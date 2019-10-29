@@ -781,4 +781,19 @@ namespace DataWF.Common
         }
 
     }
+
+    public class NullUser : IUserIdentity
+    {
+        public static readonly NullUser Value = new NullUser();
+
+        public int? Id => null;
+
+        public IEnumerable<IAccessGroup> Groups => Enumerable.Empty<IAccessGroup>();
+
+        public string AuthenticationType => string.Empty;
+
+        public bool IsAuthenticated => false;
+
+        public string Name => string.Empty;
+    }
 }

@@ -15,7 +15,8 @@
     <DotNetCliToolReference Include="Swashbuckle.AspNetCore.Cli" Version="4.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DataWF.Web.Common\DataWF.Web.Common.csproj" />
+    <ProjectReference Include="..\DataWF.WebClient.Common\DataWF.WebClient.Common.csproj" />
+    <ProjectReference Include="..\DataWF.WebService.Common\DataWF.WebService.Common.csproj" />
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
@@ -25,13 +26,13 @@
     <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />
   </ItemGroup>
  <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="dotnet $(ProjectDir)../DataWF.Web.CodeGenerator/$(OutDir)DataWF.Web.CodeGenerator.dll -m Controllers, Logs, Invokers -p $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Common.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Counterpart.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Messanger.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Flow.dll -o $(ProjectDir)Controllers" />
-  </Target>  
-   <Target Name="SwaggerToFile" AfterTargets="AfterBuild">
+  <Target Name="CodeGenerator" BeforeTargets="PreBuildEvent">
+    <Exec Command="dotnet tool restore" />
+    <Exec Command="dotnet wscodegen -m Controllers, Logs, Invokers -p $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Common.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Counterpart.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Messanger.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Flow.dll -o $(ProjectDir)Controllers" />
+  </Target>
+  <Target Name="SwaggerToFile" AfterTargets="AfterBuild">
     <Exec Command="dotnet swagger tofile --output $(ProjectDir)wwwroot/swagger.json $(OutputPath)$(AssemblyName).dll v1" />
   </Target>
 </Project>

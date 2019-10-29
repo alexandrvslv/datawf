@@ -7,7 +7,7 @@
     <AssemblyName>DataWF.Module.Common</AssemblyName>
     <TargetFrameworks>netstandard2.0;netcoreapp2.2;net461</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
-    
+
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -27,16 +27,16 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>  
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MailKit" Version="2.3.1.6" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.2.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
     <PackageReference Include="Novell.Directory.Ldap.NETStandard2_0" Version="3.1.0" />
-  </ItemGroup>  
+  </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
     <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj" />
+    <ProjectReference Include="..\DataWF.WebClient.Common\DataWF.WebClient.Common.csproj" />
   </ItemGroup>
 </Project>

@@ -6,6 +6,7 @@
     <RootNamespace>DataWF.Test.Web.CodeGenerator</RootNamespace>
     <AssemblyName>DataWF.Test.Web.CodeGenerator</AssemblyName>
     <TargetFramework>netcoreapp2.2</TargetFramework>
+    <Version>1.0.1</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -23,14 +24,18 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\DataWF.WebService.Generator\CodeGeneratorMode.cs" Link="CodeGeneratorMode.cs" />
+    <Compile Include="..\DataWF.WebService.Generator\Generator.cs" Link="Generator.cs" />
+    <Compile Include="..\DataWF.WebService.Generator\SyntaxHelper.cs" Link="SyntaxHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
     <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj" />
     <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
     <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />
-    <ProjectReference Include="..\DataWF.Web.CodeGenerator\DataWF.Web.CodeGenerator.csproj" />
-    <ProjectReference Include="..\DataWF.Web.Common\DataWF.Web.Common.csproj" />
+    <ProjectReference Include="..\DataWF.WebService.Common\DataWF.WebService.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.3.0" />

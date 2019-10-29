@@ -22,7 +22,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [DataContract, Table("rbook", "Reference Book", BlockSize = 100)]
+    [Table("rbook", "Reference Book", BlockSize = 100)]
     public class Book : DBGroupItem
     {
         public static readonly DBTable<Book> DBTable = GetTable<Book>();

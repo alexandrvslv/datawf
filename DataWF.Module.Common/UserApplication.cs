@@ -31,7 +31,9 @@ namespace DataWF.Module.Common
     public class UserApplication : DBItem
     {
         public static readonly DBTable<UserApplication> DBTable = GetTable<UserApplication>();
+        public static readonly DBColumn TypeKey = DBTable.ParseProperty(nameof(Type));
         public static readonly DBColumn EMailKey = DBTable.ParseProperty(nameof(EMail));
+        public static readonly DBColumn PasswordKey = DBTable.ParseProperty(nameof(Password));
         public static readonly DBColumn EmailVerifiedKey = DBTable.ParseProperty(nameof(EmailVerified));
         public static readonly DBColumn PhoneKey = DBTable.ParseProperty(nameof(Phone));
         public static readonly DBColumn PhoneVerifiedKey = DBTable.ParseProperty(nameof(PhoneVerified));
@@ -44,6 +46,7 @@ namespace DataWF.Module.Common
         public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(UserId));
         public static event Func<UserApplication, Task> Created;
         public static event Func<UserApplication, Task> Approved;
+        public static event Func<UserApplication, Task> Rejected;
         public static event Func<UserApplication, Task> Verified;
         private User user;
 
@@ -57,11 +60,25 @@ namespace DataWF.Module.Common
             set => SetValue(value, Table.PrimaryKey);
         }
 
+        [Column("app_type", 1024, Keys = DBColumnKeys.ElementType | DBColumnKeys.Notnull)]
+        public UserApplicationType? Type
+        {
+            get => GetValue<UserApplicationType?>(TypeKey);
+            set => SetValue(value, TypeKey);
+        }
+
         [Column("email", 1024, Keys = DBColumnKeys.Code | DBColumnKeys.Notnull)]//Index("duser_request_email", true)
         public string EMail
         {
             get => GetValue<string>(EMailKey);
             set => SetValue(value?.Trim(), EMailKey);
+        }
+
+        [Column("password", Keys = DBColumnKeys.Notnull)]//Index("duser_request_email", true)
+        public string Password
+        {
+            get => GetValue<string>(PasswordKey);
+            set => SetValue(value, PasswordKey);
         }
 
         [Column("email_verified", Keys = DBColumnKeys.System), DefaultValue(false)]
@@ -144,38 +161,42 @@ namespace DataWF.Module.Common
         [ControllerMethod]
         public async Task<UserApplication> Approve(DBTransaction transaction)
         {
-            if (User != null)
+            if (Type == UserApplicationType.NewAccount)
             {
-                throw new InvalidOperationException($"User already exist!");
+                if (User != null)
+                {
+                    throw new InvalidOperationException($"User already exist!");
+                }
+                if (Status == DBStatus.Error)
+                {
+                    throw new InvalidOperationException($"Application is Rejected!");
+                }
+                //if (EmailVerified == false)
+                //{
+                //    throw new InvalidOperationException($"Email Verification not Passed!");
+                //}
+                var (company, department, position) = CheckValues(transaction);
+                var user = new User
+                {
+                    EMail = EMail,
+                    Login = EMail.Substring(0, EMail.IndexOf('@')),
+                    Password = Helper.Decript(Password, SMTPSetting.Current.PassKey),
+                    Phone = Phone,
+                    NameEN = $"{LastName} {FirstName}",
+                    Company = company,
+                    Department = department,
+                    Position = position,
+                };
+                var check = User.DBTable.Select(User.DBTable.CodeKey, CompareType.Equal, user.Login).ToList();
+                if (check.Count > 1)
+                {
+                    user.Login = $"{user.Login}.{Helper.IntToChar(check.Count).ToLowerInvariant()}";
+                }
+                await user.Save(transaction);
+                User = user;
+                Status = DBStatus.Archive;
+                await Save(transaction);
             }
-            if(Status == DBStatus.Error)
-            {
-                throw new InvalidOperationException($"Application is Rejected!");
-            }
-            //if (EmailVerified == false)
-            //{
-            //    throw new InvalidOperationException($"Email Verification not Passed!");
-            //}
-            var (company, department, position) = CheckValues(transaction);
-            var user = new User
-            {
-                EMail = EMail,
-                Login = EMail.Substring(0, EMail.IndexOf('@')),
-                Phone = Phone,
-                NameEN = $"{LastName} {FirstName}",
-                Company = company,
-                Department = department,
-                Position = position,
-            };
-            await User.Save(transaction);
-            var check = User.DBTable.Select(User.DBTable.CodeKey, CompareType.Equal, user.Login).ToList();
-            if (check.Count > 1)
-            {
-                user.Login = $"{user.Login}.{Helper.IntToChar(check.Count).ToLowerInvariant()}";
-            }
-            User = user;
-            Status = DBStatus.Archive;
-            await Save(transaction);
             return this;
         }
 
@@ -209,29 +230,41 @@ namespace DataWF.Module.Common
         {
             if ((UpdateState & DBUpdateState.Insert) != 0)
             {
-                _ = OnApplicationCreated();
+                _ = OnCreated();
             }
             else if (EmailVerified == true && IsChangedKey(EmailVerifiedKey))
             {
-                _ = OnApplicationEmailVerified();
+                _ = OnVerified();
             }
-            else if (User != null && IsChangedKey(UserKey))
+            else if (Status != null && IsChangedKey(Table.StatusKey))
             {
-                _ = OnApplicationAccepted();
+                if (Status == DBStatus.Archive)
+                {
+                    _ = OnAccepted();
+                }
+                else if (Status == DBStatus.Error || Status == DBStatus.Delete)
+                {
+                    _ = OnRejected();
+                }
             }
         }
 
-        private Task OnApplicationEmailVerified()
+        private Task OnVerified()
         {
             return Verified?.Invoke(this);
         }
 
-        private Task OnApplicationAccepted()
+        private Task OnAccepted()
         {
             return Approved?.Invoke(this);
         }
 
-        private Task OnApplicationCreated()
+        private Task OnRejected()
+        {
+            return Rejected?.Invoke(this);
+        }
+
+        private Task OnCreated()
         {
             return Created?.Invoke(this);
         }
@@ -285,5 +318,13 @@ namespace DataWF.Module.Common
             }
             return (company, department, position);
         }
+
+
+    }
+
+    public enum UserApplicationType
+    {
+        NewAccount,
+        ResetPassword
     }
 }

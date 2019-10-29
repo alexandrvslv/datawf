@@ -10,7 +10,7 @@
         "tags": [
           "Access"
         ],
-        "operationId": "GetAccess",
+        "operationId": "Get",
         "consumes": [],
         "produces": [
           "application/json",
@@ -40,7 +40,7 @@
         "tags": [
           "Access"
         ],
-        "operationId": "GetPropertyAccess",
+        "operationId": "GetProperty",
         "consumes": [],
         "produces": [
           "application/json",
@@ -76,7 +76,7 @@
         "tags": [
           "Access"
         ],
-        "operationId": "GetAccessItems",
+        "operationId": "Get",
         "consumes": [],
         "produces": [
           "application/json",
@@ -116,7 +116,7 @@
         "tags": [
           "Access"
         ],
-        "operationId": "SetAccessItems",
+        "operationId": "Set",
         "consumes": [
           "application/json-patch+json",
           "application/json",
@@ -164,12 +164,55 @@
         }
       }
     },
+    "/api/Access/SetItems/{name}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Set",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accessPack",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/AccessUpdatePackage"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
     "/api/Access/ClearAccess/{name}/{id}": {
       "put": {
         "tags": [
           "Access"
         ],
-        "operationId": "ClearAccess",
+        "operationId": "Clear",
         "consumes": [],
         "produces": [
           "application/json",
@@ -188,6 +231,57 @@
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AccessItem"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/ClearAccess/{name}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Clear",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ids",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           }
         ],
         "responses": {
@@ -497,6 +591,37 @@
         }
       }
     },
+    "/api/Address/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Address"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/Address/{id}": {
       "get": {
         "tags": [
@@ -691,198 +816,6 @@
                 "format": "int32",
                 "type": "integer"
               }
-            }
-          }
-        }
-      }
-    },
-    "/api/Authorize/LoginIn": {
-      "post": {
-        "tags": [
-          "Authorize"
-        ],
-        "operationId": "LoginIn",
-        "consumes": [
-          "application/json-patch+json",
-          "application/json",
-          "text/json",
-          "application/*+json"
-        ],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "login",
-            "in": "body",
-            "required": false,
-            "schema": {
-              "$ref": "#/definitions/LoginModel"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/TokenModel"
-            }
-          }
-        }
-      }
-    },
-    "/api/Authorize/ReLogin": {
-      "post": {
-        "tags": [
-          "Authorize"
-        ],
-        "operationId": "ReLogin",
-        "consumes": [
-          "application/json-patch+json",
-          "application/json",
-          "text/json",
-          "application/*+json"
-        ],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "token",
-            "in": "body",
-            "required": false,
-            "schema": {
-              "$ref": "#/definitions/TokenModel"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/TokenModel"
-            }
-          }
-        }
-      }
-    },
-    "/api/Authorize/LoginOut": {
-      "post": {
-        "tags": [
-          "Authorize"
-        ],
-        "operationId": "LoginOut",
-        "consumes": [
-          "application/json-patch+json",
-          "application/json",
-          "text/json",
-          "application/*+json"
-        ],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "token",
-            "in": "body",
-            "required": false,
-            "schema": {
-              "$ref": "#/definitions/TokenModel"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/TokenModel"
-            }
-          }
-        }
-      }
-    },
-    "/api/Authorize/ResetPassword": {
-      "post": {
-        "tags": [
-          "Authorize"
-        ],
-        "operationId": "ResetPassword",
-        "consumes": [
-          "application/json-patch+json",
-          "application/json",
-          "text/json",
-          "application/*+json"
-        ],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "login",
-            "in": "body",
-            "required": false,
-            "schema": {
-              "$ref": "#/definitions/LoginModel"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        }
-      }
-    },
-    "/api/Authorize/Logs": {
-      "get": {
-        "tags": [
-          "Authorize"
-        ],
-        "operationId": "GetLogs",
-        "consumes": [],
-        "produces": [
-          "application/octet-stream"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "file"
-            }
-          }
-        }
-      }
-    },
-    "/api/Authorize": {
-      "get": {
-        "tags": [
-          "Authorize"
-        ],
-        "operationId": "Get",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/User"
             }
           }
         }
@@ -1176,6 +1109,37 @@
               "items": {
                 "$ref": "#/definitions/Book"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/Book/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Book"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -1673,6 +1637,37 @@
         }
       }
     },
+    "/api/City/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "City"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/City/{id}": {
       "get": {
         "tags": [
@@ -2160,6 +2155,37 @@
               "items": {
                 "$ref": "#/definitions/Company"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/Company/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -2657,6 +2683,37 @@
         }
       }
     },
+    "/api/Continent/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Continent"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/Continent/{id}": {
       "get": {
         "tags": [
@@ -3144,6 +3201,37 @@
               "items": {
                 "$ref": "#/definitions/Country"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/Country/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Country"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -3641,6 +3729,37 @@
         }
       }
     },
+    "/api/Currency/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Currency"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/Currency/{id}": {
       "get": {
         "tags": [
@@ -4128,6 +4247,37 @@
               "items": {
                 "$ref": "#/definitions/Customer"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/Customer/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Customer"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -4625,6 +4775,37 @@
         }
       }
     },
+    "/api/CustomerAddress/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "CustomerAddress"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/CustomerAddress/{id}": {
       "get": {
         "tags": [
@@ -5112,6 +5293,37 @@
               "items": {
                 "$ref": "#/definitions/CustomerReference"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/CustomerReference/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "CustomerReference"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -5674,6 +5886,37 @@
               "items": {
                 "$ref": "#/definitions/Department"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/Department/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Department"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -6396,6 +6639,37 @@
         }
       }
     },
+    "/api/Document/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/Document/{id}": {
       "get": {
         "tags": [
@@ -6721,6 +6995,37 @@
               "items": {
                 "$ref": "#/definitions/DocumentComment"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/DocumentComment/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "DocumentComment"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -7213,6 +7518,37 @@
               "items": {
                 "$ref": "#/definitions/DocumentCustomer"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/DocumentCustomer/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "DocumentCustomer"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -7909,6 +8245,37 @@
         }
       }
     },
+    "/api/DocumentData/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "DocumentData"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentData/{id}": {
       "get": {
         "tags": [
@@ -8401,6 +8768,37 @@
         }
       }
     },
+    "/api/DocumentReference/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "DocumentReference"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentReference/{id}": {
       "get": {
         "tags": [
@@ -8888,6 +9286,37 @@
               "items": {
                 "$ref": "#/definitions/DocumentWork"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/DocumentWork/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "DocumentWork"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -9449,6 +9878,37 @@
         }
       }
     },
+    "/api/GroupPermission/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "GroupPermission"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/GroupPermission/{id}": {
       "get": {
         "tags": [
@@ -9616,498 +10076,6 @@
       "get": {
         "tags": [
           "GroupPermission"
-        ],
-        "operationId": "GenerateIds",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "count",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "uniqueItems": false,
-              "type": "array",
-              "items": {
-                "format": "int32",
-                "type": "integer"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance/GetLogs/{filter}": {
-      "get": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "GetLogs",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "filter",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "uniqueItems": false,
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/InstanceLog"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance/GetItemLogs/{id}": {
-      "get": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "GetItemLogs",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "uniqueItems": false,
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/InstanceLog"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance/UndoLog/{logId}": {
-      "get": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "UndoLog",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "logId",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/Instance"
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance/RedoLog/{logId}": {
-      "get": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "RedoLog",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "logId",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/Instance"
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance/RemoveLog/{logId}": {
-      "get": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "RemoveLog",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "logId",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance": {
-      "get": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "Get",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "uniqueItems": false,
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Instance"
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "Put",
-        "consumes": [
-          "application/json-patch+json",
-          "application/json",
-          "text/json",
-          "application/*+json"
-        ],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "value",
-            "in": "body",
-            "required": false,
-            "schema": {
-              "$ref": "#/definitions/Instance"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/Instance"
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "Post",
-        "consumes": [
-          "application/json-patch+json",
-          "application/json",
-          "text/json",
-          "application/*+json"
-        ],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "value",
-            "in": "body",
-            "required": false,
-            "schema": {
-              "$ref": "#/definitions/Instance"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/Instance"
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance/Find/{filter}": {
-      "get": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "Find",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "filter",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "uniqueItems": false,
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Instance"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance/{id}": {
-      "get": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "Get",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/Instance"
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "Delete",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance/Merge/{id}": {
-      "delete": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "Merge",
-        "consumes": [
-          "application/json-patch+json",
-          "application/json",
-          "text/json",
-          "application/*+json"
-        ],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "ids",
-            "in": "body",
-            "required": false,
-            "schema": {
-              "uniqueItems": false,
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/Instance"
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance/Copy/{id}": {
-      "get": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "Copy",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/Instance"
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance/GenerateId": {
-      "get": {
-        "tags": [
-          "Instance"
-        ],
-        "operationId": "GenerateId",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "format": "int32",
-              "type": "integer"
-            }
-          }
-        }
-      }
-    },
-    "/api/Instance/GenerateIds/{count}": {
-      "get": {
-        "tags": [
-          "Instance"
         ],
         "operationId": "GenerateIds",
         "consumes": [],
@@ -10428,6 +10396,37 @@
               "items": {
                 "$ref": "#/definitions/Location"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/Location/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Location"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -10939,6 +10938,37 @@
         }
       }
     },
+    "/api/Message/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Message"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/Message/{id}": {
       "get": {
         "tags": [
@@ -11269,6 +11299,37 @@
         }
       }
     },
+    "/api/MessageAddress/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "MessageAddress"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/MessageAddress/{id}": {
       "get": {
         "tags": [
@@ -11594,6 +11655,37 @@
               "items": {
                 "$ref": "#/definitions/MessageData"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/MessageData/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "MessageData"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -12091,6 +12183,37 @@
         }
       }
     },
+    "/api/Persone/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Persone"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/Persone/{id}": {
       "get": {
         "tags": [
@@ -12578,6 +12701,37 @@
               "items": {
                 "$ref": "#/definitions/PersoneIdentify"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/PersoneIdentify/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "PersoneIdentify"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -13105,6 +13259,37 @@
               "items": {
                 "$ref": "#/definitions/Position"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/Position/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Position"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -13745,6 +13930,37 @@
               "items": {
                 "$ref": "#/definitions/Scheduler"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/Scheduler/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -14425,6 +14641,37 @@
         }
       }
     },
+    "/api/Stage/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Stage"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/Stage/{id}": {
       "get": {
         "tags": [
@@ -14912,6 +15159,37 @@
               "items": {
                 "$ref": "#/definitions/StageForeign"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/StageForeign/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "StageForeign"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -15409,6 +15687,37 @@
         }
       }
     },
+    "/api/StageParam/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "StageParam"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/StageParam/{id}": {
       "get": {
         "tags": [
@@ -15896,6 +16205,37 @@
               "items": {
                 "$ref": "#/definitions/StageProcedure"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/StageProcedure/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "StageProcedure"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -16393,6 +16733,37 @@
         }
       }
     },
+    "/api/StageReference/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "StageReference"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/StageReference/{id}": {
       "get": {
         "tags": [
@@ -16885,6 +17256,37 @@
         }
       }
     },
+    "/api/StageTemplate/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "StageTemplate"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/StageTemplate/{id}": {
       "get": {
         "tags": [
@@ -17372,6 +17774,37 @@
               "items": {
                 "$ref": "#/definitions/Statistic"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/Statistic/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Statistic"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -17944,6 +18377,37 @@
         }
       }
     },
+    "/api/Template/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Template"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/Template/{id}": {
       "get": {
         "tags": [
@@ -18431,6 +18895,37 @@
               "items": {
                 "$ref": "#/definitions/TemplateData"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/TemplateData/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "TemplateData"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -19098,6 +19593,37 @@
         }
       }
     },
+    "/api/TemplateFile/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "TemplateFile"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/TemplateFile/{id}": {
       "get": {
         "tags": [
@@ -19585,6 +20111,37 @@
               "items": {
                 "$ref": "#/definitions/TemplateProperty"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/TemplateProperty/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "TemplateProperty"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -20082,6 +20639,37 @@
         }
       }
     },
+    "/api/TemplateReference/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "TemplateReference"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/TemplateReference/{id}": {
       "get": {
         "tags": [
@@ -20276,6 +20864,192 @@
                 "format": "int32",
                 "type": "integer"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/User/Register/{id}/{application}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "Register",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "application",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        }
+      }
+    },
+    "/api/User/LoginIn": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "LoginIn",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "login",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/LoginModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/TokenModel"
+            }
+          }
+        }
+      }
+    },
+    "/api/User/ReLogin": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "ReLogin",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/TokenModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/TokenModel"
+            }
+          }
+        }
+      }
+    },
+    "/api/User/LoginOut": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "LoginOut",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/TokenModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/TokenModel"
+            }
+          }
+        }
+      }
+    },
+    "/api/User/ChangePassword": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "ChangePassword",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "login",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/LoginModel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "boolean"
             }
           }
         }
@@ -20574,6 +21348,37 @@
         }
       }
     },
+    "/api/User/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/User/{id}": {
       "get": {
         "tags": [
@@ -20741,6 +21546,622 @@
       "get": {
         "tags": [
           "User"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/Approve/{id}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Approve",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/Reject/{id}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Reject",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/EmailVerification/{id}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "EmailVerification",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/GetLogs/{filter}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "GetLogs",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserApplicationLog"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/GetItemLogs/{id}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "GetItemLogs",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserApplicationLog"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/UndoLog/{logId}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "UndoLog",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "logId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/RedoLog/{logId}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "RedoLog",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "logId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/RemoveLog/{logId}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "RemoveLog",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "logId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Get",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserApplication"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Put",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "value",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Post",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "value",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/Find/{filter}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Find",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserApplication"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/{id}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Get",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Delete",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/Merge/{id}": {
+      "delete": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Merge",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "ids",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/Copy/{id}": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Copy",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/GenerateId": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "GenerateId",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "UserApplication"
         ],
         "operationId": "GenerateIds",
         "consumes": [],
@@ -21231,6 +22652,37 @@
               "items": {
                 "$ref": "#/definitions/UserFile"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/UserFile/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -21763,6 +23215,37 @@
         }
       }
     },
+    "/api/UserGroup/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "UserGroup"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/UserGroup/{id}": {
       "get": {
         "tags": [
@@ -21962,336 +23445,6 @@
         }
       }
     },
-    "/api/UserLog": {
-      "get": {
-        "tags": [
-          "UserLog"
-        ],
-        "operationId": "Get",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "uniqueItems": false,
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/UserLog"
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "UserLog"
-        ],
-        "operationId": "Put",
-        "consumes": [
-          "application/json-patch+json",
-          "application/json",
-          "text/json",
-          "application/*+json"
-        ],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "value",
-            "in": "body",
-            "required": false,
-            "schema": {
-              "$ref": "#/definitions/UserLog"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/UserLog"
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "UserLog"
-        ],
-        "operationId": "Post",
-        "consumes": [
-          "application/json-patch+json",
-          "application/json",
-          "text/json",
-          "application/*+json"
-        ],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "value",
-            "in": "body",
-            "required": false,
-            "schema": {
-              "$ref": "#/definitions/UserLog"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/UserLog"
-            }
-          }
-        }
-      }
-    },
-    "/api/UserLog/Find/{filter}": {
-      "get": {
-        "tags": [
-          "UserLog"
-        ],
-        "operationId": "Find",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "filter",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "uniqueItems": false,
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/UserLog"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/UserLog/{id}": {
-      "get": {
-        "tags": [
-          "UserLog"
-        ],
-        "operationId": "Get",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/UserLog"
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "UserLog"
-        ],
-        "operationId": "Delete",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        }
-      }
-    },
-    "/api/UserLog/Merge/{id}": {
-      "delete": {
-        "tags": [
-          "UserLog"
-        ],
-        "operationId": "Merge",
-        "consumes": [
-          "application/json-patch+json",
-          "application/json",
-          "text/json",
-          "application/*+json"
-        ],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "ids",
-            "in": "body",
-            "required": false,
-            "schema": {
-              "uniqueItems": false,
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/UserLog"
-            }
-          }
-        }
-      }
-    },
-    "/api/UserLog/Copy/{id}": {
-      "get": {
-        "tags": [
-          "UserLog"
-        ],
-        "operationId": "Copy",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/UserLog"
-            }
-          }
-        }
-      }
-    },
-    "/api/UserLog/GenerateId": {
-      "get": {
-        "tags": [
-          "UserLog"
-        ],
-        "operationId": "GenerateId",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "format": "int64",
-              "type": "integer"
-            }
-          }
-        }
-      }
-    },
-    "/api/UserLog/GenerateIds/{count}": {
-      "get": {
-        "tags": [
-          "UserLog"
-        ],
-        "operationId": "GenerateIds",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "count",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "uniqueItems": false,
-              "type": "array",
-              "items": {
-                "format": "int64",
-                "type": "integer"
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/UserReg": {
       "get": {
         "tags": [
@@ -22418,6 +23571,37 @@
               "items": {
                 "$ref": "#/definitions/UserReg"
               }
+            }
+          }
+        }
+      }
+    },
+    "/api/UserReg/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "UserReg"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -23117,6 +24301,37 @@
         }
       }
     },
+    "/api/Work/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Work"
+        ],
+        "operationId": "GetLink",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/api/Work/{id}": {
       "get": {
         "tags": [
@@ -23356,6 +24571,25 @@
       "type": "string",
       "x-flags": 0
     },
+    "AccessUpdatePackage": {
+      "type": "object",
+      "properties": {
+        "Ids": {
+          "uniqueItems": false,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Items": {
+          "uniqueItems": false,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AccessItem"
+          }
+        }
+      }
+    },
     "AddressLog": {
       "type": "object",
       "allOf": [
@@ -23569,322 +24803,6 @@
       },
       "x-id": "Id",
       "x-type-id": 0
-    },
-    "LoginModel": {
-      "required": [
-        "Email",
-        "Password"
-      ],
-      "type": "object",
-      "properties": {
-        "Email": {
-          "type": "string"
-        },
-        "Password": {
-          "format": "password",
-          "type": "string"
-        },
-        "Online": {
-          "type": "boolean"
-        }
-      }
-    },
-    "TokenModel": {
-      "type": "object",
-      "properties": {
-        "Email": {
-          "type": "string"
-        },
-        "AccessToken": {
-          "format": "password",
-          "type": "string"
-        },
-        "RefreshToken": {
-          "type": "string"
-        }
-      }
-    },
-    "User": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/DBUser"
-        }
-      ],
-      "properties": {
-        "CompanyId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Company": {
-          "$ref": "#/definitions/Company",
-          "x-id": "CompanyId"
-        },
-        "Abbreviation": {
-          "maxLength": 4,
-          "type": "string"
-        },
-        "DepartmentId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Department": {
-          "$ref": "#/definitions/Department",
-          "x-id": "DepartmentId"
-        },
-        "PositionId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Position": {
-          "$ref": "#/definitions/Position",
-          "x-id": "PositionId"
-        },
-        "Super": {
-          "default": "False",
-          "type": "boolean"
-        },
-        "Phone": {
-          "maxLength": 1024,
-          "type": "string"
-        },
-        "AuthType": {
-          "$ref": "#/definitions/UserAuthType"
-        },
-        "NameRU": {
-          "maxLength": 512,
-          "type": "string"
-        },
-        "NameEN": {
-          "maxLength": 512,
-          "type": "string"
-        }
-      },
-      "x-type-id": 0
-    },
-    "DBUser": {
-      "required": [
-        "Id"
-      ],
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/DBItem"
-        }
-      ],
-      "properties": {
-        "Id": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Login": {
-          "maxLength": 256,
-          "type": "string"
-        },
-        "EMail": {
-          "maxLength": 1024,
-          "type": "string"
-        }
-      },
-      "x-id": "Id",
-      "x-type-id": 0
-    },
-    "Company": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/Customer"
-        }
-      ],
-      "properties": {},
-      "x-type-id": 1
-    },
-    "Customer": {
-      "required": [
-        "Id"
-      ],
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/DBItem"
-        }
-      ],
-      "properties": {
-        "Id": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "INN": {
-          "maxLength": 40,
-          "type": "string"
-        },
-        "Code": {
-          "maxLength": 40,
-          "type": "string"
-        },
-        "EMail": {
-          "maxLength": 1024,
-          "type": "string"
-        },
-        "Phone": {
-          "maxLength": 1024,
-          "type": "string"
-        },
-        "CountryId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Country": {
-          "$ref": "#/definitions/Country",
-          "x-id": "CountryId"
-        },
-        "AddressId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Address": {
-          "$ref": "#/definitions/Address",
-          "x-id": "AddressId"
-        },
-        "ShortNameRU": {
-          "maxLength": 512,
-          "type": "string"
-        },
-        "ShortNameEN": {
-          "maxLength": 512,
-          "type": "string"
-        },
-        "NameRU": {
-          "maxLength": 1024,
-          "type": "string"
-        },
-        "NameEN": {
-          "maxLength": 1024,
-          "type": "string"
-        }
-      },
-      "x-id": "Id",
-      "x-type-id": 0
-    },
-    "Country": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/Location"
-        }
-      ],
-      "properties": {},
-      "x-type-id": 2
-    },
-    "Department": {
-      "required": [
-        "Id"
-      ],
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/DBGroupItem"
-        }
-      ],
-      "properties": {
-        "Id": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "CompanyId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Company": {
-          "$ref": "#/definitions/Company",
-          "x-id": "CompanyId"
-        },
-        "ParentId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Parent": {
-          "$ref": "#/definitions/Department",
-          "x-id": "ParentId"
-        },
-        "Code": {
-          "maxLength": 256,
-          "type": "string"
-        },
-        "NameRU": {
-          "maxLength": 512,
-          "type": "string"
-        },
-        "NameEN": {
-          "maxLength": 512,
-          "type": "string"
-        }
-      },
-      "x-id": "Id",
-      "x-type-id": 0
-    },
-    "Position": {
-      "required": [
-        "Id"
-      ],
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/DBGroupItem"
-        }
-      ],
-      "properties": {
-        "Id": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "CompanyId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Company": {
-          "$ref": "#/definitions/Company",
-          "x-id": "CompanyId"
-        },
-        "DepartmentId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Department": {
-          "$ref": "#/definitions/Department",
-          "x-id": "DepartmentId"
-        },
-        "ParentId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Parent": {
-          "$ref": "#/definitions/Position",
-          "x-id": "ParentId"
-        },
-        "Code": {
-          "maxLength": 40,
-          "type": "string"
-        },
-        "NameRU": {
-          "maxLength": 512,
-          "type": "string"
-        },
-        "NameEN": {
-          "maxLength": 512,
-          "type": "string"
-        }
-      },
-      "x-id": "Id",
-      "x-type-id": 0
-    },
-    "UserAuthType": {
-      "enum": [
-        "Internal",
-        "SMTP",
-        "LDAP"
-      ],
-      "type": "string"
     },
     "BookLog": {
       "type": "object",
@@ -24102,6 +25020,93 @@
       },
       "x-type-id": 0
     },
+    "Country": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Location"
+        }
+      ],
+      "properties": {},
+      "x-type-id": 2
+    },
+    "Company": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Customer"
+        }
+      ],
+      "properties": {},
+      "x-type-id": 1
+    },
+    "Customer": {
+      "required": [
+        "Id"
+      ],
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DBItem"
+        }
+      ],
+      "properties": {
+        "Id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "INN": {
+          "maxLength": 40,
+          "type": "string"
+        },
+        "Code": {
+          "maxLength": 40,
+          "type": "string"
+        },
+        "EMail": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "Phone": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "CountryId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Country": {
+          "$ref": "#/definitions/Country",
+          "x-id": "CountryId"
+        },
+        "AddressId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Address": {
+          "$ref": "#/definitions/Address",
+          "x-id": "AddressId"
+        },
+        "ShortNameRU": {
+          "maxLength": 512,
+          "type": "string"
+        },
+        "ShortNameEN": {
+          "maxLength": 512,
+          "type": "string"
+        },
+        "NameRU": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "NameEN": {
+          "maxLength": 1024,
+          "type": "string"
+        }
+      },
+      "x-id": "Id",
+      "x-type-id": 0
+    },
     "ContinentLog": {
       "type": "object",
       "allOf": [
@@ -24309,6 +25314,201 @@
       },
       "x-id": "Id",
       "x-type-id": 0
+    },
+    "Position": {
+      "required": [
+        "Id"
+      ],
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DBGroupItem"
+        }
+      ],
+      "properties": {
+        "Id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "CompanyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Company": {
+          "$ref": "#/definitions/Company",
+          "x-id": "CompanyId"
+        },
+        "DepartmentId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Department": {
+          "$ref": "#/definitions/Department",
+          "x-id": "DepartmentId"
+        },
+        "ParentId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Parent": {
+          "$ref": "#/definitions/Position",
+          "x-id": "ParentId"
+        },
+        "Code": {
+          "maxLength": 40,
+          "type": "string"
+        },
+        "NameRU": {
+          "maxLength": 512,
+          "type": "string"
+        },
+        "NameEN": {
+          "maxLength": 512,
+          "type": "string"
+        }
+      },
+      "x-id": "Id",
+      "x-type-id": 0
+    },
+    "Department": {
+      "required": [
+        "Id"
+      ],
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DBGroupItem"
+        }
+      ],
+      "properties": {
+        "Id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "CompanyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Company": {
+          "$ref": "#/definitions/Company",
+          "x-id": "CompanyId"
+        },
+        "ParentId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Parent": {
+          "$ref": "#/definitions/Department",
+          "x-id": "ParentId"
+        },
+        "Code": {
+          "maxLength": 256,
+          "type": "string"
+        },
+        "NameRU": {
+          "maxLength": 512,
+          "type": "string"
+        },
+        "NameEN": {
+          "maxLength": 512,
+          "type": "string"
+        }
+      },
+      "x-id": "Id",
+      "x-type-id": 0
+    },
+    "User": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DBUser"
+        }
+      ],
+      "properties": {
+        "CompanyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Company": {
+          "$ref": "#/definitions/Company",
+          "x-id": "CompanyId"
+        },
+        "Abbreviation": {
+          "maxLength": 4,
+          "type": "string"
+        },
+        "DepartmentId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Department": {
+          "$ref": "#/definitions/Department",
+          "x-id": "DepartmentId"
+        },
+        "PositionId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Position": {
+          "$ref": "#/definitions/Position",
+          "x-id": "PositionId"
+        },
+        "Super": {
+          "default": "False",
+          "type": "boolean"
+        },
+        "Phone": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "AuthType": {
+          "$ref": "#/definitions/UserAuthType"
+        },
+        "NameRU": {
+          "maxLength": 512,
+          "type": "string"
+        },
+        "NameEN": {
+          "maxLength": 512,
+          "type": "string"
+        }
+      },
+      "x-type-id": 0
+    },
+    "DBUser": {
+      "required": [
+        "Id"
+      ],
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DBItem"
+        }
+      ],
+      "properties": {
+        "Id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Login": {
+          "maxLength": 256,
+          "type": "string"
+        },
+        "EMail": {
+          "maxLength": 1024,
+          "type": "string"
+        }
+      },
+      "x-id": "Id",
+      "x-type-id": 0
+    },
+    "UserAuthType": {
+      "enum": [
+        "Internal",
+        "SMTP",
+        "LDAP"
+      ],
+      "type": "string"
     },
     "DepartmentLog": {
       "type": "object",
@@ -25512,76 +26712,6 @@
       },
       "x-type-id": 0
     },
-    "InstanceLog": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/DBLogItem"
-        }
-      ],
-      "properties": {
-        "Id": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "UserId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "User": {
-          "$ref": "#/definitions/User",
-          "x-id": "UserId"
-        },
-        "Host": {
-          "type": "string"
-        },
-        "Port": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Active": {
-          "type": "boolean"
-        }
-      },
-      "x-type-id": 0
-    },
-    "Instance": {
-      "required": [
-        "Id"
-      ],
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/DBItem"
-        }
-      ],
-      "properties": {
-        "Id": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "UserId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "User": {
-          "$ref": "#/definitions/User",
-          "x-id": "UserId"
-        },
-        "Host": {
-          "type": "string"
-        },
-        "Port": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Active": {
-          "type": "boolean"
-        }
-      },
-      "x-id": "Id",
-      "x-type-id": 0
-    },
     "MessageAddress": {
       "required": [
         "Id"
@@ -26503,6 +27633,140 @@
       },
       "x-type-id": 0
     },
+    "UserApplication": {
+      "required": [
+        "Id",
+        "Type",
+        "EMail",
+        "Password",
+        "FirstName",
+        "LastName",
+        "Company",
+        "Department",
+        "Position"
+      ],
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DBItem"
+        }
+      ],
+      "properties": {
+        "Id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Type": {
+          "$ref": "#/definitions/UserApplicationType"
+        },
+        "EMail": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "Password": {
+          "type": "string"
+        },
+        "EmailVerified": {
+          "default": "False",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "Phone": {
+          "maxLength": 30,
+          "type": "string"
+        },
+        "PhoneVerified": {
+          "default": "False",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "FirstName": {
+          "maxLength": 50,
+          "type": "string"
+        },
+        "LastName": {
+          "maxLength": 50,
+          "type": "string"
+        },
+        "MiddleName": {
+          "maxLength": 50,
+          "type": "string"
+        },
+        "Company": {
+          "maxLength": 100,
+          "type": "string"
+        },
+        "Department": {
+          "maxLength": 100,
+          "type": "string"
+        },
+        "Position": {
+          "maxLength": 100,
+          "type": "string"
+        },
+        "UserId": {
+          "format": "int32",
+          "type": "integer",
+          "readOnly": true
+        },
+        "User": {
+          "$ref": "#/definitions/User",
+          "x-id": "UserId"
+        }
+      },
+      "x-id": "Id",
+      "x-type-id": 0
+    },
+    "UserApplicationType": {
+      "enum": [
+        "NewAccount",
+        "ResetPassword"
+      ],
+      "type": "string"
+    },
+    "LoginModel": {
+      "required": [
+        "Email",
+        "Password"
+      ],
+      "type": "object",
+      "properties": {
+        "Email": {
+          "type": "string"
+        },
+        "Password": {
+          "format": "password",
+          "type": "string"
+        },
+        "Online": {
+          "type": "boolean"
+        },
+        "Platform": {
+          "type": "string"
+        },
+        "Application": {
+          "type": "string"
+        },
+        "Version": {
+          "type": "string"
+        }
+      }
+    },
+    "TokenModel": {
+      "type": "object",
+      "properties": {
+        "Email": {
+          "type": "string"
+        },
+        "AccessToken": {
+          "format": "password",
+          "type": "string"
+        },
+        "RefreshToken": {
+          "type": "string"
+        }
+      }
+    },
     "UserLog": {
       "type": "object",
       "allOf": [
@@ -26583,6 +27847,73 @@
         "EMail": {
           "maxLength": 1024,
           "type": "string"
+        }
+      },
+      "x-type-id": 0
+    },
+    "UserApplicationLog": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DBLogItem"
+        }
+      ],
+      "properties": {
+        "Id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Type": {
+          "$ref": "#/definitions/UserApplicationType"
+        },
+        "EMail": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "Password": {
+          "type": "string"
+        },
+        "EmailVerified": {
+          "type": "boolean"
+        },
+        "Phone": {
+          "maxLength": 30,
+          "type": "string"
+        },
+        "PhoneVerified": {
+          "type": "boolean"
+        },
+        "FirstName": {
+          "maxLength": 50,
+          "type": "string"
+        },
+        "LastName": {
+          "maxLength": 50,
+          "type": "string"
+        },
+        "MiddleName": {
+          "maxLength": 50,
+          "type": "string"
+        },
+        "Company": {
+          "maxLength": 100,
+          "type": "string"
+        },
+        "Department": {
+          "maxLength": 100,
+          "type": "string"
+        },
+        "Position": {
+          "maxLength": 100,
+          "type": "string"
+        },
+        "UserId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "User": {
+          "$ref": "#/definitions/User",
+          "x-id": "UserId"
         }
       },
       "x-type-id": 0

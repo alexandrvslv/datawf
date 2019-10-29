@@ -24,10 +24,12 @@ using MailKit.Net.Smtp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Security;
+using System.Security.Claims;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -51,9 +53,8 @@ namespace DataWF.Module.Common
         public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
         public static readonly DBColumn AuthTokenKey = DBTable.ParseProperty(nameof(AuthType));
 
-        private static SmtpSetting config;
         private static readonly UserPasswordSpec PasswordSpec = UserPasswordSpec.Lenght6 | UserPasswordSpec.CharSpecial | UserPasswordSpec.CharNumbers;
-
+        public const string AuthenticationScheme = "Bearer";
 
         public static User GetByEmail(string email)
         {
@@ -70,91 +71,68 @@ namespace DataWF.Module.Common
             return DBTable.LoadByCode(Environment.UserName);
         }
 
-        public static async Task StartSession(User value)
+        public static async Task RegisterSession(User user, LoginModel login = null)
         {
-            if (value != null)
+            if (user == null || user.LogStart != null)
             {
-                if (value.LogStart == null)
-                {
-                    await UserReg.LogUser(value, UserRegType.Authorization, "GetUser");
-                }
+                return;
             }
+            var text = login == null ? $"Login:{user.EMail}" : $"Login:{user.EMail}\nPlatform:{login.Platform}\nApp:{login.Application}\nVersion:{login.Version}";
+            await UserReg.LogUser(user, UserRegType.Authorization, text);
         }
 
-        public static async Task<User> StartSession(string login, string password)
+        public static Task<User> StartSession(string login, string password)
         {
-            var user = await GetUser(login, Helper.GetSha512(password));
-            await StartSession(user ?? throw new KeyNotFoundException("User not found!"));
-            return user;
-        }
-
-        public static Task<User> StartSession(string email, SecureString password)
-        {
-            return StartSession(new NetworkCredential(email, password));
+            return StartSession(new LoginModel { Email = login, Password = password, Platform = "unknown", Application = "unknown", Version = "1.0.0.0" });
         }
 
         public static async Task<User> StartSession(string email)
         {
-            var user = GetByEmail(email);
+            var user = GetByEmail(email) ?? GetByLogin(email);
             if (user == null || user.Status == DBStatus.Archive || user.Status == DBStatus.Error)
+            {
                 throw new KeyNotFoundException("User not found!");
-            await StartSession(user);
+            }
+
+            await RegisterSession(user);
             return user;
         }
 
-        public static void ChangePassword(User user, string password)
+        public static async Task<User> StartSession(LoginModel login)
         {
-            if (config == null)
-            {
-                config = SmtpSetting.Load();
-            }
-            user.Password = Helper.Decript(password, config.PassKey);
-        }
-
-        public static async Task<User> StartSession(NetworkCredential credentials)
-        {
-            if (config == null)
-            {
-                config = SmtpSetting.Load();
-            }
-            credentials.Password = Helper.Decript(credentials.Password, config.PassKey);
-            var user = GetByEmail(credentials.UserName);
-            if (user == null)
-            {
-                user = GetByLogin(credentials.UserName);
-            }
-
+            var user = GetByEmail(login.Email) ?? GetByLogin(login.Email);
             if (user == null || user.Status == DBStatus.Archive || user.Status == DBStatus.Error)
             {
                 throw new KeyNotFoundException("User not found!");
             }
+            var password = Helper.Decript(login.Password, SMTPSetting.Current.PassKey);
 
             if (user.AuthType == UserAuthType.SMTP)
             {
                 using (var smtpClient = new SmtpClient { Timeout = 20000 })
                 {
                     smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
-                    smtpClient.Connect(config.Host, config.Port, config.SSL);
-                    smtpClient.Authenticate(credentials);
+                    smtpClient.Connect(SMTPSetting.Current.Host, SMTPSetting.Current.Port, SMTPSetting.Current.SSL);
+                    smtpClient.Authenticate(user.EMail, password);
                 }
             }
             else if (user.AuthType == UserAuthType.LDAP)
             {
                 var address = new System.Net.Mail.MailAddress(user.EMail);
                 var domain = address.Host.Substring(0, address.Host.IndexOf('.'));
-                if (!LdapHelper.ValidateUser(domain, address.User, credentials.Password))
+                if (!LdapHelper.ValidateUser(domain, address.User, login.Password))
                 {
                     throw new Exception("Authentication fail!");
                 }
             }
             else
             {
-                if (!user.Password.Equals(Helper.GetSha512(credentials.Password), StringComparison.Ordinal))
+                if (!user.Password.Equals(Helper.GetSha512(password), StringComparison.Ordinal))
                 {
                     throw new Exception("Authentication fail!");
                 }
             }
-            await StartSession(user);
+            await RegisterSession(user, login);
 
             return user;
         }
@@ -234,6 +212,124 @@ namespace DataWF.Module.Common
             }
 
             return user;
+        }
+
+        [ControllerMethod(true)]
+        public static async Task<TokenModel> LoginIn(LoginModel login)
+        {
+            var user = await StartSession(login);
+            user.AccessToken = CreateAccessToken(user);
+            user.RefreshToken = login.Online ? CreateRefreshToken(user) : null;
+            await user.Save(user);
+            return new TokenModel
+            {
+                Email = user.EMail,
+                AccessToken = user.AccessToken,
+                RefreshToken = user.RefreshToken
+            };
+        }
+
+        [ControllerMethod(true)]
+        public static async Task<TokenModel> ReLogin(TokenModel token)
+        {
+            var user = await StartSession(token.Email);
+
+            if (user.RefreshToken == null || token.RefreshToken == null)
+            {
+                throw new Exception("Refresh token not found.");
+            }
+            else if (!user.RefreshToken.Equals(token.RefreshToken, StringComparison.Ordinal))
+            {
+                throw new Exception("Refresh token is invalid.");
+            }
+
+            token.AccessToken =
+                user.AccessToken = CreateAccessToken(user);
+            await user.Save(user);
+            return token;
+        }
+
+        [ControllerMethod]
+        public static async Task<TokenModel> LoginOut(TokenModel token, DBTransaction transaction)
+        {
+            var user = GetByEmail(token.Email) ?? GetByLogin(token.Email);
+            if (user != transaction.Caller)
+            {
+                throw new Exception("Invalid Arguments!");
+            }
+            token.AccessToken =
+                token.RefreshToken =
+            user.AccessToken =
+                user.RefreshToken = null;
+            await user.Save(transaction);
+            return token;
+        }
+
+        [ControllerMethod]
+        public static async Task<bool> ChangePassword(LoginModel login, DBTransaction transaction)
+        {
+            var user = GetByEmail(login.Email) ?? GetByLogin(login.Email);
+            if (user == null)
+            {
+                throw new KeyNotFoundException($"User with Login\\Email {login.Email} not Found!");
+            }
+
+            if (user != transaction.Caller)
+            {
+                if (!user.Access.GetFlag(AccessType.Admin, transaction.Caller)
+                    && !user.Table.Access.GetFlag(AccessType.Admin, transaction.Caller))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            user.Password = Helper.Decript(login.Password, SMTPSetting.Current.PassKey);
+            await user.Save(transaction);
+            return true;
+        }
+
+        [ControllerMethod(true)]
+        public async Task<UserApplication> Register(UserApplication application)
+        {
+            await application.Save((IUserIdentity)null);
+            return application;
+        }
+
+        private static string CreateRefreshToken(User user)
+        {
+            return Helper.GetSha256(user.EMail + Guid.NewGuid().ToString());
+        }
+
+        private static string CreateAccessToken(User user)
+        {
+            var identity = GetIdentity(user);
+            var now = DateTime.UtcNow;
+
+            var jwt = new JwtSecurityToken(
+                    issuer: JwtSetting.Current.ValidIssuer,
+                    audience: JwtSetting.Current.ValidAudience,
+                    notBefore: now,
+                    expires: now.AddMinutes(JwtSetting.Current.LifeTime),
+                    claims: identity.Claims,
+                    signingCredentials: JwtSetting.Current.SigningCredentials);
+            var jwthandler = new JwtSecurityTokenHandler();
+            return jwthandler.WriteToken(jwt);
+        }
+
+        private static ClaimsIdentity GetIdentity(User user)
+        {
+            var claimsIdentity = new ClaimsIdentity(
+                identity: user,
+                claims: GetClaims(user),
+                authenticationType: AuthenticationScheme,
+                nameType: JwtRegisteredClaimNames.NameId,
+                roleType: "");
+            return claimsIdentity;
+        }
+
+        private static IEnumerable<Claim> GetClaims(User person)
+        {
+            yield return new Claim(ClaimTypes.Name, person.EMail);
+            yield return new Claim(ClaimTypes.Email, person.EMail);
         }
 
         protected bool online = false;

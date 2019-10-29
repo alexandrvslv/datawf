@@ -27,7 +27,7 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Common
 {
 
-    [DataContract, Table("rposition", "User")]
+    [Table("rposition", "User")]
     public class Position : DBGroupItem
     {
         public static readonly DBTable<Position> DBTable = GetTable<Position>();

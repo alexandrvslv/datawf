@@ -23,7 +23,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [DataContract, Table("dstats", "Reference Book")]
+    [Table("dstats", "Reference Book")]
     public class Statistic : DBItem//, IComparable
     {
         public static readonly DBTable<Statistic> DBTable = GetTable<Statistic>();

@@ -1697,6 +1697,11 @@ namespace DataWF.Data
 
         }
 
+        public string GetLink()
+        {
+            return $"{ProtocolSetting.Current.Protocol}://{ProtocolSetting.Current.Host}/{GetType().Name}/{PrimaryId}";
+        }
+
     }
 }
 

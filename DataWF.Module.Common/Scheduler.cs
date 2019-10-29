@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 namespace DataWF.Module.Common
 {
 
-    [DataContract, Table("rscheduler", "Reference Book", BlockSize = 20)]
+    [Table("rscheduler", "Reference Book", BlockSize = 20)]
     public class Scheduler : DBItem//, IComparable
     {
         public static readonly DBTable<Scheduler> DBTable = GetTable<Scheduler>();

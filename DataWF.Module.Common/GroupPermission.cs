@@ -39,7 +39,7 @@ namespace DataWF.Module.Common
         GTypeMember
     }
 
-    [DataContract, Table("rgroup_permission", "User", BlockSize = 500)]
+    [Table("rgroup_permission", "User", BlockSize = 500)]
     public class GroupPermission : DBGroupItem
     {
         private object target;

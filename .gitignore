@@ -16,3 +16,4 @@ packages/
 .vs/
 .vscode/
 DataWF.Test.Web.Service/Controllers/
+Package/

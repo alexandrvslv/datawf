@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <OutputType>Library</OutputType>
+    <RootNamespace>DataWF.WebClient.Common</RootNamespace>
+    <AssemblyName>DataWF.WebClient.Common</AssemblyName>
+    <TargetFrameworks>netstandard2.0;netcoreapp2.2;net461</TargetFrameworks>
+    <LangVersion>7.1</LangVersion>
+    <Platforms>AnyCPU</Platforms>
+        
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;NETSTANDARD2_0</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <DefineConstants>TRACE;NETSTANDARD2_0</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Brotli.NET" Version="2.0.4.2" />    
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+  </ItemGroup>
+</Project>

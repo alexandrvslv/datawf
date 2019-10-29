@@ -67,31 +67,45 @@ namespace DataWF.Common
         {
             if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => m.Key == "module"))
             {
-                foreach (var item in e.LoadedAssembly.GetExportedTypes())
+                try
                 {
-                    if (TypeHelper.IsInterface(item, typeof(IModuleInitialize)))
+                    foreach (var item in e.LoadedAssembly.GetExportedTypes())
                     {
-                        try
+                        if (TypeHelper.IsInterface(item, typeof(IModuleInitialize)))
                         {
-                            var imodule = (IModuleInitialize)EmitInvoker.CreateObject(item);
-                            ModuleInitializer.Add(imodule);
-                        }
-                        catch (Exception ex)
-                        {
-                            Helper.OnException(ex);
+                            try
+                            {
+                                var imodule = (IModuleInitialize)EmitInvoker.CreateObject(item);
+                                ModuleInitializer.Add(imodule);
+                            }
+                            catch (Exception ex)
+                            {
+                                Helper.OnException(ex);
+                            }
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
                 }
             }
             if (!e.LoadedAssembly.IsDynamic && !e.LoadedAssembly.GetName().Name.StartsWith("System", StringComparison.Ordinal))
             {
-                foreach (var item in e.LoadedAssembly.GetExportedTypes())
+                try
                 {
-                    var invoker = item.GetCustomAttribute<InvokerAttribute>();
-                    if (invoker != null)
+                    foreach (var item in e.LoadedAssembly.GetExportedTypes())
                     {
-                        EmitInvoker.RegisterInvoker(item, invoker);
+                        var invoker = item.GetCustomAttribute<InvokerAttribute>();
+                        if (invoker != null)
+                        {
+                            EmitInvoker.RegisterInvoker(item, invoker);
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
                 }
             }
         }

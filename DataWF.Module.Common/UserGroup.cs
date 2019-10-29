@@ -27,7 +27,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [DataContract, Table("rgroup", "User", BlockSize = 10)]
+    [Table("rgroup", "User", BlockSize = 10)]
     public class UserGroup : DBGroupItem, IDisposable, IAccessGroup
     {
         public static readonly DBTable<UserGroup> DBTable = GetTable<UserGroup>();

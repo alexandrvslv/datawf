@@ -46,11 +46,11 @@ namespace DataWF.Module.Common
         BySession
     }
 
-    [DataContract, Table("duser_log", "User", BlockSize = 500, IsLoging = false)]
+    [Table("duser_log", "User", BlockSize = 500, IsLoging = false)]
     public class UserReg : DBUserReg
     {
         public static UserRegStrategy LogStrategy = UserRegStrategy.BySession;
-        
+
         public static readonly DBTable<UserReg> DBTable = GetTable<UserReg>();
         public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(UserId));
         public static readonly DBColumn RegTypeKey = DBTable.ParseProperty(nameof(RegType));
@@ -70,7 +70,7 @@ namespace DataWF.Module.Common
             RowLoging?.Invoke(null, arg);
             if (user != null && user.LogStart == null)
             {
-                await Common.User.StartSession(user);
+                await Common.User.RegisterSession(user);
             }
             var userLog = user?.LogStart;
 
@@ -100,7 +100,7 @@ namespace DataWF.Module.Common
 
         public UserReg()
         { }
-        
+
         public override long? Id
         {
             get => GetValue<long?>(Table.PrimaryKey);
@@ -120,8 +120,10 @@ namespace DataWF.Module.Common
             set => SetReference(user = value, UserKey);
         }
 
-        public override DBUser DBUser { get => User; set => User = (User)value; }
-
+        public override DBUser DBUser
+        {
+            get => User; set => User = (User)value;
+        }
 
         [Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
         public UserRegType? RegType
@@ -196,7 +198,7 @@ namespace DataWF.Module.Common
         //    return listmap;
         //}
 
-        public static async Task LogUser(User user, UserRegType type, string info)
+        public static async Task<UserReg> LogUser(User user, UserRegType type, string info)
         {
             var newLog = new UserReg()
             {
@@ -219,6 +221,7 @@ namespace DataWF.Module.Common
 
             newLog.TextData = info;
             await newLog.Save(user);
+            return newLog;
         }
 
 

@@ -168,7 +168,7 @@ namespace DataWF.Module.CommonGui
                 }
                 else
                 {
-                    await User.StartSession(row);
+                    await User.RegisterSession(row);
                     GuiEnvironment.User = row;
                     //row ["session_start"] = DateTime.Now;
                     if (!row.Super.GetValueOrDefault())

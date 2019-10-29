@@ -1,4 +1,4 @@
-﻿using DataWF.Web.Common;
+﻿using DataWF.WebService.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
