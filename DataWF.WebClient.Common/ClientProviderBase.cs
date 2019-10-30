@@ -8,6 +8,15 @@ namespace DataWF.Common
         private static readonly Dictionary<Type, ICRUDClient> crudClients = new Dictionary<Type, ICRUDClient>();
         private static readonly Dictionary<Type, Dictionary<int, ICRUDClient>> crudTypedClients = new Dictionary<Type, Dictionary<int, ICRUDClient>>();
         private readonly SelectableList<IClient> clients = new SelectableList<IClient>();
+        public static ICRUDClient<T> Get<T>()
+        {
+            return (ICRUDClient<T>)Get(typeof(T));
+        }
+
+        public static ICRUDClient Get(Type type)
+        {
+            return crudClients.TryGetValue(type, out var crudClient) ? crudClient : null;
+        }
 
         public ClientProviderBase()
         {
