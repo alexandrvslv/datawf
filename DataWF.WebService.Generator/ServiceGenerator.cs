@@ -102,6 +102,7 @@ namespace DataWF.WebService.Generator
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
+                    Console.WriteLine($"Warning: Can't GetExportedTypes of {assembly}");
                     continue;
                 }
 
@@ -576,7 +577,7 @@ namespace DataWF.WebService.Generator
             if (table.Attribute.IsLoging)
             {
                 var logItemName = itemType.Name + "Log";
-                var logItemType = TypeHelper.ParseType(logItemName)?.FullName ?? logItemName;
+                var logItemType = (Mode & CodeGeneratorMode.Logs) != 0 ? logItemName : TypeHelper.ParseType(logItemName)?.FullName;
                 //AddUsing(logItemType, usings);
                 baseName = $"Base{(table.FileKey != null ? "File" : "Logged")}Controller<{itemType.Name}, {primaryKeyType.Name}, {logItemType}>";
             }
