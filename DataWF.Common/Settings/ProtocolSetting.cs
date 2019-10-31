@@ -13,6 +13,6 @@ namespace DataWF.Common
 
         public string Protocol { get; set; } = "datawf";
 
-        public string Host { get; set; } = "default";
+        public string Host { get; set; } = "default.net";
     }
 }

@@ -1697,9 +1697,13 @@ namespace DataWF.Data
 
         }
 
-        public string GetLink()
+        public LinkModel GetLink()
         {
-            return $"{ProtocolSetting.Current.Protocol}://{ProtocolSetting.Current.Host}/{GetType().Name}/{PrimaryId}";
+            return new LinkModel
+            {
+                ProtocolLink = $"{ProtocolSetting.Current.Protocol}://{ProtocolSetting.Current.Host}/{GetType().Name}/{PrimaryId}",
+                WebLink = $"http://{ProtocolSetting.Current.Host}/api/{GetType().Name}/{PrimaryId}",
+            };
         }
 
     }
