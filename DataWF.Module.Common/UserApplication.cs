@@ -34,6 +34,7 @@ namespace DataWF.Module.Common
         public static readonly DBColumn TypeKey = DBTable.ParseProperty(nameof(Type));
         public static readonly DBColumn EMailKey = DBTable.ParseProperty(nameof(EMail));
         public static readonly DBColumn PasswordKey = DBTable.ParseProperty(nameof(Password));
+        public static readonly DBColumn TemporaryPasswordKey = DBTable.ParseProperty(nameof(TemporaryPassword));
         public static readonly DBColumn EmailVerifiedKey = DBTable.ParseProperty(nameof(EmailVerified));
         public static readonly DBColumn PhoneKey = DBTable.ParseProperty(nameof(Phone));
         public static readonly DBColumn PhoneVerifiedKey = DBTable.ParseProperty(nameof(PhoneVerified));
@@ -79,6 +80,13 @@ namespace DataWF.Module.Common
         {
             get => GetValue<string>(PasswordKey);
             set => SetValue(value, PasswordKey);
+        }
+
+        [Column("temp_password")]//Index("duser_request_email", true)
+        public string TemporaryPassword
+        {
+            get => GetValue<string>(TemporaryPasswordKey);
+            set => SetValue(value, TemporaryPasswordKey);
         }
 
         [Column("email_verified", Keys = DBColumnKeys.System), DefaultValue(false)]
@@ -158,16 +166,28 @@ namespace DataWF.Module.Common
             set => SetReference(user = value, UserKey);
         }
 
+        [ControllerMethod(true)]
+        public static async Task<UserApplication> Register(UserApplication application)
+        {
+            await application.Save((IUserIdentity)null);
+            return application;
+        }
+
         [ControllerMethod]
         public async Task<UserApplication> Approve(DBTransaction transaction)
         {
+            var caller = transaction.Caller as User;
+            if (caller == null || User.DBTable.Access.GetFlag(AccessType.Admin, caller))
+            {
+                throw new UnauthorizedAccessException("Approving. Required administrators permission!");
+            }
             if (Type == UserApplicationType.NewAccount)
             {
                 if (User != null)
                 {
-                    throw new InvalidOperationException($"User already exist!");
+                    throw new InvalidOperationException($"User already Registered!");
                 }
-                if (Status == DBStatus.Error)
+                if (Status == DBStatus.Error || Status == DBStatus.Delete)
                 {
                     throw new InvalidOperationException($"Application is Rejected!");
                 }
@@ -197,7 +217,50 @@ namespace DataWF.Module.Common
                 Status = DBStatus.Archive;
                 await Save(transaction);
             }
+            else if (Type == UserApplicationType.ResetPassword)
+            {
+                if (Status == DBStatus.Archive)
+                {
+                    throw new InvalidOperationException($"Application is Closed!");
+                }
+                if (Status == DBStatus.Error || Status == DBStatus.Delete)
+                {
+                    throw new InvalidOperationException($"Application is Rejected!");
+                }
+                var user = User.GetByEmail(EMail);
+                if (user == null)
+                {
+                    throw new InvalidOperationException($"Application is Closed!");
+                }
+                var (company, department, position) = CheckValues(transaction);
+                if (user.Company != company)
+                {
+                    throw new InvalidOperationException($"Wrong Company spefied in Application!");
+                }
+                if (user.Department != department)
+                {
+                    throw new InvalidOperationException($"Wrong Department spefied in Application!");
+                }
+                if (user.Position != position)
+                {
+                    throw new InvalidOperationException($"Wrong Position spefied in Application!");
+                }
+                TemporaryPassword = GeneratePassword();
+                
+                user.Password = TemporaryPassword;
+                user.IsTemporaryPassword = true;
+                await user.Save(transaction);
+
+                User = user;
+                Status = DBStatus.Archive;
+                await Save(transaction);
+            }
             return this;
+        }
+
+        private string GeneratePassword()
+        {
+            return "Test123!";
         }
 
         [ControllerMethod]

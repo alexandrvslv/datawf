@@ -46,6 +46,7 @@ namespace DataWF.Module.Common
         public static readonly DBColumn EmailKey = DBTable.ParseProperty(nameof(EMail));
         public static readonly DBColumn PhoneKey = DBTable.ParseProperty(nameof(Phone));
         public static readonly DBColumn PasswordKey = DBTable.ParseProperty(nameof(Password));
+        public static readonly DBColumn IsTemporaryPasswordKey = DBTable.ParseProperty(nameof(IsTemporaryPassword));
         public static readonly DBColumn SuperKey = DBTable.ParseProperty(nameof(Super));
         public static readonly DBColumn RefreshTokenKey = DBTable.ParseProperty(nameof(RefreshToken));
         public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
@@ -137,7 +138,7 @@ namespace DataWF.Module.Common
             return user;
         }
 
-        public static string ValidateText(User User, string password, bool checkOld)
+        public static string ValidateText(User User, string password)
         {
             string message = string.Empty;
             if (password == null)
@@ -175,7 +176,7 @@ namespace DataWF.Module.Common
                 }
             }
 
-            if (checkOld)
+            if (PasswordSpec.HasFlag(UserPasswordSpec.CheckOld))
             {
                 string encoded = Helper.GetSha512(password);
                 foreach (var item in GetOld(User))
@@ -287,13 +288,6 @@ namespace DataWF.Module.Common
             return true;
         }
 
-        [ControllerMethod(true)]
-        public async Task<UserApplication> Register(UserApplication application)
-        {
-            await application.Save((IUserIdentity)null);
-            return application;
-        }
-
         private static string CreateRefreshToken(User user)
         {
             return Helper.GetSha256(user.EMail + Guid.NewGuid().ToString());
@@ -364,7 +358,6 @@ namespace DataWF.Module.Common
             get => GetReference(CompanyKey, ref company);
             set => SetReference(company = value, CompanyKey);
         }
-
         public override string Login
         {
             get => GetValue<string>(Table.CodeKey);
@@ -391,7 +384,6 @@ namespace DataWF.Module.Common
             get => GetValue<int?>(DepartmentKey);
             set => SetValue(value, DepartmentKey);
         }
-
 
         [Reference(nameof(DepartmentId))]
         public Department Department
@@ -458,20 +450,29 @@ namespace DataWF.Module.Common
             set => Status = value ? DBStatus.Actual : DBStatus.Error;
         }
 
+        public bool? IsTemporaryPassword
+        {
+            get => GetValue<bool?>(IsTemporaryPasswordKey);
+            set => SetValue(value, IsTemporaryPasswordKey);
+        }
+
         [Column("password", 512, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
         public string Password
         {
             get => GetValue<string>(PasswordKey);
             set
             {
-                if (value == null || value.Length == 40)
+                if (value == null)
                 {
-                    SetProperty(value);
+                    SetValue(value, PasswordKey);
                     return;
                 }
-                var rez = ValidateText(this, value, false);
-                if (rez.Length > 0)
+                var rez = ValidateText(this, value);
+                if (!string.IsNullOrEmpty(rez))
+                {
                     throw new ArgumentException(rez);
+                }
+                IsTemporaryPassword = false;
                 SetValue(Helper.GetSha512(value), PasswordKey);
             }
         }
@@ -564,6 +565,7 @@ namespace DataWF.Module.Common
         Lenght6 = 128,
         Lenght8 = 256,
         Lenght10 = 512,
+        CheckOld = 1024,
     }
 
     public enum UserAuthType
