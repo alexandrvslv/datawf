@@ -17,16 +17,13 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
 
 namespace DataWF.Data
 {
-    [AttributeUsage(AttributeTargets.Method)]
-    public class ControllerMethodAttribute : Attribute
+    public enum ControllerParameterType
     {
-        public ControllerMethodAttribute()
-        { }
-
-        public bool Anonymous { get; set; }
+        Route,
+        Query,
+        Body
     }
 }

@@ -166,8 +166,8 @@ namespace DataWF.Module.Common
             set => SetReference(user = value, UserKey);
         }
 
-        [ControllerMethod(true)]
-        public static async Task<UserApplication> Register(UserApplication application)
+        [ControllerMethod(Anonymous = true)]
+        public static async Task<UserApplication> Register([ControllerParameter(ControllerParameterType.Body)]UserApplication application)
         {
             await application.Save((IUserIdentity)null);
             return application;
@@ -246,7 +246,7 @@ namespace DataWF.Module.Common
                     throw new InvalidOperationException($"Wrong Position spefied in Application!");
                 }
                 TemporaryPassword = GeneratePassword();
-                
+
                 user.Password = TemporaryPassword;
                 user.IsTemporaryPassword = true;
                 await user.Save(transaction);
@@ -271,7 +271,7 @@ namespace DataWF.Module.Common
             return this;
         }
 
-        [ControllerMethod(true)]
+        [ControllerMethod(Anonymous = true)]
         public async Task<bool> EmailVerification(DBTransaction transaction)
         {
             EmailVerified = true;

@@ -215,7 +215,7 @@ namespace DataWF.Module.Common
             return user;
         }
 
-        [ControllerMethod(true)]
+        [ControllerMethod(Anonymous = true)]
         public static async Task<TokenModel> LoginIn(LoginModel login)
         {
             var user = await StartSession(login);
@@ -230,7 +230,7 @@ namespace DataWF.Module.Common
             };
         }
 
-        [ControllerMethod(true)]
+        [ControllerMethod(Anonymous = true)]
         public static async Task<TokenModel> ReLogin(TokenModel token)
         {
             var user = await StartSession(token.Email);

@@ -902,7 +902,7 @@ namespace DataWF.WebService.Generator
 
         private IEnumerable<AttributeListSyntax> GenControllerMethodAttributes(MethodInfo method, List<MethodParametrInfo> parametersList, ControllerMethodAttribute attribute)
         {
-            if (attribute.AllowAnonymous)
+            if (attribute.Anonymous)
             {
                 yield return SF.AttributeList(
                          SF.SingletonSeparatedList(
@@ -1100,18 +1100,28 @@ namespace DataWF.WebService.Generator
 
         private IEnumerable<AttributeListSyntax> GenParameterAttributes(MethodParametrInfo methodParameter = null)
         {
-            if (methodParameter == null
+            var type = methodParameter == null
                 || methodParameter.Type.IsValueType
-                || methodParameter.Type == typeof(string))
+                || methodParameter.Type == typeof(string)
+                ? ControllerParameterType.Route
+                : ControllerParameterType.Body;
+            if (methodParameter?.Attribute != null)
+                type = methodParameter.Attribute.Type;
+            if (type == ControllerParameterType.Route)
                 yield return SF.AttributeList(
                              SF.SingletonSeparatedList(
                              SF.Attribute(
                              SF.IdentifierName("FromRoute"))));
-            else
+            else if (type == ControllerParameterType.Body)
                 yield return SF.AttributeList(
                              SF.SingletonSeparatedList(
                              SF.Attribute(
                              SF.IdentifierName("FromBody"))));
+            else if (type == ControllerParameterType.Query)
+                yield return SF.AttributeList(
+                             SF.SingletonSeparatedList(
+                             SF.Attribute(
+                             SF.IdentifierName("FromQuery"))));
         }
 
         private void AddUsing(Type type, Dictionary<string, UsingDirectiveSyntax> usings)
@@ -1203,6 +1213,8 @@ namespace DataWF.WebService.Generator
         public Type Type { get; internal set; }
         public TableGenerator Table { get; internal set; }
         public string ValueName { get; internal set; }
+        public ControllerParameterAttribute Attribute { get; private set; }
+
         public ParameterInfo Info
         {
             get => info;
@@ -1211,7 +1223,9 @@ namespace DataWF.WebService.Generator
                 info = value;
                 Type = info?.ParameterType;
                 ValueName = info?.Name;
-                if (TypeHelper.IsBaseType(Type, typeof(DBItem)))
+                Attribute = Info.GetCustomAttribute<ControllerParameterAttribute>();
+                if (TypeHelper.IsBaseType(Type, typeof(DBItem))
+                    && (Attribute == null || Attribute.Type != ControllerParameterType.Body))
                 {
                     Table = DBTable.GetTableAttribute(Type);
                     var primaryKey = Table?.PrimaryKey;

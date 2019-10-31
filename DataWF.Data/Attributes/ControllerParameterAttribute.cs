@@ -21,12 +21,14 @@ using System;
 
 namespace DataWF.Data
 {
-    [AttributeUsage(AttributeTargets.Method)]
-    public class ControllerMethodAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Parameter)]
+    public class ControllerParameterAttribute : Attribute
     {
-        public ControllerMethodAttribute()
-        { }
+        public ControllerParameterAttribute(ControllerParameterType type)
+        {
+            Type = type;
+        }
 
-        public bool Anonymous { get; set; }
+        public ControllerParameterType Type { get; }
     }
 }

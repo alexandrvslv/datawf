@@ -58,7 +58,6 @@ namespace DataWF.WebService.Common
             }
         }
 
-        [AllowAnonymous]
         [HttpGet("GetLink/{id}")]
         public ActionResult<LinkModel> GetLink([FromRoute]K id)
         {
