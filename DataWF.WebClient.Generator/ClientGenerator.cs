@@ -1274,7 +1274,15 @@ namespace DataWF.WebClient.Generator
         {
             if (!isOverride)
             {
-                yield return SF.ParseStatement($"if({GetFieldName(property)} == value) return;");
+                var type = GetTypeString(property, true, "SelectableList");
+                if (type.Equals("string", StringComparison.Ordinal))
+                {
+                    yield return SF.ParseStatement($"if(string.Equals({GetFieldName(property)}, value, StringComparison.Ordinal)) return;");
+                }
+                else
+                {
+                    yield return SF.ParseStatement($"if({GetFieldName(property)} == value) return;");
+                }
                 yield return SF.ParseStatement($"var temp = {GetFieldName(property)};");
                 yield return SF.ParseStatement($"{GetFieldName(property)} = value;");
                 var refPropertyName = (object)null;
