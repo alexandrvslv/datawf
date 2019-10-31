@@ -338,18 +338,6 @@ namespace DataWF.WebService.Generator
                            identifier: SF.Identifier("DBLogTable"),
                            argumentList: null,
                            initializer: SF.EqualsValueClause(SF.ParseExpression($"GetTable<{table.ItemType.Name}>().LogTable"))))));
-                //yield return SF.PropertyDeclaration(
-                //    attributeLists: SF.List<AttributeListSyntax>(),
-                //    modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword) }),
-                //    type: SF.ParseTypeName(nameof(IDBLogTable)),
-                //    explicitInterfaceSpecifier: null,
-                //    identifier: SF.Identifier("DBLogTable"),
-                //    accessorList: null,
-                //    expressionBody: SF.ArrowExpressionClause(
-                //        SF.ParseExpression($"_dbLogTable ?? (_dbLogTable = GetTable<{table.ItemType.Name}>().LogTable)")),
-                //    initializer: null,
-                //    semicolonToken: SF.Token(SyntaxKind.SemicolonToken)
-                //   );
             }
             var columns = GetLogColumns(table, itemType);
 
@@ -357,10 +345,6 @@ namespace DataWF.WebService.Generator
             {
                 yield return GenKeyField(column, table, itemType);
             }
-            //foreach (var column in columns)
-            //{
-            //    yield return GenKeyProperty(column, table, itemType);
-            //}
             foreach (var column in columns)
             {
                 foreach (var property in GenLogProperty(column, table, itemType, usings))
