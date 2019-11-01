@@ -56,10 +56,13 @@ namespace DataWF.Common
         public AccessType GetFlags(IUserIdentity user)
         {
             var data = AccessType.None;
-            foreach (IAccessGroup group in user.Groups)
+            if (user != null)
             {
-                var item = Get(group);
-                data |= item.Access;
+                foreach (IAccessGroup group in user.Groups)
+                {
+                    var item = Get(group);
+                    data |= item.Access;
+                }
             }
             return data;
         }
