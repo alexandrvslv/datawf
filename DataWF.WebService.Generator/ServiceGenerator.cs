@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -73,7 +74,7 @@ namespace DataWF.WebService.Generator
                         var assembly = (Assembly)null;
                         try
                         {
-                            assembly = Assembly.LoadFrom(file);
+                            AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
                         }
                         catch (Exception ex) { Helper.OnException(ex); }
                         if (assembly != null)
@@ -82,7 +83,7 @@ namespace DataWF.WebService.Generator
                 }
                 else
                 {
-                    yield return Assembly.LoadFrom(fullPath);
+                    AssemblyLoadContext.Default.LoadFromAssemblyPath(fullPath);
                 }
             }
         }
