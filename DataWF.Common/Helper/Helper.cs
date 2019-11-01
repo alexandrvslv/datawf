@@ -31,6 +31,22 @@ namespace DataWF.Common
         }
     }
 
+    [Flags]
+    public enum PasswordSpec
+    {
+        None = 0,
+        CharNumbers = 2,
+        CharUppercase = 4,
+        CharLowercase = 8,
+        CharSpecial = 16,
+        CharRepet = 32,
+        Login = 64,
+        Lenght6 = 128,
+        Lenght8 = 256,
+        Lenght10 = 512,
+        CheckOld = 1024,
+    }
+
     public static class Helper
     {
         public static string AppName = "DataWF";
@@ -212,6 +228,43 @@ namespace DataWF.Common
             [FieldOffset(4)]
             public int High;
         }
+
+        public static string PasswordVerification(string password, string login = null, PasswordSpec specification = PasswordSpec.Lenght6 | PasswordSpec.CharSpecial | PasswordSpec.CharNumbers)
+        {
+            string message = string.Empty;
+            if (password == null)
+                return "Must be not NULL";
+            if (specification.HasFlag(PasswordSpec.Lenght6)
+                && password.Length < 6)
+                message += Locale.Get("Login", " Must be more than 6 characters long.");
+            if (specification.HasFlag(PasswordSpec.Lenght8)
+                && password.Length < 8)
+                message += Locale.Get("Login", " Must be more than 8 characters long.");
+            if (specification.HasFlag(PasswordSpec.Lenght10)
+                && password.Length < 10)
+                message += Locale.Get("Login", " Must be more than 10 characters long.");
+            if (specification.HasFlag(PasswordSpec.CharNumbers)
+                && !Regex.IsMatch(password, @"(?=.*\d)^.*", RegexOptions.CultureInvariant))
+                message += Locale.Get("Login", " Should contain a number.");
+            if (specification.HasFlag(PasswordSpec.CharUppercase)
+                && !Regex.IsMatch(password, @"(?=.*[A-Z])^.*", RegexOptions.CultureInvariant))
+                message += Locale.Get("Login", " Should contain a uppercase.");
+            if (specification.HasFlag(PasswordSpec.CharLowercase)
+                && !Regex.IsMatch(password, @"(?=.*[a-z])^.*", RegexOptions.CultureInvariant))
+                message += Locale.Get("Login", " Should contain a lowercase letters.");
+            if (specification.HasFlag(PasswordSpec.CharSpecial)
+                && !Regex.IsMatch(password, @"(?=.*[\W_])^.*", RegexOptions.CultureInvariant))
+                message += Locale.Get("Login", " Should contain a special character.");
+            if (specification.HasFlag(PasswordSpec.CharRepet)
+                && Regex.IsMatch(password, @"(.)\1{2,}", RegexOptions.CultureInvariant))
+                message += Locale.Get("Login", " Remove repeted characters.");
+            if (specification.HasFlag(PasswordSpec.Login)
+                && login != null
+                && password.IndexOf(login, StringComparison.OrdinalIgnoreCase) >= 0)
+                message += Locale.Get("Login", " Should not contain your Login.");
+            return message;
+        }
+
 
         public static StateInfoList Logs
         {

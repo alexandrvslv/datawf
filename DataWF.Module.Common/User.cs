@@ -54,7 +54,8 @@ namespace DataWF.Module.Common
         public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
         public static readonly DBColumn AuthTokenKey = DBTable.ParseProperty(nameof(AuthType));
 
-        private static readonly UserPasswordSpec PasswordSpec = UserPasswordSpec.Lenght6 | UserPasswordSpec.CharSpecial | UserPasswordSpec.CharNumbers;
+        private static readonly PasswordSpec PasswordSpecification = PasswordSpec.Lenght6 | PasswordSpec.CharSpecial | PasswordSpec.CharNumbers;
+
         public const string AuthenticationScheme = "Bearer";
 
         public static User GetByEmail(string email)
@@ -138,31 +139,10 @@ namespace DataWF.Module.Common
             return user;
         }
 
-        public static string ValidateText(User User, string password)
+        public static string ValidateText(User user, string password)
         {
-            string message = string.Empty;
-            if (password == null)
-                return message;
-            if (PasswordSpec.HasFlag(UserPasswordSpec.Lenght6) && password.Length < 6)
-                message += Locale.Get("Login", " Must be more than 6 characters long.");
-            if (PasswordSpec.HasFlag(UserPasswordSpec.Lenght8) && password.Length < 8)
-                message += Locale.Get("Login", " Must be more than 8 characters long.");
-            if (PasswordSpec.HasFlag(UserPasswordSpec.Lenght10) && password.Length < 10)
-                message += Locale.Get("Login", " Must be more than 10 characters long.");
-            if (PasswordSpec.HasFlag(UserPasswordSpec.CharNumbers) && !Regex.IsMatch(password, @"(?=.*\d)^.*", RegexOptions.CultureInvariant))
-                message += Locale.Get("Login", " Should contain a number.");
-            if (PasswordSpec.HasFlag(UserPasswordSpec.CharUppercase) && !Regex.IsMatch(password, @"(?=.*[A-Z])^.*", RegexOptions.CultureInvariant))
-                message += Locale.Get("Login", " Should contain a uppercase.");
-            if (PasswordSpec.HasFlag(UserPasswordSpec.CharLowercase) && !Regex.IsMatch(password, @"(?=.*[a-z])^.*", RegexOptions.CultureInvariant))
-                message += Locale.Get("Login", " Should contain a lowercase letters.");
-            if (PasswordSpec.HasFlag(UserPasswordSpec.CharSpecial) && !Regex.IsMatch(password, @"(?=.*[\W_])^.*", RegexOptions.CultureInvariant))
-                message += Locale.Get("Login", " Should contain a special character.");
-            if (PasswordSpec.HasFlag(UserPasswordSpec.CharRepet) && Regex.IsMatch(password, @"(.)\1{2,}", RegexOptions.CultureInvariant))
-                message += Locale.Get("Login", " Remove repeted characters.");
-            if (PasswordSpec.HasFlag(UserPasswordSpec.Login) && User.Login != null && password.IndexOf(User.Login, StringComparison.OrdinalIgnoreCase) >= 0)
-                message += Locale.Get("Login", " Should not contain your Login.");
-
-            var proc = User.Table.Schema?.Procedures["simple"];
+            string message = Helper.PasswordVerification(password, user.Login, PasswordSpecification);
+            var proc = User.DBTable.Schema?.Procedures["simple"];
             if (proc != null)
             {
                 string[] split = proc.Source.Split('\r', '\n');
@@ -176,10 +156,10 @@ namespace DataWF.Module.Common
                 }
             }
 
-            if (PasswordSpec.HasFlag(UserPasswordSpec.CheckOld))
+            if (PasswordSpecification.HasFlag(PasswordSpec.CheckOld))
             {
                 string encoded = Helper.GetSha512(password);
-                foreach (var item in GetOld(User))
+                foreach (var item in GetOld(user))
                 {
                     if (item.TextData == encoded)
                     {
@@ -337,7 +317,6 @@ namespace DataWF.Module.Common
         { }
 
         public UserReg LogStart { get; set; }
-
 
         public override int? Id
         {
@@ -552,21 +531,7 @@ namespace DataWF.Module.Common
         }
     }
 
-    [Flags]
-    public enum UserPasswordSpec
-    {
-        None = 0,
-        CharNumbers = 2,
-        CharUppercase = 4,
-        CharLowercase = 8,
-        CharSpecial = 16,
-        CharRepet = 32,
-        Login = 64,
-        Lenght6 = 128,
-        Lenght8 = 256,
-        Lenght10 = 512,
-        CheckOld = 1024,
-    }
+
 
     public enum UserAuthType
     {
