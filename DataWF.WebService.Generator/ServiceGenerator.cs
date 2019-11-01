@@ -102,7 +102,7 @@ namespace DataWF.WebService.Generator
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
-                    Console.WriteLine($"Warning: Can't GetExportedTypes of {assembly}");
+                    Console.WriteLine($"Warning: Can't GetExportedTypes of {assembly} {ex.Message}");
                     continue;
                 }
 
@@ -758,7 +758,9 @@ namespace DataWF.WebService.Generator
             AddUsing(method.DeclaringType, usings);
             AddUsing(method.ReturnType, usings);
 
-            var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
+            var returning = method.ReturnType == typeof(void) ? "void"
+                : attribute.ReturnHtml ? "IActionResult"
+                : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
             var modifiers = new List<SyntaxToken> { SF.Token(SyntaxKind.PublicKeyword) };
             var isAsync = TypeHelper.IsBaseType(method.ReturnType, typeof(Task));
             if (isAsync)
@@ -768,7 +770,10 @@ namespace DataWF.WebService.Generator
                 {
                     var returnType = method.ReturnType.GetGenericArguments().FirstOrDefault();
                     AddUsing(returnType, usings);
-                    returning = $"Task<ActionResult<{TypeHelper.FormatCode(returnType)}>>";
+                    if (attribute.ReturnHtml)
+                        returning = $"Task<IActionResult>";
+                    else
+                        returning = $"Task<ActionResult<{TypeHelper.FormatCode(returnType)}>>";
                 }
                 else
                 {
@@ -787,18 +792,19 @@ namespace DataWF.WebService.Generator
                           typeParameterList: null,
                           parameterList: SF.ParameterList(SF.SeparatedList(GenControllerMethodParameters(method, table, parametersInfo))),
                           constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                          body: SF.Block(GenControllerMethodBody(method, parametersInfo, returning)),
+                          body: SF.Block(GenControllerMethodBody(method, parametersInfo, returning, attribute)),
                           semicolonToken: SF.Token(SyntaxKind.None));
             // Annotate that this node should be formatted
             //.WithAdditionalAnnotations(Formatter.Annotation);
         }
 
-        private IEnumerable<StatementSyntax> GenControllerMethodBody(MethodInfo method, List<MethodParametrInfo> parametersInfo, string returning)
+        private IEnumerable<StatementSyntax> GenControllerMethodBody(MethodInfo method, List<MethodParametrInfo> parametersInfo, string returning, ControllerMethodAttribute attribute)
         {
             var isTransact = parametersInfo.Any(p => p.Info.ParameterType == typeof(DBTransaction));
             var isVoid = method.ReturnType == typeof(void);
             var returnType = method.ReturnType;
             var isAsync = TypeHelper.IsBaseType(method.ReturnType, typeof(Task));
+
             if (isAsync)
             {
                 returning = returning.Substring(5, returning.Length - 6);
@@ -878,7 +884,14 @@ namespace DataWF.WebService.Generator
 
                 if (!isVoid)
                 {
-                    yield return SF.ParseStatement($"return new {returning}(result);");
+                    if (attribute.ReturnHtml)
+                    {
+                        yield return SF.ParseStatement(@"return new ContentResult { ContentType = ""text/html"", Content = result };");
+                    }
+                    else
+                    {
+                        yield return SF.ParseStatement($"return new {returning}(result);");
+                    }
                 }
                 else
                 {

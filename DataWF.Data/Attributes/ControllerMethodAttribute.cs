@@ -28,5 +28,6 @@ namespace DataWF.Data
         { }
 
         public bool Anonymous { get; set; }
+        public bool ReturnHtml { get; set; }
     }
 }
