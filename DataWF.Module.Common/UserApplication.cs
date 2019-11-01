@@ -45,10 +45,10 @@ namespace DataWF.Module.Common
         public static readonly DBColumn DepartmentKey = DBTable.ParseProperty(nameof(Department));
         public static readonly DBColumn PositionKey = DBTable.ParseProperty(nameof(Position));
         public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(UserId));
-        public static event Func<UserApplication, Task> Created;
-        public static event Func<UserApplication, Task> Approved;
-        public static event Func<UserApplication, Task> Rejected;
-        public static event Func<UserApplication, Task> Verified;
+        public static Func<UserApplication, Task> Registered;
+        public static Func<UserApplication, Task> Approved;
+        public static Func<UserApplication, Task> Rejected;
+        public static Func<UserApplication, Task> Verified;
         private User user;
 
         public UserApplication()
@@ -169,7 +169,24 @@ namespace DataWF.Module.Common
         [ControllerMethod(Anonymous = true)]
         public static async Task<UserApplication> Register([ControllerParameter(ControllerParameterType.Body)]UserApplication application)
         {
+            if (Common.User.GetByEmail(application.EMail) != null)
+            {
+                throw new ArgumentException($"User with specified email: {application.EMail} already exist!", nameof(EMail));
+            }
+
+            using (var query = new QQuery(DBTable))
+            {
+                query.BuildParam(EMailKey, application.EMail);
+                query.BuildParam(TypeKey, (int)application.Type);
+                query.BuildParam(DBTable.StatusKey, CompareType.In, new[] { (int)DBStatus.Actual, (int)DBStatus.New });
+                var exist = DBTable.Load(query);
+                if (exist.Count() > 0)
+                {
+                    throw new ArgumentException($"Application with specified email: {application.EMail} already in process!", nameof(EMail));
+                }
+            }
             await application.Save((IUserIdentity)null);
+            _ = application.OnRegistered();
             return application;
         }
 
@@ -255,6 +272,7 @@ namespace DataWF.Module.Common
                 Status = DBStatus.Archive;
                 await Save(transaction);
             }
+            _ = OnAccepted();
             return this;
         }
 
@@ -268,48 +286,36 @@ namespace DataWF.Module.Common
         {
             Status = DBStatus.Error;
             await Save(transaction);
+            _ = OnRejected();
             return this;
         }
 
-        [ControllerMethod(Anonymous = true)]
-        public async Task<bool> EmailVerification(DBTransaction transaction)
+        [ControllerMethod(Anonymous = true, ReturnHtml = true)]
+        public async Task<string> EmailVerification(DBTransaction transaction)
         {
             EmailVerified = true;
             Status = DBStatus.Actual;
             await Save(transaction);
-            return true;
+            _ = OnVerified();
+            return @"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset = ""utf-8""/>
+    <title>Email Verification</title>
+ </head>
+ <body>
+     <H1>Email Verification Competed Successfully</H1>
+ </body>
+ </html> ";
         }
 
         protected override Task<bool> OnSaving(DBTransaction transaction)
         {
             if ((UpdateState & DBUpdateState.Insert) != 0)
             {
-                CheckValues(transaction);
+                //CheckValues(transaction);
             }
             return base.OnSaving(transaction);
-        }
-
-        public override void OnAccepting(IUserIdentity user)
-        {
-            if ((UpdateState & DBUpdateState.Insert) != 0)
-            {
-                _ = OnCreated();
-            }
-            else if (EmailVerified == true && IsChangedKey(EmailVerifiedKey))
-            {
-                _ = OnVerified();
-            }
-            else if (Status != null && IsChangedKey(Table.StatusKey))
-            {
-                if (Status == DBStatus.Archive)
-                {
-                    _ = OnAccepted();
-                }
-                else if (Status == DBStatus.Error || Status == DBStatus.Delete)
-                {
-                    _ = OnRejected();
-                }
-            }
         }
 
         private Task OnVerified()
@@ -327,9 +333,9 @@ namespace DataWF.Module.Common
             return Rejected?.Invoke(this);
         }
 
-        private Task OnCreated()
+        private Task OnRegistered()
         {
-            return Created?.Invoke(this);
+            return Registered?.Invoke(this);
         }
 
         private (Company company, Department department, Position position) CheckValues(DBTransaction transaction)
