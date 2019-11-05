@@ -74,16 +74,20 @@ namespace DataWF.WebService.Generator
                         var assembly = (Assembly)null;
                         try
                         {
-                            AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
+                            assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
                         }
-                        catch (Exception ex) { Helper.OnException(ex); }
+                        catch (Exception ex)
+                        {
+                            Helper.OnException(ex);
+                            Console.WriteLine($"Warning: Can't Load Assembly {file} {ex.Message}");
+                        }
                         if (assembly != null)
                             yield return assembly;
                     }
                 }
                 else
                 {
-                    AssemblyLoadContext.Default.LoadFromAssemblyPath(fullPath);
+                    yield return AssemblyLoadContext.Default.LoadFromAssemblyPath(fullPath);
                 }
             }
         }
