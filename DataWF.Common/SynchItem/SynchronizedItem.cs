@@ -12,7 +12,8 @@ namespace DataWF.Common
         New,
         Edit,
         Load,
-        Actual
+        Actual,
+        Suspend
     }
 
     public abstract class SynchronizedItem : DefaultItem, ISynchronized
