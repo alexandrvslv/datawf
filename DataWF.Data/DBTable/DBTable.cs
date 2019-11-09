@@ -886,7 +886,10 @@ namespace DataWF.Data
             if (rows.Count > 0)
             {
                 ListHelper.QuickSort(rows, new InvokerComparer(typeof(DBItem), nameof(DBItem.UpdateState)));
-
+                foreach (DBItem row in rows)
+                {
+                    transaction.AddItem(row);
+                }
                 foreach (DBItem row in rows)
                 {
                     await row.Save(transaction);
