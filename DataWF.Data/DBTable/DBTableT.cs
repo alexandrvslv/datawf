@@ -462,11 +462,11 @@ namespace DataWF.Data
             finally
             {
                 transaction.Reader = null;
-                RaiseLoadCompleate(transaction);
                 if (baseTransaction == null)
                 {
                     transaction.Dispose();
                 }
+                RaiseLoadCompleate(transaction);
             }
             return list;
         }

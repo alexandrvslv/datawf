@@ -27,7 +27,10 @@ namespace DataWF.WebService.Common
             {
                 var streamResult = await GetStream(id, transaction);
                 if (streamResult.Value.Stream == null)
+                {
+                    transaction.Dispose();
                     return streamResult.Result;
+                }
                 return new TransactFileStreamResult(streamResult.Value.Stream,
                     System.Net.Mime.MediaTypeNames.Application.Octet,
                     transaction, streamResult.Value.FileName);
@@ -250,16 +253,19 @@ namespace DataWF.WebService.Common
                 var logItem = (DBLogItem)table.LogTable?.LoadItemById(logId);
                 if (logItem == null)
                 {
+                    transaction.Dispose();
                     return NotFound();
                 }
                 if (!(logItem.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
                     && !(logItem.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
                 {
+                    transaction.Dispose();
                     return Forbid();
                 }
                 var fileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
                 if (fileName == null)
                 {
+                    transaction.Dispose();
                     return BadRequest($"Log with id {logId} no file name defined!");
                 }
 
@@ -278,7 +284,7 @@ namespace DataWF.WebService.Common
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
+                transaction.Dispose();
                 return BadRequest(ex);
             }
         }

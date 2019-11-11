@@ -214,7 +214,7 @@ namespace DataWF.Data
                 }
                 finally
                 {
-                    if (Connection.State == ConnectionState.Open)
+                    if (Connection.State != ConnectionState.Closed)
                     {
                         Connection.Close();
                     }
