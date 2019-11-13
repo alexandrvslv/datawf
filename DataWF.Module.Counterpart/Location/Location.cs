@@ -47,10 +47,12 @@ namespace DataWF.Module.Counterpart
         private static DBColumn codeIKey = DBColumn.EmptyKey;
         private static DBColumn nameENKey = DBColumn.EmptyKey;
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBColumn externalIdKey = DBColumn.EmptyKey;
 
         public static DBColumn CodeIKey => DBTable.ParseProperty(nameof(CodeI), ref codeIKey);
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
+        public static DBColumn ExternalIdKey => DBTable.ParseProperty(nameof(ExternalId), ref externalIdKey);
         public static DBTable<Location> DBTable => dbTable ?? (dbTable = GetTable<Location>());
 
         public Location()
@@ -116,6 +118,12 @@ namespace DataWF.Module.Counterpart
         {
             get => GetValue<string>(NameENKey);
             set => SetValue(value, NameENKey);
+        }
+        [Column("ext_id")]
+        public int? ExternalId
+        {
+            get => GetValue<int?>(ExternalIdKey);
+            set => SetValue(value, ExternalIdKey);
         }
 
         public Location GetParent(LocationType parenttype)

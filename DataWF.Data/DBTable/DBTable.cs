@@ -888,6 +888,7 @@ namespace DataWF.Data
                 ListHelper.QuickSort(rows, new InvokerComparer(typeof(DBItem), nameof(DBItem.UpdateState)));
                 foreach (DBItem row in rows)
                 {
+                    row.Attach();
                     transaction.AddItem(row);
                 }
                 foreach (DBItem row in rows)

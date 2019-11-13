@@ -28,9 +28,11 @@ namespace DataWF.Module.Counterpart
     public class Country : Location
     {
         public Country()
-        { }
+        {
+            ItemType = (int)LocationType.Country;
+        }
 
-        public static DBTable<Country> DBVirtualTable => GetTable<Country>();
+        public static DBTable<Country> VTTable => GetTable<Country>();
 
         public Continent Continent
         {

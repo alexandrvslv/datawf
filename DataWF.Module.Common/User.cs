@@ -53,6 +53,7 @@ namespace DataWF.Module.Common
         public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
         public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
         public static readonly DBColumn AuthTokenKey = DBTable.ParseProperty(nameof(AuthType));
+        public static readonly DBColumn AddressIdKey = DBTable.ParseProperty(nameof(AddessId));
 
         private static readonly PasswordSpec PasswordSpecification = PasswordSpec.Lenght6 | PasswordSpec.CharSpecial | PasswordSpec.CharNumbers;
 
@@ -312,6 +313,7 @@ namespace DataWF.Module.Common
         private Position position;
         private List<IAccessGroup> groups;
         private AccessValue cacheAccess;
+        private Address address;
 
         public User()
         { }
@@ -494,6 +496,19 @@ namespace DataWF.Module.Common
             set => SetValue(value, NameENKey);
         }
 
+        [Column("address_id"), Browsable(false)]
+        public int? AddessId
+        {
+            get => GetValue<int?>(AddressIdKey);
+            set => SetValue(value, AddressIdKey);
+        }
+
+        [Reference(nameof(AddessId))]
+        public Address Address
+        {
+            get => GetReference(AddressIdKey, ref address);
+            set => SetReference(address = value, AddressIdKey);
+        }
         public override string AuthenticationType => AuthType?.ToString();
 
         public override IEnumerable<IAccessGroup> Groups
@@ -519,6 +534,7 @@ namespace DataWF.Module.Common
                 return groups;
             }
         }
+
 
         public override void Dispose()
         {

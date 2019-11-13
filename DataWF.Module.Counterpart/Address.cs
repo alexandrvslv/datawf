@@ -39,7 +39,8 @@ namespace DataWF.Module.Counterpart
         public static readonly DBColumn PostIndexKey = DBTable.ParseProperty(nameof(PostIndex));
         public static readonly DBColumn StreetENKey = DBTable.ParseProperty(nameof(StreetEN));
         public static readonly DBColumn StreetRUKey = DBTable.ParseProperty(nameof(StreetRU));
-
+        public static readonly DBColumn FloorKey = DBTable.ParseProperty(nameof(Floor));
+        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
         private Location location;
 
         public Address()
@@ -99,5 +100,18 @@ namespace DataWF.Module.Counterpart
             set => SetValue(value, StreetRUKey);
         }
 
+        [Column("floor")]
+        public string Floor
+        {
+            get => GetValue<string>(FloorKey);
+            set => SetValue(value, FloorKey);
+        }
+
+        [Column("ext_id")]
+        public int? ExternalId
+        {
+            get => GetValue<int?>(ExternalIdKey);
+            set => SetValue(value, ExternalIdKey);
+        }
     }
 }
