@@ -431,6 +431,7 @@ namespace DataWF.Module.Common
             set => Status = value ? DBStatus.Actual : DBStatus.Error;
         }
 
+        [Column("is_temporary_password")]
         public bool? IsTemporaryPassword
         {
             get => GetValue<bool?>(IsTemporaryPasswordKey);
