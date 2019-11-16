@@ -734,8 +734,8 @@ namespace DataWF.Module.Flow
                 foreach (var data in GetTemplatedData())
                 {
                     if (isnew
-                        || Works.Count() <= 1
-                        || data.FileLOB == null)
+                        || data.FileLOB == null
+                        || (data.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert)
                     {
                         await data.ParseAndSave(param, false);
                     }
