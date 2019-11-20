@@ -264,6 +264,9 @@ namespace DataWF.Data
             {
                 try
                 {
+#if DEBUG
+                    Console.WriteLine(command);
+#endif
                     schema.Connection.ExecuteQuery(command);
                 }
                 catch (Exception ex)
