@@ -89,8 +89,8 @@ namespace DataWF.WebService.Common
                 }
 
                 if (!column.Access.GetFlag(AccessType.Read, CurrentUser)
-                    || !value.Access.GetFlag(AccessType.Read, CurrentUser)
-                    || !table.Access.GetFlag(AccessType.Read, CurrentUser))
+                    && !value.Access.GetFlag(AccessType.Read, CurrentUser)
+                    && !table.Access.GetFlag(AccessType.Read, CurrentUser))
                 {
                     return Forbid();
                 }
