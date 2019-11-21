@@ -75,8 +75,8 @@ namespace DataWF.WebService.Common
             {
                 return NotFound();
             }
-            var accessColumn = table.AccessKey;
-            if (accessColumn == null)
+            var column = table.AccessKey;
+            if (column == null)
             {
                 return BadRequest($"Table {table} is not Accessable!");
             }
@@ -88,8 +88,9 @@ namespace DataWF.WebService.Common
                     return NotFound();
                 }
 
-                if (!accessColumn.Access.GetFlag(AccessType.Read, CurrentUser)
-                    || !value.Access.GetFlag(AccessType.Read, CurrentUser))
+                if (!column.Access.GetFlag(AccessType.Read, CurrentUser)
+                    || !value.Access.GetFlag(AccessType.Read, CurrentUser)
+                    || !table.Access.GetFlag(AccessType.Read, CurrentUser))
                 {
                     return Forbid();
                 }
