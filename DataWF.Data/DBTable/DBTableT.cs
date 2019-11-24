@@ -567,12 +567,12 @@ namespace DataWF.Data
             return LoadByCode(code, ParseColumn(column), param);
         }
 
-        public override DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null)
+        public override DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
             return LoadByCode(code, column, param);
         }
 
-        public T LoadByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null)
+        public T LoadByCode(string code, DBColumn column, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
             var row = SelectOne(column, code);
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)//&& !IsSynchronized

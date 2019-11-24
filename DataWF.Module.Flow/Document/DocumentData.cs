@@ -144,7 +144,7 @@ namespace DataWF.Module.Flow
         }
 
         [Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]
-        public string FileName
+        public virtual string FileName
         {
             get => GetValue<string>(Table.FileNameKey);
             set => SetValue(value, Table.FileNameKey);
