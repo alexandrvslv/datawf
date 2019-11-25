@@ -430,14 +430,14 @@ namespace DataWF.Common
         {
             if (index < 0)
                 return;
-            if (propertyHandler != null)
+            if (propertyHandler != null && item is INotifyPropertyChanged notified)
             {
-                if (item is INotifyPropertyChanged notified)
-                {
-                    notified.PropertyChanged -= propertyHandler;
-                }
+                notified.PropertyChanged -= propertyHandler;
             }
-            indexes.RemoveItem(item);
+            if (item != null)
+            {
+                indexes.RemoveItem(item);
+            }
             items.RemoveAt(index);
         }
 
