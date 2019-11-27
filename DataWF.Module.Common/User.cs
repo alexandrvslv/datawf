@@ -54,7 +54,7 @@ namespace DataWF.Module.Common
         public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
         public static readonly DBColumn AuthTokenKey = DBTable.ParseProperty(nameof(AuthType));
         public static readonly DBColumn AddressIdKey = DBTable.ParseProperty(nameof(AddessId));
-
+        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
         private static readonly PasswordSpec PasswordSpecification = PasswordSpec.Lenght6 | PasswordSpec.CharSpecial | PasswordSpec.CharNumbers;
 
         public const string AuthenticationScheme = "Bearer";
@@ -324,6 +324,13 @@ namespace DataWF.Module.Common
         {
             get => GetValue<int?>(Table.PrimaryKey);
             set => SetValue(value, Table.PrimaryKey);
+        }
+
+        [Column("ext_id")]
+        public int? ExternalId
+        {
+            get => GetValue<int?>(ExternalIdKey);
+            set => SetValue(value, ExternalIdKey);
         }
 
         [Column("company_id"), Browsable(false)]

@@ -29,6 +29,7 @@ namespace DataWF.Module.Common
         public static readonly DBColumn ValueKey = DBTable.ParseProperty(nameof(Value));
         public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
         public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
+        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
 
         public Book()
         { }
@@ -85,6 +86,13 @@ namespace DataWF.Module.Common
         {
             get => GetValue<string>(ValueKey);
             set => SetValue(value, ValueKey);
+        }
+
+        [Column("ext_id")]
+        public int? ExternalId
+        {
+            get => GetValue<int?>(ExternalIdKey);
+            set => SetValue(value, ExternalIdKey);
         }
     }
 }

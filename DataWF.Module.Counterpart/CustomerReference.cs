@@ -30,6 +30,7 @@ namespace DataWF.Module.Counterpart
         public static readonly DBColumn PersoneKey = DBTable.ParseProperty(nameof(PersoneId));
         public static readonly DBColumn EMailKey = DBTable.ParseProperty(nameof(EMail));
         public static readonly DBColumn PhoneKey = DBTable.ParseProperty(nameof(Phone));
+        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
 
         private Company company;
         private Persone persone;
@@ -95,6 +96,13 @@ namespace DataWF.Module.Counterpart
         {
             get => GetValue<string>(PhoneKey);
             set => SetValue(value, PhoneKey);
+        }
+
+        [Column("ext_id")]
+        public int? ExternalId
+        {
+            get => GetValue<int?>(ExternalIdKey);
+            set => SetValue(value, ExternalIdKey);
         }
     }
 

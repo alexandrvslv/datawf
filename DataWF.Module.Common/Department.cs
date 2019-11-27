@@ -35,7 +35,7 @@ namespace DataWF.Module.Common
         public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
         public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
         public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
-
+        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
         private Company company;
 
         public Department()
@@ -81,6 +81,13 @@ namespace DataWF.Module.Common
         {
             get => GetValue<string>(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
+        }
+        
+        [Column("ext_id")]
+        public int? ExternalId
+        {
+            get => GetValue<int?>(ExternalIdKey);
+            set => SetValue(value, ExternalIdKey);
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]

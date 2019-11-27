@@ -52,6 +52,7 @@ namespace DataWF.Module.Counterpart
         public static readonly DBColumn CountryKey = DBTable.ParseProperty(nameof(CountryId));
         public static readonly DBColumn AddressKey = DBTable.ParseProperty(nameof(AddressId));
         public static readonly DBColumn KeyKey = DBTable.ParseProperty(nameof(Key));
+        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
         //public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
 
         private Address address;
@@ -196,7 +197,12 @@ namespace DataWF.Module.Counterpart
             set => SetValue(value, KeyKey);
         }
 
-
+        [Column("ext_id")]
+        public int? ExternalId
+        {
+            get => GetValue<int?>(ExternalIdKey);
+            set => SetValue(value, ExternalIdKey);
+        }
     }
 
 }
