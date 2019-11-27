@@ -397,7 +397,7 @@ namespace DataWF.Data
                 {
                     var objects = new Dictionary<string, object>(fCount, StringComparer.OrdinalIgnoreCase);
                     for (int i = 0; i < fCount; i++)
-                        objects.Add(reader.GetName(i), reader.GetValue(i));
+                        objects[reader.GetName(i)] = reader.GetValue(i);
                     list.Add(objects);
                 }
                 reader.Close();
