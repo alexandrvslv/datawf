@@ -22,7 +22,7 @@ namespace DataWF.Data
         private readonly ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
 
         public DBTable()
-        {            
+        {
             SetItemType(typeof(T));
         }
 
@@ -176,7 +176,7 @@ namespace DataWF.Data
             foreach (var collection in virtualTables)
             {
                 collection.Accept(item);
-            }            
+            }
         }
 
         public void CopyTo(T[] array, int arrayIndex)
@@ -526,7 +526,12 @@ namespace DataWF.Data
 
         public T LoadItem(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
-            return Load(CreateItemCommmand(id, cols), param, transaction).FirstOrDefault();
+            return LoadItem(id, PrimaryKey, param, cols, transaction);
+        }
+
+        public T LoadItem(object id, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            return Load(CreateKeyCommmand(id, column, cols), param, transaction).FirstOrDefault();
         }
 
         public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
@@ -541,16 +546,21 @@ namespace DataWF.Data
 
         public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
-            object val = PrimaryKey?.ParseValue(id);
+            return LoadByKey(id, PrimaryKey, param, cols, transaction);
+        }
 
-            if (val == null || PrimaryKey == null)
+        public T LoadByKey(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            object val = column?.ParseValue(key);
+
+            if (val == null || column == null)
                 return null;
 
-            T row = SelectOne(PrimaryKey, val) as T;
+            T row = SelectOne(column, key) as T;
 
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                row = LoadItem(val, param, cols, transaction);
+                row = LoadItem(val, column, param, cols, transaction);
             }
             return row;
         }
@@ -657,7 +667,7 @@ namespace DataWF.Data
             return srow;
         }
 
-        
+
 
         public override IEnumerable<DBItem> GetChangedItems()
         {
@@ -898,7 +908,7 @@ namespace DataWF.Data
         public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true)
         {
             var item = (T)FormatterServices.GetUninitializedObject(typeof(T));
-            item.Build(this, def, ItemTypeIndex);           
+            item.Build(this, def, ItemTypeIndex);
             item.update = state;
             return item;
         }

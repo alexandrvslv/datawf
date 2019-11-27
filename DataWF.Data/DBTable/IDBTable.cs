@@ -72,7 +72,7 @@ namespace DataWF.Data
         bool CheckItem(DBItem item, QParam param);
         bool CheckItem(DBItem item, QQuery query);
         bool CheckItem(DBItem item, string column, object val, CompareType comparer);
-        IDbCommand CreateItemCommmand(object id, IEnumerable<DBColumn> cols = null);
+        IDbCommand CreatePrimaryKeyCommmand(object id, IEnumerable<DBColumn> cols = null);
         IDBTableView CreateItemsView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
         string CreateQuery(string whereText, string alias, IEnumerable<DBColumn> cols = null);
         void DeleteById(object id);

@@ -1324,12 +1324,17 @@ namespace DataWF.Data
             }
         }
 
-        public IDbCommand CreateItemCommmand(object id, IEnumerable<DBColumn> cols = null)
+        public IDbCommand CreateKeyCommmand(object key, DBColumn column, IEnumerable<DBColumn> cols = null)
         {
-            string idName = System.ParameterPrefix + PrimaryKey.Name;
-            var command = System.CreateCommand(Schema.Connection, BuildQuery($"where a.{PrimaryKey.SqlName}={idName}", "a", cols));
-            System.CreateParameter(command, idName, id, PrimaryKey);
+            string idName = System.ParameterPrefix + column.Name;
+            var command = System.CreateCommand(Schema.Connection, BuildQuery($"where a.{column.SqlName}={idName}", "a", cols));
+            System.CreateParameter(command, idName, key, column);
             return command;
+        }
+
+        public IDbCommand CreatePrimaryKeyCommmand(object id, IEnumerable<DBColumn> cols = null)
+        {
+            return CreateKeyCommmand(id, PrimaryKey, cols);
         }
 
         public string CreateQuery(string whereText, string alias, IEnumerable<DBColumn> cols = null)

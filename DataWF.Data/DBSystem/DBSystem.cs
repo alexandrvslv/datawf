@@ -885,7 +885,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual Stream ReadSequential(DBItem item, DBColumn column, DBTransaction transaction)
         {
-            var command = transaction.AddCommand(item.Table.CreateItemCommmand(item.PrimaryId, new[] { column }));
+            var command = transaction.AddCommand(item.Table.CreatePrimaryKeyCommmand(item.PrimaryId, new[] { column }));
             transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
             if (transaction.Reader.Read())
             {
@@ -904,7 +904,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, DBTransaction transaction, int bufferSize = 81920)
         {
-            var command = transaction.AddCommand(item.Table.CreateItemCommmand(item.PrimaryId, new[] { column }));
+            var command = transaction.AddCommand(item.Table.CreatePrimaryKeyCommmand(item.PrimaryId, new[] { column }));
             using (transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
             {
                 if (transaction.Reader.Read())
