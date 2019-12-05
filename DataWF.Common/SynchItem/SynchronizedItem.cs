@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
@@ -36,7 +37,12 @@ namespace DataWF.Common
                     {
                         Changes.Clear();
                     }
-                    //PERFORMANCE ListView Update(( OnPropertyChanged();
+                    if (syncStatus == SynchronizedStatus.Actual
+                        || syncStatus == SynchronizedStatus.Edit)
+                        foreach (var container in Containers.OfType<IReferenceList>())
+                        {
+                            container.CheckOwnerStatus(new[] { this });
+                        }
                 }
             }
         }

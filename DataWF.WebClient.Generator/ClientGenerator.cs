@@ -789,7 +789,7 @@ namespace DataWF.WebClient.Generator
         {
             if (schema.ExtensionData?.TryGetValue("x-flags", out var flags) ?? false)
             {
-                yield return SyntaxHelper.GenAttribute("Flags");
+                yield return SyntaxHelper.GenAttributeList("Flags");
             }
         }
 
@@ -832,7 +832,7 @@ namespace DataWF.WebClient.Generator
         private IEnumerable<AttributeListSyntax> GenDefinitionEnumMemberAttribute(object item)
         {
             //[System.Runtime.Serialization.EnumMember(Value = "Empty")]
-            yield return SyntaxHelper.GenAttribute("EnumMember", $"Value = \"{item.ToString()}\"");
+            yield return SyntaxHelper.GenAttributeList("EnumMember", $"Value = \"{item.ToString()}\"");
         }
 
         private MemberDeclarationSyntax GenDefinitionClass(JsonSchema schema)
@@ -1083,7 +1083,7 @@ namespace DataWF.WebClient.Generator
 
         private IEnumerable<AttributeListSyntax> GenDefinitionClassPropertyInvokerAttribute(string definitionName, string propertyName)
         {
-            yield return SyntaxHelper.GenAttribute("Invoker", $"typeof({definitionName}), nameof({definitionName}.{propertyName})");
+            yield return SyntaxHelper.GenAttributeList("Invoker", $"typeof({definitionName}), nameof({definitionName}.{propertyName})");
         }
 
         private string GetInvokerName(JsonSchemaProperty property)
@@ -1185,15 +1185,15 @@ namespace DataWF.WebClient.Generator
             }
             else if (property == typeKey)
             {
-                yield return SyntaxHelper.GenAttribute("JsonProperty", $"Order = -3");
+                yield return SyntaxHelper.GenAttributeList("JsonProperty", $"Order = -3");
             }
             else if (property == idKey)
             {
-                yield return SyntaxHelper.GenAttribute("JsonProperty", $"Order = -2");
+                yield return SyntaxHelper.GenAttributeList("JsonProperty", $"Order = -2");
             }
             else //if (!property.IsRequired)
             {
-                yield return SyntaxHelper.GenAttribute("JsonProperty", $"NullValueHandling = NullValueHandling.Include");
+                yield return SyntaxHelper.GenAttributeList("JsonProperty", $"NullValueHandling = NullValueHandling.Include");
             }
 
             foreach (var attribute in GenDefinitionClassPropertyValidationAttributes(property, idKey, typeKey))
@@ -1211,14 +1211,21 @@ namespace DataWF.WebClient.Generator
                 propertyName = GetPropertyName(objectProperty);
             }
 
-            if (property.IsRequired && property != idKey && property != typeKey)
+            if (property.IsRequired)
             {
-                yield return SyntaxHelper.GenAttribute("Required", $"ErrorMessage = \"{propertyName} is required\"");
+                if (property == idKey || property == typeKey)
+                {
+                    yield return SyntaxHelper.GenAttributeList("Required", $"AllowEmptyStrings = true");
+                }
+                else
+                {
+                    yield return SyntaxHelper.GenAttributeList("Required", $"ErrorMessage = \"{propertyName} is required\"");
+                }
             }
 
             if (property.MaxLength != null)
             {
-                yield return SyntaxHelper.GenAttribute("MaxLength",
+                yield return SyntaxHelper.GenAttributeList("MaxLength",
                     $"{property.MaxLength}, ErrorMessage = \"{propertyName} only max {property.MaxLength} letters allowed.\"");
             }
             var idProperty = GetReferenceIdProperty(property);

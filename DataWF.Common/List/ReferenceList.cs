@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
@@ -24,24 +25,15 @@ namespace DataWF.Common
         public override void OnListChanged(NotifyCollectionChangedEventArgs e)
         {
             base.OnListChanged(e);
-            var items = e.Action == NotifyCollectionChangedAction.Add
-                ? Enumerable.Repeat((T)e.NewItems[0], 1)
+            IList items = e.Action == NotifyCollectionChangedAction.Add
+                ? e.NewItems
                 : e.Action == NotifyCollectionChangedAction.Reset
                 || e.Action == NotifyCollectionChangedAction.Remove
-                ? (IEnumerable<T>)this
+                ? (IList)this.items
                 : null;
             if (items != null)
             {
                 CheckOwnerStatus(items);
-            }
-        }
-
-        public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            base.OnItemPropertyChanged(sender, e);
-            if (sender is T item && item.SyncStatus != SynchronizedStatus.Load)
-            {
-                CheckOwnerStatus(Enumerable.Repeat(item, 1));
             }
         }
 
@@ -52,12 +44,12 @@ namespace DataWF.Common
             return base.Add(item);
         }
 
-        private void CheckOwnerStatus(IEnumerable<T> items)
+        public void CheckOwnerStatus(IEnumerable items)
         {
             switch (Owner.SyncStatus)
             {
                 case SynchronizedStatus.Actual:
-                    if (items.Any(p => p.SyncStatus == SynchronizedStatus.New
+                    if (items.Cast<T>().Any(p => p.SyncStatus == SynchronizedStatus.New
                     || p.SyncStatus == SynchronizedStatus.Edit))
                     {
                         Owner.SyncStatus = SynchronizedStatus.Edit;

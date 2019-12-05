@@ -387,6 +387,22 @@ namespace DataWF.Common
             return items;
         }
 
+        protected virtual void SerializeArray(JsonSerializer serializer, JsonTextWriter jwriter, IList list)
+        {
+            jwriter.WriteStartArray();
+            var itemType = TypeHelper.GetItemType(list);
+            var itemInfo = Serialization.Instance.GetTypeInfo(itemType);
+            foreach (var item in list)
+            {
+                if (item is ISynchronized isSynch && isSynch.SyncStatus == SynchronizedStatus.Actual)
+                {
+                    continue;
+                }
+                SerializeValue(serializer, jwriter, item, itemInfo);
+            }
+            jwriter.WriteEndArray();
+        }
+
         protected virtual IList DeserializeArray(JsonSerializer serializer, JsonTextReader jreader, Type type, IList sourceList)
         {
             if (type == null)
@@ -398,47 +414,50 @@ namespace DataWF.Common
             var itemType = TypeHelper.GetItemType(type);
             var client = Provider.GetClient(itemType);
             var temp = sourceList ?? (IList)EmitInvoker.CreateObject(type);
-            var referenceList = temp as IReferenceList;
-            if (referenceList != null
-                && referenceList.Owner.SyncStatus == SynchronizedStatus.Load)
+            lock (temp)
             {
-                foreach (var item in referenceList.OfType<ISynchronized>())
+                var referenceList = temp as IReferenceList;
+                if (referenceList != null
+                    && referenceList.Owner.SyncStatus == SynchronizedStatus.Load)
                 {
-                    item.SyncStatus = SynchronizedStatus.Load;
-                }
-            }
-            else
-            {
-                temp.Clear();
-            }
-            while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
-            {
-                var item = client != null
-                    ? client.DeserializeItem(serializer, jreader, null, sourceList)
-                    : DeserializeValue(serializer, jreader, itemType, null, sourceList);
-                if (item == null)
-                {
-                    continue;
-                }
-                temp.Add(item);
-            }
-
-            if (referenceList != null
-                && referenceList.Owner.SyncStatus == SynchronizedStatus.Load
-                && client != null)
-            {
-                for (var i = 0; i < referenceList.Count; i++)
-                {
-                    var item = referenceList[i];
-                    if (item is ISynchronized synched
-                        && synched.SyncStatus == SynchronizedStatus.Load)
+                    foreach (var item in referenceList.TypeOf<ISynchronized>())
                     {
+                        item.SyncStatus = SynchronizedStatus.Load;
+                    }
+                }
+                else
+                {
+                    temp.Clear();
+                }
+                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+                {
+                    var item = client != null
+                        ? client.DeserializeItem(serializer, jreader, null, sourceList)
+                        : DeserializeValue(serializer, jreader, itemType, null, sourceList);
+                    if (item == null)
+                    {
+                        continue;
+                    }
+                    temp.Add(item);
+                }
 
-                        if (!client.Remove(item))
+                if (referenceList != null
+                    && referenceList.Owner.SyncStatus == SynchronizedStatus.Load
+                    && client != null)
+                {
+                    for (var i = 0; i < referenceList.Count; i++)
+                    {
+                        var item = referenceList[i];
+                        if (item is ISynchronized synched
+                            && synched.SyncStatus == SynchronizedStatus.Load)
                         {
-                            referenceList.RemoveAt(i);
+
+                            if (!client.Remove(item))
+                            {
+                                referenceList.RemoveAt(i);
+                            }
+                            i--;
                         }
-                        i--;
                     }
                 }
             }
@@ -454,6 +473,41 @@ namespace DataWF.Common
             }
 
             return (R)DeserializeObject(serializer, jreader, typeof(R), item, sourceList);
+        }
+
+        public virtual void SerializeObject(JsonSerializer serializer, JsonTextWriter jwriter, object item, TypeSerializationInfo info = null)
+        {
+            var type = item.GetType();
+            var typeInfo = info?.Type == type ? info : Serialization.Instance.GetTypeInfo(type);
+            var synched = item as ISynchronized;
+
+            jwriter.WriteStartObject();
+            foreach (var property in typeInfo.Properties)
+            {
+                if (!property.IsWriteable
+                    || (property.IsChangeSensitive
+                    && synched != null
+                    && !(synched.Changes.ContainsKey(property.Name))))
+                {
+                    continue;
+                }
+
+                jwriter.WritePropertyName(property.Name);
+                var value = property.Invoker.GetValue(item);
+                if (property.IsAttribute)
+                {
+                    serializer.Serialize(jwriter, value);
+                }
+                else if (value is IList list)
+                {
+                    SerializeArray(serializer, jwriter, list);
+                }
+                else
+                {
+                    SerializeObject(serializer, jwriter, value);
+                }
+            }
+            jwriter.WriteEndObject();
         }
 
         public virtual object DeserializeObject(JsonSerializer serializer, JsonTextReader jreader, Type type, object item, IList sourceList)
@@ -501,6 +555,23 @@ namespace DataWF.Common
                 synchronizedNew.SyncStatus = SynchronizedStatus.Actual;
             }
             return item;
+        }
+
+        public void SerializeValue(JsonSerializer serializer, JsonTextWriter jwriter, object item, TypeSerializationInfo info = null)
+        {
+            var type = item?.GetType();
+            if (type == null || (info?.IsAttribute ?? TypeHelper.IsSerializeAttribute(type)))
+            {
+                serializer.Serialize(jwriter, item);
+            }
+            else if (item is IList list)
+            {
+                SerializeArray(serializer, jwriter, list);
+            }
+            else
+            {
+                SerializeObject(serializer, jwriter, item, info);
+            }
         }
 
         public object DeserializeValue(JsonSerializer serializer, JsonTextReader jreader, Type type, object item, IList sourceList)
@@ -574,11 +645,17 @@ namespace DataWF.Common
             else if (value != null)
             {
                 Validation(value);
-
-                var contentText = JsonConvert.SerializeObject(value, JsonSerializerSettings);
-                var content = new StringContent(contentText, Encoding.UTF8);
-                content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-                request.Content = content;
+                var serializer = JsonSerializer.Create(JsonSerializerSettings);
+                using (var writer = new StringWriter())
+                using (var jwriter = new JsonTextWriter(writer))
+                {
+                    SerializeValue(serializer, jwriter, value);
+                    jwriter.Flush();
+                    var contentText = writer.ToString();
+                    var content = new StringContent(contentText, Encoding.UTF8);
+                    content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+                    request.Content = content;
+                }
             }
             if (httpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))
             {

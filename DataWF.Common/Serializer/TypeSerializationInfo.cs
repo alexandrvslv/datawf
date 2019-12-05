@@ -18,7 +18,7 @@ namespace DataWF.Common
             Type = type;
             TypeName = TypeHelper.FormatBinary(Type);
 
-            IsAttribute = TypeHelper.IsXmlAttribute(Type);
+            IsAttribute = TypeHelper.IsSerializeAttribute(Type);
             if (IsAttribute)
             {
                 Serialazer = TypeHelper.GetValueSerializer(type);
@@ -39,15 +39,15 @@ namespace DataWF.Common
                     && !type.IsGenericType
                     && !type.IsArray
                     && !TypeHelper.IsInterface(type, typeof(ISortable));
-                ListItemIsAttribute = TypeHelper.IsXmlAttribute(ListItemType);
+                ListItemIsAttribute = TypeHelper.IsSerializeAttribute(ListItemType);
 
                 ListConstructor = EmitInvoker.Initialize(type, new[] { typeof(int) });
             }
             IsDictionary = TypeHelper.IsDictionary(type);
 
             Properties = new NamedList<PropertySerializationInfo>();
-            Properties.Indexes.Add(PropertySaveInfoIsAttributeInvoker.Instance);
-
+            Properties.Indexes.Add(PropertySerializationInfoIsAttributeInvoker.Instance);
+            int order = 0;
             foreach (var property in properties)
             {
                 var exist = GetProperty(property.Name);
@@ -57,12 +57,13 @@ namespace DataWF.Common
                         Properties.Remove(exist);
                     continue;
                 }
-                var method = property.GetGetMethod() ?? property.GetSetMethod();
+                //var method = property.GetGetMethod() ?? property.GetSetMethod();
                 if (exist != null)// && method.Equals(method.GetBaseDefinition())
                     Properties.Remove(exist);
-                
-                Properties.Add(new PropertySerializationInfo(property));
+
+                Properties.Add(new PropertySerializationInfo(property, ++order));
             }
+            Properties.ApplySortInternal(new InvokerComparer<PropertySerializationInfo>(PropertySerializationInfoOrderInvoker.Instance));
         }
 
         public Type Type { get; }
@@ -75,23 +76,23 @@ namespace DataWF.Common
 
         public bool IsNamedList { get; }
 
-        public Type ListItemType { get; }
+        public bool IsAttribute { get; }
 
-        public TypeSerializationInfo ListItemTypeInfo { get; set; }
+        public bool IsDictionary { get; }
 
         public bool ListDefaulType { get; }
 
         public bool ListItemIsAttribute { get; }
 
+        public Type ListItemType { get; }
+
+        public TypeSerializationInfo ListItemTypeInfo { get; set; }
+
         public EmitConstructor ListConstructor { get; }
 
-        public bool IsAttribute { get; }
+        public IEnumerable<PropertySerializationInfo> GetAttributes() => Properties.Select(PropertySerializationInfoIsAttributeInvoker.Instance, CompareType.Equal, true);
 
-        public bool IsDictionary { get; }
-
-        public IEnumerable<PropertySerializationInfo> GetAttributes() => Properties.Select(PropertySaveInfoIsAttributeInvoker.Instance, CompareType.Equal, true);
-
-        public IEnumerable<PropertySerializationInfo> GetContents() => Properties.Select(PropertySaveInfoIsAttributeInvoker.Instance, CompareType.Equal, false);
+        public IEnumerable<PropertySerializationInfo> GetContents() => Properties.Select(PropertySerializationInfoIsAttributeInvoker.Instance, CompareType.Equal, false);
 
         public NamedList<PropertySerializationInfo> Properties { get; private set; }
 
@@ -118,9 +119,9 @@ namespace DataWF.Common
     }
 
     [Invoker(typeof(PropertySerializationInfo), nameof(PropertySerializationInfo.IsAttribute))]
-    public class PropertySaveInfoIsAttributeInvoker : Invoker<PropertySerializationInfo, bool>
+    public class PropertySerializationInfoIsAttributeInvoker : Invoker<PropertySerializationInfo, bool>
     {
-        public static readonly PropertySaveInfoIsAttributeInvoker Instance = new PropertySaveInfoIsAttributeInvoker();
+        public static readonly PropertySerializationInfoIsAttributeInvoker Instance = new PropertySerializationInfoIsAttributeInvoker();
 
         public override string Name => nameof(PropertySerializationInfo.IsAttribute);
 
@@ -129,6 +130,20 @@ namespace DataWF.Common
         public override bool GetValue(PropertySerializationInfo target) => target.IsAttribute;
 
         public override void SetValue(PropertySerializationInfo target, bool value) { }
+    }
+
+    [Invoker(typeof(PropertySerializationInfo), nameof(PropertySerializationInfo.Order))]
+    public class PropertySerializationInfoOrderInvoker : Invoker<PropertySerializationInfo, int>
+    {
+        public static readonly PropertySerializationInfoOrderInvoker Instance = new PropertySerializationInfoOrderInvoker();
+
+        public override string Name => nameof(PropertySerializationInfo.Order);
+
+        public override bool CanWrite => false;
+
+        public override int GetValue(PropertySerializationInfo target) => target.Order;
+
+        public override void SetValue(PropertySerializationInfo target, int value) => target.Order = value;
     }
 
 }

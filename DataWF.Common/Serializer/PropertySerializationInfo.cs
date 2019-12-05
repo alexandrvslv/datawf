@@ -4,17 +4,39 @@ using System.Reflection;
 
 namespace DataWF.Common
 {
+    [Flags]
+    public enum PropertySerializationInfoKeys
+    {
+        None,
+        Attribute = 1,
+        Text = 2,
+        Writeable = 4,
+        Required = 8,
+        ChangeSensitive = 16,
+    }
+
     public class PropertySerializationInfo : INamed
     {
         public PropertySerializationInfo()
         { }
 
-        public PropertySerializationInfo(PropertyInfo property)
+        public PropertySerializationInfo(PropertyInfo property, int order = -1)
         {
             Property = property;
             DataType = Property.PropertyType;
-            IsText = TypeHelper.IsXmlText(property);
-            IsAttribute = TypeHelper.IsXmlAttribute(property) && !IsText;
+            var keys = PropertySerializationInfoKeys.None;
+            if (TypeHelper.IsSerializeText(property))
+                keys |= PropertySerializationInfoKeys.Text;
+            else if (TypeHelper.IsSerializeAttribute(property))
+                keys |= PropertySerializationInfoKeys.Attribute;
+            if (TypeHelper.IsSerializeWriteable(property))
+                keys |= PropertySerializationInfoKeys.Writeable;
+            if (TypeHelper.IsRequired(property))
+                keys |= PropertySerializationInfoKeys.Required;
+            else if (TypeHelper.IsJsonPropertyNullValueHandling(property) != null)
+                keys |= PropertySerializationInfoKeys.ChangeSensitive;
+            Keys = keys;
+            Order = TypeHelper.GetOrder(property, order);
             Invoker = EmitInvoker.Initialize(property, true);
             Default = TypeHelper.GetDefault(property);
             if (IsAttribute || IsText)
@@ -32,9 +54,19 @@ namespace DataWF.Common
 
         public Type DataType { get; set; }
 
-        public bool IsAttribute { get; }
+        public PropertySerializationInfoKeys Keys { get; }
 
-        public bool IsText { get; }
+        public bool IsAttribute => (Keys & PropertySerializationInfoKeys.Attribute) == PropertySerializationInfoKeys.Attribute;
+
+        public bool IsChangeSensitive => (Keys & PropertySerializationInfoKeys.ChangeSensitive) == PropertySerializationInfoKeys.ChangeSensitive;
+
+        public bool IsRequired => (Keys & PropertySerializationInfoKeys.Required) == PropertySerializationInfoKeys.Required;
+
+        public bool IsText => (Keys & PropertySerializationInfoKeys.Text) == PropertySerializationInfoKeys.Text;
+
+        public bool IsWriteable => (Keys & PropertySerializationInfoKeys.Writeable) == PropertySerializationInfoKeys.Writeable;
+
+        public int Order { get; set; }
 
         public object Default { get; }
 
@@ -59,6 +91,11 @@ namespace DataWF.Common
             return Serialazer != null
                 ? Serialazer.ConvertFromString(value, null)
                 : Helper.TextParse(value, DataType);
+        }
+
+        public override string ToString()
+        {
+            return $"{Name} {DataType.Name} {Keys}";
         }
     }
 }

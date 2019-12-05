@@ -1,4 +1,5 @@
-﻿using Portable.Xaml.Markup;
+﻿using Newtonsoft.Json;
+using Portable.Xaml.Markup;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace DataWF.Common
     {
         private static readonly Type[] typeOneArray = { typeof(string) };
         private static readonly Dictionary<string, MemberInfo> casheNames = new Dictionary<string, MemberInfo>(200, StringComparer.Ordinal);
+
         private static readonly Dictionary<string, Type> cacheTypes = new Dictionary<string, Type>(200, StringComparer.Ordinal);
         private static readonly Dictionary<MemberInfo, bool> cacheIsXmlText = new Dictionary<MemberInfo, bool>(200);
         private static readonly Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
@@ -298,7 +300,15 @@ namespace DataWF.Common
             return serializer;
         }
 
-        public static bool IsXmlText(MemberInfo info)
+        public static int GetOrder(PropertyInfo property, int order)
+        {
+            var propertyAtribute = property.GetCustomAttribute<JsonPropertyAttribute>(false);
+            if (propertyAtribute != null && propertyAtribute.Order != 0)
+                return propertyAtribute.Order;
+            return order;
+        }
+
+        public static bool IsSerializeText(MemberInfo info)
         {
             if (!cacheIsXmlText.TryGetValue(info, out bool flag))
             {
@@ -308,7 +318,7 @@ namespace DataWF.Common
             return flag;
         }
 
-        public static bool IsXmlAttribute(MemberInfo info)
+        public static bool IsSerializeAttribute(MemberInfo info)
         {
             if (!cacheIsXmlAttribute.TryGetValue(info, out bool flag))
             {
@@ -318,12 +328,36 @@ namespace DataWF.Common
                 if (info is PropertyInfo propertyInfo && GetValueSerializer(propertyInfo) != null)
                     return cacheIsXmlAttribute[info] = true;
 
-                return cacheIsXmlAttribute[info] = IsXmlAttribute(GetMemberType(info));
+                return cacheIsXmlAttribute[info] = IsSerializeAttribute(GetMemberType(info));
             }
             return flag;
         }
 
-        public static bool IsXmlAttribute(Type type)
+        public static bool IsRequired(PropertyInfo info)
+        {
+            var attribute = info.GetCustomAttribute<RequiredAttribute>(false);
+            return attribute != null;
+        }
+
+        public static NullValueHandling? IsJsonPropertyNullValueHandling(PropertyInfo info)
+        {
+            var attribute = info.GetCustomAttribute<JsonPropertyAttribute>(false);
+            if (attribute != null)
+                return attribute.NullValueHandling;
+            else
+                return null;
+        }
+
+        public static bool IsSerializeWriteable(PropertyInfo info)
+        {
+            var attribute = info.GetCustomAttribute<JsonIgnoreSerializationAttribute>(false);
+            if (attribute != null)
+                return false;
+            else
+                return true;
+        }
+
+        public static bool IsSerializeAttribute(Type type)
         {
             type = CheckNullable(type);
             if (!cacheTypeIsXmlAttribute.TryGetValue(type, out bool flag))
@@ -363,7 +397,8 @@ namespace DataWF.Common
                 catch { flag = true; }
                 if (!flag)
                 {
-                    var attribute = info.GetCustomAttribute(typeof(XmlIgnoreAttribute), false);
+                    var attribute = info.GetCustomAttribute<XmlIgnoreAttribute>(false)
+                        ?? (Attribute)info.GetCustomAttribute<JsonIgnoreAttribute>(false);
                     flag = attribute != null;
                     if (!flag && info is FieldInfo)
                     {
@@ -579,7 +614,7 @@ namespace DataWF.Common
             return property.GetCustomAttribute<DescriptionAttribute>(false)?.Description;
         }
 
-        public static bool GetPassword(MemberInfo property)
+        public static bool IsPassword(MemberInfo property)
         {
             var dataType = (DataTypeAttribute)null;
             return (property.GetCustomAttribute<PasswordPropertyTextAttribute>(false)?.Password ?? false)

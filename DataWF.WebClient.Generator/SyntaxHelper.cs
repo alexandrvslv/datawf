@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 //using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -92,24 +93,34 @@ namespace DataWF.WebClient.Generator
                                 semicolonToken: initializer == null ? SF.Token(SyntaxKind.None) : SF.Token(SyntaxKind.SemicolonToken));
         }
 
-        public static AttributeListSyntax GenAttribute(string name)
+        public static AttributeListSyntax GenAttributeList(string name, string args = null)
         {
-            return SF.AttributeList(
-                SF.SingletonSeparatedList(
-                    SF.Attribute(
-                        SF.IdentifierName(name))));
+            return SF.AttributeList(SF.SingletonSeparatedList(GenAttribute(name, args)));
         }
 
-        public static AttributeListSyntax GenAttribute(string name, string args)
+        public static AttributeListSyntax GenAttributeList(KeyValuePair<string, string>[] names)
         {
-            return SF.AttributeList(
-                SF.SingletonSeparatedList(
-                    SF.Attribute(
-                        SF.IdentifierName(name)).WithArgumentList(
+            var list = new List<AttributeSyntax>();
+            foreach (var name in names)
+            {
+                list.Add(GenAttribute(name.Key, name.Value));
+            }
+            return SF.AttributeList(SF.SeparatedList(list));
+        }
+
+        public static AttributeSyntax GenAttribute(string name, string args)
+        {
+            var attribure = SF.Attribute(SF.IdentifierName(name));
+            if (args != null)
+            {
+                attribure = attribure.WithArgumentList(
                         SF.AttributeArgumentList(
                             SF.SingletonSeparatedList(
                                 SF.AttributeArgument(
-                                    SF.ParseExpression(args)))))));
+                                    SF.ParseExpression(args)))));
+            }
+
+            return attribure;
         }
     }
 
