@@ -353,7 +353,7 @@ namespace DataWF.WebClient.Generator
                                @default: null) })),
                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
                    body: SF.Block(GenClientRemoveOverrideBody(clientName, idKey, typeKey, typeId, cache)),
-                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+                   semicolonToken: SF.Token(SyntaxKind.None));
                 yield return SF.MethodDeclaration(
                attributeLists: SF.List<AttributeListSyntax>(),
                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
@@ -371,7 +371,7 @@ namespace DataWF.WebClient.Generator
                                @default: null) })),
                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
                    body: SF.Block(GenClientAddOverrideBody(clientName, idKey, typeKey, typeId, cache)),
-                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+                   semicolonToken: SF.Token(SyntaxKind.None));
             }
         }
 
@@ -645,7 +645,7 @@ namespace DataWF.WebClient.Generator
             //        parameterList: SF.ParameterList(SF.SeparatedList(GenOperationParameter(descriptor, false))),
             //        constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
             //        body: SF.Block(GenOperationWrapperBody(actualName, descriptor)),
-            //        semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+            //        semicolonToken: SF.Token(SyntaxKind.None));
 
             yield return SF.MethodDeclaration(
                 attributeLists: SF.List<AttributeListSyntax>(),
@@ -660,7 +660,7 @@ namespace DataWF.WebClient.Generator
                     parameterList: SF.ParameterList(SF.SeparatedList(GenOperationParameter(descriptor))),
                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
                     body: SF.Block(GenOperationBody(actualName, descriptor, isOverride)),
-                    semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+                    semicolonToken: SF.Token(SyntaxKind.None));
         }
 
         //private StatementSyntax GenOperationWrapperBody(string actualName, OpenApiOperationDescription descriptor)
@@ -957,7 +957,7 @@ namespace DataWF.WebClient.Generator
                     parameterList: SF.ParameterList(),
                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
                     body: SF.Block(new[] { SF.ParseStatement($"return {idKey.Name}.ToString();") }),
-                    semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+                    semicolonToken: SF.Token(SyntaxKind.None));
             }
             var definitionName = GetDefinitionName(schema);
 
