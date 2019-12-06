@@ -9,7 +9,7 @@ namespace DataWF.Common
     public interface IClipboard
     {
         Task SetTextAsync(string text);
-        Task SetHtmlAsync(string html);
+        Task SetHtmlAsync(string html, string text);
         
         bool HasText { get; }
 
