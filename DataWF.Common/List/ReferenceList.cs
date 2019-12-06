@@ -48,6 +48,14 @@ namespace DataWF.Common
         {
             switch (Owner.SyncStatus)
             {
+                case SynchronizedStatus.New:
+                    if (items.Cast<T>().Any(p => p.SyncStatus == SynchronizedStatus.New
+                    || p.SyncStatus == SynchronizedStatus.Edit))
+                    {
+                        Owner.Changes[OwnerProperty] = this;
+                        Owner.OnPropertyChanged(OwnerProperty);
+                    }
+                    break;
                 case SynchronizedStatus.Actual:
                     if (items.Cast<T>().Any(p => p.SyncStatus == SynchronizedStatus.New
                     || p.SyncStatus == SynchronizedStatus.Edit))
@@ -66,6 +74,11 @@ namespace DataWF.Common
                             Owner.SyncStatus = SynchronizedStatus.Actual;
                             Owner.OnPropertyChanged(OwnerProperty);
                         }
+                    }
+                    else
+                    {
+                        Owner.Changes[OwnerProperty] = this;
+                        Owner.OnPropertyChanged(OwnerProperty);
                     }
                     break;
             }
