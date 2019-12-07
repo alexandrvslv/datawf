@@ -2507,8 +2507,8 @@ namespace DataWF.Gui
             }
             cell.Format = TypeHelper.GetDefaultFormat(member);
             cell.Description = TypeHelper.GetDescription(member);
-            cell.Password = TypeHelper.GetPassword(member);
-            cell.ReadOnly = TypeHelper.GetReadOnly(member);
+            cell.Password = TypeHelper.IsPassword(member);
+            cell.ReadOnly = TypeHelper.IsReadOnly(member);
 
             if (cell is LayoutColumn)
             {
@@ -2516,7 +2516,7 @@ namespace DataWF.Gui
                 {
                     ((LayoutColumn)cell).Visible = TypeHelper.GetBrowsable(member);
                 }
-                ((LayoutColumn)cell).Validate = TypeHelper.GetPassword(member);
+                ((LayoutColumn)cell).Validate = TypeHelper.IsPassword(member);
                 if (((LayoutColumn)cell).Map == null && cell.DataType.IsPrimitive)
                 {
                     ((LayoutColumn)cell).Width *= 0.7;

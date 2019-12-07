@@ -17,7 +17,7 @@ namespace DataWF.Test.Web.CodeGenerator
         [Test()]
         public void GenerateCode()
         {
-            var generator = new DataWF.WebService.Generator.Generator(
+            var generator = new DataWF.WebService.Generator.ServiceGenerator(
                 new[] {
                     typeof(Company).Assembly,
                     typeof(User).Assembly,

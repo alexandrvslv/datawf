@@ -616,7 +616,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -1139,7 +1139,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -1662,7 +1662,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -2185,7 +2185,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -2708,7 +2708,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -3231,7 +3231,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -3754,7 +3754,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -4277,7 +4277,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -4800,7 +4800,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -5323,7 +5323,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -5916,7 +5916,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -6664,7 +6664,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -7025,7 +7025,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -7548,7 +7548,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -8270,7 +8270,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -8793,7 +8793,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -9316,7 +9316,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -9903,7 +9903,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -10426,7 +10426,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -10963,7 +10963,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -11324,7 +11324,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -11685,7 +11685,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -12208,7 +12208,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -12731,7 +12731,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -13289,7 +13289,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -13960,7 +13960,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -14666,7 +14666,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -15189,7 +15189,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -15712,7 +15712,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -16235,7 +16235,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -16758,7 +16758,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -17281,7 +17281,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -17804,7 +17804,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -18402,7 +18402,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -18925,7 +18925,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -19618,7 +19618,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -20141,7 +20141,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -20664,7 +20664,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -20864,44 +20864,6 @@
                 "format": "int32",
                 "type": "integer"
               }
-            }
-          }
-        }
-      }
-    },
-    "/api/User/Register/{id}/{application}": {
-      "get": {
-        "tags": [
-          "User"
-        ],
-        "operationId": "Register",
-        "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "application",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/UserApplication"
             }
           }
         }
@@ -21373,7 +21335,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -21647,11 +21609,7 @@
         ],
         "operationId": "EmailVerification",
         "consumes": [],
-        "produces": [
-          "application/json",
-          "text/json",
-          "text/plain"
-        ],
+        "produces": [],
         "parameters": [
           {
             "name": "id",
@@ -21663,9 +21621,43 @@
         ],
         "responses": {
           "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/UserApplication/Register": {
+      "post": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Register",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "application",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/UserApplication"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": "Success",
             "schema": {
-              "type": "boolean"
+              "$ref": "#/definitions/UserApplication"
             }
           }
         }
@@ -21989,7 +21981,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -22682,7 +22674,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -23240,7 +23232,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -23601,7 +23593,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -24326,7 +24318,7 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/LinkModel"
             }
           }
         }
@@ -24621,6 +24613,13 @@
         "StreetEN": {
           "maxLength": 1024,
           "type": "string"
+        },
+        "Floor": {
+          "type": "string"
+        },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
         }
       },
       "x-type-id": 0
@@ -24744,6 +24743,10 @@
           "$ref": "#/definitions/Location",
           "x-id": "ParentId"
         },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
+        },
         "NameRU": {
           "maxLength": 512,
           "type": "string"
@@ -24792,6 +24795,13 @@
           "maxLength": 20,
           "type": "string"
         },
+        "Floor": {
+          "type": "string"
+        },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
+        },
         "StreetRU": {
           "maxLength": 1024,
           "type": "string"
@@ -24803,6 +24813,17 @@
       },
       "x-id": "Id",
       "x-type-id": 0
+    },
+    "LinkModel": {
+      "type": "object",
+      "properties": {
+        "ProtocolLink": {
+          "type": "string"
+        },
+        "WebLink": {
+          "type": "string"
+        }
+      }
     },
     "BookLog": {
       "type": "object",
@@ -24838,6 +24859,10 @@
         },
         "Value": {
           "type": "string"
+        },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
         }
       },
       "x-type-id": 0
@@ -24871,6 +24896,10 @@
         },
         "Value": {
           "type": "string"
+        },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
         },
         "NameRU": {
           "maxLength": 1024,
@@ -24929,6 +24958,10 @@
         "NameEN": {
           "maxLength": 512,
           "type": "string"
+        },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
         }
       },
       "x-type-id": 0
@@ -25016,6 +25049,10 @@
         "Key": {
           "maxLength": 1024,
           "type": "string"
+        },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
         }
       },
       "x-type-id": 0
@@ -25086,6 +25123,10 @@
         "Address": {
           "$ref": "#/definitions/Address",
           "x-id": "AddressId"
+        },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
         },
         "ShortNameRU": {
           "maxLength": 512,
@@ -25258,6 +25299,10 @@
         "Phone": {
           "maxLength": 1024,
           "type": "string"
+        },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
         }
       },
       "x-type-id": 0
@@ -25310,6 +25355,10 @@
         "Phone": {
           "maxLength": 1024,
           "type": "string"
+        },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
         }
       },
       "x-id": "Id",
@@ -25358,6 +25407,10 @@
           "maxLength": 40,
           "type": "string"
         },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
+        },
         "NameRU": {
           "maxLength": 512,
           "type": "string"
@@ -25405,6 +25458,10 @@
           "maxLength": 256,
           "type": "string"
         },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
+        },
         "NameRU": {
           "maxLength": 512,
           "type": "string"
@@ -25425,6 +25482,10 @@
         }
       ],
       "properties": {
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
+        },
         "CompanyId": {
           "format": "int32",
           "type": "integer"
@@ -25461,8 +25522,19 @@
           "maxLength": 1024,
           "type": "string"
         },
+        "IsTemporaryPassword": {
+          "type": "boolean"
+        },
         "AuthType": {
           "$ref": "#/definitions/UserAuthType"
+        },
+        "AddessId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Address": {
+          "$ref": "#/definitions/Address",
+          "x-id": "AddessId"
         },
         "NameRU": {
           "maxLength": 512,
@@ -25541,6 +25613,10 @@
         "Code": {
           "maxLength": 256,
           "type": "string"
+        },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
         },
         "NameRU": {
           "maxLength": 512,
@@ -26934,6 +27010,10 @@
           "maxLength": 40,
           "type": "string"
         },
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
+        },
         "NameRU": {
           "maxLength": 512,
           "type": "string"
@@ -27633,6 +27713,148 @@
       },
       "x-type-id": 0
     },
+    "LoginModel": {
+      "required": [
+        "Email",
+        "Password"
+      ],
+      "type": "object",
+      "properties": {
+        "Email": {
+          "type": "string"
+        },
+        "Password": {
+          "format": "password",
+          "type": "string"
+        },
+        "Online": {
+          "type": "boolean"
+        },
+        "Platform": {
+          "type": "string"
+        },
+        "Application": {
+          "type": "string"
+        },
+        "Version": {
+          "type": "string"
+        }
+      }
+    },
+    "TokenModel": {
+      "type": "object",
+      "properties": {
+        "Email": {
+          "type": "string"
+        },
+        "AccessToken": {
+          "format": "password",
+          "type": "string"
+        },
+        "RefreshToken": {
+          "type": "string"
+        }
+      }
+    },
+    "UserLog": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DBUserLog"
+        }
+      ],
+      "properties": {
+        "ExternalId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "CompanyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Company": {
+          "$ref": "#/definitions/Company",
+          "x-id": "CompanyId"
+        },
+        "Abbreviation": {
+          "maxLength": 4,
+          "type": "string"
+        },
+        "NameRU": {
+          "maxLength": 512,
+          "type": "string"
+        },
+        "NameEN": {
+          "maxLength": 512,
+          "type": "string"
+        },
+        "DepartmentId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Department": {
+          "$ref": "#/definitions/Department",
+          "x-id": "DepartmentId"
+        },
+        "PositionId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Position": {
+          "$ref": "#/definitions/Position",
+          "x-id": "PositionId"
+        },
+        "Super": {
+          "type": "boolean"
+        },
+        "Phone": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "IsTemporaryPassword": {
+          "type": "boolean"
+        },
+        "Password": {
+          "maxLength": 512,
+          "type": "string"
+        },
+        "AuthType": {
+          "$ref": "#/definitions/UserAuthType"
+        },
+        "AddessId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Address": {
+          "$ref": "#/definitions/Address",
+          "x-id": "AddessId"
+        }
+      },
+      "x-type-id": 0
+    },
+    "DBUserLog": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DBLogItem"
+        }
+      ],
+      "properties": {
+        "Id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Login": {
+          "maxLength": 256,
+          "type": "string"
+        },
+        "EMail": {
+          "maxLength": 1024,
+          "type": "string"
+        }
+      },
+      "x-type-id": 0
+    },
     "UserApplication": {
       "required": [
         "Id",
@@ -27664,6 +27886,9 @@
           "type": "string"
         },
         "Password": {
+          "type": "string"
+        },
+        "TemporaryPassword": {
           "type": "string"
         },
         "EmailVerified": {
@@ -27724,133 +27949,6 @@
       ],
       "type": "string"
     },
-    "LoginModel": {
-      "required": [
-        "Email",
-        "Password"
-      ],
-      "type": "object",
-      "properties": {
-        "Email": {
-          "type": "string"
-        },
-        "Password": {
-          "format": "password",
-          "type": "string"
-        },
-        "Online": {
-          "type": "boolean"
-        },
-        "Platform": {
-          "type": "string"
-        },
-        "Application": {
-          "type": "string"
-        },
-        "Version": {
-          "type": "string"
-        }
-      }
-    },
-    "TokenModel": {
-      "type": "object",
-      "properties": {
-        "Email": {
-          "type": "string"
-        },
-        "AccessToken": {
-          "format": "password",
-          "type": "string"
-        },
-        "RefreshToken": {
-          "type": "string"
-        }
-      }
-    },
-    "UserLog": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/DBUserLog"
-        }
-      ],
-      "properties": {
-        "CompanyId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Company": {
-          "$ref": "#/definitions/Company",
-          "x-id": "CompanyId"
-        },
-        "Abbreviation": {
-          "maxLength": 4,
-          "type": "string"
-        },
-        "NameRU": {
-          "maxLength": 512,
-          "type": "string"
-        },
-        "NameEN": {
-          "maxLength": 512,
-          "type": "string"
-        },
-        "DepartmentId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Department": {
-          "$ref": "#/definitions/Department",
-          "x-id": "DepartmentId"
-        },
-        "PositionId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Position": {
-          "$ref": "#/definitions/Position",
-          "x-id": "PositionId"
-        },
-        "Super": {
-          "type": "boolean"
-        },
-        "Phone": {
-          "maxLength": 1024,
-          "type": "string"
-        },
-        "Password": {
-          "maxLength": 512,
-          "type": "string"
-        },
-        "AuthType": {
-          "$ref": "#/definitions/UserAuthType"
-        }
-      },
-      "x-type-id": 0
-    },
-    "DBUserLog": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/DBLogItem"
-        }
-      ],
-      "properties": {
-        "Id": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "Login": {
-          "maxLength": 256,
-          "type": "string"
-        },
-        "EMail": {
-          "maxLength": 1024,
-          "type": "string"
-        }
-      },
-      "x-type-id": 0
-    },
     "UserApplicationLog": {
       "type": "object",
       "allOf": [
@@ -27871,6 +27969,9 @@
           "type": "string"
         },
         "Password": {
+          "type": "string"
+        },
+        "TemporaryPassword": {
           "type": "string"
         },
         "EmailVerified": {
