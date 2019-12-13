@@ -293,7 +293,10 @@ namespace DataWF.Common
             {
                 if (query.IsGlobalParameter(e.PropertyName))
                 {
-                    UpdateFilter();
+                    if (!FilterQuery.Suspending)
+                    {
+                        UpdateFilter();
+                    }
                 }
                 else
                 {
