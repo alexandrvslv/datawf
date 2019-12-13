@@ -175,7 +175,7 @@ namespace DataWF.Common
         }
 
         protected void UpdateInternal(IEnumerable<T> list)
-        {            
+        {
             lock (lockObject)
             {
                 try
@@ -293,7 +293,10 @@ namespace DataWF.Common
             {
                 if (query.IsGlobalParameter(e.PropertyName))
                 {
-                    UpdateFilter();
+                    if (!FilterQuery.Suspending)
+                    {
+                        UpdateFilter();
+                    }
                 }
                 else
                 {
