@@ -113,7 +113,7 @@ namespace DataWF.Common
             }
             else if (args is PropertyChangedEventArgs p)
             {
-                if (p.PropertyName == nameof(InvokerComparer<T>.Direction))
+                if (string.Equals(p.PropertyName, nameof(InvokerComparer<T>.Direction), StringComparison.Ordinal))
                 {
                     comparer = null;
                     ApplySort((IComparer<T>)FilterQuery.GetComparer());
@@ -134,9 +134,9 @@ namespace DataWF.Common
             }
             else if (args is PropertyChangedEventArgs p)
             {
-                if (p.PropertyName == nameof(QueryParameter<T>.IsEnabled)
-                    || p.PropertyName == nameof(QueryParameter<T>.Value)
-                    || p.PropertyName == nameof(QueryParameter<T>.Comparer))
+                if (string.Equals(p.PropertyName, nameof(QueryParameter<T>.IsEnabled), StringComparison.Ordinal)
+                    || string.Equals(p.PropertyName, nameof(QueryParameter<T>.Value), StringComparison.Ordinal)
+                    || string.Equals(p.PropertyName, nameof(QueryParameter<T>.Comparer), StringComparison.Ordinal))
                 {
                     CheckUpdateFilter(sender, args);
                 }
@@ -175,7 +175,7 @@ namespace DataWF.Common
         }
 
         protected void UpdateInternal(IEnumerable<T> list)
-        {            
+        {
             lock (lockObject)
             {
                 try

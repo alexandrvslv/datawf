@@ -60,7 +60,7 @@ namespace DataWF.Common
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnItemPropertyChanged(sender, e);
-            if (e.PropertyName == nameof(EnumItem.Check))
+            if (string.Equals(e.PropertyName, nameof(EnumItem.Check), StringComparison.Ordinal))
             {
                 int temp = 0;
                 foreach (var item in this)

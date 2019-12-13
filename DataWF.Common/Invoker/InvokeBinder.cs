@@ -79,7 +79,7 @@ namespace DataWF.Common
         {
             if (ViewInvoker == null)
                 throw new InvalidOperationException($"{nameof(ViewInvoker)} is not specified!");
-            if (DataInvoker.Name == e.PropertyName || string.IsNullOrEmpty(e.PropertyName))
+            if (string.Equals(DataInvoker.Name, e.PropertyName, StringComparison.Ordinal) || string.IsNullOrEmpty(e.PropertyName))
             {
                 if (view is INotifyPropertyChanged notify)
                 {
@@ -96,7 +96,7 @@ namespace DataWF.Common
 
         private void ViewPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (ViewInvoker.Name == e.PropertyName || string.IsNullOrEmpty(e.PropertyName))
+            if (string.Equals(ViewInvoker.Name, e.PropertyName, StringComparison.Ordinal) || string.IsNullOrEmpty(e.PropertyName))
             {
                 if (data is INotifyPropertyChanged notify)
                 {

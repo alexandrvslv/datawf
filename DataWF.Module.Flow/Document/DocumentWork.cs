@@ -86,7 +86,7 @@ namespace DataWF.Module.Flow
             base.OnItemPropertyChanged(sender, e);
             if (document != null
                 && (string.IsNullOrEmpty(e.PropertyName)
-                || e.PropertyName == nameof(DocumentWork.IsComplete)))
+                || string.Equals(e.PropertyName, nameof(DocumentWork.IsComplete), StringComparison.Ordinal)))
             {
                 document.RefreshCache();
             }
