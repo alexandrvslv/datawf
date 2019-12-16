@@ -494,7 +494,7 @@ namespace DataWF.Common
 
                 jwriter.WritePropertyName(property.Name);
                 var value = property.Invoker.GetValue(item);
-                if (property.IsAttribute)
+                if (property.IsAttribute || value == null)
                 {
                     serializer.Serialize(jwriter, value);
                 }
