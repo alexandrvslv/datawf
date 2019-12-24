@@ -303,6 +303,10 @@ namespace DataWF.Module.Common
 
         private static IEnumerable<Claim> GetClaims(User person)
         {
+            if (person.ExternalId != null)
+            {
+                yield return new Claim("sub", person.ExternalId.ToString());
+            }
             yield return new Claim(ClaimTypes.Name, person.EMail);
             yield return new Claim(ClaimTypes.Email, person.EMail);
         }
