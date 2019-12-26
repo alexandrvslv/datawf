@@ -541,9 +541,14 @@ namespace DataWF.Common
             lock (lockObject)
             {
                 this.comparer = comparer;
-                ListHelper.QuickSort<T>(items, this.comparer);
-                //_items.Sort(comparer);
+                UpdateSort();
             }
+        }
+
+        public void UpdateSort()
+        {
+            ListHelper.QuickSort<T>(items, comparer);
+            //_items.Sort(comparer);
         }
 
         public void ApplySort(IComparer comparer)
