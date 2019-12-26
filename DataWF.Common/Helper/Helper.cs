@@ -1163,7 +1163,11 @@ namespace DataWF.Common
             if (value == null || value == DBNull.Value)
                 return null;
             string result;
-            if (format != null && format.Equals("size", StringComparison.OrdinalIgnoreCase))
+            if (value is string stringResult)
+            {
+                result = stringResult;
+            }
+            else if (string.Equals(format, "size", StringComparison.OrdinalIgnoreCase))
             {
                 result = LenghtFormat(value);
             }
@@ -1183,10 +1187,6 @@ namespace DataWF.Common
             {
                 result = LenghtFormat(byteArray.LongLength);
             }
-            else if (value is IList)
-            {
-                result = "Collection (" + ((IList)value).Count + ")";
-            }
             else if (value is DateTime dateValue)
             {
                 if (format == null)
@@ -1201,6 +1201,10 @@ namespace DataWF.Common
             else if (value is IFormattable formattable)
             {
                 result = formattable.ToString(format, info);
+            }
+            else if (value is IEnumerable enumerable)
+            {
+                result = string.Join(", ", enumerable.Cast<object>().Select(p => p.ToString()));
             }
             else
             {
