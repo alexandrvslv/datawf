@@ -252,7 +252,7 @@ namespace DataWF.Data
 
                 if (referenceTable?.LogTable == null || referenceColumn?.LogColumn == null)
                     continue;
-
+                var stack = new HashSet<object>();
                 using (var query = new QQuery((DBTable)referenceTable.LogTable))
                 {
                     query.BuildParam(referenceColumn.LogColumn, CompareType.Equal, BaseId);
@@ -260,8 +260,9 @@ namespace DataWF.Data
                     var logItems = referenceTable.LogTable.LoadItems(query).Cast<DBLogItem>().ToList();
                     foreach (var refed in logItems)
                     {
-                        if ((refed.DateCreate.Value - this.DateCreate.Value).TotalMinutes < 2)
+                        if (!stack.Contains(refed.BaseId))
                         {
+                            stack.Add(refed.BaseId);
                             await refed.Undo(transaction);
                         }
                     }
