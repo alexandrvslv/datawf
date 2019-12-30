@@ -1699,7 +1699,6 @@ namespace DataWF.Common
                     {
                         charArray.Add(' ');
                     }
-
                 }
 
                 charArray.Add(currentChar);

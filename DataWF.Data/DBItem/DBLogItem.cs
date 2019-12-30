@@ -138,7 +138,10 @@ namespace DataWF.Data
             {
                 baseItem = BaseTable.NewItem(DBUpdateState.Insert, false, (int)GetValue<int?>(BaseTable.ItemTypeKey.LogColumn));
             }
-
+            else if (BaseItem.UpdateState == DBUpdateState.Delete)
+            {
+                BaseItem.UpdateState = DBUpdateState.Insert;
+            }
             Upload(BaseItem);
             BaseItem.Attach();
             await UploadReferences(transaction);
