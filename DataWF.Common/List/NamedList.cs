@@ -73,6 +73,10 @@ namespace DataWF.Common
             if (value != null)
             {
                 Set(value);
+                if (index >= Count)
+                {
+                    index = Count - 1;
+                }
                 this[index] = (T)value;
             }
         }
