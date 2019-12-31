@@ -148,7 +148,7 @@ namespace DataWF.Common
 
         private string FormatValue(object value, CompareType comparer)
         {
-            string result; 
+            string result;
             if (Invoker == null)
             {
                 result = value.ToString();
@@ -164,11 +164,13 @@ namespace DataWF.Common
             else if (value is DateTime date)
             {
                 result = $"'{date.ToString("yyyy.MM.dd")}'";
-            }            
+            }
             else if (value is string stringValue)
             {
                 if (comparer.Type == CompareTypes.Like && stringValue.IndexOf('%') < 0)
-                    result = $"'%{stringValue}%'";                
+                    result = $"'%{stringValue}%'";
+                else if (comparer.Type == CompareTypes.In && Invoker?.DataType != typeof(string))
+                    result = stringValue;
                 else
                     result = $"'{stringValue}'";
             }
