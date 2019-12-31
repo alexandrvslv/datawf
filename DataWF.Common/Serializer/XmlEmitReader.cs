@@ -128,7 +128,7 @@ namespace DataWF.Common
         public void ReadCollectionElement(object element, TypeSerializationInfo info, ref int listIndex)
         {
             Type mtype = ReadType();
-            if (Reader.Name == "i")
+            if (string.Equals(Reader.Name, "i", StringComparison.Ordinal))
             {
                 var itemInfo = mtype != null ? GetTypeInfo(mtype) : info.ListItemTypeInfo;
                 var list = (IList)element;
