@@ -272,7 +272,7 @@ namespace DataWF.Data
                 foreach (var table in tables)
                     if (prefix.Equals(table.Text, StringComparison.OrdinalIgnoreCase) ||
                         prefix.Equals(table.Alias, StringComparison.OrdinalIgnoreCase))
-                        return table.Table.ParseColumn(word);
+                        return table.Table.ParseColumn(word)?? Table.ParseProperty(word);
             }
             var q = Query as QQuery;
             while (q != this)

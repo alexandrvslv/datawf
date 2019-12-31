@@ -104,6 +104,11 @@ namespace DataWF.Data
             return (command == null || Value == null) ? DBSystem.FormatText(Value) : CreateParameter(command, Value);
         }
 
+        public override string ToString()
+        {
+            return DBSystem.FormatText(Value);
+        }
+
         public override object GetValue(DBItem row)
         {
             return Value;

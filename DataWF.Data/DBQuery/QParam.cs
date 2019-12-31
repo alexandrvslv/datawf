@@ -273,7 +273,11 @@ namespace DataWF.Data
 
         public override string ToString()
         {
-            return ValueLeft == null ? Text : ValueLeft.ToString();
+            if (parameters != null && parameters.Count > 0)
+            {
+                return $"({string.Join(" ", parameters.Select(p => p.ToString()))})";
+            }
+            return $"{Logic} {ValueLeft} {Comparer} {ValueRight}";
         }
 
         public string FormatValue(QItem Value, IDbCommand command = null)
