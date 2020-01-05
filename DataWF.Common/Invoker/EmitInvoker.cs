@@ -61,7 +61,7 @@ namespace DataWF.Common
             cacheInvokers.Remove(token);
         }
 
-      
+
         public static MetadataToken GetToken(MemberInfo info)
         {
             return new MetadataToken(info.Module.GetHashCode(), info.DeclaringType.GetHashCode(), info.GetHashCode());
@@ -231,7 +231,7 @@ namespace DataWF.Common
             }
             else if (info is MethodInfo)
             {
-                if (info.Name == nameof(Object.ToString))
+                if (string.Equals(info.Name, nameof(Object.ToString), StringComparison.Ordinal))
                 {
                     result = ToStringInvoker.Instance;
                 }
