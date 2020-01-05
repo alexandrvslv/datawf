@@ -136,7 +136,7 @@ namespace DataWF.Common
         {
             while (type != null)
             {
-                if (type.FullName == filterType)
+                if (string.Equals(type.FullName, filterType, StringComparison.Ordinal))
                     return true;
                 type = type.BaseType;
             }
@@ -173,7 +173,7 @@ namespace DataWF.Common
                     {
                         if (byName)
                         {
-                            type = assembly.DefinedTypes.FirstOrDefault(p => p.Name == value);
+                            type = assembly.DefinedTypes.FirstOrDefault(p => string.Equals(p.Name, value, StringComparison.Ordinal));
                         }
                         else
                         {
@@ -389,7 +389,7 @@ namespace DataWF.Common
                 if (itemType.IsSubclassOf(typeof(Delegate))
                     || (itemType == info.DeclaringType && itemType.IsValueType)
                     || (info is PropertyInfo && (!((PropertyInfo)info).CanWrite || IsIndex((PropertyInfo)info)))
-                    || info.Name == "BindingContext")
+                    || string.Equals(info.Name, "BindingContext", StringComparison.Ordinal))
                     //!IsDictionary(itemType) && !IsCollection(itemType)
                     flag = true;
 
@@ -476,7 +476,7 @@ namespace DataWF.Common
             if (casheNames.TryGetValue(cachename, out MemberInfo mi))
                 return mi;
 
-            if (type.IsInterface && name == nameof(ToString))
+            if (type.IsInterface && string.Equals(name, nameof(ToString), StringComparison.Ordinal))
             {
                 mi = typeof(object).GetMethod(name, types);
             }
@@ -501,7 +501,7 @@ namespace DataWF.Common
             foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             {
                 //var method = property.CanWrite ? property.GetGetMethod() : property.GetSetMethod();
-                if (property.Name.Equals(name, StringComparison.Ordinal))//&& method.IsGenericMethod == generic
+                if (string.Equals(property.Name, name, StringComparison.Ordinal))//&& method.IsGenericMethod == generic
                 {
                     if (CompareParameters(property.GetIndexParameters(), types))
                         return property;
@@ -515,7 +515,7 @@ namespace DataWF.Common
         {
             foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                if (method.Name.Equals(name, StringComparison.Ordinal) && method.IsGenericMethod == generic)
+                if (string.Equals(method.Name, name, StringComparison.Ordinal) && method.IsGenericMethod == generic)
                 {
                     if (CompareParameters(method.GetParameters(), types))
                         return method;
@@ -594,7 +594,7 @@ namespace DataWF.Common
         public static object CreateObject(Type type)
         {
             if (type == typeof(string))
-                return "";
+                return string.Empty;
             var invoker = EmitInvoker.Initialize(type, Type.EmptyTypes, true);
             return invoker?.Create();
         }
@@ -763,7 +763,8 @@ namespace DataWF.Common
                 builder.Append(type.FullName);
             }
             var assemblyName = type.Assembly.GetName().Name;
-            if (assemblyName != "mscorlib" && assemblyName != "System.Private.CoreLib")
+            if (!string.Equals(assemblyName, "mscorlib", StringComparison.Ordinal)
+                && !string.Equals(assemblyName, "System.Private.CoreLib", StringComparison.Ordinal))
             {
                 builder.Append(", ");
                 builder.Append(assemblyName);
