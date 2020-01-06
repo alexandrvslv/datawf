@@ -67,7 +67,7 @@ namespace DataWF.WebService.Common
                     else
                     {
                         serializer.Serialize(writer, propertyValue);
-                        if (includeReference && column.ReferencePropertyInvoker != null)
+                        if (includeReference && column.ReferencePropertyInvoker != null && writer.Path.LastIndexOf('.') < 4)
                         {
                             writer.WritePropertyName(column.ReferencePropertyInfo.Name);
                             serializer.Serialize(writer, column.ReferencePropertyInfo.GetValue(item));
