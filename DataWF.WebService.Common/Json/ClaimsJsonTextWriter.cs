@@ -11,6 +11,10 @@ namespace DataWF.WebService.Common
         public ClaimsJsonTextWriter(TextWriter textWriter) : base(textWriter)
         { }
 
+        public int AllowDepth { get; set; } = 1;
+
+        public int CurrentDepth { get; set; }
+
         public ClaimsPrincipal UserPrincipal { get; set; }
 
         public IUserIdentity User

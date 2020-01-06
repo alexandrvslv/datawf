@@ -67,10 +67,16 @@ namespace DataWF.WebService.Common
                     else
                     {
                         serializer.Serialize(writer, propertyValue);
-                        if (includeReference && column.ReferencePropertyInvoker != null)
+                        if (includeReference
+                            && column.ReferencePropertyInvoker != null
+                            && propertyValue != null
+                            && claimsWriter != null
+                            && claimsWriter.CurrentDepth < claimsWriter.AllowDepth)
                         {
+                            claimsWriter.CurrentDepth++;
                             writer.WritePropertyName(column.ReferencePropertyInfo.Name);
                             serializer.Serialize(writer, column.ReferencePropertyInfo.GetValue(item));
+                            claimsWriter.CurrentDepth--;
                         }
                     }
                 }
