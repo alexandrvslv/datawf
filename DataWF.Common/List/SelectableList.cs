@@ -82,6 +82,10 @@ namespace DataWF.Common
             get { return comparer != null; }
         }
 
+        public IComparer<T> Comparer => comparer;
+
+        IComparer ISortable.Comparer => comparer as IComparer;
+
         IFilterable ISortable.DefaultView
         {
             get { return DefaultView; }
