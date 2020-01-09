@@ -138,6 +138,10 @@ namespace DataWF.WebService.Common
             {
                 schema.Extensions.Add("x-type", column.PropertyName);
             }
+            if (column.Culture != null)
+            {
+                columnSchema.Extensions.Add("x-culture", column.Culture.ToString());
+            }
             schema.Properties.Add(column.PropertyName, columnSchema);
 
             var defaultValue = column.PropertyInfo.GetCustomAttribute<DefaultValueAttribute>();
