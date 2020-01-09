@@ -331,6 +331,25 @@ namespace DataWF.WebClient.Generator
         private IEnumerable<MemberDeclarationSyntax> GenClientMembers(string clientName, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId)
         {
             document.Definitions.TryGetValue(clientName, out var clientSchema);
+            var typeName = $"{clientName}Client";
+            yield return SF.PropertyDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword)),
+                    type: SF.ParseTypeName(typeName),
+                    identifier: SF.Identifier("Instance"),
+                    explicitInterfaceSpecifier: null,
+                    accessorList: SF.AccessorList(SF.List(new[]
+                    {
+                        SF.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                         .WithSemicolonToken(SF.Token(SyntaxKind.SemicolonToken)),
+                        SF.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration,
+                            attributeLists:SF.List<AttributeListSyntax>(),
+                            modifiers: SF.TokenList(SF.Token(SyntaxKind.PrivateKeyword)),
+                            body:null)
+                         .WithSemicolonToken(SF.Token(SyntaxKind.SemicolonToken))
+                    })),
+                    expressionBody: null,
+                    initializer: null,
+                    semicolonToken: SF.Token(SyntaxKind.None));
 
             var cache = clientSchema != null ? GetClientReferences(clientSchema) : new HashSet<RefField>();
             yield return GenClientConstructor(clientName, idKey, typeKey, typeId, cache);
@@ -559,8 +578,8 @@ namespace DataWF.WebClient.Generator
                     SyntaxKind.BaseConstructorInitializer,
                     SF.ArgumentList(
                         SF.SeparatedList(new[] {
-                            SF.Argument(SF.ParseExpression($"{clientName}.{idName}Invoker<{clientName}>.Default")),
-                            SF.Argument(SF.ParseExpression($"{clientName}.{typeName}Invoker<{clientName}>.Default")),
+                            SF.Argument(SF.ParseExpression($"{(clientName=="Instance"?Namespace+".":"")}{clientName}.{idName}Invoker<{clientName}>.Default")),
+                            SF.Argument(SF.ParseExpression($"{(clientName=="Instance"?Namespace+".":"")}{clientName}.{typeName}Invoker<{clientName}>.Default")),
                             SF.Argument(SF.ParseExpression($"{typeId}")),
                         })));
             return SF.ConstructorDeclaration(
@@ -574,6 +593,7 @@ namespace DataWF.WebClient.Generator
 
         private IEnumerable<StatementSyntax> GenClientConstructorBody(string clientName, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, HashSet<RefField> cache)
         {
+            yield return SF.ParseStatement($"Instance = Instance ?? this;");
             foreach (var refField in cache)
             {
                 yield return SF.ParseStatement($"Items.Indexes.Add({refField.InvokerName});");
@@ -1270,7 +1290,7 @@ namespace DataWF.WebClient.Generator
                 var idFiledName = GetFieldName((string)idProperty);
                 yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
                 //yield return SF.ParseStatement($"var client = ({GetTypeString(property, false, "List")}Client)ClientProvider.Default.GetClient<{GetTypeString(property, false, "List")}>();");
-                yield return SF.ParseStatement($"{fieldName} = ClientProvider.Default.{GetTypeString(property, false, "List")}.Get({idFiledName}.Value,(item) =>{{ {fieldName} = item; OnPropertyChanged(\"{ GetPropertyName(property)}\"); }});");
+                yield return SF.ParseStatement($"{fieldName} = {GetTypeString(property, false, "List")}Client.Instance.Get({idFiledName}.Value,(item) =>{{ {fieldName} = item; OnPropertyChanged(nameof({ GetPropertyName(property)})); }});");
                 //yield return SF.ParseStatement($"{fieldName} = ClientProvider.Default.{GetTypeString(property, false, "List")}.Select({idFiledName}.Value);");
                 yield return SF.ParseStatement("}");
             }
@@ -1305,7 +1325,7 @@ namespace DataWF.WebClient.Generator
                     yield return SF.ParseStatement($"if({objectFieldName}?.Id != value)");
                     yield return SF.ParseStatement("{");
                     yield return SF.ParseStatement($"{objectFieldName} = null;");
-                    yield return SF.ParseStatement($"OnPropertyChanged(\"{GetPropertyName(objectProperty)}\");");
+                    yield return SF.ParseStatement($"OnPropertyChanged(nameof({GetPropertyName(objectProperty)}));");
                     yield return SF.ParseStatement("}");
                 }
 
