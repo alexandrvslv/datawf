@@ -81,7 +81,7 @@ namespace DataWF.Common
 
         private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs e)
         {
-            if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => m.Key == "module"))
+            if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => string.Equals(m.Key, "module", StringComparison.Ordinal)))
             {
                 try
                 {
@@ -1691,11 +1691,14 @@ namespace DataWF.Common
             if (string.IsNullOrEmpty(str))
                 return str;
             var charArray = new List<char>(str.Length);
-            foreach (Char currentChar in str)
+            for (int i = 0; i < str.Length; i++)
             {
-                if (Char.IsLetter(currentChar) && charArray.Count > 0)
+                Char currentChar = str[i];
+                if (Char.IsLetter(currentChar) && charArray.Count > 0 && i > 0)
                 {
-                    if (currentChar == Char.ToUpper(currentChar))
+                    var prevChar = str[i - 1];
+                    if (currentChar == Char.ToUpper(currentChar)
+                        && prevChar != Char.ToUpper(prevChar))
                     {
                         charArray.Add(' ');
                     }
