@@ -10,11 +10,12 @@ namespace DataWF.Common
     {
         private bool isChanged;
         private FileWatcherService service;
+        private bool disposed;
 
         //https://stackoverflow.com/a/721743
         public FileWatcher(string filePath, IFileModel model, IFileModelView modelView, bool enabled = true, FileWatcherService service = null)
         {
-            Model = model;            
+            Model = model;
 
             ModelView = modelView;
             FilePath = filePath;
@@ -47,8 +48,12 @@ namespace DataWF.Common
 
         public void Dispose()
         {
-            Service.OnDeleted(this, EventArgs.Empty);
-            Watcher?.Dispose();
+            if (!disposed)
+            {
+                Watcher?.Dispose();
+                disposed = true;
+                Service.OnDeleted(this, EventArgs.Empty);
+            }
         }
 
         public string FilePath { get; set; }
@@ -135,8 +140,6 @@ namespace DataWF.Common
                     }
                     OnPropertyChanged();
                 }
-                
-                
             }
         }
 
@@ -149,6 +152,19 @@ namespace DataWF.Common
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        public void Rename(string fileName)
+        {
+            var newPath = Path.Combine(Path.GetDirectoryName(FilePath), fileName);
+            if (File.Exists(FilePath) && !File.Exists(newPath))
+            {
+                File.Move(FilePath, newPath);
+            }
+            FilePath = newPath;
+            if (Watcher != null)
+            {
+                Watcher.Filter = fileName;
+            }
+        }
 
     }
 }
