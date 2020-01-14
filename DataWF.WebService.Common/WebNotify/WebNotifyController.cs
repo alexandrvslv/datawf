@@ -32,9 +32,7 @@ namespace DataWF.WebService.Common
             }
             var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             Service.Register(socket, User.GetCommonUser(), GetIPAddress());
-            var socketTask = new Task(async () => await Service.ListenAsync(socket), TaskCreationOptions.LongRunning);
-            socketTask.Start();
-            socketTask.Wait();
+            await Service.ListenAsync(socket);            
             return new EmptyResult();
         }
 
