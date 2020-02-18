@@ -123,7 +123,7 @@ namespace DataWF.Module.Common
             {
                 var address = new System.Net.Mail.MailAddress(user.EMail);
                 var domain = address.Host.Substring(0, address.Host.IndexOf('.'));
-                if (!LdapHelper.ValidateUser(domain, address.User, login.Password))
+                if (!LdapHelper.ValidateUser(domain, address.User, password))
                 {
                     throw new Exception("Authentication fail!");
                 }

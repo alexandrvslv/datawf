@@ -20,10 +20,10 @@
 
 namespace DataWF.Common
 {
-    public class LdapSetting
+    public class LDAPSetting
     {
-        public static LdapSetting Current { get; private set; }
-        public LdapSetting()
+        public static LDAPSetting Current { get; private set; }
+        public LDAPSetting()
         {
             Current = this;
         }
