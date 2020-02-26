@@ -378,11 +378,10 @@ namespace DataWF.Data
                 }
             }
         }
-
-        [Invoker(typeof(DBVirtualTable<>), nameof(BaseTableName))]
-        public class BaseTableNameInvoker<T> : Invoker<DBVirtualTable<T>, string> where T : DBItem, new()
+        [Invoker(typeof(DBVirtualTable<>), nameof(BaseTableName), GenericType = typeof(DBItem))]
+        public class BaseTableNameInvoker : Invoker<DBVirtualTable<T>, string>
         {
-            public static readonly BaseTableNameInvoker<T> Instance = new BaseTableNameInvoker<T>();
+            public static readonly BaseTableNameInvoker Instance = new BaseTableNameInvoker();
             public override string Name => nameof(DBVirtualTable<T>.BaseTableName);
 
             public override bool CanWrite => true;
@@ -392,4 +391,6 @@ namespace DataWF.Data
             public override void SetValue(DBVirtualTable<T> target, string value) => target.BaseTableName = value;
         }
     }
+
+
 }

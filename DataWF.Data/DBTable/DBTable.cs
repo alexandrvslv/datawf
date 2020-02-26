@@ -1476,7 +1476,7 @@ namespace DataWF.Data
             var reference = Foreigns.GetByProperty(property);
             if (reference != null)
             {
-                return reference.PropertyInvoker;
+                return reference.Invoker;
             }
 
             var refing = TableAttribute?.GetReferencingByProperty(property);
@@ -1969,6 +1969,45 @@ namespace DataWF.Data
             public override bool GetValue(DBTable target) => target.IsCaching;
 
             public override void SetValue(DBTable target, bool value) => target.IsCaching = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.ComDelete))]
+        public class ComDeleteInvoker : Invoker<DBTable, string>
+        {
+            public static readonly ComDeleteInvoker Instance = new ComDeleteInvoker();
+            public override string Name => nameof(DBTable.ComDelete);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBTable target) => target.ComDelete;
+
+            public override void SetValue(DBTable target, string value) => target.ComDelete = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.ComInsert))]
+        public class ComInsertInvoker : Invoker<DBTable, string>
+        {
+            public static readonly ComInsertInvoker Instance = new ComInsertInvoker();
+            public override string Name => nameof(DBTable.ComInsert);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBTable target) => target.ComInsert;
+
+            public override void SetValue(DBTable target, string value) => target.ComInsert = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.ComUpdate))]
+        public class ComUpdateInvoker : Invoker<DBTable, string>
+        {
+            public static readonly ComUpdateInvoker Instance = new ComUpdateInvoker();
+            public override string Name => nameof(DBTable.ComUpdate);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBTable target) => target.ComUpdate;
+
+            public override void SetValue(DBTable target, string value) => target.ComUpdate = value;
         }
     }
 }

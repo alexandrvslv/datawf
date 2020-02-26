@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -84,6 +85,19 @@ namespace DataWF.Data
         public override string FormatSql(DDLType ddlType)
         {
             return null;
+        }
+
+        [Invoker(typeof(DBColumnGroup), nameof(DBColumnGroup.Order))]
+        public class OrderInvoker<T> : Invoker<T, int> where T : DBColumnGroup
+        {
+            public static readonly OrderInvoker<T> Instance = new OrderInvoker<T>();
+            public override string Name => nameof(DBColumnGroup.Order);
+
+            public override bool CanWrite => true;
+
+            public override int GetValue(T target) => target.Order;
+
+            public override void SetValue(T target, int value) => target.Order = value;
         }
     }
 }

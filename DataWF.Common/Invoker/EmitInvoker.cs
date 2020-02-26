@@ -22,6 +22,7 @@ namespace DataWF.Common
     /// </summary>
     public static class EmitInvoker
     {
+        private static readonly Dictionary<MetadataToken, Type> cacheGenericInvokers = new Dictionary<MetadataToken, Type>(10);
         private static readonly Dictionary<MetadataToken, IInvoker> cacheInvokers = new Dictionary<MetadataToken, IInvoker>(500);
         private static readonly Dictionary<MetadataToken, EmitConstructor> cacheCtors = new Dictionary<MetadataToken, EmitConstructor>(500);
 
@@ -101,6 +102,39 @@ namespace DataWF.Common
                 return rezult;
             }
         }
+
+        public static void RegisterInvoker(Type type, InvokerAttribute invoker)
+        {
+            var propertyInfo = TypeHelper.GetPropertyInfo(invoker.TargetType, invoker.PropertyName);
+            if (propertyInfo != null)
+            {
+                if (invoker.TargetType.IsGenericTypeDefinition)
+                {
+                    var token = GetToken(propertyInfo);
+                    cacheGenericInvokers[token] = type;
+                }
+                else
+                {
+                    if (type.IsGenericType)
+                    {
+                        type = type.MakeGenericType(invoker.GenericType ?? invoker.TargetType);
+                    }
+                    RegisterInvoker(propertyInfo, (IInvoker)Activator.CreateInstance(type));
+                }
+            }
+        }
+
+        public static void RegisterInvoker(Type type, string memberName, IInvoker invoker)
+        {
+            RegisterInvoker(TypeHelper.GetMemberInfo(type, memberName), invoker);
+        }
+
+        public static void RegisterInvoker(MemberInfo memeberInfo, IInvoker invoker)
+        {
+            var token = GetToken(memeberInfo);
+            cacheInvokers[token] = invoker;
+        }
+
         public static IInvoker Initialize<T>(string property)
         {
             return Initialize(typeof(T), property);
@@ -137,23 +171,6 @@ namespace DataWF.Common
             return Initialize(info, cache);
         }
 
-        public static void RegisterInvoker(Type type, InvokerAttribute invoker)
-        {
-            var propertyInfo = TypeHelper.GetPropertyInfo(invoker.TargetType, invoker.PropertyName);
-            if (propertyInfo != null)
-            {
-                var token = GetToken(propertyInfo);
-                if (type.IsGenericType)
-                {
-                    cacheInvokers[token] = (IInvoker)Activator.CreateInstance(type.MakeGenericType(invoker.TargetType));
-                }
-                else
-                {
-                    cacheInvokers[token] = (IInvoker)Activator.CreateInstance(type);
-                }
-            }
-        }
-
         public static EmitConstructor Initialize(ConstructorInfo info, bool cache = true)
         {
             var token = GetToken(info);
@@ -186,9 +203,19 @@ namespace DataWF.Common
                     token = baseToken;
                     info = baseInfo;
                 }
+
+                if (info.DeclaringType.IsGenericType && !info.DeclaringType.IsGenericTypeDefinition)
+                {
+                    var genericType = info.DeclaringType.GetGenericTypeDefinition();
+                    var genericMember = TypeHelper.GetMemberInfo(genericType, info.Name);
+                    var genericToken = GetToken(genericMember);
+                    if (cacheGenericInvokers.TryGetValue(genericToken, out var genericInvokerType))
+                    {
+                        var type = genericInvokerType.MakeGenericType(info.DeclaringType.GetGenericArguments());
+                        return cacheInvokers[token] = (IInvoker)Activator.CreateInstance(type);
+                    }
+                }
             }
-
-
             return cacheInvokers[token] = Initialize(info, null);
         }
 

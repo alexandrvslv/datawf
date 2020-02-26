@@ -836,7 +836,7 @@ namespace DataWF.Common
 
         public int? Id => null;
 
-        public IEnumerable<IAccessGroup> Groups => Enumerable.Empty<IAccessGroup>();
+        public IEnumerable<IAccessIdentity> Groups => Enumerable.Empty<IAccessIdentity>();
 
         public string AuthenticationType => string.Empty;
 

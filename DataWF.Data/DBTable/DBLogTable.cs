@@ -187,6 +187,17 @@ namespace DataWF.Data
             return await base.SaveItem(item, transaction);
         }
 
+        [Invoker(typeof(DBLogTable<>), nameof(BaseTableName), GenericType = typeof(DBLogItem))]
+        public class BaseTableNameInvoker : Invoker<DBLogTable<T>, string>
+        {
+            public static readonly BaseTableNameInvoker Instance = new BaseTableNameInvoker();
+            public override string Name => nameof(DBLogTable<T>.BaseTableName);
 
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBLogTable<T> target) => target.BaseTableName;
+
+            public override void SetValue(DBLogTable<T> target, string value) => target.BaseTableName = value;
+        }
     }
 }

@@ -108,9 +108,9 @@ namespace DataWF.Data
             Column.Column.IsReference = true;
             ForeignKey.Property = PropertyInfo.Name;
             ForeignKey.PropertyInfo = PropertyInfo;
-            if (ForeignKey.PropertyInvoker == null)
+            if (ForeignKey.Invoker == null)
             {
-                ForeignKey.PropertyInvoker = EmitInvoker.Initialize(PropertyInfo, true);
+                ForeignKey.Invoker = EmitInvoker.Initialize(PropertyInfo, true);
             }
             return ForeignKey;
         }
