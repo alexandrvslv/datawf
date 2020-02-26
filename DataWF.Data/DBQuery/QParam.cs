@@ -18,13 +18,13 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
-using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -93,20 +93,13 @@ namespace DataWF.Data
             }
         }
 
-        public void CheckGroupLogic()
-        {
-            if (Group != null)
-            {
-                if (Group.Parameters.IsFirst(this))
-                    Group.Logic = this.Logic;
-            }
-        }
-
+        [XmlIgnore, JsonIgnore]
         public QColumn QColumn
         {
             get { return ValueLeft as QColumn; }
         }
 
+        [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
             get { return QColumn?.Column; }
@@ -123,6 +116,7 @@ namespace DataWF.Data
             }
         }
 
+        [XmlIgnore, JsonIgnore]
         public object Value
         {
             get { return ValueRight?.GetValue(null); }
@@ -179,11 +173,6 @@ namespace DataWF.Data
             }
         }
 
-        private void ValueListChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            OnPropertyChanged(sender == ValueLeft ? nameof(ValueLeft) : nameof(ValueRight));
-        }
-
         public CompareType Comparer
         {
             get { return comparer; }
@@ -195,12 +184,6 @@ namespace DataWF.Data
                     OnPropertyChanged(nameof(Comparer));
                 }
             }
-        }
-
-        public bool IsColumn(DBColumn column)
-        {
-            return (ValueLeft is QColumn && ((QColumn)ValueLeft).Column == column) ||
-                (ValueRight is QColumn && ((QColumn)ValueRight).Column == column);
         }
 
         public LogicType Logic
@@ -231,11 +214,13 @@ namespace DataWF.Data
             }
         }
 
+        [XmlIgnore, JsonIgnore]
         public string ValueLeftText
         {
             get { return QColumn?.FullName; }
         }
 
+        [XmlIgnore, JsonIgnore]
         public bool IsCompaund
         {
             get { return parameters != null && parameters.Count > 0; }
@@ -247,11 +232,61 @@ namespace DataWF.Data
             {
                 if (parameters == null)
                 {
-                    parameters = new QItemList<QParam>(this);
-                    parameters.CollectionChanged += ParametersListChanged;
+                    Parameters = new QItemList<QParam>(this);
                 }
                 return parameters;
             }
+            set
+            {
+                parameters = value;
+                if (parameters != null)
+                {
+                    parameters.CollectionChanged += ParametersListChanged;
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore]
+        public bool IsExpanded
+        {
+            get { return GroupHelper.GetAllParentExpand(this); }
+        }
+
+        IGroup IGroup.Group
+        {
+            get { return Group; }
+            set { Group = (QParam)value; }
+        }
+
+        public bool Expand
+        {
+            get { return expand; }
+            set { expand = value; }
+        }
+
+        [XmlIgnore, JsonIgnore]
+        public IQItemList Owner => throw new NotImplementedException();
+
+        public bool IsDefault { get; set; }
+
+        public void CheckGroupLogic()
+        {
+            if (Group != null)
+            {
+                if (Group.Parameters.IsFirst(this))
+                    Group.Logic = this.Logic;
+            }
+        }
+
+        private void ValueListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(sender == ValueLeft ? nameof(ValueLeft) : nameof(ValueRight));
+        }
+
+        public bool IsColumn(DBColumn column)
+        {
+            return (ValueLeft is QColumn && ((QColumn)ValueLeft).Column == column) ||
+                (ValueRight is QColumn && ((QColumn)ValueRight).Column == column);
         }
 
         public void ParametersListChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -354,27 +389,6 @@ namespace DataWF.Data
         {
             return parameters;
         }
-
-        public bool IsExpanded
-        {
-            get { return GroupHelper.GetAllParentExpand(this); }
-        }
-
-        IGroup IGroup.Group
-        {
-            get { return Group; }
-            set { Group = (QParam)value; }
-        }
-
-        public bool Expand
-        {
-            get { return expand; }
-            set { expand = value; }
-        }
-
-        public IQItemList Owner => throw new NotImplementedException();
-
-        public bool IsDefault { get; set; }
     }
 
 }

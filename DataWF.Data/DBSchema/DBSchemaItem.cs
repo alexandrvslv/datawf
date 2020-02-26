@@ -18,11 +18,12 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataWF.Data
 {
@@ -81,11 +82,6 @@ namespace DataWF.Data
             get { return Name; }
         }
 
-        public virtual string GetLocalizeCategory()
-        {
-            return Schema?.Name ?? Name;
-        }
-
         [Browsable(false), Category("Naming"), XmlIgnore, JsonIgnore]
         public LocaleItem LocaleInfo
         {
@@ -119,7 +115,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Naming"), JsonRequired]
+        [Category("Naming"), Required]
         public virtual string Name
         {
             get { return name; }
@@ -157,6 +153,11 @@ namespace DataWF.Data
                     return;
                 isSynchronized = value;
             }
+        }
+
+        public virtual string GetLocalizeCategory()
+        {
+            return Schema?.Name ?? Name;
         }
 
         public abstract string FormatSql(DDLType ddlType);

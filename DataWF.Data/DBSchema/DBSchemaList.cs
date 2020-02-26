@@ -18,11 +18,11 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -262,6 +262,19 @@ namespace DataWF.Data
                 }
 
             }
+        }
+
+        [Invoker(typeof(DBSchemaList), nameof(DBSchemaList.HandleChanges))]
+        public class HandleChangesInvoker<T> : Invoker<T, bool> where T : DBSchemaList
+        {
+            public static readonly HandleChangesInvoker<T> Instance = new HandleChangesInvoker<T>();
+            public override string Name => nameof(DBSchemaList.HandleChanges);
+
+            public override bool CanWrite => true;
+
+            public override bool GetValue(T target) => target.HandleChanges;
+
+            public override void SetValue(T target, bool value) => target.HandleChanges = value;
         }
     }
 }

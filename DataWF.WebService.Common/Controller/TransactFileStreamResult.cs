@@ -17,6 +17,7 @@ namespace DataWF.WebService.Common
         }
 
         public bool DeleteFile { get; set; }
+
         public DBTransaction Transaction { get; }
 
         private void OnFileDelete()
@@ -43,7 +44,6 @@ namespace DataWF.WebService.Common
                 Transaction?.Dispose();
             }
         }
-
 
         public override async Task ExecuteResultAsync(ActionContext context)
         {

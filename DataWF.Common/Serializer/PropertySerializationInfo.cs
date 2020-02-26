@@ -33,7 +33,7 @@ namespace DataWF.Common
                 keys |= PropertySerializationInfoKeys.Writeable;
             if (TypeHelper.IsRequired(property))
                 keys |= PropertySerializationInfoKeys.Required;
-            else if (TypeHelper.IsJsonPropertyNullValueHandling(property) != null)
+            else if (TypeHelper.IsJsonSynchronized(property))
                 keys |= PropertySerializationInfoKeys.ChangeSensitive;
             Keys = keys;
             Order = TypeHelper.GetOrder(property, order);

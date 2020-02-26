@@ -33,22 +33,22 @@ namespace DataWF.Data
 
         public DBProcedureList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(DBProcedureGroupNameInvoker.Instance);
-            Indexes.Add(DBProcedureDataNameInvoker.Instance);
-            Indexes.Add(DBProcedureProcedureTypeInvoker.Instance);
+            Indexes.Add(DBProcedure.GroupNameInvoker.Instance);
+            Indexes.Add(DBProcedure.DataNameInvoker.Instance);
+            Indexes.Add(DBProcedure.ProcedureTypeInvoker.Instance);
         }
 
         public IEnumerable<DBProcedure> SelectByFile(string fileName)
         {
             var query = new Query<DBProcedure>();
-            query.Parameters.Add(new QueryParameter<DBProcedure>() { Invoker = DBProcedureProcedureTypeInvoker.Instance, Value = ProcedureTypes.Source });
-            query.Parameters.Add(new QueryParameter<DBProcedure>() { Invoker = DBProcedureDataNameInvoker.Instance, Value = fileName });
+            query.Parameters.Add(new QueryParameter<DBProcedure>() { Invoker = DBProcedure.ProcedureTypeInvoker.Instance, Value = ProcedureTypes.Source });
+            query.Parameters.Add(new QueryParameter<DBProcedure>() { Invoker = DBProcedure.DataNameInvoker.Instance, Value = fileName });
             return Select(query);
         }
 
         public IEnumerable<DBProcedure> SelectByParent(DBProcedure procedure)
         {
-            return Select(DBProcedureGroupNameInvoker.Instance, CompareType.Equal, procedure?.Name);
+            return Select(DBProcedure.GroupNameInvoker.Instance, CompareType.Equal, procedure?.Name);
         }
 
         public IEnumerable<KeyValuePair<string, DBProcedure>> SelectByCategory(string category = "General")
@@ -173,45 +173,6 @@ namespace DataWF.Data
                 }
             }
         }
-    }
-
-    [Invoker(typeof(DBProcedure), nameof(DBProcedure.GroupName))]
-    public class DBProcedureGroupNameInvoker : Invoker<DBProcedure, string>
-    {
-        public static readonly DBProcedureGroupNameInvoker Instance = new DBProcedureGroupNameInvoker();
-        public override string Name => nameof(DBProcedure.GroupName);
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(DBProcedure target) => target.GroupName;
-
-        public override void SetValue(DBProcedure target, string value) => target.GroupName = value;
-    }
-
-    [Invoker(typeof(DBProcedure), nameof(DBProcedure.DataName))]
-    public class DBProcedureDataNameInvoker : Invoker<DBProcedure, string>
-    {
-        public static readonly DBProcedureDataNameInvoker Instance = new DBProcedureDataNameInvoker();
-        public override string Name => nameof(DBProcedure.DataName);
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(DBProcedure target) => target.DataName;
-
-        public override void SetValue(DBProcedure target, string value) => target.DataName = value;
-    }
-
-    [Invoker(typeof(DBProcedure), nameof(DBProcedure.ProcedureType))]
-    public class DBProcedureProcedureTypeInvoker : Invoker<DBProcedure, ProcedureTypes>
-    {
-        public static readonly DBProcedureProcedureTypeInvoker Instance = new DBProcedureProcedureTypeInvoker();
-        public override string Name => nameof(DBProcedure.ProcedureType);
-
-        public override bool CanWrite => true;
-
-        public override ProcedureTypes GetValue(DBProcedure target) => target.ProcedureType;
-
-        public override void SetValue(DBProcedure target, ProcedureTypes value) => target.ProcedureType = value;
     }
 }
 

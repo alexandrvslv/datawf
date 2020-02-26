@@ -1,5 +1,4 @@
 ﻿using DataWF.Common;
-using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -9,6 +8,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -38,19 +38,19 @@ namespace DataWF.Data
             set { items.Capacity = value; }
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public override int Count
         {
             get { return items.Count; }
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public override IDBTableView DefaultItemsView
         {
             get { return DefaultView; }
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public DBTableView<T> DefaultView
         {
             get
@@ -72,7 +72,7 @@ namespace DataWF.Data
             return Select(query);
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public override bool IsEdited
         {
             get { return GetChanged().Any(); }
@@ -666,8 +666,6 @@ namespace DataWF.Data
             }
             return srow;
         }
-
-
 
         public override IEnumerable<DBItem> GetChangedItems()
         {

@@ -14,7 +14,7 @@ namespace DataWF.WebService.Common
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
-    [Auth]
+    [LoggerAndFormatter]
     public class AccessController : ControllerBase
     {
         private DBTable GetTable(string name)

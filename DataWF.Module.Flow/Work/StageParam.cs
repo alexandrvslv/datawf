@@ -21,6 +21,8 @@ using DataWF.Common;
 using DataWF.Data;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -114,7 +116,7 @@ namespace DataWF.Module.Flow
             set => SetValue(value, NameKey);
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public object Param
         {
             get
@@ -248,6 +250,7 @@ namespace DataWF.Module.Flow
             ItemType = (int)StageParamType.Foreign;
         }
 
+        [XmlIgnore, JsonIgnore]
         public DBForeignKey Foreign
         {
             get => Param as DBForeignKey;

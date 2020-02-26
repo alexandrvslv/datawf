@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
-    public abstract class DataProviderBase : IDataProvider
+    public abstract class DataProviderBase : IDBProvider
     {
         private DBSchema schema;
         protected string schemaName = "example";

@@ -55,6 +55,30 @@ namespace DataWF.Common
         }
     }
 
+    public class TimeSpanValueSerializer : ValueSerializer
+    {
+        public static readonly TimeSpanValueSerializer Instance = new TimeSpanValueSerializer();
+
+        public override bool CanConvertFromString(string value, IValueSerializerContext context) => true;
+
+        public override bool CanConvertToString(object value, IValueSerializerContext context) => true;
+
+        public override object ConvertFromString(string value, IValueSerializerContext context)
+        {
+            return TimeSpan.TryParse(value, out var timeSpan) ? timeSpan : TimeSpan.MaxValue;
+        }
+
+        public override string ConvertToString(object value, IValueSerializerContext context)
+        {
+            return ((TimeSpan)value).ToString();
+        }
+
+        public override IEnumerable<Type> TypeReferences(object value, IValueSerializerContext context)
+        {
+            yield break;
+        }
+    }
+
     public class TypeValueSerializer : ValueSerializer
     {
         public static readonly TypeValueSerializer Instance = new TypeValueSerializer();

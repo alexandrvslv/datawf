@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -21,10 +20,10 @@ namespace DataWF.Common
     {
         private SynchronizedStatus syncStatus = SynchronizedStatus.New;
 
-        [JsonIgnore, XmlIgnore, Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore, Browsable(false)]
         public IDictionary<string, object> Changes { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
 
-        [JsonIgnore, XmlIgnore]
+        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
         public virtual SynchronizedStatus SyncStatus
         {
             get => syncStatus;

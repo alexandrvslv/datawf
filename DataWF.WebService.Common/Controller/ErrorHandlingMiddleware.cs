@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DataWF.WebService.Common
@@ -28,7 +28,7 @@ namespace DataWF.WebService.Common
 
         private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            var result = JsonConvert.SerializeObject(new { error = exception.Message });
+            var result = JsonSerializer.Serialize(new { Error = exception.Message });
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)500;
             return context.Response.WriteAsync(result);

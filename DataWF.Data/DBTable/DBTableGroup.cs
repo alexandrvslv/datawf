@@ -22,6 +22,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -41,7 +43,7 @@ namespace DataWF.Data
         {
         }
 
-        [Category("Naming")]
+        [XmlIgnore, JsonIgnore, Category("Naming")]
         public override string FullName
         {
             get { return $"{Schema?.Name}.{Name}"; }
@@ -60,13 +62,13 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool IsExpanded
         {
             get { return GroupHelper.IsExpand(this); }
         }
 
-        [Category("Group")]
+        [XmlIgnore, JsonIgnore, Category("Group")]
         public DBTableGroup Group
         {
             get { return group ?? (group = Schema?.TableGroups[groupName]); }
@@ -127,19 +129,45 @@ namespace DataWF.Data
             set { Group = value as DBTableGroup; }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool Expand
         {
             get { return expand; }
             set { expand = value; }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool IsCompaund
         {
             get { return GetTables().Any(); }
         }
         #endregion
+
+        [Invoker(typeof(DBTableGroup), nameof(GroupName))]
+        public class GroupNameInvoker : Invoker<DBTableGroup, string>
+        {
+            public static readonly GroupNameInvoker Instance = new GroupNameInvoker();
+            public override string Name => nameof(DBTableGroup.GroupName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBTableGroup target) => target.GroupName;
+
+            public override void SetValue(DBTableGroup target, string value) => target.GroupName = value;
+        }
+
+        [Invoker(typeof(DBTableGroup), nameof(DBTableGroup.Expand))]
+        public class ExpandInvoker : Invoker<DBTableGroup, bool>
+        {
+            public static readonly ExpandInvoker Instance = new ExpandInvoker();
+            public override string Name => nameof(DBTable.IsCaching);
+
+            public override bool CanWrite => true;
+
+            public override bool GetValue(DBTableGroup target) => target.Expand;
+
+            public override void SetValue(DBTableGroup target, bool value) => target.Expand = value;
+        }       
     }
 }
 

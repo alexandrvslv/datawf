@@ -17,12 +17,12 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
 using System.ComponentModel;
-using DataWF.Common;
-using System.Xml.Serialization;
 using System.Globalization;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {

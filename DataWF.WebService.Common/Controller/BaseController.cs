@@ -18,7 +18,7 @@ namespace DataWF.WebService.Common
 {
 
     [ResponseCache(CacheProfileName = "Never")]
-    [Auth]
+    [LoggerAndFormatter]
     public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
     {
         protected DBTable<T> table;

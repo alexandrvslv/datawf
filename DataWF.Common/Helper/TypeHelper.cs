@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using Portable.Xaml.Markup;
+﻿using Portable.Xaml.Markup;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -171,13 +170,21 @@ namespace DataWF.Common
 
                     foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                     {
-                        if (byName)
+                        try
                         {
-                            type = assembly.DefinedTypes.FirstOrDefault(p => string.Equals(p.Name, value, StringComparison.Ordinal));
+                            if (byName)
+                            {
+                                type = assembly.DefinedTypes.FirstOrDefault(p => string.Equals(p.Name, value, StringComparison.Ordinal));
+                            }
+                            else
+                            {
+                                type = assembly.GetType(code);
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            type = assembly.GetType(code);
+                            Helper.OnException(ex);
+                            continue;
                         }
                         if (type != null)
                         {
@@ -275,6 +282,10 @@ namespace DataWF.Common
                 {
                     serializer = DateTimeValueSerializer.Instance;
                 }
+                else if (type == typeof(TimeSpan))
+                {
+                    serializer = TimeSpanValueSerializer.Instance;
+                }
                 else if (type == typeof(Type))
                 {
                     serializer = TypeValueSerializer.Instance;
@@ -302,9 +313,12 @@ namespace DataWF.Common
 
         public static int GetOrder(PropertyInfo property, int order)
         {
-            var propertyAtribute = property.GetCustomAttribute<JsonPropertyAttribute>(false);
-            if (propertyAtribute != null && propertyAtribute.Order != 0)
-                return propertyAtribute.Order;
+            var newtonJsonProperty = property.GetCustomAttribute<Newtonsoft.Json.JsonPropertyAttribute>(false);
+            if (newtonJsonProperty != null && newtonJsonProperty.Order != 0)
+                return newtonJsonProperty.Order;
+            var displayProperty = property.GetCustomAttribute<DisplayAttribute>(false);
+            if (displayProperty != null && displayProperty.Order != 0)
+                return displayProperty.Order;
             return order;
         }
 
@@ -339,13 +353,10 @@ namespace DataWF.Common
             return attribute != null;
         }
 
-        public static NullValueHandling? IsJsonPropertyNullValueHandling(PropertyInfo info)
+        public static bool IsJsonSynchronized(PropertyInfo info)
         {
-            var attribute = info.GetCustomAttribute<JsonPropertyAttribute>(false);
-            if (attribute != null)
-                return attribute.NullValueHandling;
-            else
-                return null;
+            var attribute = info.GetCustomAttribute<JsonSynchronizedAttribute>(false);
+            return attribute != null;
         }
 
         public static bool IsSerializeWriteable(PropertyInfo info)
@@ -398,7 +409,8 @@ namespace DataWF.Common
                 if (!flag)
                 {
                     var attribute = info.GetCustomAttribute<XmlIgnoreAttribute>(false)
-                        ?? (Attribute)info.GetCustomAttribute<JsonIgnoreAttribute>(false);
+                        ?? (Attribute)info.GetCustomAttribute<Newtonsoft.Json.JsonIgnoreAttribute>(false)
+                        ?? (Attribute)info.GetCustomAttribute<System.Text.Json.Serialization.JsonIgnoreAttribute>(false);
                     flag = attribute != null;
                     if (!flag && info is FieldInfo)
                     {

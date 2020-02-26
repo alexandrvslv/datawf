@@ -12,7 +12,7 @@ namespace DataWF.WebService.Common
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
-    [Auth]
+    [LoggerAndFormatter]
     public class WebNotifyController : ControllerBase
     {
         public WebNotifyController(WebNotifyService service)

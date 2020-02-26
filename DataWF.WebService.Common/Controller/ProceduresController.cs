@@ -10,7 +10,7 @@ namespace DataWF.WebService.Common
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
-    [Auth]
+    [LoggerAndFormatter]
     public class ProceduresController : ControllerBase
     {
         [HttpGet]

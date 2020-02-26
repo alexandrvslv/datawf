@@ -441,7 +441,7 @@ namespace DataWF.Data
 
         public static List<int> AccessGroups { get; } = new List<int>();
 
-        public static IDataProvider DataProvider { get; set; }
+        public static IDBProvider DataProvider { get; set; }
     }
 
     public class DBSchemaChange : ICheck

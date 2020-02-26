@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -70,7 +69,7 @@ namespace DataWF.Common
             }
         }
 
-        [JsonIgnore, XmlIgnore]
+        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
         public virtual IInvoker Invoker
         {
             get => invoker;

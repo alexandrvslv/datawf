@@ -1,10 +1,6 @@
-﻿using DataWF.Data;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using DataWF.Common;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -33,7 +29,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public override DBSchema Schema
         {
             get { return Table?.Schema; }
@@ -42,6 +38,19 @@ namespace DataWF.Data
         public override string GetLocalizeCategory()
         {
             return Table?.FullName;
+        }
+
+        [Invoker(typeof(DBTableItem), nameof(DBTableItem.Table))]
+        public class TableInvoker<T> : Invoker<T, DBTable> where T : DBTableItem
+        {
+            public static readonly TableInvoker<T> Instance = new TableInvoker<T>();
+            public override string Name => nameof(DBTableItem.Table);
+
+            public override bool CanWrite => true;
+
+            public override DBTable GetValue(T target) => target.Table;
+
+            public override void SetValue(T target, DBTable value) => target.Table = value;
         }
     }
 }

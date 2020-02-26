@@ -28,7 +28,7 @@ namespace DataWF.Data
 
         public DBConstraintList(DBTable table) : base(table)
         {
-            Indexes.Add(DBConstraintColumnNameInvoker<T>.Instance);
+            Indexes.Add(DBConstraint.ColumnNameInvoker<T>.Instance);
         }
 
         public IEnumerable<T> GetByColumn(DBColumn column)
@@ -43,7 +43,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetByValue(string value)
         {
-            return Select(DBConstraintValueInvoker<T>.Instance, CompareType.Equal, value);
+            return Select(DBConstraint.ValueInvoker<T>.Instance, CompareType.Equal, value);
         }
 
         public override DDLType GetInsertType(T item)
@@ -52,29 +52,5 @@ namespace DataWF.Data
         }
     }
 
-    [Invoker(typeof(DBConstraint), nameof(DBConstraint.ColumnName))]
-    public class DBConstraintColumnNameInvoker<T> : Invoker<T, string> where T : DBConstraint
-    {
-        public static readonly DBConstraintColumnNameInvoker<T> Instance = new DBConstraintColumnNameInvoker<T>();
-        public override string Name => nameof(DBConstraint.ColumnName);
 
-        public override bool CanWrite => true;
-
-        public override string GetValue(T target) => target.ColumnName;
-
-        public override void SetValue(T target, string value) => target.ColumnName = value;
-    }
-
-    [Invoker(typeof(DBConstraint), nameof(DBConstraint.Value))]
-    public class DBConstraintValueInvoker<T> : Invoker<T, string> where T : DBConstraint
-    {
-        public static readonly DBConstraintValueInvoker<T> Instance = new DBConstraintValueInvoker<T>();
-        public override string Name => nameof(DBConstraint.Value);
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(T target) => target.Value;
-
-        public override void SetValue(T target, string value) => target.Value = value;
-    }
 }

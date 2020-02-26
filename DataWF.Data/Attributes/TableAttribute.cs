@@ -18,15 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System;
-using DataWF.Data;
-using DataWF.Common;
-using System.Globalization;
 using System.ComponentModel;
-using System.Collections.Generic;
-using System.Xml.Serialization;
-using System.Reflection;
-using System.Diagnostics;
-using Newtonsoft.Json;
 
 namespace DataWF.Data
 {

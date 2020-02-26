@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -12,7 +11,7 @@ namespace DataWF.Common
         public static Action<PropertyChangedEventHandler, object, PropertyChangedEventArgs> GlogalChangedHook;
         protected PropertyChangedEventHandler propertyChanged;
 
-        [JsonIgnore, XmlIgnore, Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore, Browsable(false)]
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(propertyChanged);
 
         public event PropertyChangedEventHandler PropertyChanged

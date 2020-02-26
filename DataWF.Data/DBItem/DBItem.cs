@@ -19,7 +19,6 @@
 */
 
 using DataWF.Common;
-using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,6 +30,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -65,6 +65,249 @@ namespace DataWF.Data
             if (table != null)
                 Build(table);
         }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public bool Attached => (state & DBItemState.Attached) == DBItemState.Attached;
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public int Handler { get => handler; set => handler = value; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public short Block { get => block; set => block = value; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public short BlockIndex { get => blockIndex; set => blockIndex = value; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public virtual string CodeCategory
+        {
+            get => Table.CodeKey != null ? GetValue<string>(Table.CodeKey) : "General";
+            set { }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public bool IsChanged
+        {
+            get { return UpdateState != DBUpdateState.Default && (UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit; }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public bool IsReferencingChanged
+        {
+            get { return IsChanged || GetPropertyReferencing().Any(p => p.IsReferencingChanged); }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public byte[] Image
+        {
+            get => this[Table.ImageKey] as byte[];
+            set
+            {
+                if (Table.ImageKey == null)
+                    return;
+                this[Table.ImageKey] = value;
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public object PrimaryId
+        {
+            get => Table.PrimaryKey == null ? null : GetValue(Table.PrimaryKey);
+            set => this[Table.PrimaryKey] = value;
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public string PrimaryCode
+        {
+            get => Table.CodeKey == null ? null : GetValue<string>(Table.CodeKey);
+            set => this[Table.CodeKey] = value;
+        }
+
+        [Browsable(false), DefaultValue(0)]
+        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]
+        public virtual int? ItemType
+        {
+            get => Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey);
+            set => SetValue(value, Table.ItemTypeKey);
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        DBStatus IStatusable.Status
+        {
+            get => Status ?? DBStatus.Empty;
+            set => Status = value;
+        }
+
+        [DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.Indexing, Order = 99)]
+        public DBStatus? Status
+        {
+            get => Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault();
+            set => SetValue(value, Table.StatusKey);
+        }
+
+        [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
+        public virtual DateTime? DateCreate
+        {
+            get => Table.DateKey == null ? null : GetValue<DateTime?>(Table.DateKey);
+            set => SetValue(value, Table.DateKey);
+        }
+
+        [Browsable(false)]
+        [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System, Order = 101)]
+        public DateTime? Stamp
+        {
+            get => Table.StampKey == null ? null : GetValue<DateTime?>(Table.StampKey);
+            set => SetValue(value, Table.StampKey);
+        }
+
+        IAccessValue IAccessable.Access { get => Access; set => Access = (AccessValue)value; }
+
+        //[XmlIgnore, JsonIgnore, NotMapped, Browsable(false)]
+        [Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
+        public virtual AccessValue Access
+        {
+            get
+            {
+                if (access == null)
+                {
+                    if (Table.AccessKey != null)
+                    {
+                        access = ReadAccess();
+                    }
+                    if (access == null)
+                    {
+                        return Table.Access;
+                    }
+                }
+                return access;
+            }
+            set
+            {
+                if (Table.AccessKey != null)
+                {
+                    SetValue(value?.Write(), Table.AccessKey);
+                }
+                access = value;
+            }
+        }
+
+        //[Browsable(false)]
+        //public virtual string Name
+        //{
+        //    get { return GetName(nameof(Name)); }
+        //    set { SetName(nameof(Name), value); }
+        //}
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public virtual DBTable Table
+        {
+            get => table;
+            set
+            {
+                if (table != value)
+                {
+                    table = value is IDBVirtualTable virtualTable ? virtualTable.BaseTable : value;
+                    handler = table.GetNextHandler(out block, out blockIndex);
+                }
+            }
+        }
+
+        public object this[int columnIndex]
+        {
+            get => this[Table.Columns[columnIndex]];
+            set => this[Table.Columns[columnIndex]] = value;
+        }
+
+        public object this[string code]
+        {
+            get
+            {
+                if (code == null)
+                    return null;
+                DBItem row = this;
+                int pi = 0, i = code.IndexOf('.');
+                while (i > 0)
+                {
+                    var scolumn = row.Table.ParseColumnProperty(code.Substring(pi, i - pi));
+                    if (scolumn == null)
+                        return null;
+                    var item = row.GetReference(scolumn);
+                    if (item == null)
+                        return null;
+                    row = item;
+                    pi = i + 1;
+                    i = code.IndexOf('.', pi);
+                }
+                return row[row.Table.ParseColumnProperty(code.Substring(pi))];
+            }
+            set
+            {
+                DBItem row = this;
+                int pi = 0, i = code.IndexOf('.');
+                while (i > 0)
+                {
+                    var item = row.GetReference(row.Table.ParseColumnProperty(code.Substring(pi, i - pi)));
+                    if (item == null)
+                        return;
+                    row = item;
+                    pi = i + 1;
+                    i = code.IndexOf('.', pi);
+                }
+                row[row.Table.ParseColumnProperty(code.Substring(pi))] = value;
+            }
+        }
+
+        public object this[DBColumn column]
+        {
+            get
+            {
+                if (column == null)
+                    return null;
+                if (column.ColumnType == DBColumnTypes.Expression)
+                    return column.GetExpression().GetValue(this);
+
+                return GetValue(column);
+            }
+            set
+            {
+                if (column == null)
+                    return;
+
+                SetValue(column.ParseValue(value),
+                         column,
+                         column.ColumnType == DBColumnTypes.Default);
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public DBItemState State
+        {
+            get => state;
+            set
+            {
+                if (state != value)
+                {
+                    state = value;
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public virtual DBUpdateState UpdateState
+        {
+            get => update;
+            set
+            {
+                if (update != value)
+                {
+                    update = value;
+                    OnPropertyChanged(nameof(UpdateState));
+                    //var arg = new DBItemEventArgs(this) { State = update };
+                    //DBService.OnStateEdited(arg);
+                }
+            }
+        }
+
 
         public bool GetOld(DBColumn column, out object value)
         {
@@ -609,212 +852,10 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual string CodeCategory
-        {
-            get { return Table.CodeKey != null ? GetValue<string>(Table.CodeKey) : "General"; }
-            set { }
-        }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public object PrimaryId
-        {
-            get { return Table.PrimaryKey == null ? null : GetValue(Table.PrimaryKey); }
-            set { this[Table.PrimaryKey] = value; }
-        }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public string PrimaryCode
-        {
-            get { return Table.CodeKey == null ? null : GetValue<string>(Table.CodeKey); }
-            set { this[Table.CodeKey] = value; }
-        }
-
-        [Browsable(false), DefaultValue(0)]
-        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]
-        public virtual int? ItemType
-        {
-            get { return Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey); }
-            set { SetValue(value, Table.ItemTypeKey); }
-        }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        DBStatus IStatusable.Status { get => Status ?? DBStatus.Empty; set => Status = value; }
-
-        [DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.Indexing, Order = 99)]
-        public DBStatus? Status
-        {
-            get { return Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault(); }
-            set { SetValue(value, Table.StatusKey); }
-        }
-
-        [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
-        public virtual DateTime? DateCreate
-        {
-            get { return Table.DateKey == null ? null : GetValue<DateTime?>(Table.DateKey); }
-            set { SetValue(value, Table.DateKey); }
-        }
-
-        [Browsable(false)]
-        [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System, Order = 101)]
-        public DateTime? Stamp
-        {
-            get { return Table.StampKey == null ? null : GetValue<DateTime?>(Table.StampKey); }
-            set { SetValue(value, Table.StampKey); }
-        }
-
-        IAccessValue IAccessable.Access { get => Access; set => Access = (AccessValue)value; }
-
-        [XmlIgnore, JsonIgnore, NotMapped, Browsable(false)]
-        [Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
-        public virtual AccessValue Access
-        {
-            get
-            {
-                if (access == null)
-                {
-                    if (Table.AccessKey != null)
-                    {
-                        access = ReadAccess();
-                    }
-                    if (access == null)
-                    {
-                        return Table.Access;
-                    }
-                }
-                return access;
-            }
-            set
-            {
-                if (Table.AccessKey != null)
-                {
-                    SetValue(value?.Write(), Table.AccessKey);
-                }
-                access = value;
-            }
-        }
-
         private AccessValue ReadAccess()
         {
             var accessData = GetValue<byte[]>(Table.AccessKey);
             return accessData != null ? new AccessValue(accessData) : null;
-        }
-
-        //[Browsable(false)]
-        //public virtual string Name
-        //{
-        //    get { return GetName(nameof(Name)); }
-        //    set { SetName(nameof(Name), value); }
-        //}
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual DBTable Table
-        {
-            get { return table; }
-            set
-            {
-                if (table != value)
-                {
-                    table = value is IDBVirtualTable virtualTable ? virtualTable.BaseTable : value;
-                    handler = table.GetNextHandler(out block, out blockIndex);
-                }
-            }
-        }
-
-        public object this[int columnIndex]
-        {
-            get { return this[Table.Columns[columnIndex]]; }
-            set { this[Table.Columns[columnIndex]] = value; }
-        }
-
-        public object this[string code]
-        {
-            get
-            {
-                if (code == null)
-                    return null;
-                DBItem row = this;
-                int pi = 0, i = code.IndexOf('.');
-                while (i > 0)
-                {
-                    var scolumn = row.Table.ParseColumnProperty(code.Substring(pi, i - pi));
-                    if (scolumn == null)
-                        return null;
-                    var item = row.GetReference(scolumn);
-                    if (item == null)
-                        return null;
-                    row = item;
-                    pi = i + 1;
-                    i = code.IndexOf('.', pi);
-                }
-                return row[row.Table.ParseColumnProperty(code.Substring(pi))];
-            }
-            set
-            {
-                DBItem row = this;
-                int pi = 0, i = code.IndexOf('.');
-                while (i > 0)
-                {
-                    var item = row.GetReference(row.Table.ParseColumnProperty(code.Substring(pi, i - pi)));
-                    if (item == null)
-                        return;
-                    row = item;
-                    pi = i + 1;
-                    i = code.IndexOf('.', pi);
-                }
-                row[row.Table.ParseColumnProperty(code.Substring(pi))] = value;
-            }
-        }
-
-        public object this[DBColumn column]
-        {
-            get
-            {
-                if (column == null)
-                    return null;
-                if (column.ColumnType == DBColumnTypes.Expression)
-                    return column.GetExpression().GetValue(this);
-
-                return GetValue(column);
-            }
-            set
-            {
-                if (column == null)
-                    return;
-
-                SetValue(column.ParseValue(value),
-                         column,
-                         column.ColumnType == DBColumnTypes.Default);
-            }
-        }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBItemState State
-        {
-            get { return state; }
-            set
-            {
-                if (state != value)
-                {
-                    state = value;
-                }
-            }
-        }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual DBUpdateState UpdateState
-        {
-            get { return update; }
-            set
-            {
-                if (update != value)
-                {
-                    update = value;
-                    OnPropertyChanged(nameof(UpdateState));
-                    //var arg = new DBItemEventArgs(this) { State = update };
-                    //DBService.OnStateEdited(arg);
-                }
-            }
         }
 
         public void Accept(string column)
@@ -926,12 +967,6 @@ namespace DataWF.Data
 
         #endregion
 
-        [Browsable(false)]
-        public bool Attached
-        {
-            get { return (state & DBItemState.Attached) == DBItemState.Attached; }
-        }
-
         public void Attach()
         {
             if (!Attached)
@@ -1042,24 +1077,6 @@ namespace DataWF.Data
             Table.FreeHandlers.Enqueue(handler);
         }
 
-        [Browsable(false)]
-        public bool IsChanged
-        {
-            get { return UpdateState != DBUpdateState.Default && (UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit; }
-        }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public byte[] Image
-        {
-            get { return this[Table.ImageKey] as byte[]; }
-            set
-            {
-                if (Table.ImageKey == null)
-                    return;
-                this[Table.ImageKey] = value;
-            }
-        }
-
         public Task Save()
         {
             return Save((IUserIdentity)null);
@@ -1120,7 +1137,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool Check
         {
-            get { return (state & DBItemState.Check) == DBItemState.Check; }
+            get => (state & DBItemState.Check) == DBItemState.Check;
             set
             {
                 if (Check != value)
@@ -1130,12 +1147,6 @@ namespace DataWF.Data
                 }
             }
         }
-
-        public int Handler { get => handler; set => handler = value; }
-
-        public short Block { get => block; set => block = value; }
-
-        public short BlockIndex { get => blockIndex; set => blockIndex = value; }
 
         public int CompareTo(DBItem obj)
         {
@@ -1401,11 +1412,6 @@ namespace DataWF.Data
                     }
                 }
             }
-        }
-
-        public bool IsReferencingChanged
-        {
-            get { return IsChanged || GetPropertyReferencing().Any(p => p.IsReferencingChanged); }
         }
 
         public IEnumerable<DBItem> GetPropertyReferencing()

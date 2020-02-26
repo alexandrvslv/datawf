@@ -20,16 +20,30 @@
 
 using DataWF.Common;
 using DataWF.Data;
-using Newtonsoft.Json;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace DataWF.WebService.Common
 {
 
-    public class DBItemJsonConverter : JsonConverter
+    public class DBItemJsonConverter : JsonConverter<DBItem>
     {
+        private const string jsonIncludeRef = "json_include_ref";
+        private const string jsonIncludeRefing = "json_include_refing";
+        private const string jsonReferenceCheck = "json_ref_check";
+        private const string jsonMaxDepth = "json_max_depth";
+        private IHttpContextAccessor httpContextAccessor;
+        private HttpContext context;
+        private IUserIdentity user;
+        private bool? includeReference;
+        private bool? includeReferencing;
+        private int? maxDepth;
+        private bool? referenceCheck;
+        private HashSet<DBItem> referenceSet = new HashSet<DBItem>();
         public bool IsSerializeableColumn(DBColumn column)
         {
             return column.PropertyInvoker != null
@@ -38,97 +52,149 @@ namespace DataWF.WebService.Common
                 && (column.Keys & DBColumnKeys.File) != DBColumnKeys.File;
         }
 
+        public DBItemJsonConverter()
+        {
+
+        }
+
+        public IHttpContextAccessor HttpContextAccessor
+        {
+            get => httpContextAccessor;
+            set => httpContextAccessor = value;
+        }
+
+        public HttpContext HttpContext
+        {
+            get => context ?? HttpContextAccessor?.HttpContext;
+            set => context = value;
+        }
+
+        public IUserIdentity CurrentUser
+        {
+            get => user ?? HttpContext?.User?.GetCommonUser();
+            set => user = value;
+        }
+
+        public bool IncludeReference
+        {
+            get => includeReference ?? HttpContext?.ReadBool(jsonIncludeRef) ?? false;
+            set => includeReference = value;
+        }
+
+        public bool IncludeReferencing
+        {
+            get => includeReferencing ?? HttpContext?.ReadBool(jsonIncludeRefing) ?? true;
+            set => includeReferencing = value;
+        }
+
+        public bool ReferenceCheck
+        {
+            get => referenceCheck ?? HttpContext?.ReadBool(jsonReferenceCheck) ?? false;
+            set => referenceCheck = value;
+        }
+
+        public int MaxDepth
+        {
+            get => maxDepth ?? HttpContext?.ReadInt(jsonMaxDepth) ?? 5;
+            set => maxDepth = value;
+        }
+
         public override bool CanConvert(Type objectType)
         {
             return TypeHelper.IsBaseType(objectType, typeof(DBItem));
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void Write(Utf8JsonWriter writer, DBItem value, JsonSerializerOptions options)
         {
-            if (value is DBItem item)
-            {
-                var claimsWriter = writer as ClaimsJsonTextWriter;
-                writer.WriteStartObject();
-                var table = item.Table;
-                var valueType = value.GetType();
-                var includeReference = claimsWriter?.IncludeReferences ?? false;
+            bool includeReference = IncludeReference;
+            int maxDepth = MaxDepth;
+            var table = value.Table;
+            var valueType = value.GetType();
+            writer.WriteStartObject();
 
-                foreach (var column in table.Columns)
+            foreach (var column in table.Columns)
+            {
+                if (!column.PropertyInvoker.TargetType.IsAssignableFrom(valueType)
+                    || !IsSerializeableColumn(column))
+                    continue;
+                writer.WritePropertyName(column.Property);
+                var propertyValue = column.PropertyInvoker.GetValue(value);
+                if (propertyValue is AccessValue accessValue)
                 {
-                    if (!column.PropertyInvoker.TargetType.IsAssignableFrom(valueType)
-                        || !IsSerializeableColumn(column))
+                    JsonSerializer.Serialize(writer, accessValue.GetFlags(CurrentUser), options);
+                }
+                else
+                {
+                    JsonSerializer.Serialize(writer, propertyValue, options);
+
+                    if (includeReference
+                        && column.ReferencePropertyInvoker != null
+                        && propertyValue != null
+                        && writer.CurrentDepth < maxDepth)
+                    {
+                        var reference = (DBItem)column.ReferencePropertyInfo.GetValue(value);
+                        if (ReferenceCheck && reference != null)
+                        {
+                            if (referenceSet.Contains(reference))
+                                continue;
+                            else
+                                referenceSet.Add(reference);
+                        }
+                        writer.WritePropertyName(column.ReferencePropertyInfo.Name);
+                        JsonSerializer.Serialize(writer, reference, options);
+                    }
+                }
+            }
+
+            if (IncludeReferencing && table.TableAttribute != null)
+            {
+                foreach (var refing in table.TableAttribute.Referencings)
+                {
+                    if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(valueType))
                         continue;
-                    writer.WritePropertyName(column.Property);
-                    var propertyValue = column.PropertyInvoker.GetValue(item);
-                    if (propertyValue is AccessValue accessValue)
+                    if (refing.PropertyInvoker.GetValue(value) is IEnumerable<DBItem> refs)
                     {
-                        serializer.Serialize(writer, accessValue.GetFlags(claimsWriter.User));
-                    }
-                    else
-                    {
-                        serializer.Serialize(writer, propertyValue);
-                        if (includeReference
-                            && column.ReferencePropertyInvoker != null
-                            && propertyValue != null
-                            && claimsWriter != null
-                            && claimsWriter.CurrentDepth < claimsWriter.AllowDepth)
-                        {
-                            claimsWriter.CurrentDepth++;
-                            writer.WritePropertyName(column.ReferencePropertyInfo.Name);
-                            serializer.Serialize(writer, column.ReferencePropertyInfo.GetValue(item));
-                            claimsWriter.CurrentDepth--;
-                        }
+                        writer.WritePropertyName(refing.PropertyInfo.Name);
+                        JsonSerializer.Serialize(writer, refs, options);
                     }
                 }
-
-                if (claimsWriter?.IncludeReferencing ?? true && table.TableAttribute != null)
-                {
-                    foreach (var refing in table.TableAttribute.Referencings)
-                    {
-                        if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(valueType))
-                            continue;
-                        if (refing.PropertyInvoker.GetValue(item) is IEnumerable<DBItem> refs)
-                        {
-                            writer.WritePropertyName(refing.PropertyInfo.Name);
-                            serializer.Serialize(writer, refs);
-                        }
-                    }
-                }
-                writer.WriteEndObject();
             }
-            else
-            {
-                serializer.Serialize(writer, value);
-            }
+            writer.WriteEndObject();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override DBItem Read(ref Utf8JsonReader reader, Type objectType, JsonSerializerOptions options)
         {
-            var item = existingValue as DBItem;
-            if (existingValue != null && item == null)
+            var item = (DBItem)null;
+            if (!objectType.IsAssignableFrom(typeof(DBItem)))
             {
-                throw new JsonSerializationException($"Expect {nameof(DBItem)} but {nameof(existingValue)} is {existingValue?.GetType().Name ?? "null"}");
+                throw new JsonException($"Expect {nameof(DBItem)} but {nameof(objectType)} is {objectType?.Name ?? "null"}");
             }
             var table = DBTable.GetTable(objectType);
             if (table == null)
             {
-                throw new JsonSerializationException($"Can't find table of {objectType?.Name ?? "null"}");
+                throw new JsonException($"Can't find table of {objectType?.Name ?? "null"}");
             }
             var dictionary = new Dictionary<IInvoker, object>();
-            var key = (IInvoker)null;
-            while (reader.Read() && reader.TokenType != JsonToken.EndObject)
+            var invoker = (IInvoker)null;
+            var propertyName = (string)null;
+            while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
             {
-                if (reader.TokenType == JsonToken.PropertyName)
+                if (reader.TokenType == JsonTokenType.PropertyName)
                 {
-                    key = table.GetInvoker((string)reader.Value);
-                    if (key == null)
-                    {
-                        throw new InvalidOperationException($"Property {reader.Value} not found!");
-                    }
+                    propertyName = reader.GetString();
+                    invoker = table.GetInvoker(propertyName);
                 }
-                else if (key != null)
+                else
                 {
-                    dictionary[key] = serializer.Deserialize(reader, key.DataType);
+                    var proeprtyValue = JsonSerializer.Deserialize(ref reader, invoker.DataType, options);
+                    if (invoker != null)
+                    {
+                        dictionary[invoker] = proeprtyValue;
+                    }
+                    else if (!options.AllowTrailingCommas)
+                    {
+                        throw new InvalidOperationException($"Property {propertyName} not found!");
+                    }
                 }
             }
 

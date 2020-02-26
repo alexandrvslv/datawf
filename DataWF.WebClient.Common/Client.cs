@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -55,22 +55,22 @@ namespace DataWF.Common
             }
         }
 
-        public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, IList sourceList)
+        public virtual T DeserializeItem(ref Utf8JsonReader jreader, JsonSerializerOptions options, T item, IList sourceList)
         {
             var property = (PropertySerializationInfo)null;
             var id = (object)null;
             var synchItem = item as ISynchronized;
-            while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
+            while (jreader.Read() && jreader.TokenType != JsonTokenType.EndObject)
             {
-                if (jreader.TokenType == JsonToken.PropertyName)
+                if (jreader.TokenType == JsonTokenType.PropertyName)
                 {
-                    property = SerializationInfo.GetProperty((string)jreader.Value);
+                    property = SerializationInfo.GetProperty(jreader.GetString());
                 }
                 else
                 {
                     if (property == null)
                     {
-                        DeserializeValue(serializer, jreader, null, null, null);
+                        DeserializeValue(ref jreader, options, null, null, null);
                         continue;
                     }
                     var currentValue = item != null && property.DataType != typeof(string) && !property.DataType.IsValueType
@@ -87,7 +87,7 @@ namespace DataWF.Common
                             }
                         }
                     }
-                    object value = DeserializeValue(serializer, jreader, property.DataType, currentValue, null);
+                    object value = DeserializeValue(ref jreader, options, property.DataType, currentValue, null);
 
 
                     if (property.Name == TypeInvoker?.Name && value != null)
@@ -96,7 +96,7 @@ namespace DataWF.Common
                         if (typeId != TypeId)
                         {
                             var client = Provider.GetClient(typeof(T), typeId);
-                            return (T)client.DeserializeItem(serializer, jreader, item, (IList)sourceList);
+                            return (T)client.DeserializeItem(ref jreader, options, item, (IList)sourceList);
                         }
                         continue;
                     }
@@ -256,18 +256,18 @@ namespace DataWF.Common
             return GetBaseClient()?.Select(id) as T;
         }
 
-        public object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, IList sourceList)
+        public object DeserializeItem(ref Utf8JsonReader jreader, JsonSerializerOptions options, object item, IList sourceList)
         {
-            return DeserializeItem(serializer, jreader, item as T, sourceList);
+            return DeserializeItem(ref jreader, options, item as T, sourceList);
         }
 
-        public override R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader, R item, IList sourceList)
+        public override R DeserializeObject<R>(ref Utf8JsonReader jreader, JsonSerializerOptions options, R item, IList sourceList)
         {
             if (typeof(R) == typeof(T))
             {
-                return (R)(object)DeserializeItem(serializer, jreader, (T)(object)item, sourceList);
+                return (R)(object)DeserializeItem(ref jreader, options, (T)(object)item, sourceList);
             }
-            return base.DeserializeObject(serializer, jreader, item, sourceList);
+            return base.DeserializeObject(ref jreader, options, item, sourceList);
         }
 
         public ICRUDClient GetBaseClient()

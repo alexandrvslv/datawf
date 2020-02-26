@@ -18,7 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -57,7 +57,7 @@ namespace DataWF.Data
             Parameters.AddRange(parameters);
         }
 
-        [JsonIgnore, XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBProcedureList Store
         {
             get { return (DBProcedureList)Containers.FirstOrDefault(); }
@@ -89,7 +89,7 @@ namespace DataWF.Data
 
         public string DataName { get; set; }
 
-        [Browsable(false), JsonIgnore]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public byte[] DataStore { get; set; }
 
         [XmlIgnore, JsonIgnore]
@@ -374,7 +374,7 @@ namespace DataWF.Data
                             TempAssembly = Assembly.LoadFrom(file);//File.ReadAllBytes(FileDataName)
                                                                    //TempAssembly = Assembly.LoadFile(Path.Combine(Environment.CurrentDirectory,  FileDataName)); // Assembly.Load(File.ReadAllBytes(FileDataName))
                         }
-                        var list = Store.Select(DBProcedureDataNameInvoker.Instance, CompareType.Equal, DataName);
+                        var list = Store.Select(DataNameInvoker.Instance, CompareType.Equal, DataName);
                         foreach (DBProcedure proc in list)
                             proc.TempAssembly = TempAssembly;
                     }
@@ -794,7 +794,7 @@ namespace DataWF.Data
             Helper.Logs.Add(new StateInfo("Startup", "Cache Sources", "", StatusType.Information));
 
 
-            var groups = schema.Procedures.Select(DBProcedureProcedureTypeInvoker.Instance,
+            var groups = schema.Procedures.Select(ProcedureTypeInvoker.Instance,
                                                   CompareType.Equal,
                                                   ProcedureTypes.Source).GroupBy((p) => p.DataName);
             foreach (var group in groups)
@@ -832,6 +832,84 @@ namespace DataWF.Data
                 }
             }
             return result;
+        }
+
+        [Invoker(typeof(DBProcedure), nameof(DBProcedure.Source))]
+        public class SourceInvoker : Invoker<DBProcedure, string>
+        {
+            public static readonly SourceInvoker Instance = new SourceInvoker();
+            public override string Name => nameof(DBProcedure.Source);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBProcedure target) => target.Source;
+
+            public override void SetValue(DBProcedure target, string value) => target.Source = value;
+        }
+
+        [Invoker(typeof(DBProcedure), nameof(DBProcedure.Stamp))]
+        public class StampInvoker : Invoker<DBProcedure, DateTime>
+        {
+            public static readonly StampInvoker Instance = new StampInvoker();
+            public override string Name => nameof(DBProcedure.Stamp);
+
+            public override bool CanWrite => true;
+
+            public override DateTime GetValue(DBProcedure target) => target.Stamp;
+
+            public override void SetValue(DBProcedure target, DateTime value) => target.Stamp = value;
+        }
+
+        [Invoker(typeof(DBProcedure), nameof(DBProcedure.Parameters))]
+        public class ParametersInvoker : Invoker<DBProcedure, DBProcParameterList>
+        {
+            public static readonly ParametersInvoker Instance = new ParametersInvoker();
+            public override string Name => nameof(DBProcedure.Parameters);
+
+            public override bool CanWrite => true;
+
+            public override DBProcParameterList GetValue(DBProcedure target) => target.Parameters;
+
+            public override void SetValue(DBProcedure target, DBProcParameterList value) => target.Parameters = value;
+        }
+
+        [Invoker(typeof(DBProcedure), nameof(DBProcedure.GroupName))]
+        public class GroupNameInvoker : Invoker<DBProcedure, string>
+        {
+            public static readonly GroupNameInvoker Instance = new GroupNameInvoker();
+            public override string Name => nameof(DBProcedure.GroupName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBProcedure target) => target.GroupName;
+
+            public override void SetValue(DBProcedure target, string value) => target.GroupName = value;
+        }
+
+        [Invoker(typeof(DBProcedure), nameof(DBProcedure.DataName))]
+        public class DataNameInvoker : Invoker<DBProcedure, string>
+        {
+            public static readonly DataNameInvoker Instance = new DataNameInvoker();
+            public override string Name => nameof(DBProcedure.DataName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBProcedure target) => target.DataName;
+
+            public override void SetValue(DBProcedure target, string value) => target.DataName = value;
+        }
+
+        [Invoker(typeof(DBProcedure), nameof(DBProcedure.ProcedureType))]
+        public class ProcedureTypeInvoker : Invoker<DBProcedure, ProcedureTypes>
+        {
+            public static readonly ProcedureTypeInvoker Instance = new ProcedureTypeInvoker();
+            public override string Name => nameof(DBProcedure.ProcedureType);
+
+            public override bool CanWrite => true;
+
+            public override ProcedureTypes GetValue(DBProcedure target) => target.ProcedureType;
+
+            public override void SetValue(DBProcedure target, ProcedureTypes value) => target.ProcedureType = value;
         }
     }
 }

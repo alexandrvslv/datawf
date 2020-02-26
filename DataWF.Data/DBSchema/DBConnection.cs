@@ -1,15 +1,14 @@
 ﻿using DataWF.Common;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
@@ -644,6 +643,84 @@ namespace DataWF.Data
             public override string GetValue(DBConnection target) => target.Path;
 
             public override void SetValue(DBConnection target, string value) => target.Path = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.IntegratedSecurity))]
+        public class IntegratedSecurityInvoker : Invoker<DBConnection, bool>
+        {
+            public static readonly IntegratedSecurityInvoker Instance = new IntegratedSecurityInvoker();
+            public override string Name => nameof(DBConnection.IntegratedSecurity);
+
+            public override bool CanWrite => true;
+
+            public override bool GetValue(DBConnection target) => target.IntegratedSecurity;
+
+            public override void SetValue(DBConnection target, bool value) => target.IntegratedSecurity = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.Pool))]
+        public class PoolInvoker : Invoker<DBConnection, bool?>
+        {
+            public static readonly PoolInvoker Instance = new PoolInvoker();
+            public override string Name => nameof(DBConnection.Pool);
+
+            public override bool CanWrite => true;
+
+            public override bool? GetValue(DBConnection target) => target.Pool;
+
+            public override void SetValue(DBConnection target, bool? value) => target.Pool = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.Encrypt))]
+        public class EncryptInvoker : Invoker<DBConnection, bool>
+        {
+            public static readonly EncryptInvoker Instance = new EncryptInvoker();
+            public override string Name => nameof(DBConnection.Encrypt);
+
+            public override bool CanWrite => true;
+
+            public override bool GetValue(DBConnection target) => target.Encrypt;
+
+            public override void SetValue(DBConnection target, bool value) => target.Encrypt = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.TimeOut))]
+        public class TimeOutInvoker : Invoker<DBConnection, int>
+        {
+            public static readonly EncryptInvoker Instance = new EncryptInvoker();
+            public override string Name => nameof(DBConnection.Encrypt);
+
+            public override bool CanWrite => true;
+
+            public override int GetValue(DBConnection target) => target.TimeOut;
+
+            public override void SetValue(DBConnection target, int value) => target.TimeOut = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.IsolationLevel))]
+        public class IsolationLevelInvoker : Invoker<DBConnection, IsolationLevel>
+        {
+            public static readonly IsolationLevelInvoker Instance = new IsolationLevelInvoker();
+            public override string Name => nameof(DBConnection.IsolationLevel);
+
+            public override bool CanWrite => true;
+
+            public override IsolationLevel GetValue(DBConnection target) => target.IsolationLevel;
+
+            public override void SetValue(DBConnection target, IsolationLevel value) => target.IsolationLevel = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.Extend))]
+        public class ExtendInvoker : Invoker<DBConnection, string>
+        {
+            public static readonly ExtendInvoker Instance = new ExtendInvoker();
+            public override string Name => nameof(DBConnection.Extend);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBConnection target) => target.Extend;
+
+            public override void SetValue(DBConnection target, string value) => target.Extend = value;
         }
 
     }

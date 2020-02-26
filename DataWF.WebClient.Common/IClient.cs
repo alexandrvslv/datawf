@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -48,7 +48,7 @@ namespace DataWF.Common
         Task<object> PostAsync(object value);
         Task<object> PutAsync(object value);
         Task<object> MergeAsync(object id, List<string> ids);
-        object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, IList sourceList);
+        object DeserializeItem(ref Utf8JsonReader jreader, JsonSerializerOptions options, object item, IList sourceList);
         object NewItem();
     }
 
@@ -69,7 +69,7 @@ namespace DataWF.Common
         Task<T> PutAsync(T value, ProgressToken progressToken);
         Task<bool> DeleteAsync(object id, ProgressToken progressToken);
         Task<T> MergeAsync(T value, List<string> ids, ProgressToken progressToken);
-        T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, IList sourceList);
+        T DeserializeItem(ref Utf8JsonReader jreader, JsonSerializerOptions options, T item, IList sourceList);
     }
 
     public interface ILoggedClient

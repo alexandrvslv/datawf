@@ -1,5 +1,4 @@
 ﻿using Brotli;
-using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,6 +12,8 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -28,22 +29,25 @@ namespace DataWF.Common
     {
         private const string fileNameUTFToken = "filename*=UTF-8";
         private const string fileNameToken = "filename=";
-        private readonly Lazy<JsonSerializerSettings> serializeSettings;
+        private readonly Lazy<JsonSerializerOptions> serializeSettings;
         private string baseUrl;
         private IClientProvider provider;
         private static HttpClient client;
 
         public ClientBase()
         {
-            serializeSettings = new Lazy<JsonSerializerSettings>(() =>
+            serializeSettings = new Lazy<JsonSerializerOptions>(() =>
             {
-                var settings = new JsonSerializerSettings()
-                {
-                    MissingMemberHandling = MissingMemberHandling.Ignore,
-                    ContractResolver = SynchronizedContractResolver.Instance
-                };
-                settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                return settings;
+                var options = new JsonSerializerOptions();
+#if DEBUG
+                options.WriteIndented = true;
+#endif
+                // Use the default property (As Is).
+                options.PropertyNamingPolicy = null;
+                options.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+                // Configure a converters.
+                options.Converters.Add(new JsonStringEnumConverter());
+                return options;
             });
         }
 
@@ -66,7 +70,7 @@ namespace DataWF.Common
             set { baseUrl = value; }
         }
 
-        protected JsonSerializerSettings JsonSerializerSettings { get { return serializeSettings.Value; } }
+        protected JsonSerializerOptions JsonSerializerOptions { get { return serializeSettings.Value; } }
 
         partial void ProcessResponse(HttpClient client, HttpResponseMessage response);
 
@@ -137,7 +141,6 @@ namespace DataWF.Common
                                 using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                 {
                                     using (var encodedStream = GetEncodedStream(response, responseStream))
-                                    using (var reader = new StreamReader(encodedStream))
                                     {
                                         if (mediaType.Equals("application/octet-stream"))
                                         {
@@ -170,28 +173,17 @@ namespace DataWF.Common
                                         }
                                         else if (typeof(R) == typeof(string))
                                         {
-                                            result = (R)(object)reader.ReadToEnd();
+                                            using (var reader = new StreamReader(encodedStream))
+                                            {
+                                                result = (R)(object)reader.ReadToEnd();
+                                            }
                                         }
                                         else
                                         {
-                                            var serializer = JsonSerializer.Create(JsonSerializerSettings);
-                                            using (var jreader = new JsonTextReader(reader))
+                                            using (var memoryStream = new MemoryStream())
                                             {
-                                                while (jreader.Read())
-                                                {
-                                                    switch (jreader.TokenType)
-                                                    {
-                                                        case JsonToken.StartObject:
-                                                            result = DeserializeObject<R>(serializer, jreader, value is R rvalue ? rvalue : default(R), null);
-                                                            break;
-                                                        case JsonToken.StartArray:
-                                                            result = (R)DeserializeArray(serializer, jreader, typeof(R), value as IList);
-                                                            break;
-                                                        default:
-                                                            result = serializer.Deserialize<R>(jreader);
-                                                            break;
-                                                    }
-                                                }
+                                                await encodedStream.CopyToAsync(memoryStream);
+                                                result = DeserializeStream<R>(value, memoryStream);
                                             }
                                         }
                                     }
@@ -308,20 +300,13 @@ namespace DataWF.Common
                         switch (response.StatusCode)
                         {
                             case System.Net.HttpStatusCode.OK:
-
                                 using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                 {
                                     using (var encodedStream = GetEncodedStream(response, responseStream))
-                                    using (var reader = new StreamReader(encodedStream))
+                                    using (var memoryStream = new MemoryStream())
                                     {
-                                        var serializer = JsonSerializer.Create(JsonSerializerSettings);
-                                        using (var jreader = new JsonTextReader(reader))
-                                        {
-                                            while (jreader.Read() && jreader.TokenType == JsonToken.StartArray)
-                                            {
-                                                result = DeserializeArray<R, I>(serializer, jreader);
-                                            }
-                                        }
+                                        await encodedStream.CopyToAsync(memoryStream);
+                                        result = DeserializeArrayStream<R, I>(memoryStream);
                                     }
                                 }
                                 break;
@@ -367,27 +352,61 @@ namespace DataWF.Common
             }
         }
 
-        protected virtual R DeserializeArray<R, I>(JsonSerializer serializer, JsonTextReader jreader) where R : IList<I>
+        private R DeserializeStream<R>(object value, MemoryStream memoryStream)
+        {
+            var span = new ReadOnlySpan<byte>(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
+            var jreader = new Utf8JsonReader(span);
+            var result = default(R);
+            while (jreader.Read())
+            {
+                switch (jreader.TokenType)
+                {
+                    case JsonTokenType.StartObject:
+                        result = DeserializeObject<R>(ref jreader, JsonSerializerOptions, value is R rvalue ? rvalue : default(R), null);
+                        break;
+                    case JsonTokenType.StartArray:
+                        result = (R)DeserializeArray(ref jreader, JsonSerializerOptions, typeof(R), value as IList);
+                        break;
+                    default:
+                        result = JsonSerializer.Deserialize<R>(ref jreader, JsonSerializerOptions);
+                        break;
+                }
+            }
+            return result;
+        }
+
+        private R DeserializeArrayStream<R, I>(MemoryStream memoryStream) where R : IList<I>
+        {
+            var span = new ReadOnlySpan<byte>(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
+            var jreader = new Utf8JsonReader(span);
+            while (jreader.Read() && jreader.TokenType == JsonTokenType.StartArray)
+            {
+                return DeserializeArray<R, I>(ref jreader, JsonSerializerOptions);
+            }
+            return default(R);
+        }
+
+        protected virtual R DeserializeArray<R, I>(ref Utf8JsonReader jreader, JsonSerializerOptions options) where R : IList<I>
         {
             var client = Provider.GetClient<I>();
             var items = EmitInvoker.CreateObject<R>();
             var defaultValue = default(I);
             var itemType = typeof(I);
-            while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+            while (jreader.Read() && jreader.TokenType != JsonTokenType.EndArray)
             {
                 if (client != null)
                 {
-                    items.Add(client.DeserializeItem(serializer, jreader, defaultValue, null));
+                    items.Add(client.DeserializeItem(ref jreader, options, defaultValue, null));
                 }
                 else
                 {
-                    items.Add((I)DeserializeValue(serializer, jreader, itemType, defaultValue, null));
+                    items.Add((I)DeserializeValue(ref jreader, options, itemType, defaultValue, null));
                 }
             }
             return items;
         }
 
-        protected virtual void SerializeArray(JsonSerializer serializer, JsonTextWriter jwriter, IList list)
+        protected virtual void SerializeArray(Utf8JsonWriter jwriter, JsonSerializerOptions options, IList list)
         {
             jwriter.WriteStartArray();
             var itemType = TypeHelper.GetItemType(list);
@@ -398,16 +417,16 @@ namespace DataWF.Common
                 {
                     continue;
                 }
-                SerializeValue(serializer, jwriter, item, itemInfo);
+                SerializeValue(jwriter, options, item, itemInfo);
             }
             jwriter.WriteEndArray();
         }
 
-        protected virtual IList DeserializeArray(JsonSerializer serializer, JsonTextReader jreader, Type type, IList sourceList)
+        protected virtual IList DeserializeArray(ref Utf8JsonReader jreader, JsonSerializerOptions options, Type type, IList sourceList)
         {
             if (type == null)
             {
-                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+                while (jreader.Read() && jreader.TokenType != JsonTokenType.EndArray)
                 { }
                 return null;
             }
@@ -429,11 +448,11 @@ namespace DataWF.Common
                 {
                     temp.Clear();
                 }
-                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+                while (jreader.Read() && jreader.TokenType != JsonTokenType.EndArray)
                 {
                     var item = client != null
-                        ? client.DeserializeItem(serializer, jreader, null, sourceList)
-                        : DeserializeValue(serializer, jreader, itemType, null, sourceList);
+                        ? client.DeserializeItem(ref jreader, options, null, sourceList)
+                        : DeserializeValue(ref jreader, options, itemType, null, sourceList);
                     if (item == null)
                     {
                         continue;
@@ -464,18 +483,18 @@ namespace DataWF.Common
             return temp;
         }
 
-        public virtual R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader, R item, IList sourceList)
+        public virtual R DeserializeObject<R>(ref Utf8JsonReader jreader, JsonSerializerOptions option, R item, IList sourceList)
         {
             var client = Provider.GetClient<R>();
             if (client != null)
             {
-                return client.DeserializeItem(serializer, jreader, item, sourceList);
+                return client.DeserializeItem(ref jreader, option, item, sourceList);
             }
 
-            return (R)DeserializeObject(serializer, jreader, typeof(R), item, sourceList);
+            return (R)DeserializeObject(ref jreader, option, typeof(R), item, sourceList);
         }
 
-        public virtual void SerializeObject(JsonSerializer serializer, JsonTextWriter jwriter, object item, TypeSerializationInfo info = null)
+        public virtual void SerializeObject(Utf8JsonWriter jwriter, JsonSerializerOptions options, object item, TypeSerializationInfo info = null)
         {
             var type = item.GetType();
             var typeInfo = info?.Type == type ? info : Serialization.Instance.GetTypeInfo(type);
@@ -496,25 +515,25 @@ namespace DataWF.Common
                 var value = property.Invoker.GetValue(item);
                 if (property.IsAttribute || value == null)
                 {
-                    serializer.Serialize(jwriter, value);
+                    JsonSerializer.Serialize(jwriter, value, options);
                 }
                 else if (value is IList list)
                 {
-                    SerializeArray(serializer, jwriter, list);
+                    SerializeArray(jwriter, options, list);
                 }
                 else
                 {
-                    SerializeObject(serializer, jwriter, value);
+                    SerializeObject(jwriter, options, value);
                 }
             }
             jwriter.WriteEndObject();
         }
 
-        public virtual object DeserializeObject(JsonSerializer serializer, JsonTextReader jreader, Type type, object item, IList sourceList)
+        public virtual object DeserializeObject(ref Utf8JsonReader jreader, JsonSerializerOptions options, Type type, object item, IList sourceList)
         {
             if (type == null)
             {
-                while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
+                while (jreader.Read() && jreader.TokenType != JsonTokenType.EndObject)
                 { }
                 return null;
             }
@@ -522,7 +541,7 @@ namespace DataWF.Common
             var client = Provider.GetClient(type);
             if (client != null)
             {
-                return client.DeserializeItem(serializer, jreader, item, sourceList);
+                return client.DeserializeItem(ref jreader, options, item, sourceList);
             }
 
             var typeInfo = Serialization.Instance.GetTypeInfo(type);
@@ -535,15 +554,15 @@ namespace DataWF.Common
             {
                 synchronized.SyncStatus = SynchronizedStatus.Load;
             }
-            while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
+            while (jreader.Read() && jreader.TokenType != JsonTokenType.EndObject)
             {
-                if (jreader.TokenType == JsonToken.PropertyName)
+                if (jreader.TokenType == JsonTokenType.PropertyName)
                 {
-                    property = typeInfo.GetProperty((string)jreader.Value);
+                    property = typeInfo.GetProperty(jreader.GetString());
                 }
                 else
                 {
-                    object value = DeserializeValue(serializer, jreader, property?.DataType, property?.Invoker.GetValue(item), null);
+                    object value = DeserializeValue(ref jreader, options, property?.DataType, property?.Invoker.GetValue(item), null);
                     if (property == null)
                         continue;
                     property.Invoker.SetValue(item, value);
@@ -557,37 +576,44 @@ namespace DataWF.Common
             return item;
         }
 
-        public void SerializeValue(JsonSerializer serializer, JsonTextWriter jwriter, object item, TypeSerializationInfo info = null)
+        public void SerializeValue(Utf8JsonWriter jwriter, JsonSerializerOptions options, object item, TypeSerializationInfo info = null)
         {
             var type = item?.GetType();
             if (type == null || (info?.IsAttribute ?? TypeHelper.IsSerializeAttribute(type)))
             {
-                serializer.Serialize(jwriter, item);
+                JsonSerializer.Serialize(jwriter, item, options);
             }
             else if (item is IList list)
             {
-                SerializeArray(serializer, jwriter, list);
+                SerializeArray(jwriter, options, list);
             }
             else
             {
-                SerializeObject(serializer, jwriter, item, info);
+                SerializeObject(jwriter, options, item, info);
             }
         }
 
-        public object DeserializeValue(JsonSerializer serializer, JsonTextReader jreader, Type type, object item, IList sourceList)
+        public object DeserializeValue(ref Utf8JsonReader jreader, JsonSerializerOptions options, Type type, object item, IList sourceList)
         {
             object value;
-            if (jreader.TokenType == JsonToken.StartObject)
+            if (jreader.TokenType == JsonTokenType.StartObject)
             {
-                value = DeserializeObject(serializer, jreader, type, item, sourceList);
+                value = DeserializeObject(ref jreader, options, type, item, sourceList);
             }
-            else if (jreader.TokenType == JsonToken.StartArray)
+            else if (jreader.TokenType == JsonTokenType.StartArray)
             {
-                value = DeserializeArray(serializer, jreader, type, item as IList);
+                value = DeserializeArray(ref jreader, options, type, item as IList);
             }
             else
             {
-                value = serializer.Deserialize(jreader, type);
+                try
+                {
+                    value = JsonSerializer.Deserialize(ref jreader, type, options);
+                }
+                catch (Exception ex)
+                {
+                    value = null;
+                }
             }
             if (value != null && sourceList != null && !sourceList.Contains(value))
             {
@@ -645,16 +671,13 @@ namespace DataWF.Common
             else if (value != null)
             {
                 Validation(value);
-                var serializer = JsonSerializer.Create(JsonSerializerSettings);
-                using (var writer = new StringWriter())
-                using (var jwriter = new JsonTextWriter(writer))
+                using (var memoryStream = new MemoryStream())
+                using (var jwriter = new Utf8JsonWriter(memoryStream))
                 {
-                    SerializeValue(serializer, jwriter, value);
+                    SerializeValue(jwriter, JsonSerializerOptions, value);
                     jwriter.Flush();
-                    var contentText = writer.ToString();
-                    var content = new StringContent(contentText, Encoding.UTF8);
-                    content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-                    request.Content = content;
+                    var text = Encoding.UTF8.GetString(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
+                    request.Content = new StringContent(text, Encoding.UTF8, "application/json");
                 }
             }
             if (httpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))

@@ -1,8 +1,7 @@
 ﻿using DataWF.Common;
-using DataWF.Data;
-using Newtonsoft.Json;
 using System;
 using System.Net.WebSockets;
+using System.Text.Json.Serialization;
 
 namespace DataWF.WebService.Common
 {

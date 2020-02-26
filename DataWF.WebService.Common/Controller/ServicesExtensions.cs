@@ -4,17 +4,21 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security.Claims;
 
@@ -22,28 +26,53 @@ namespace DataWF.WebService.Common
 {
     public static partial class ServicesExtensions
     {
-        public static IServiceCollection AddDataProvider(this IServiceCollection services, IDataProvider dataProvider)
+        public static IServiceCollection AddCompression(this IServiceCollection services)
         {
-            dataProvider.Load();
+            services.AddResponseCompression(options =>
+            {
+                options.Providers.Add<BrotliCompressionProvider>();
+                options.Providers.Add<GzipCompressionProvider>();
+                options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                        new[] { "application/json", "text/json" });
+            });
+            services.Configure<GzipCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Fastest;
+            });
+            services.Configure<BrotliCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Fastest;
+            });
+            return services;
+        }
+
+        public static IApplicationBuilder UseCompression(this IApplicationBuilder app)
+        {
+            return app.UseResponseCompression();
+        }
+
+        public static IServiceCollection AddDBProvider(this IServiceCollection services, IDBProvider dataProvider, bool load = false)
+        {
+            if (load)
+            {
+                dataProvider.Load();
+            }
             return services.AddSingleton(dataProvider);
         }
 
-        public static IServiceCollection AddAuthAndMvc(this IServiceCollection services, IConfiguration configuration)
+        public static IApplicationBuilder UseDBProvider(this IApplicationBuilder app)
+        {
+            var service = app.ApplicationServices.GetService<IDBProvider>();
+            service.Load();
+            return app;
+        }
+
+        public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
             var jwtConfig = new JwtSetting();
             var jwtSection = configuration.GetSection("JwtSetting");
             jwtSection.Bind(jwtConfig);
             services.Configure<JwtSetting>(jwtSection);
-
-            var protocolSetting = new ProtocolSetting();
-            var protocolSection = configuration.GetSection("ProtocolSetting");
-            protocolSection.Bind(protocolSetting);
-            services.Configure<ProtocolSetting>(protocolSection);
-
-            var smtpSetting = new SMTPSetting();
-            var smtpSection = configuration.GetSection("SmtpSetting");
-            smtpSection.Bind(smtpSetting);
-            services.Configure<SMTPSetting>(smtpSection);
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer(options =>
@@ -67,7 +96,34 @@ namespace DataWF.WebService.Common
                     .Build();
             });
 
-            services.AddMvc(options =>
+            return services;
+        }
+
+        public static IApplicationBuilder UseJwtAuthentication(this IApplicationBuilder app)
+        {
+            return app.UseAuthentication()
+                .UseAuthorization();
+        }
+
+        public static IServiceCollection AddDefaults(this IServiceCollection services, IConfiguration configuration)
+        {
+            var protocolSetting = new ProtocolSetting();
+            var protocolSection = configuration.GetSection("ProtocolSetting");
+            if (protocolSection != null)
+            {
+                protocolSection.Bind(protocolSetting);
+            }
+            services.Configure<ProtocolSetting>(protocolSection);
+
+            var smtpSetting = new SMTPSetting();
+            var smtpSection = configuration.GetSection("SmtpSetting");
+            if (smtpSection != null)
+            {
+                smtpSection.Bind(smtpSetting);
+            }
+            services.Configure<SMTPSetting>(smtpSection);
+
+            services.AddControllers(options =>
             {
                 options.CacheProfiles.Add("Never", new CacheProfile()
                 {
@@ -75,21 +131,12 @@ namespace DataWF.WebService.Common
                     NoStore = true,
                     Duration = 0
                 });
-                options.OutputFormatters.RemoveType<JsonOutputFormatter>();
-                var settings = new JsonSerializerSettings() { ContractResolver = DBItemContractResolver.Instance };
-                settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                options.OutputFormatters.Insert(0, new ClaimsJsonOutputFormatter(settings, ArrayPool<char>.Shared));
             })
-               .AddJsonOptions(options =>
-               {
-#if DEBUG
-                   options.SerializerSettings.Formatting = Formatting.Indented;
-#endif
-                   options.SerializerSettings.ContractResolver = DBItemContractResolver.Instance;
-                   //options.SerializerSettings.Error = SerializationErrors;
-                   //options.SerializerSettings.TraceWriter = new DiagnosticsTraceWriter() { };
-                   options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-               });
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.InitDefaults();
+                });
+
 
             foreach (var validator in services.Where(s => s.ServiceType == typeof(IObjectModelValidator)).ToList())
             {
@@ -103,36 +150,50 @@ namespace DataWF.WebService.Common
         {
             return services.AddSwaggerGen(c =>
               {
-                  c.SwaggerDoc(version, new Info { Title = name, Version = version });
-                  c.SchemaFilter<SwaggerDBSchemaFilter>();
-                  c.OperationFilter<SwaggerFileUploadOperationFilter>();
-                  c.ParameterFilter<SwaggerEnumParameterFilter>();
+                  c.SwaggerDoc(version, new OpenApiInfo { Title = name, Version = version });
+                  c.SchemaFilter<OpenApiDBSchemaFilter>();
+                  c.OperationFilter<OpenApiFileOperationFilter>();
+                  c.ParameterFilter<OpenApiEnumParameterFilter>();
 
-                  c.MapType<Stream>(() => new Schema { Type = "file" });
-                  c.MapType<MemoryStream>(() => new Schema { Type = "file" });
-                  c.MapType<FileStream>(() => new Schema { Type = "file" });
-                  c.MapType<FileStreamResult>(() => new Schema { Type = "file" });
+                  c.MapType<Stream>(() => new OpenApiSchema { Type = "file" });
+                  c.MapType<MemoryStream>(() => new OpenApiSchema { Type = "file" });
+                  c.MapType<FileStream>(() => new OpenApiSchema { Type = "file" });
+                  c.MapType<FileStreamResult>(() => new OpenApiSchema { Type = "file" });
+                  c.MapType<TimeSpan>(() => new OpenApiSchema { Type = "string" });
+                  c.MapType<TimeSpan?>(() => new OpenApiSchema { Type = "string" });
 
-                  c.UseReferencedDefinitionsForEnums();
-                  c.DescribeAllEnumsAsStrings();
+                  c.CustomOperationIds(selector => selector.ActionDescriptor is ControllerActionDescriptor controllerAction
+                  ? controllerAction.ActionName
+                  : selector.ActionDescriptor.DisplayName);
+
                   c.ResolveConflictingActions(parameters =>
                    {
                        return parameters.FirstOrDefault();
                    });
 
-                  var apiKey = new ApiKeyScheme
+                  c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme,
+                      new OpenApiSecurityScheme
+                      {
+                          Name = "Authorization",
+                          Scheme = JwtBearerDefaults.AuthenticationScheme,
+                          BearerFormat = "JWT",
+                          In = ParameterLocation.Header,
+                          Description = "JWT Authorization header using the Bearer scheme. ",
+                          Type = SecuritySchemeType.Http,
+                      });
+                  c.AddSecurityRequirement(new OpenApiSecurityRequirement()
                   {
-                      Name = "Authorization",
-                      In = "header",
-                      Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
-                      Type = "apiKey"
-                  };
-                  apiKey.Extensions.Add("TokenPath", "/api/Auth");
-
-                  c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, apiKey);
-                  c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>(StringComparer.Ordinal)
-                  {
-                      { JwtBearerDefaults.AuthenticationScheme, new string[] { } }
+                      {
+                          new OpenApiSecurityScheme
+                          {
+                              Reference = new OpenApiReference
+                              {
+                                  Type = ReferenceType.SecurityScheme,
+                                  Id = JwtBearerDefaults.AuthenticationScheme
+                              }
+                          }
+                          , new string[] { }
+                      }
                   });
               });
         }
@@ -154,19 +215,20 @@ namespace DataWF.WebService.Common
             });
         }
 
-        public static IServiceCollection AddWebNotify(this IServiceCollection services)
+        public static IServiceCollection AddWebSocketNotify(this IServiceCollection services, EventHandler<WebNotifyEventArgs> removeHandler = null)
         {
-            return services.AddSingleton(new WebNotifyService());
-        }
-
-        public static IApplicationBuilder UseWebNotify(this IApplicationBuilder app, EventHandler<WebNotifyEventArgs> removeHandler = null)
-        {
-            var service = app.ApplicationServices.GetService<WebNotifyService>();
-            service.Start();
+            var service = new WebNotifyService();
             if (removeHandler != null)
             {
                 service.RemoveClient += removeHandler;
             }
+            return services.AddSingleton(service);
+        }
+
+        public static IApplicationBuilder UseWebSocketNotify(this IApplicationBuilder app)
+        {
+            var service = app.ApplicationServices.GetService<WebNotifyService>();
+            service.Start();
 
             var webSocketOptions = new WebSocketOptions()
             {

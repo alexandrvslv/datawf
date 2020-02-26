@@ -27,9 +27,9 @@ namespace DataWF.Data
 
         public DBForeignList(DBTable table) : base(table)
         {
-            Indexes.Add(DBForeignKeyReferenceNameInvoker.Instance);
-            Indexes.Add(DBForeignKeyReferenceTableNameInvoker.Instance);
-            Indexes.Add(DBForeignKeyPropertyInvoker.Instance);
+            Indexes.Add(DBForeignKey.ReferenceNameInvoker.Instance);
+            Indexes.Add(DBForeignKey.ReferenceTableNameInvoker.Instance);
+            Indexes.Add(DBForeignKey.PropertyInvoker.Instance);
         }
 
         public DBForeignKey GetForeignByColumn(DBColumn column)
@@ -44,12 +44,12 @@ namespace DataWF.Data
 
         public IEnumerable<DBForeignKey> GetByReference(DBColumn reference)
         {
-            return Select(DBForeignKeyReferenceNameInvoker.Instance, CompareType.Equal, reference.FullName);
+            return Select(DBForeignKey.ReferenceNameInvoker.Instance, CompareType.Equal, reference.FullName);
         }
 
         public IEnumerable<DBForeignKey> GetByReference(DBTable reference)
         {
-            return Select(DBForeignKeyReferenceTableNameInvoker.Instance, CompareType.Equal, reference.FullName);
+            return Select(DBForeignKey.ReferenceTableNameInvoker.Instance, CompareType.Equal, reference.FullName);
         }
 
         public DBForeignKey GetByColumns(DBColumn column, DBColumn reference)
@@ -81,44 +81,5 @@ namespace DataWF.Data
         }
     }
 
-    [Invoker(typeof(DBForeignKey), nameof(DBForeignKey.ReferenceName))]
-    public class DBForeignKeyReferenceNameInvoker : Invoker<DBForeignKey, string>
-    {
-        public static readonly DBForeignKeyReferenceNameInvoker Instance = new DBForeignKeyReferenceNameInvoker();
-        public override string Name => nameof(DBForeignKey.ReferenceName);
 
-        public override bool CanWrite => true;
-
-        public override string GetValue(DBForeignKey target) => target.ReferenceName;
-
-        public override void SetValue(DBForeignKey target, string value) => target.ReferenceName = value;
-    }
-
-    [Invoker(typeof(DBForeignKey), nameof(DBForeignKey.Property))]
-    public class DBForeignKeyPropertyInvoker : Invoker<DBForeignKey, string>
-    {
-        public static readonly DBForeignKeyPropertyInvoker Instance = new DBForeignKeyPropertyInvoker();
-
-        public override bool CanWrite => throw new System.NotImplementedException();
-
-        public override string Name => nameof(DBForeignKey.Property);
-
-        public override string GetValue(DBForeignKey target) => target.Property;
-
-        public override void SetValue(DBForeignKey target, string value) => target.Property = value;
-    }
-
-    [Invoker(typeof(DBForeignKey), nameof(DBForeignKey.ReferenceTableName))]
-    public class DBForeignKeyReferenceTableNameInvoker : Invoker<DBForeignKey, string>
-    {
-        public static readonly DBForeignKeyReferenceTableNameInvoker Instance = new DBForeignKeyReferenceTableNameInvoker();
-
-        public override string Name => nameof(DBForeignKey.ReferenceTableName);
-
-        public override bool CanWrite => false;
-
-        public override string GetValue(DBForeignKey target) => target.ReferenceTableName;
-
-        public override void SetValue(DBForeignKey target, string value) { }
-    }
 }

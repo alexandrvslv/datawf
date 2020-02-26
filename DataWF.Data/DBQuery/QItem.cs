@@ -18,12 +18,12 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -46,10 +46,10 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore]
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public IQItemList List
         {
-            get { return Containers.FirstOrDefault() as IQItemList; }
+            get { return (IQItemList)Containers.FirstOrDefault(p => p is IQItemList); }
         }
 
         public int Order
@@ -87,26 +87,26 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual IQuery Query
         {
             get { return List?.Query; }
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual DBTable Table
         {
             get { return Query?.Table; }
             set { }
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual DBSchema Schema
         {
             get { return Table?.Schema; }
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual DBSystem DBSystem
         {
             get { return Schema?.System ?? DBSystem.Default; }

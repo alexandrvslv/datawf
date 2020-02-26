@@ -66,7 +66,7 @@ namespace DataWF.WebClient.Generator
                 SyntaxHelper.CreateUsingDirective("System.Threading.Tasks") ,
                 SyntaxHelper.CreateUsingDirective("System.Net.Http") ,
                 SyntaxHelper.CreateUsingDirective("System.Net.Http.Headers") ,
-                SyntaxHelper.CreateUsingDirective("Newtonsoft.Json")
+                SyntaxHelper.CreateUsingDirective("System.Text.Json.Serialization")
             };
             var url = new Uri(Source);
             if (url.Scheme == "http" || url.Scheme == "https")
@@ -502,10 +502,22 @@ namespace DataWF.WebClient.Generator
             if (inherit)
             {
                 foreach (var baseClass in schema.AllInheritedSchemas)
+                {
                     if (baseClass.ExtensionData != null && baseClass.ExtensionData.TryGetValue("x-id", out propertyName))
                     {
                         return baseClass.Properties[propertyName.ToString()];
                     }
+                }
+                var parentSchema = schema.ParentSchema;
+                while (parentSchema != null)
+                {
+                    if (parentSchema.ExtensionData != null && parentSchema.ExtensionData.TryGetValue("x-id", out propertyName))
+                    {
+                        return parentSchema.Properties[propertyName.ToString()];
+                    }
+                    parentSchema = schema.ParentSchema;
+                }
+
             }
             return null;
         }
@@ -514,7 +526,7 @@ namespace DataWF.WebClient.Generator
         {
             var find = schema.Properties.Values.FirstOrDefault(p => p.ExtensionData != null
                  && p.ExtensionData.TryGetValue("x-id", out var propertyName)
-                 && propertyName.Equals(name));
+                 && string.Equals(propertyName.ToString(), name, StringComparison.Ordinal));
             if (find != null)
             {
                 return find;
@@ -780,6 +792,9 @@ namespace DataWF.WebClient.Generator
 
         private CompilationUnitSyntax GetOrGenDefinion(string key)
         {
+            if (key.Equals(nameof(DefaultItem), StringComparison.OrdinalIgnoreCase)
+                   || key.Equals(nameof(TimeSpan), StringComparison.OrdinalIgnoreCase))
+                return null;
             if (!cacheModels.TryGetValue(key, out var tree))
             {
                 cacheModels[key] = null;
@@ -844,8 +859,6 @@ namespace DataWF.WebClient.Generator
                 {
                     value *= 2;
                 }
-
-                //SF.EqualsValueClause(SF.Token(SyntaxKind.EqualsToken), SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(i++)))
             }
         }
 
@@ -1205,15 +1218,15 @@ namespace DataWF.WebClient.Generator
             }
             else if (property == typeKey)
             {
-                yield return SyntaxHelper.GenAttributeList("JsonProperty", $"Order = -3");
+                yield return SyntaxHelper.GenAttributeList("Display", $"Order = -3");
             }
             else if (property == idKey)
             {
-                yield return SyntaxHelper.GenAttributeList("JsonProperty", $"Order = -2");
+                yield return SyntaxHelper.GenAttributeList("Display", $"Order = -2");
             }
             else //if (!property.IsRequired)
             {
-                yield return SyntaxHelper.GenAttributeList("JsonProperty", $"NullValueHandling = NullValueHandling.Include");
+                yield return SyntaxHelper.GenAttributeList("JsonSynchronized", null);
             }
 
             foreach (var attribute in GenDefinitionClassPropertyValidationAttributes(property, idKey, typeKey))
@@ -1315,7 +1328,7 @@ namespace DataWF.WebClient.Generator
                 var refPropertyName = (object)null;
                 if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out refPropertyName))
                 {
-                    var idProperty = GetPrimaryKey(property.Reference);
+                    var idProperty = GetPrimaryKey(property.Reference ?? property.AllOf.FirstOrDefault()?.Reference ?? property.AnyOf.FirstOrDefault()?.Reference);
                     yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)};");
                 }
                 var objectProperty = GetReferenceProperty((JsonSchema)property.Parent, property.Name);
@@ -1400,6 +1413,7 @@ namespace DataWF.WebClient.Generator
 
                 refField.ValueProperty = GetReferenceProperty((JsonSchema)refField.KeyProperty.Parent, refField.KeyName);
                 refField.ValueName = GetPropertyName(refField.ValueProperty);
+
                 refField.ValueType = GetTypeString(refField.ValueProperty, false, null);
                 refField.ValueFieldName = GetFieldName(refField.ValueProperty);
 
@@ -1502,8 +1516,9 @@ namespace DataWF.WebClient.Generator
                     switch (schema.Format)
                     {
                         case "byte":
-                        case "binary":
                             return "byte[]";
+                        case "binary":
+                            return "Stream";
                         case "date":
                         case "date-time":
                             return "DateTime" + (nullable ? "?" : string.Empty);
@@ -1513,14 +1528,19 @@ namespace DataWF.WebClient.Generator
                 case JsonObjectType.Array:
                     return $"{listType}<{GetTypeString(schema.Item, false, listType)}>";
                 case JsonObjectType.None:
-                    if (schema.ActualTypeSchema != null)
+                    if (schema.ActualTypeSchema != schema)
                     {
-                        if (schema.ActualTypeSchema.Type != JsonObjectType.None)
-                            return GetTypeString(schema.ActualTypeSchema, nullable, listType);
-                        else
-                        { }
+                        return GetTypeString(schema.ActualTypeSchema, nullable, listType);
                     }
-                    break;
+                    else if (schema is JsonSchemaProperty propertySchema)
+                    {
+                        return GetTypeString(schema.AllOf.FirstOrDefault()?.Reference
+                            ?? schema.AnyOf.FirstOrDefault()?.Reference, nullable, listType);
+                    }
+                    else
+                    {
+                        goto case JsonObjectType.Object;
+                    }
                 case JsonObjectType.Object:
                     if (schema.Id != null)
                     {
@@ -1533,6 +1553,10 @@ namespace DataWF.WebClient.Generator
                         {
                             return GetDefinitionName(schema);
                         }
+                    }
+                    else if (schema.Properties.ContainsKey("file"))
+                    {
+                        return "Stream";
                     }
                     break;
                 case JsonObjectType.File:

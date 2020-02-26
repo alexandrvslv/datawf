@@ -19,7 +19,7 @@
 */
 
 using DataWF.Common;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -67,6 +67,7 @@ namespace DataWF.Data
             set => SetValue(value, LogTable.UserLogKey);
         }
 
+        [XmlIgnore, JsonIgnore]
         public DBUserReg UserReg
         {
             get => userLog ?? (userLog = (DBUserReg)UserLogTable?.LoadItemById(UserRegId));
@@ -77,6 +78,7 @@ namespace DataWF.Data
         public int? LogUserId
         {
             get => UserReg?.UserId;
+            set { }
         }
 
         [LogColumn("item_type", "item_type_log", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0), DefaultValue(0)]
@@ -101,10 +103,11 @@ namespace DataWF.Data
             set => base.Access = value;
         }
 
-        [Column("base_id", ColumnType = DBColumnTypes.Code)]
+        [Column("base_id", ColumnType = DBColumnTypes.Code, Keys = DBColumnKeys.System)]
         public string BaseId
         {
             get => GetValue(LogTable.BaseKey)?.ToString();
+            set { }
         }
 
         [XmlIgnore, JsonIgnore]
@@ -129,7 +132,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBTable BaseTable => LogTable?.BaseTable;
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public IDBLogTable LogTable => (IDBLogTable)Table;
 
         public async Task<DBItem> Redo(DBTransaction transaction)

@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -46,7 +45,7 @@ namespace DataWF.Common
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangedEventHandler ItemPropertyChanged;
 
-        [XmlIgnore, JsonIgnore, Browsable(false)]
+        [XmlIgnore, Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, Browsable(false)]
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
 
         [XmlIgnore, Browsable(false)]
@@ -225,7 +224,7 @@ namespace DataWF.Common
             get { return items == null; }
         }
 
-        [XmlIgnore, JsonIgnore]
+        [XmlIgnore, Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public bool CheckUnique { get; set; } = true;
 
         public virtual void OnListChanged(NotifyCollectionChangedEventArgs e)

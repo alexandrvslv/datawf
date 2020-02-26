@@ -4,7 +4,7 @@ using DataWF.Common;
 namespace DataWF.Data
 {
 
-    public interface IDataProvider
+    public interface IDBProvider
     {
         void Load();
         void Save();

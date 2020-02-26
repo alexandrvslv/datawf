@@ -1,7 +1,8 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,7 +18,6 @@ namespace DataWF.WebService.Common
     public class WebNotifyService : NotifyService
     {
         private readonly SelectableList<WebNotifyConnection> connections = new SelectableList<WebNotifyConnection>();
-        private readonly JsonSerializerSettings jsonSettings;
 
         public static WebNotifyService Instance { get; private set; }
 
@@ -31,8 +31,6 @@ namespace DataWF.WebService.Common
                 new ListIndex<WebNotifyConnection, IUserIdentity>(
                     WebNotifyConnectionUserInvoker.Instance,
                     NullUser.Value));
-            jsonSettings = new JsonSerializerSettings { ContractResolver = DBItemContractResolver.Instance };
-            jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
         }
 
         public WebNotifyConnection GetBySocket(WebSocket socket)
@@ -45,14 +43,13 @@ namespace DataWF.WebService.Common
             return connections.Select(WebNotifyConnectionUserInvoker.Instance, CompareType.Equal, user);
         }
 
-        public void SetCurrentAction(AuthorizationFilterContext context)
+        public void SetCurrentAction(ActionExecutingContext context)
         {
-            var emailClaim = context.HttpContext.User?.FindFirst(ClaimTypes.Email);
-            var user = emailClaim != null ? ServicesExtensions.FindUser?.Invoke(emailClaim.Value) : null;
+            var user = context.HttpContext.User?.GetCommonUser();
             SetCurrentAction(user, context);
         }
 
-        public void SetCurrentAction(IUserIdentity user, AuthorizationFilterContext context)
+        public void SetCurrentAction(IUserIdentity user, ActionExecutingContext context)
         {
             SetCurrentAction(user, context.HttpContext.Connection.RemoteIpAddress.ToString(), context.ActionDescriptor.DisplayName);
         }
@@ -176,30 +173,32 @@ namespace DataWF.WebService.Common
             stream.Position = 0;
             var property = (string)null;
             var type = (Type)null;
-            var serializer = JsonSerializer.Create(jsonSettings);
-            using (var reader = new StreamReader(stream))
-            using (var jreader = new JsonTextReader(reader))
+            var jsonOptions = new JsonSerializerOptions();
+            jsonOptions.InitDefaults(new DBItemJsonConverter { CurrentUser = client.User });
+
+            var span = new ReadOnlySpan<byte>(stream.GetBuffer(), 0, (int)stream.Length);
+            var jreader = new Utf8JsonReader(span);
             {
                 while (jreader.Read())
                 {
                     switch (jreader.TokenType)
                     {
-                        case JsonToken.PropertyName:
-                            property = (string)jreader.Value;
+                        case JsonTokenType.PropertyName:
+                            property = jreader.GetString();
                             break;
-                        case JsonToken.String:
+                        case JsonTokenType.String:
                             switch (property)
                             {
                                 case ("Type"):
-                                    type = TypeHelper.ParseType((string)jreader.Value);
+                                    type = TypeHelper.ParseType(jreader.GetString());
                                     break;
                             }
                             break;
-                        case JsonToken.StartObject:
+                        case JsonTokenType.StartObject:
                             if (property == "Value" && type != null)
                             {
                                 property = null;
-                                var obj = serializer.Deserialize(jreader, type);
+                                var obj = JsonSerializer.Deserialize(ref jreader, type, jsonOptions);
 
                                 if (obj is WebNotifyRegistration data)
                                 {
@@ -213,8 +212,11 @@ namespace DataWF.WebService.Common
                     }
                 }
             }
-            var message = Encoding.UTF8.GetString(stream.ToArray());
-            ReceiveMessage?.Invoke(this, new WebNotifyEventArgs(client, message));
+            if (ReceiveMessage != null)
+            {
+                var message = Encoding.UTF8.GetString(span);
+                ReceiveMessage(this, new WebNotifyEventArgs(client, message));
+            }
         }
 
         protected override async void OnSendChanges(NotifyMessageItem[] list)
@@ -315,17 +317,22 @@ namespace DataWF.WebService.Common
         private MemoryStream WriteData(NotifyMessageItem[] list, IUserIdentity user)
         {
             bool haveValue = false;
+            var jsonOptions = new JsonSerializerOptions();
+            jsonOptions.InitDefaults(new DBItemJsonConverter
+            {
+                CurrentUser = user,
+                IncludeReference = false,
+                IncludeReferencing = false
+            });
             var stream = new MemoryStream();
-            using (var streamWriter = new StreamWriter(stream, Encoding.UTF8, 80 * 1024, true))
-            using (var writer = new ClaimsJsonTextWriter(streamWriter)
+
+            //using (var streamWriter = new StreamWriter(stream, Encoding.UTF8, 80 * 1024, true))
+            using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
             {
-                User = user,
-                IncludeReferences = false,
-                IncludeReferencing = false,
-                CloseOutput = false
-            })
+                Encoder = jsonOptions.Encoder,
+                Indented = jsonOptions.WriteIndented
+            }))
             {
-                var jsonSerializer = JsonSerializer.Create(jsonSettings);
                 writer.WriteStartArray();
                 Type itemType = null;
                 object id = null;
@@ -341,7 +348,7 @@ namespace DataWF.WebService.Common
                         itemType = item.Table.ItemType.Type;
                         writer.WriteStartObject();
                         writer.WritePropertyName("Type");
-                        writer.WriteValue(itemType.Name);
+                        writer.WriteStringValue(itemType.Name);
                         writer.WritePropertyName("Items");
                         writer.WriteStartArray();
                     }
@@ -351,11 +358,11 @@ namespace DataWF.WebService.Common
                         id = item.ItemId;
                         writer.WriteStartObject();
                         writer.WritePropertyName("Diff");
-                        writer.WriteValue((int)item.Type);
+                        writer.WriteNumberValue((int)item.Type);
                         writer.WritePropertyName("User");
-                        writer.WriteValue(item.UserId);
+                        writer.WriteNumberValue(item.UserId);
                         writer.WritePropertyName("Id");
-                        writer.WriteValue(item.ItemId.ToString());
+                        writer.WriteStringValue(item.ItemId.ToString());
                         if (item.Type != DBLogType.Delete)
                         {
                             var value = item.Table.LoadItemById(item.ItemId);
@@ -364,7 +371,7 @@ namespace DataWF.WebService.Common
                                 && value.PrimaryId != null)
                             {
                                 writer.WritePropertyName("Value");
-                                jsonSerializer.Serialize(writer, value, value?.GetType());
+                                JsonSerializer.Serialize(writer, value, value?.GetType(), jsonOptions);
                                 haveValue = true;
                             }
                         }

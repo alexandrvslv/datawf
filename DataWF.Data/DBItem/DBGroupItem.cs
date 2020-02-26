@@ -26,6 +26,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -34,11 +36,72 @@ namespace DataWF.Data
     {
         private DBItem group;
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public object GroupId
         {
             get { return GetValue(Table.GroupKey); }
             set { SetGroupValue(value); }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public virtual DBGroupItem Group
+        {
+            get { return GetGroupReference<DBGroupItem>(); }
+            set { SetGroupReference(value); }
+        }
+
+        IGroup IGroup.Group
+        {
+            get { return Group; }
+            set { Group = value as DBGroupItem; }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public string FullName
+        {
+            get
+            {
+                char separator = Path.PathSeparator;
+                string buf = string.Empty;
+                var row = this;
+                while (row != null)
+                {
+                    buf = row.ToString() + (buf.Length == 0 ? string.Empty : (separator + buf));
+                    row = row.Group;
+                }
+                return buf;
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public bool IsExpanded
+        {
+            get { return GroupHelper.GetAllParentExpand(this); }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public bool Expand
+        {
+            get { return (state & DBItemState.Expand) == DBItemState.Expand; }
+            set
+            {
+                if (Expand != value)
+                {
+                    state = value ? state | DBItemState.Expand : state & ~DBItemState.Expand;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public bool IsCompaund
+        {
+            get
+            {
+                if (Table.GroupKey == null)
+                    return false;
+                return GetSubGroups(DBLoadParam.None).Any();
+            }
         }
 
         public T GetGroupValue<T>()
@@ -69,68 +132,7 @@ namespace DataWF.Data
             }
             SetReference<T>((T)(group = value), Table.GroupKey);
         }
-
-        [Browsable(false)]
-        public virtual DBGroupItem Group
-        {
-            get { return GetGroupReference<DBGroupItem>(); }
-            set { SetGroupReference(value); }
-        }
-
-        IGroup IGroup.Group
-        {
-            get { return Group; }
-            set { Group = value as DBGroupItem; }
-        }
-
-        [Browsable(false)]
-        public string FullName
-        {
-            get
-            {
-                char separator = Path.PathSeparator;
-                string buf = string.Empty;
-                var row = this;
-                while (row != null)
-                {
-                    buf = row.ToString() + (buf.Length == 0 ? string.Empty : (separator + buf));
-                    row = row.Group;
-                }
-                return buf;
-            }
-        }
-
-        [Browsable(false)]
-        public bool IsExpanded
-        {
-            get { return GroupHelper.GetAllParentExpand(this); }
-        }
-
-        [Browsable(false)]
-        public bool Expand
-        {
-            get { return (state & DBItemState.Expand) == DBItemState.Expand; }
-            set
-            {
-                if (Expand != value)
-                {
-                    state = value ? state | DBItemState.Expand : state & ~DBItemState.Expand;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        [Browsable(false)]
-        public bool IsCompaund
-        {
-            get
-            {
-                if (Table.GroupKey == null)
-                    return false;
-                return GetSubGroups(DBLoadParam.None).Any();
-            }
-        }
-
+        
         public bool GroupCompare(string column, string value)
         {
             DBColumn col = Table.Columns[column];

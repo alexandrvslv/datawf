@@ -20,6 +20,8 @@
 
 using System.Collections.Generic;
 using System.Security.Principal;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 using DataWF.Common;
 
 namespace DataWF.Data
@@ -37,11 +39,13 @@ namespace DataWF.Data
 
         public abstract string Name { get; set; }
 
-
+        [JsonIgnore, XmlIgnore]
         public abstract IEnumerable<IAccessGroup> Groups { get; }
 
+        [JsonIgnore, XmlIgnore]
         public abstract string AuthenticationType { get; }
 
+        [JsonIgnore, XmlIgnore]
         public abstract bool IsAuthenticated { get; }
 
         string IIdentity.Name => EMail;

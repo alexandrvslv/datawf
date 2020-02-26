@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Linq;
@@ -33,9 +32,6 @@ namespace DataWF.Common
             }
         }
 
-        [JsonIgnore, XmlIgnore]
-        public object Tag { get; set; }
-
         public string Name
         {
             get { return name; }
@@ -59,7 +55,7 @@ namespace DataWF.Common
             get; set;
         }
 
-        [JsonIgnore, XmlIgnore]
+        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
         public IInvoker Invoker
         {
             get { return invoker ?? (invoker = EmitInvoker.Initialize<T>(Name)); }
@@ -117,7 +113,7 @@ namespace DataWF.Common
             }
         }
 
-        [JsonIgnore, XmlIgnore]
+        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
         public object TypedValue
         {
             get { return typedValue; }
@@ -136,6 +132,29 @@ namespace DataWF.Common
                 }
             }
         }
+
+        public LogicType Logic
+        {
+            get { return logic; }
+            set
+            {
+                if (logic != value)
+                {
+                    logic = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public QueryGroup Group { get => group; set => group = value; }
+
+        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
+        public IComparer Comparision { get; set; }
+
+        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
+        public object Tag { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public void Format(StringBuilder builder, bool logic = true)
         {
@@ -191,26 +210,6 @@ namespace DataWF.Common
             }
             return result;
         }
-
-        public LogicType Logic
-        {
-            get { return logic; }
-            set
-            {
-                if (logic != value)
-                {
-                    logic = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public QueryGroup Group { get => group; set => group = value; }
-
-        [JsonIgnore, XmlIgnore]
-        public IComparer Comparision { get; set; }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

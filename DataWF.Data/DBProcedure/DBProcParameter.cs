@@ -18,7 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using System;
 using System.Data;
 using System.Linq;
@@ -83,6 +83,45 @@ namespace DataWF.Data
         public override string FormatSql(DDLType ddlType)
         {
             return null;
+        }
+
+        [Invoker(typeof(DBProcParameter), nameof(DBProcParameter.ColumnName))]
+        public class ColumnNameInvoker : Invoker<DBProcParameter, string>
+        {
+            public static readonly ColumnNameInvoker Instance = new ColumnNameInvoker();
+            public override string Name => nameof(DBProcParameter.ColumnName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBProcParameter target) => target.ColumnName;
+
+            public override void SetValue(DBProcParameter target, string value) => target.ColumnName = value;
+        }
+
+        [Invoker(typeof(DBProcParameter), nameof(DBProcParameter.DataTypeName))]
+        public class DataTypeNameInvoker : Invoker<DBProcParameter, string>
+        {
+            public static readonly DataTypeNameInvoker Instance = new DataTypeNameInvoker();
+            public override string Name => nameof(DBProcParameter.DataTypeName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBProcParameter target) => target.DataTypeName;
+
+            public override void SetValue(DBProcParameter target, string value) => target.DataTypeName = value;
+        }
+
+        [Invoker(typeof(DBProcParameter), nameof(DBProcParameter.Direction))]
+        public class DirectionInvoker : Invoker<DBProcParameter, ParameterDirection>
+        {
+            public static readonly DirectionInvoker Instance = new DirectionInvoker();
+            public override string Name => nameof(DBProcParameter.Direction);
+
+            public override bool CanWrite => true;
+
+            public override ParameterDirection GetValue(DBProcParameter target) => target.Direction;
+
+            public override void SetValue(DBProcParameter target, ParameterDirection value) => target.Direction = value;
         }
     }
 }

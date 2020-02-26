@@ -26,7 +26,7 @@ namespace DataWF.Data
     {
         public DBTableGroupList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(DBTableGroupGroupNameInvoker.Instance);
+            Indexes.Add(DBTableGroup.GroupNameInvoker.Instance);
         }
 
         public IEnumerable<DBTableGroup> GetTopParents()
@@ -38,18 +38,5 @@ namespace DataWF.Data
         {
             return Select(nameof(DBTableGroup.GroupName), CompareType.Equal, name);
         }
-    }
-
-    [Invoker(typeof(DBTableGroup), nameof(DBTableGroup.GroupName))]
-    public class DBTableGroupGroupNameInvoker : Invoker<DBTableGroup, string>
-    {
-        public static readonly DBTableGroupGroupNameInvoker Instance = new DBTableGroupGroupNameInvoker();
-        public override string Name => nameof(DBTableGroup.GroupName);
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(DBTableGroup target) => target.GroupName;
-
-        public override void SetValue(DBTableGroup target, string value) => target.GroupName = value;
     }
 }

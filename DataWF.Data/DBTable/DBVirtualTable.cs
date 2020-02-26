@@ -17,13 +17,14 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using Newtonsoft.Json;
+using DataWF.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -146,6 +147,7 @@ namespace DataWF.Data
             set { }
         }
 
+        [XmlIgnore, JsonIgnore]
         public override string SqlName
         {
             get { return BaseTableName; }
@@ -375,6 +377,19 @@ namespace DataWF.Data
                     Constraints.Add(exist);
                 }
             }
+        }
+
+        [Invoker(typeof(DBVirtualTable<>), nameof(BaseTableName))]
+        public class BaseTableNameInvoker<T> : Invoker<DBVirtualTable<T>, string> where T : DBItem, new()
+        {
+            public static readonly BaseTableNameInvoker<T> Instance = new BaseTableNameInvoker<T>();
+            public override string Name => nameof(DBVirtualTable<T>.BaseTableName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBVirtualTable<T> target) => target.BaseTableName;
+
+            public override void SetValue(DBVirtualTable<T> target, string value) => target.BaseTableName = value;
         }
     }
 }

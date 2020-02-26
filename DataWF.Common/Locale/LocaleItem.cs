@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -68,7 +67,7 @@ namespace DataWF.Common
             get { return Locale.GetImage(image); }
         }
 
-        [Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, Browsable(false)]
         public LocaleCategory Category { get { return Containers.FirstOrDefault() as LocaleCategory; } }
 
         public void Merge(LocaleItem item)
@@ -128,7 +127,7 @@ namespace DataWF.Common
             set { this[CultureInfo.GetCultureInfo(cultureName)] = value; }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public string Value
         {
             get
@@ -149,7 +148,7 @@ namespace DataWF.Common
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public string Description
         {
             get { return this[Locale.Instance.Culture]?.Description ?? name; }

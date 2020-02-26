@@ -57,6 +57,7 @@ namespace DataWF.Test.Module.Common
                 Name = "Test User",
                 Password = "UserCommon1!",
                 Position = position,
+                AuthType = UserAuthType.Internal,
                 Access = new AccessValue(new[] { new AccessItem(group, AccessType.Create) })
             };
             await user.Save();

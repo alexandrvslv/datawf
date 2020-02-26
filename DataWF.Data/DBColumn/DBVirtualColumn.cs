@@ -17,12 +17,12 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
 using System.ComponentModel;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
-using DataWF.Common;
-using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -42,6 +42,7 @@ namespace DataWF.Data
             BaseColumn = baseColumn;
         }
 
+        [XmlIgnore, JsonIgnore]
         public IDBVirtualTable VirtualTable
         {
             get { return (IDBVirtualTable)Table; }

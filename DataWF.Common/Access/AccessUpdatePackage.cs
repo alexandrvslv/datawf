@@ -1,7 +1,6 @@
-﻿using DataWF.Common;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace DataWF.WebService.Common
+namespace DataWF.Common
 {
     public class AccessUpdatePackage
     {

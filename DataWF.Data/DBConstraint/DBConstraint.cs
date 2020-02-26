@@ -17,9 +17,10 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using Newtonsoft.Json;
+using DataWF.Common;
 using System.ComponentModel;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -125,6 +126,58 @@ namespace DataWF.Data
                 constraint.Columns.Add(item.Clone());
             }
             return constraint;
+        }
+
+        [Invoker(typeof(DBConstraint), nameof(DBConstraint.Type))]
+        public class TypeInvoker<T> : Invoker<T, DBConstraintType> where T : DBConstraint
+        {
+            public static readonly TypeInvoker<T> Instance = new TypeInvoker<T>();
+            public override string Name => nameof(DBConstraint.Type);
+
+            public override bool CanWrite => true;
+
+            public override DBConstraintType GetValue(T target) => target.Type;
+
+            public override void SetValue(T target, DBConstraintType value) => target.Type = value;
+        }
+
+        [Invoker(typeof(DBConstraint), nameof(DBConstraint.Columns))]
+        public class ColumnsInvoker<T> : Invoker<T, DBColumnReferenceList> where T : DBConstraint
+        {
+            public static readonly ColumnsInvoker<T> Instance = new ColumnsInvoker<T>();
+            public override string Name => nameof(DBConstraint.Columns);
+
+            public override bool CanWrite => true;
+
+            public override DBColumnReferenceList GetValue(T target) => target.Columns;
+
+            public override void SetValue(T target, DBColumnReferenceList value) => target.Columns = value;
+        }
+
+        [Invoker(typeof(DBConstraint), nameof(DBConstraint.ColumnName))]
+        public class ColumnNameInvoker<T> : Invoker<T, string> where T : DBConstraint
+        {
+            public static readonly ColumnNameInvoker<T> Instance = new ColumnNameInvoker<T>();
+            public override string Name => nameof(DBConstraint.ColumnName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.ColumnName;
+
+            public override void SetValue(T target, string value) => target.ColumnName = value;
+        }
+
+        [Invoker(typeof(DBConstraint), nameof(DBConstraint.Value))]
+        public class ValueInvoker<T> : Invoker<T, string> where T : DBConstraint
+        {
+            public static readonly ValueInvoker<T> Instance = new ValueInvoker<T>();
+            public override string Name => nameof(DBConstraint.Value);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.Value;
+
+            public override void SetValue(T target, string value) => target.Value = value;
         }
     }
 }

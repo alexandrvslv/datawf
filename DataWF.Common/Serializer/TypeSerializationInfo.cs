@@ -24,7 +24,7 @@ namespace DataWF.Common
                 Serialazer = TypeHelper.GetValueSerializer(type);
                 return;
             }
-            if (!Type.IsInterface)
+            if (!Type.IsInterface && !Type.IsAbstract)
             {
                 Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes);
             }

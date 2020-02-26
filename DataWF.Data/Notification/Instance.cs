@@ -24,7 +24,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -90,6 +92,7 @@ namespace DataWF.Data
             set => SetValue(value, ActiveKey);
         }
 
+        [JsonIgnore, XmlIgnore]
         public IPEndPoint EndPoint
         {
             get => ipEndPoint ?? (ipEndPoint = Host == null ? null : new IPEndPoint(IPAddress.Parse(Host), Port.GetValueOrDefault()));

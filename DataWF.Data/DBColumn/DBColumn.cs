@@ -18,17 +18,16 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
-using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -183,7 +182,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false), XmlIgnore, JsonIgnore]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual PropertyInfo ReferencePropertyInfo
         {
             get => referencePropertyInfo;
@@ -202,7 +201,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false), XmlIgnore, JsonIgnore]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual IInvoker ReferencePropertyInvoker { get; set; }
 
         [Browsable(false)]
@@ -219,7 +218,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool CanWrite { get { return true; } }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -233,154 +232,6 @@ namespace DataWF.Data
                     pull = value;
                     CheckIndex();
                 }
-            }
-        }
-
-        internal protected virtual void CheckPull()
-        {
-            if (!Containers.Any()
-                || ColumnType == DBColumnTypes.Expression
-                || ColumnType == DBColumnTypes.Code)
-                return;
-            if (Pull != null && Pull.ItemType != DataType)
-            {
-                Pull.Clear();
-                pull = null;
-            }
-            if (Pull == null && Table != null)
-            {
-                if (DataType == null)
-                    throw new InvalidOperationException($"{nameof(DataType)} not specified!");
-                Pull = Pull.Fabric(DataType, Table.BlockSize);
-            }
-        }
-
-        public IComparer CreateComparer(ListSortDirection direction = ListSortDirection.Ascending)
-        {
-            return CreateComparer<DBItem>(direction);
-        }
-
-        public IComparer CreateComparer<T>(ListSortDirection direction = ListSortDirection.Ascending) where T : DBItem
-        {
-            var type = typeof(DBComparer<,>).MakeGenericType(typeof(T), GetDataType());
-            return (IComparer)EmitInvoker.CreateObject(type,
-                new Type[] { typeof(DBColumn), typeof(ListSortDirection) },
-                new object[] { this, direction }, true);
-        }
-
-        public void LoadFromReader(DBTransaction transaction, DBItem row, int i)
-        {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
-            switch (DBDataType)
-            {
-                case DBDataType.String:
-                case DBDataType.Clob:
-                    var stringValue = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
-                    row.SetValue<string>(stringValue, this, false);
-                    break;
-                case DBDataType.Int:
-                    var intValue = transaction.Reader.IsDBNull(i) ? null : (int?)transaction.Reader.GetInt32(i);
-                    if (DataType.IsEnum)
-                    {
-                        row.SetValue((object)intValue, this, false);
-                    }
-                    else if (DataType == typeof(uint))
-                    {
-                        row.SetValue<uint?>(intValue == null ? null : (uint?)intValue, this, false);
-                    }
-                    else
-                    {
-                        row.SetValue<int?>(intValue, this, false);
-                    }
-                    break;
-                case DBDataType.BigInt:
-                    var longValue = transaction.Reader.IsDBNull(i) ? null : (long?)transaction.Reader.GetInt64(i);
-                    row.SetValue<long?>(longValue, this, false);
-                    break;
-                case DBDataType.ShortInt:
-                    var shortValue = transaction.Reader.IsDBNull(i) ? null : (short?)transaction.Reader.GetInt16(i);
-                    row.SetValue<short?>(shortValue, this, false);
-                    break;
-                case DBDataType.Date:
-                case DBDataType.DateTime:
-                case DBDataType.TimeStamp:
-                    var dateValue = transaction.Reader.IsDBNull(i) ? null : (DateTime?)transaction.Reader.GetDateTime(i);
-                    row.SetValue<DateTime?>(dateValue, this, false);
-                    break;
-                case DBDataType.Bool:
-                    var boolValue = transaction.Reader.IsDBNull(i) ? null : (bool?)transaction.Reader.GetBoolean(i);
-                    row.SetValue<bool?>(boolValue, this, false);
-                    break;
-                case DBDataType.Blob:
-                case DBDataType.ByteArray:
-                    var arrayValue = transaction.Reader.IsDBNull(i) ? null : (byte[])transaction.Reader.GetValue(i);
-                    row.SetValue<byte[]>(arrayValue, this, false);
-                    break;
-                case DBDataType.LargeObject:
-                    var unitValue = transaction.Reader.IsDBNull(i) ? null : (uint?)transaction.Reader.GetValue(i);
-                    row.SetValue<uint?>(unitValue, this, false);
-                    break;
-                case DBDataType.Decimal:
-                    var decimalValue = transaction.Reader.IsDBNull(i) ? null : (decimal?)transaction.Reader.GetDecimal(i);
-                    row.SetValue<decimal?>(decimalValue, this, false);
-                    break;
-                case DBDataType.Double:
-                    var doubleValue = transaction.Reader.IsDBNull(i) ? null : (double?)transaction.Reader.GetDouble(i);
-                    row.SetValue<double?>(doubleValue, this, false);
-                    break;
-                case DBDataType.Float:
-                    var floatValue = transaction.Reader.IsDBNull(i) ? null : (float?)transaction.Reader.GetFloat(i);
-                    row.SetValue<float?>(floatValue, this, false);
-                    break;
-                case DBDataType.TimeSpan:
-                    var spanValue = transaction.Reader.IsDBNull(i) ? null : (TimeSpan?)transaction.Reader.GetValue(i);
-                    row.SetValue<TimeSpan?>(spanValue, this, false);
-                    break;
-                case DBDataType.TinyInt:
-                    var byteValue = transaction.Reader.IsDBNull(i) ? null : (byte?)transaction.Reader.GetByte(i);
-                    if (DataType == typeof(sbyte))
-                    {
-                        row.SetValue<sbyte?>(byteValue == null ? null : (sbyte?)byteValue, this, false);
-                    }
-                    else
-                    {
-                        row.SetValue<byte?>(byteValue, this, false);
-                    }
-                    break;
-                default:
-                    var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetValue(i);
-                    row.SetValue(value, this, false);
-                    break;
-            }
-            //var value = transaction.DbConnection.System.ReadValue(this, transaction.Reader.GetValue(i));
-            //row.SetValue(value, this, false);
-        }
-
-        protected void CheckIndex()
-        {
-            if (Index != null && Index.BasePull != pull)
-            {
-                Index.Dispose();
-                Index = null;
-            }
-            if (pull == null)
-            {
-                return;
-            }
-            var build = IsPrimaryKey
-                || (Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing
-                || (Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference;
-            if (Index == null && build)
-            {
-                Index = DBPullIndexFabric.Create(Table, this);
-            }
-            else if (Index != null && !build)
-            {
-                Index.Dispose();
-                Index = null;
             }
         }
 
@@ -403,29 +254,6 @@ namespace DataWF.Data
         {
             get { return subList; }
             set { subList = value; }
-        }
-
-        public QExpression GetExpression()
-        {
-            if (expression == null)
-            {
-                expression = new QExpression();
-                expression.Parse(query, Table);
-            }
-            return expression;
-        }
-
-        public List<string> GetSubList()
-        {
-            if (subList == null)
-                return null;
-            List<string> items = new List<string>();
-            string[] split = System.Text.RegularExpressions.Regex.Split(subList, "\n|\rn|;");
-            foreach (string s in split)
-                if (s.Trim().Length != 0)
-                    items.Add(s.Trim());
-            items.Sort();
-            return items;
         }
 
         [Browsable(false), Category("Add")]
@@ -569,11 +397,6 @@ namespace DataWF.Data
             }
         }
 
-        public DBForeignKey GetForeign()
-        {
-            return Table?.Foreigns.GetForeignByColumn(this);
-        }
-
         [XmlIgnore, JsonIgnore, Category("Database")]
         public DBTable ReferenceTable
         {
@@ -657,13 +480,6 @@ namespace DataWF.Data
 
         [Browsable(false)]
         public Type TargetType { get { return typeof(DBItem); } }
-
-        public Type GetDataType()
-        {
-            if (DataType.IsValueType)
-                return typeof(Nullable<>).MakeGenericType(DataType);
-            return DataType;
-        }
 
         [Browsable(false), Category("Database")]
         public virtual Type DataType
@@ -863,6 +679,189 @@ namespace DataWF.Data
 
         [JsonIgnore, XmlIgnore]
         public DBLogColumn LogColumn => logColumn ?? (logColumn = Table?.LogTable?.GetLogColumn(this));
+
+        internal protected virtual void CheckPull()
+        {
+            if (!Containers.Any()
+                || ColumnType == DBColumnTypes.Expression
+                || ColumnType == DBColumnTypes.Code)
+                return;
+            if (Pull != null && Pull.ItemType != DataType)
+            {
+                Pull.Clear();
+                pull = null;
+            }
+            if (Pull == null && Table != null)
+            {
+                if (DataType == null)
+                    throw new InvalidOperationException($"{nameof(DataType)} not specified!");
+                Pull = Pull.Fabric(DataType, Table.BlockSize);
+            }
+        }
+
+        public IComparer CreateComparer(ListSortDirection direction = ListSortDirection.Ascending)
+        {
+            return CreateComparer<DBItem>(direction);
+        }
+
+        public IComparer CreateComparer<T>(ListSortDirection direction = ListSortDirection.Ascending) where T : DBItem
+        {
+            var type = typeof(DBComparer<,>).MakeGenericType(typeof(T), GetDataType());
+            return (IComparer)EmitInvoker.CreateObject(type,
+                new Type[] { typeof(DBColumn), typeof(ListSortDirection) },
+                new object[] { this, direction }, true);
+        }
+
+        public void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        {
+            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
+            {
+                return;
+            }
+            switch (DBDataType)
+            {
+                case DBDataType.String:
+                case DBDataType.Clob:
+                    var stringValue = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
+                    row.SetValue<string>(stringValue, this, false);
+                    break;
+                case DBDataType.Int:
+                    var intValue = transaction.Reader.IsDBNull(i) ? null : (int?)transaction.Reader.GetInt32(i);
+                    if (DataType.IsEnum)
+                    {
+                        row.SetValue((object)intValue, this, false);
+                    }
+                    else if (DataType == typeof(uint))
+                    {
+                        row.SetValue<uint?>(intValue == null ? null : (uint?)intValue, this, false);
+                    }
+                    else
+                    {
+                        row.SetValue<int?>(intValue, this, false);
+                    }
+                    break;
+                case DBDataType.BigInt:
+                    var longValue = transaction.Reader.IsDBNull(i) ? null : (long?)transaction.Reader.GetInt64(i);
+                    row.SetValue<long?>(longValue, this, false);
+                    break;
+                case DBDataType.ShortInt:
+                    var shortValue = transaction.Reader.IsDBNull(i) ? null : (short?)transaction.Reader.GetInt16(i);
+                    row.SetValue<short?>(shortValue, this, false);
+                    break;
+                case DBDataType.Date:
+                case DBDataType.DateTime:
+                case DBDataType.TimeStamp:
+                    var dateValue = transaction.Reader.IsDBNull(i) ? null : (DateTime?)transaction.Reader.GetDateTime(i);
+                    row.SetValue<DateTime?>(dateValue, this, false);
+                    break;
+                case DBDataType.Bool:
+                    var boolValue = transaction.Reader.IsDBNull(i) ? null : (bool?)transaction.Reader.GetBoolean(i);
+                    row.SetValue<bool?>(boolValue, this, false);
+                    break;
+                case DBDataType.Blob:
+                case DBDataType.ByteArray:
+                    var arrayValue = transaction.Reader.IsDBNull(i) ? null : (byte[])transaction.Reader.GetValue(i);
+                    row.SetValue<byte[]>(arrayValue, this, false);
+                    break;
+                case DBDataType.LargeObject:
+                    var unitValue = transaction.Reader.IsDBNull(i) ? null : (uint?)transaction.Reader.GetValue(i);
+                    row.SetValue<uint?>(unitValue, this, false);
+                    break;
+                case DBDataType.Decimal:
+                    var decimalValue = transaction.Reader.IsDBNull(i) ? null : (decimal?)transaction.Reader.GetDecimal(i);
+                    row.SetValue<decimal?>(decimalValue, this, false);
+                    break;
+                case DBDataType.Double:
+                    var doubleValue = transaction.Reader.IsDBNull(i) ? null : (double?)transaction.Reader.GetDouble(i);
+                    row.SetValue<double?>(doubleValue, this, false);
+                    break;
+                case DBDataType.Float:
+                    var floatValue = transaction.Reader.IsDBNull(i) ? null : (float?)transaction.Reader.GetFloat(i);
+                    row.SetValue<float?>(floatValue, this, false);
+                    break;
+                case DBDataType.TimeSpan:
+                    var spanValue = transaction.Reader.IsDBNull(i) ? null : (TimeSpan?)transaction.Reader.GetValue(i);
+                    row.SetValue<TimeSpan?>(spanValue, this, false);
+                    break;
+                case DBDataType.TinyInt:
+                    var byteValue = transaction.Reader.IsDBNull(i) ? null : (byte?)transaction.Reader.GetByte(i);
+                    if (DataType == typeof(sbyte))
+                    {
+                        row.SetValue<sbyte?>(byteValue == null ? null : (sbyte?)byteValue, this, false);
+                    }
+                    else
+                    {
+                        row.SetValue<byte?>(byteValue, this, false);
+                    }
+                    break;
+                default:
+                    var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetValue(i);
+                    row.SetValue(value, this, false);
+                    break;
+            }
+            //var value = transaction.DbConnection.System.ReadValue(this, transaction.Reader.GetValue(i));
+            //row.SetValue(value, this, false);
+        }
+
+        protected void CheckIndex()
+        {
+            if (Index != null && Index.BasePull != pull)
+            {
+                Index.Dispose();
+                Index = null;
+            }
+            if (pull == null)
+            {
+                return;
+            }
+            var build = IsPrimaryKey
+                || (Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing
+                || (Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference;
+            if (Index == null && build)
+            {
+                Index = DBPullIndexFabric.Create(Table, this);
+            }
+            else if (Index != null && !build)
+            {
+                Index.Dispose();
+                Index = null;
+            }
+        }
+
+        public QExpression GetExpression()
+        {
+            if (expression == null)
+            {
+                expression = new QExpression();
+                expression.Parse(query, Table);
+            }
+            return expression;
+        }
+
+        public List<string> GetSubList()
+        {
+            if (subList == null)
+                return null;
+            List<string> items = new List<string>();
+            string[] split = System.Text.RegularExpressions.Regex.Split(subList, "\n|\rn|;");
+            foreach (string s in split)
+                if (s.Trim().Length != 0)
+                    items.Add(s.Trim());
+            items.Sort();
+            return items;
+        }
+
+        public DBForeignKey GetForeign()
+        {
+            return Table?.Foreigns.GetForeignByColumn(this);
+        }
+
+        public Type GetDataType()
+        {
+            if (DataType.IsValueType)
+                return typeof(Nullable<>).MakeGenericType(DataType);
+            return DataType;
+        }
 
         #region IComparable Members
 

@@ -18,7 +18,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
@@ -70,7 +70,7 @@ namespace DataWF.Data
             Serialization.Deserialize(fileName, this);
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBSchemaList Schems => Containers.FirstOrDefault() as DBSchemaList;
 
         [Browsable(false)]
@@ -116,7 +116,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBSystem System { get { return Connection?.System ?? DBSystem.Default; } }
 
         public DBTableList Tables { get; set; }
@@ -262,7 +262,7 @@ namespace DataWF.Data
                 IsSynchronizing = false;
             }
         }
-
+        
         public IEnumerable<DBTableInfo> GetTablesInfo(string schemaName = null, string tableName = null)
         {
             return System.GetTablesInfo(Connection, schemaName, tableName);
@@ -679,6 +679,19 @@ namespace DataWF.Data
             public override DBSequenceList GetValue(T target) => target.Sequences;
 
             public override void SetValue(T target, DBSequenceList value) => target.Sequences = value;
+        }
+
+        [Invoker(typeof(DBSchema), nameof(DBSchema.FileName))]
+        public class FileNameInvoker<T> : Invoker<T, string> where T : DBSchema
+        {
+            public static readonly FileNameInvoker<T> Instance = new FileNameInvoker<T>();
+            public override string Name => nameof(DBSchema.FileName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.FileName;
+
+            public override void SetValue(T target, string value) => target.FileName = value;
         }
     }
 }

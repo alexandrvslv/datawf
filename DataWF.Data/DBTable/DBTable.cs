@@ -18,7 +18,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
-using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -32,6 +31,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -247,6 +247,9 @@ namespace DataWF.Data
 
         [Browsable(false), XmlIgnore, JsonIgnore]
         public DBItemType ItemType => itemType;
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public string ItemTypeName => itemType?.Type.Name;
 
         [Browsable(false), XmlIgnore, JsonIgnore]
         public int ItemTypeIndex { get => itemTypeIndex; set => itemTypeIndex = value; }
@@ -1838,6 +1841,32 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, DBColumnList<DBColumn> value) => target.Columns = value;
         }
 
+        [Invoker(typeof(DBTable), nameof(DBTable.ItemType))]
+        public class ItemTypeInvoker : Invoker<DBTable, DBItemType>
+        {
+            public static readonly ItemTypeInvoker Instance = new ItemTypeInvoker();
+            public override string Name => nameof(DBTable.ItemType);
+
+            public override bool CanWrite => false;
+
+            public override DBItemType GetValue(DBTable target) => target.ItemType;
+
+            public override void SetValue(DBTable target, DBItemType value) { }
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.ItemTypeName))]
+        public class ItemTypeNameInvoker : Invoker<DBTable, string>
+        {
+            public static readonly ItemTypeNameInvoker Instance = new ItemTypeNameInvoker();
+            public override string Name => nameof(DBTable.ItemTypeName);
+
+            public override bool CanWrite => false;
+
+            public override string GetValue(DBTable target) => target.ItemTypeName;
+
+            public override void SetValue(DBTable target, string value) { }
+        }
+
         [Invoker(typeof(DBTable), nameof(DBTable.ColumnGroups))]
         public class ColumnGroupsInvoker : Invoker<DBTable, DBColumnGroupList>
         {
@@ -1888,6 +1917,58 @@ namespace DataWF.Data
             public override DBConstraintList<DBConstraint> GetValue(DBTable target) => target.Constraints;
 
             public override void SetValue(DBTable target, DBConstraintList<DBConstraint> value) => target.Constraints = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.ItemTypes))]
+        public class ItemTypesInvoker : Invoker<DBTable, Dictionary<int, DBItemType>>
+        {
+            public static readonly ItemTypesInvoker Instance = new ItemTypesInvoker();
+            public override string Name => nameof(DBTable.ItemTypes);
+
+            public override bool CanWrite => true;
+
+            public override Dictionary<int, DBItemType> GetValue(DBTable target) => target.ItemTypes;
+
+            public override void SetValue(DBTable target, Dictionary<int, DBItemType> value) => target.ItemTypes = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.Query))]
+        public class QueryInvoker : Invoker<DBTable, string>
+        {
+            public static readonly QueryInvoker Instance = new QueryInvoker();
+            public override string Name => nameof(DBTable.Query);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBTable target) => target.Query;
+
+            public override void SetValue(DBTable target, string value) => target.Query = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.Type))]
+        public class TypeInvoker : Invoker<DBTable, DBTableType>
+        {
+            public static readonly TypeInvoker Instance = new TypeInvoker();
+            public override string Name => nameof(DBTable.Type);
+
+            public override bool CanWrite => true;
+
+            public override DBTableType GetValue(DBTable target) => target.Type;
+
+            public override void SetValue(DBTable target, DBTableType value) => target.Type = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.IsCaching))]
+        public class IsCachingInvoker : Invoker<DBTable, bool>
+        {
+            public static readonly IsCachingInvoker Instance = new IsCachingInvoker();
+            public override string Name => nameof(DBTable.IsCaching);
+
+            public override bool CanWrite => true;
+
+            public override bool GetValue(DBTable target) => target.IsCaching;
+
+            public override void SetValue(DBTable target, bool value) => target.IsCaching = value;
         }
     }
 }
