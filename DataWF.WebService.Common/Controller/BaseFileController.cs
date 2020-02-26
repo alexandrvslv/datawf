@@ -124,6 +124,7 @@ namespace DataWF.WebService.Common
         [HttpPost("UploadFile/{id}/{fileName}")]
         [DisableFormValueModelBinding]
         [DisableRequestSizeLimit]
+        [Obsolete("Use UploadFile(id)")]
         public async Task<ActionResult> UploadFile([FromRoute]K id, [FromRoute]string fileName)
         {
             if (table.FileNameKey == null)
