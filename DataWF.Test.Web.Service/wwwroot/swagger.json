@@ -7461,7 +7461,8 @@
           "200": {
             "description": "Success"
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/api/DocumentData/UploadFile/{id}": {
@@ -18152,7 +18153,8 @@
           "200": {
             "description": "Success"
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/api/TemplateFile/UploadFile/{id}": {
@@ -21048,7 +21050,8 @@
           "200": {
             "description": "Success"
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/api/UserFile/UploadFile/{id}": {
@@ -23172,9 +23175,12 @@
       "AccessItem": {
         "type": "object",
         "properties": {
-          "GroupId": {
+          "IdentityId": {
             "type": "integer",
             "format": "int32"
+          },
+          "IsUser": {
+            "type": "boolean"
           },
           "Access": {
             "allOf": [
@@ -23281,67 +23287,61 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "type": "object"
           }
         ]
       },
       "Location": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBGroupItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Code": {
-                "maxLength": 40,
-                "type": "string"
-              },
-              "CodeI": {
-                "maxLength": 40,
-                "type": "string"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Location"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "NameRU": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "NameEN": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "en-US"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "CodeI": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "NameRU": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "DBLogType": {
         "enum": [
@@ -23353,141 +23353,136 @@
         "type": "string"
       },
       "DBLogItem": {
+        "required": [
+          "LogId"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "LogId"
-            ],
-            "type": "object",
-            "properties": {
-              "LogId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "LogType": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DBLogType"
-                  }
-                ]
-              },
-              "UserRegId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "LogUserId": {
-                "type": "integer",
-                "format": "int32"
-              }
-            },
-            "x-id": "LogId"
           }
-        ]
+        ],
+        "properties": {
+          "LogId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "LogType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DBLogType"
+              }
+            ]
+          },
+          "UserRegId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "LogUserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "BaseId": {
+            "type": "string",
+            "readOnly": true
+          }
+        },
+        "x-id": "LogId"
       },
       "AddressLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "LocationId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Location": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Location"
-                  }
-                ],
-                "x-id": "LocationId"
-              },
-              "PostIndex": {
-                "type": "string"
-              },
-              "StreetRU": {
-                "type": "string"
-              },
-              "StreetEN": {
-                "type": "string"
-              },
-              "Floor": {
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "LocationId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Location": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              }
+            ],
+            "x-id": "LocationId"
+          },
+          "PostIndex": {
+            "type": "string"
+          },
+          "StreetRU": {
+            "type": "string"
+          },
+          "StreetEN": {
+            "type": "string"
+          },
+          "Floor": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
       },
       "Address": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "LocationId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Location": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Location"
-                  }
-                ],
-                "x-id": "LocationId"
-              },
-              "PostIndex": {
-                "maxLength": 20,
-                "type": "string"
-              },
-              "Floor": {
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "StreetRU": {
-                "maxLength": 1024,
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "StreetEN": {
-                "maxLength": 1024,
-                "type": "string",
-                "x-culture": "en-US"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "LocationId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Location": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              }
+            ],
+            "x-id": "LocationId"
+          },
+          "PostIndex": {
+            "maxLength": 20,
+            "type": "string"
+          },
+          "StreetRU": {
+            "maxLength": 1024,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "StreetEN": {
+            "maxLength": 1024,
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "Floor": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "LinkModel": {
         "type": "object",
@@ -23501,788 +23496,743 @@
         }
       },
       "Book": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBGroupItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Code": {
-                "maxLength": 512,
-                "type": "string"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Book"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "Value": {
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "NameRU": {
-                "maxLength": 1024,
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "NameEN": {
-                "maxLength": 1024,
-                "type": "string",
-                "x-culture": "en-US"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "maxLength": 512,
+            "type": "string"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Book"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "NameRU": {
+            "maxLength": 1024,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "maxLength": 1024,
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "Value": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "BookLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Code": {
-                "type": "string"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Book"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "NameRU": {
-                "type": "string"
-              },
-              "NameEN": {
-                "type": "string"
-              },
-              "Value": {
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Book"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "Value": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
       },
       "LocationLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Code": {
-                "type": "string"
-              },
-              "CodeI": {
-                "type": "string"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Location"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "NameRU": {
-                "type": "string"
-              },
-              "NameEN": {
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "CodeI": {
+            "type": "string"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
       },
       "CityLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/LocationLog"
-          },
-          {
-            "type": "object",
-            "x-type-id": 5
           }
-        ]
+        ],
+        "x-type-id": 5
       },
       "City": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/Location"
-          },
-          {
-            "type": "object",
-            "x-type-id": 5
           }
-        ]
+        ],
+        "x-type-id": 5
       },
       "Continent": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/Location"
-          },
-          {
-            "type": "object",
-            "x-type-id": 1
           }
-        ]
+        ],
+        "x-type-id": 1
       },
       "Country": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/Location"
-          },
-          {
-            "type": "object",
-            "x-type-id": 2
           }
-        ]
+        ],
+        "x-type-id": 2
       },
       "CustomerLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "INN": {
-                "type": "string"
-              },
-              "Code": {
-                "type": "string"
-              },
-              "ShortNameRU": {
-                "type": "string"
-              },
-              "ShortNameEN": {
-                "type": "string"
-              },
-              "NameRU": {
-                "type": "string"
-              },
-              "NameEN": {
-                "type": "string"
-              },
-              "EMail": {
-                "type": "string"
-              },
-              "Phone": {
-                "type": "string"
-              },
-              "CountryId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Country": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Country"
-                  }
-                ],
-                "x-id": "CountryId"
-              },
-              "AddressId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Address": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Address"
-                  }
-                ],
-                "x-id": "AddressId"
-              },
-              "Key": {
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "INN": {
+            "type": "string"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "ShortNameRU": {
+            "type": "string"
+          },
+          "ShortNameEN": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "EMail": {
+            "type": "string"
+          },
+          "Phone": {
+            "type": "string"
+          },
+          "CountryId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Country": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Country"
+              }
+            ],
+            "x-id": "CountryId"
+          },
+          "AddressId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddressId"
+          },
+          "Key": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
       },
       "CompanyLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/CustomerLog"
-          },
-          {
-            "type": "object",
-            "x-type-id": 1
           }
-        ]
+        ],
+        "x-type-id": 1
       },
       "Customer": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "INN": {
-                "maxLength": 40,
-                "type": "string"
-              },
-              "Code": {
-                "maxLength": 40,
-                "type": "string"
-              },
-              "EMail": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "Phone": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "CountryId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Country": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Country"
-                  }
-                ],
-                "x-id": "CountryId"
-              },
-              "AddressId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Address": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Address"
-                  }
-                ],
-                "x-id": "AddressId"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "ShortNameRU": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "ShortNameEN": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "en-US"
-              },
-              "NameRU": {
-                "maxLength": 1024,
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "NameEN": {
-                "maxLength": 1024,
-                "type": "string",
-                "x-culture": "en-US"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "INN": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "Code": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "ShortNameRU": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "ShortNameEN": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "NameRU": {
+            "maxLength": 1024,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "maxLength": 1024,
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "EMail": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "Phone": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "CountryId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Country": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Country"
+              }
+            ],
+            "x-id": "CountryId"
+          },
+          "AddressId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddressId"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "Company": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/Customer"
-          },
-          {
-            "type": "object",
-            "x-type-id": 1
           }
-        ]
+        ],
+        "x-type-id": 1
       },
       "ContinentLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/LocationLog"
-          },
-          {
-            "type": "object",
-            "x-type-id": 1
           }
-        ]
+        ],
+        "x-type-id": 1
       },
       "CountryLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/LocationLog"
-          },
-          {
-            "type": "object",
-            "x-type-id": 2
           }
-        ]
+        ],
+        "x-type-id": 2
       },
       "CurrencyLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/LocationLog"
-          },
-          {
-            "type": "object",
-            "x-type-id": 3
           }
-        ]
+        ],
+        "x-type-id": 3
       },
       "Currency": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/Location"
-          },
-          {
-            "type": "object",
-            "x-type-id": 3
           }
-        ]
+        ],
+        "x-type-id": 3
       },
       "CustomerAddressLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CustomerId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Customer": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Customer"
-                  }
-                ],
-                "x-id": "CustomerId"
-              },
-              "AddressId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Address": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Address"
-                  }
-                ],
-                "x-id": "AddressId"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CustomerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Customer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Customer"
+              }
+            ],
+            "x-id": "CustomerId"
+          },
+          "AddressId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddressId"
+          }
+        },
+        "x-type-id": 0
       },
       "CustomerAddress": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CustomerId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Customer": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Customer"
-                  }
-                ],
-                "x-id": "CustomerId"
-              },
-              "AddressId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Address": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Address"
-                  }
-                ],
-                "x-id": "AddressId"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CustomerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Customer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Customer"
+              }
+            ],
+            "x-id": "CustomerId"
+          },
+          "AddressId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddressId"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "Persone": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/Customer"
-          },
-          {
-            "type": "object",
-            "x-type-id": 2
           }
-        ]
+        ],
+        "x-type-id": 2
       },
       "CustomerReferenceLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "PersoneId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Persone": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Persone"
-                  }
-                ],
-                "x-id": "PersoneId"
-              },
-              "EMail": {
-                "type": "string"
-              },
-              "Phone": {
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "PersoneId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Persone": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Persone"
+              }
+            ],
+            "x-id": "PersoneId"
+          },
+          "EMail": {
+            "type": "string"
+          },
+          "Phone": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
       },
       "CustomerReference": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "PersoneId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Persone": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Persone"
-                  }
-                ],
-                "x-id": "PersoneId"
-              },
-              "EMail": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "Phone": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "PersoneId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Persone": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Persone"
+              }
+            ],
+            "x-id": "PersoneId"
+          },
+          "EMail": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "Phone": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "Department": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBGroupItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Department"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "Code": {
-                "maxLength": 256,
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "NameRU": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "NameEN": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "en-US"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Department"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "Code": {
+            "maxLength": 256,
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NameRU": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "en-US"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "Position": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBGroupItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "DepartmentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Department": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Department"
-                  }
-                ],
-                "x-id": "DepartmentId"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Position"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "Code": {
-                "maxLength": 40,
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "NameRU": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "NameEN": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "en-US"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
-      },
-      "UserAuthType": {
-        "enum": [
-          "Internal",
-          "SMTP",
-          "LDAP"
         ],
-        "type": "string"
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "DepartmentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Department": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Department"
+              }
+            ],
+            "x-id": "DepartmentId"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Position"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "Code": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NameRU": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "en-US"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
+      },
+      "DBUser": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Login": {
+            "maxLength": 256,
+            "type": "string"
+          },
+          "EMail": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "Name": {
+            "type": "string"
+          }
+        },
+        "x-id": "Id"
       },
       "UserRegType": {
         "enum": [
@@ -24296,38 +24246,6 @@
           "Reject"
         ],
         "type": "string"
-      },
-      "DBUser": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Login": {
-                "maxLength": 256,
-                "type": "string"
-              },
-              "EMail": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "Name": {
-                "type": "string"
-              }
-            },
-            "x-id": "Id"
-          }
-        ]
       },
       "UserRegItem": {
         "type": "object",
@@ -24345,433 +24263,414 @@
         }
       },
       "DBUserReg": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBGroupItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "UserId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "DBUser": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DBUser"
-                  }
-                ]
-              }
-            },
-            "x-id": "Id"
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "UserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "DBUser": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DBUser"
+              }
+            ]
+          }
+        },
+        "x-id": "Id"
       },
       "UserReg": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBUserReg"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "RegType": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UserRegType"
-                  }
-                ]
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UserReg"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "RedoId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Redo": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UserReg"
-                  }
-                ],
-                "x-id": "RedoId"
-              },
-              "TextData": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "RegType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserRegType"
+              }
+            ]
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserReg"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "RedoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Redo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserReg"
+              }
+            ],
+            "x-id": "RedoId"
+          },
+          "TextData": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
+      },
+      "UserAuthType": {
+        "enum": [
+          "Internal",
+          "SMTP",
+          "LDAP"
+        ],
+        "type": "string"
       },
       "User": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBUser"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "Abbreviation": {
-                "maxLength": 4,
-                "type": "string"
-              },
-              "DepartmentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Department": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Department"
-                  }
-                ],
-                "x-id": "DepartmentId"
-              },
-              "PositionId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Position": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Position"
-                  }
-                ],
-                "x-id": "PositionId"
-              },
-              "Super": {
-                "type": "boolean",
-                "default": "False"
-              },
-              "Phone": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "IsTemporaryPassword": {
-                "type": "boolean"
-              },
-              "AuthType": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UserAuthType"
-                  }
-                ]
-              },
-              "AddessId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Address": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Address"
-                  }
-                ],
-                "x-id": "AddessId"
-              },
-              "NameRU": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "NameEN": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "en-US"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "Abbreviation": {
+            "maxLength": 4,
+            "type": "string"
+          },
+          "NameRU": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "DepartmentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Department": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Department"
+              }
+            ],
+            "x-id": "DepartmentId"
+          },
+          "PositionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Position": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Position"
+              }
+            ],
+            "x-id": "PositionId"
+          },
+          "Super": {
+            "type": "boolean",
+            "default": "False"
+          },
+          "Phone": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "IsTemporaryPassword": {
+            "type": "boolean"
+          },
+          "AuthType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserAuthType"
+              }
+            ]
+          },
+          "AddessId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddessId"
+          }
+        },
+        "x-type-id": 0
       },
       "DepartmentLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Department"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "Code": {
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "NameRU": {
-                "type": "string"
-              },
-              "NameEN": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Department"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
       },
       "Work": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Code": {
-                "type": "string"
-              },
-              "NameRU": {
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "NameEN": {
-                "type": "string",
-                "x-culture": "en-US"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "type": "string",
+            "x-culture": "en-US"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "TemplateFile": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "DataName": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "DataLastWrite": {
-                "type": "string",
-                "format": "date-time"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "DataName": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "DataLastWrite": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "TemplateData": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "TemplateId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Template": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "TemplateId"
-              },
-              "FileId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "File": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/TemplateFile"
-                  }
-                ],
-                "x-id": "FileId"
-              },
-              "AutoGenerate": {
-                "type": "boolean"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TemplateId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Template": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "TemplateId"
+          },
+          "FileId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "File": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TemplateFile"
+              }
+            ],
+            "x-id": "FileId"
+          },
+          "AutoGenerate": {
+            "type": "boolean"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "TemplateReference": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "TemplateId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Template": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "TemplateId"
-              },
-              "ReferenceId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Reference": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "ReferenceId"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TemplateId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Template": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "TemplateId"
+          },
+          "ReferenceId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Reference": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "ReferenceId"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "TemplateProperty": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "TemplateId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Template": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "TemplateId"
-              },
-              "PropertyName": {
-                "maxLength": 1024,
-                "type": "string"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TemplateId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Template": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "TemplateId"
+          },
+          "PropertyName": {
+            "maxLength": 1024,
+            "type": "string"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "MemberTypes": {
         "enum": [
@@ -24881,9 +24780,6 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/MemberInfo"
-          },
-          {
-            "type": "object"
           }
         ]
       },
@@ -24892,9 +24788,6 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/MethodBase"
-          },
-          {
-            "type": "object"
           }
         ]
       },
@@ -24936,9 +24829,6 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/MethodBase"
-          },
-          {
-            "type": "object"
           }
         ]
       },
@@ -24947,9 +24837,6 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/MemberInfo"
-          },
-          {
-            "type": "object"
           }
         ]
       },
@@ -24986,9 +24873,6 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/MemberInfo"
-          },
-          {
-            "type": "object"
           }
         ]
       },
@@ -25011,9 +24895,6 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/MemberInfo"
-          },
-          {
-            "type": "object"
           }
         ]
       },
@@ -25085,9 +24966,6 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/Attribute"
-          },
-          {
-            "type": "object"
           }
         ]
       },
@@ -25099,9 +24977,6 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/Type"
-          },
-          {
-            "type": "object"
           }
         ]
       },
@@ -25497,106 +25372,103 @@
         "additionalProperties": false
       },
       "Template": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBGroupItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Code": {
-                "maxLength": 250,
-                "type": "string"
-              },
-              "AlterName1": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "AlterName2": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "AlterName3": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "DocumentType": {
-                "type": "integer",
-                "format": "int32",
-                "default": "0"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "WorkId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Work": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Work"
-                  }
-                ],
-                "x-id": "WorkId"
-              },
-              "IsFile": {
-                "type": "boolean",
-                "default": "False"
-              },
-              "NameRU": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "NameEN": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "en-US"
-              },
-              "Datas": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/TemplateData"
-                },
-                "x-ref-key": "TemplateId"
-              },
-              "References": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/TemplateReference"
-                },
-                "x-ref-key": "TemplateId"
-              },
-              "Properties": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/TemplateProperty"
-                },
-                "x-ref-key": "TemplateId"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "maxLength": 250,
+            "type": "string"
+          },
+          "NameRU": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "AlterName1": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "AlterName2": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "AlterName3": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "DocumentType": {
+            "type": "integer",
+            "format": "int32",
+            "default": "0"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "WorkId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Work": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Work"
+              }
+            ],
+            "x-id": "WorkId"
+          },
+          "IsFile": {
+            "type": "boolean",
+            "default": "False"
+          },
+          "Datas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateData"
+            },
+            "x-ref-key": "TemplateId"
+          },
+          "References": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateReference"
+            },
+            "x-ref-key": "TemplateId"
+          },
+          "Properties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateProperty"
+            },
+            "x-ref-key": "TemplateId"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "StageKey": {
         "enum": [
@@ -25611,421 +25483,63 @@
         "x-flags": 0
       },
       "Stage": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
           },
-          {
-            "required": [
-              "Id"
+          "Code": {
+            "maxLength": 512,
+            "type": "string"
+          },
+          "ExportCode": {
+            "maxLength": 512,
+            "type": "string"
+          },
+          "NameRU": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "WorkId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Work": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Work"
+              }
             ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Code": {
-                "maxLength": 512,
-                "type": "string"
-              },
-              "ExportCode": {
-                "maxLength": 512,
-                "type": "string"
-              },
-              "WorkId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Work": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Work"
-                  }
-                ],
-                "x-id": "WorkId"
-              },
-              "Keys": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/StageKey"
-                  }
-                ]
-              },
-              "TimeLimit": {
-                "type": "string"
-              },
-              "NameRU": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "NameEN": {
-                "maxLength": 512,
-                "type": "string",
-                "x-culture": "en-US"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
-          }
-        ]
-      },
-      "DocumentData": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBItem"
+            "x-id": "WorkId"
           },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "DocumentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Document": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "DocumentId"
-              },
-              "TemplateDataId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "TemplateData": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/TemplateData"
-                  }
-                ],
-                "x-id": "TemplateDataId"
-              },
-              "FileName": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "FileUrl": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "FileLastWrite": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "FileLOB": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CurrentUserId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CurrentUser": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/User"
-                  }
-                ],
-                "x-id": "CurrentUserId"
+          "Keys": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StageKey"
               }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
-          }
-        ]
-      },
-      "DocumentCustomer": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBItem"
+            ]
           },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "DocumentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Document": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "DocumentId"
-              },
-              "CustomerId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Customer": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Customer"
-                  }
-                ],
-                "x-id": "CustomerId"
-              },
-              "AddressId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Address": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Address"
-                  }
-                ],
-                "x-id": "AddressId"
-              },
-              "EMail": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "Phone": {
-                "maxLength": 1024,
-                "type": "string"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
+          "TimeLimit": {
+            "type": "string"
           }
-        ]
-      },
-      "MessageDetail": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "MessageId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Message": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Message"
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      },
-      "MessageAddress": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/MessageDetail"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "UserId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "User": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/User"
-                  }
-                ],
-                "x-id": "UserId"
-              },
-              "PositionId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Position": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Position"
-                  }
-                ],
-                "x-id": "PositionId"
-              },
-              "DepartmentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Department": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Department"
-                  }
-                ],
-                "x-id": "DepartmentId"
-              },
-              "DateRead": {
-                "type": "string",
-                "format": "date-time"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
-          }
-        ]
-      },
-      "Message": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "UserId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "User": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/User"
-                  }
-                ],
-                "x-id": "UserId"
-              },
-              "Data": {
-                "type": "string"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
-          }
-        ]
-      },
-      "DocumentComment": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "DocumentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Document": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "DocumentId"
-              },
-              "MessageId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Message": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Message"
-                  }
-                ],
-                "x-id": "MessageId"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
-          }
-        ]
-      },
-      "DocumentReference": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "DocumentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Document": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "DocumentId"
-              },
-              "ReferenceId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Reference": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "ReferenceId"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
-          }
-        ]
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "DocInitType": {
         "enum": [
@@ -26041,682 +25555,995 @@
         "type": "string",
         "x-flags": 0
       },
-      "Document": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBGroupItem"
-          },
-          {
-            "required": [
-              "Id",
-              "TemplateId"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "TemplateId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Template": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "TemplateId"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "DocumentDate": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "Number": {
-                "maxLength": 80,
-                "type": "string"
-              },
-              "CustomerId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Customer": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Customer"
-                  }
-                ],
-                "x-id": "CustomerId"
-              },
-              "CompleteProgress": {
-                "type": "number",
-                "format": "double",
-                "default": "0"
-              },
-              "CurrentWorkId": {
-                "type": "integer",
-                "format": "int64",
-                "readOnly": true
-              },
-              "CurrentWork": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DocumentWork"
-                  }
-                ],
-                "x-id": "CurrentWorkId"
-              },
-              "CurrentStageId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CurrentStage": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Stage"
-                  }
-                ],
-                "x-id": "CurrentStageId"
-              },
-              "CurrentUserId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CurrentUser": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/User"
-                  }
-                ],
-                "x-id": "CurrentUserId"
-              },
-              "WorkUser": {
-                "type": "string",
-                "readOnly": true
-              },
-              "WorkStage": {
-                "type": "string",
-                "readOnly": true
-              },
-              "Important": {
-                "type": "boolean"
-              },
-              "IsComplete": {
-                "type": "boolean",
-                "default": "False"
-              },
-              "TitleRU": {
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "TitleEN": {
-                "type": "string",
-                "x-culture": "en-US"
-              },
-              "Works": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/DocumentWork"
-                },
-                "x-ref-key": "DocumentId"
-              },
-              "Datas": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/DocumentData"
-                },
-                "x-ref-key": "DocumentId"
-              },
-              "Customers": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/DocumentCustomer"
-                },
-                "x-ref-key": "DocumentId"
-              },
-              "Comments": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/DocumentComment"
-                },
-                "x-ref-key": "DocumentId"
-              },
-              "Referencing": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/DocumentReference"
-                },
-                "x-ref-key": "ReferenceId"
-              },
-              "Referenced": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/DocumentReference"
-                },
-                "x-ref-key": "DocumentId"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
-          }
-        ]
-      },
-      "DocumentWork": {
+      "DocumentData": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "DocumentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Document": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "DocumentId"
-              },
-              "StageId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Stage": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Stage"
-                  }
-                ],
-                "x-id": "StageId"
-              },
-              "WorkId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Work": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Work"
-                  }
-                ],
-                "x-id": "WorkId"
-              },
-              "UserId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "User": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/User"
-                  }
-                ],
-                "x-id": "UserId"
-              },
-              "PositionId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Position": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Position"
-                  }
-                ],
-                "x-id": "PositionId"
-              },
-              "DepartmentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Department": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Department"
-                  }
-                ],
-                "x-id": "DepartmentId"
-              },
-              "FromId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "From": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DocumentWork"
-                  }
-                ],
-                "x-id": "FromId"
-              },
-              "DateRead": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "DateLimit": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "DateComplete": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "IsComplete": {
-                "type": "boolean",
-                "default": "False"
-              },
-              "IsSystem": {
-                "type": "boolean"
-              },
-              "IsStart": {
-                "type": "boolean"
-              },
-              "IsStop": {
-                "type": "boolean"
-              },
-              "Description": {
-                "maxLength": 2048,
-                "type": "string"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "DocumentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Document": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "DocumentId"
+          },
+          "TemplateDataId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TemplateData": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TemplateData"
+              }
+            ],
+            "x-id": "TemplateDataId"
+          },
+          "FileName": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "FileUrl": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "FileLastWrite": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "FileLOB": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CurrentUserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CurrentUser": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "CurrentUserId"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
+      },
+      "DocumentCustomer": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "DocumentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Document": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "DocumentId"
+          },
+          "CustomerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Customer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Customer"
+              }
+            ],
+            "x-id": "CustomerId"
+          },
+          "AddressId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddressId"
+          },
+          "EMail": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "Phone": {
+            "maxLength": 1024,
+            "type": "string"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
+      },
+      "MessageDetail": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "MessageId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Message": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Message"
+              }
+            ]
+          }
+        }
+      },
+      "MessageAddress": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MessageDetail"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "UserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "User": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "UserId"
+          },
+          "PositionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Position": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Position"
+              }
+            ],
+            "x-id": "PositionId"
+          },
+          "DepartmentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Department": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Department"
+              }
+            ],
+            "x-id": "DepartmentId"
+          },
+          "DateRead": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
+      },
+      "Message": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "UserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "User": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "UserId"
+          },
+          "Data": {
+            "type": "string"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
+      },
+      "DocumentComment": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "DocumentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Document": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "DocumentId"
+          },
+          "MessageId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Message": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Message"
+              }
+            ],
+            "x-id": "MessageId"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
+      },
+      "DocumentReference": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "DocumentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Document": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "DocumentId"
+          },
+          "ReferenceId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Reference": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "ReferenceId"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
+      },
+      "Document": {
+        "required": [
+          "Id",
+          "TemplateId"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBGroupItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "TemplateId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Template": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "TemplateId"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "DocumentDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Number": {
+            "maxLength": 80,
+            "type": "string"
+          },
+          "CustomerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Customer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Customer"
+              }
+            ],
+            "x-id": "CustomerId"
+          },
+          "TitleRU": {
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "TitleEN": {
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "CompleteProgress": {
+            "type": "number",
+            "format": "double",
+            "default": "0"
+          },
+          "CurrentWorkId": {
+            "type": "integer",
+            "format": "int64",
+            "readOnly": true
+          },
+          "CurrentWork": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentWork"
+              }
+            ],
+            "x-id": "CurrentWorkId"
+          },
+          "CurrentStageId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CurrentStage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Stage"
+              }
+            ],
+            "x-id": "CurrentStageId"
+          },
+          "CurrentUserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CurrentUser": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "CurrentUserId"
+          },
+          "WorkUser": {
+            "type": "string",
+            "readOnly": true
+          },
+          "WorkStage": {
+            "type": "string",
+            "readOnly": true
+          },
+          "Important": {
+            "type": "boolean"
+          },
+          "IsComplete": {
+            "type": "boolean",
+            "default": "False"
+          },
+          "Works": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentWork"
+            },
+            "x-ref-key": "DocumentId"
+          },
+          "Datas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentData"
+            },
+            "x-ref-key": "DocumentId"
+          },
+          "Customers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentCustomer"
+            },
+            "x-ref-key": "DocumentId"
+          },
+          "Comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentComment"
+            },
+            "x-ref-key": "DocumentId"
+          },
+          "Referencing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentReference"
+            },
+            "x-ref-key": "ReferenceId"
+          },
+          "Referenced": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentReference"
+            },
+            "x-ref-key": "DocumentId"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
+      },
+      "DocumentWork": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "DocumentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Document": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "DocumentId"
+          },
+          "StageId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Stage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Stage"
+              }
+            ],
+            "x-id": "StageId"
+          },
+          "WorkId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Work": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Work"
+              }
+            ],
+            "x-id": "WorkId"
+          },
+          "UserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "User": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "UserId"
+          },
+          "PositionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Position": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Position"
+              }
+            ],
+            "x-id": "PositionId"
+          },
+          "DepartmentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Department": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Department"
+              }
+            ],
+            "x-id": "DepartmentId"
+          },
+          "FromId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "From": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentWork"
+              }
+            ],
+            "x-id": "FromId"
+          },
+          "DateRead": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "DateLimit": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "DateComplete": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "IsComplete": {
+            "type": "boolean",
+            "default": "False"
+          },
+          "IsSystem": {
+            "type": "boolean"
+          },
+          "IsStart": {
+            "type": "boolean"
+          },
+          "IsStop": {
+            "type": "boolean"
+          },
+          "Description": {
+            "maxLength": 2048,
+            "type": "string"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "DocumentLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "TemplateId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Template": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "TemplateId"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "DocumentDate": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "Number": {
-                "type": "string"
-              },
-              "CustomerId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Customer": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Customer"
-                  }
-                ],
-                "x-id": "CustomerId"
-              },
-              "TitleRU": {
-                "type": "string"
-              },
-              "TitleEN": {
-                "type": "string"
-              },
-              "CompleteProgress": {
-                "type": "number",
-                "format": "double"
-              },
-              "Important": {
-                "type": "boolean"
-              },
-              "IsComplete": {
-                "type": "boolean"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "TemplateId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Template": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "TemplateId"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "DocumentDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Number": {
+            "type": "string"
+          },
+          "CustomerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Customer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Customer"
+              }
+            ],
+            "x-id": "CustomerId"
+          },
+          "TitleRU": {
+            "type": "string"
+          },
+          "TitleEN": {
+            "type": "string"
+          },
+          "CompleteProgress": {
+            "type": "number",
+            "format": "double"
+          },
+          "Important": {
+            "type": "boolean"
+          },
+          "IsComplete": {
+            "type": "boolean"
+          }
+        },
+        "x-type-id": 0
       },
       "DocumentCustomerLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "DocumentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Document": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "DocumentId"
-              },
-              "CustomerId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Customer": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Customer"
-                  }
-                ],
-                "x-id": "CustomerId"
-              },
-              "AddressId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Address": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Address"
-                  }
-                ],
-                "x-id": "AddressId"
-              },
-              "EMail": {
-                "type": "string"
-              },
-              "Phone": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "DocumentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Document": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "DocumentId"
+          },
+          "CustomerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Customer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Customer"
+              }
+            ],
+            "x-id": "CustomerId"
+          },
+          "AddressId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddressId"
+          },
+          "EMail": {
+            "type": "string"
+          },
+          "Phone": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
       },
       "DocumentDataLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "DocumentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Document": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "DocumentId"
-              },
-              "TemplateDataId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "TemplateData": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/TemplateData"
-                  }
-                ],
-                "x-id": "TemplateDataId"
-              },
-              "FileName": {
-                "type": "string"
-              },
-              "FileUrl": {
-                "type": "string"
-              },
-              "FileLastWrite": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "FileData": {
-                "type": "string",
-                "format": "byte"
-              },
-              "FileLOB": {
-                "type": "integer",
-                "format": "int32"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "DocumentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Document": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "DocumentId"
+          },
+          "TemplateDataId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TemplateData": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TemplateData"
+              }
+            ],
+            "x-id": "TemplateDataId"
+          },
+          "FileName": {
+            "type": "string"
+          },
+          "FileUrl": {
+            "type": "string"
+          },
+          "FileLastWrite": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "FileData": {
+            "type": "string",
+            "format": "byte"
+          },
+          "FileLOB": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
       },
       "DocumentReferenceLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "DocumentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Document": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "DocumentId"
-              },
-              "ReferenceId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Reference": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "ReferenceId"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "DocumentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Document": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "DocumentId"
+          },
+          "ReferenceId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Reference": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "ReferenceId"
+          }
+        },
+        "x-type-id": 0
       },
       "DocumentWorkLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "DocumentId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Document": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Document"
-                  }
-                ],
-                "x-id": "DocumentId"
-              },
-              "StageId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Stage": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Stage"
-                  }
-                ],
-                "x-id": "StageId"
-              },
-              "WorkId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Work": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Work"
-                  }
-                ],
-                "x-id": "WorkId"
-              },
-              "UserId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "User": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/User"
-                  }
-                ],
-                "x-id": "UserId"
-              },
-              "PositionId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Position": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Position"
-                  }
-                ],
-                "x-id": "PositionId"
-              },
-              "DepartmentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Department": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Department"
-                  }
-                ],
-                "x-id": "DepartmentId"
-              },
-              "FromId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "From": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/DocumentWork"
-                  }
-                ],
-                "x-id": "FromId"
-              },
-              "DateRead": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "DateLimit": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "DateComplete": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "IsComplete": {
-                "type": "boolean"
-              },
-              "IsSystem": {
-                "type": "boolean"
-              },
-              "IsStart": {
-                "type": "boolean"
-              },
-              "IsStop": {
-                "type": "boolean"
-              },
-              "Description": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "DocumentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Document": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Document"
+              }
+            ],
+            "x-id": "DocumentId"
+          },
+          "StageId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Stage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Stage"
+              }
+            ],
+            "x-id": "StageId"
+          },
+          "WorkId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Work": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Work"
+              }
+            ],
+            "x-id": "WorkId"
+          },
+          "UserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "User": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "UserId"
+          },
+          "PositionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Position": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Position"
+              }
+            ],
+            "x-id": "PositionId"
+          },
+          "DepartmentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Department": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Department"
+              }
+            ],
+            "x-id": "DepartmentId"
+          },
+          "FromId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "From": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentWork"
+              }
+            ],
+            "x-id": "FromId"
+          },
+          "DateRead": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "DateLimit": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "DateComplete": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "IsComplete": {
+            "type": "boolean"
+          },
+          "IsSystem": {
+            "type": "boolean"
+          },
+          "IsStart": {
+            "type": "boolean"
+          },
+          "IsStop": {
+            "type": "boolean"
+          },
+          "Description": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
       },
       "PermissionType": {
         "enum": [
@@ -26730,319 +26557,283 @@
         "type": "string"
       },
       "GroupPermission": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBGroupItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/GroupPermission"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "Type": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/PermissionType"
-                  }
-                ],
-                "default": "GTable"
-              },
-              "Code": {
-                "maxLength": 512,
-                "type": "string"
-              },
-              "ObjectName": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "AccessItems": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/AccessItem"
-                }
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GroupPermission"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PermissionType"
+              }
+            ],
+            "default": "GTable"
+          },
+          "Code": {
+            "maxLength": 512,
+            "type": "string"
+          },
+          "ObjectName": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "AccessItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccessItem"
+            }
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "GroupPermissionLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/GroupPermission"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "Type": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/PermissionType"
-                  }
-                ]
-              },
-              "Code": {
-                "type": "string"
-              },
-              "ObjectName": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GroupPermission"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PermissionType"
+              }
+            ]
+          },
+          "Code": {
+            "type": "string"
+          },
+          "ObjectName": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
       },
       "MessageData": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/MessageDetail"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "DataName": {
-                "type": "string"
-              },
-              "Data": {
-                "type": "string",
-                "format": "byte"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "DataName": {
+            "type": "string"
+          },
+          "Data": {
+            "type": "string",
+            "format": "byte"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "PersoneLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/CustomerLog"
-          },
-          {
-            "type": "object",
-            "x-type-id": 2
           }
-        ]
+        ],
+        "x-type-id": 2
       },
       "PersoneIdentifyLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "PersoneId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Persone": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Persone"
-                  }
-                ],
-                "x-id": "PersoneId"
-              },
-              "Number": {
-                "type": "string"
-              },
-              "DateIssue": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "DateExpire": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "IssuedBy": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "PersoneId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Persone": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Persone"
+              }
+            ],
+            "x-id": "PersoneId"
+          },
+          "Number": {
+            "type": "string"
+          },
+          "DateIssue": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "DateExpire": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "IssuedBy": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
       },
       "PersoneIdentify": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "PersoneId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Persone": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Persone"
-                  }
-                ],
-                "x-id": "PersoneId"
-              },
-              "Number": {
-                "maxLength": 30,
-                "type": "string"
-              },
-              "DateIssue": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "DateExpire": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "IssuedBy": {
-                "type": "string"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "PersoneId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Persone": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Persone"
+              }
+            ],
+            "x-id": "PersoneId"
+          },
+          "Number": {
+            "maxLength": 30,
+            "type": "string"
+          },
+          "DateIssue": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "DateExpire": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "IssuedBy": {
+            "type": "string"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "PositionLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "DepartmentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Department": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Department"
-                  }
-                ],
-                "x-id": "DepartmentId"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Position"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "Code": {
-                "type": "string"
-              },
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "NameRU": {
-                "type": "string"
-              },
-              "NameEN": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
-      },
-      "ProcedureTypes": {
-        "enum": [
-          "Group",
-          "Query",
-          "Constant",
-          "StoredProcedure",
-          "StoredFunction",
-          "Assembly",
-          "Source",
-          "Menu",
-          "Table",
-          "File"
         ],
-        "type": "string"
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "DepartmentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Department": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Department"
+              }
+            ],
+            "x-id": "DepartmentId"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Position"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
       },
       "ParameterDirection": {
         "enum": [
@@ -27072,26 +26863,38 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/DBSchemaItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "DataTypeName": {
-                "type": "string"
-              },
-              "Direction": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/ParameterDirection"
-                  }
-                ]
-              },
-              "ColumnName": {
-                "type": "string"
-              }
-            }
           }
-        ]
+        ],
+        "properties": {
+          "ColumnName": {
+            "type": "string"
+          },
+          "DataTypeName": {
+            "type": "string"
+          },
+          "Direction": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ParameterDirection"
+              }
+            ]
+          }
+        }
+      },
+      "ProcedureTypes": {
+        "enum": [
+          "Group",
+          "Query",
+          "Constant",
+          "StoredProcedure",
+          "StoredFunction",
+          "Assembly",
+          "Source",
+          "Menu",
+          "Table",
+          "File"
+        ],
+        "type": "string"
       },
       "DBProcedure": {
         "required": [
@@ -27101,39 +26904,36 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/DBSchemaItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "GroupName": {
-                "type": "string"
-              },
-              "DataName": {
-                "type": "string"
-              },
-              "ProcedureType": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/ProcedureTypes"
-                  }
-                ]
-              },
-              "Source": {
-                "type": "string"
-              },
-              "Parameters": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/DBProcParameter"
-                }
-              },
-              "Stamp": {
-                "type": "string",
-                "format": "date-time"
-              }
-            }
           }
-        ]
+        ],
+        "properties": {
+          "Source": {
+            "type": "string"
+          },
+          "Stamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Parameters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DBProcParameter"
+            }
+          },
+          "GroupName": {
+            "type": "string"
+          },
+          "DataName": {
+            "type": "string"
+          },
+          "ProcedureType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProcedureTypes"
+              }
+            ]
+          }
+        }
       },
       "StatusType": {
         "enum": [
@@ -27188,188 +26988,176 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "Code": {
-                "type": "string"
-              },
-              "NameRU": {
-                "type": "string"
-              },
-              "NameEN": {
-                "type": "string"
-              },
-              "Order": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Type": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/SchedulerType"
-                  }
-                ]
-              },
-              "Interval": {
-                "type": "string"
-              },
-              "ProcedureName": {
-                "type": "string"
-              },
-              "DateExecute": {
-                "type": "string",
-                "format": "date-time"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "Order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SchedulerType"
+              }
+            ]
+          },
+          "Interval": {
+            "type": "string"
+          },
+          "ProcedureName": {
+            "type": "string"
+          },
+          "DateExecute": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "x-type-id": 0
       },
       "Scheduler": {
+        "required": [
+          "Id",
+          "Interval",
+          "Type"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id",
-              "Type",
-              "Interval"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "Code": {
-                "type": "string"
-              },
-              "Order": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Type": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/SchedulerType"
-                  }
-                ],
-                "default": "Interval"
-              },
-              "Interval": {
-                "type": "string"
-              },
-              "ProcedureName": {
-                "type": "string"
-              },
-              "DateExecute": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "NameRU": {
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "NameEN": {
-                "type": "string",
-                "x-culture": "en-US"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "Order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SchedulerType"
+              }
+            ],
+            "default": "Interval"
+          },
+          "Interval": {
+            "type": "string"
+          },
+          "ProcedureName": {
+            "type": "string"
+          },
+          "DateExecute": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "StageParam": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "StageId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Stage": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Stage"
-                  }
-                ],
-                "x-id": "StageId"
-              },
-              "ParamCode": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "Name": {
-                "maxLength": 1024,
-                "type": "string"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "StageId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Stage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Stage"
+              }
+            ],
+            "x-id": "StageId"
+          },
+          "ParamCode": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "Name": {
+            "maxLength": 1024,
+            "type": "string"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "StageReference": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/StageParam"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Next": {
-                "type": "boolean"
-              }
-            },
-            "x-type-id": 5
           }
-        ]
+        ],
+        "properties": {
+          "Next": {
+            "type": "boolean"
+          }
+        },
+        "x-type-id": 5
       },
       "StageParamProcudureType": {
         "enum": [
@@ -27385,483 +27173,435 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/StageParam"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "ProcedureType": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/StageParamProcudureType"
-                  }
-                ]
-              }
-            },
-            "x-type-id": 4
           }
-        ]
+        ],
+        "properties": {
+          "ProcedureType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StageParamProcudureType"
+              }
+            ]
+          }
+        },
+        "x-type-id": 4
       },
       "StageLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Code": {
-                "type": "string"
-              },
-              "ExportCode": {
-                "type": "string"
-              },
-              "NameRU": {
-                "type": "string"
-              },
-              "NameEN": {
-                "type": "string"
-              },
-              "WorkId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Work": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Work"
-                  }
-                ],
-                "x-id": "WorkId"
-              },
-              "Keys": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/StageKey"
-                  }
-                ]
-              },
-              "TimeLimit": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "ExportCode": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "WorkId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Work": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Work"
+              }
+            ],
+            "x-id": "WorkId"
+          },
+          "Keys": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StageKey"
+              }
+            ]
+          },
+          "TimeLimit": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
       },
       "StageParamLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "StageId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Stage": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Stage"
-                  }
-                ],
-                "x-id": "StageId"
-              },
-              "ParamCode": {
-                "type": "string"
-              },
-              "Name": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "StageId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Stage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Stage"
+              }
+            ],
+            "x-id": "StageId"
+          },
+          "ParamCode": {
+            "type": "string"
+          },
+          "Name": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
       },
       "StageForeignLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/StageParamLog"
-          },
-          {
-            "type": "object",
-            "x-type-id": 2
           }
-        ]
+        ],
+        "x-type-id": 2
       },
       "StageForeign": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/StageParam"
-          },
-          {
-            "type": "object",
-            "x-type-id": 2
           }
-        ]
+        ],
+        "x-type-id": 2
       },
       "StageProcedureLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/StageParamLog"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "ProcedureType": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/StageParamProcudureType"
-                  }
-                ]
-              }
-            },
-            "x-type-id": 4
           }
-        ]
+        ],
+        "properties": {
+          "ProcedureType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StageParamProcudureType"
+              }
+            ]
+          }
+        },
+        "x-type-id": 4
       },
       "StageReferenceLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/StageParamLog"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Next": {
-                "type": "boolean"
-              }
-            },
-            "x-type-id": 5
           }
-        ]
+        ],
+        "properties": {
+          "Next": {
+            "type": "boolean"
+          }
+        },
+        "x-type-id": 5
       },
       "StageTemplateLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/StageParamLog"
-          },
-          {
-            "type": "object",
-            "x-type-id": 3
           }
-        ]
+        ],
+        "x-type-id": 3
       },
       "StageTemplate": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/StageParam"
-          },
-          {
-            "type": "object",
-            "x-type-id": 3
           }
-        ]
+        ],
+        "x-type-id": 3
       },
       "StatisticLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "SchedulerId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Scheduler": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Scheduler"
-                  }
-                ],
-                "x-id": "SchedulerId"
-              },
-              "Result": {
-                "type": "number",
-                "format": "double"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SchedulerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Scheduler": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Scheduler"
+              }
+            ],
+            "x-id": "SchedulerId"
+          },
+          "Result": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "x-type-id": 0
       },
       "Statistic": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "SchedulerId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Scheduler": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Scheduler"
-                  }
-                ],
-                "x-id": "SchedulerId"
-              },
-              "Result": {
-                "type": "number",
-                "format": "double"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SchedulerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Scheduler": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Scheduler"
+              }
+            ],
+            "x-id": "SchedulerId"
+          },
+          "Result": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "TemplateLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Code": {
-                "type": "string"
-              },
-              "NameRU": {
-                "type": "string"
-              },
-              "NameEN": {
-                "type": "string"
-              },
-              "AlterName1": {
-                "type": "string"
-              },
-              "AlterName2": {
-                "type": "string"
-              },
-              "AlterName3": {
-                "type": "string"
-              },
-              "DocumentType": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "WorkId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Work": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Work"
-                  }
-                ],
-                "x-id": "WorkId"
-              },
-              "IsFile": {
-                "type": "boolean"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "AlterName1": {
+            "type": "string"
+          },
+          "AlterName2": {
+            "type": "string"
+          },
+          "AlterName3": {
+            "type": "string"
+          },
+          "DocumentType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "WorkId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Work": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Work"
+              }
+            ],
+            "x-id": "WorkId"
+          },
+          "IsFile": {
+            "type": "boolean"
+          }
+        },
+        "x-type-id": 0
       },
       "TemplateDataLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "TemplateId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Template": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "TemplateId"
-              },
-              "FileId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "File": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/TemplateFile"
-                  }
-                ],
-                "x-id": "FileId"
-              },
-              "AutoGenerate": {
-                "type": "boolean"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TemplateId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Template": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "TemplateId"
+          },
+          "FileId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "File": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TemplateFile"
+              }
+            ],
+            "x-id": "FileId"
+          },
+          "AutoGenerate": {
+            "type": "boolean"
+          }
+        },
+        "x-type-id": 0
       },
       "TemplateFileLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Data": {
-                "type": "string",
-                "format": "byte"
-              },
-              "DataName": {
-                "type": "string"
-              },
-              "DataLastWrite": {
-                "type": "string",
-                "format": "date-time"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Data": {
+            "type": "string",
+            "format": "byte"
+          },
+          "DataName": {
+            "type": "string"
+          },
+          "DataLastWrite": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "x-type-id": 0
       },
       "TemplatePropertyLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "TemplateId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Template": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "TemplateId"
-              },
-              "PropertyName": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TemplateId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Template": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "TemplateId"
+          },
+          "PropertyName": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
       },
       "TemplateReferenceLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "TemplateId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Template": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "TemplateId"
-              },
-              "ReferenceId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Reference": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Template"
-                  }
-                ],
-                "x-id": "ReferenceId"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TemplateId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Template": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "TemplateId"
+          },
+          "ReferenceId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Reference": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Template"
+              }
+            ],
+            "x-id": "ReferenceId"
+          }
+        },
+        "x-type-id": 0
       },
       "Class1": {
         "type": "object",
@@ -27877,48 +27617,39 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/Class1"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Class2Property": {
-                "type": "string"
-              }
-            }
           }
-        ]
+        ],
+        "properties": {
+          "Class2Property": {
+            "type": "string"
+          }
+        }
       },
       "Class3": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/Class2"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Class3Property": {
-                "type": "string"
-              }
-            }
           }
-        ]
+        ],
+        "properties": {
+          "Class3Property": {
+            "type": "string"
+          }
+        }
       },
       "Class4": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/Class3"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Class4Property": {
-                "type": "string"
-              }
-            }
           }
-        ]
+        ],
+        "properties": {
+          "Class4Property": {
+            "type": "string"
+          }
+        }
       },
       "LoginModel": {
         "required": [
@@ -27966,117 +27697,111 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Login": {
-                "type": "string"
-              },
-              "EMail": {
-                "type": "string"
-              }
-            }
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Login": {
+            "type": "string"
+          },
+          "EMail": {
+            "type": "string"
+          }
+        }
       },
       "UserLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBUserLog"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "ExternalId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "Abbreviation": {
-                "type": "string"
-              },
-              "NameRU": {
-                "type": "string"
-              },
-              "NameEN": {
-                "type": "string"
-              },
-              "DepartmentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Department": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Department"
-                  }
-                ],
-                "x-id": "DepartmentId"
-              },
-              "PositionId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Position": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Position"
-                  }
-                ],
-                "x-id": "PositionId"
-              },
-              "Super": {
-                "type": "boolean"
-              },
-              "Phone": {
-                "type": "string"
-              },
-              "IsTemporaryPassword": {
-                "type": "boolean"
-              },
-              "Password": {
-                "type": "string"
-              },
-              "AuthType": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UserAuthType"
-                  }
-                ]
-              },
-              "AddessId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Address": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Address"
-                  }
-                ],
-                "x-id": "AddessId"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "Abbreviation": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "DepartmentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Department": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Department"
+              }
+            ],
+            "x-id": "DepartmentId"
+          },
+          "PositionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Position": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Position"
+              }
+            ],
+            "x-id": "PositionId"
+          },
+          "Super": {
+            "type": "boolean"
+          },
+          "Phone": {
+            "type": "string"
+          },
+          "IsTemporaryPassword": {
+            "type": "boolean"
+          },
+          "Password": {
+            "type": "string"
+          },
+          "AuthType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserAuthType"
+              }
+            ]
+          },
+          "AddessId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddessId"
+          }
+        },
+        "x-type-id": 0
       },
       "UserApplicationType": {
         "enum": [
@@ -28086,373 +27811,355 @@
         "type": "string"
       },
       "UserApplication": {
+        "required": [
+          "Company",
+          "Department",
+          "EMail",
+          "FirstName",
+          "Id",
+          "LastName",
+          "Password",
+          "Position",
+          "Type"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id",
-              "Type",
-              "EMail",
-              "Password",
-              "FirstName",
-              "LastName",
-              "Company",
-              "Department",
-              "Position"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Type": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UserApplicationType"
-                  }
-                ]
-              },
-              "EMail": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "Password": {
-                "type": "string"
-              },
-              "TemporaryPassword": {
-                "type": "string"
-              },
-              "EmailVerified": {
-                "type": "boolean",
-                "default": "False",
-                "readOnly": true
-              },
-              "Phone": {
-                "maxLength": 30,
-                "type": "string"
-              },
-              "PhoneVerified": {
-                "type": "boolean",
-                "default": "False",
-                "readOnly": true
-              },
-              "FirstName": {
-                "maxLength": 50,
-                "type": "string"
-              },
-              "LastName": {
-                "maxLength": 50,
-                "type": "string"
-              },
-              "MiddleName": {
-                "maxLength": 50,
-                "type": "string"
-              },
-              "Company": {
-                "maxLength": 100,
-                "type": "string"
-              },
-              "Department": {
-                "maxLength": 100,
-                "type": "string"
-              },
-              "Position": {
-                "maxLength": 100,
-                "type": "string"
-              },
-              "UserId": {
-                "type": "integer",
-                "format": "int32",
-                "readOnly": true
-              },
-              "User": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/User"
-                  }
-                ],
-                "x-id": "UserId"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserApplicationType"
+              }
+            ]
+          },
+          "EMail": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "Password": {
+            "type": "string"
+          },
+          "TemporaryPassword": {
+            "type": "string"
+          },
+          "EmailVerified": {
+            "type": "boolean",
+            "default": "False",
+            "readOnly": true
+          },
+          "Phone": {
+            "maxLength": 30,
+            "type": "string"
+          },
+          "PhoneVerified": {
+            "type": "boolean",
+            "default": "False",
+            "readOnly": true
+          },
+          "FirstName": {
+            "maxLength": 50,
+            "type": "string"
+          },
+          "LastName": {
+            "maxLength": 50,
+            "type": "string"
+          },
+          "MiddleName": {
+            "maxLength": 50,
+            "type": "string"
+          },
+          "Company": {
+            "maxLength": 100,
+            "type": "string"
+          },
+          "Department": {
+            "maxLength": 100,
+            "type": "string"
+          },
+          "Position": {
+            "maxLength": 100,
+            "type": "string"
+          },
+          "UserId": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "User": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "UserId"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "UserApplicationLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Type": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UserApplicationType"
-                  }
-                ]
-              },
-              "EMail": {
-                "type": "string"
-              },
-              "Password": {
-                "type": "string"
-              },
-              "TemporaryPassword": {
-                "type": "string"
-              },
-              "EmailVerified": {
-                "type": "boolean"
-              },
-              "Phone": {
-                "type": "string"
-              },
-              "PhoneVerified": {
-                "type": "boolean"
-              },
-              "FirstName": {
-                "type": "string"
-              },
-              "LastName": {
-                "type": "string"
-              },
-              "MiddleName": {
-                "type": "string"
-              },
-              "Company": {
-                "type": "string"
-              },
-              "Department": {
-                "type": "string"
-              },
-              "Position": {
-                "type": "string"
-              },
-              "UserId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "User": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/User"
-                  }
-                ],
-                "x-id": "UserId"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserApplicationType"
+              }
+            ]
+          },
+          "EMail": {
+            "type": "string"
+          },
+          "Password": {
+            "type": "string"
+          },
+          "TemporaryPassword": {
+            "type": "string"
+          },
+          "EmailVerified": {
+            "type": "boolean"
+          },
+          "Phone": {
+            "type": "string"
+          },
+          "PhoneVerified": {
+            "type": "boolean"
+          },
+          "FirstName": {
+            "type": "string"
+          },
+          "LastName": {
+            "type": "string"
+          },
+          "MiddleName": {
+            "type": "string"
+          },
+          "Company": {
+            "type": "string"
+          },
+          "Department": {
+            "type": "string"
+          },
+          "Position": {
+            "type": "string"
+          },
+          "UserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "User": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "UserId"
+          }
+        },
+        "x-type-id": 0
       },
       "UserFileLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Data": {
-                "type": "string",
-                "format": "byte"
-              },
-              "DataName": {
-                "type": "string"
-              },
-              "DataLastWrite": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "UserId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "User": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/User"
-                  }
-                ],
-                "x-id": "UserId"
-              },
-              "IsAvatar": {
-                "type": "boolean"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Data": {
+            "type": "string",
+            "format": "byte"
+          },
+          "DataName": {
+            "type": "string"
+          },
+          "DataLastWrite": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "UserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "User": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "UserId"
+          },
+          "IsAvatar": {
+            "type": "boolean"
+          }
+        },
+        "x-type-id": 0
       },
       "UserFile": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "DataName": {
-                "maxLength": 1024,
-                "type": "string"
-              },
-              "DataLastWrite": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "UserId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "User": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/User"
-                  }
-                ],
-                "x-id": "UserId"
-              },
-              "IsAvatar": {
-                "type": "boolean"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "DataName": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "DataLastWrite": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "UserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "User": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "UserId"
+          },
+          "IsAvatar": {
+            "type": "boolean"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "UserGroup": {
+        "required": [
+          "Id"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBGroupItem"
-          },
-          {
-            "required": [
-              "Id"
-            ],
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UserGroup"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "Number": {
-                "maxLength": 512,
-                "type": "string"
-              },
-              "NameRU": {
-                "type": "string",
-                "x-culture": "ru-RU"
-              },
-              "NameEN": {
-                "type": "string",
-                "x-culture": "en-US"
-              }
-            },
-            "x-id": "Id",
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserGroup"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "Number": {
+            "maxLength": 512,
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "type": "string",
+            "x-culture": "en-US"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
       },
       "UserGroupLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "ParentId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Parent": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UserGroup"
-                  }
-                ],
-                "x-id": "ParentId"
-              },
-              "CompanyId": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Company": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/Company"
-                  }
-                ],
-                "x-id": "CompanyId"
-              },
-              "Number": {
-                "type": "string"
-              },
-              "NameRU": {
-                "type": "string"
-              },
-              "NameEN": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserGroup"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "Number": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
       },
       "WebSocketState": {
         "enum": [
@@ -28474,59 +28181,53 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/DefaultItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Address": {
-                "type": "string"
-              },
-              "Action": {
-                "type": "string"
-              },
-              "Platform": {
-                "type": "string"
-              },
-              "Application": {
-                "type": "string"
-              },
-              "Version": {
-                "type": "string"
-              }
-            }
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "type": "string"
+          },
+          "Action": {
+            "type": "string"
+          },
+          "Platform": {
+            "type": "string"
+          },
+          "Application": {
+            "type": "string"
+          },
+          "Version": {
+            "type": "string"
+          }
+        }
       },
       "WorkLog": {
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/DBLogItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Id": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "Code": {
-                "type": "string"
-              },
-              "NameRU": {
-                "type": "string"
-              },
-              "NameEN": {
-                "type": "string"
-              }
-            },
-            "x-type-id": 0
           }
-        ]
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          }
+        },
+        "x-type-id": 0
       }
     },
     "securitySchemes": {
