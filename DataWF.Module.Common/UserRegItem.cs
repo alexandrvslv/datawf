@@ -113,12 +113,12 @@ namespace DataWF.Module.Common
                             var newAcces = new AccessValue((byte[])newValue);
                             foreach (var oAccess in oldAcces.Items)
                             {
-                                var nAceess = newAcces.Get(oAccess.Group);
+                                var nAceess = newAcces.Get(oAccess.Identity);
                                 if (nAceess.Equals(AccessItem.Empty))
                                     rez += string.Format("Remove {0}; ", oAccess);
                                 else if (!nAceess.Equals(oAccess))
                                 {
-                                    rez += string.Format("Change {0}({1}{2}{3}{4}{5}{6}); ", oAccess.Group,
+                                    rez += string.Format("Change {0}({1}{2}{3}{4}{5}{6}); ", oAccess.Identity,
                                         oAccess.Read != nAceess.Read ? (nAceess.Read ? "+" : "-") + "View " : "",
                                         oAccess.Update != nAceess.Update ? (nAceess.Update ? "+" : "-") + "Edit " : "",
                                         oAccess.Create != nAceess.Create ? (nAceess.Create ? "+" : "-") + "Create " : "",
@@ -129,7 +129,7 @@ namespace DataWF.Module.Common
                             }
                             foreach (var nAccess in newAcces.Items)
                             {
-                                var access = oldAcces.Get(nAccess.Group);
+                                var access = oldAcces.Get(nAccess.Identity);
                                 if (!access.Equals(AccessItem.Empty))
                                     rez += string.Format("New {0}; ", nAccess);
                             }

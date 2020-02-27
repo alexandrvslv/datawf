@@ -36,7 +36,7 @@ namespace DataWF.Module.Common
         {
             foreach (var item in this)
             {
-                if (item.ContainsUser(user))
+                if (item.ContainsIdentity(user))
                     return item;
             }
 

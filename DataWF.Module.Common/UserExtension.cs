@@ -32,7 +32,7 @@ namespace DataWF.Module.Common
                 foreach (var group in user.Groups)
                 {
                     var access = item.Access.Get(group);
-                    if (access.Create && (filter == null || filter.Access.Get(access.Group).Update))
+                    if (access.Create && (filter == null || filter.Access.Get(access.Identity).Update))
                     {
                         yield return user;
                         break;
@@ -48,9 +48,9 @@ namespace DataWF.Module.Common
             {
                 foreach (var access in position.Access.Items.Where(p => p.Create))
                 {
-                    if (item.Access.Get(access.Group).Create)
+                    if (item.Access.Get(access.Identity).Create)
                     {
-                        if (filter == null || filter.Access.Get(access.Group).Update)
+                        if (filter == null || filter.Access.Get(access.Identity).Update)
                         {
                             yield return position;
                             break;
@@ -66,9 +66,9 @@ namespace DataWF.Module.Common
             {
                 foreach (var access in department.Access.Items.Where(p => p.Create))
                 {
-                    if (item.Access.Get(access.Group).Create)
+                    if (item.Access.Get(access.Identity).Create)
                     {
-                        if ((filter == null || filter.Access.Get(access.Group).Update))
+                        if ((filter == null || filter.Access.Get(access.Identity).Update))
                         {
                             yield return department;
                             break;

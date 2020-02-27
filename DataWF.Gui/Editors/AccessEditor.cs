@@ -17,7 +17,7 @@ namespace DataWF.Gui
                 GenerateColumns = false,
                 GenerateToString = false,
                 ListInfo = new LayoutListInfo(new[] {
-                    new LayoutColumn() { Name = nameof(AccessItem.Group), Width = 110, FillWidth = true, Editable = false },
+                    new LayoutColumn() { Name = nameof(AccessItem.Identity), Width = 110, FillWidth = true, Editable = false },
                     new LayoutColumn() { Name = nameof(AccessItem.Read), Width = 35, Invoker = new ActionInvoker<AccessItem, bool>(nameof(AccessItem.Read),
                                                             (item) => item.Read,
                                                             (item, value) =>

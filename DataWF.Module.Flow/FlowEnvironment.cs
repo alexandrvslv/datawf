@@ -85,7 +85,8 @@ namespace DataWF.Module.Flow
                 Book.DBTable.Load();
                 //cache groups
                 UserGroup.DBTable.Load();
-                AccessValue.Groups = new DBTableView<UserGroup>("");
+                AccessValue.Groups = new IdCollectionView<IGroupIdentity, UserGroup>(UserGroup.DBTable);
+                AccessValue.Users = new IdCollectionView<IUserIdentity, User>(User.DBTable);
                 Location.DBTable.Load();
                 User.DBTable.Load();
                 Template.DBTable.Load();
@@ -103,8 +104,6 @@ namespace DataWF.Module.Flow
             DocumentWork.DBTable.DefaultComparer = new DBComparer<DocumentWork, long?>(DocumentWork.DBTable.PrimaryKey) { Hash = true };
             //Logs.Add(new StateInfo("Flow Check", "Config Falil", "AccountInfo", StatusType.Warning));
         }
-
-
 
         public static void LoadConfig()
         {

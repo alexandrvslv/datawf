@@ -24,11 +24,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Security.Principal;
 
 namespace DataWF.Module.Common
 {
     [Table("rgroup", "User", BlockSize = 10)]
-    public class UserGroup : DBGroupItem, IDisposable, IAccessGroup
+    public class UserGroup : DBGroupItem, IDisposable, IGroupIdentity
     {
         public static readonly DBTable<UserGroup> DBTable = GetTable<UserGroup>();
         public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
@@ -39,7 +40,7 @@ namespace DataWF.Module.Common
 
         internal static void SetCurrent()
         {
-            AccessValue.Groups = UserGroup.DBTable;
+            AccessValue.Groups = new IdCollectionView<IGroupIdentity, UserGroup>(UserGroup.DBTable);
         }
 
         //[NonSerialized()]
@@ -70,8 +71,6 @@ namespace DataWF.Module.Common
             get => GetGroupReference<UserGroup>();
             set => SetGroupReference(value);
         }
-
-        int IAccessGroup.Id { get { return Id ?? -1; } }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
@@ -113,6 +112,10 @@ namespace DataWF.Module.Common
             set => SetValue(value, NameRUKey);
         }
 
+        string IIdentity.AuthenticationType => NameEN;
+
+        bool IIdentity.IsAuthenticated => true;
+
         [ControllerMethod]
         public IEnumerable<User> GetUsers(DBTransaction transaction)
         {
@@ -126,7 +129,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        public bool ContainsUser(IUserIdentity user)
+        public bool ContainsIdentity(IUserIdentity user)
         {
             return user is User currentUser
                 // && currentUser.Status == DBStatus.Actual

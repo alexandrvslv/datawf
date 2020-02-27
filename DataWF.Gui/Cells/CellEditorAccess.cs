@@ -34,7 +34,7 @@ namespace DataWF.Gui
             if (value is byte[])
             {
                 temp = new AccessValue();
-                temp.Read((byte[])value);
+                temp.Deserialize((byte[])value);
             }
             if (temp != null)
                 return temp;

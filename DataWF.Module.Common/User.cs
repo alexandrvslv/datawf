@@ -315,7 +315,7 @@ namespace DataWF.Module.Common
         private Company company;
         private Department department;
         private Position position;
-        private List<IAccessGroup> groups;
+        private List<IAccessIdentity> identities;
         private AccessValue cacheAccess;
         private Address address;
 
@@ -523,27 +523,29 @@ namespace DataWF.Module.Common
         }
         public override string AuthenticationType => AuthType?.ToString();
 
-        public override IEnumerable<IAccessGroup> Groups
+        public override IEnumerable<IAccessIdentity> Groups
         {
             get
             {
                 var access = Access;
-                if (groups == null)
+                if (identities == null)
                 {
                     cacheAccess = access;
-                    groups = new List<IAccessGroup>(Super ?? false
-                            ? (IEnumerable<IAccessGroup>)UserGroup.DBTable
-                            : access.Items.Where(p => p.Create).Select(p => p.Group));
+                    identities = new List<IAccessIdentity>(Super ?? false
+                            ? (IEnumerable<IAccessIdentity>)UserGroup.DBTable
+                            : access.Items.Where(p => p.Create).Select(p => p.Identity));
+                    identities.Add(this);
                 }
                 else if (access != cacheAccess)
                 {
                     cacheAccess = access;
-                    groups.Clear();
-                    groups.AddRange(Super ?? false
-                        ? (IEnumerable<IAccessGroup>)UserGroup.DBTable
-                        : access.Items.Where(p => p.Create).Select(p => p.Group));
+                    identities.Clear();
+                    identities.Add(this);
+                    identities.AddRange(Super ?? false
+                        ? (IEnumerable<IAccessIdentity>)UserGroup.DBTable
+                        : access.Items.Where(p => p.Create).Select(p => p.Identity));
                 }
-                return groups;
+                return identities;
             }
         }
 
@@ -558,8 +560,6 @@ namespace DataWF.Module.Common
             return base.CompareTo(obj);// this.ToString().CompareTo(obj.ToString());
         }
     }
-
-
 
     public enum UserAuthType
     {

@@ -26,7 +26,7 @@ namespace DataWF.Test.Data
             if (DBService.Connections.Count == 0)
                 Serialization.Deserialize("connections.xml", DBService.Connections);
 
-            AccessValue.Groups = new List<IAccessGroup> {
+            AccessValue.Groups = new IdCollection<IGroupIdentity> {
                 new AccessGroupBung() { Id = 1, Name = "Group1"},
                 new AccessGroupBung() { Id = 2, Name = "Group2"},
                 new AccessGroupBung() { Id = 3, Name = "Group3"}
@@ -397,9 +397,9 @@ namespace DataWF.Test.Data
         }
     }
 
-    public class AccessGroupBung : IAccessGroup
+    public class AccessGroupBung : IGroupIdentity, IPrimaryKey
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
         public string Name { get; set; }
         public bool Expand { get; set; }
@@ -409,12 +409,18 @@ namespace DataWF.Test.Data
 
         public bool IsExpanded => true;
 
+        public string AuthenticationType => Name;
+
+        public bool IsAuthenticated => true;
+
+        public object PrimaryKey { get => Id; set => Id = (int)value; }
+
         public int CompareTo(object obj)
         {
             throw new NotImplementedException();
         }
 
-        public bool ContainsUser(IUserIdentity user)
+        public bool ContainsIdentity(IUserIdentity user)
         {
             return true;
         }

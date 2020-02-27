@@ -239,7 +239,7 @@ namespace DataWF.Module.FlowGui
                 //row.Access.Create
                 foreach (var access in row.Access.Items.ToList())
                 {
-                    row.Access.Add(access.Group, access.Access & ~AccessType.Create);
+                    row.Access.Add(access.Identity, access.Access & ~AccessType.Create);
                 }
             }
             else if (item.Name == "Scheduler")
