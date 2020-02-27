@@ -3,17 +3,17 @@
   <PropertyGroup>
     <Description>Web Client Code Generation Tool</Description>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.2</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     <AssemblyName>dotnet-wccodegen</AssemblyName>
     <PackageId>DataWF.WebClient.Generator</PackageId>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>wccodegen</ToolCommandName>
-    <VersionPrefix>1.0.36</VersionPrefix>
+    <VersionPrefix>1.3.2</VersionPrefix>
     <Authors>Alexandr</Authors>
     <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/alexandrvslv/datawf</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/alexandrvslv/datawf.git</RepositoryUrl> 
+    <RepositoryUrl>https://github.com/alexandrvslv/datawf.git</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
@@ -21,7 +21,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.4.0" />
     <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="13.2.3" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\DataWF.WebClient.Common\DataWF.WebClient.Common.csproj" />
   </ItemGroup>

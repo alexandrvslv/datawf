@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.WebClient.Common</RootNamespace>
     <AssemblyName>DataWF.WebClient.Common</AssemblyName>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <LangVersion>7.1</LangVersion>
     <Platforms>AnyCPU</Platforms>
         
