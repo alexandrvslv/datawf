@@ -7,12 +7,10 @@ namespace DataWF.Common
 {
     public class ExceptionInfo
     {
-        private readonly DateTime date;
-
         public ExceptionInfo(Exception exception)
         {
             Exception = exception;
-            date = DateTime.Now;
+            Date = DateTime.UtcNow;
             var modules = new StringBuilder();
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             Array.Sort<Assembly>(assemblies, (x, y) => string.Compare(x.GetName().Name, y.GetName().Name, StringComparison.Ordinal));
@@ -52,12 +50,12 @@ namespace DataWF.Common
         }
 
         [Category("Misc"), ReadOnly(true)]
-        public DateTime Date { get; internal set; }
+        public DateTime Date { get; }
 
         [Category("Misc"), ReadOnly(true)]
-        public string Modules { get; internal set; }
+        public string Modules { get; }
 
         [Category("Data")]
-        public Exception Exception { get; internal set; }
+        public Exception Exception { get; }
     }
 }

@@ -17,16 +17,14 @@ namespace DataWF.Data
                 keyComparer = StringComparer.OrdinalIgnoreCase;
             }
 
-
-            Type gtype = null;
             if (keyType.IsValueType || keyType.IsEnum)
             {
-                gtype = typeof(NullablePullIndex<,>).MakeGenericType(type, keyType);
+                var gtype = typeof(NullablePullIndex<,>).MakeGenericType(type, keyType);
                 return (PullIndex)EmitInvoker.CreateObject(gtype, ctorTypes, new object[] { pull, nullKey, valueComparer, keyComparer }, true);
             }
             else
             {
-                gtype = typeof(PullIndex<,>).MakeGenericType(type, keyType);
+                var gtype = typeof(PullIndex<,>).MakeGenericType(type, keyType);
                 return (PullIndex)EmitInvoker.CreateObject(gtype, ctorTypes, new object[] { pull, nullKey, valueComparer, keyComparer }, true);
             }
 

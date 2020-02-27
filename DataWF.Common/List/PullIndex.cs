@@ -104,13 +104,15 @@ namespace DataWF.Data
             {
                 if (!store.TryGetValue(key, out ThreadSafeList<T> list))
                 {
-                    store[key] = list = new ThreadSafeList<T>(1) { item };
+                    store[key] = new ThreadSafeList<T>(1) { item };
                 }
                 else
                 {
                     var index = list.BinarySearch(item, valueComparer);
                     if (index < 0)
+                    {
                         list.Insert(-index - 1, item);
+                    }
                 }
             }
         }

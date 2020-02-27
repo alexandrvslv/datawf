@@ -100,7 +100,7 @@ namespace DataWF.Common
             var member = info.GetProperty(Reader.Name);
             if (member != null)
             {
-                object value = null;
+                object value;
                 if (member.IsText || member.IsAttribute)
                 {
                     var text = Reader.ReadElementContentAsString();
