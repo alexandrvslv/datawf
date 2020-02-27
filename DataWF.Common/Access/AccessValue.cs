@@ -8,25 +8,26 @@ namespace DataWF.Common
 {
     public class AccessValue : IAccessValue//, IEnumerable<AccessItem>
     {
-        public static IEnumerable<IAccessGroup> Groups = new List<IAccessGroup>();
+        public static IIdCollection<IGroupIdentity> Groups = new IdCollection<IGroupIdentity>();
+        public static IIdCollection<IUserIdentity> Users = new IdCollection<IUserIdentity>();
 
         public static implicit operator AccessValue(byte[] value)
         {
             return new AccessValue(value);
         }
 
-        private readonly Dictionary<IAccessGroup, AccessItem> items = new Dictionary<IAccessGroup, AccessItem>(1);
+        private readonly Dictionary<IAccessIdentity, AccessItem> items = new Dictionary<IAccessIdentity, AccessItem>(1);
 
         public AccessValue()
         { }
 
-        public AccessValue(IEnumerable<IAccessGroup> groups, AccessType access = AccessType.Read)
+        public AccessValue(IEnumerable<IAccessIdentity> identities, AccessType access = AccessType.Read)
         {
-            foreach (IAccessGroup group in groups)
+            foreach (var identity in identities)
             {
-                if (group != null)
+                if (identity != null)
                 {
-                    Add(new AccessItem(group, access));
+                    Add(new AccessItem(identity, access));
                 }
             }
         }
@@ -35,7 +36,7 @@ namespace DataWF.Common
         {
             foreach (var item in items)
             {
-                this.items[item.Group] = item;
+                this.items[item.Identity] = item;
             }
         }
 
@@ -43,7 +44,7 @@ namespace DataWF.Common
         {
             if (buffer != null)
             {
-                Read(buffer);
+                Deserialize(buffer);
             }
         }
 
@@ -58,9 +59,9 @@ namespace DataWF.Common
             var data = AccessType.None;
             if (user != null)
             {
-                foreach (IAccessGroup group in user.Groups)
+                foreach (IAccessIdentity identity in user.Groups)
                 {
-                    var item = Get(group);
+                    var item = Get(identity);
                     data |= item.Access;
                 }
             }
@@ -69,7 +70,7 @@ namespace DataWF.Common
 
         public bool GetFlag(AccessType type, IUserIdentity user)
         {
-            foreach (IAccessGroup group in user.Groups)
+            foreach (IAccessIdentity group in user.Groups)
             {
                 var item = Get(group);
                 if ((item.Access & type) == type)
@@ -78,7 +79,7 @@ namespace DataWF.Common
             return false;
         }
 
-        public void Add(IAccessGroup group, AccessType type)
+        public void Add(IAccessIdentity group, AccessType type)
         {
             Add(new AccessItem(group, type));
         }
@@ -89,44 +90,45 @@ namespace DataWF.Common
             var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
-                Write(writer);
+                Serialize(writer);
                 buffer = stream.ToArray();
             }
             return buffer;
         }
 
-        public void Write(BinaryWriter writer)
+        public void Serialize(BinaryWriter writer)
         {
             writer.Write(items.Values.Where(p => !p.IsEmpty).Count());
 
             foreach (AccessItem item in items.Values.Where(p => !p.IsEmpty))
             {
-                item.BinaryWrite(writer);
+                item.Serialize(writer);
             }
         }
 
-        public void Read(byte[] buffer)
+        public void Deserialize(byte[] buffer)
         {
             var stream = new MemoryStream(buffer);
             using (var reader = new BinaryReader(stream))
             {
-                Read(reader);
+                Deserialize(reader);
             }
         }
 
-        public void Read(BinaryReader reader)
+        public void Deserialize(BinaryReader reader)
         {
             items.Clear();
             var capacity = reader.ReadInt32();
             if (capacity > 0)
             {
+                var itemSize = (reader.BaseStream.Length - 4) / capacity;
+                var IsUser = itemSize > 8;
                 while (reader.BaseStream.Position < reader.BaseStream.Length)
                 {
-                    var item = new AccessItem();
-                    item.BinaryRead(reader);
+                    var item = AccessItem.Deserialize(reader, IsUser);
                     if (!item.IsEmpty)
                     {
-                        items[item.Group] = item;
+                        items[item.Identity] = item;
                     }
                 }
             }
@@ -137,11 +139,11 @@ namespace DataWF.Common
             var flag = false;
             foreach (var item in items.Values.ToList())
             {
-                if (item.Group?.Group != null
-                    && items.TryGetValue((IAccessGroup)item.Group.Group, out var value)
+                if (item.Identity is IGroup group && group.Group != null
+                    && items.TryGetValue((IAccessIdentity)group.Group, out var value)
                     && (value.Access & item.Access) == item.Access)
                 {
-                    items.Remove(item.Group);
+                    items.Remove(item.Identity);
                     flag = true;
                 }
             }
@@ -155,32 +157,30 @@ namespace DataWF.Common
             {
                 if (item.Access == AccessType.None)
                 {
-                    items.Remove(item.Group);
+                    items.Remove(item.Identity);
                     flag = true;
                 }
             }
             return flag;
         }
 
-        public AccessItem Get(IAccessGroup group, bool hierarchy = true)
+        public AccessItem Get(IAccessIdentity identity, bool hierarchy = true)
         {
             var item = AccessItem.Empty;
-            while (group != null && !items.TryGetValue(group, out item))
+            while (identity != null && !items.TryGetValue(identity, out item) && hierarchy)
             {
-                if (!hierarchy)
-                    break;
-                group = (IAccessGroup)group.Group;
+                identity = identity is IGroup groupped ? (IAccessIdentity)groupped.Group : null;
             }
             return item;
         }
 
-        public AccessItem GetOrAdd(IAccessGroup group)
+        public AccessItem GetOrAdd(IAccessIdentity identity)
         {
-            if (items.TryGetValue(group, out var item))
+            if (items.TryGetValue(identity, out var item))
             {
                 return item;
             }
-            var newItem = new AccessItem(group);
+            var newItem = new AccessItem(identity);
             Add(newItem);
             return newItem;
         }
@@ -195,15 +195,15 @@ namespace DataWF.Common
 
         public void Add(AccessItem item)
         {
-            items[item.Group] = item;
+            items[item.Identity] = item;
         }
 
-        public IEnumerable<IAccessGroup> GetGroups(AccessType type)
+        public IEnumerable<IAccessIdentity> GetGroups(AccessType type)
         {
             foreach (var item in items.Values)
             {
                 if ((type & item.Access) == type)
-                    yield return item.Group;
+                    yield return item.Identity;
             }
         }
 
@@ -214,7 +214,7 @@ namespace DataWF.Common
 
         public void Fill()
         {
-            foreach (IAccessGroup group in Groups)
+            foreach (IAccessIdentity group in Groups)
             {
                 GetOrAdd(group);
             }
@@ -234,7 +234,7 @@ namespace DataWF.Common
                 return false;
             foreach (var item in accessValue.Items)
             {
-                if (!items.TryGetValue(item.Group, out var thisItem) || thisItem.Access != item.Access)
+                if (!items.TryGetValue(item.Identity, out var thisItem) || thisItem.Access != item.Access)
                 {
                     return false;
                 }

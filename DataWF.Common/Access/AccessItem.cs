@@ -8,41 +8,58 @@ namespace DataWF.Common
 {
     public struct AccessItem : IAccessItem
     {
-        public readonly static AccessItem Empty = new AccessItem();
-
-        public AccessItem(IAccessGroup group, AccessType data = AccessType.None) : this()
+        public static readonly AccessItem Empty = new AccessItem();
+        private IAccessIdentity identity;
+        private int identityId;
+        public AccessItem(bool isUser, int identityId, AccessType data)
         {
-            Group = group;
+            IsUser = isUser;
+            Access = data;
+            this.identityId = identityId;
+            this.identity = null;
+        }
+
+        public AccessItem(IAccessIdentity identity, AccessType data = AccessType.None) : this()
+        {
+            Identity = identity;
             Access = data;
         }
 
         public override string ToString()
         {
-            return $"{Group?.Name}({Access})";
+            return $"{Identity?.Name}({Access})";
         }
 
         [XmlIgnore, JsonIgnore]
-        public IAccessGroup Group { get; private set; }
-
-        public int GroupId
+        public IAccessIdentity Identity
         {
-            get { return Group?.Id ?? -1; }
-            set
+            get => identity ?? (identity = IsUser
+                ? (IAccessIdentity)AccessValue.Users.GetById(identityId)
+                : (IAccessIdentity)AccessValue.Groups.GetById(identityId));
+            private set
             {
-                if (value >= 0)
-                {
-                    Group = AccessValue.Groups.FirstOrDefault(p => p.Id == value);
-                }
+                identityId = value?.Id ?? -1;
+                identity = value;
+                IsUser = value is IUserIdentity;
             }
         }
 
+        public int IdentityId
+        {
+            get => identityId;
+            set
+            {
+                identityId = value;
+                identity = null;
+            }
+        }
+
+        public bool IsUser { get; set; }
+
         public AccessType Access { get; set; }
 
-        [JsonIgnore]
-        public bool IsEmpty
-        {
-            get { return Group == null; }
-        }
+        [XmlIgnore, JsonIgnore]
+        public bool IsEmpty => IdentityId <= 0;
 
         [XmlIgnore, JsonIgnore, DefaultValue(false)]
         public bool Read
@@ -140,16 +157,16 @@ namespace DataWF.Common
             }
         }
 
-        internal void BinaryWrite(BinaryWriter writer)
+        internal void Serialize(BinaryWriter writer)
         {
-            writer.Write(GroupId);
+            writer.Write(IsUser);
+            writer.Write(IdentityId);
             writer.Write((int)Access);
         }
 
-        internal void BinaryRead(BinaryReader reader)
+        public static AccessItem Deserialize(BinaryReader reader, bool user)
         {
-            GroupId = reader.ReadInt32();
-            Access = (AccessType)reader.ReadInt32();
+            return new AccessItem(user ? reader.ReadBoolean() : false, reader.ReadInt32(), (AccessType)reader.ReadInt32());
         }
     }
 }

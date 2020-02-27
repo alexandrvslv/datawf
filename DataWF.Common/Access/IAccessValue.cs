@@ -3,12 +3,12 @@
     public interface IAccessValue
     {
         bool GetFlag(AccessType type, IUserIdentity user);
-        void Add(IAccessGroup group, AccessType type);
+        void Add(IAccessIdentity group, AccessType type);
     }
 
     public interface IAccessItem
     {
-        int GroupId { get; }
+        int IdentityId { get; }
         AccessType Access { get; }        
     }
 }

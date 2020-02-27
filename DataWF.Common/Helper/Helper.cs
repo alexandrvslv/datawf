@@ -271,7 +271,7 @@ namespace DataWF.Common
             get { return logs; }
         }
 
-        public static string DateDaysString(DateTime date, CultureInfo culture = null)
+        public static string DateDaysString(DateTime date)
         {
             return DateDaysString(DateTime.Now, date);
         }
@@ -288,7 +288,7 @@ namespace DataWF.Common
 
         public static string DateRevelantString(DateTime date, CultureInfo culture = null)
         {
-            return DateRevelantString(DateTime.Now, date);
+            return DateRevelantString(DateTime.Now, date, culture);
         }
 
         public static string DateRevelantString(DateTime stamp, DateTime date, CultureInfo culture = null)

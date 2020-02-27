@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
@@ -49,6 +50,19 @@ namespace DataWF.Data
                 baseSchema = value;
                 BaseSchemaName = value?.Name;
             }
+        }
+
+        [Invoker(typeof(DBLogSchema), nameof(DBLogSchema.BaseSchemaName))]
+        public class BaseSchemaNameInvoker<T> : Invoker<T, string> where T : DBLogSchema
+        {
+            public static readonly BaseSchemaNameInvoker<T> Instance = new BaseSchemaNameInvoker<T>();
+            public override string Name => nameof(DBLogSchema.BaseSchemaName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.BaseSchemaName;
+
+            public override void SetValue(T target, string value) => target.BaseSchemaName = value;
         }
     }
 }

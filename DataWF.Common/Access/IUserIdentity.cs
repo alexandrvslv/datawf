@@ -3,11 +3,9 @@ using System.Security.Principal;
 
 namespace DataWF.Common
 {
-    public interface IUserIdentity : IIdentity
+    public interface IUserIdentity : IAccessIdentity
     {
-        int? Id { get; }
-
-        IEnumerable<IAccessGroup> Groups { get; }
+        IEnumerable<IAccessIdentity> Groups { get; }
     }
 
     public interface IUserReg

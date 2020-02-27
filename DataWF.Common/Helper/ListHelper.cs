@@ -195,8 +195,8 @@ namespace DataWF.Common
 
         public static int BinarySearch<T>(IList<T> array, int low, int high, T value, IComparer<T> comp)
         {
-            int midpoint = 0;
-            int rez = 0;
+            int midpoint;
+            int rez;
             while (low <= high)
             {
                 midpoint = low + ((high - low) >> 1);
@@ -232,8 +232,8 @@ namespace DataWF.Common
         // http://codelab.ru/task/binsearch/
         public static int BinarySearch(IList array, int low, int high, object value, IComparer comp)
         {
-            int midpoint = 0;
-            int rez = 0;
+            int midpoint;
+            int rez;
             while (low <= high)
             {
                 midpoint = (low + high) >> 1;
@@ -350,14 +350,6 @@ namespace DataWF.Common
             }
 
             return compare.Not ? !result : result;
-        }
-
-        public static IFilterable GetListView(object dataSource)
-        {
-            throw new NotImplementedException();
-            //dataSource as ;
-            //if (filterable == null && dataSource is ISelectable)
-            //    filterable = ((ISelectable)dataSource).
         }
 
         public static IEnumerable Search(IEnumerable items, IQueryParameter param)

@@ -14,7 +14,8 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBTable<T> : DBTable, ICollection<T> where T : DBItem, new()
+
+    public class DBTable<T> : DBTable, IIdCollection<T> where T : DBItem, new()
     {
         protected readonly List<T> items = new List<T>();
         protected readonly List<T> insertItems = new List<T>();
@@ -66,7 +67,7 @@ namespace DataWF.Data
             if (!queryChache.TryGetValue(filter, out var query))
             {
                 query = new QQuery(filter, this);
-                Load(query, DBLoadParam.Referencing, transaction);
+                Load(query, loadParam, transaction);
                 queryChache.TryAdd(filter, query);
             }
             return Select(query);
@@ -541,12 +542,17 @@ namespace DataWF.Data
 
         public T1 LoadById<T1>(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null) where T1 : T
         {
-            return (T1)LoadById(id, param, cols);
+            return (T1)LoadById(id, param, cols, transaction);
         }
 
         public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             return LoadByKey(id, PrimaryKey, param, cols, transaction);
+        }
+
+        public T GetById(object id)
+        {
+            return LoadByKey(id, PrimaryKey);
         }
 
         public T LoadByKey(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)

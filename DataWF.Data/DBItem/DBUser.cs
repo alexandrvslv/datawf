@@ -40,7 +40,7 @@ namespace DataWF.Data
         public abstract string Name { get; set; }
 
         [JsonIgnore, XmlIgnore]
-        public abstract IEnumerable<IAccessGroup> Groups { get; }
+        public abstract IEnumerable<IAccessIdentity> Groups { get; }
 
         [JsonIgnore, XmlIgnore]
         public abstract string AuthenticationType { get; }

@@ -74,7 +74,7 @@ namespace DataWF.Common
         {
             var list = new List<MemberInfo>();
             MemberInfo last = null;
-            int s = 0, i = 0;
+            int i, s = 0;
             do
             {
                 i = property.IndexOf('.', s);

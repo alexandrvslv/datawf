@@ -6,9 +6,9 @@ namespace DataWF.Common
 {
     public class CompaundInvoker<T, V> : Invoker<T, V>
     {
-        private string property;
-        private List<IInvoker> invokers = new List<IInvoker>();
-        private IInvoker lastInvoker;
+        private readonly string property;
+        private readonly List<IInvoker> invokers = new List<IInvoker>();
+        private readonly IInvoker lastInvoker;
         public CompaundInvoker(string property)
            : this(property, TypeHelper.GetMemberInfoList(typeof(T), property))
         {

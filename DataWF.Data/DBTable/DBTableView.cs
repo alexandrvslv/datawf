@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
-    public class DBTableView<T> : SelectableList<T>, IDBTableView where T : DBItem, new()
+    public class DBTableView<T> : SelectableList<T>, IDBTableView, IIdCollection<T> where T : DBItem, new()
     {
         protected DBViewKeys keys = DBViewKeys.Lock;
         protected QParam defaultParam;
@@ -607,5 +607,9 @@ namespace DataWF.Data
             return groups;
         }
 
+        public T GetById(object id)
+        {
+            return table.GetById(id);
+        }
     }
 }

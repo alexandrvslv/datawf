@@ -209,6 +209,7 @@ namespace DataWF.Data
 
         public DBExport(string name)
         {
+            Name = name;
             this.tables = new DBETableList(this);
         }
 
@@ -216,6 +217,8 @@ namespace DataWF.Data
         {
             return string.Format("Source: {0}; Target: {1}", SourceName, TargetName);
         }
+        
+        public string Name { get; set; }
 
         public string Prefix
         {

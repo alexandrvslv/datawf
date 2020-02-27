@@ -14,4 +14,9 @@ namespace DataWF.Common
         Accept = 32,
         Download = 64
     }
+
+    public enum IdentityType
+    {
+
+    }
 }

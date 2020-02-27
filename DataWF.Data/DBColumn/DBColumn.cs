@@ -1359,5 +1359,57 @@ namespace DataWF.Data
 
             public override void SetValue(T target, string value) => target.DefaultValue = value;
         }
+
+        [Invoker(typeof(DBColumn), nameof(DBColumn.Query))]
+        public class QueryInvoker<T> : Invoker<T, string> where T : DBColumn
+        {
+            public static readonly QueryInvoker<T> Instance = new QueryInvoker<T>();
+            public override string Name => nameof(DBColumn.Query);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.Query;
+
+            public override void SetValue(T target, string value) => target.Query = value;
+        }
+
+        [Invoker(typeof(DBColumn), nameof(DBColumn.SubList))]
+        public class SubListInvoker<T> : Invoker<T, string> where T : DBColumn
+        {
+            public static readonly SubListInvoker<T> Instance = new SubListInvoker<T>();
+            public override string Name => nameof(DBColumn.SubList);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.SubList;
+
+            public override void SetValue(T target, string value) => target.SubList = value;
+        }
+
+        [Invoker(typeof(DBColumn), nameof(DBColumn.BoolTrue))]
+        public class BoolTrueInvoker<T> : Invoker<T, string> where T : DBColumn
+        {
+            public static readonly BoolTrueInvoker<T> Instance = new BoolTrueInvoker<T>();
+            public override string Name => nameof(DBColumn.BoolTrue);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.BoolTrue;
+
+            public override void SetValue(T target, string value) => target.BoolTrue = value;
+        }
+
+        [Invoker(typeof(DBColumn), nameof(DBColumn.BoolFalse))]
+        public class BoolFalseInvoker<T> : Invoker<T, string> where T : DBColumn
+        {
+            public static readonly BoolFalseInvoker<T> Instance = new BoolFalseInvoker<T>();
+            public override string Name => nameof(DBColumn.BoolFalse);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.BoolFalse;
+
+            public override void SetValue(T target, string value) => target.BoolFalse = value;
+        }
     }
 }
