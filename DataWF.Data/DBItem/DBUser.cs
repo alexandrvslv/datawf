@@ -37,6 +37,7 @@ namespace DataWF.Data
         [Column("email", 1024, Keys = DBColumnKeys.Indexing), Index("ruser_email", true)]
         public abstract string EMail { get; set; }
 
+        [JsonIgnore, XmlIgnore]
         public abstract string Name { get; set; }
 
         [JsonIgnore, XmlIgnore]
