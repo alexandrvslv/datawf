@@ -49,5 +49,14 @@ namespace DataWF.WebService.Common
                    && (!StringSegment.IsNullOrEmpty(contentDisposition.FileName)
                        || !StringSegment.IsNullOrEmpty(contentDisposition.FileNameStar));
         }
+
+        //public static bool HasFileContentDisposition(ContentDispositionHeaderValue contentDisposition)
+        //{
+        //    // Content-Disposition: form-data; name="myfile1"; filename="Misc 002.jpg"
+        //    return contentDisposition != null
+        //           && contentDisposition.DispositionType.Equals("form-data")
+        //           && (!StringSegment.IsNullOrEmpty(contentDisposition.FileName)
+        //               || !StringSegment.IsNullOrEmpty(contentDisposition.FileNameStar));
+        //}
     }
 }

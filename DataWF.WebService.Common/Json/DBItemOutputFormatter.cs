@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace DataWF.WebService.Common
 {
     //https://github.com/dotnet/aspnetcore/blob/master/src/Mvc/Mvc.Core/src/Formatters/MediaTypeHeaderValues.cs
-    public class DBItemJsonOutputFormatter : TextOutputFormatter
+    public class DBItemOutputFormatter : TextOutputFormatter
     {
         public static readonly MediaTypeHeaderValue ApplicationJson
             = MediaTypeHeaderValue.Parse("application/json").CopyAsReadOnly();
@@ -19,7 +19,7 @@ namespace DataWF.WebService.Common
         public static readonly MediaTypeHeaderValue ApplicationAnyJsonSyntax
             = MediaTypeHeaderValue.Parse("application/*+json").CopyAsReadOnly();
 
-        public DBItemJsonOutputFormatter()
+        public DBItemOutputFormatter()
         {
             SupportedEncodings.Add(Encoding.UTF8);
             SupportedEncodings.Add(Encoding.Unicode);

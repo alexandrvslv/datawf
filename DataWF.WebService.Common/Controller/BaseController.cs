@@ -22,7 +22,6 @@ namespace DataWF.WebService.Common
     public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
     {
         protected DBTable<T> table;
-        private static readonly FormOptions formOptions = new FormOptions();
 
         public BaseController()
         {
@@ -312,6 +311,7 @@ namespace DataWF.WebService.Common
 
         protected async Task<UploadModel> Upload()
         {
+            var formOptions = new FormOptions();
             var result = new UploadModel() { ModificationDate = DateTime.UtcNow };
             var formAccumulator = new KeyValueAccumulator();
             var boundary = MultipartRequestHelper.GetBoundary(
@@ -369,6 +369,7 @@ namespace DataWF.WebService.Common
 
         protected async Task<UploadModel> Upload(bool inMemory)
         {
+            var formOptions = new FormOptions();
             var formAccumulator = new KeyValueAccumulator();
             var result = new UploadModel();
 

@@ -332,7 +332,7 @@ namespace DataWF.Data
             if (!queryChache.TryGetValue(filter, out var query))
             {
                 query = new QQuery(filter, this);
-                await LoadAsync(query, loadParam, transaction).ConfigureAwait(false);
+                await LoadAsync(query, loadParam, transaction);
                 queryChache.TryAdd(filter, query);
             }
             return Select(query);
@@ -500,7 +500,7 @@ namespace DataWF.Data
             {
                 param &= ~DBLoadParam.CheckDeleted;
             }
-            var buf = await LoadAsync(query.ToCommand(true), param, transaction).ConfigureAwait(false);
+            var buf = await LoadAsync(query.ToCommand(true), param, transaction);
 
             if (buf != null && (param & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
             {
@@ -561,7 +561,7 @@ namespace DataWF.Data
                 {
                     return list;
                 }
-                using (transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader).ConfigureAwait(false))
+                using (transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader))
                 {
                     CheckColumns(transaction);
                     while (!transaction.Canceled && await transaction.ReadAsync())

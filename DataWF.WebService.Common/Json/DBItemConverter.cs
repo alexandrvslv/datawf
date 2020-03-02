@@ -30,72 +30,29 @@ using System.Text.Json.Serialization;
 namespace DataWF.WebService.Common
 {
 
-    public class DBItemJsonConverter : JsonConverter<DBItem>
+    public class DBItemConverter<T> : JsonConverter<T> where T : DBItem, new()
     {
-        private const string jsonIncludeRef = "json_include_ref";
-        private const string jsonReferenceCheck = "json_ref_check";
-        private const string jsonMaxDepth = "json_max_depth";
-        private IHttpContextAccessor httpContextAccessor;
-        private HttpContext context;
-        private IUserIdentity user;
-        private bool? includeReference;
-        private int? maxDepth;
-        private bool? referenceCheck;
-        private HashSet<DBItem> referenceSet = new HashSet<DBItem>();
 
-        public DBItemJsonConverter()
+        public DBItemConverter()
         {
         }
 
-        public IHttpContextAccessor HttpContextAccessor
+        public DBItemConverter(DBItemConverterFactory factory)
         {
-            get => httpContextAccessor;
-            set => httpContextAccessor = value;
+            Factory = factory;
         }
 
-        public HttpContext HttpContext
-        {
-            get => context ?? HttpContextAccessor?.HttpContext;
-            set
-            {
-                context = value;
-                user = context?.User?.GetCommonUser();
-            }
-        }
-
-        public IUserIdentity CurrentUser
-        {
-            get => user ?? HttpContext?.User?.GetCommonUser();
-            set => user = value;
-        }
-
-        public bool IncludeReference
-        {
-            get => includeReference ?? HttpContext?.ReadBool(jsonIncludeRef) ?? false;
-            set => includeReference = value;
-        }
-
-        public bool ReferenceCheck
-        {
-            get => referenceCheck ?? HttpContext?.ReadBool(jsonReferenceCheck) ?? false;
-            set => referenceCheck = value;
-        }
-
-        public int MaxDepth
-        {
-            get => maxDepth ?? HttpContext?.ReadInt(jsonMaxDepth) ?? 5;
-            set => maxDepth = value;
-        }
+        public DBItemConverterFactory Factory { get; set; }
 
         public override bool CanConvert(Type objectType)
         {
-            return TypeHelper.IsBaseType(objectType, typeof(DBItem));
+            return TypeHelper.IsBaseType(objectType, typeof(T));
         }
 
-        public override void Write(Utf8JsonWriter writer, DBItem value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
         {
-            bool includeReference = IncludeReference;
-            int maxDepth = MaxDepth;
+            bool includeReference = Factory.IncludeReference;
+            int maxDepth = Factory.MaxDepth;
             var valueType = value.GetType();
             var table = DBTable.GetTable(valueType);
             writer.WriteStartObject();
@@ -108,12 +65,12 @@ namespace DataWF.WebService.Common
                     if (!includeReference || writer.CurrentDepth > maxDepth)
                         continue;
                     propertyValue = invoker.GetValue(value);
-                    if (ReferenceCheck && propertyValue is DBItem reference)
+                    if (Factory.ReferenceCheck && propertyValue is DBItem reference)
                     {
-                        if (referenceSet.Contains(reference))
+                        if (Factory.referenceSet.Contains(reference))
                             continue;
                         else
-                            referenceSet.Add(reference);
+                            Factory.referenceSet.Add(reference);
                     }
                 }
                 else
@@ -121,7 +78,7 @@ namespace DataWF.WebService.Common
                     propertyValue = invoker.GetValue(value);
                     if (propertyValue is AccessValue accessValue)
                     {
-                        propertyValue = accessValue.GetFlags(CurrentUser);
+                        propertyValue = accessValue.GetFlags(Factory.CurrentUser);
                     }
                 }
                 writer.WritePropertyName(invoker.Name);
@@ -131,11 +88,11 @@ namespace DataWF.WebService.Common
             writer.WriteEndObject();
         }
 
-        public override DBItem Read(ref Utf8JsonReader reader, Type objectType, JsonSerializerOptions options)
+        public override T Read(ref Utf8JsonReader reader, Type objectType, JsonSerializerOptions options)
         {
-            var item = (DBItem)null;
+            var item = (T)null;
 
-            var table = DBTable.GetTable(objectType);
+            var table = DBTable.GetTable<T>();
             if (table == null)
             {
                 throw new JsonException($"Can't find table of {objectType?.Name ?? "null"}");
@@ -166,18 +123,18 @@ namespace DataWF.WebService.Common
 
             if (table.PrimaryKey != null && dictionary.TryGetValue(table.PrimaryKey.PropertyInvoker, out var value) && value != null)
             {
-                item = table.LoadItemById(value, DBLoadParam.Load | DBLoadParam.Referencing);
+                item = table.LoadById(value, DBLoadParam.Load | DBLoadParam.Referencing);
             }
 
             if (item == null)
             {
                 if (table.ItemTypeKey != null && dictionary.TryGetValue(table.ItemTypeKey.PropertyInvoker, out var itemType) && itemType != null)
                 {
-                    item = table.NewItem(DBUpdateState.Insert, true, (int)itemType);
+                    item = (T)table.NewItem(DBUpdateState.Insert, true, (int)itemType);
                 }
                 else
                 {
-                    item = table.NewItem(DBUpdateState.Insert, true);
+                    item = (T)table.NewItem(DBUpdateState.Insert, true);
                 }
             }
 

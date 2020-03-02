@@ -5,23 +5,27 @@ namespace DataWF.Common
 {
     public class WebNotifyClientEventArgs : EventArgs
     {
+        private string messageText;
+
         public WebNotifyClientEventArgs(byte[] message)
         {
             Message = message;
-            if (message != null && message.Length > 0)
+        }
+        
+        public byte[] Message { get; }
+
+        public string MessageText
+        {
+            get
             {
-                var messageText = Encoding.UTF8.GetString(message);
-                MessageText = messageText.Trim(new char[] { '\uFEFF', '\u200B' });
+                if (Message != null && Message.Length > 0)
+                {
+                    messageText = Encoding.UTF8.GetString(Message);
+                    messageText = messageText.Trim(new char[] { '\uFEFF', '\u200B' });
+                }
+                return messageText;
             }
         }
 
-        public WebNotifyClientEventArgs(string messageText)
-        {
-            MessageText = messageText.Trim(new char[] { '\uFEFF', '\u200B' });
-        }
-
-        public string MessageText { get; }
-
-        public byte[] Message { get; }
     }
 }

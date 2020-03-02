@@ -444,7 +444,7 @@ namespace DataWF.Data
                     {
                         if (!IsSerializeableColumn(column))
                             continue;
-                        invokers.Add(column);
+                        invokers.Add(column.PropertyInvoker);
                         if (column.ReferencePropertyInvoker != null)
                         {
                             invokers.Add(column.ReferencePropertyInvoker);
@@ -503,7 +503,7 @@ namespace DataWF.Data
         public bool IsSerializeableColumn(DBColumn column)
         {
             return column.Property != null
-                && column.PropertyInvoker != null
+                && column.PropertyInvoker != null && column.PropertyInvoker != column
                 && column.PropertyInvoker.TargetType.IsAssignableFrom(ItemType.Type)
                 //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
                 && (column.Keys & DBColumnKeys.Password) != DBColumnKeys.Password

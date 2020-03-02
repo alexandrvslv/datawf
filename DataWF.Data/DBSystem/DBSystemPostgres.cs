@@ -307,7 +307,7 @@ namespace DataWF.Data
             {
                 using (var tempStream = new FileStream(tempFileName, FileMode.Create, FileAccess.ReadWrite))
                 {
-                    while ((count = value.Read(buffer, 0, bufferSize)) != 0)
+                    while ((count = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
                     {
                         tempStream.Write(buffer, 0, count);
                     }
@@ -341,7 +341,7 @@ namespace DataWF.Data
             {
                 //await value.CopyToAsync(lobStream);
                 int count;
-                while ((count = value.Read(buffer, 0, bufferSize)) != 0)
+                while ((count = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
                 {
                     lobStream.Write(buffer, 0, count);
                 }
