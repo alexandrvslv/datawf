@@ -26,6 +26,8 @@ namespace DataWF.WebService.Common
 {
     public static partial class ServicesExtensions
     {
+        public static IServiceCollection Services { get; private set; }
+
         public static IServiceCollection AddCompression(this IServiceCollection services)
         {
             services.AddResponseCompression(options =>
@@ -122,7 +124,6 @@ namespace DataWF.WebService.Common
                 smtpSection.Bind(smtpSetting);
             }
             services.Configure<SMTPSetting>(smtpSection);
-
             services.AddControllers(options =>
             {
                 options.CacheProfiles.Add("Never", new CacheProfile()
@@ -131,11 +132,18 @@ namespace DataWF.WebService.Common
                     NoStore = true,
                     Duration = 0
                 });
-            })
-                .AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.InitDefaults();
-                });
+                options.OutputFormatters.Insert(0, new DBItemJsonOutputFormatter());
+            }).AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.InitDefaults();
+            });//).ConfigureApiBehaviorOptions(options =>
+            //{
+            //    options.SuppressConsumesConstraintForFormFileParameters = true;
+            //    options.SuppressInferBindingSourcesForParameters = true;
+            //    options.SuppressModelStateInvalidFilter = true;
+            //    options.SuppressMapClientErrors = true;
+            //    options.ClientErrorMapping[404].Link = "https://httpstatuses.com/404";
+            //});
 
 
             foreach (var validator in services.Where(s => s.ServiceType == typeof(IObjectModelValidator)).ToList())

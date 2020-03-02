@@ -32,13 +32,13 @@ namespace DataWF.WebService.Common
         public IUserIdentity CurrentUser => User.GetCommonUser();
 
         [HttpGet]
-        public ActionResult<IEnumerable<T>> Get()
+        public Task<ActionResult<IEnumerable<T>>> Get()
         {
             return Find(string.Empty);
         }
 
         [HttpGet("Find/{filter}")]
-        public ActionResult<IEnumerable<T>> Find([FromRoute]string filter)
+        public async Task<ActionResult<IEnumerable<T>>> Find([FromRoute]string filter)
         {
             try
             {
@@ -47,8 +47,8 @@ namespace DataWF.WebService.Common
                 {
                     return Forbid();
                 }
-                return new ActionResult<IEnumerable<T>>(table.LoadCache(filter, DBLoadParam.Referencing)
-                                                              .Where(p => p.Access.GetFlag(AccessType.Read, user)
+                var result = await table.LoadCacheAsync(filter, DBLoadParam.Referencing);
+                return new ActionResult<IEnumerable<T>>(result.Where(p => p.Access.GetFlag(AccessType.Read, user)
                                                               && p.PrimaryId != null
                                                               && (p.UpdateState & DBUpdateState.Insert) == 0));
             }
@@ -82,13 +82,13 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("{id}")]
-        public ActionResult<T> Get([FromRoute]K id)
+        public async Task<ActionResult<T>> Get([FromRoute]K id)
         {
             var value = default(T);
             try
             {
                 var user = CurrentUser;
-                value = table.LoadById(id, DBLoadParam.Referencing | DBLoadParam.Load);
+                value = await table.LoadByIdAsync(id, DBLoadParam.Referencing | DBLoadParam.Load);
                 if (value == null)
                 {
                     return NotFound();

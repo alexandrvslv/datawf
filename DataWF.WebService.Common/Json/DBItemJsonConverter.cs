@@ -33,28 +33,18 @@ namespace DataWF.WebService.Common
     public class DBItemJsonConverter : JsonConverter<DBItem>
     {
         private const string jsonIncludeRef = "json_include_ref";
-        private const string jsonIncludeRefing = "json_include_refing";
         private const string jsonReferenceCheck = "json_ref_check";
         private const string jsonMaxDepth = "json_max_depth";
         private IHttpContextAccessor httpContextAccessor;
         private HttpContext context;
         private IUserIdentity user;
         private bool? includeReference;
-        private bool? includeReferencing;
         private int? maxDepth;
         private bool? referenceCheck;
         private HashSet<DBItem> referenceSet = new HashSet<DBItem>();
-        public bool IsSerializeableColumn(DBColumn column)
-        {
-            return column.PropertyInvoker != null
-                //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
-                && (column.Keys & DBColumnKeys.Password) != DBColumnKeys.Password
-                && (column.Keys & DBColumnKeys.File) != DBColumnKeys.File;
-        }
 
         public DBItemJsonConverter()
         {
-
         }
 
         public IHttpContextAccessor HttpContextAccessor
@@ -66,7 +56,11 @@ namespace DataWF.WebService.Common
         public HttpContext HttpContext
         {
             get => context ?? HttpContextAccessor?.HttpContext;
-            set => context = value;
+            set
+            {
+                context = value;
+                user = context?.User?.GetCommonUser();
+            }
         }
 
         public IUserIdentity CurrentUser
@@ -79,12 +73,6 @@ namespace DataWF.WebService.Common
         {
             get => includeReference ?? HttpContext?.ReadBool(jsonIncludeRef) ?? false;
             set => includeReference = value;
-        }
-
-        public bool IncludeReferencing
-        {
-            get => includeReferencing ?? HttpContext?.ReadBool(jsonIncludeRefing) ?? true;
-            set => includeReferencing = value;
         }
 
         public bool ReferenceCheck
@@ -108,67 +96,45 @@ namespace DataWF.WebService.Common
         {
             bool includeReference = IncludeReference;
             int maxDepth = MaxDepth;
-            var table = value.Table;
             var valueType = value.GetType();
+            var table = DBTable.GetTable(valueType);
             writer.WriteStartObject();
 
-            foreach (var column in table.Columns)
+            foreach (var invoker in table.Invokers)
             {
-                if (!column.PropertyInvoker.TargetType.IsAssignableFrom(valueType)
-                    || !IsSerializeableColumn(column))
-                    continue;
-                writer.WritePropertyName(column.Property);
-                var propertyValue = column.PropertyInvoker.GetValue(value);
-                if (propertyValue is AccessValue accessValue)
+                object propertyValue;
+                if (TypeHelper.IsBaseType(invoker.DataType, typeof(DBItem)))
                 {
-                    JsonSerializer.Serialize(writer, accessValue.GetFlags(CurrentUser), options);
+                    if (!includeReference || writer.CurrentDepth > maxDepth)
+                        continue;
+                    propertyValue = invoker.GetValue(value);
+                    if (ReferenceCheck && propertyValue is DBItem reference)
+                    {
+                        if (referenceSet.Contains(reference))
+                            continue;
+                        else
+                            referenceSet.Add(reference);
+                    }
                 }
                 else
                 {
-                    JsonSerializer.Serialize(writer, propertyValue, options);
-
-                    if (includeReference
-                        && column.ReferencePropertyInvoker != null
-                        && propertyValue != null
-                        && writer.CurrentDepth < maxDepth)
+                    propertyValue = invoker.GetValue(value);
+                    if (propertyValue is AccessValue accessValue)
                     {
-                        var reference = (DBItem)column.ReferencePropertyInfo.GetValue(value);
-                        if (ReferenceCheck && reference != null)
-                        {
-                            if (referenceSet.Contains(reference))
-                                continue;
-                            else
-                                referenceSet.Add(reference);
-                        }
-                        writer.WritePropertyName(column.ReferencePropertyInfo.Name);
-                        JsonSerializer.Serialize(writer, reference, options);
+                        propertyValue = accessValue.GetFlags(CurrentUser);
                     }
                 }
+                writer.WritePropertyName(invoker.Name);
+                JsonSerializer.Serialize(writer, propertyValue, options);
             }
 
-            if (IncludeReferencing && table.TableAttribute != null)
-            {
-                foreach (var refing in table.TableAttribute.Referencings)
-                {
-                    if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(valueType))
-                        continue;
-                    if (refing.PropertyInvoker.GetValue(value) is IEnumerable<DBItem> refs)
-                    {
-                        writer.WritePropertyName(refing.PropertyInfo.Name);
-                        JsonSerializer.Serialize(writer, refs, options);
-                    }
-                }
-            }
             writer.WriteEndObject();
         }
 
         public override DBItem Read(ref Utf8JsonReader reader, Type objectType, JsonSerializerOptions options)
         {
             var item = (DBItem)null;
-            if (!objectType.IsAssignableFrom(typeof(DBItem)))
-            {
-                throw new JsonException($"Expect {nameof(DBItem)} but {nameof(objectType)} is {objectType?.Name ?? "null"}");
-            }
+
             var table = DBTable.GetTable(objectType);
             if (table == null)
             {

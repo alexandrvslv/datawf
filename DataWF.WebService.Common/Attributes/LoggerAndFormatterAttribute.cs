@@ -18,12 +18,17 @@ namespace DataWF.WebService.Common
         //https://stackoverflow.com/a/52623772/4682355
         public override void OnActionExecuted(ActionExecutedContext context)
         {
-            if (context.Result is ObjectResult objectResult)
-            {
-                var options = new JsonSerializerOptions();
-                options.InitDefaults(context.HttpContext);
-                objectResult.Formatters.Add(new SystemTextJsonOutputFormatter(options));
-            }
+            //options.OutputFormatters.RemoveType<JsonOutputFormatter>();
+            //var settings = new JsonSerializerSettings() { ContractResolver = DBItemContractResolver.Instance };
+            //settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+            //options.OutputFormatters.Insert(0, new ClaimsJsonOutputFormatter(settings, ArrayPool<char>.Shared));
+            //memory leak
+            //if (context.Result is ObjectResult objectResult)
+            //{
+            //    var options = new JsonSerializerOptions();
+            //    options.InitDefaults(context.HttpContext);
+            //    objectResult.Formatters.Add(new SystemTextJsonOutputFormatter(options));
+            //}
         }
     }
 }

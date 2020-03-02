@@ -256,7 +256,7 @@ namespace DataWF.WebService.Common
                             var count = stream.Read(buffer, 0, buffer.Length);
 
                             await connection.Socket.SendAsync(new ArraySegment<byte>(buffer, 0, count)
-                                , WebSocketMessageType.Text
+                                , WebSocketMessageType.Binary
                                 , stream.Position == stream.Length
                                 , CancellationToken.None);
                         }
@@ -322,7 +322,6 @@ namespace DataWF.WebService.Common
             {
                 CurrentUser = user,
                 IncludeReference = false,
-                IncludeReferencing = false
             });
             var stream = new MemoryStream();
 

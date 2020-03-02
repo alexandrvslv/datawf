@@ -192,20 +192,19 @@ namespace DataWF.WebService.Generator
         private IEnumerable<MemberDeclarationSyntax> GenInvokers(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var columns = GetColumns(table, itemType);
+            foreach (var property in itemType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+            {
+                if (TypeHelper.IsIndex(property))
+                {
+                    continue;
+                }
 
-            foreach (var column in columns)
-            {
-                foreach (var invoker in GenPropertyInvokers(column, table, itemType, usings))
-                    yield return invoker;
-            }
-            foreach (var referencing in table.Referencings.Where(p => p.PropertyInfo?.DeclaringType == itemType))
-            {
-                AddUsing(referencing.PropertyInfo.PropertyType, usings);
-                yield return GenPropertyInvoker(referencing.PropertyInfo.Name + "Invoker",
-                      itemType.Name,
-                      referencing.PropertyInfo.Name,
-                      TypeHelper.FormatCode(referencing.PropertyInfo.PropertyType),
-                      referencing.PropertyInfo.GetSetMethod() != null);
+                AddUsing(property.PropertyType, usings);
+                yield return GenPropertyInvoker(property.Name + "Invoker",
+                    itemType.Name,
+                    property.Name,
+                    TypeHelper.FormatCode(property.PropertyType),
+                    property.GetSetMethod() != null);
             }
         }
 
