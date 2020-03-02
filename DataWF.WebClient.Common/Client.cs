@@ -5,13 +5,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-
-    public abstract partial class Client<T, K> : ClientBase, ICRUDClient<T>
+    public abstract partial class Client<T, K> : ClientBase, ICrudClient<T>
         where T : class, new()
         where K : struct
     {
@@ -22,18 +22,16 @@ namespace DataWF.Common
             Items.Indexes.Add(IdInvoker);
             TypeInvoker = typeInvoker;
             TypeId = typeId;
-            SerializationInfo = new TypeSerializationInfo(typeof(T));
+            Converter = new JsonClientConverter<T, K>(this);
             if (typeId == 0)
                 downloads = new ConcurrentDictionary<K, T>();
         }
         private readonly ConcurrentDictionary<K, T> downloads;
-        private ICRUDClient baseClient;
+        private ICrudClient baseClient;
         private LoadProgress<T> loadProgress;
         private SemaphoreSlim getActionSemaphore;
 
-        //private object downloadLock;
-
-        public TypeSerializationInfo SerializationInfo { get; }
+        public IClientConverter Converter { get; }
 
         public Invoker<T, K?> IdInvoker { get; }
 
@@ -53,110 +51,6 @@ namespace DataWF.Common
                 Items.IsSynchronized = value;
                 Status = value ? ClientStatus.Compleate : ClientStatus.None;
             }
-        }
-
-        public virtual T DeserializeItem(ref Utf8JsonReader jreader, JsonSerializerOptions options, T item, IList sourceList)
-        {
-            var property = (PropertySerializationInfo)null;
-            var id = (object)null;
-            var synchItem = item as ISynchronized;
-            while (jreader.Read() && jreader.TokenType != JsonTokenType.EndObject)
-            {
-                if (jreader.TokenType == JsonTokenType.PropertyName)
-                {
-                    property = SerializationInfo.GetProperty(jreader.GetString());
-                }
-                else
-                {
-                    if (property == null)
-                    {
-                        DeserializeValue(ref jreader, options, null, null, null);
-                        continue;
-                    }
-                    var currentValue = item != null && property.DataType != typeof(string) && !property.DataType.IsValueType
-                        ? property.Invoker.GetValue(item)
-                        : null;
-
-                    if (currentValue is IList listValue && synchItem != null && synchItem.SyncStatus == SynchronizedStatus.Load)
-                    {
-                        foreach (var listItem in listValue)
-                        {
-                            if (listItem is ISynchronized synchronized && synchronized.SyncStatus != SynchronizedStatus.Actual)
-                            {
-                                synchronized.SyncStatus = SynchronizedStatus.Load;
-                            }
-                        }
-                    }
-                    object value = DeserializeValue(ref jreader, options, property.DataType, currentValue, null);
-
-
-                    if (property.Name == TypeInvoker?.Name && value != null)
-                    {
-                        var typeId = (int)value;
-                        if (typeId != TypeId)
-                        {
-                            var client = Provider.GetClient(typeof(T), typeId);
-                            return (T)client.DeserializeItem(ref jreader, options, item, (IList)sourceList);
-                        }
-                        continue;
-                    }
-                    if (property.Name == IdInvoker?.Name)
-                    {
-                        id = value;
-                        if (item == null && id != null)
-                        {
-                            item = Select((K)id) ?? SelectBase(id);
-                        }
-                        if (item == null)
-                        {
-                            item = AddDownloads((K)id, (p) => NewLoadItem());
-                            if (item == null)
-                            {
-                                item = NewLoadItem();
-                                SetDownloads((K)id, item);
-                            }
-                        }
-                        else if (!Items.Contains(item))
-                        {
-                            item = AddDownloads((K)id, item);
-                        }
-                        IdInvoker.SetValue(item, id);
-
-                        if (item is ISynchronized synchronized)
-                        {
-                            synchItem = synchronized;
-                            if (synchItem.SyncStatus == SynchronizedStatus.Actual)
-                            {
-                                synchItem.SyncStatus = SynchronizedStatus.Load;
-                            }
-                        }
-
-                        continue;
-                    }
-                    if (item == null)
-                    {
-                        throw new Exception("Wrong Json properties sequence!");
-                    }
-                    if (synchItem != null && synchItem.SyncStatus != SynchronizedStatus.Load
-                        && synchItem.Changes.ContainsKey(property.Name))
-                    {
-                        continue;
-                    }
-                    property.Invoker.SetValue(item, value);
-                }
-            }
-            if (item == null)
-                return null;
-
-            if (synchItem != null && synchItem.SyncStatus == SynchronizedStatus.Load)
-            {
-                synchItem.SyncStatus = SynchronizedStatus.Actual;
-            }
-            if (RemoveDownloads((K)id))
-            {
-                Add(item);
-            }
-            return item;
         }
 
         public T NewLoadItem()
@@ -215,11 +109,15 @@ namespace DataWF.Common
             }
         }
 
-        public T AddDownloads(K id, Func<K, T> item)
+        public T AddDownloads(K id, Func<K, T> newItem)
         {
-            return downloads != null
-                 ? downloads.GetOrAdd(id, item)
-                 : GetBaseClient()?.AddDownloads(id, item) as T;
+            var item = downloads?.GetOrAdd(id, newItem) ?? GetBaseClient()?.AddDownloads(id, newItem) as T;
+            if (item == null)
+            {
+                item = NewLoadItem();
+                SetDownloads((K)id, item);
+            }
+            return item;
         }
 
         public object GetDownloads(object id)
@@ -251,31 +149,17 @@ namespace DataWF.Common
             }
         }
 
-        private T SelectBase(object id)
+        internal T SelectBase(object id)
         {
             return GetBaseClient()?.Select(id) as T;
         }
 
-        public object DeserializeItem(ref Utf8JsonReader jreader, JsonSerializerOptions options, object item, IList sourceList)
-        {
-            return DeserializeItem(ref jreader, options, item as T, sourceList);
-        }
-
-        public override R DeserializeObject<R>(ref Utf8JsonReader jreader, JsonSerializerOptions options, R item, IList sourceList)
-        {
-            if (typeof(R) == typeof(T))
-            {
-                return (R)(object)DeserializeItem(ref jreader, options, (T)(object)item, sourceList);
-            }
-            return base.DeserializeObject(ref jreader, options, item, sourceList);
-        }
-
-        public ICRUDClient GetBaseClient()
+        public ICrudClient GetBaseClient()
         {
             if (TypeId == 0 || baseClient != null)
                 return baseClient;
             var type = typeof(T).BaseType;
-            var result = (ICRUDClient)null;
+            var result = (ICrudClient)null;
             while (type != typeof(object))
             {
                 var client = Provider.GetClient(type);
@@ -291,7 +175,7 @@ namespace DataWF.Common
             return new T();
         }
 
-        public bool Add(object item)
+        public override bool Add(object item)
         {
             return Add((T)item);
         }
@@ -308,7 +192,7 @@ namespace DataWF.Common
             return added;
         }
 
-        public bool Remove(object item)
+        public override bool Remove(object item)
         {
             return Remove((T)item);
         }

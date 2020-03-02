@@ -31,10 +31,10 @@ namespace DataWF.WebClient.Generator
             "RemoveLogAsync",
             "UndoLogAsync"
         };
-        private Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>(StringComparer.Ordinal);
-        private Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>(StringComparer.Ordinal);
-        private List<UsingDirectiveSyntax> usings = new List<UsingDirectiveSyntax>();
-        private Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
+        private readonly Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>(StringComparer.Ordinal);
+        private readonly Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>(StringComparer.Ordinal);
+        private List<UsingDirectiveSyntax> usings;
+        private readonly Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
         private OpenApiDocument document;
         private CompilationUnitSyntax provider;
 
@@ -303,7 +303,7 @@ namespace DataWF.WebClient.Generator
 
         private void AddClientOperation(OpenApiOperationDescription descriptor)
         {
-            var operationName = GetOperationName(descriptor, out var clientName);
+            GetOperationName(descriptor, out var clientName);
             if (!cacheClients.TryGetValue(clientName, out var clientSyntax))
             {
                 clientSyntax = GenClient(clientName);
@@ -748,13 +748,7 @@ namespace DataWF.WebClient.Generator
             //    yield return SF.ParseStatement($"await base.{actualName}({paramBuilder.ToString()}).ConfigureAwait(false);");
             //}
             var requestBuilder = new StringBuilder();
-            requestBuilder.Append($"await Request");
-            if (responceSchema?.Type == JsonObjectType.Array)
-                requestBuilder.Append("Array");
-            requestBuilder.Append($"<{returnType}");
-            if (responceSchema?.Type == JsonObjectType.Array)
-                requestBuilder.Append($", {GetTypeString(responceSchema.Item, false, "List")}");
-            requestBuilder.Append($">(progressToken, \"{method}\", \"{path}\", \"{mediatype}\"");
+            requestBuilder.Append($"await Request<{returnType}>(progressToken, \"{method}\", \"{path}\", \"{mediatype}\"");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             if (bodyParameter == null)
             {

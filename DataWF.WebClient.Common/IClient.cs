@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -12,9 +13,10 @@ namespace DataWF.Common
         string BaseUrl { get; set; }
         IEnumerable<IClient> Clients { get; }
         AuthorizationInfo Authorization { get; set; }
-        ICRUDClient<T> GetClient<T>();
-        ICRUDClient GetClient(Type type);
-        ICRUDClient GetClient(Type type, int typeId);
+        JsonSerializerOptions JsonSerializerOptions { get; }
+        ICrudClient<T> GetClient<T>();
+        ICrudClient GetClient(Type type);
+        ICrudClient GetClient(Type type, int typeId);
     }
 
     public interface IClient
@@ -23,9 +25,9 @@ namespace DataWF.Common
         ClientStatus Status { get; set; }
     }
 
-    public interface ICRUDClient : IClient
+    public interface ICrudClient : IClient
     {
-        TypeSerializationInfo SerializationInfo { get; }
+        IClientConverter Converter { get; }
         bool IsSynchronized { get; set; }
         Type ItemType { get; }
         int TypeId { get; }
@@ -48,11 +50,10 @@ namespace DataWF.Common
         Task<object> PostAsync(object value);
         Task<object> PutAsync(object value);
         Task<object> MergeAsync(object id, List<string> ids);
-        object DeserializeItem(ref Utf8JsonReader jreader, JsonSerializerOptions options, object item, IList sourceList);
         object NewItem();
     }
 
-    public interface ICRUDClient<T> : ICRUDClient
+    public interface ICrudClient<T> : ICrudClient
     {
         SelectableList<T> Items { get; }
         bool Add(T item);
@@ -69,7 +70,6 @@ namespace DataWF.Common
         Task<T> PutAsync(T value, ProgressToken progressToken);
         Task<bool> DeleteAsync(object id, ProgressToken progressToken);
         Task<T> MergeAsync(T value, List<string> ids, ProgressToken progressToken);
-        T DeserializeItem(ref Utf8JsonReader jreader, JsonSerializerOptions options, T item, IList sourceList);
     }
 
     public interface ILoggedClient

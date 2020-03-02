@@ -86,7 +86,7 @@ namespace DataWF.WebService.Generator
         public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
             var typeInfo = SemanticModel.GetTypeInfo(node.Type);
-            if (typeInfo.Type.ContainingAssembly.Equals(SemanticModel.Compilation.Assembly))
+            if (typeInfo.Type.ContainingAssembly.Name.Equals(SemanticModel.Compilation.Assembly.Name))
             {
                 return base.VisitPropertyDeclaration(node);
             }
