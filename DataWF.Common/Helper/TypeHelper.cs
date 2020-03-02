@@ -100,7 +100,7 @@ namespace DataWF.Common
         //}
         public static Type CheckNullable(Type type)
         {
-            return Nullable.GetUnderlyingType(type) ?? type;
+            return type == null ? null : Nullable.GetUnderlyingType(type) ?? type;
             //type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)
             //   ? type.GetGenericArguments()[0]
             //   : type
