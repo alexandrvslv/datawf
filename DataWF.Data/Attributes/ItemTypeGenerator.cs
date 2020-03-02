@@ -71,7 +71,7 @@ namespace DataWF.Data
             {
                 Schema.Tables.Add(Table);
             }
-            Table.TableAttribute = TableAttribute;
+            Table.Generator = TableAttribute;
             Table.ItemTypeIndex = Attribute.Id;
             VirtualTable.BaseTable = TableAttribute.Table;
             foreach (var columnAttribute in TableAttribute.Columns)

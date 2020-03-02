@@ -51,7 +51,7 @@ namespace DataWF.Data
         DBSequence Sequence { get; set; }
         string SequenceName { get; set; }
         string SqlName { get; }
-        TableGenerator TableAttribute { get; }
+        TableGenerator Generator { get; }
         DBTableType Type { get; set; }
 
         event EventHandler<DBLoadColumnsEventArgs> LoadColumns;

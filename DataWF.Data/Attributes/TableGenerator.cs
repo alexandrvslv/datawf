@@ -199,7 +199,7 @@ namespace DataWF.Data
             {
                 Table.DisplayName = ItemType.Name;
             }
-            Table.TableAttribute = this;
+            Table.Generator = this;
             Table.Group = TableGroup;
             Table.Type = Attribute.TableType;
             Table.BlockSize = Attribute.BlockSize;

@@ -394,5 +394,11 @@ select :oid;");
             }
             return null;
         }
+
+        public override Task<bool> ReadAsync(IDataReader reader)
+        {
+            var sqlReader = (OracleDataReader)reader;
+            return sqlReader.ReadAsync();
+        }
     }
 }

@@ -41,6 +41,15 @@ namespace DataWF.Data
             //Columns.Indexes.Add(baseNameInvoker);
         }
 
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public override bool IsSynchronized
+        {
+            get { return base.IsSynchronized || (BaseTable?.IsSynchronized ?? false); }
+            set
+            {
+                base.IsSynchronized = value;
+            }
+        }
 
         [JsonIgnore, XmlIgnore]
         public override DBColumnList<DBColumn> Columns
@@ -328,6 +337,7 @@ namespace DataWF.Data
         {
             if (BaseTable == null || Columns.Count > 0)
                 return;
+            var type = typeof(T);
             foreach (DBColumn column in BaseTable.Columns)
             {
                 var exist = (DBVirtualColumn)ParseColumn(column.Name);
@@ -346,7 +356,8 @@ namespace DataWF.Data
             foreach (DBForeignKey reference in BaseTable.Foreigns)
             {
                 var existColumn = ParseColumn(reference.Column.Name);
-
+                if (existColumn == null)
+                    continue;
                 var exist = Foreigns.GetByColumns(existColumn, reference.Reference);
                 if (exist == null)
                 {

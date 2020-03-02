@@ -45,6 +45,6 @@ namespace DataWF.Data
 
         public bool IsLoging { get; set; } = true;
 
-
+        public bool ForceLoadReference { get; set; }
     }
 }

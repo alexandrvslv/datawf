@@ -72,30 +72,21 @@ namespace DataWF.Data
 
         public IDbCommand Command
         {
-            get { return command; }
-            set { AddCommand(value); }
+            get => command;
+            set => AddCommand(value);
         }
 
         public string CommandText
         {
-            get { return command?.CommandText; }
-            set { AddCommand(value); }
+            get => command?.CommandText;
+            set => AddCommand(value);
         }
 
-        public HashSet<DBItem> Items
-        {
-            get { return items; }
-        }
+        public HashSet<DBItem> Items => items;
 
-        public IsolationLevel IsolationLevel
-        {
-            get { return transaction == null ? DbConnection.IsolationLevel : transaction.IsolationLevel; }
-        }
+        public IsolationLevel IsolationLevel => transaction == null ? DbConnection.IsolationLevel : transaction.IsolationLevel;
 
-        public IEnumerable<DBTransaction> SubTransactions
-        {
-            get { return subTransactions.Values; }
-        }
+        public IEnumerable<DBTransaction> SubTransactions => subTransactions.Values;
 
         public DBConnection DbConnection { get; private set; }
 
@@ -118,6 +109,8 @@ namespace DataWF.Data
         public IDBTableView View { get; set; }
 
         public DBItem UserLog { get; set; }
+
+        public HashSet<DBColumn> ReferencingStack { get; set; } = new HashSet<DBColumn>();
 
         public int ReferencingRecursion { get; set; }
 
@@ -181,52 +174,52 @@ namespace DataWF.Data
 
         public void Dispose()
         {
-            if (Connection != null)
+            if (Connection == null)
             {
-                try
-                {
-                    foreach (var item in commands)
-                    {
-                        //TODO CHECK item.Cancel();
-                        //try
-                        //{
-                        //    foreach (IDataParameter param in item.Parameters)
-                        //    {
-                        //        if (param.Value is IDisposable dispValue)
-                        //            dispValue.Dispose();
-                        //    }
-                        //}
-                        //catch (Exception ex) { Helper.OnException(ex); }
-                        item.Dispose();
-                    }
-                    commands.Clear();
-
-                    Reader?.Dispose();
-                    transaction?.Dispose();
-
-                    if (subTransactions != null)
-                    {
-                        foreach (var subTransaction in subTransactions.Values.ToList())
-                        {
-                            subTransaction.Dispose();
-                        }
-                    }
-                }
-                finally
-                {
-                    if (Connection.State != ConnectionState.Closed)
-                    {
-                        Connection.Close();
-                    }
-                    transaction = null;
-                    Connection = null;
-                    command = null;
-                    ReaderColumns = null;
-                    items.Clear();
-                }
-                //Debug.WriteLine($"Dispose DBTransaction owner:{Owner} connection:{DbConnection}");
+                return;
             }
+            try
+            {
+                foreach (var item in commands)
+                {
+                    //TODO CHECK item.Cancel();
+                    //try
+                    //{
+                    //    foreach (IDataParameter param in item.Parameters)
+                    //    {
+                    //        if (param.Value is IDisposable dispValue)
+                    //            dispValue.Dispose();
+                    //    }
+                    //}
+                    //catch (Exception ex) { Helper.OnException(ex); }
+                    item.Dispose();
+                }
+                commands.Clear();
 
+                Reader?.Dispose();
+                transaction?.Dispose();
+
+                if (subTransactions != null)
+                {
+                    foreach (var subTransaction in subTransactions.Values.ToList())
+                    {
+                        subTransaction.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (Connection.State != ConnectionState.Closed)
+                {
+                    Connection.Close();
+                }
+                transaction = null;
+                Connection = null;
+                command = null;
+                ReaderColumns = null;
+                items.Clear();
+            }
+            //Debug.WriteLine($"Dispose DBTransaction owner:{Owner} connection:{DbConnection}");
         }
 
         public IDbCommand AddCommand(IDbCommand ncommand)
@@ -342,6 +335,11 @@ namespace DataWF.Data
                 }
                 Rollback();
             }
+        }
+
+        public Task<bool> ReadAsync()
+        {
+            return DbConnection.System.ReadAsync(Reader);
         }
 
         public QResult ExecuteQResult()

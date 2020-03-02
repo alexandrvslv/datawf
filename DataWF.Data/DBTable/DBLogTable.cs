@@ -91,7 +91,7 @@ namespace DataWF.Data
                 {
                     Schema = Schema,
                     Table = this,
-                    BaseTableAttribute = value.TableAttribute
+                    BaseTableAttribute = value.Generator
                 };
                 tableGenerator.Initialize(typeof(DBLogItem));
                 tableGenerator.GenerateColumns();

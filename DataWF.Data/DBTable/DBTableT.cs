@@ -62,17 +62,6 @@ namespace DataWF.Data
             }
         }
 
-        public IEnumerable<T> LoadCache(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
-        {
-            if (!queryChache.TryGetValue(filter, out var query))
-            {
-                query = new QQuery(filter, this);
-                Load(query, loadParam, transaction);
-                queryChache.TryAdd(filter, query);
-            }
-            return Select(query);
-        }
-
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public override bool IsEdited
         {
@@ -327,6 +316,28 @@ namespace DataWF.Data
             return new DBTableView<T>(this, query, mode, filter);
         }
 
+        public IEnumerable<T> LoadCache(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
+        {
+            if (!queryChache.TryGetValue(filter, out var query))
+            {
+                query = new QQuery(filter, this);
+                Load(query, loadParam, transaction);
+                queryChache.TryAdd(filter, query);
+            }
+            return Select(query);
+        }
+
+        public async Task<IEnumerable<T>> LoadCacheAsync(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
+        {
+            if (!queryChache.TryGetValue(filter, out var query))
+            {
+                query = new QQuery(filter, this);
+                await LoadAsync(query, loadParam, transaction).ConfigureAwait(false);
+                queryChache.TryAdd(filter, query);
+            }
+            return Select(query);
+        }
+
         public override IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             return Load(whereText, param, cols, transaction);
@@ -443,10 +454,140 @@ namespace DataWF.Data
                         if (transaction.View?.Table == this && transaction.View.IsStatic)
                             transaction.View.Add(row);
                     }
+                    transaction.Reader.Close();
                 }
 
-                transaction.Reader = null;
+                //Check IsSynchronized
+                if (transaction.View?.Table == this)
+                {
+                    transaction.View.IsSynchronized = true;
+                }
 
+                if (whereInd < 0)
+                {
+                    IsSynchronized = true;
+                }
+                //return buffer;
+            }
+            finally
+            {
+                transaction.Reader = null;
+                if (baseTransaction == null)
+                {
+                    transaction.Dispose();
+                }
+                RaiseLoadCompleate(transaction);
+            }
+            return list;
+        }
+        public Task<IEnumerable<T>> LoadAsync(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
+                whereText = string.Empty;
+            else if (whereText.Length > 3
+                     && whereText.IndexOf("where", StringComparison.OrdinalIgnoreCase) < 0
+                     && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
+                whereText = "where " + whereText;
+
+            return LoadAsync(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", cols)), param, transaction);
+        }
+
+        public async Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        {
+            if (query.Table != this)
+                throw new ArgumentException(nameof(query));
+            if (Count == 0)
+            {
+                param &= ~DBLoadParam.CheckDeleted;
+            }
+            var buf = await LoadAsync(query.ToCommand(true), param, transaction).ConfigureAwait(false);
+
+            if (buf != null && (param & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
+            {
+                CheckDelete(query, buf, param, transaction);
+            }
+            if (query.Parameters.Count == 0)
+            {
+                IsSynchronized = true;
+            }
+            return buf;
+        }
+
+        public override async Task<IEnumerable<DBItem>> LoadItemsAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        {
+            return await LoadAsync(command, param, transaction);
+        }
+
+        public async Task<IEnumerable<T>> LoadAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
+        {
+            var list = new List<T>();
+            var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);
+            try
+            {
+                transaction.AddCommand(command);
+
+                if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
+                {
+                    LoadReferenceBlock(command, transaction);
+                }
+
+                if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
+                {
+                    LoadReferencingBlock(command, transaction);
+                }
+
+                if (transaction.Canceled)
+                    return list;
+                var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
+                var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
+
+                if (transaction.View != null && transaction.View.Table == this && transaction.View.IsStatic)
+                    transaction.View.Clear();
+
+                if ((transaction.ReaderParam & DBLoadParam.GetCount) == DBLoadParam.GetCount)
+                {
+                    string w = whereInd == -1 ? string.Empty : command.CommandText.Substring(whereInd);
+                    var val = transaction.ExecuteQuery(transaction.AddCommand(DBCommand.CloneCommand(command, BuildQuery(w, "a", null, "count(*)"))), DBExecuteType.Scalar);
+                    arg.TotalCount = val is Exception ? -1 : int.Parse(val.ToString());
+
+                    if (arg.TotalCount < 0 || arg.TotalCount == 0)
+                        return list;
+                    if (items.Capacity < arg.TotalCount)
+                        items.Capacity = arg.TotalCount;
+                    //arg.TotalCount = Rows._items.Capacity;
+                }
+                //var buffer = new List<T>(arg.TotalCount == 0 ? 1 : arg.TotalCount);
+                if (transaction.Canceled)
+                {
+                    return list;
+                }
+                using (transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader).ConfigureAwait(false))
+                {
+                    CheckColumns(transaction);
+                    while (!transaction.Canceled && await transaction.ReadAsync())
+                    {
+                        T row = null;
+                        lock (Lock)
+                        {
+                            row = LoadFromReader(transaction);
+
+                            if (!row.Attached && (transaction.ReaderParam & DBLoadParam.NoAttach) != DBLoadParam.NoAttach)
+                            {
+                                Add(row);
+                            }
+                        }
+                        if (arg.TotalCount > 0)
+                        {
+                            arg.Current++;
+                            arg.CurrentRow = row;
+                            RaiseLoadProgress(arg);
+                        }
+                        list.Add(row);
+                        if (transaction.View?.Table == this && transaction.View.IsStatic)
+                            transaction.View.Add(row);
+                    }
+                    transaction.Reader.Close();
+                }
 
                 //Check IsSynchronized
                 if (transaction.View?.Table == this)
@@ -472,54 +613,6 @@ namespace DataWF.Data
             return list;
         }
 
-        public Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
-        {
-            return Task.Run<IEnumerable<T>>(() =>
-            {
-                try
-                {
-                    return Load(query, param, transaction);
-                }
-                catch (Exception e)
-                {
-                    Helper.OnException(e);
-                    return null;
-                }
-            });
-        }
-
-        public Task<IEnumerable<T>> LoadAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
-        {
-            return Task.Run<IEnumerable<T>>(() =>
-             {
-                 try
-                 {
-                     return Load(command, param, transaction);
-                 }
-                 catch (Exception e)
-                 {
-                     Helper.OnException(e);
-                     return null;
-                 }
-             });
-        }
-
-        public Task<IEnumerable<T>> LoadAsync(string query, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> columns = null, DBTransaction transaction = null)
-        {
-            return Task.Run<IEnumerable<T>>(() =>
-            {
-                try
-                {
-                    return Load(query, param, columns, transaction);
-                }
-                catch (Exception e)
-                {
-                    Helper.OnException(e);
-                    return null;
-                }
-            });
-        }
-
         public override void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
             LoadItem(id, param);
@@ -535,6 +628,11 @@ namespace DataWF.Data
             return Load(CreateKeyCommmand(id, column, cols), param, transaction).FirstOrDefault();
         }
 
+        public async Task<T> LoadItemAsync(object id, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            return (await LoadAsync(CreateKeyCommmand(id, column, cols), param, transaction)).FirstOrDefault();
+        }
+
         public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             return LoadById(id, param, cols, transaction);
@@ -548,6 +646,11 @@ namespace DataWF.Data
         public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             return LoadByKey(id, PrimaryKey, param, cols, transaction);
+        }
+
+        public Task<T> LoadByIdAsync(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            return LoadByKeyAsync(id, PrimaryKey, param, cols, transaction);
         }
 
         public T GetById(object id)
@@ -567,6 +670,22 @@ namespace DataWF.Data
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
             {
                 row = LoadItem(val, column, param, cols, transaction);
+            }
+            return row;
+        }
+
+        public async Task<T> LoadByKeyAsync(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            object val = column?.ParseValue(key);
+
+            if (val == null || column == null)
+                return null;
+
+            T row = SelectOne(column, key) as T;
+
+            if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
+            {
+                row = await LoadItemAsync(val, column, param, cols, transaction);
             }
             return row;
         }

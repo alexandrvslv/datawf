@@ -144,7 +144,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public bool IsSynchronized
+        public virtual bool IsSynchronized
         {
             get { return isSynchronized; }
             set

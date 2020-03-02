@@ -162,5 +162,11 @@ select seq from db_sequence where name = '{sequence.Name}';";
             }
             return null;
         }
+
+        public override Task<bool> ReadAsync(IDataReader reader)
+        {
+            var sqlReader = (MySqlDataReader)reader;
+            return sqlReader.ReadAsync();
+        }
     }
 }

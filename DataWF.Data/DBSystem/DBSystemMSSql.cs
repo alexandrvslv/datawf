@@ -205,7 +205,7 @@ namespace DataWF.Data
         {
             var command = (SqlCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = @oid");
             command.Parameters.AddWithValue($"@oid", (long)oid);
-            transaction.Reader = (IDataReader) await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
+            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
             if (transaction.Reader.Read())
             {
                 return ((SqlDataReader)transaction.Reader).GetStream(1);
@@ -240,6 +240,12 @@ select @oid;");
                     return await sqlCommand.ExecuteNonQueryAsync();
             }
             return null;
+        }
+
+        public override Task<bool> ReadAsync(IDataReader reader)
+        {
+            var sqlReader = (SqlDataReader)reader;
+            return sqlReader.ReadAsync();
         }
     }
 }

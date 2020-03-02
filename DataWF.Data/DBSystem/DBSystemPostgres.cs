@@ -394,6 +394,12 @@ namespace DataWF.Data
             return null;
         }
 
+        public override Task<bool> ReadAsync(IDataReader reader)
+        {
+            var sqlReader = (NpgsqlDataReader)reader;
+            return sqlReader.ReadAsync();
+        }
+
         //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)
         //{
         //    var Conn = (NpgsqlConnection)CreateConnection(item.Table.Schema.Connection);

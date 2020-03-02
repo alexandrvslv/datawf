@@ -54,6 +54,11 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
+        public override Task<bool> ReadAsync(IDataReader reader)
+        {
+            throw new NotImplementedException();
+        }
+
         public override string SequenceCurrentValue(DBSequence sequence)
         {
             throw new NotImplementedException();

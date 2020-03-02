@@ -399,6 +399,8 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public abstract Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior);
 
+        public abstract Task<bool> ReadAsync(IDataReader reader);
+
         public virtual void Format(StringBuilder ddl, DBForeignKey constraint)
         {
             DBTable refer = constraint.ReferenceTable;

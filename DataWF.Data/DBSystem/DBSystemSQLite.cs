@@ -273,5 +273,11 @@ select last_insert_rowid();");
             }
             return null;
         }
+
+        public override Task<bool> ReadAsync(IDataReader reader)
+        {
+            var sqlReader = (SqliteDataReader)reader;
+            return sqlReader.ReadAsync();
+        }
     }
 }
