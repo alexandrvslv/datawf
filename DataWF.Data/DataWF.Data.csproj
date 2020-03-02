@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Data</RootNamespace>
     <AssemblyName>DataWF.Data</AssemblyName>
-    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
     
   </PropertyGroup>
@@ -30,10 +30,10 @@
     <Compile Remove="DBItem\DBVirtualItem.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DocumentFormat.OpenXml" Version="2.10.0" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.10.1" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.2" />
-    <PackageReference Include="MySqlConnector" Version="0.61.0" />
+    <PackageReference Include="MySqlConnector" Version="0.62.0" />
     <PackageReference Include="Npgsql" Version="4.1.3.1" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.60" />
     <PackageReference Include="System.CodeDom" Version="4.7.0" />
