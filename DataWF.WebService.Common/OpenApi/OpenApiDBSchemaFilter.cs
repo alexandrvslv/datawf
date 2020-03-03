@@ -42,9 +42,20 @@ namespace DataWF.WebService.Common
                 }
                 ApplyObject(schema, context);
             }
-            else if (context.Type.IsEnum && context.Type.GetCustomAttribute<FlagsAttribute>() != null)
+            else if (context.Type.IsEnum)
             {
-                schema.Extensions.Add("x-flags", new OpenApiInteger(Enum.GetValues(context.Type).Cast<int>().First()));
+                var items = EnumItem.GetEnumItems(context.Type);
+
+                var namesArray = new OpenApiArray();
+                namesArray.AddRange(items.Select(p => new OpenApiString(p.Name)));
+                schema.Extensions.Add("x-enumNames", namesArray);
+
+                var textArray = new OpenApiArray();
+                textArray.AddRange(items.Select(p => new OpenApiString(p.Text)));
+                schema.Extensions.Add("x-enumMembers", textArray);
+
+                if (context.Type.GetCustomAttribute<FlagsAttribute>() != null)
+                    schema.Extensions.Add("x-flags", new OpenApiInteger(Enum.GetValues(context.Type).Cast<int>().First()));
             }
 
         }

@@ -824,42 +824,34 @@ namespace DataWF.WebClient.Generator
 
         private IEnumerable<EnumMemberDeclarationSyntax> GenDefinitionEnumMemebers(JsonSchema schema)
         {
-            var value = -1;
-            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-flags", out var flags) && flags is long lflags)
+            object[] names = null;
+            if (schema.ExtensionData != null
+                && schema.ExtensionData.TryGetValue("x-enumNames", out var enumNames))
             {
-                value = (int)lflags;
+                names = (object[])enumNames;
+            }
+            object[] members = null;
+            if (schema.ExtensionData != null
+                && schema.ExtensionData.TryGetValue("x-enumMembers", out var enumMembers))
+            {
+                members = (object[])enumMembers;
             }
             int i = 0;
             var definitionName = GetDefinitionName(schema);
             foreach (var item in schema.Enumeration)
             {
-                var sitem = item.ToString().Replace(" ", "");
-                if (!Char.IsLetter(sitem[0]))
-                {
-                    sitem = definitionName[0] + sitem;
-                }
-                yield return SF.EnumMemberDeclaration(attributeLists: SF.List(GenDefinitionEnumMemberAttribute(item)),
+                var sitem = schema.EnumerationNames[i];
+                var memeber = members?[i].ToString() ?? sitem;
+                //if (!Char.IsLetter(sitem[0]))
+                //{
+                //    sitem = definitionName[0] + sitem;
+                //}
+                yield return SF.EnumMemberDeclaration(attributeLists: SF.SingletonList(SyntaxHelper.GenAttributeList("EnumMember", $"Value = \"{memeber}\"")),
                         identifier: SF.Identifier(sitem),
-                        equalsValue: value >= 0
-                            ? SF.EqualsValueClause(SF.Token(SyntaxKind.EqualsToken), SF.ParseExpression(value.ToString()))
-                            : null);
+                        equalsValue: SF.EqualsValueClause(SF.Token(SyntaxKind.EqualsToken), SF.ParseExpression(item.ToString())));
 
                 i++;
-                if (value == 0)
-                {
-                    value = 1;
-                }
-                else if (value > 0)
-                {
-                    value *= 2;
-                }
             }
-        }
-
-        private IEnumerable<AttributeListSyntax> GenDefinitionEnumMemberAttribute(object item)
-        {
-            //[System.Runtime.Serialization.EnumMember(Value = "Empty")]
-            yield return SyntaxHelper.GenAttributeList("EnumMember", $"Value = \"{item.ToString()}\"");
         }
 
         private MemberDeclarationSyntax GenDefinitionClass(JsonSchema schema)
@@ -1485,6 +1477,10 @@ namespace DataWF.WebClient.Generator
             switch (schema.Type)
             {
                 case JsonObjectType.Integer:
+                    if (schema.IsEnumeration)
+                    {
+                        goto case JsonObjectType.Object;
+                    }
                     if (schema.Format == "int64")
                     {
                         return "long" + (nullable ? "?" : string.Empty);
