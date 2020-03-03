@@ -30,7 +30,7 @@ namespace DataWF.Common
 #if DEBUG
                     WriteIndented = true,
 #endif
-                    DefaultBufferSize = 128 * 1024,
+                    DefaultBufferSize = 82 * 1024,
                     AllowTrailingCommas = true,
                     // Use the default property (As Is).
                     PropertyNamingPolicy = null,
