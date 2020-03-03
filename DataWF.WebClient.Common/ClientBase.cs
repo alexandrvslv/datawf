@@ -166,10 +166,11 @@ namespace DataWF.Common
                                         else
                                         {
                                             result = await JsonSerializer.DeserializeAsync<R>(encodedStream, Provider.JsonSerializerOptions).ConfigureAwait(false);
-                                            if (encodedStream.CanWrite)
-                                            {
-                                                encodedStream.CopyTo(File.OpenWrite("output.json"));
-                                            }
+                                            //if (encodedStream.CanWrite)
+                                            //{
+                                            //    using (var file = File.OpenWrite("output.json"))
+                                            //        encodedStream.CopyTo(file);
+                                            //}
                                         }
                                     }
                                 }
