@@ -87,7 +87,7 @@ namespace DataWF.Data
             }
         }
 
-        [DisplayName("Source Code"), ReadOnly(true)]
+        [DisplayName("Source Code")]
         public string Source
         {
             get { return source; }
@@ -176,7 +176,7 @@ namespace DataWF.Data
             }
         }
 
-        [DisplayName("User Defined"), ReadOnly(true)]
+        [DisplayName("User Defined")]
         public bool UserDefined
         {
             get { return user; }

@@ -362,10 +362,7 @@ namespace DataWF.Common
         public static bool IsSerializeWriteable(PropertyInfo info)
         {
             var attribute = info.GetCustomAttribute<JsonIgnoreSerializationAttribute>(false);
-            if (attribute != null)
-                return false;
-            else
-                return true;
+            return attribute == null;
         }
 
         public static bool IsSerializeAttribute(Type type)
@@ -399,7 +396,7 @@ namespace DataWF.Common
                 Type itemType = GetMemberType(info);
                 if (itemType.IsSubclassOf(typeof(Delegate))
                     || (itemType == info.DeclaringType && itemType.IsValueType)
-                    || (info is PropertyInfo && (!((PropertyInfo)info).CanWrite || IsIndex((PropertyInfo)info)))
+                    || (info is PropertyInfo propertyInfo && IsIndex(propertyInfo))
                     || string.Equals(info.Name, "BindingContext", StringComparison.Ordinal))
                     //!IsDictionary(itemType) && !IsCollection(itemType)
                     flag = true;

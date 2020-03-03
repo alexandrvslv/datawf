@@ -19,7 +19,8 @@ namespace DataWF.WebService.Common
             options.WriteIndented = true;
 #endif
             options.IgnoreNullValues = false;
-            options.DefaultBufferSize = 128 * 1024;
+            options.IgnoreReadOnlyProperties = false;
+            options.DefaultBufferSize = 82 * 1024;
             options.PropertyNamingPolicy = null;
             options.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
             // Configure a converters.

@@ -289,7 +289,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false), Category("Localizing"), ReadOnly(true)]
+        [XmlIgnore, JsonIgnore, Browsable(false), Category("Localizing")]
         public bool IsCulture
         {
             get { return Culture != null; }

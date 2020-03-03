@@ -34,7 +34,7 @@ namespace DataWF.Common
             }
         }
 
-        [ReadOnly(true), DefaultValue("")]
+        [DefaultValue("")]
         public string Name
         {
             get { return name; }

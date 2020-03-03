@@ -14,7 +14,7 @@ namespace DataWF.Common
                 new ListIndex<LocaleItem, string>(LocaleItem.NameInvoker.Instance, ListIndexFabric.GetNullKey<string>(), StringComparer.Ordinal));
         }
 
-        [ReadOnly(true), DefaultValue("")]
+        [DefaultValue("")]
         public string Name
         {
             get { return name; }

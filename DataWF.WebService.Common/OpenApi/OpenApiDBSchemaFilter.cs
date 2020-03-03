@@ -112,6 +112,17 @@ namespace DataWF.WebService.Common
                 {
                     ApplyColumnAttribute(schema, propertySchema, columnAttribute, property.Property);
                 }
+                else
+                {
+                    if (property.IsReadOnly)
+                    {
+                        propertySchema.ReadOnly = true;
+                    }
+                    if (property.IsRequired)
+                    {
+                        schema.Required.Add(property.Name);
+                    }
+                }
                 if (property.Default != null)
                 {
                     ApplyDefault(propertySchema, property.Default);
@@ -131,7 +142,6 @@ namespace DataWF.WebService.Common
                 ApplyTableProperties(schema, baseType, context, table);
                 baseType = baseType.BaseType;
             }
-
 
             if (!context.Type.IsAbstract)
             {

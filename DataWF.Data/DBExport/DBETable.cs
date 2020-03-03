@@ -59,7 +59,7 @@ namespace DataWF.Data
             return source + " - " + target;
         }
 
-        [DisplayName("Source Code"), ReadOnly(true)]
+        [DisplayName("Source Code")]
         public string Source
         {
             get { return source; }
