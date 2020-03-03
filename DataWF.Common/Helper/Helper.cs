@@ -706,6 +706,20 @@ namespace DataWF.Common
             }
         }
 
+        public static async Task<byte[]> GetBytesAsync(Stream stream)
+        {
+            if (stream is MemoryStream memStream)
+                return memStream.ToArray();
+            else
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await stream.CopyToAsync(memoryStream);
+                    return memoryStream.ToArray();
+                }
+            }
+        }
+
         public static byte[] GetBytes(Stream stream)
         {
             if (stream is MemoryStream memStream)

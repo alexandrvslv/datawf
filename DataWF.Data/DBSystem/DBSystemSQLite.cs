@@ -237,7 +237,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
             var command = (SqliteCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = $oid");
             command.Parameters.AddWithValue($"$oid", (long)oid);
             transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (transaction.Reader.Read())
+            if (await transaction.ReadAsync())
             {
                 return ((SqliteDataReader)transaction.Reader).GetStream(1);
             }

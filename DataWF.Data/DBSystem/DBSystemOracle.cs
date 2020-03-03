@@ -353,7 +353,7 @@ namespace DataWF.Data
             var command = (OracleCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = :oid");
             command.Parameters.Add($"@oid", (long)oid);
             transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (transaction.Reader.Read())
+            if (await transaction.ReadAsync())
             {
                 return ((OracleDataReader)transaction.Reader).GetStream(1);
             }
@@ -364,7 +364,7 @@ namespace DataWF.Data
         {
             using (var blob = new OracleBlob((OracleConnection)transaction.Connection))
             {
-                value.CopyTo(blob);
+                await value.CopyToAsync(blob);
                 var command = (OracleCommand)transaction.AddCommand(@"begin
 select db_lob_seq.nextval into :oid = next from dual;
 insert into db_lob (oid, lob_data) values (:oid, :lob_data);
