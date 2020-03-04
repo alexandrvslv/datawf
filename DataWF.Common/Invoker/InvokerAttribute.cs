@@ -11,8 +11,7 @@ namespace DataWF.Common
             PropertyName = propertyName;
         }
 
-        public Type TargetType { get; }
-        public Type GenericType { get; set; }
+        public Type TargetType { get; }        
         public string PropertyName { get; }
     }
 }

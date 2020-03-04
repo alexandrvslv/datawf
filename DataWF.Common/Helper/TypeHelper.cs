@@ -166,7 +166,7 @@ namespace DataWF.Common
                     var code = index >= 0 ? value.Substring(0, index) : value;
                     type = Type.GetType(code);
 
-                    var byName = !code.Contains('.');
+                    var byName = code.IndexOf('.') < 0;
 
                     foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                     {

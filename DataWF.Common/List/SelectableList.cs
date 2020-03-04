@@ -696,6 +696,88 @@ namespace DataWF.Common
             }
         }
 
+        [Invoker(typeof(SelectableList<>), nameof(Disposed))]
+        public class DisposedInvoker : Invoker<SelectableList<T>, bool>
+        {
+            public override string Name => nameof(SelectableList<T>.Disposed);
 
+            public override bool CanWrite => false;
+
+            public override bool GetValue(SelectableList<T> target) => target.Disposed;
+
+            public override void SetValue(SelectableList<T> target, bool value) { }
+        }
+
+        [Invoker(typeof(SelectableList<>), nameof(IsFixedSize))]
+        public class IsFixedSizeInvoker : Invoker<SelectableList<T>, bool>
+        {
+            public override string Name => nameof(SelectableList<T>.IsFixedSize);
+
+            public override bool CanWrite => false;
+
+            public override bool GetValue(SelectableList<T> target) => target.IsFixedSize;
+
+            public override void SetValue(SelectableList<T> target, bool value) { }
+        }
+
+        [Invoker(typeof(SelectableList<>), nameof(IsReadOnly))]
+        public class IsReadOnlyInvoker : Invoker<SelectableList<T>, bool>
+        {
+            public override string Name => nameof(SelectableList<T>.IsReadOnly);
+
+            public override bool CanWrite => false;
+
+            public override bool GetValue(SelectableList<T> target) => target.IsReadOnly;
+
+            public override void SetValue(SelectableList<T> target, bool value) { }
+        }
+
+        [Invoker(typeof(SelectableList<>), nameof(IsSorted))]
+        public class IsSortedInvoker : Invoker<SelectableList<T>, bool>
+        {
+            public override string Name => nameof(SelectableList<T>.IsSorted);
+
+            public override bool CanWrite => false;
+
+            public override bool GetValue(SelectableList<T> target) => target.IsSorted;
+
+            public override void SetValue(SelectableList<T> target, bool value) { }
+        }
+
+        [Invoker(typeof(SelectableList<>), nameof(Comparer))]
+        public class ComparerInvoker : Invoker<SelectableList<T>, IComparer<T>>
+        {
+            public override string Name => nameof(SelectableList<T>.Comparer);
+
+            public override bool CanWrite => false;
+
+            public override IComparer<T> GetValue(SelectableList<T> target) => target.Comparer;
+
+            public override void SetValue(SelectableList<T> target, IComparer<T> value) { }
+        }
+
+        [Invoker(typeof(SelectableList<>), nameof(Count))]
+        public class CountInvoker : Invoker<SelectableList<T>, int>
+        {
+            public override string Name => nameof(SelectableList<T>.Count);
+
+            public override bool CanWrite => false;
+
+            public override int GetValue(SelectableList<T> target) => target.Count;
+
+            public override void SetValue(SelectableList<T> target, int value) { }
+        }
+
+        [Invoker(typeof(SelectableList<>), nameof(SyncRoot))]
+        public class SyncRootInvoker : Invoker<SelectableList<T>, object>
+        {
+            public override string Name => nameof(SelectableList<T>.SyncRoot);
+
+            public override bool CanWrite => false;
+
+            public override object GetValue(SelectableList<T> target) => target.SyncRoot;
+
+            public override void SetValue(SelectableList<T> target, object value) { }
+        }
     }
 }

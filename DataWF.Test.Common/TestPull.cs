@@ -12,7 +12,7 @@ namespace DataWF.Test.Common
         {
             var blockSize = 50;
             var pull = new Pull<int>(blockSize);
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 var index = Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
                 Helper.OneToTwoShift(index, out var left, out var right);
@@ -20,7 +20,7 @@ namespace DataWF.Test.Common
                 pull.SetValue(index, i);
             }
 
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
                 Assert.AreEqual(i, pull.GetValue(block, blockIndex));
@@ -32,7 +32,7 @@ namespace DataWF.Test.Common
         {
             var blockSize = 50;
             var pull = new NullablePull<int>(blockSize);
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 var index = Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
                 Helper.OneToTwoShift(index, out var left, out var right);
@@ -40,7 +40,7 @@ namespace DataWF.Test.Common
                 pull.SetValue<int?>(index, i);
             }
 
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
                 Assert.AreEqual(i, pull.GetValue(block, blockIndex));
@@ -53,9 +53,9 @@ namespace DataWF.Test.Common
             Stopwatch watch = new Stopwatch();
             watch.Reset();
             watch.Start();
-            for (short i = 0; i < 100; i++)
+            for (short i = 0; i < 1000; i++)
             {
-                for (short j = 0; j < 100; j++)
+                for (short j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOneShift(i, j);
                     Helper.OneToTwoShift(value, out var a, out var b);
@@ -73,9 +73,9 @@ namespace DataWF.Test.Common
             Stopwatch watch = new Stopwatch();
             watch.Reset();
             watch.Start();
-            for (short i = 0; i < 100; i++)
+            for (short i = 0; i < 1000; i++)
             {
-                for (short j = 0; j < 100; j++)
+                for (short j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOnePointer(i, j);
                     Helper.OneToTwoPointer(value, out var a, out var b);
@@ -93,9 +93,9 @@ namespace DataWF.Test.Common
             Stopwatch watch = new Stopwatch();
             watch.Reset();
             watch.Start();
-            for (short i = 0; i < 100; i++)
+            for (short i = 0; i < 1000; i++)
             {
-                for (short j = 0; j < 100; j++)
+                for (short j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOneStruct(i, j);
                     Helper.OneToTwoStruct(value, out var a, out var b);
@@ -113,9 +113,9 @@ namespace DataWF.Test.Common
             Stopwatch watch = new Stopwatch();
             watch.Reset();
             watch.Start();
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
             {
-                for (int j = 0; j < 100; j++)
+                for (int j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOneShift(i, j);
                     Helper.OneToTwoShift(value, out var a, out var b);
@@ -133,9 +133,9 @@ namespace DataWF.Test.Common
             Stopwatch watch = new Stopwatch();
             watch.Reset();
             watch.Start();
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
             {
-                for (int j = 0; j < 100; j++)
+                for (int j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOnePointer(i, j);
                     Helper.OneToTwoPointer(value, out var a, out var b);
@@ -153,9 +153,9 @@ namespace DataWF.Test.Common
             Stopwatch watch = new Stopwatch();
             watch.Reset();
             watch.Start();
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 1000; i++)
             {
-                for (int j = 0; j < 100; j++)
+                for (int j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOneStruct(i, j);
                     Helper.OneToTwoStruct(value, out var a, out var b);

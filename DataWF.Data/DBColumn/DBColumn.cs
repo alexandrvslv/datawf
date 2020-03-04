@@ -1259,7 +1259,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.Size))]
         public class SizeInvoker<T> : Invoker<T, int> where T : DBColumn
         {
-            public static readonly SizeInvoker<T> Instance = new SizeInvoker<T>();
             public override string Name => nameof(DBColumn.Size);
 
             public override bool CanWrite => true;
@@ -1272,7 +1271,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.Scale))]
         public class ScaleInvoker<T> : Invoker<T, int> where T : DBColumn
         {
-            public static readonly ScaleInvoker<T> Instance = new ScaleInvoker<T>();
             public override string Name => nameof(DBColumn.Scale);
 
             public override bool CanWrite => true;
@@ -1285,7 +1283,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.CultureCode))]
         public class CultureCodeInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly CultureCodeInvoker<T> Instance = new CultureCodeInvoker<T>();
             public override string Name => nameof(DBColumn.CultureCode);
 
             public override bool CanWrite => true;
@@ -1298,7 +1295,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.Format))]
         public class FormatInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly FormatInvoker<T> Instance = new FormatInvoker<T>();
             public override string Name => nameof(DBColumn.Format);
 
             public override bool CanWrite => true;
@@ -1311,7 +1307,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.DBDataType))]
         public class DBDataTypeInvoker<T> : Invoker<T, DBDataType> where T : DBColumn
         {
-            public static readonly DBDataTypeInvoker<T> Instance = new DBDataTypeInvoker<T>();
             public override string Name => nameof(DBColumn.DBDataType);
 
             public override bool CanWrite => true;
@@ -1324,7 +1319,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.DataType))]
         public class DataTypeInvoker<T> : Invoker<T, Type> where T : DBColumn
         {
-            public static readonly DataTypeInvoker<T> Instance = new DataTypeInvoker<T>();
             public override string Name => nameof(DBColumn.DataType);
 
             public override bool CanWrite => true;
@@ -1337,7 +1331,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.ColumnType))]
         public class ColumnTypeInvoker<T> : Invoker<T, DBColumnTypes> where T : DBColumn
         {
-            public static readonly ColumnTypeInvoker<T> Instance = new ColumnTypeInvoker<T>();
             public override string Name => nameof(DBColumn.ColumnType);
 
             public override bool CanWrite => true;
@@ -1350,7 +1343,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.DefaultValue))]
         public class DefaultValueInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly DefaultValueInvoker<T> Instance = new DefaultValueInvoker<T>();
             public override string Name => nameof(DBColumn.DefaultValue);
 
             public override bool CanWrite => true;
@@ -1363,7 +1355,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.Query))]
         public class QueryInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly QueryInvoker<T> Instance = new QueryInvoker<T>();
             public override string Name => nameof(DBColumn.Query);
 
             public override bool CanWrite => true;
@@ -1376,7 +1367,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.SubList))]
         public class SubListInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly SubListInvoker<T> Instance = new SubListInvoker<T>();
             public override string Name => nameof(DBColumn.SubList);
 
             public override bool CanWrite => true;
@@ -1389,7 +1379,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.BoolTrue))]
         public class BoolTrueInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly BoolTrueInvoker<T> Instance = new BoolTrueInvoker<T>();
             public override string Name => nameof(DBColumn.BoolTrue);
 
             public override bool CanWrite => true;
@@ -1402,7 +1391,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.BoolFalse))]
         public class BoolFalseInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly BoolFalseInvoker<T> Instance = new BoolFalseInvoker<T>();
             public override string Name => nameof(DBColumn.BoolFalse);
 
             public override bool CanWrite => true;
@@ -1410,6 +1398,30 @@ namespace DataWF.Data
             public override string GetValue(T target) => target.BoolFalse;
 
             public override void SetValue(T target, string value) => target.BoolFalse = value;
+        }
+
+        [Invoker(typeof(DBColumn), nameof(DBColumn.SqlName))]
+        public class SqlNameInvoker<T> : Invoker<T, string> where T : DBColumn
+        {
+            public override string Name => nameof(DBColumn.SqlName);
+
+            public override bool CanWrite => false;
+
+            public override string GetValue(T target) => target.SqlName;
+
+            public override void SetValue(T target, string value) { }
+        }
+
+        [Invoker(typeof(DBColumn), nameof(DBColumn.TargetType))]
+        public class TargetTypeInvoker<T> : Invoker<T, Type> where T : DBColumn
+        {
+            public override string Name => nameof(DBColumn.TargetType);
+
+            public override bool CanWrite => false;
+
+            public override Type GetValue(T target) => target.TargetType;
+
+            public override void SetValue(T target, Type value) { }
         }
     }
 }

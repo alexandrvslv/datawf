@@ -389,7 +389,7 @@ namespace DataWF.Data
                 }
             }
         }
-        [Invoker(typeof(DBVirtualTable<>), nameof(BaseTableName), GenericType = typeof(DBItem))]
+        [Invoker(typeof(DBVirtualTable<>), nameof(BaseTableName))]
         public class BaseTableNameInvoker : Invoker<DBVirtualTable<T>, string>
         {
             public static readonly BaseTableNameInvoker Instance = new BaseTableNameInvoker();

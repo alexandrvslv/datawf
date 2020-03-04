@@ -117,7 +117,7 @@ namespace DataWF.Common
                 {
                     if (type.IsGenericType)
                     {
-                        type = type.MakeGenericType(invoker.GenericType ?? invoker.TargetType);
+                        type = type.MakeGenericType(invoker.TargetType);
                     }
                     RegisterInvoker(propertyInfo, (IInvoker)Activator.CreateInstance(type));
                 }

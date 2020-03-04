@@ -57,7 +57,7 @@ namespace DataWF.Common
         {
             block = (short)(index / blockSize);
             blockIndex = (short)(index % blockSize);
-            return Helper.TwoToOnePointer(block, blockIndex);
+            return Helper.TwoToOneShift(block, blockIndex);
         }
 
         protected int blockSize;
@@ -78,7 +78,7 @@ namespace DataWF.Common
 
         public T GetValue<T>(int index)
         {
-            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
+            Helper.OneToTwoShift(index, out var block, out var blockIndex);
             return GetValue<T>(block, blockIndex);
         }
 
@@ -89,7 +89,7 @@ namespace DataWF.Common
 
         public void SetValue<T>(int index, T value)
         {
-            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
+            Helper.OneToTwoShift(index, out var block, out var blockIndex);
             SetValue(block, blockIndex, value);
         }
 
@@ -198,7 +198,7 @@ namespace DataWF.Common
 
         public override object Get(int index)
         {
-            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
+            Helper.OneToTwoShift(index, out var block, out var blockIndex);
             return GetValue(block, blockIndex);
         }
 
@@ -209,7 +209,7 @@ namespace DataWF.Common
 
         public override void Set(int index, object value)
         {
-            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
+            Helper.OneToTwoShift(index, out var block, out var blockIndex);
             SetValue(block, blockIndex, (T)value);
         }
 
@@ -267,7 +267,7 @@ namespace DataWF.Common
 
         public override void Trunc(int maxIndex)
         {
-            Helper.OneToTwoPointer(maxIndex, out var block, out var blockIndex);
+            Helper.OneToTwoShift(maxIndex, out var block, out var blockIndex);
             while (block < array.Count - 1)
             {
                 array.RemoveAt(array.Count - 1);

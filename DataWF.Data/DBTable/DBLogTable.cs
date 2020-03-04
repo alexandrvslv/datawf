@@ -187,10 +187,9 @@ namespace DataWF.Data
             return await base.SaveItem(item, transaction);
         }
 
-        [Invoker(typeof(DBLogTable<>), nameof(BaseTableName), GenericType = typeof(DBLogItem))]
+        [Invoker(typeof(DBLogTable<>), nameof(BaseTableName))]
         public class BaseTableNameInvoker : Invoker<DBLogTable<T>, string>
         {
-            public static readonly BaseTableNameInvoker Instance = new BaseTableNameInvoker();
             public override string Name => nameof(DBLogTable<T>.BaseTableName);
 
             public override bool CanWrite => true;
@@ -199,5 +198,31 @@ namespace DataWF.Data
 
             public override void SetValue(DBLogTable<T> target, string value) => target.BaseTableName = value;
         }
+
+        [Invoker(typeof(DBLogTable<>), nameof(BaseKey))]
+        public class BaseKeyInvoker : Invoker<DBLogTable<T>, DBColumn>
+        {
+            public override string Name => nameof(DBLogTable<T>.BaseKey);
+
+            public override bool CanWrite => false;
+
+            public override DBColumn GetValue(DBLogTable<T> target) => target.BaseKey;
+
+            public override void SetValue(DBLogTable<T> target, DBColumn value) { }
+        }
+
+        [Invoker(typeof(DBLogTable<>), nameof(UserLogKey))]
+        public class UserLogKeyInvoker : Invoker<DBLogTable<T>, DBColumn>
+        {
+            public override string Name => nameof(DBLogTable<T>.UserLogKey);
+
+            public override bool CanWrite => false;
+
+            public override DBColumn GetValue(DBLogTable<T> target) => target.UserLogKey;
+
+            public override void SetValue(DBLogTable<T> target, DBColumn value) { }
+        }
+
+        
     }
 }

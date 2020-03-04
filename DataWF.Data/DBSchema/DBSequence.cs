@@ -229,5 +229,17 @@ namespace DataWF.Data
 
             public override void SetValue(DBSequence target, DBDataType value) => target.DBDataType = value;
         }
+
+        [Invoker(typeof(DBSequence), nameof(DBSequence.NextQuery))]
+        public class NextQueryInvoker : Invoker<DBSequence, string>
+        {
+            public override string Name => nameof(DBSequence.NextQuery);
+
+            public override bool CanWrite => false;
+
+            public override string GetValue(DBSequence target) => target.NextQuery;
+
+            public override void SetValue(DBSequence target, string value) { }
+        }
     }
 }
