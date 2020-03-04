@@ -13,6 +13,7 @@ namespace DataWF.WebService.Common
         private const string jsonIncludeRef = "json_include_ref";
         private const string jsonReferenceCheck = "json_ref_check";
         private const string jsonMaxDepth = "json_max_depth";
+        private readonly Type[] types = new Type[] { typeof(DBItemConverterFactory) };
         private HttpContext context;
         private IUserIdentity user;
         private bool? includeReference;
@@ -32,34 +33,30 @@ namespace DataWF.WebService.Common
         public HttpContext HttpContext
         {
             get => context;
-            set
-            {
-                context = value;
-                user = context?.User?.GetCommonUser();
-            }
+            set => context = value;
         }
 
         public IUserIdentity CurrentUser
         {
-            get => user ?? HttpContext?.User?.GetCommonUser();
+            get => user ?? (user = HttpContext?.User?.GetCommonUser());
             set => user = value;
         }
 
         public bool IncludeReference
         {
-            get => includeReference ?? HttpContext?.ReadBool(jsonIncludeRef) ?? false;
+            get => includeReference ?? (includeReference = HttpContext?.ReadBool(jsonIncludeRef) ?? false).Value;
             set => includeReference = value;
         }
 
         public bool ReferenceCheck
         {
-            get => referenceCheck ?? HttpContext?.ReadBool(jsonReferenceCheck) ?? false;
+            get => referenceCheck ?? (referenceCheck = HttpContext?.ReadBool(jsonReferenceCheck) ?? false).Value;
             set => referenceCheck = value;
         }
 
         public int MaxDepth
         {
-            get => maxDepth ?? HttpContext?.ReadInt(jsonMaxDepth) ?? 5;
+            get => maxDepth ?? (maxDepth = HttpContext?.ReadInt(jsonMaxDepth) ?? 5).Value;
             set => maxDepth = value;
         }
 
@@ -72,7 +69,8 @@ namespace DataWF.WebService.Common
         {
             if (TypeHelper.IsBaseType(typeToConvert, typeof(DBItem)))
             {
-                return (JsonConverter)Activator.CreateInstance(typeof(DBItemConverter<>).MakeGenericType(typeToConvert), this);
+                return (JsonConverter)EmitInvoker.CreateObject(typeof(DBItemConverter<>).MakeGenericType(typeToConvert), types, new[] { this }, true);
+                //Activator.CreateInstance(typeof(DBItemConverter<>).MakeGenericType(typeToConvert), this);
             }
             else
             {

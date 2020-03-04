@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace DataWF.Common
@@ -139,8 +140,8 @@ namespace DataWF.Common
 
         public override void Set(int index, object value)
         {
-            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
-            Set(block, blockIndex, value);
+            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            SetValue(block, blockIndex, DBNullable<T>.CheckNull(value));
         }
 
         public override void Set(short block, short blockIndex, object value)
@@ -158,19 +159,20 @@ namespace DataWF.Common
 
         public override void Set(int index, object value)
         {
-            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
-            Set(block, blockIndex, value);
+            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            SetValue(block, blockIndex, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
         }
 
         public override void Set(short block, short blockIndex, object value)
         {
-            base.Set(block, blockIndex, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
+            SetValue(block, blockIndex, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
         }
     }
 
     public class Pull<T> : Pull, IEnumerable<T>
     {
         private readonly List<T[]> array = new List<T[]>();
+        private short blockCount;
         private short maxIndex;
 
         public Pull(int blockSize) : base(blockSize)
@@ -178,16 +180,18 @@ namespace DataWF.Common
             ItemType = typeof(T);
         }
 
-        public override int Capacity { get { return array.Count * blockSize; } }
+        public override int Capacity => array.Count * blockSize;
 
         public override void Clear()
         {
             foreach (var a in array)
             {
                 if (a != null)
+                {
                     Array.Clear(a, 0, a.Length);
+                }
             }
-
+            blockCount = 0;
             array.Clear();
         }
 
@@ -220,26 +224,27 @@ namespace DataWF.Common
 
         public T GetValue(short block, short blockIndex)
         {
-            if (block >= array.Count || array[block] == null)
+            if (block >= blockCount)
                 return default(T);
-            return array[block][blockIndex];
+            var arrayBlock = array[block];
+            return arrayBlock != null ? arrayBlock[blockIndex] : default(T);
         }
 
         public void SetValue(short block, short blockIndex, T value)
         {
-            while (block > array.Count)
-                array.Add(null);
-            if (block == array.Count)
+            if (block >= blockCount)
             {
-                array.Add(new T[blockSize]);
-                maxIndex = 0;
+                var blockAdd = (block + 1) - blockCount;
+                array.AddRange(Enumerable.Repeat((T[])null, blockAdd));
+                blockCount += (short)blockAdd;
             }
             if (array[block] == null)
             {
                 array[block] = new T[blockSize];
+                maxIndex = block == (blockCount - 1) ? (short)0 : maxIndex;
             }
             array[block][blockIndex] = value;
-            if (block == array.Count - 1)
+            if (block == blockCount - 1)
             {
                 maxIndex = Math.Max(maxIndex, blockIndex);
             }
@@ -247,10 +252,10 @@ namespace DataWF.Common
 
         public IEnumerator<T> GetEnumerator()
         {
-            for (int i = 0; i < array.Count; i++)
+            for (int i = 0; i < blockCount; i++)
             {
                 var block = array[i];
-                var size = i == array.Count - 1 ? maxIndex : blockSize;
+                var size = i == blockCount - 1 ? maxIndex : blockSize;
                 for (int j = 0; j < size; j++)
                 {
                     if (block == null)

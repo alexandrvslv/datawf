@@ -271,7 +271,7 @@ namespace DataWF.Common
                 var value = property.Invoker.GetValue(item);
                 if (property.IsAttribute || value == null)
                 {
-                    JsonSerializer.Serialize(jwriter, value, options);
+                    JsonSerializer.Serialize(jwriter, value, property.DataType, options);
                 }
                 else if (value is IList list)
                 {
@@ -323,7 +323,7 @@ namespace DataWF.Common
                 var value = property.Invoker.GetValue(item);
                 if (property.IsAttribute || value == null)
                 {
-                    JsonSerializer.Serialize(jwriter, value, options);
+                    JsonSerializer.Serialize(jwriter, value, property.DataType, options);
                 }
                 else if (value is IList list)
                 {

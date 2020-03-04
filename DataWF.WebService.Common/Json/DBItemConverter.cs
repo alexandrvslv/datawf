@@ -56,10 +56,11 @@ namespace DataWF.WebService.Common
             var valueType = value.GetType();
             var table = DBTable.GetTable(valueType);
             writer.WriteStartObject();
-
+            object propertyValue;
+            Type propertyType;
             foreach (var invoker in table.Invokers)
             {
-                object propertyValue;
+                propertyType = invoker.DataType;
                 if (TypeHelper.IsBaseType(invoker.DataType, typeof(DBItem)))
                 {
                     if (!includeReference || writer.CurrentDepth > maxDepth)
@@ -79,10 +80,11 @@ namespace DataWF.WebService.Common
                     if (propertyValue is AccessValue accessValue)
                     {
                         propertyValue = accessValue.GetFlags(Factory.CurrentUser);
+                        propertyType = typeof(AccessType);
                     }
                 }
                 writer.WritePropertyName(invoker.Name);
-                JsonSerializer.Serialize(writer, propertyValue, options);
+                JsonSerializer.Serialize(writer, propertyValue, propertyType, options);
             }
 
             writer.WriteEndObject();

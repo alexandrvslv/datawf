@@ -727,9 +727,9 @@ namespace DataWF.Data
                     break;
                 case DBDataType.Int:
                     var intValue = transaction.Reader.IsDBNull(i) ? null : (int?)transaction.Reader.GetInt32(i);
-                    if (DataType.IsEnum)
+                    if (DataType == typeof(int))
                     {
-                        row.SetValue((object)intValue, this, false);
+                        row.SetValue<int?>(intValue, this, false);
                     }
                     else if (DataType == typeof(uint))
                     {
@@ -737,7 +737,7 @@ namespace DataWF.Data
                     }
                     else
                     {
-                        row.SetValue<int?>(intValue, this, false);
+                        row.SetValue((object)intValue, this, false);
                     }
                     break;
                 case DBDataType.BigInt:

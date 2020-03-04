@@ -395,12 +395,16 @@ namespace DataWF.Data
             {
                 return y == null;
             }
+            if (y == null)
+            {
+                return x == null;
+            }
 
             var equal = false;
-            if (x is string strX && y is string strY)
-                equal = string.Equals(strX, strY, StringComparison.Ordinal);
+            if (typeof(T) == typeof(string))
+                equal = string.Equals(x.ToString(), y.ToString(), StringComparison.Ordinal);
             else if (x is byte[] byteX && y is byte[] byteY)
-                equal = Helper.CompareByte(byteX, byteY);
+                equal = Helper.CompareByteAsSpan(byteX, byteY);
             else
                 equal = EqualityComparer<T>.Default.Equals(x, y);
             return equal;
@@ -412,16 +416,20 @@ namespace DataWF.Data
             {
                 return y == null;
             }
+            if (y == null)
+            {
+                return x == null;
+            }
 
             var equal = false;
-            if (x is string strX && y is string strY)
-                equal = string.Equals(strX, strY, StringComparison.Ordinal);
+            if (x.GetType() == typeof(string))
+                equal = string.Equals(x.ToString(), y.ToString(), StringComparison.Ordinal);
             else if (x is Enum && y is int intY)
                 equal = ((int)x).Equals(intY);
             else if (y is Enum && x is int intX)
                 equal = ((int)y).Equals(intX);
             else if (x is byte[] byteX && y is byte[] byteY)
-                equal = Helper.CompareByte(byteX, byteY);
+                equal = Helper.CompareByteAsSpan(byteX, byteY);
             else
                 equal = x.Equals(y);
             return equal;

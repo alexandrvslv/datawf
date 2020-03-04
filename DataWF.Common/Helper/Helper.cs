@@ -383,7 +383,7 @@ namespace DataWF.Common
         //http://stackoverflow.com/questions/43289/comparing-two-byte-arrays-in-net/8808245#8808245
         public static unsafe bool CompareByte(byte[] a1, byte[] a2)
         {
-            if ((a1 == null && a2 == null) || a1 == a2)
+            if (a1 == a2)
                 return true;
             if (a1 == null || a2 == null || a1.Length != a2.Length)
                 return false;
@@ -411,6 +411,21 @@ namespace DataWF.Common
                     if (*((byte*)x1) != *((byte*)x2)) return false;
                 return true;
             }
+        }
+
+        public static bool CompareByteAsSpan(byte[] a1, byte[] a2)
+        {
+            if (a1 == a2)
+                return true;
+            if (a1 == null || a2 == null || a1.Length != a2.Length)
+                return false;
+            return CompareByte(new ReadOnlySpan<byte>(a1), new ReadOnlySpan<byte>(a2));
+        }
+
+        //https://stackoverflow.com/a/48599119/4682355
+        public static bool CompareByte(ReadOnlySpan<byte> a1, in ReadOnlySpan<byte> a2)
+        {
+            return a1.SequenceEqual(a2);
         }
 
         public static void CopyStream(Stream input, Stream output, int bufferSize)
