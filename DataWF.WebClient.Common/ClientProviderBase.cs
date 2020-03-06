@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
@@ -11,6 +14,10 @@ namespace DataWF.Common
         private static readonly Dictionary<Type, Dictionary<int, ICrudClient>> crudTypedClients = new Dictionary<Type, Dictionary<int, ICrudClient>>();
         private readonly SelectableList<IClient> clients = new SelectableList<IClient>();
         private readonly Lazy<JsonSerializerOptions> serializeSettings;
+        private static HttpClient client;
+        private string baseUrl;
+        private string authorizationToken;
+
         public static ICrudClient<T> Get<T>()
         {
             return (ICrudClient<T>)Get(typeof(T));
@@ -45,13 +52,71 @@ namespace DataWF.Common
 
         public JsonSerializerOptions JsonSerializerOptions { get { return serializeSettings.Value; } }
 
-        public AuthorizationInfo Authorization { get; set; }
+        public string AuthorizationKey { get; set; } = "Bearer";
+        public string AuthorizationToken
+        {
+            get => authorizationToken;
+            set
+            {
+                if (authorizationToken != value)
+                {
+                    authorizationToken = value;
+                    if (client != null)
+                    {
+                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(AuthorizationKey, AuthorizationToken);
+                    }
+                }
+            }
+        }
 
-        public string BaseUrl { get; set; }
+        public Func<Task<bool>> UnauthorizedError { get; set; }
+
+        public string BaseUrl
+        {
+            get => baseUrl;
+            set
+            {
+                if (baseUrl != value)
+                {
+                    baseUrl = value;
+                    if (client != null)
+                    {
+                        client.BaseAddress = new Uri(baseUrl);
+                    }
+                }
+            }
+        }
 
         public SelectableList<IClient> Clients => clients;
 
         IEnumerable<IClient> IClientProvider.Clients => Clients;
+
+        public virtual HttpClient CreateHttpClient(HttpMessageHandler httpMessageHandler = null)
+        {
+            if (client == null)
+            {
+                client = httpMessageHandler != null ? new HttpClient(httpMessageHandler, false) : new HttpClient();
+                client.Timeout = TimeSpan.FromHours(1);
+                if (baseUrl != null)
+                {
+                    client.BaseAddress = new Uri(baseUrl);
+                }
+                if (AuthorizationToken != null)
+                {
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(AuthorizationKey, AuthorizationToken);
+                }
+            }
+            return client;
+        }
+
+        public async Task<bool> OnUnauthorized()
+        {
+            if (UnauthorizedError != null)
+            {
+                return await UnauthorizedError();
+            }
+            return false;
+        }
 
         protected void Add(IClient client)
         {

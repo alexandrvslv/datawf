@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -12,8 +13,13 @@ namespace DataWF.Common
     {
         string BaseUrl { get; set; }
         IEnumerable<IClient> Clients { get; }
-        AuthorizationInfo Authorization { get; set; }
+        string AuthorizationKey { get; set; }
+        string AuthorizationToken { get; set; }
+        Func<Task<bool>> UnauthorizedError { get; set; }
         JsonSerializerOptions JsonSerializerOptions { get; }
+
+        HttpClient CreateHttpClient(HttpMessageHandler httpMessageHandler = null);
+        Task<bool> OnUnauthorized();
         ICrudClient<T> GetClient<T>();
         ICrudClient GetClient(Type type);
         ICrudClient GetClient(Type type, int typeId);

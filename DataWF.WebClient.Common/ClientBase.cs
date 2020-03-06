@@ -32,7 +32,6 @@ namespace DataWF.Common
 
         private string baseUrl;
         private IClientProvider provider;
-        private static HttpClient client;
 
         public ClientBase()
         {
@@ -57,20 +56,12 @@ namespace DataWF.Common
             set { baseUrl = value; }
         }
 
-        partial void ProcessResponse(HttpClient client, HttpResponseMessage response);
-
-        protected virtual HttpClient CreateHttpClient()
+        public virtual HttpClient GetHttpClient()
         {
-            if (client == null)
-            {
-                //var handler = new HttpClientHandler()
-                //{
-                //    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-                //};
-                client = new HttpClient() { Timeout = TimeSpan.FromHours(1) };
-            }
-            return client;
+            return Provider.CreateHttpClient();
         }
+
+        partial void ProcessResponse(HttpClient client, HttpResponseMessage response);
 
         protected virtual void Validation(object value)
         {
@@ -107,7 +98,7 @@ namespace DataWF.Common
             object value = null,
             params object[] routeParams)
         {
-            var client = CreateHttpClient();
+            var client = GetHttpClient();
             try
             {
                 using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, routeParams))
@@ -176,7 +167,7 @@ namespace DataWF.Common
                                 }
                                 break;
                             case System.Net.HttpStatusCode.Unauthorized:
-                                if (await Provider?.Authorization?.OnUnauthorizedError())
+                                if (await Provider?.OnUnauthorized())
                                 {
                                     return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, value, routeParams).ConfigureAwait(false);
                                 }
@@ -285,19 +276,32 @@ namespace DataWF.Common
             object value = null,
             params object[] parameters)
         {
-            Status =
-                httpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Post :
-                httpMethod.Equals("PUT", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Put :
-                httpMethod.Equals("DELETE", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Delete :
-                ClientStatus.Get;
 
             var request = new HttpRequestMessage()
             {
                 RequestUri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute),
-                Method = new HttpMethod(httpMethod)
             };
 
-            Provider?.Authorization?.FillRequest(request);
+            if (httpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))
+            {
+                Status = ClientStatus.Get;
+                request.Method = HttpMethod.Get;
+            }
+            else if (httpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase))
+            {
+                Status = ClientStatus.Post;
+                request.Method = HttpMethod.Post;
+            }
+            else if (httpMethod.Equals("PUT", StringComparison.OrdinalIgnoreCase))
+            {
+                Status = ClientStatus.Put;
+                request.Method = HttpMethod.Put;
+            }
+            else if (httpMethod.Equals("PUT", StringComparison.OrdinalIgnoreCase))
+            {
+                Status = ClientStatus.Delete;
+                request.Method = HttpMethod.Delete;
+            }
 
             if (value is Stream stream)
             {
@@ -319,11 +323,11 @@ namespace DataWF.Common
                 var text = JsonSerializer.Serialize(value, value.GetType(), Provider.JsonSerializerOptions);
                 request.Content = new StringContent(text, Encoding.UTF8, "application/json");
             }
-            if (httpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))
+            if (request.Method == HttpMethod.Get)
             {
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
             }
-            if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase))
+            if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase) && !BaseUrl.StartsWith("https", StringComparison.OrdinalIgnoreCase))
             {
                 request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("br"));
             }
@@ -344,7 +348,7 @@ namespace DataWF.Common
                 }
                 if (parameters.Length <= i)
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentOutOfRangeException(nameof(parameters));
                 }
 
                 urlBuilder.Append(Uri.EscapeDataString(ConvertToString(parameters[i++], CultureInfo.InvariantCulture)));
@@ -358,7 +362,7 @@ namespace DataWF.Common
             return urlBuilder;
         }
 
-        protected string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
+        protected string ConvertToString(object value, CultureInfo cultureInfo)
         {
             if (value is Enum)
             {
