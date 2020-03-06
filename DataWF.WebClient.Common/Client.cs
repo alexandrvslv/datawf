@@ -334,14 +334,14 @@ namespace DataWF.Common
                 loadProgress = new LoadProgress<T>(filter, progressable);
                 loadProgress.Task = string.IsNullOrEmpty(filter)
                     ? GetAsync(loadProgress.Token)
-                    : FindAsync(filter, loadProgress.Token);
+                    : SearchAsync(filter, loadProgress.Token);
             }
             return loadProgress;
         }
 
-        public virtual Task<List<T>> FindAsync(string filter, ProgressToken progressToken) => Task.FromResult<List<T>>(null);
+        public virtual Task<List<T>> SearchAsync(string filter, ProgressToken progressToken) => Task.FromResult<List<T>>(null);
 
-        public async Task<IEnumerable> FindAsync(string filter) => await FindAsync(filter, ProgressToken.None);
+        public async Task<IEnumerable> SearchAsync(string filter) => await SearchAsync(filter, ProgressToken.None);
 
         public virtual Task<T> GetAsync(K id, ProgressToken progressToken) => Task.FromResult(default(T));
 

@@ -49,7 +49,7 @@ namespace DataWF.Common
         IEnumerable<object> GetChanges();
         Task<object> GenerateId();
         Task<bool> DeleteAsync(object id);
-        Task<IEnumerable> FindAsync(string filter);
+        Task<IEnumerable> SearchAsync(string filter);
         Task<IEnumerable> GetAsync();
         Task<object> GetAsync(object id);
         Task<object> CopyAsync(object id);
@@ -68,7 +68,7 @@ namespace DataWF.Common
         T Get(object id);
         Task<bool> Delete(T item);
         LoadProgress<T> Load(string filter, IProgressable progressable);
-        Task<List<T>> FindAsync(string filter, ProgressToken progressToken);
+        Task<List<T>> SearchAsync(string filter, ProgressToken progressToken);
         Task<List<T>> GetAsync(ProgressToken progressToken);
         Task<T> GetAsync(object id, ProgressToken progressToken);
         Task<T> CopyAsync(object id, ProgressToken progressToken);

@@ -35,9 +35,10 @@ namespace DataWF.WebService.Common
         [HttpGet]
         public Task<ActionResult<IEnumerable<T>>> Get()
         {
-            return Find(string.Empty);
+            return Search(string.Empty);
         }
 
+        [Obsolete("Use Search instead!")]
         [HttpGet("Find/{filter}")]
         public async Task<ActionResult<IEnumerable<T>>> Find([FromRoute]string filter)
         {
@@ -59,8 +60,8 @@ namespace DataWF.WebService.Common
             }
         }
 
-        [HttpGet("Select")]
-        public async Task<ActionResult<IEnumerable<T>>> Select([FromQuery]string filter)
+        [HttpGet("Search")]
+        public async Task<ActionResult<IEnumerable<T>>> Search([FromQuery]string filter)
         {
             try
             {
