@@ -355,10 +355,22 @@ namespace DataWF.Data
             return Load(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", cols)), param, transaction);
         }
 
+        public Task<IEnumerable<T>> LoadAsync(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
+                whereText = string.Empty;
+            else if (whereText.Length > 3
+                     && whereText.IndexOf("where", StringComparison.OrdinalIgnoreCase) < 0
+                     && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
+                whereText = "where " + whereText;
+
+            return LoadAsync(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", cols)), param, transaction);
+        }
+
         public override IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
             return Load(query, param, transaction);
-        }
+        }       
 
         public IEnumerable<T> Load(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
@@ -381,9 +393,35 @@ namespace DataWF.Data
             return buf;
         }
 
+        public async Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        {
+            if (query.Table != this)
+                throw new ArgumentException(nameof(query));
+            if (Count == 0)
+            {
+                param &= ~DBLoadParam.CheckDeleted;
+            }
+            var buf = await LoadAsync(query.ToCommand(true), param, transaction);
+
+            if (buf != null && (param & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
+            {
+                CheckDelete(query, buf, param, transaction);
+            }
+            if (query.Parameters.Count == 0)
+            {
+                IsSynchronized = true;
+            }
+            return buf;
+        }
+
         public override IEnumerable<DBItem> LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
             return Load(command, param, transaction);
+        }
+
+        public override async Task<IEnumerable<DBItem>> LoadItemsAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        {
+            return await LoadAsync(command, param, transaction);
         }
 
         public List<T> Load(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
@@ -479,43 +517,6 @@ namespace DataWF.Data
                 RaiseLoadCompleate(transaction);
             }
             return list;
-        }
-        public Task<IEnumerable<T>> LoadAsync(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
-        {
-            if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
-                whereText = string.Empty;
-            else if (whereText.Length > 3
-                     && whereText.IndexOf("where", StringComparison.OrdinalIgnoreCase) < 0
-                     && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
-                whereText = "where " + whereText;
-
-            return LoadAsync(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", cols)), param, transaction);
-        }
-
-        public async Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
-        {
-            if (query.Table != this)
-                throw new ArgumentException(nameof(query));
-            if (Count == 0)
-            {
-                param &= ~DBLoadParam.CheckDeleted;
-            }
-            var buf = await LoadAsync(query.ToCommand(true), param, transaction);
-
-            if (buf != null && (param & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
-            {
-                CheckDelete(query, buf, param, transaction);
-            }
-            if (query.Parameters.Count == 0)
-            {
-                IsSynchronized = true;
-            }
-            return buf;
-        }
-
-        public override async Task<IEnumerable<DBItem>> LoadItemsAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
-        {
-            return await LoadAsync(command, param, transaction);
         }
 
         public async Task<IEnumerable<T>> LoadAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)

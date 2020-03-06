@@ -12,6 +12,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataWF.WebService.Common
@@ -25,6 +26,7 @@ namespace DataWF.WebService.Common
 
         public BaseController()
         {
+            Interlocked.Increment(ref MemoryLeak.Controllers.DiagnosticsController.Requests);
             table = DBTable.GetTable<T>();
         }
 
@@ -38,6 +40,27 @@ namespace DataWF.WebService.Common
 
         [HttpGet("Find/{filter}")]
         public async Task<ActionResult<IEnumerable<T>>> Find([FromRoute]string filter)
+        {
+            try
+            {
+                var user = CurrentUser;
+                if (!table.Access.GetFlag(AccessType.Read, user))
+                {
+                    return Forbid();
+                }
+                var result = await table.LoadCacheAsync(filter, DBLoadParam.Referencing);
+                return new ActionResult<IEnumerable<T>>(result.Where(p => p.Access.GetFlag(AccessType.Read, user)
+                                                              && p.PrimaryId != null
+                                                              && (p.UpdateState & DBUpdateState.Insert) == 0));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex, null);
+            }
+        }
+
+        [HttpGet("Select")]
+        public async Task<ActionResult<IEnumerable<T>>> Select([FromQuery]string filter)
         {
             try
             {

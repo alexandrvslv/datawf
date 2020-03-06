@@ -206,14 +206,9 @@ namespace DataWF.WebService.Common
               });
         }
 
-        public static IApplicationBuilder UseSwagger(this IApplicationBuilder app, string name, string url = "/swagger/v1/swagger.json")
+        public static IApplicationBuilder UseSwaggerUI(this IApplicationBuilder app, string name, string url = "/swagger/v1/swagger.json")
         {
-            //app.UseHttpMethodOverride
-            return app.UseSwagger(c =>
-            {
-
-            })
-            .UseSwaggerUI(c =>
+            return app.UseSwaggerUI(c =>
             {
                 // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
                 // specifying the Swagger JSON endpoint.
