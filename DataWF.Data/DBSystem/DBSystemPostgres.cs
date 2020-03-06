@@ -202,7 +202,7 @@ namespace DataWF.Data
             {
                 if (column.DBDataType == DBDataType.TimeSpan)
                 {
-                    parameter.DbType = DbType.Time;
+                    ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Interval; 
                 }
                 else if (column.DBDataType == DBDataType.LargeObject)
                 {
