@@ -327,7 +327,7 @@ namespace DataWF.Common
             {
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
             }
-            if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase) && !BaseUrl.StartsWith("https", StringComparison.OrdinalIgnoreCase))
+            if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase) && request.Version.Major < 2)
             {
                 request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("br"));
             }
