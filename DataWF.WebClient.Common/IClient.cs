@@ -13,7 +13,7 @@ namespace DataWF.Common
     {
         string BaseUrl { get; set; }
         IEnumerable<IClient> Clients { get; }
-        string AuthorizationKey { get; set; }
+        string AuthorizationScheme { get; set; }
         string AuthorizationToken { get; set; }
         Func<Task<bool>> UnauthorizedError { get; set; }
         JsonSerializerOptions JsonSerializerOptions { get; }

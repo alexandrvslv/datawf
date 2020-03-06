@@ -1,6 +1,6 @@
 ﻿using System.Net.Http;
 
-namespace DataWF.WebClient.Common
+namespace DataWF.Common
 {
     public interface IHttpClientProvider
     {

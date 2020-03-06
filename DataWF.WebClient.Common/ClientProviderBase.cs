@@ -52,7 +52,7 @@ namespace DataWF.Common
 
         public JsonSerializerOptions JsonSerializerOptions { get { return serializeSettings.Value; } }
 
-        public string AuthorizationKey { get; set; } = "Bearer";
+        public string AuthorizationScheme { get; set; } = "Bearer";
         public string AuthorizationToken
         {
             get => authorizationToken;
@@ -63,7 +63,7 @@ namespace DataWF.Common
                     authorizationToken = value;
                     if (client != null)
                     {
-                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(AuthorizationKey, AuthorizationToken);
+                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(AuthorizationScheme, AuthorizationToken);
                     }
                 }
             }
@@ -103,7 +103,7 @@ namespace DataWF.Common
                 }
                 if (AuthorizationToken != null)
                 {
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(AuthorizationKey, AuthorizationToken);
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(AuthorizationScheme, AuthorizationToken);
                 }
             }
             return client;
