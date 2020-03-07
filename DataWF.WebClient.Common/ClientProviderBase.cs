@@ -17,6 +17,7 @@ namespace DataWF.Common
         private static HttpClient client;
         private string baseUrl;
         private string authorizationToken;
+        private HttpMessageHandler httpMessageHandler;
 
         public static ICrudClient<T> Get<T>()
         {
@@ -81,7 +82,9 @@ namespace DataWF.Common
                     baseUrl = value;
                     if (client != null)
                     {
-                        client.BaseAddress = new Uri(baseUrl);
+                        client.Dispose();
+                        client = null;
+                        CreateHttpClient(httpMessageHandler);
                     }
                 }
             }
@@ -93,6 +96,7 @@ namespace DataWF.Common
 
         public virtual HttpClient CreateHttpClient(HttpMessageHandler httpMessageHandler = null)
         {
+            this.httpMessageHandler = httpMessageHandler;
             if (client == null)
             {
                 client = httpMessageHandler != null ? new HttpClient(httpMessageHandler, false) : new HttpClient();
