@@ -5,9 +5,9 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Data</RootNamespace>
     <AssemblyName>DataWF.Data</AssemblyName>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
-    
+
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
