@@ -8,9 +8,10 @@ namespace DataWF.Common
 {
     public struct AccessItem : IAccessItem
     {
-        public static readonly AccessItem Empty = new AccessItem();
+        public static readonly AccessItem Empty = new AccessItem(null);
         private IAccessIdentity identity;
         private int identityId;
+
         public AccessItem(bool isUser, int identityId, AccessType data)
         {
             IsUser = isUser;
@@ -59,7 +60,7 @@ namespace DataWF.Common
         public AccessType Access { get; set; }
 
         [XmlIgnore, JsonIgnore]
-        public bool IsEmpty => IdentityId <= 0;
+        public bool IsEmpty => IdentityId < 0;
 
         [XmlIgnore, JsonIgnore, DefaultValue(false)]
         public bool Read
