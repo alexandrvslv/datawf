@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace DataWF.Common
 {
@@ -172,8 +173,8 @@ namespace DataWF.Common
     public class Pull<T> : Pull, IEnumerable<T>
     {
         private readonly List<T[]> array = new List<T[]>();
-        private short blockCount;
-        private short maxIndex;
+        private int blockCount;
+        private int maxIndex;
 
         public Pull(int blockSize) : base(blockSize)
         {
@@ -236,12 +237,12 @@ namespace DataWF.Common
             {
                 var blockAdd = (block + 1) - blockCount;
                 array.AddRange(Enumerable.Repeat((T[])null, blockAdd));
-                blockCount += (short)blockAdd;
+                Interlocked.Add(ref blockCount, blockAdd);
             }
             if (array[block] == null)
             {
                 array[block] = new T[blockSize];
-                maxIndex = block == (blockCount - 1) ? (short)0 : maxIndex;
+                maxIndex = block == (blockCount - 1) ? 0 : maxIndex;
             }
             array[block][blockIndex] = value;
             if (block == blockCount - 1)
