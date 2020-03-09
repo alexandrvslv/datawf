@@ -132,6 +132,7 @@ namespace DataWF.WebService.Common
                     NoStore = true,
                     Duration = 0
                 });
+                options.SuppressOutputFormatterBuffering = true;
                 options.OutputFormatters.Insert(0, new DBItemOutputFormatter());
             }).AddJsonOptions(options =>
             {

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace DataWF.WebService.Common
 {
@@ -28,6 +29,15 @@ namespace DataWF.WebService.Common
                 return intValue;
             }
             return null;
+        }
+
+        public static void DisableBuffering(this HttpContext httpContext)
+        {
+            var responseBodyFeature = httpContext.Features.Get<IHttpResponseBodyFeature>();
+            if (responseBodyFeature != null)
+            {
+                responseBodyFeature.DisableBuffering();
+            }
         }
     }
 }
