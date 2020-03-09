@@ -144,10 +144,12 @@ namespace DataWF.Data
                     {
                         if (Property == null)
                             Property = propertyInfo.Name;
-                        if (PropertyInvoker == this && Property == propertyInfo.Name)
+                        if (PropertyInvoker == this && string.Equals(Property, propertyInfo.Name, StringComparison.Ordinal))
                         {
                             PropertyInvoker = EmitInvoker.Initialize(propertyInfo, true);
                         }
+                        else
+                        { }
                     }
                     OnPropertyChanged(nameof(PropertyInfo));
                 }
@@ -301,7 +303,7 @@ namespace DataWF.Data
             get { return gname; }
             set
             {
-                if (gname == value)
+                if (string.Equals(gname, value, StringComparison.Ordinal))
                     return;
                 gname = value;
                 cacheGroup = null;
