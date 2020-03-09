@@ -9,11 +9,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
-using System.Runtime.Serialization;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -156,7 +152,16 @@ namespace DataWF.Common
                                         }
                                         else
                                         {
-                                            result = await JsonSerializer.DeserializeAsync<R>(encodedStream, Provider.JsonSerializerOptions).ConfigureAwait(false);
+#if NETSTANDARD2_0
+                                            var jsonSerializer = Newtonsoft.Json.JsonSerializer.Create(Provider.JsonSettings);
+                                            using (var sreader = new StreamReader(encodedStream))
+                                            using (var jreader = new Newtonsoft.Json.JsonTextReader(sreader))
+                                            {
+                                                result = (R)jsonSerializer.Deserialize(jreader, typeof(R));
+                                            }
+#else
+                                            result = await System.Text.Json.JsonSerializer.DeserializeAsync<R>(encodedStream, Provider.JsonSettings).ConfigureAwait(false);
+#endif
                                             //if (encodedStream.CanWrite)
                                             //{
                                             //    using (var file = File.OpenWrite("output.json"))
@@ -320,7 +325,19 @@ namespace DataWF.Common
             else if (value != null)
             {
                 Validation(value);
-                var text = JsonSerializer.Serialize(value, value.GetType(), Provider.JsonSerializerOptions);
+#if NETSTANDARD2_0
+                string text;
+                var serializer = Newtonsoft.Json.JsonSerializer.Create(Provider.JsonSettings);
+                using (var writer = new StringWriter())
+                using (var jwriter = new Newtonsoft.Json.JsonTextWriter(writer))
+                {
+                    serializer.Serialize(jwriter, value);
+                    jwriter.Flush();
+                    text = writer.ToString();
+                }
+#else
+                var text = System.Text.Json.JsonSerializer.Serialize(value, value.GetType(), Provider.JsonSettings);
+#endif
                 request.Content = new StringContent(text, Encoding.UTF8, "application/json");
             }
             if (request.Method == HttpMethod.Get)

@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-
+﻿
 namespace DataWF.Common
 {
     public interface IClientConverter
@@ -7,7 +6,10 @@ namespace DataWF.Common
         ICrudClient Client { get; }
 
         TypeSerializationInfo SerializationInfo { get; }
-
-        object Read(ref Utf8JsonReader jreader, object item, JsonSerializerOptions options);
+#if NETSTANDARD2_0
+        object Read(Newtonsoft.Json.JsonReader jreader, object item, Newtonsoft.Json.JsonSerializer serializer);
+#else
+        object Read(ref System.Text.Json.Utf8JsonReader jreader, object item, System.Text.Json.JsonSerializerOptions options);
+#endif
     }
 }

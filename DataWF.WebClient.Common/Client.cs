@@ -15,6 +15,11 @@ namespace DataWF.Common
         where T : class, new()
         where K : struct
     {
+        private readonly ConcurrentDictionary<K, T> downloads;
+        private ICrudClient baseClient;
+        private LoadProgress<T> loadProgress;
+        private SemaphoreSlim getActionSemaphore;
+
         public Client(Invoker<T, K?> idInvoker, Invoker<T, int?> typeInvoker, int typeId = 0)
         {
             IdInvoker = idInvoker;
@@ -22,14 +27,16 @@ namespace DataWF.Common
             Items.Indexes.Add(IdInvoker);
             TypeInvoker = typeInvoker;
             TypeId = typeId;
-            Converter = new JsonClientConverter<T, K>(this);
+#if NETSTANDARD2_0
+            Converter = new NewtonJsonClientConverter<T, K>(this);
+#else
+            Converter = new SystemJsonClientConverter<T, K>(this);
+#endif
             if (typeId == 0)
+            {
                 downloads = new ConcurrentDictionary<K, T>();
+            }
         }
-        private readonly ConcurrentDictionary<K, T> downloads;
-        private ICrudClient baseClient;
-        private LoadProgress<T> loadProgress;
-        private SemaphoreSlim getActionSemaphore;
 
         public IClientConverter Converter { get; }
 

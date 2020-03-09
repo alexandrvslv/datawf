@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -16,8 +14,11 @@ namespace DataWF.Common
         string AuthorizationScheme { get; set; }
         string AuthorizationToken { get; set; }
         Func<Task<bool>> UnauthorizedError { get; set; }
-        JsonSerializerOptions JsonSerializerOptions { get; }
-
+#if NETSTANDARD2_0
+        Newtonsoft.Json.JsonSerializerSettings JsonSettings { get; }
+#else
+        System.Text.Json.JsonSerializerOptions JsonSettings { get; }
+#endif  
         HttpClient CreateHttpClient(HttpMessageHandler httpMessageHandler = null);
         Task<bool> OnUnauthorized();
         ICrudClient<T> GetClient<T>();

@@ -1,9 +1,12 @@
-﻿using System;
+﻿#if NETSTANDARD2_0
+using Newtonsoft.Json;
+#else
+using System.Text.Json;
+#endif
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -13,7 +16,7 @@ namespace DataWF.Common
         private static readonly Dictionary<Type, ICrudClient> crudClients = new Dictionary<Type, ICrudClient>();
         private static readonly Dictionary<Type, Dictionary<int, ICrudClient>> crudTypedClients = new Dictionary<Type, Dictionary<int, ICrudClient>>();
         private readonly SelectableList<IClient> clients = new SelectableList<IClient>();
-        private readonly Lazy<JsonSerializerOptions> serializeSettings;
+
         private static HttpClient client;
         private string baseUrl;
         private string authorizationToken;
@@ -31,28 +34,39 @@ namespace DataWF.Common
 
         public ClientProviderBase()
         {
-            serializeSettings = new Lazy<JsonSerializerOptions>(() =>
+#if NETSTANDARD2_0
+            JsonSettings = new JsonSerializerSettings()
             {
-                var options = new JsonSerializerOptions
-                {
 #if DEBUG
-                    WriteIndented = true,
+                Formatting = Formatting.Indented,
 #endif
-                    DefaultBufferSize = 82 * 1024,
-                    AllowTrailingCommas = true,
-                    // Use the default property (As Is).
-                    PropertyNamingPolicy = null,
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                };
-                // Configure a converters.
-                //options.Converters.Add(new JsonStringEnumConverter());
-                options.Converters.Add(new JsonClientConverterFactory(this));
-                return options;
-            });
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+                ContractResolver = new NewtonJsonContractResolver(this)
+            };
+            //JsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+#else
+            JsonSettings = new JsonSerializerOptions
+            {
+#if DEBUG
+            WriteIndented = true,
+#endif
+            DefaultBufferSize = 82 * 1024,
+            AllowTrailingCommas = true,
+            // Use the default property (As Is).
+            PropertyNamingPolicy = null,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            //JsonSettings.Converters.Add(new JsonStringEnumConverter());
+            JsonSettings.Converters.Add(new SystemJsonConverterFactory(this));
+#endif
         }
 
-        public JsonSerializerOptions JsonSerializerOptions { get { return serializeSettings.Value; } }
+#if NETSTANDARD2_0
+        public JsonSerializerSettings JsonSettings { get; }
+#else
+        public JsonSerializerOptions JsonSettings { get; }
 
+#endif
         public string AuthorizationScheme { get; set; } = "Bearer";
         public string AuthorizationToken
         {
