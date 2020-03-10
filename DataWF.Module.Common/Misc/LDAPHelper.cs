@@ -25,21 +25,38 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace DataWF.Module.Common
+namespace ECMS.Model.Common
 {
 
     public static class LdapHelper
     {
+        public const int SCOPE_BASE = 0;
+        public const int SCOPE_ONE = 1;
+        public const int SCOPE_SUB = 2;
+        public const string NO_ATTRS = "1.1";
+        public const string ALL_USER_ATTRS = "*";
+        public const int Ldap_V3 = 3;
+        public const int DEFAULT_PORT = 389;
+        public const int DEFAULT_SSL_PORT = 636;
         //https://github.com/WinLwinOoNet/AspNetCoreActiveDirectoryStarterKit/blob/master/src/Libraries/Asp.NovellDirectoryLdap/LdapAuthenticationService.cs#L14
         public static bool ValidateUser(string domainName, string username, string password)
         {
             string userDn = $"{username}@{domainName}";
-            using (var connection = new LdapConnection { SecureSocketLayer = false })
+            var ssl = LDAPSetting.Current?.SSL ?? false;
+            using (var connection = new LdapConnection { SecureSocketLayer = ssl })
             {
-                connection.Connect(domainName, LdapConnection.DEFAULT_PORT);
-                connection.Bind(userDn, password);
-                if (connection.Bound)
-                    return true;
+                connection.UserDefinedServerCertValidationDelegate += (sender, certificate, chain, errors) => true;
+                var host = LDAPSetting.Current?.Host ?? domainName;
+                var port = LDAPSetting.Current?.Port ?? (ssl ? DEFAULT_SSL_PORT : DEFAULT_PORT);
+                try
+                {
+                    connection.Connect(host, port);
+                    connection.Bind(userDn, password);
+                    if (connection.Bound)
+                        return true;
+                }
+                finally
+                { connection.Disconnect(); }
             }
             return false;
         }
@@ -57,10 +74,10 @@ namespace DataWF.Module.Common
                 var attributes = new string[] { "cn", "company", "lastLongon", "lastLongoff", "mail", "mailNickname", "name", "title", "userPrincipalName" };
                 using (var conn = new LdapConnection())
                 {
-                    conn.Connect(domain, LdapConnection.DEFAULT_PORT);
+                    conn.Connect(domain, DEFAULT_PORT);
                     conn.Bind(userDN, password);
                     var results = conn.Search(ldapDom, //search base
-                        LdapConnection.SCOPE_SUB, //scope 
+                        SCOPE_SUB, //scope 
                         "(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))", //filter
                         attributes, //attributes 
                         false); //types only 
@@ -70,11 +87,11 @@ namespace DataWF.Module.Common
                         {
 
                             var resultRecord = results.Next();
-                            var attribute = resultRecord.getAttribute("mailNickname");
+                            var attribute = resultRecord.GetAttribute("mailNickname");
                             if (attribute != null)
                             {
                                 Position position = null;
-                                var positionName = resultRecord.getAttribute("title")?.StringValue;
+                                var positionName = resultRecord.GetAttribute("title")?.StringValue;
                                 if (!string.IsNullOrEmpty(positionName))
                                 {
                                     position = Position.DBTable.LoadByCode(positionName);
@@ -94,8 +111,8 @@ namespace DataWF.Module.Common
                                 }
                                 user.Position = position;
                                 user.Login = attribute.StringValue;
-                                user.EMail = resultRecord.getAttribute("mail")?.StringValue;
-                                user.Name = resultRecord.getAttribute("name")?.StringValue;
+                                user.EMail = resultRecord.GetAttribute("mail")?.StringValue;
+                                user.Name = resultRecord.GetAttribute("name")?.StringValue;
                                 await user.Save(transaction);
                             }
 

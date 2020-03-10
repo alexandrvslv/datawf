@@ -124,6 +124,15 @@ namespace DataWF.WebService.Common
                 smtpSection.Bind(smtpSetting);
             }
             services.Configure<SMTPSetting>(smtpSection);
+
+            var ldapSetting = new LDAPSetting();
+            var ldapSection = configuration.GetSection("LdapSetting");
+            if (ldapSection != null)
+            {
+                ldapSection.Bind(ldapSetting);
+            }
+            services.Configure<SMTPSetting>(ldapSection);
+
             services.AddControllers(options =>
             {
                 options.CacheProfiles.Add("Never", new CacheProfile()
