@@ -117,20 +117,40 @@ namespace DataWF.Common
             socket = null;
         }
 
-        public async void Send(byte[] data)
+        public Task Send(byte[] data)
         {
-            var buffer = new ArraySegment<byte>(new byte[8 * 1024]);
             using (var stream = new MemoryStream(data))
             {
-                int result = 0;
-                int total = 0;
-                while ((result = stream.Read(buffer.Array, 0, buffer.Count)) != 0)
+                return Send(stream);
+            }
+        }
+
+        public Task Send(Stream stream)
+        {
+            return Send(stream, 8 * 1024, CancellationToken.None);
+        }
+
+        public async Task Send(Stream stream, int bufferSize, CancellationToken cancellationToken)
+        {
+            var buffer = new ArraySegment<byte>(new byte[bufferSize]);
+            int result = 0;
+            int total = 0;
+            try
+            {
+                while ((result = await stream.ReadAsync(buffer.Array, 0, buffer.Count, cancellationToken)) != 0)
                 {
                     total += result;
-                    await socket.SendAsync(buffer, WebSocketMessageType.Binary, total >= data.Length, CancellationToken.None);
+                    await socket.SendAsync(buffer, WebSocketMessageType.Binary, result < buffer.Count, cancellationToken);
                 }
             }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+                if (socket.State == WebSocketState.Open)
+                {
 
+                }
+            }
         }
     }
 
