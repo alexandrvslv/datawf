@@ -18,6 +18,7 @@ namespace DataWF.Common
     /// </summary>
     public static class TypeHelper
     {
+        private static readonly Type genericEnumerable = typeof(IEnumerable<>);
         private static readonly Type[] typeOneArray = { typeof(string) };
         private static readonly Dictionary<string, MemberInfo> casheNames = new Dictionary<string, MemberInfo>(200, StringComparer.Ordinal);
 
@@ -670,6 +671,13 @@ namespace DataWF.Common
         public static Type GetItemType(Type type)
         {
             Type t = typeof(object);
+            foreach (var inter in type.GetInterfaces())
+            {
+                if (inter.IsGenericType && inter.GetGenericTypeDefinition() == genericEnumerable)
+                {
+                    return inter.GetGenericArguments().FirstOrDefault();
+                }
+            }
             if (type.IsGenericType)
             {
                 t = type.GetGenericArguments().FirstOrDefault();
