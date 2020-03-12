@@ -262,6 +262,7 @@ namespace DataWF.Common
             foreach (var property in typeInfo.Properties)
             {
                 if (!property.IsWriteable
+                    || property.IsReadOnly
                     || (property.IsChangeSensitive
                     && synched != null
                     && !(synched.Changes.ContainsKey(property.Name))))
@@ -281,7 +282,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    SerializeObject(jwriter, value, options);
+                    JsonSerializer.Serialize(jwriter, value, property.DataType, options);
                 }
             }
             jwriter.WriteEndObject();
@@ -300,43 +301,8 @@ namespace DataWF.Common
             }
             else
             {
-                SerializeObject(jwriter, item, options, info);
+                JsonSerializer.Serialize(jwriter, item, options);
             }
-        }
-
-        public virtual void SerializeObject(Utf8JsonWriter jwriter, object item, JsonSerializerOptions options, TypeSerializationInfo info = null)
-        {
-            var type = item.GetType();
-            var typeInfo = info?.Type == type ? info : Serialization.Instance.GetTypeInfo(type);
-            var synched = item as ISynchronized;
-
-            jwriter.WriteStartObject();
-            foreach (var property in typeInfo.Properties)
-            {
-                if (!property.IsWriteable
-                    || (property.IsChangeSensitive
-                    && synched != null
-                    && !(synched.Changes.ContainsKey(property.Name))))
-                {
-                    continue;
-                }
-
-                jwriter.WritePropertyName(property.Name);
-                var value = property.Invoker.GetValue(item);
-                if (property.IsAttribute || value == null)
-                {
-                    JsonSerializer.Serialize(jwriter, value, property.DataType, options);
-                }
-                else if (value is IList list)
-                {
-                    SerializeArray(jwriter, list, options);
-                }
-                else
-                {
-                    SerializeObject(jwriter, value, options);
-                }
-            }
-            jwriter.WriteEndObject();
         }
 
         protected virtual void SerializeArray(Utf8JsonWriter jwriter, IList list, JsonSerializerOptions options)

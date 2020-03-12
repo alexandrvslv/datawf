@@ -57,6 +57,7 @@ namespace DataWF.Common
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
             //JsonSettings.Converters.Add(new JsonStringEnumConverter());
+            JsonSettings.Converters.Add(new TimeSpanConverter());
             JsonSettings.Converters.Add(new SystemJsonConverterFactory(this));
 #endif
         }
@@ -98,7 +99,7 @@ namespace DataWF.Common
                     {
                         client.Dispose();
                         client = null;
-                        CreateHttpClient(httpMessageHandler);
+                        //CreateHttpClient(httpMessageHandler);
                     }
                 }
             }

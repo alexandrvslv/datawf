@@ -25,6 +25,7 @@ namespace DataWF.WebService.Common
             options.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
             // Configure a converters.
             //options.Converters.Add(new JsonStringEnumConverter());
+            options.Converters.Add(new TimeSpanConverter());
             options.Converters.Add(converter);
         }
     }

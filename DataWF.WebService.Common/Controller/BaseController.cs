@@ -368,7 +368,7 @@ namespace DataWF.WebService.Common
                             leaveOpen: true))
                         {
                             // The value length limit is enforced by MultipartBodyLengthLimit
-                            var value = streamReader.ReadToEnd();
+                            var value = await streamReader.ReadToEndAsync();
                             if (String.Equals(value, "undefined", StringComparison.OrdinalIgnoreCase))
                             {
                                 value = String.Empty;

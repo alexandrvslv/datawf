@@ -259,6 +259,7 @@ namespace DataWF.Common
             foreach (var property in typeInfo.Properties)
             {
                 if (!property.IsWriteable
+                    || property.IsReadOnly
                     || (property.IsChangeSensitive
                     && synched != null
                     && !(synched.Changes.ContainsKey(property.Name))))
@@ -278,7 +279,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    SerializeObject(jwriter, value, serializer);
+                    serializer.Serialize(jwriter, value, property.DataType);
                 }
             }
             jwriter.WriteEndObject();
@@ -297,43 +298,8 @@ namespace DataWF.Common
             }
             else
             {
-                SerializeObject(jwriter, item, serializer, info);
+                serializer.Serialize(jwriter, item, type);
             }
-        }
-
-        public virtual void SerializeObject(JsonWriter jwriter, object item, JsonSerializer serializer, TypeSerializationInfo info = null)
-        {
-            var type = item.GetType();
-            var typeInfo = info?.Type == type ? info : Serialization.Instance.GetTypeInfo(type);
-            var synched = item as ISynchronized;
-
-            jwriter.WriteStartObject();
-            foreach (var property in typeInfo.Properties)
-            {
-                if (!property.IsWriteable
-                    || (property.IsChangeSensitive
-                    && synched != null
-                    && !(synched.Changes.ContainsKey(property.Name))))
-                {
-                    continue;
-                }
-
-                jwriter.WritePropertyName(property.Name);
-                var value = property.Invoker.GetValue(item);
-                if (property.IsAttribute || value == null)
-                {
-                    serializer.Serialize(jwriter, value, property.DataType);
-                }
-                else if (value is IList list)
-                {
-                    SerializeArray(jwriter, list, serializer);
-                }
-                else
-                {
-                    SerializeObject(jwriter, value, serializer);
-                }
-            }
-            jwriter.WriteEndObject();
         }
 
         protected virtual void SerializeArray(JsonWriter jwriter, IList list, JsonSerializer serializer)

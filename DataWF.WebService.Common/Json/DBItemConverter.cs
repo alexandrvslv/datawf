@@ -108,18 +108,14 @@ namespace DataWF.WebService.Common
                 {
                     propertyName = reader.GetString();
                     invoker = table.GetInvoker(propertyName);
-                }
-                else
-                {
-                    var proeprtyValue = JsonSerializer.Deserialize(ref reader, invoker.DataType, options);
-                    if (invoker != null)
-                    {
-                        dictionary[invoker] = proeprtyValue;
-                    }
-                    else if (!options.AllowTrailingCommas)
+                    if (invoker == null)
                     {
                         throw new InvalidOperationException($"Property {propertyName} not found!");
                     }
+                }
+                else
+                {
+                    dictionary[invoker] = JsonSerializer.Deserialize(ref reader, invoker.DataType, options);
                 }
             }
 

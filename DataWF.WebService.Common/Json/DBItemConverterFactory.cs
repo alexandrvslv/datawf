@@ -10,6 +10,7 @@ namespace DataWF.WebService.Common
 {
     public class DBItemConverterFactory : JsonConverterFactory
     {
+        //private readonly Dictionary<Type, JsonConverter> cache = new Dictionary<Type, JsonConverter>();
         private const string jsonIncludeRef = "json_include_ref";
         private const string jsonReferenceCheck = "json_ref_check";
         private const string jsonMaxDepth = "json_max_depth";
@@ -69,8 +70,11 @@ namespace DataWF.WebService.Common
         {
             if (TypeHelper.IsBaseType(typeToConvert, typeof(DBItem)))
             {
+                //if (!cache.TryGetValue(typeToConvert, out var converter))
+                //{
+                //    cache[typeToConvert] = converter = ;
+                //}
                 return (JsonConverter)EmitInvoker.CreateObject(typeof(DBItemConverter<>).MakeGenericType(typeToConvert), types, new[] { this }, true);
-                //Activator.CreateInstance(typeof(DBItemConverter<>).MakeGenericType(typeToConvert), this);
             }
             else
             {

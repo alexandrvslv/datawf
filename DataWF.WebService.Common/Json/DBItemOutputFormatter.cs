@@ -5,6 +5,7 @@ using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections;
 using System.IO;
+using System.IO.Pipelines;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -16,7 +17,7 @@ namespace DataWF.WebService.Common
     {
         private static readonly byte[] startArray = Encoding.UTF8.GetBytes("[");
         private static readonly byte[] endArray = Encoding.UTF8.GetBytes("]");
-        private static readonly byte[] dot = Encoding.UTF8.GetBytes(",");
+        private static readonly byte[] comma = Encoding.UTF8.GetBytes(",");
         public static readonly MediaTypeHeaderValue ApplicationJson
             = MediaTypeHeaderValue.Parse("application/json").CopyAsReadOnly();
 
@@ -53,56 +54,122 @@ namespace DataWF.WebService.Common
             var option = new JsonSerializerOptions();
             option.InitDefaults(httpContext);
 
-            var body = httpContext.Response.Body;
+
             var objectType = context.Object?.GetType() ?? context.ObjectType ?? typeof(object);
 
-            //experiment
-            //if (TypeHelper.IsEnumerable(objectType))
-            //{
-            //    await WriteArrayAsync(context, objectType, option);
-            //}
-            //else
+            if (TypeHelper.IsEnumerable(objectType))
             {
-                await JsonSerializer.SerializeAsync(body, context.Object, objectType, option);
+                var pipeWriter = httpContext.Response.BodyWriter;
+                await WriteArray(pipeWriter, (IEnumerable)context.Object, objectType, option);
+                await pipeWriter.FlushAsync();
             }
-            await body.FlushAsync();
-        }
-
-        private async Task WriteArrayAsync(OutputFormatterWriteContext context, Type objectType, JsonSerializerOptions option)
-        {
-            var itemType = TypeHelper.GetItemType(objectType);
-            var body = context.HttpContext.Response.Body;
-            await body.WriteAsync(startArray);
-            var dotSet = false;
-            foreach (var item in ((IEnumerable)context.Object))
+            else
             {
-                if (dotSet)
-                    await body.WriteAsync(dot);
-                var buffer = JsonSerializer.SerializeToUtf8Bytes(item, itemType, option);
-                await body.WriteAsync(buffer);
-                dotSet = true;
-            }
-            await body.WriteAsync(endArray);
-        }
-
-        private void WriteArray(OutputFormatterWriteContext context, Type objectType, JsonSerializerOptions option)
-        {
-            var itemType = TypeHelper.GetItemType(objectType);
-            var body = context.HttpContext.Response.Body;
-            using (var jsonWriter = new Utf8JsonWriter(body, new JsonWriterOptions
-            {
-                Encoder = option.Encoder,
-                Indented = option.WriteIndented,
-                SkipValidation = true
-            }))
-            {
-                jsonWriter.WriteStartArray();
-                foreach (var item in ((IEnumerable)context.Object))
+                var pipeWriter = httpContext.Response.BodyWriter;
+                using (var jsonWriter = CreatetWriter(pipeWriter, option))
                 {
-                    JsonSerializer.Serialize(jsonWriter, item, itemType, option);
+                    JsonSerializer.Serialize(jsonWriter, context.Object, objectType, option);
                 }
-                jsonWriter.WriteEndArray();
+                await pipeWriter.FlushAsync();
             }
+
+        }
+
+        private async Task WriteArray(PipeWriter pipeWriter, IEnumerable enumerable, Type objectType, JsonSerializerOptions option)
+        {
+            var itemType = TypeHelper.GetItemType(objectType);
+            await pipeWriter.WriteAsync(startArray);
+
+            using (var jsonWriter = CreatetWriter(pipeWriter, option))
+            {
+                var commaSet = false;
+                foreach (var item in enumerable)
+                {
+                    if (commaSet)
+                    {
+                        await pipeWriter.WriteAsync(comma);
+                    }
+                    try
+                    {
+                        JsonSerializer.Serialize(jsonWriter, item, itemType, option);
+                        await pipeWriter.FlushAsync();
+                        jsonWriter.Reset();
+                    }
+                    catch (Exception ex)
+                    {
+                        Helper.OnException(ex);
+                    }
+                    commaSet = true;
+                }
+            }
+            await pipeWriter.WriteAsync(endArray);
+        }
+
+        private async Task WriteArray(Stream stream, IEnumerable enumerable, Type objectType, JsonSerializerOptions option)
+        {
+            var itemType = TypeHelper.GetItemType(objectType);
+            await stream.WriteAsync(startArray);
+            using (var memoryStream = new MemoryStream())
+            using (var jsonWriter = CreatetWriter(memoryStream, option))
+            {
+                var commaSet = false;
+                foreach (var item in enumerable)
+                {
+                    if (commaSet)
+                    {
+                        await stream.WriteAsync(comma);
+                    }
+                    try
+                    {
+                        JsonSerializer.Serialize(jsonWriter, item, itemType, option);
+
+                        await stream.WriteAsync(memoryStream.GetBuffer(), 0, (int)jsonWriter.BytesCommitted);
+                        await stream.FlushAsync();
+                        jsonWriter.Reset();
+                        memoryStream.Position = 0;
+                    }
+                    catch (Exception ex)
+                    {
+                        Helper.OnException(ex);
+                    }
+                    commaSet = true;
+                }
+            }
+            await stream.WriteAsync(endArray);
+        }
+
+        private async Task WriteArray(Utf8JsonWriter jsonWriter, IEnumerable enumerable, Type objectType, JsonSerializerOptions option)
+        {
+            var itemType = TypeHelper.GetItemType(objectType);
+            jsonWriter.WriteStartArray();
+            foreach (var item in enumerable)
+            {
+                JsonSerializer.Serialize(jsonWriter, item, itemType, option);
+                await jsonWriter.FlushAsync();
+            }
+            jsonWriter.WriteEndArray();
+        }
+
+        private static Utf8JsonWriter CreatetWriter(PipeWriter pipeWriter, JsonSerializerOptions option)
+        {
+            return new Utf8JsonWriter(pipeWriter,
+                            new JsonWriterOptions
+                            {
+                                Indented = option.WriteIndented,
+                                Encoder = option.Encoder,
+                                SkipValidation = true
+                            });
+        }
+
+        private static Utf8JsonWriter CreatetWriter(Stream stram, JsonSerializerOptions option)
+        {
+            return new Utf8JsonWriter(stram,
+                            new JsonWriterOptions
+                            {
+                                Indented = option.WriteIndented,
+                                Encoder = option.Encoder,
+                                SkipValidation = true
+                            });
         }
     }
 }
