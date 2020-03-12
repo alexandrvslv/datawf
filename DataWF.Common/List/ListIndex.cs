@@ -89,7 +89,7 @@ namespace DataWF.Common
         {
             if (Dictionary.TryGetValue(key, out var list))
             {
-                return list.Count > 0 ? list[0] : default(T);
+                return list[0];
             }
             return default(T);
         }

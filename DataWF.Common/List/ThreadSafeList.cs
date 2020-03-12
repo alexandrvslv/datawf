@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace DataWF.Common
@@ -70,6 +71,11 @@ namespace DataWF.Common
         public void AddRange(IEnumerable<T> enumerable)
         {
             list.AddRange(enumerable);
+        }
+
+        public T SelectOne()
+        {
+            return list.Count > 0 ? list[0] : default(T);
         }
     }
 }
