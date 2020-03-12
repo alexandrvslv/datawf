@@ -403,8 +403,8 @@ namespace DataWF.Data
             var equal = false;
             if (typeof(T) == typeof(string))
                 equal = string.Equals(x.ToString(), y.ToString(), StringComparison.Ordinal);
-            else if (x is byte[] byteX && y is byte[] byteY)
-                equal = Helper.CompareByteAsSpan(byteX, byteY);
+            else if (typeof(T) == typeof(byte[]))
+                equal = Helper.CompareByteAsSpan((byte[])(object)x, (byte[])(object)y);
             else
                 equal = EqualityComparer<T>.Default.Equals(x, y);
             return equal;
