@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -21,6 +24,7 @@ namespace DataWF.Common
         protected SelectableListView<T> defaultView;
         private bool isSynchronized;
         protected object lockObject = new object();
+        private ConcurrentQueue<Tuple<object, EventArgs>> queue = new ConcurrentQueue<Tuple<object, EventArgs>>();
 
         public SelectableList(int capacity)
         {
@@ -41,56 +45,41 @@ namespace DataWF.Common
             AddRangeInternal(items);
         }
 
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-        public event PropertyChangedEventHandler PropertyChanged;
-        public event PropertyChangedEventHandler ItemPropertyChanged;
-
-        [XmlIgnore, Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, Browsable(false)]
+        [XmlIgnore, Browsable(false)]
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
 
-        [XmlIgnore, Browsable(false)]
-        public ListIndexes<T> Indexes
-        {
-            get { return indexes; }
-        }
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public ListIndexes<T> Indexes => indexes;
 
-        [XmlIgnore, Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public int Capacity
         {
-            get { return items.Capacity; }
-            set { items.Capacity = value; }
+            get => items.Capacity;
+            set => items.Capacity = value;
         }
 
-        [Browsable(false)]
-        public bool IsFixedSize
-        {
-            get { return false; }
-        }
+        [JsonIgnore, Browsable(false)]
+        public bool IsFixedSize => false;
 
-        [XmlIgnore]
+        [JsonIgnore, XmlIgnore]
         [Browsable(false)]
         public Type ItemType
         {
-            get { return type; }
-            set { type = value; }
+            get => type;
+            set => type = value;
         }
 
-        [Browsable(false)]
-        public bool IsSorted
-        {
-            get { return comparer != null; }
-        }
+        [JsonIgnore, Browsable(false)]
+        public bool IsSorted => comparer != null;
 
+        [JsonIgnore]
         public IComparer<T> Comparer => comparer;
 
         IComparer ISortable.Comparer => comparer as IComparer;
 
-        IFilterable ISortable.DefaultView
-        {
-            get { return DefaultView; }
-        }
+        IFilterable ISortable.DefaultView => DefaultView;
 
-        [XmlIgnore, Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public SelectableListView<T> DefaultView
         {
             get
@@ -101,22 +90,16 @@ namespace DataWF.Common
             }
         }
 
-        public int Count
-        {
-            get { return items.Count; }
-        }
+        public int Count => items.Count;
 
         [Browsable(false)]
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        public bool IsReadOnly => false;
 
-        [Browsable(false), XmlIgnore]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual bool IsSynchronized
         {
-            get { return isSynchronized; }
-            set { isSynchronized = value; }
+            get => isSynchronized;
+            set => isSynchronized = value;
         }
 
         [Browsable(false)]
@@ -124,6 +107,20 @@ namespace DataWF.Common
         {
             get { return items; }
         }
+
+        [JsonIgnore, XmlIgnore]
+        public bool CheckUnique { get; set; } = true;
+
+        [JsonIgnore]
+        public bool Disposed => items == null;
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public bool AsyncNotification { get; set; }
+
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler ItemPropertyChanged;
+
 
         #region Use Index
         IEnumerable ISelectable.Select(IQuery query)
@@ -219,18 +216,58 @@ namespace DataWF.Common
             }
         }
 
-        public bool Disposed
+        private async Task EnqueueNotification(object sender, EventArgs e)
         {
-            get { return items == null; }
+            queue.Enqueue(new Tuple<object, EventArgs>(sender, e));
+
+            if (queue.Count == 1)
+            {
+                await Task.Run(() =>
+                {
+                    while (queue.TryDequeue(out var args))
+                    {
+                        if (args.Item2 is NotifyCollectionChangedEventArgs collectionArgs
+                        && collectionArgs.Action == NotifyCollectionChangedAction.Add)
+                        {
+                            var list = new List<object>();
+                            list.AddRange(collectionArgs.NewItems.Cast<object>());
+                            while (queue.TryPeek(out var prev)
+                            && prev.Item2 is NotifyCollectionChangedEventArgs prevArgs
+                            && prevArgs.Action == NotifyCollectionChangedAction.Add
+                            && queue.TryDequeue(out prev))
+                            {
+                                list.AddRange(prevArgs.NewItems.Cast<object>());
+                            }
+                            if (list.Count > 1)
+                            {
+                                args = new Tuple<object, EventArgs>(args.Item1,
+                                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, list, collectionArgs.NewStartingIndex));
+                                //System.Diagnostics.Debug.WriteLine($"Join Add Notifications: {list.Count}");
+                            }
+                        }
+                        ProcessNotification(args.Item1, args.Item2);
+                    }
+                });
+            }
         }
 
-        [XmlIgnore, Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
-        public bool CheckUnique { get; set; } = true;
-
-        public virtual void OnListChanged(NotifyCollectionChangedEventArgs e)
+        private void ProcessNotification(object sender, EventArgs e)
         {
-            CollectionChanged?.Invoke(this, e);
-            OnPropertyChanged(nameof(SyncRoot));
+            if (e is NotifyCollectionChangedEventArgs collectionArgs)
+            {
+                CollectionChanged?.Invoke(this, collectionArgs);
+            }
+            else if (e is PropertyChangedEventArgs propertyArgs)
+            {
+                if (sender == this)
+                {
+                    PropertyChanged?.Invoke(sender, propertyArgs);
+                }
+                else
+                {
+                    ItemPropertyChanged?.Invoke(sender, propertyArgs);
+                }
+            }
         }
 
         public virtual void OnListChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
@@ -255,9 +292,36 @@ namespace DataWF.Common
             OnListChanged(args);
         }
 
+        public virtual void OnListChanged(NotifyCollectionChangedEventArgs e)
+        {
+            if (CollectionChanged != null)
+            {
+                if (AsyncNotification)
+                {
+                    _ = EnqueueNotification(this, e);
+                }
+                else
+                {
+                    CollectionChanged(this, e);
+                }
+            }
+            OnPropertyChanged(nameof(SyncRoot));
+        }
+
         protected virtual void OnPropertyChanged([CallerMemberName]string property = "")
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            if (PropertyChanged != null)
+            {
+                var args = new PropertyChangedEventArgs(property);
+                if (AsyncNotification)
+                {
+                    _ = EnqueueNotification(this, args);
+                }
+                else
+                {
+                    PropertyChanged(this, args);
+                }
+            }
         }
 
         public virtual void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -299,7 +363,17 @@ namespace DataWF.Common
                     OnListChanged(NotifyCollectionChangedAction.Move, item, newindex, index);
                 }
             }
-            ItemPropertyChanged?.Invoke(item, e);
+            if (ItemPropertyChanged != null)
+            {
+                if (AsyncNotification)
+                {
+                    _ = EnqueueNotification(item, e);
+                }
+                else
+                {
+                    ItemPropertyChanged(item, e);
+                }
+            }
         }
 
         public bool IsFirst(T item)

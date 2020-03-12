@@ -48,7 +48,7 @@ namespace DataWF.Common
 
         public Type ItemType { get { return typeof(T); } }
 
-        public SelectableList<T> Items { get; set; } = new SelectableList<T>();
+        public SelectableList<T> Items { get; set; } = new SelectableList<T> { AsyncNotification = true };
 
         public bool IsSynchronized
         {
