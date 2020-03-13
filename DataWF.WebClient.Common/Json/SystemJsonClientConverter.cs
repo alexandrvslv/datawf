@@ -77,7 +77,7 @@ namespace DataWF.Common
                     }
                     object value = Deserialize(ref jreader, property.DataType, options, currentValue, currentValue as IList);
 
-                    if (property.Name == Client.TypeInvoker?.Name && value != null)
+                    if (string.Equals(property.Name, Client.TypeInvoker?.Name, StringComparison.Ordinal) && value != null)
                     {
                         var typeId = (int)value;
                         if (typeId != Client.TypeId)
@@ -91,7 +91,7 @@ namespace DataWF.Common
                         }
                         continue;
                     }
-                    if (property.Name == Client.IdInvoker?.Name)
+                    if (string.Equals(property.Name, Client.IdInvoker?.Name, StringComparison.Ordinal))
                     {
                         id = value;
                         if (item == null && id != null)
