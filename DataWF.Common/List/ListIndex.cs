@@ -76,9 +76,13 @@ namespace DataWF.Common
                     }
                 }
             }
-            if (refs != null && refs.Count == 1)
+            if (refs != null)
             {
-                Dictionary.Remove(key);
+                refs.Remove(item);
+                if (refs.Count == 1)
+                {
+                    Dictionary.Remove(key);
+                }
             }
         }
 
