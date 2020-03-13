@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -24,7 +25,10 @@ namespace DataWF.Common
         protected SelectableListView<T> defaultView;
         private bool isSynchronized;
         protected object lockObject = new object();
-        private ConcurrentQueue<Tuple<object, EventArgs>> queue = new ConcurrentQueue<Tuple<object, EventArgs>>();
+        //Async notify
+        private SemaphoreSlim notifySemafore;
+        private ConcurrentQueue<Tuple<object, EventArgs>> notifyQueue;
+        private bool asyncNotification;
 
         public SelectableList(int capacity)
         {
@@ -115,7 +119,19 @@ namespace DataWF.Common
         public bool Disposed => items == null;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public bool AsyncNotification { get; set; }
+        public bool AsyncNotification
+        {
+            get => asyncNotification;
+            set
+            {
+                asyncNotification = value;
+                if (asyncNotification)
+                {
+                    notifySemafore = new SemaphoreSlim(1, 1);
+                    notifyQueue = new ConcurrentQueue<Tuple<object, EventArgs>>();
+                }
+            }
+        }
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event PropertyChangedEventHandler PropertyChanged;
@@ -216,39 +232,47 @@ namespace DataWF.Common
             }
         }
 
-        private async Task EnqueueNotification(object sender, EventArgs e)
+        private async ValueTask EnqueueNotification(object sender, EventArgs e)
         {
-            queue.Enqueue(new Tuple<object, EventArgs>(sender, e));
+            notifyQueue.Enqueue(new Tuple<object, EventArgs>(sender, e));
 
-            if (queue.Count == 1)
+            if (notifySemafore.CurrentCount == 1)
             {
-                await Task.Run(() =>
-                {
-                    while (queue.TryDequeue(out var args))
-                    {
-                        if (args.Item2 is NotifyCollectionChangedEventArgs collectionArgs
-                        && collectionArgs.Action == NotifyCollectionChangedAction.Add)
-                        {
-                            var list = new List<object>();
-                            list.AddRange(collectionArgs.NewItems.Cast<object>());
-                            while (queue.TryPeek(out var prev)
-                            && prev.Item2 is NotifyCollectionChangedEventArgs prevArgs
-                            && prevArgs.Action == NotifyCollectionChangedAction.Add
-                            && queue.TryDequeue(out prev))
-                            {
-                                list.AddRange(prevArgs.NewItems.Cast<object>());
-                            }
-                            if (list.Count > 1)
-                            {
-                                args = new Tuple<object, EventArgs>(args.Item1,
-                                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, list, collectionArgs.NewStartingIndex));
-                                //System.Diagnostics.Debug.WriteLine($"Join Add Notifications: {list.Count}");
-                            }
-                        }
-                        ProcessNotification(args.Item1, args.Item2);
-                    }
-                });
+                notifySemafore.Wait();
+                await DequeueNotification();
             }
+        }
+
+        private async ValueTask DequeueNotification()
+        {
+            await notifySemafore.WaitAsync(20);
+            while (notifyQueue.TryDequeue(out var args))
+            {
+                if (args.Item2 is NotifyCollectionChangedEventArgs collectionArgs
+                    && collectionArgs.Action == NotifyCollectionChangedAction.Add)
+                {
+                    var list = new List<object>();
+                    list.AddRange(collectionArgs.NewItems.Cast<object>());
+                    while (notifyQueue.TryPeek(out var next)
+                        && next.Item2 is NotifyCollectionChangedEventArgs nextArgs
+                        && nextArgs.Action == NotifyCollectionChangedAction.Add
+                        && notifyQueue.TryDequeue(out next))
+                    {
+                        list.AddRange(nextArgs.NewItems.Cast<object>());
+                    }
+                    if (list.Count > 1)
+                    {
+                        args = new Tuple<object, EventArgs>(args.Item1,
+                            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, list, collectionArgs.NewStartingIndex));
+                        //if (list.Count > 100)
+                        //{
+                        //    System.Diagnostics.Debug.WriteLine($"Join Add Notifications: {list.Count}");
+                        //}
+                    }
+                }
+                ProcessNotification(args.Item1, args.Item2);
+            }
+            notifySemafore.Release();
         }
 
         private void ProcessNotification(object sender, EventArgs e)
