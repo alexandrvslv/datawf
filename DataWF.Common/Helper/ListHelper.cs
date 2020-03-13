@@ -745,11 +745,11 @@ namespace DataWF.Common
 
         public static bool Equal(object x, object y, bool hash)
         {
-            if (x == null || x == DBNull.Value)
+            if (x == null)
             {
-                return y == null || y == DBNull.Value;
+                return y == null;
             }
-            else if (y == null || y == DBNull.Value)
+            else if (y == null)
             {
                 return false;
             }
@@ -760,13 +760,9 @@ namespace DataWF.Common
                 x = (int)x;
                 y = (int)y;
             }
-            if (x is string xString)
+            else if (x is string || y is string)
             {
-                result = xString.Equals(y.ToString(), StringComparison.OrdinalIgnoreCase);
-            }
-            else if (y is string yString)
-            {
-                result = yString.Equals(x.ToString(), StringComparison.OrdinalIgnoreCase);
+                result = string.Equals(x.ToString(), y.ToString(), StringComparison.OrdinalIgnoreCase);
             }
             else if (x is DateTime xDate && y is DateTime yDate)
             {
