@@ -16,6 +16,11 @@ namespace DataWF.Common
             list = new List<T>(capacity);
         }
 
+        public ThreadSafeList(T item) : this(1)
+        {
+            list.Add(item);
+        }
+
         public int Count => list.Count;
 
         public bool IsSynchronized => true;

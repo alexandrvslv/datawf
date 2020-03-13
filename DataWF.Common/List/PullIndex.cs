@@ -104,7 +104,7 @@ namespace DataWF.Data
             {
                 if (!store.TryGetValue(key, out ThreadSafeList<T> list))
                 {
-                    store[key] = new ThreadSafeList<T>(1) { item };
+                    store[key] = new ThreadSafeList<T>(item);
                 }
                 else
                 {
