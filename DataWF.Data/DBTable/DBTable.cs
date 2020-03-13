@@ -971,9 +971,14 @@ namespace DataWF.Data
 
         public void RejectChanges(IUserIdentity user)
         {
-            foreach (var row in GetChangedItems().ToList())
+            RejectChanges(GetChangedItems().ToList(), user);
+        }
+
+        public void RejectChanges(IEnumerable<DBItem> items, IUserIdentity user)
+        {
+            foreach (var item in items)
             {
-                row.Reject(user);
+                item.Reject(user);
             }
         }
 

@@ -14,7 +14,6 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-
     public class DBTable<T> : DBTable, IIdCollection<T> where T : DBItem, new()
     {
         protected readonly List<T> items = new List<T>();
@@ -327,7 +326,7 @@ namespace DataWF.Data
             return Select(query);
         }
 
-        public async Task<IEnumerable<T>> LoadCacheAsync(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
+        public async ValueTask<IEnumerable<T>> LoadCacheAsync(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
         {
             if (!queryChache.TryGetValue(filter, out var query))
             {
@@ -370,7 +369,7 @@ namespace DataWF.Data
         public override IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
             return Load(query, param, transaction);
-        }       
+        }
 
         public IEnumerable<T> Load(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
@@ -649,7 +648,7 @@ namespace DataWF.Data
             return LoadByKey(id, PrimaryKey, param, cols, transaction);
         }
 
-        public Task<T> LoadByIdAsync(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public ValueTask<T> LoadByIdAsync(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             return LoadByKeyAsync(id, PrimaryKey, param, cols, transaction);
         }
@@ -675,7 +674,7 @@ namespace DataWF.Data
             return row;
         }
 
-        public async Task<T> LoadByKeyAsync(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public async ValueTask<T> LoadByKeyAsync(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             object val = column?.ParseValue(key);
 

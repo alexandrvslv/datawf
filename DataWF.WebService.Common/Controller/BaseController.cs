@@ -22,6 +22,16 @@ namespace DataWF.WebService.Common
     [LoggerAndFormatter]
     public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
     {
+        private static bool IsDenied(T value, IUserIdentity user)
+        {
+            if (value.Access.GetFlag(AccessType.Admin, user))
+                return false;
+            return ((value.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert
+                && !value.Access.GetFlag(AccessType.Create, user))
+                || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update
+                && !value.Access.GetFlag(AccessType.Update, user));
+        }
+
         protected DBTable<T> table;
 
         public BaseController()
@@ -33,14 +43,14 @@ namespace DataWF.WebService.Common
         public IUserIdentity CurrentUser => User.GetCommonUser();
 
         [HttpGet]
-        public Task<ActionResult<IEnumerable<T>>> Get()
+        public ValueTask<ActionResult<IEnumerable<T>>> Get()
         {
             return Search(string.Empty);
         }
 
         [Obsolete("Use Search instead!")]
         [HttpGet("Find/{filter}")]
-        public async Task<ActionResult<IEnumerable<T>>> Find([FromRoute]string filter)
+        public async ValueTask<ActionResult<IEnumerable<T>>> Find([FromRoute]string filter)
         {
             try
             {
@@ -61,7 +71,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("Search")]
-        public async Task<ActionResult<IEnumerable<T>>> Search([FromQuery]string filter)
+        public async ValueTask<ActionResult<IEnumerable<T>>> Search([FromQuery]string filter)
         {
             try
             {
@@ -105,7 +115,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<T>> Get([FromRoute]K id)
+        public async ValueTask<ActionResult<T>> Get([FromRoute]K id)
         {
             var value = default(T);
             try
@@ -128,6 +138,41 @@ namespace DataWF.WebService.Common
             }
         }
 
+        [HttpPost("Package")]
+        public async Task<ActionResult<IEnumerable<T>>> PostPackage([FromBody]List<T> values)
+        {
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            {
+                T current = null;
+                try
+                {
+                    if (values == null)
+                    {
+                        throw new InvalidOperationException("Some deserialization problem!");
+                    }
+                    foreach (var value in values)
+                    {
+                        current = value;
+                        if (IsDenied(value, transaction.Caller))
+                        {
+                            table.RejectChanges(values, transaction.Caller);
+                            transaction.Rollback();
+                            return Forbid();
+                        }
+                        await value.Save(transaction);
+                    }
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    table.RejectChanges(values, transaction.Caller);
+                    transaction.Rollback();
+                    return BadRequest(ex, current);
+                }
+            }
+            return Ok(values);
+        }
+
         [HttpPost]
         public async Task<ActionResult<T>> Post([FromBody]T value)
         {
@@ -139,16 +184,10 @@ namespace DataWF.WebService.Common
                     {
                         throw new InvalidOperationException("Some deserialization problem!");
                     }
-                    if (!value.Access.GetFlag(AccessType.Admin, transaction.Caller))
+                    if (IsDenied(value, transaction.Caller))
                     {
-                        if (((value.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert
-                            && !value.Access.GetFlag(AccessType.Create, transaction.Caller))
-                            || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update
-                            && !value.Access.GetFlag(AccessType.Update, transaction.Caller)))
-                        {
-                            value.Reject(transaction.Caller);
-                            return Forbid();
-                        }
+                        value.Reject(transaction.Caller);
+                        return Forbid();
                     }
                     await value.Save(transaction);
                     transaction.Commit();
@@ -173,14 +212,10 @@ namespace DataWF.WebService.Common
                     {
                         throw new InvalidOperationException("Some deserialization problem!");
                     }
-                    if (!value.Access.GetFlag(AccessType.Admin, transaction.Caller))
+                    if (IsDenied(value, transaction.Caller))
                     {
-                        if (((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update
-                        && !value.Access.GetFlag(AccessType.Update, transaction.Caller)))
-                        {
-                            value.Reject(transaction.Caller);
-                            return Forbid();
-                        }
+                        value.Reject(transaction.Caller);
+                        return Forbid();
                     }
                     await value.Save(transaction);
                     transaction.Commit();
