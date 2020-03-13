@@ -158,6 +158,38 @@ namespace DataWF.Common
             }
         }
 
+        [XmlIgnore, JsonIgnore, DefaultValue(false)]
+        public bool Download
+        {
+            get { return (Access & AccessType.Download) == AccessType.Download; }
+            set
+            {
+                if (Accept != value)
+                {
+                    if (value)
+                        Access |= AccessType.Download;
+                    else
+                        Access &= ~AccessType.Download;
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, DefaultValue(false)]
+        public bool Full
+        {
+            get { return (Access & AccessType.Full) == AccessType.Full; }
+            set
+            {
+                if (Accept != value)
+                {
+                    if (value)
+                        Access |= AccessType.Full;
+                    else
+                        Access &= ~AccessType.Full;
+                }
+            }
+        }
+
         internal void Serialize(BinaryWriter writer)
         {
             writer.Write(IsUser);
