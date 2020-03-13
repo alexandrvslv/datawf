@@ -64,11 +64,11 @@ namespace DataWF.Common
 
         public void Remove(T item, K key)
         {
-            if (!Dictionary.TryGetValue(key, out var refs) || !refs.Remove(item))
+            if (!Dictionary.TryGetValue(key, out var refs) || !refs.Contains(item))
             {
                 foreach (var entry in Dictionary)
                 {
-                    if (entry.Value.Remove(item))
+                    if (entry.Value.Contains(item))
                     {
                         key = entry.Key;
                         refs = entry.Value;
@@ -76,7 +76,7 @@ namespace DataWF.Common
                     }
                 }
             }
-            if (refs != null && refs.Count == 0)
+            if (refs != null && refs.Count == 1)
             {
                 Dictionary.Remove(key);
             }
