@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
@@ -25,6 +26,7 @@ namespace DataWF.Common
             IdInvoker = idInvoker;
             Items.Indexes.Concurrent = true;
             Items.Indexes.Add(IdInvoker);
+            Items.CollectionChanged += OnItemsCollectionChanged;
             TypeInvoker = typeInvoker;
             TypeId = typeId;
 #if NETSTANDARD2_0
@@ -181,6 +183,24 @@ namespace DataWF.Common
         {
             return new T();
         }
+
+        protected virtual void OnItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                OnAdded(e.NewItems);
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Remove)
+            {
+                OnRemoved(e.OldItems);
+            }
+        }
+
+        protected virtual void OnAdded(IList items)
+        { }
+
+        protected virtual void OnRemoved(IList items)
+        { }
 
         public override bool Add(object item)
         {

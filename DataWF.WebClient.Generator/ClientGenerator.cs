@@ -55,6 +55,7 @@ namespace DataWF.WebClient.Generator
             usings = new List<UsingDirectiveSyntax>() {
                 SyntaxHelper.CreateUsingDirective("DataWF.Common") ,
                 SyntaxHelper.CreateUsingDirective("System") ,
+                SyntaxHelper.CreateUsingDirective("System.Collections"),
                 SyntaxHelper.CreateUsingDirective("System.Collections.Generic") ,
                 SyntaxHelper.CreateUsingDirective("System.ComponentModel") ,
                 SyntaxHelper.CreateUsingDirective("System.ComponentModel.DataAnnotations") ,
@@ -116,70 +117,11 @@ namespace DataWF.WebClient.Generator
                            initializer: null,
                            body: SF.Block(GenProviderConstructorBody()));
 
-            //yield return SyntaxHelper.GenProperty("string", "BaseUrl", true);
-            //yield return SyntaxHelper.GenProperty("AuthorizationInfo", "Authorization", true);
-
-            //yield return SF.PropertyDeclaration(
-            //        attributeLists: SF.List<AttributeListSyntax>(),
-            //        modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
-            //        type: SF.ParseTypeName("IEnumerable<IClient>"),
-            //        explicitInterfaceSpecifier: null,
-            //        identifier: SF.Identifier("Clients"),
-            //        accessorList: SF.AccessorList(SF.List(new[] {
-            //            SF.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration,  SF.Block(GenProviderClientsBody()))
-            //        })),
-            //        expressionBody: null,
-            //        initializer: null,
-            //        semicolonToken: SF.Token(SyntaxKind.None));
-
             foreach (var client in cacheClients.Keys)
             {
                 yield return SyntaxHelper.GenProperty($"{client}Client", client, false);
             }
-
-            //yield return SF.MethodDeclaration(
-            //   attributeLists: SF.List<AttributeListSyntax>(),
-            //       modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword) }),
-            //       returnType: SF.ParseTypeName("ICRUDClient<T>"),
-            //       explicitInterfaceSpecifier: null,
-            //       identifier: SF.Identifier("GetClient"),
-            //       typeParameterList: SF.TypeParameterList(SF.SingletonSeparatedList(SF.TypeParameter("T"))),
-            //       parameterList: SF.ParameterList(),
-            //       constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-            //       body: SF.Block(new[] { SF.ParseStatement("return Clients.OfType<ICRUDClient<T>>().FirstOrDefault();") }),
-            //       semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
-
-            //yield return SF.MethodDeclaration(
-            //   attributeLists: SF.List<AttributeListSyntax>(),
-            //       modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword) }),
-            //       returnType: SF.ParseTypeName("ICRUDClient"),
-            //       explicitInterfaceSpecifier: null,
-            //       identifier: SF.Identifier("GetClient"),
-            //       typeParameterList: null,
-            //       parameterList: SF.ParameterList(SF.SingletonSeparatedList(SF.Parameter(
-            //           attributeLists: SF.List<AttributeListSyntax>(),
-            //           modifiers: SF.TokenList(),
-            //           type: SF.ParseTypeName("Type"),
-            //           identifier: SF.Identifier("type"),
-            //           @default: null))),
-            //       constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-            //       body: SF.Block(new[] { SF.ParseStatement("return Clients.OfType<ICRUDClient>().FirstOrDefault(p=>p.ItemType == type);") }),
-            //       semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
-
-            //yield return SF.MethodDeclaration(
-            //   attributeLists: SF.List<AttributeListSyntax>(),
-            //       modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword) }),
-            //       returnType: SF.ParseTypeName("ICRUDClient"),
-            //       explicitInterfaceSpecifier: null,
-            //       identifier: SF.Identifier("GetClient"),
-            //       typeParameterList: null,
-            //       parameterList: SF.ParameterList(SF.SeparatedList(new[]{
-            //           SF.Parameter( attributeLists: SF.List<AttributeListSyntax>(), modifiers: SF.TokenList(), type: SF.ParseTypeName("Type"), identifier: SF.Identifier("type"), @default: null),
-            //           SF.Parameter( attributeLists: SF.List<AttributeListSyntax>(), modifiers: SF.TokenList(), type: SF.ParseTypeName("int"), identifier: SF.Identifier("typeId"), @default: null)
-            //       })),
-            //       constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-            //       body: SF.Block(new[] { SF.ParseStatement("return Clients.OfType<ICRUDClient>().FirstOrDefault(p => TypeHelper.IsBaseType(p.ItemType, type) && p.TypeId == typeId);") }),
-            //       semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+            
         }
 
         private IEnumerable<StatementSyntax> GenProviderClientsBody()
@@ -356,51 +298,48 @@ namespace DataWF.WebClient.Generator
             if (cache.Count > 0)
             {
                 yield return SF.MethodDeclaration(
-               attributeLists: SF.List<AttributeListSyntax>(),
-                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
-                   returnType: SF.ParseTypeName("bool"),
-                   explicitInterfaceSpecifier: null,
-                   identifier: SF.Identifier("Remove"),
-                   typeParameterList: null,
-                   parameterList: SF.ParameterList(
-                       SF.SeparatedList(new[] {
-                           SF.Parameter(
-                               attributeLists: SF.List<AttributeListSyntax>(),
-                               modifiers: SF.TokenList(),
-                               type: SF.ParseTypeName(clientName),
-                               identifier: SF.Identifier("item"),
-                               @default: null) })),
-                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                   body: SF.Block(GenClientRemoveOverrideBody(clientName, idKey, typeKey, typeId, cache)),
-                   semicolonToken: SF.Token(SyntaxKind.None));
+                    attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.ProtectedKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                    returnType: SF.ParseTypeName("void"),
+                    explicitInterfaceSpecifier: null,
+                    identifier: SF.Identifier("OnRemoved"),
+                    typeParameterList: null,
+                    parameterList: SF.ParameterList(
+                        SF.SeparatedList(new[] {
+                            SF.Parameter(
+                                attributeLists: SF.List<AttributeListSyntax>(),
+                                modifiers: SF.TokenList(),
+                                type: SF.ParseTypeName("IList"),
+                                identifier: SF.Identifier("items"),
+                                @default: null) })),
+                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                    body: SF.Block(GenClientRemoveOverrideBody(clientName, idKey, typeKey, typeId, cache)),
+                    semicolonToken: SF.Token(SyntaxKind.None));
                 yield return SF.MethodDeclaration(
-               attributeLists: SF.List<AttributeListSyntax>(),
-                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
-                   returnType: SF.ParseTypeName("bool"),
-                   explicitInterfaceSpecifier: null,
-                   identifier: SF.Identifier("Add"),
-                   typeParameterList: null,
-                   parameterList: SF.ParameterList(
-                       SF.SeparatedList(new[] {
-                           SF.Parameter(
-                               attributeLists: SF.List<AttributeListSyntax>(),
-                               modifiers: SF.TokenList(),
-                               type: SF.ParseTypeName(clientName),
-                               identifier: SF.Identifier("item"),
-                               @default: null) })),
-                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                   body: SF.Block(GenClientAddOverrideBody(clientName, idKey, typeKey, typeId, cache)),
-                   semicolonToken: SF.Token(SyntaxKind.None));
+                    attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.ProtectedKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                    returnType: SF.ParseTypeName("void"),
+                    explicitInterfaceSpecifier: null,
+                    identifier: SF.Identifier("OnAdded"),
+                    typeParameterList: null,
+                    parameterList: SF.ParameterList(
+                        SF.SeparatedList(new[] {
+                                SF.Parameter(
+                                    attributeLists: SF.List<AttributeListSyntax>(),
+                                    modifiers: SF.TokenList(),
+                                    type: SF.ParseTypeName("IList"),
+                                    identifier: SF.Identifier("items"),
+                                    @default: null) })),
+                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                    body: SF.Block(GenClientAddOverrideBody(clientName, idKey, typeKey, typeId, cache)),
+                    semicolonToken: SF.Token(SyntaxKind.None));
             }
         }
 
         private IEnumerable<StatementSyntax> GenClientRemoveOverrideBody(string clientName, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId, HashSet<RefField> cache)
         {
-            yield return SF.ParseStatement($"var removed = base.Remove(item);");
-            if (cache.Count > 0)
-            {
-                yield return SF.ParseStatement("if(removed){");
-            }
+            yield return SF.ParseStatement($"base.OnRemoved(items);");
+            yield return SF.ParseStatement($"foreach ({clientName} item in items){{");
             foreach (var refField in cache)
             {
                 yield return SF.ParseStatement($"if(item.{refField.KeyName} != null){{");
@@ -408,20 +347,13 @@ namespace DataWF.WebClient.Generator
                 yield return SF.ParseStatement($"item{refField.ValueName}?.{refField.PropertyName}.Remove(item);");
                 yield return SF.ParseStatement("}");
             }
-            if (cache.Count > 0)
-            {
-                yield return SF.ParseStatement("}");
-            }
-            yield return SF.ParseStatement($"return removed;");
+            yield return SF.ParseStatement("}");
         }
 
         private IEnumerable<StatementSyntax> GenClientAddOverrideBody(string clientName, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId, HashSet<RefField> cache)
         {
-            yield return SF.ParseStatement($"var added = base.Add(item);");
-            if (cache.Count > 0)
-            {
-                yield return SF.ParseStatement("if(added){");
-            }
+            yield return SF.ParseStatement($"base.OnAdded(items);");
+            yield return SF.ParseStatement($"foreach ({clientName} item in items){{");
             foreach (var refField in cache)
             {
                 yield return SF.ParseStatement($"if(item.{refField.KeyName} != null){{");
@@ -429,11 +361,7 @@ namespace DataWF.WebClient.Generator
                 yield return SF.ParseStatement($"item{refField.ValueName}?.{refField.PropertyName}.Add(item);");
                 yield return SF.ParseStatement("}");
             }
-            if (cache.Count > 0)
-            {
-                yield return SF.ParseStatement("}");
-            }
-            yield return SF.ParseStatement($"return added;");
+            yield return SF.ParseStatement("}");
         }
 
         private HashSet<RefField> GetClientReferences(JsonSchema clientSchema)
