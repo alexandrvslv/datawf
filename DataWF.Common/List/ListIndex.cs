@@ -78,10 +78,13 @@ namespace DataWF.Common
             }
             if (refs != null)
             {
-                refs.Remove(item);
                 if (refs.Count == 1)
                 {
                     Dictionary.Remove(key);
+                }
+                else
+                {
+                    refs.Remove(item);
                 }
             }
         }
