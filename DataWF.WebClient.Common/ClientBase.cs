@@ -162,11 +162,11 @@ namespace DataWF.Common
 #else
                                             result = await System.Text.Json.JsonSerializer.DeserializeAsync<R>(encodedStream, Provider.JsonSettings).ConfigureAwait(false);
 #endif
-                                            //if (encodedStream.CanWrite)
-                                            //{
-                                            //    using (var file = File.OpenWrite("output.json"))
-                                            //        encodedStream.CopyTo(file);
-                                            //}
+                                            if (encodedStream.CanWrite)
+                                            {
+                                                using (var file = File.OpenWrite("output.json"))
+                                                    encodedStream.CopyTo(file);
+                                            }
                                         }
                                     }
                                 }
@@ -302,7 +302,7 @@ namespace DataWF.Common
                 Status = ClientStatus.Put;
                 request.Method = HttpMethod.Put;
             }
-            else if (httpMethod.Equals("PUT", StringComparison.OrdinalIgnoreCase))
+            else if (httpMethod.Equals("DELETE", StringComparison.OrdinalIgnoreCase))
             {
                 Status = ClientStatus.Delete;
                 request.Method = HttpMethod.Delete;
