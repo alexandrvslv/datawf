@@ -47,7 +47,7 @@ namespace DataWF.Common
             {
                 return string.Join(", ", Enum.GetValues(type)
                     .TypeOf<object>()
-                    .Where(p => ((int)p & (int)item) != 0)
+                    .Where(p => ((int)p & (int)item) == (int)p)
                     .Select(p => FormatUI(p)));
             }
 
