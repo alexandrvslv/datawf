@@ -1391,6 +1391,8 @@ namespace DataWF.Common
                     buf = (byte)intValue;
                 else if (type.IsEnum)
                     buf = Enum.ToObject(type, intValue);
+                else if (type == typeof(long))
+                    buf = (long)intValue;
             }
             else if (value is long longValue)
             {
