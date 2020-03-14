@@ -246,33 +246,39 @@ namespace DataWF.Common
         private async ValueTask DequeueNotification()
         {
             await notifySemafore.WaitAsync(20);
-            while (notifyQueue.TryDequeue(out var args))
+            try
             {
-                if (args.Item2 is NotifyCollectionChangedEventArgs collectionArgs
-                    && collectionArgs.Action == NotifyCollectionChangedAction.Add)
+                while (notifyQueue.TryDequeue(out var args))
                 {
-                    var list = new List<object>();
-                    list.AddRange(collectionArgs.NewItems.Cast<object>());
-                    while (notifyQueue.TryPeek(out var next)
-                        && next.Item2 is NotifyCollectionChangedEventArgs nextArgs
-                        && nextArgs.Action == NotifyCollectionChangedAction.Add
-                        && notifyQueue.TryDequeue(out next))
+                    if (args.Item2 is NotifyCollectionChangedEventArgs collectionArgs
+                        && collectionArgs.Action == NotifyCollectionChangedAction.Add)
                     {
-                        list.AddRange(nextArgs.NewItems.Cast<object>());
+                        var list = new List<object>();
+                        list.AddRange(collectionArgs.NewItems.Cast<object>());
+                        while (notifyQueue.TryPeek(out var next)
+                            && next.Item2 is NotifyCollectionChangedEventArgs nextArgs
+                            && nextArgs.Action == NotifyCollectionChangedAction.Add
+                            && notifyQueue.TryDequeue(out next))
+                        {
+                            list.AddRange(nextArgs.NewItems.Cast<object>());
+                        }
+                        if (list.Count > 1)
+                        {
+                            args = new Tuple<object, EventArgs>(args.Item1,
+                                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, list, collectionArgs.NewStartingIndex));
+                            //if (list.Count > 100)
+                            //{
+                            //    System.Diagnostics.Debug.WriteLine($"Join Add Notifications: {list.Count}");
+                            //}
+                        }
                     }
-                    if (list.Count > 1)
-                    {
-                        args = new Tuple<object, EventArgs>(args.Item1,
-                            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, list, collectionArgs.NewStartingIndex));
-                        //if (list.Count > 100)
-                        //{
-                        //    System.Diagnostics.Debug.WriteLine($"Join Add Notifications: {list.Count}");
-                        //}
-                    }
+                    ProcessNotification(args.Item1, args.Item2);
                 }
-                ProcessNotification(args.Item1, args.Item2);
             }
-            notifySemafore.Release();
+            finally
+            {
+                notifySemafore.Release();
+            }
         }
 
         private void ProcessNotification(object sender, EventArgs e)
