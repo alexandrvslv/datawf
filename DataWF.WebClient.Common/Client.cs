@@ -209,12 +209,7 @@ namespace DataWF.Common
 
         public virtual bool Add(T item)
         {
-            var added = false;
-            if (!Items.Contains(item))
-            {
-                Items.Add(item);
-                added = true;
-            }
+            var added = Items.Add(item) > -1;
             GetBaseClient()?.Add(item);
             return added;
         }
@@ -320,7 +315,7 @@ namespace DataWF.Common
             return item;
         }
 
-        private async Task GetAction(K id, Action<T> loadAction)
+        private async ValueTask GetAction(K id, Action<T> loadAction)
         {
             if (getActionSemaphore == null)
                 getActionSemaphore = new SemaphoreSlim(2);
