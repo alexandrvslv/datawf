@@ -10,7 +10,7 @@ namespace DataWF.Common
 {
     public class QueryParameter<T> : IQueryParameter, INotifyPropertyChanged, INamed
     {
-        private object parameter;
+        private object value;
         private CompareType comparer = CompareType.Equal;
         private LogicType logic = LogicType.And;
         private string name;
@@ -22,6 +22,11 @@ namespace DataWF.Common
 
         public QueryParameter()
         { }
+
+        public QueryParameter(IInvoker invoker)
+        {
+            Invoker = invoker;
+        }
 
         public QueryParameter(string property)
         {
@@ -98,16 +103,26 @@ namespace DataWF.Common
 
         public object Value
         {
-            get { return parameter; }
+            get { return value; }
             set
             {
-                if (parameter != value)
+                if (this.value != value)
                 {
-                    parameter = value;
-                    TypedValue = Comparer.Type != CompareTypes.In
-                        && Comparer.Type != CompareTypes.Contains
-                        && Comparer.Type != CompareTypes.Intersect
-                        && Invoker != null ? Helper.Parse(parameter, Invoker.DataType) : value;
+                    this.value = value;
+                    if (Comparer.Type == CompareTypes.In
+                        || Comparer.Type == CompareTypes.Contains
+                        || Comparer.Type == CompareTypes.Intersect)
+                    {
+                        TypedValue = this.value;
+                        if (this.value is string stringValue && Invoker?.DataType != typeof(string))
+                        {
+                            TypedValue = stringValue.Split(',');
+                        }
+                    }
+                    else
+                    {
+                        TypedValue = Invoker != null ? Helper.Parse(this.value, Invoker.DataType) : value;
+                    }
                     OnPropertyChanged();
                 }
             }
