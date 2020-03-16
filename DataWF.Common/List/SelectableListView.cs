@@ -266,6 +266,7 @@ namespace DataWF.Common
                     }
                     goto case NotifyCollectionChangedAction.Add;
                 case NotifyCollectionChangedAction.Remove:
+                    var removeList = new List<T>();
                     foreach (T oldItem in e.OldItems)
                     {
                         if (oldItem != null)
@@ -273,21 +274,20 @@ namespace DataWF.Common
                             Remove(oldItem);
                         }
                     }
+                    RemoveRange(removeList);
                     break;
                 case NotifyCollectionChangedAction.Add:
+                    var addList = new List<T>();
                     foreach (T newItem in e.NewItems)
                     {
                         if (newItem != null && ListHelper.CheckItem(newItem, query))
                         {
-                            if (!query.IsEnabled && comparer == null)
-                            {
-                                base.Add(newItem);
-                            }
-                            else
-                            {
-                                base.Add(newItem);
-                            }
+                            addList.Add(newItem);
                         }
+                    }
+                    if (addList.Count > 0)
+                    {
+                        AddRange(addList);
                     }
                     break;
             }

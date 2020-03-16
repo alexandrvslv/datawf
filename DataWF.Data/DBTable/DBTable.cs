@@ -1153,7 +1153,7 @@ namespace DataWF.Data
                 //case CompareTypes.Is:
                 //    return val1.Equals(DBNull.Value) ? !comparer.Not : comparer.Not;
                 case CompareTypes.Equal:
-                    return ListHelper.Equal(val1, val2, false) ? !comparer.Not : comparer.Not;
+                    return ListHelper.Equal(val1, val2) ? !comparer.Not : comparer.Not;
                 case CompareTypes.Like:
                     var r = val2 is Regex ? (Regex)val2 : Helper.BuildLike(val2.ToString());
                     return r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
@@ -1179,11 +1179,11 @@ namespace DataWF.Data
                     var between = val2 as QBetween;
                     if (between == null)
                         throw new Exception("Expect QBetween but Get " + val2 == null ? "null" : val2.GetType().FullName);
-                    return ListHelper.Compare(val1, between.Min.GetValue(item), null, false) >= 0
-                                     && ListHelper.Compare(val1, between.Max.GetValue(item), null, false) <= 0;
+                    return ListHelper.Compare(val1, between.Min.GetValue(item), null) >= 0
+                                     && ListHelper.Compare(val1, between.Max.GetValue(item), null) <= 0;
                 default:
                     bool f = false;
-                    int rez = ListHelper.Compare(val1, val2, null, false);
+                    int rez = ListHelper.Compare(val1, val2, null);
                     switch (comparer.Type)
                     {
                         case CompareTypes.Greater:

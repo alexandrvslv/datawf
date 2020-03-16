@@ -3,26 +3,26 @@ using System;
 
 namespace DataWF.Common
 {
-    public class ToStringInvoker : IInvoker<object, string>
+    public class ToStringInvoker<T> : Invoker<T, string>
     {
-        public static readonly IInvoker<object, string> Instance = new ToStringInvoker();
+        public static readonly ToStringInvoker<T> Instance = new ToStringInvoker<T>();
 
-        public bool CanWrite => false;
+        public override string Name => nameof(Object.ToString);
 
-        public Type DataType => typeof(string);
+        public override bool CanWrite => false;
 
-        public Type TargetType => typeof(object);
+        public override string GetValue(T target)
+        {
+            return target.ToString();
+        }
 
-        public string Name { get => nameof(Object.ToString); set { } }
+        public override void SetValue(T target, string value)
+        { }
+    }
 
-        public string GetValue(object target) => target?.ToString();
+    public class ToStringInvoker : ToStringInvoker<object>
+    {
+        public static readonly ToStringInvoker Default = new ToStringInvoker();
 
-        object IValueProvider.GetValue(object target) => GetValue(target);
-
-        public void SetValue(object target, object value) => throw new NotSupportedException();
-
-        public void SetValue(object target, string value) => throw new NotImplementedException();
-
-        public IListIndex CreateIndex(bool concurrent) => ListIndexFabric.Create<object, string>(this, concurrent);
     }
 }

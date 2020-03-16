@@ -29,7 +29,7 @@ namespace DataWF.Common
         static EmitInvoker()
         {
             var methoInfo = TypeHelper.GetMemberInfo(typeof(object), nameof(ToString));
-            cacheInvokers[GetToken(methoInfo)] = ToStringInvoker.Instance;
+            cacheInvokers[GetToken(methoInfo)] = ToStringInvoker<object>.Instance;
         }
         public static void DeleteCache()
         {
@@ -260,7 +260,8 @@ namespace DataWF.Common
             {
                 if (string.Equals(info.Name, nameof(Object.ToString), StringComparison.Ordinal))
                 {
-                    result = ToStringInvoker.Instance;
+                    var type = typeof(ToStringInvoker<>).MakeGenericType(info.DeclaringType);
+                    result = (IInvoker)CreateObject(type);
                 }
                 else
                 {
@@ -289,15 +290,16 @@ namespace DataWF.Common
         //			cFieldSet[GetToken(setInfo)] = setHandler = GetInvokerSet(setInfo);
         //	}
         //}
-        public static int CompareKey(string member, object x, object key, IComparer comparer)
-        {
-            return CompareKey(Initialize(x.GetType(), member), x, key, comparer);
-        }
 
-        public static int CompareKey(IInvoker accesor, object x, object key, IComparer comparer)
-        {
-            return ListHelper.Compare(accesor.GetValue(x), key, comparer, false);
-        }
+        //public static int CompareKey(string member, object x, object key, IComparer comparer)
+        //{
+        //    return CompareKey(Initialize(x.GetType(), member), x, key, comparer);
+        //}
+
+        //public static int CompareKey(IInvoker accesor, object x, object key, IComparer comparer)
+        //{
+        //    return ListHelper.Compare(accesor.GetValue(x), key, comparer);
+        //}
 
         public static T CreateObject<T>(bool cache = true)
         {

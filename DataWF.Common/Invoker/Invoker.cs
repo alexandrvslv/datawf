@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using Newtonsoft.Json.Serialization;
 
 namespace DataWF.Common
@@ -15,16 +17,6 @@ namespace DataWF.Common
         public abstract bool CanWrite { get; }
 
         string INamed.Name { get => Name; set { } }
-
-        public IListIndex CreateIndex(bool concurrent)
-        {
-            return ListIndexFabric.Create<T, V>(this, concurrent);
-        }
-
-        public QueryParameter<T> CreateParameter()
-        {
-            return new QueryParameter<T> { Invoker = this };
-        }
 
         public abstract V GetValue(T target);
 
@@ -43,6 +35,41 @@ namespace DataWF.Common
         public override string ToString()
         {
             return $"{typeof(T).Name}.{Name} {typeof(V).Name}";
+        }
+
+        public virtual IListIndex CreateIndex(bool concurrent)
+        {
+            return ListIndexFabric.Create<T, V>(this, concurrent);
+        }
+
+        IQueryParameter IInvoker.CreateParameter()
+        {
+            return CreateParameter();
+        }
+
+        public virtual QueryParameter<T> CreateParameter()
+        {
+            return new QueryParameter<T> { Invoker = this };
+        }
+
+        InvokerComparer IInvoker.CreateComparer()
+        {
+            return CreateComparer();
+        }
+
+        public virtual InvokerComparer<T, V> CreateComparer()
+        {
+            return new InvokerComparer<T, V>(this);
+        }
+
+        public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return CheckItem((T)item, typedValue, comparer, comparision);
+        }
+
+        public bool CheckItem(T item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);//(IComparer<V>)
         }
     }
 }

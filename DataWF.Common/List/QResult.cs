@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace DataWF.Common
@@ -14,12 +15,8 @@ namespace DataWF.Common
         public Type TargetType { get { return typeof(object[]); } }
 
         public string Name { get; set; }
-        object IIndexInvoker.Index { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public IListIndex CreateIndex(bool concurrent)
-        {
-            return ListIndexFabric.Create<object[], object>(this, concurrent);
-        }
+        object IIndexInvoker.Index { get => Index; set => Index = (int)value; }
 
         public object GetValue(object[] target, int index)
         {
@@ -59,6 +56,31 @@ namespace DataWF.Common
         public void SetValue(object target, object index, object value)
         {
             SetValue((object[])target, (int)index, value);
+        }
+
+        public InvokerComparer CreateComparer()
+        {
+            return new InvokerComparer<object[], object>(this);
+        }
+
+        public IListIndex CreateIndex(bool concurrent)
+        {
+            return ListIndexFabric.Create<object[], object>(this, concurrent);
+        }
+
+        public IQueryParameter CreateParameter()
+        {
+            return new QueryParameter<object[]>(this);
+        }
+
+        public bool CheckItem(object[] item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);
+        }
+
+        public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return CheckItem((object[])item, typedValue, comparer, comparision);
         }
     }
 
@@ -112,7 +134,7 @@ namespace DataWF.Common
                 foreach (var p in param)
                 {
                     int index = GetIndex(p);
-                    rez = ListHelper.Compare(a[index], b[index], null, false);
+                    rez = ListHelper.Compare(a[index], b[index], null);
                     if (rez != 0)
                         return rez;
                 }

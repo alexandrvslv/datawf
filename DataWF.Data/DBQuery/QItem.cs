@@ -28,7 +28,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class QItem : IDisposable, IContainerNotifyPropertyChanged, IComparable, IValued
+    public class QItem : IDisposable, IEntryNotifyPropertyChanged, IComparable, IValued
     {
         protected int order = -1;
         protected string text;
@@ -44,7 +44,7 @@ namespace DataWF.Data
         }
 
         [JsonIgnore, XmlIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public IQItemList List

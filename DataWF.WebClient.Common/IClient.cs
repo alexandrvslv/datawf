@@ -62,7 +62,7 @@ namespace DataWF.Common
 
     public interface ICrudClient<T> : ICrudClient
     {
-        SelectableList<T> Items { get; }
+        ChangeableList<T> Items { get; }
         bool Add(T item);
         bool Remove(T item);
         Task<T> Get(T item);

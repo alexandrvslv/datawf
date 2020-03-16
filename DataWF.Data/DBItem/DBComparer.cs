@@ -85,8 +85,8 @@ namespace DataWF.Data
                 return string.Compare(xFormat.ToString(Format, CultureInfo.InvariantCulture), keyFormat.ToString(Format, CultureInfo.InvariantCulture), StringComparison.Ordinal);
             }
             return Direction == ListSortDirection.Ascending
-                ? ListHelper.CompareT<K>(xo, key, null, false)
-                : -ListHelper.CompareT<K>(xo, key, null, false);
+                ? ListHelper.CompareT<K>(xo, key, null)
+                : -ListHelper.CompareT<K>(xo, key, null);
         }
 
         public bool Predicate(T x)
@@ -156,7 +156,7 @@ namespace DataWF.Data
                     if (len != 0)
                         return Direction == ListSortDirection.Descending ? -len : len;
                 }
-                rez = ListHelper.CompareT(xValue, yValue, null, false);
+                rez = ListHelper.CompareT(xValue, yValue, null);
                 if (rez == 0 && Hash)
                     rez = x.CompareTo(y);
             }

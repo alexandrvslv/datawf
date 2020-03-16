@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Gui
 {
-    public class LayoutFilter : IContainerNotifyPropertyChanged
+    public class LayoutFilter : IEntryNotifyPropertyChanged
     {
         private string name;
         [DefaultValue(false)]
@@ -31,7 +31,7 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         [XmlIgnore]
         public LayoutList List

@@ -8,7 +8,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class LayoutGroup : IComparable, IContainerNotifyPropertyChanged, IDisposable
+    public class LayoutGroup : IComparable, IEntryNotifyPropertyChanged, IDisposable
     {
         protected int startIndex = -1;
         protected int endIndex = -1;
@@ -115,7 +115,7 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -131,7 +131,7 @@ namespace DataWF.Gui
 
         public int CompareTo(object obj)
         {
-            return ListHelper.Compare(TextValue, ((LayoutGroup)obj).TextValue, null, false);
+            return ListHelper.Compare(TextValue, ((LayoutGroup)obj).TextValue, null);
         }
 
         public TextLayout GetTextLayout()

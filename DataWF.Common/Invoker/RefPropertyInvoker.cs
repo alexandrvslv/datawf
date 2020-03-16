@@ -2,6 +2,7 @@
 using System.Reflection.Emit;
 using System.Reflection;
 using System.Linq.Expressions;
+using System.Collections;
 
 namespace DataWF.Common
 {
@@ -34,7 +35,22 @@ namespace DataWF.Common
 
         internal SetHandler<T, V> SetAction { get; private set; }
 
+        public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);
+        }
+
+        public InvokerComparer CreateComparer()
+        {
+            throw new NotImplementedException();
+        }
+
         public IListIndex CreateIndex(bool concurrent)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IQueryParameter CreateParameter()
         {
             throw new NotImplementedException();
         }

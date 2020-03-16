@@ -72,7 +72,7 @@ namespace DataWF.Common
         public bool MoveNext()
         {
             i++;
-            if (items.Count <= i || items.Count == 0)
+            if (items.Count <= i)
             {
                 Current = default(T);
                 return false;
@@ -82,9 +82,9 @@ namespace DataWF.Common
                 Current = items[i];
             }
             catch (Exception e)
-			{ 
-				Helper.OnException(e); 
-			}
+            {
+                Helper.OnException(e);
+            }
             return true;
         }
 

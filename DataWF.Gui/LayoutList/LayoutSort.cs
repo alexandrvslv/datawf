@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Gui
 {
-    public class LayoutSort : IContainerNotifyPropertyChanged, IComparable, IComparable<LayoutSort>
+    public class LayoutSort : IEntryNotifyPropertyChanged, IComparable, IComparable<LayoutSort>
     {
         private int order;
         private string name;
@@ -28,7 +28,7 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         [XmlIgnore, Browsable(false)]
         public LayoutListInfo Info

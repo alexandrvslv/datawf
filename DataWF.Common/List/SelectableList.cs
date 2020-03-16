@@ -49,8 +49,6 @@ namespace DataWF.Common
             AddRangeInternal(items);
         }
 
-        [XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public ListIndexes<T> Indexes => indexes;
@@ -132,6 +130,12 @@ namespace DataWF.Common
                 }
             }
         }
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public IEnumerable<IFilterable> Views => TypeHelper.GetContainers<IFilterable>(PropertyChanged);
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event PropertyChangedEventHandler PropertyChanged;
@@ -576,6 +580,62 @@ namespace DataWF.Common
             Remove(items[index], index);
         }
 
+        public void AddRangeInternal(IEnumerable<T> list)
+        {
+            lock (lockObject)
+            {
+                int index = 0;
+                foreach (T item in list)
+                {
+                    index = GetIndexForAdding(item);
+                    if (index < 0)
+                    {
+                        index = -index - 1;
+                        if (index > items.Count)
+                        {
+                            index = items.Count;
+                        }
+
+                        InsertInternal(index, item);
+                    }
+                }
+            }
+        }
+
+        public void AddRange(IEnumerable<T> items)
+        {
+            AddRangeInternal(items);
+            OnListChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                items is IList iList ? iList : items.ToList(),
+                0));
+        }
+
+        private void RemoveRangeInternal(IEnumerable<T> items)
+        {
+            lock (lockObject)
+            {
+                int index = 0;
+                foreach (T item in items)
+                {
+                    index = IndexOf(item);
+                    if (index == -1)
+                    {
+                        continue;
+                    }
+
+                    RemoveInternal(item, index);
+                }
+            }
+        }
+
+        public void RemoveRange(IEnumerable<T> items)
+        {
+            RemoveRangeInternal(items);
+            OnListChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
+                items is IList iList ? iList : items.ToList(),
+                0));
+        }
+
         public virtual int IndexOf(object item)
         {
             return IndexOf((T)item);
@@ -749,7 +809,7 @@ namespace DataWF.Common
 
         public virtual bool Contains(T item)
         {
-            if (item is IContainerNotifyPropertyChanged containered && propertyHandler != null)
+            if (item is IEntryNotifyPropertyChanged containered && propertyHandler != null)
             {
                 return containered.Containers.Contains(this);
             }
@@ -776,28 +836,6 @@ namespace DataWF.Common
         public IEnumerator<T> GetEnumerator()
         {
             return new ThreadSafeEnumerator<T>(items);
-        }
-
-        public void AddRangeInternal(IEnumerable<T> list)
-        {
-            foreach (T item in list)
-            {
-                AddInternal(item);
-            }
-        }
-
-        public void AddRange(IEnumerable<T> list)
-        {
-            AddRangeInternal(list);
-            OnListChanged(NotifyCollectionChangedAction.Reset);
-        }
-
-        public void RemoveRange(IEnumerable<T> toDelete)
-        {
-            foreach (T item in toDelete)
-            {
-                Remove(item);
-            }
         }
 
         [Invoker(typeof(SelectableList<>), nameof(Disposed))]

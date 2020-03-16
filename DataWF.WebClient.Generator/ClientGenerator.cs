@@ -804,7 +804,7 @@ namespace DataWF.WebClient.Generator
             }
             else
             {
-                //yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IContainerNotifyPropertyChanged)));
+                //yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IEntryNotifyPropertyChanged)));
                 if (schema.Id == "DBItem")
                     yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(SynchronizedItem)));
                 else

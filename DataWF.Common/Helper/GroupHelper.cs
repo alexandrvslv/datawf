@@ -6,39 +6,16 @@ namespace DataWF.Common
 {
     public static class GroupHelper
     {
-        public static QueryParameter<G> CreateTreeFilter<G>() where G : IGroup
+        public static void ApplyFilter(IFilterable filterable)
         {
-            return new QueryParameter<G>()
-            {
-                Invoker = TreeInvoker<G>.Instance,
-                Comparer = CompareType.Equal,
-                Value = true,
-                IsGlobal = true,
-                FormatIgnore = true,
-            };
+            filterable.FilterQuery.Parameters.Add(TreeInvoker.Instance.CreateParameter());
+            filterable.FilterQuery.Orders.Add(TreeInvoker.Instance.CreateComparer());
         }
 
-        public static void Filter(IFilterable filterable)
+        public static void ApplyFilter<T>(IFilterable<T> filterable) where T : IGroup
         {
-            var type = TypeHelper.GetItemType(filterable);
-            filterable.FilterQuery.Parameters.Add(CreateTreeFilter(type));
-            filterable.FilterQuery.Orders.Add(CreateTreeComparer(type));
-        }
-
-        public static IQueryParameter CreateTreeFilter(Type type)
-        {
-            var parameter = (IQueryParameter)EmitInvoker.CreateObject(typeof(QueryParameter<>).MakeGenericType(type));
-            parameter.Invoker = (IInvoker)EmitInvoker.CreateObject(typeof(TreeInvoker<>).MakeGenericType(type));
-            parameter.Comparer = CompareType.Equal;
-            parameter.Value = true;
-            parameter.IsGlobal = true;
-            parameter.FormatIgnore = true;
-            return parameter;
-        }
-
-        public static IComparer CreateTreeComparer(Type type)
-        {
-            return (IComparer)EmitInvoker.CreateObject(typeof(TreeComparer<>).MakeGenericType(type));
+            filterable.FilterQuery.Parameters.Add(TreeInvoker<T>.Instance.CreateParameter());
+            filterable.FilterQuery.Orders.Add(TreeInvoker<T>.Instance.CreateComparer());
         }
 
         public static bool IsExpand(IGroup item)
@@ -201,12 +178,12 @@ namespace DataWF.Common
                 }
             }
 
-            return ListHelper.Compare(ox, oy, comp, true);
+            return ListHelper.Compare(ox, oy, comp);
         }
 
         public static IEnumerable<IGroup> GetSubGroups(IGroup group, bool addSender = false)
         {
-            if(addSender)
+            if (addSender)
                 yield return group;
             foreach (var item in group.GetGroups())
             {
@@ -216,7 +193,7 @@ namespace DataWF.Common
             }
         }
 
-        
+
     }
 
 }

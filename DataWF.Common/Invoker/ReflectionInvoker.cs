@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -16,7 +17,7 @@ namespace DataWF.Common
             TargetType = type;
         }
 
-        public bool CanWrite { get { return Last is FieldInfo || Last is PropertyInfo && ((PropertyInfo)Last).CanWrite; } }
+        public bool CanWrite { get { return Last is FieldInfo || (Last is PropertyInfo && ((PropertyInfo)Last).CanWrite); } }
 
         public Type DataType { get; set; }
 
@@ -93,6 +94,21 @@ namespace DataWF.Common
         public IListIndex CreateIndex(bool concurrent)
         {
             throw new NotImplementedException();
+        }
+
+        public IQueryParameter CreateParameter()
+        {
+            throw new NotImplementedException();
+        }
+
+        public InvokerComparer CreateComparer()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);
         }
     }
 }

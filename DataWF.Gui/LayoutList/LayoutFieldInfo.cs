@@ -26,47 +26,26 @@ namespace DataWF.Gui
         }
     }
 
-    public class FieldValueInvoker : IInvoker<LayoutField, object>
+    public class FieldValueInvoker : Invoker<LayoutField, object>
     {
         public FieldValueInvoker()
         {
-            DataType = typeof(object);
-            Name = "Value";
         }
 
-        public bool CanWrite { get { return true; } }
+        public override bool CanWrite { get { return true; } }
 
-        public Type DataType { get; set; }
-
-        public Type TargetType { get { return typeof(LayoutField); } }
-
-        public string Name { get; set; }
+        public override string Name => "Value";
 
         public object Source { get; set; }
 
-        public IListIndex CreateIndex(bool concurrent)
-        {
-            return ListIndexFabric.Create<LayoutField, object>(this, concurrent);
-        }
-
-        public object GetValue(LayoutField target)
+        public override object GetValue(LayoutField target)
         {
             return Source == null ? null : target.ReadValue(Source);
         }
 
-        public object GetValue(object target)
-        {
-            return GetValue((LayoutField)target);
-        }
-
-        public void SetValue(LayoutField target, object value)
+        public override void SetValue(LayoutField target, object value)
         {
             target.WriteValue(Source, value);
-        }
-
-        public void SetValue(object target, object value)
-        {
-            SetValue((LayoutField)target, value);
         }
     }
 

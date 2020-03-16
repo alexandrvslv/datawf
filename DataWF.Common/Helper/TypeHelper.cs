@@ -53,13 +53,13 @@ namespace DataWF.Common
             return itemType.GetProperty("Item", parameters);
         }
 
-        public static IEnumerable<INotifyListPropertyChanged> GetContainers(PropertyChangedEventHandler handler)
+        public static IEnumerable<T> GetContainers<T>(PropertyChangedEventHandler handler)
         {
             if (handler == null)
                 yield break;
             foreach (var invocator in handler.GetInvocationList())
             {
-                if (invocator.Target is INotifyListPropertyChanged container)
+                if (invocator.Target is T container)
                 {
                     yield return container;
                 }
@@ -675,7 +675,7 @@ namespace DataWF.Common
             {
                 if (inter.IsGenericType && inter.GetGenericTypeDefinition() == genericEnumerable)
                 {
-                    return inter.GetGenericArguments().FirstOrDefault();
+                    return inter.GetGenericArguments()[0];
                 }
             }
             if (type.IsGenericType)

@@ -2,56 +2,47 @@
 
 namespace DataWF.Common
 {
-    public class TreeInvoker : IInvoker
+    public class TreeInvoker<T> : Invoker<T, bool> where T : IGroup
     {
-        public Type DataType => typeof(bool);
-
-        public virtual Type TargetType => typeof(IGroup);
-
-        public bool CanWrite => true;
-
-        public string Name { get => nameof(IGroup.IsExpanded); set { } }
-
-        public virtual IListIndex CreateIndex(bool concurrent)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual object GetValue(object target)
-        {
-            return ((IGroup)target).IsExpanded;
-        }
-
-        public virtual void SetValue(object target, object value)
-        {
-            ((IGroup)target).Expand = (bool)value;
-        }
-    }
-
-    public class TreeInvoker<T> : TreeInvoker, IInvoker<T, bool> where T : IGroup
-    {
-        public static readonly IInvoker<T, bool> Instance = new TreeInvoker<T>();
+        public static readonly TreeInvoker<T> Instance = new TreeInvoker<T>();
 
         public TreeInvoker()
         { }
 
-        public override Type TargetType { get { return typeof(T); } }
+        public override string Name { get => nameof(IGroup.IsExpanded); }
 
-        public override IListIndex CreateIndex(bool concurrent)
-        {
-            return ListIndexFabric.Create<T, bool>(this, concurrent);
-        }
+        public override bool CanWrite => true;
 
-        public bool GetValue(T target)
+        public override bool GetValue(T target)
         {
             return target.IsExpanded;
         }
 
-        public void SetValue(T target, bool value)
+        public override void SetValue(T target, bool value)
         {
             target.Expand = value;
         }
+
+        public override QueryParameter<T> CreateParameter()
+        {
+            return new QueryParameter<T>()
+            {
+                Invoker = this,
+                Comparer = CompareType.Equal,
+                Value = true,
+                IsGlobal = true,
+                FormatIgnore = true,
+            };
+        }
+
+        public override InvokerComparer<T, bool> CreateComparer()
+        {
+            return new TreeComparer<T> { Invoker = this };
+        }
     }
 
+    public class TreeInvoker : TreeInvoker<IGroup>
+    {
+    }
 }
 

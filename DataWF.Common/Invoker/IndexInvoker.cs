@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace DataWF.Common
 {
@@ -75,6 +77,26 @@ namespace DataWF.Common
         public IListIndex CreateIndex(bool concurrent)
         {
             return ListIndexFabric.Create<T, V>(this, concurrent);
+        }
+
+        public IQueryParameter CreateParameter()
+        {
+            return new QueryParameter<T>(this);
+        }
+
+        public InvokerComparer CreateComparer()
+        {
+            return new InvokerComparer<T, V>(this);
+        }
+
+        public bool CheckItem(T item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);//(IComparer<V>)
+        }
+
+        public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return CheckItem((T)item, typedValue, comparer, comparision);
         }
     }
 }

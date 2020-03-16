@@ -1148,6 +1148,26 @@ namespace DataWF.Data
             return base.ToString();
         }
 
+        public IQueryParameter CreateParameter()
+        {
+            throw new NotImplementedException();
+        }
+
+        public InvokerComparer CreateComparer()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);
+        }
+
+        public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return CheckItem((DBItem)item, typedValue, comparer, comparision);
+        }
+
         [Invoker(typeof(DBColumn), nameof(DBColumn.GroupName))]
         public class GroupNameInvoker<T> : Invoker<T, string> where T : DBColumn
         {

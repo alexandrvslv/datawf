@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public class LocaleItem : SelectableList<LocaleString>, ICloneable, IContainerNotifyPropertyChanged
+    public class LocaleItem : SelectableList<LocaleString>, ICloneable, IEntryNotifyPropertyChanged
     {
         private GlyphType glyph = GlyphType.None;
         private string name = String.Empty;

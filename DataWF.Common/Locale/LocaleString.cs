@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public class LocaleString : ICloneable, IContainerNotifyPropertyChanged
+    public class LocaleString : ICloneable, IEntryNotifyPropertyChanged
     {
         internal string culture = "ru-RU";
         protected string value;
@@ -85,7 +85,7 @@ namespace DataWF.Common
         }
 
         [XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         public override string ToString()
         {

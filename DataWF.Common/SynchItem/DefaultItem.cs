@@ -6,13 +6,13 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public abstract class DefaultItem : IContainerNotifyPropertyChanged
+    public abstract class DefaultItem : IEntryNotifyPropertyChanged
     {
         public static Action<PropertyChangedEventHandler, object, PropertyChangedEventArgs> GlogalChangedHook;
         protected PropertyChangedEventHandler propertyChanged;
 
         [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(propertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(propertyChanged);
 
         public event PropertyChangedEventHandler PropertyChanged
         {
