@@ -66,15 +66,7 @@ namespace DataWF.Common
         {
             if (!Dictionary.TryGetValue(key, out var refs) || !refs.Contains(item))
             {
-                foreach (var entry in Dictionary)
-                {
-                    if (entry.Value.Contains(item))
-                    {
-                        key = entry.Key;
-                        refs = entry.Value;
-                        break;
-                    }
-                }
+                RemoveScan(item, ref key, ref refs);
             }
             if (refs != null)
             {
@@ -85,6 +77,19 @@ namespace DataWF.Common
                 else
                 {
                     refs.Remove(item);
+                }
+            }
+        }
+
+        private void RemoveScan(T item, ref K key, ref ThreadSafeList<T> refs)
+        {
+            foreach (var entry in Dictionary)
+            {
+                if (entry.Value.Contains(item))
+                {
+                    key = entry.Key;
+                    refs = entry.Value;
+                    break;
                 }
             }
         }
@@ -279,8 +284,13 @@ namespace DataWF.Common
 
         public void Refresh(T item)
         {
-            Remove(item);
-            Add(item);
+            var key = Invoker.GetValue(item);
+            CheckNull(ref key);
+            if (!Dictionary.TryGetValue(key, out var refs) || !refs.Contains(item))
+            {
+                Remove(item, key);
+                Add(item, key);
+            }
         }
 
         public void Add(object item)
