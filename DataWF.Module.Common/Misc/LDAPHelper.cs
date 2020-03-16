@@ -25,7 +25,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace ECMS.Model.Common
+namespace DataWF.Module.Common
 {
 
     public static class LdapHelper
