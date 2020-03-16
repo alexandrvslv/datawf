@@ -79,7 +79,7 @@ namespace DataWF.WebService.Common
         {
             var itemType = TypeHelper.GetItemType(objectType);
             await pipeWriter.WriteAsync(startArray);
-
+            var flag = false;
             using (var jsonWriter = CreatetWriter(pipeWriter, option))
             {
                 var commaSet = false;
@@ -92,8 +92,13 @@ namespace DataWF.WebService.Common
                     try
                     {
                         JsonSerializer.Serialize(jsonWriter, item, itemType, option);
-                        await pipeWriter.FlushAsync();
+                        if (flag)
+                        {
+                            await pipeWriter.FlushAsync();
+                        }
+
                         jsonWriter.Reset();
+                        flag = !flag;
                     }
                     catch (Exception ex)
                     {

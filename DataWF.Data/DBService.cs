@@ -399,11 +399,11 @@ namespace DataWF.Data
             {
                 return x == null;
             }
-
+            var type = typeof(T);
             var equal = false;
-            if (typeof(T) == typeof(string))
+            if (type == typeof(string))
                 equal = string.Equals(x.ToString(), y.ToString(), StringComparison.Ordinal);
-            else if (typeof(T) == typeof(byte[]))
+            else if (type == typeof(byte[]))
                 equal = Helper.CompareByteAsSpan((byte[])(object)x, (byte[])(object)y);
             else
                 equal = EqualityComparer<T>.Default.Equals(x, y);
