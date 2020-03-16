@@ -15,6 +15,8 @@ namespace DataWF.Common
 
         event EventHandler ParametersChanged;
 
+        IQueryParameter GetParameter(string name);
+
         IQueryParameter Add(string property, object value);
 
         IQueryParameter Add(LogicType logic, IInvoker invoker, CompareType comparer, object value);

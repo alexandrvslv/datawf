@@ -141,22 +141,36 @@ namespace DataWF.Common
 
         public QueryParameter<T> AddOrUpdate(IInvoker invoker, CompareType comparer, object value)
         {
-            var parameter = Parameters[invoker.Name];
+            var parameter = GetParameter(invoker);
             return AddOrUpdate(parameter?.Logic ?? LogicType.And, invoker, parameter?.Comparer ?? comparer, value);
         }
 
         public QueryParameter<T> AddOrUpdate(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
         {
-            var parameter = Parameters[invoker.Name];
+            var parameter = GetParameter(invoker);
             if (parameter == null)
             {
-                parameter = Parameters.Add(logic, invoker, comparer, null);
+                parameter = Parameters.Add(logic, invoker, comparer, value, group);
             }
             parameter.Logic = logic;
             parameter.Comparer = comparer;
             parameter.Value = value;
             parameter.Group = group;
             return parameter;
+        }
+        private QueryParameter<T> GetParameter(IInvoker invoker)
+        {
+            return Parameters[invoker.Name];
+        }
+
+        IQueryParameter IQuery.GetParameter(string name)
+        {
+            return GetParameter(name);
+        }
+
+        private QueryParameter<T> GetParameter(string name)
+        {
+            return Parameters[name];
         }
 
         IQueryParameter IQuery.Add(string property, object value)
