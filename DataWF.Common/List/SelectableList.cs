@@ -236,20 +236,20 @@ namespace DataWF.Common
             }
         }
 
-        private async ValueTask EnqueueNotification(object sender, EventArgs e)
+        private void EnqueueNotification(object sender, EventArgs e)
         {
             notifyQueue.Enqueue(new Tuple<object, EventArgs>(sender, e));
 
             if (notifySemafore.CurrentCount == 1)
             {
                 notifySemafore.Wait();
-                await DequeueNotification();
+                _ = DequeueNotification();
             }
         }
 
         private async ValueTask DequeueNotification()
         {
-            await notifySemafore.WaitAsync(20);
+            await notifySemafore.WaitAsync(30);//Delay
             try
             {
                 while (notifyQueue.TryDequeue(out var args))
@@ -257,14 +257,20 @@ namespace DataWF.Common
                     if (args.Item2 is NotifyCollectionChangedEventArgs collectionArgs
                         && collectionArgs.Action == NotifyCollectionChangedAction.Add)
                     {
-                        var list = new List<object>();
-                        list.AddRange(collectionArgs.NewItems.Cast<object>());
+                        var list = new List<object>(4);
+                        foreach (T item in collectionArgs.NewItems)
+                        {
+                            list.Add(item);
+                        }
                         while (notifyQueue.TryPeek(out var next)
                             && next.Item2 is NotifyCollectionChangedEventArgs nextArgs
                             && nextArgs.Action == NotifyCollectionChangedAction.Add
                             && notifyQueue.TryDequeue(out next))
                         {
-                            list.AddRange(nextArgs.NewItems.Cast<object>());
+                            foreach (T nextItem in nextArgs.NewItems)
+                            {
+                                list.Add(nextItem);
+                            }
                         }
                         if (list.Count > 1)
                         {
@@ -332,7 +338,7 @@ namespace DataWF.Common
             {
                 if (AsyncNotification)
                 {
-                    _ = EnqueueNotification(this, e);
+                    EnqueueNotification(this, e);
                 }
                 else
                 {
@@ -349,7 +355,7 @@ namespace DataWF.Common
                 var args = new PropertyChangedEventArgs(property);
                 if (AsyncNotification)
                 {
-                    _ = EnqueueNotification(this, args);
+                    EnqueueNotification(this, args);
                 }
                 else
                 {
@@ -401,7 +407,7 @@ namespace DataWF.Common
             {
                 if (AsyncNotification)
                 {
-                    _ = EnqueueNotification(item, e);
+                    EnqueueNotification(item, e);
                 }
                 else
                 {
