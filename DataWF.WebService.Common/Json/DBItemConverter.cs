@@ -54,11 +54,10 @@ namespace DataWF.WebService.Common
             bool includeReference = Factory.IncludeReference;
             int maxDepth = Factory.MaxDepth;
             var valueType = value.GetType();
-            var table = DBTable.GetTable(valueType);
             writer.WriteStartObject();
             object propertyValue;
             Type propertyType;
-            foreach (var invoker in table.Invokers)
+            foreach (var invoker in value.Table.GetInvokers(valueType))
             {
                 propertyType = invoker.DataType;
                 if (TypeHelper.IsBaseType(invoker.DataType, typeof(DBItem)))

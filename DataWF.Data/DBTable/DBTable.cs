@@ -182,7 +182,6 @@ namespace DataWF.Data
         protected int block = 500;
         internal object locker = new object();
         protected List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
-        protected List<IInvoker> invokers;
         private DBItemType itemType;
         private int itemTypeIndex = 0;
 
@@ -432,38 +431,6 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual List<IInvoker> Invokers
-        {
-            get
-            {
-                if (invokers == null)
-                {
-                    invokers = new List<IInvoker>(Columns.Count + (this.Generator?.Referencings.Count() ?? 0));
-                    foreach (var column in Columns)
-                    {
-                        if (!IsSerializeableColumn(column))
-                            continue;
-                        invokers.Add(column.PropertyInvoker);
-                        if (column.ReferencePropertyInvoker != null)
-                        {
-                            invokers.Add(column.ReferencePropertyInvoker);
-                        }
-                    }
-                    if (Generator != null)
-                    {
-                        foreach (var refing in Generator.Referencings)
-                        {
-                            if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(ItemType.Type))
-                                continue;
-                            invokers.Add(refing.PropertyInvoker);
-                        }
-                    }
-                }
-                return invokers;
-            }
-        }
-
         [Category("Column")]
         public virtual DBColumnList<DBColumn> Columns { get; set; }
 
@@ -500,11 +467,11 @@ namespace DataWF.Data
 
         public abstract void Trunc();
 
-        public bool IsSerializeableColumn(DBColumn column)
+        public bool IsSerializeableColumn(DBColumn column, Type type)
         {
             return column.Property != null
                 && column.PropertyInvoker != null && column.PropertyInvoker != column
-                && column.PropertyInvoker.TargetType.IsAssignableFrom(ItemType.Type)
+                && column.PropertyInvoker.TargetType.IsAssignableFrom(type)
                 //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
                 && (column.Keys & DBColumnKeys.Password) != DBColumnKeys.Password
                 && (column.Keys & DBColumnKeys.File) != DBColumnKeys.File;
@@ -1485,7 +1452,6 @@ namespace DataWF.Data
 
         internal void ClearCache()
         {
-            invokers = null;
             dmlInsert = null;
             dmlInsertSequence = null;
             dmlDelete = null;
@@ -1498,6 +1464,21 @@ namespace DataWF.Data
             groupKey = DBColumn.EmptyKey;
             stateKey = DBColumn.EmptyKey;
             imageKey = DBColumn.EmptyKey;
+        }
+
+        public IEnumerable<IInvoker> GetInvokers<T>()
+        {
+            return GetInvokers(typeof(T));
+        }
+
+        public IEnumerable<IInvoker> GetInvokers(Type type)
+        {
+            foreach (var itemType in ItemTypes.Values)
+            {
+                if (itemType.Type == type)
+                    return itemType.Invokers;
+            }
+            return itemType.Invokers;
         }
 
         public IInvoker GetInvoker(string property)
