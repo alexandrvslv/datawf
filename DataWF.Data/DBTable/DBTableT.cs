@@ -236,30 +236,49 @@ namespace DataWF.Data
             queryViews.Add(view);
         }
 
+        public override void OnItemChanging<V>(DBItem item, string property, DBColumn column, V value)
+        {
+            column?.Index?.Remove<T, V>((T)item, value);
+            foreach (var table in virtualTables)
+            {
+                table.OnItemChanging<V>(item, property, column, value);
+            }
+        }
 
         public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
         {
-            if (column?.Index != null)
-            {
-                column.Index.Remove(item, value);
-            }
+            column?.Index?.Remove(item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanging(item, property, column, value);
             }
         }
 
-        public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
+        public override void OnItemChanged<V>(DBItem item, string property, DBColumn column, V value)
         {
-            if (property == nameof(DBItem.Attached) || property == nameof(DBItem.UpdateState))
+            if (string.Equals(property, nameof(DBItem.Attached), StringComparison.Ordinal)
+                || string.Equals(property, nameof(DBItem.UpdateState), StringComparison.Ordinal))
             {
                 return;
             }
 
-            if (column?.Index != null)
+            column?.Index?.Add<T, V>((T)item, value);
+            foreach (var table in virtualTables)
             {
-                column.Index.Add(item, value);
+                table.OnItemChanged<V>(item, property, column, value);
             }
+            CheckViews(item, property, column);
+        }
+
+        public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
+        {
+            if (string.Equals(property, nameof(DBItem.Attached), StringComparison.Ordinal)
+                || string.Equals(property, nameof(DBItem.UpdateState), StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            column?.Index?.Add(item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanged(item, property, column, value);
@@ -860,7 +879,7 @@ namespace DataWF.Data
             IEnumerable<T> buf = null;
             if (query.Parameters.Count == 0)
             {
-                buf = list ?? this;
+                buf = list ?? AsReadOnly();
             }
             else if (query.Parameters.Count == 1)
             {
@@ -896,13 +915,21 @@ namespace DataWF.Data
 
         public IEnumerable<T> Search(QParam param, IEnumerable<T> list = null)
         {
-            list = list ?? this;
+            list = list ?? AsReadOnly();
             foreach (T row in list)
             {
                 if (param.ValueLeft == null || param.ValueRight == null)
                 { }
                 if (CheckItem(row, param.ValueLeft.GetValue(row), param.ValueRight.GetValue(row), param.Comparer))
                     yield return row;
+            }
+        }
+
+        private IEnumerable<T> AsReadOnly()
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                yield return items[i];
             }
         }
 
@@ -993,9 +1020,9 @@ namespace DataWF.Data
                 return list;
 
             value = Optimisation(column, comparer, value);
-            if (value is IEnumerable<T>)
+            if (value is IEnumerable<T> enumerabble)
             {
-                return (IEnumerable<T>)value;
+                return enumerabble;
             }
 
             if (column.Index != null)

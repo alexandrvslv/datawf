@@ -780,6 +780,16 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             parameter.Value = value;
         }
 
+        public virtual uint GetOID(IDataReader reader, int index)
+        {
+            return (uint)reader.GetValue(index);
+        }
+
+        public virtual TimeSpan GetTimeSpan(IDataReader reader, int index)
+        {
+            return (TimeSpan)reader.GetValue(index);
+        }
+
         public virtual void ReadValue(DBItem item, IDataParameter parameter)
         {
             item[parameter.SourceColumn] = parameter.Value;

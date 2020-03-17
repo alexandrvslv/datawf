@@ -505,6 +505,16 @@ namespace DataWF.Data
         {
             return Items.Remove(item);
         }
+
+        public uint ReadOID(int index)
+        {
+            return DbConnection.System.GetOID(Reader, index);
+        }
+
+        internal TimeSpan? ReadTimeSpan(int index)
+        {
+            return DbConnection.System.GetTimeSpan(Reader, index);
+        }
     }
 }
 

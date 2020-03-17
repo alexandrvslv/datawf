@@ -116,7 +116,9 @@ namespace DataWF.Data
         DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true);
         DBItem NewItem(DBUpdateState state, bool def, int typeIndex);
         int NextHash();
+        void OnItemChanged<V>(DBItem item, string proeprty, DBColumn column, V value);
         void OnItemChanged(DBItem item, string proeprty, DBColumn column, object value);
+        void OnItemChanging<V>(DBItem item, string proeprty, DBColumn column, V value);
         void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
         void OnUpdated(DBItemEventArgs e);
         bool OnUpdating(DBItemEventArgs e);

@@ -279,5 +279,15 @@ select last_insert_rowid();");
             var sqlReader = (SqliteDataReader)reader;
             return sqlReader.ReadAsync();
         }
+
+        public override uint GetOID(IDataReader reader, int index)
+        {
+            return ((SqliteDataReader)reader).GetFieldValue<uint>(index);
+        }
+
+        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        {
+            return ((SqliteDataReader)reader).GetTimeSpan(index);
+        }
     }
 }

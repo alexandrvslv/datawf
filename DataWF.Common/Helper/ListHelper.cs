@@ -814,38 +814,20 @@ namespace DataWF.Common
 
         public static bool EqualT<T>(T x, T y)
         {
-            var type = typeof(T);
-            if (x == null)
-            {
-                return y == null;
-            }
-            if (y == null)
-            {
-                return x == null;
-            }
-
-            var result = false;
+            var type = TypeHelper.CheckNullable(typeof(T));
             if (type == typeof(string))
             {
-                result = string.Equals(x.ToString(), y.ToString(), StringComparison.Ordinal);
+                return ((IEqualityComparer<T>)StringComparer.Ordinal).Equals(x, y);
             }
-            else if (type == typeof(DateTime) && x is DateTime xDate && y is DateTime yDate)
+            if (type == typeof(byte[]))
             {
-                if (xDate.TimeOfDay == TimeSpan.Zero || yDate.TimeOfDay == TimeSpan.Zero)
-                    result = xDate.Date.Equals(yDate.Date);
-                else
-                    result = xDate.Equals(yDate);
+                return ((IEqualityComparer<T>)ByteArrayComparer.Default).Equals(x, y);
             }
-            else if (type == typeof(byte[]))
+            if (type == typeof(DateTime))
             {
-                result = Helper.CompareByteAsSpan((byte[])(object)x, (byte[])(object)y);
+                return ((IEqualityComparer<T>)DateTimePartComparer.Default).Equals(x, y);
             }
-            else
-            {
-                result = EqualityComparer<T>.Default.Equals(x, y);
-            }
-
-            return result;
+            return EqualityComparer<T>.Default.Equals(x, y);
         }
 
         public static bool Equal(object x, object y)
@@ -896,17 +878,9 @@ namespace DataWF.Common
                 result = comp.Compare(x, y);
                 hash = x != null && y != null;
             }
-            else if (x == null)
+            if (typeof(T) == typeof(string))
             {
-                result = (y == null) ? 0 : -1;
-            }
-            else if (y == null)
-            {
-                result = 1;
-            }
-            else if (typeof(T) == typeof(string))
-            {
-                result = string.Compare(x.ToString(), y.ToString(), StringComparison.OrdinalIgnoreCase);
+                result = ((IComparer<T>)StringComparer.Ordinal).Compare(x, y);
             }
             else if (typeof(T) == typeof(DateTime) && x is DateTime xd && y is DateTime yd)
             {

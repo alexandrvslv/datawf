@@ -168,5 +168,15 @@ select seq from db_sequence where name = '{sequence.Name}';";
             var sqlReader = (MySqlDataReader)reader;
             return sqlReader.ReadAsync();
         }
+
+        public override uint GetOID(IDataReader reader, int index)
+        {
+            return ((MySqlDataReader)reader).GetUInt32(index);
+        }
+
+        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        {
+            return ((MySqlDataReader)reader).GetTimeSpan(index);
+        }
     }
 }

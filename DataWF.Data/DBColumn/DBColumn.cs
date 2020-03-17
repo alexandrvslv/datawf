@@ -720,22 +720,23 @@ namespace DataWF.Data
             {
                 return;
             }
+            var isNull = transaction.Reader.IsDBNull(i);
             switch (DBDataType)
             {
                 case DBDataType.String:
                 case DBDataType.Clob:
-                    var stringValue = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
+                    var stringValue = isNull ? null : transaction.Reader.GetString(i);
                     row.SetValue<string>(stringValue, this, false);
                     break;
                 case DBDataType.Int:
-                    var intValue = transaction.Reader.IsDBNull(i) ? null : (int?)transaction.Reader.GetInt32(i);
+                    var intValue = isNull ? (int?)null : transaction.Reader.GetInt32(i);
                     if (DataType == typeof(int))
                     {
                         row.SetValue<int?>(intValue, this, false);
                     }
                     else if (DataType == typeof(uint))
                     {
-                        row.SetValue<uint?>(intValue == null ? null : (uint?)intValue, this, false);
+                        row.SetValue<uint?>(isNull ? (uint?)null : (uint?)intValue, this, false);
                     }
                     else
                     {
@@ -743,53 +744,53 @@ namespace DataWF.Data
                     }
                     break;
                 case DBDataType.BigInt:
-                    var longValue = transaction.Reader.IsDBNull(i) ? null : (long?)transaction.Reader.GetInt64(i);
+                    var longValue = isNull ? (long?)null : transaction.Reader.GetInt64(i);
                     row.SetValue<long?>(longValue, this, false);
                     break;
                 case DBDataType.ShortInt:
-                    var shortValue = transaction.Reader.IsDBNull(i) ? null : (short?)transaction.Reader.GetInt16(i);
+                    var shortValue = isNull ? (short?)null : transaction.Reader.GetInt16(i);
                     row.SetValue<short?>(shortValue, this, false);
                     break;
                 case DBDataType.Date:
                 case DBDataType.DateTime:
                 case DBDataType.TimeStamp:
-                    var dateValue = transaction.Reader.IsDBNull(i) ? null : (DateTime?)transaction.Reader.GetDateTime(i);
+                    var dateValue = isNull ? (DateTime?)null : (DateTime?)transaction.Reader.GetDateTime(i);
                     row.SetValue<DateTime?>(dateValue, this, false);
                     break;
                 case DBDataType.Bool:
-                    var boolValue = transaction.Reader.IsDBNull(i) ? null : (bool?)transaction.Reader.GetBoolean(i);
+                    var boolValue = isNull ? (bool?)null : transaction.Reader.GetBoolean(i);
                     row.SetValue<bool?>(boolValue, this, false);
                     break;
                 case DBDataType.Blob:
                 case DBDataType.ByteArray:
-                    var arrayValue = transaction.Reader.IsDBNull(i) ? null : (byte[])transaction.Reader.GetValue(i);
+                    var arrayValue = isNull ? null : (byte[])transaction.Reader.GetValue(i);
                     row.SetValue<byte[]>(arrayValue, this, false);
                     break;
                 case DBDataType.LargeObject:
-                    var unitValue = transaction.Reader.IsDBNull(i) ? null : (uint?)transaction.Reader.GetValue(i);
+                    var unitValue = isNull ? (uint?)null : transaction.ReadOID(i);
                     row.SetValue<uint?>(unitValue, this, false);
                     break;
                 case DBDataType.Decimal:
-                    var decimalValue = transaction.Reader.IsDBNull(i) ? null : (decimal?)transaction.Reader.GetDecimal(i);
+                    var decimalValue = isNull ? (decimal?)null : transaction.Reader.GetDecimal(i);
                     row.SetValue<decimal?>(decimalValue, this, false);
                     break;
                 case DBDataType.Double:
-                    var doubleValue = transaction.Reader.IsDBNull(i) ? null : (double?)transaction.Reader.GetDouble(i);
+                    var doubleValue = isNull ? (double?)null : transaction.Reader.GetDouble(i);
                     row.SetValue<double?>(doubleValue, this, false);
                     break;
                 case DBDataType.Float:
-                    var floatValue = transaction.Reader.IsDBNull(i) ? null : (float?)transaction.Reader.GetFloat(i);
+                    var floatValue = isNull ? (float?)null : transaction.Reader.GetFloat(i);
                     row.SetValue<float?>(floatValue, this, false);
                     break;
                 case DBDataType.TimeSpan:
-                    var spanValue = transaction.Reader.IsDBNull(i) ? null : (TimeSpan?)transaction.Reader.GetValue(i);
+                    var spanValue = isNull ? (TimeSpan?)null : transaction.ReadTimeSpan(i);
                     row.SetValue<TimeSpan?>(spanValue, this, false);
                     break;
                 case DBDataType.TinyInt:
-                    var byteValue = transaction.Reader.IsDBNull(i) ? null : (byte?)transaction.Reader.GetByte(i);
+                    var byteValue = isNull ? (byte?)null : transaction.Reader.GetByte(i);
                     if (DataType == typeof(sbyte))
                     {
-                        row.SetValue<sbyte?>(byteValue == null ? null : (sbyte?)byteValue, this, false);
+                        row.SetValue<sbyte?>(isNull ? (sbyte?)null : (sbyte?)byteValue, this, false);
                     }
                     else
                     {
@@ -797,7 +798,7 @@ namespace DataWF.Data
                     }
                     break;
                 default:
-                    var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetValue(i);
+                    var value = isNull ? null : transaction.Reader.GetValue(i);
                     row.SetValue(value, this, false);
                     break;
             }
@@ -968,15 +969,14 @@ namespace DataWF.Data
         public object GetValue(DBItem target)
         {
             return Pull != null ? Pull.Get(target.block, target.blockIndex)
-                : PropertyInvoker == this || !PropertyInvoker.TargetType.IsAssignableFrom(target.GetType()) ? null
-                : PropertyInvoker.GetValue(target);
+                : propertyInvoker?.GetValue(target);
         }
 
         public T GetValue<T>(DBItem target)
         {
             return Pull != null ? Pull.GetValue<T>(target.block, target.blockIndex)
-                : PropertyInvoker == this || !PropertyInvoker.TargetType.IsAssignableFrom(target.GetType()) ? default(T)
-                : (T)PropertyInvoker.GetValue(target);
+                : propertyInvoker is IValuedInvoker valuedInvoker ? valuedInvoker.GetValue<T>(target)
+                : (T)propertyInvoker.GetValue(target);
         }
 
         public object GetValue(object target)
@@ -992,7 +992,7 @@ namespace DataWF.Data
             }
             else
             {
-                PropertyInvoker.SetValue(target, value);
+                propertyInvoker.SetValue(target, value);
             }
         }
 
@@ -1002,9 +1002,13 @@ namespace DataWF.Data
             {
                 Pull.SetValue<T>(target.block, target.blockIndex, value);
             }
+            else if (propertyInvoker is IValuedInvoker valueInvoker)
+            {
+                valueInvoker.SetValue<T>(target, value);
+            }
             else
             {
-                PropertyInvoker.SetValue(target, value);
+                propertyInvoker.SetValue(target, value);
             }
         }
 
@@ -1138,6 +1142,26 @@ namespace DataWF.Data
             return buf;
         }
 
+        public void RemoveConstraints()
+        {
+            for (var j = 0; j < Table.Constraints.Count;)
+            {
+                var constraint = Table.Constraints[j];
+                if (constraint.Columns.Contains(this))
+                {
+                    constraint.Columns.Remove(this);
+                    if (constraint.Columns.Count == 0)
+                    {
+                        Table.Constraints.RemoveInternal(constraint, j);
+                    }
+                }
+                else
+                {
+                    j++;
+                }
+            }
+        }
+
         public void RemoveForeignKeys()
         {
             for (var j = 0; j < Table.Foreigns.Count;)
@@ -1146,6 +1170,26 @@ namespace DataWF.Data
                 if (reference.Column == this)
                 {
                     Table.Foreigns.RemoveInternal(reference, j);
+                }
+                else
+                {
+                    j++;
+                }
+            }
+        }
+
+        public void RemoveIndexes()
+        {
+            for (var j = 0; j < Table.Indexes.Count;)
+            {
+                var index = Table.Indexes[j];
+                if (index.Columns.Contains(this))
+                {
+                    index.Columns.Remove(this);
+                    if (index.Columns.Count == 0)
+                    {
+                        Table.Indexes.RemoveInternal(index, j);
+                    }
                 }
                 else
                 {

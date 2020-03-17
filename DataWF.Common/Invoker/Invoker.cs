@@ -1,12 +1,14 @@
-﻿using System;
+﻿using Newtonsoft.Json.Serialization;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using Newtonsoft.Json.Serialization;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace DataWF.Common
 {
 
-    public abstract class Invoker<T, V> : IInvoker<T, V>
+    public abstract class Invoker<T, V> : IInvoker<T, V>, IValuedInvoker, IInvokerJson
     {
         public abstract string Name { get; }
 
@@ -20,17 +22,23 @@ namespace DataWF.Common
 
         public abstract V GetValue(T target);
 
-        public object GetValue(object target)
+        public L GetValue<L>(object target)
         {
-            return GetValue((T)target);
+            var value = GetValue((T)target);
+            return Unsafe.As<V, L>(ref value);
         }
+
+        public object GetValue(object target) => GetValue((T)target);
 
         public abstract void SetValue(T target, V value);
 
-        public void SetValue(object target, object value)
+        public void SetValue<L>(object target, L value)
         {
-            SetValue((T)target, (V)value);
+            var converted = Unsafe.As<L, V>(ref value);
+            SetValue((T)target, converted);
         }
+
+        public void SetValue(object target, object value) => SetValue((T)target, (V)value);
 
         public override string ToString()
         {
@@ -70,6 +78,18 @@ namespace DataWF.Common
         public bool CheckItem(T item, object typedValue, CompareType comparer, IComparer comparision)
         {
             return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);//(IComparer<V>)
+        }
+
+        public void WriteValue(Utf8JsonWriter writer, object item, JsonSerializerOptions option)
+        {
+            var value = GetValue((T)item);
+            JsonSerializer.Serialize<V>(writer, value, option);
+        }
+
+        public void ReadValue(ref Utf8JsonReader reader, object item, JsonSerializerOptions option)
+        {
+            var value = JsonSerializer.Deserialize<V>(ref reader, option);
+            SetValue((T)item, value);
         }
     }
 }

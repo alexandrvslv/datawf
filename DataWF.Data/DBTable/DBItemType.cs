@@ -41,15 +41,8 @@ namespace DataWF.Data
         public Type Type
         {
             get { return type; }
-            set
-            {
-                type = value;
-                Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes, false);
-            }
+            set { type = value; }
         }
-
-        [XmlIgnore, JsonIgnore]
-        public EmitConstructor Constructor { get; set; }
 
         [XmlIgnore, JsonIgnore]
         public DBTable Table => table ?? (table = DBTable.GetTable(Type));

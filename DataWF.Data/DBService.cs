@@ -391,23 +391,15 @@ namespace DataWF.Data
 
         public static bool Equal<T>(T x, T y)
         {
-            if (x == null)
+            if (typeof(T) == typeof(string))
             {
-                return y == null;
+                return ((IEqualityComparer<T>)StringComparer.Ordinal).Equals(x, y);
             }
-            if (y == null)
+            if (typeof(T) == typeof(byte[]))
             {
-                return x == null;
+                return ((IEqualityComparer<T>)ByteArrayComparer.Default).Equals(x, y);
             }
-            var type = typeof(T);
-            var equal = false;
-            if (type == typeof(string))
-                equal = string.Equals(x.ToString(), y.ToString(), StringComparison.Ordinal);
-            else if (type == typeof(byte[]))
-                equal = Helper.CompareByteAsSpan((byte[])(object)x, (byte[])(object)y);
-            else
-                equal = EqualityComparer<T>.Default.Equals(x, y);
-            return equal;
+            return EqualityComparer<T>.Default.Equals(x, y);
         }
 
         public static bool Equal(object x, object y)
@@ -418,16 +410,14 @@ namespace DataWF.Data
             }
             if (y == null)
             {
-                return x == null;
+                return false;
             }
 
             var equal = false;
             if (x.GetType() == typeof(string))
                 equal = string.Equals(x.ToString(), y.ToString(), StringComparison.Ordinal);
-            else if (x is Enum && y is int intY)
-                equal = ((int)x).Equals(intY);
-            else if (y is Enum && x is int intX)
-                equal = ((int)y).Equals(intX);
+            else if (x is Enum || y is Enum)
+                equal = ((int)x).Equals((int)y);
             else if (x is byte[] byteX && y is byte[] byteY)
                 equal = Helper.CompareByteAsSpan(byteX, byteY);
             else

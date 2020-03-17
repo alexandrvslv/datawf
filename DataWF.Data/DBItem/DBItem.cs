@@ -406,11 +406,11 @@ namespace DataWF.Data
                 RefreshOld(column, value, field);
             }
 
-            OnPropertyChanging(column.Property ?? column.Name, column, field);
+            OnPropertyChanging<T>(column.Property ?? column.Name, column, field);
 
             column.SetValue<T>(this, value);
 
-            OnPropertyChanged(column.Property ?? column.Name, column, value);
+            OnPropertyChanged<T>(column.Property ?? column.Name, column, value);
 
             if (check)
             {
@@ -1016,25 +1016,52 @@ namespace DataWF.Data
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangingEventHandler PropertyChanging;
 
-        public virtual void OnPropertyChanging(string property, DBColumn column = null, object value = null)
+        protected void OnPropertyChanging<V>(string property, DBColumn column = null, V value = default(V))
+        {
+            if (Attached)
+            {
+                Table.OnItemChanging<V>(this, property, column, value);
+            }
+            RaisePropertyChanging(property);
+        }
+
+        protected void OnPropertyChanging(string property, DBColumn column = null, object value = null)
         {
             if (Attached)
             {
                 Table.OnItemChanging(this, property, column, value);
             }
+            RaisePropertyChanging(property);
+        }
+
+        protected virtual void RaisePropertyChanging(string property)
+        {
             PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(property));
         }
 
-        public virtual void OnPropertyChanged([CallerMemberName]string property = null, DBColumn column = null, object value = null)
+        protected void OnPropertyChanged<V>([CallerMemberName]string property = null, DBColumn column = null, V value = default(V))
         {
             if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
             {
                 cacheToString = string.Empty;
             }
-            //if (string.IsNullOrEmpty(property))
-            //{
-            //    RemoveTag();
-            //}
+            if (Attached)
+            {
+                Table.OnItemChanged<V>(this, property, column, value);
+                if (property == nameof(Access) && access != null)
+                {
+                    access = ReadAccess();
+                }
+            }
+            RaisePropertyChanged(property);
+        }
+
+        protected void OnPropertyChanged([CallerMemberName]string property = null, DBColumn column = null, object value = null)
+        {
+            if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
+            {
+                cacheToString = string.Empty;
+            }
             if (Attached)
             {
                 Table.OnItemChanged(this, property, column, value);
@@ -1043,8 +1070,14 @@ namespace DataWF.Data
                     access = ReadAccess();
                 }
             }
+            RaisePropertyChanged(property);
+        }
+
+        protected virtual void RaisePropertyChanged(string property)
+        {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
+
         #endregion
 
         public void Refresh(IUserIdentity user)

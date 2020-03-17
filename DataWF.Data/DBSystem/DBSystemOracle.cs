@@ -400,5 +400,15 @@ select :oid;");
             var sqlReader = (OracleDataReader)reader;
             return sqlReader.ReadAsync();
         }
+
+        public override uint GetOID(IDataReader reader, int index)
+        {
+            return ((OracleDataReader)reader).GetFieldValue<uint>(index);
+        }
+
+        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        {
+            return ((OracleDataReader)reader).GetTimeSpan(index);
+        }
     }
 }

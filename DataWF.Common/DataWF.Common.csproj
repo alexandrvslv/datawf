@@ -6,7 +6,7 @@
     <RootNamespace>DataWF.Common</RootNamespace>
     <AssemblyName>DataWF.Common</AssemblyName>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
-    <!--<LangVersion>7.1</LangVersion>-->
+    <!--<LangVersion>8.0</LangVersion>-->
     <Platforms>AnyCPU</Platforms>
 
   </PropertyGroup>

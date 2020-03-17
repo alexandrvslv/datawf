@@ -247,5 +247,15 @@ select @oid;");
             var sqlReader = (SqlDataReader)reader;
             return sqlReader.ReadAsync();
         }
+
+        public override uint GetOID(IDataReader reader, int index)
+        {
+            return ((SqlDataReader)reader).GetFieldValue<uint>(index);
+        }
+
+        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        {
+            return ((SqlDataReader)reader).GetTimeSpan(index);
+        }
     }
 }

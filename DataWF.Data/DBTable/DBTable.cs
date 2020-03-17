@@ -461,9 +461,11 @@ namespace DataWF.Data
 
         public abstract void CopyTo(DBItem[] array, int arrayIndex);
 
+        public abstract void OnItemChanging<V>(DBItem item, string property, DBColumn column, V value);
+        public abstract void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
+        public abstract void OnItemChanged<V>(DBItem item, string proeprty, DBColumn column, V value);
         public abstract void OnItemChanged(DBItem item, string proeprty, DBColumn column, object value);
 
-        public abstract void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
 
         public abstract void Trunc();
 
@@ -1773,7 +1775,9 @@ namespace DataWF.Data
                 var column = Columns[i];
                 if (column.Property != null && column.PropertyInfo == null)
                 {
+                    column.RemoveConstraints();
                     column.RemoveForeignKeys();
+                    column.RemoveIndexes();
 
                     Columns.RemoveInternal(column, i);
                 }

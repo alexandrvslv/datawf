@@ -245,6 +245,41 @@ namespace DataWF.Data
             }
         }
 
+        public override void OnItemChanging<V>(DBItem item, string property, DBColumn column, V value)
+        {
+            if (item is T && item.GetType() == typeof(T))
+            {
+                base.OnItemChanging<V>(item, property, column == null ? null : Columns[column.Name], value);
+            }
+        }
+
+        public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
+        {
+            if (item is T && item.GetType() == typeof(T))
+            {
+                base.OnItemChanging(item, property, column == null ? null : Columns[column.Name], value);
+            }
+        }
+
+        public override void OnItemChanged<V>(DBItem item, string property, DBColumn column, V value)
+        {
+            if (item is T tItem && tItem.GetType() == typeof(T))
+            {
+                if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(column?.Name) && !BaseTable.CheckItem(tItem, FilterQuery)))
+                {
+                    if (items.Remove(tItem))
+                    {
+                        CheckViews(item, NotifyCollectionChangedAction.Remove);
+                        RemoveIndexes(tItem);
+                    }
+                }
+                else
+                {
+                    base.OnItemChanged<V>(item, property, column == null ? null : Columns[column.Name], value);
+                }
+            }
+        }
+
         public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
         {
             if (item is T tItem && tItem.GetType() == typeof(T))
@@ -261,14 +296,6 @@ namespace DataWF.Data
                 {
                     base.OnItemChanged(item, property, column == null ? null : Columns[column.Name], value);
                 }
-            }
-        }
-
-        public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
-        {
-            if (item is T && item.GetType() == typeof(T))
-            {
-                base.OnItemChanging(item, property, column == null ? null : Columns[column.Name], value);
             }
         }
 

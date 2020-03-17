@@ -202,7 +202,7 @@ namespace DataWF.Data
             {
                 if (column.DBDataType == DBDataType.TimeSpan)
                 {
-                    ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Interval; 
+                    ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Interval;
                 }
                 else if (column.DBDataType == DBDataType.LargeObject)
                 {
@@ -398,6 +398,16 @@ namespace DataWF.Data
         {
             var sqlReader = (NpgsqlDataReader)reader;
             return sqlReader.ReadAsync();
+        }
+
+        public override uint GetOID(IDataReader reader, int index)
+        {
+            return ((NpgsqlDataReader)reader).GetDataTypeOID(index);
+        }
+
+        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        {
+            return ((NpgsqlDataReader)reader).GetTimeSpan(index);
         }
 
         //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)

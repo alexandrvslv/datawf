@@ -55,7 +55,6 @@ namespace DataWF.WebService.Common
             int maxDepth = Factory.MaxDepth;
             var valueType = value.GetType();
             writer.WriteStartObject();
-            object propertyValue;
             Type propertyType;
             foreach (var invoker in value.Table.GetInvokers(valueType))
             {
@@ -64,7 +63,7 @@ namespace DataWF.WebService.Common
                 {
                     if (!includeReference || writer.CurrentDepth > maxDepth)
                         continue;
-                    propertyValue = invoker.GetValue(value);
+                    var propertyValue = invoker.GetValue(value);
                     if (Factory.ReferenceCheck && propertyValue is DBItem reference)
                     {
                         if (Factory.referenceSet.Contains(reference))
@@ -72,18 +71,26 @@ namespace DataWF.WebService.Common
                         else
                             Factory.referenceSet.Add(reference);
                     }
+                    writer.WritePropertyName(invoker.Name);
+                    JsonSerializer.Serialize(writer, propertyValue, propertyType, options);
+                }
+                else if (invoker.DataType == typeof(AccessValue))
+                {
+                    var propertyValue = (AccessValue)invoker.GetValue(value);
+                    var accessValue = propertyValue.GetFlags(Factory.CurrentUser);
+                    writer.WritePropertyName(invoker.Name);
+                    JsonSerializer.Serialize<AccessType>(writer, accessValue, options);
+                }
+                else if (invoker is IInvokerJson jsonInvoker)
+                {
+                    writer.WritePropertyName(invoker.Name);
+                    jsonInvoker.WriteValue(writer, value, options);
                 }
                 else
                 {
-                    propertyValue = invoker.GetValue(value);
-                    if (propertyValue is AccessValue accessValue)
-                    {
-                        propertyValue = accessValue.GetFlags(Factory.CurrentUser);
-                        propertyType = typeof(AccessType);
-                    }
+                    writer.WritePropertyName(invoker.Name);
+                    JsonSerializer.Serialize(writer, invoker.GetValue(value), propertyType, options);
                 }
-                writer.WritePropertyName(invoker.Name);
-                JsonSerializer.Serialize(writer, propertyValue, propertyType, options);
             }
 
             writer.WriteEndObject();

@@ -17,7 +17,11 @@ namespace DataWF.WebService.Common
     {
         private static readonly byte[] startArray = Encoding.UTF8.GetBytes("[");
         private static readonly byte[] endArray = Encoding.UTF8.GetBytes("]");
-        private static readonly byte[] comma = Encoding.UTF8.GetBytes(",");
+        private static readonly byte[] commaArray = Encoding.UTF8.GetBytes(",");
+        private static readonly byte start = startArray[0];
+        private static readonly byte end = endArray[0];
+        private static readonly byte comma = commaArray[0];
+
         public static readonly MediaTypeHeaderValue ApplicationJson
             = MediaTypeHeaderValue.Parse("application/json").CopyAsReadOnly();
 
@@ -78,8 +82,11 @@ namespace DataWF.WebService.Common
         private async Task WriteArray(PipeWriter pipeWriter, IEnumerable enumerable, Type objectType, JsonSerializerOptions option)
         {
             var itemType = TypeHelper.GetItemType(objectType);
-            await pipeWriter.WriteAsync(startArray);
-            var flag = false;
+            {
+                WriteByte(pipeWriter, start);
+            }
+            var bytes = 0L;
+            var max = 64 * 1024;
             using (var jsonWriter = CreatetWriter(pipeWriter, option))
             {
                 var commaSet = false;
@@ -87,18 +94,17 @@ namespace DataWF.WebService.Common
                 {
                     if (commaSet)
                     {
-                        await pipeWriter.WriteAsync(comma);
+                        WriteByte(pipeWriter, comma);
                     }
                     try
                     {
                         JsonSerializer.Serialize(jsonWriter, item, itemType, option);
-                        if (flag)
+                        bytes += jsonWriter.BytesCommitted;
+                        jsonWriter.Reset();
+                        if (bytes > max)
                         {
                             await pipeWriter.FlushAsync();
                         }
-
-                        jsonWriter.Reset();
-                        flag = !flag;
                     }
                     catch (Exception ex)
                     {
@@ -107,7 +113,14 @@ namespace DataWF.WebService.Common
                     commaSet = true;
                 }
             }
-            await pipeWriter.WriteAsync(endArray);
+            WriteByte(pipeWriter, end);
+        }
+
+        private static void WriteByte(PipeWriter pipeWriter, byte value)
+        {
+            var span = pipeWriter.GetSpan();
+            span[0] = value;
+            pipeWriter.Advance(1);
         }
 
         private async Task WriteArray(Stream stream, IEnumerable enumerable, Type objectType, JsonSerializerOptions option)
@@ -122,7 +135,7 @@ namespace DataWF.WebService.Common
                 {
                     if (commaSet)
                     {
-                        await stream.WriteAsync(comma);
+                        await stream.WriteAsync(commaArray);
                     }
                     try
                     {
