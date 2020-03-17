@@ -1138,6 +1138,22 @@ namespace DataWF.Data
             return buf;
         }
 
+        public void RemoveForeignKeys()
+        {
+            for (var j = 0; j < Table.Foreigns.Count;)
+            {
+                var reference = Table.Foreigns[j];
+                if (reference.Column == this)
+                {
+                    Table.Foreigns.RemoveInternal(reference, j);
+                }
+                else
+                {
+                    j++;
+                }
+            }
+        }
+
         public IListIndex CreateIndex(bool concurrent)
         {
             throw new NotImplementedException();

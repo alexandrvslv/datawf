@@ -1766,6 +1766,24 @@ namespace DataWF.Data
             });
         }
 
+        public void RemoveDeletedColumns()
+        {
+            for (int i = 0; i < Columns.Count;)
+            {
+                var column = Columns[i];
+                if (column.Property != null && column.PropertyInfo == null)
+                {
+                    column.RemoveForeignKeys();
+
+                    Columns.RemoveInternal(column, i);
+                }
+                else
+                {
+                    i++;
+                }
+            }
+        }
+
         [Invoker(typeof(DBTable), nameof(DBTable.GroupName))]
         public class GroupNameInvoker : Invoker<DBTable, string>
         {

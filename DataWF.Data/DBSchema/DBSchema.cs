@@ -537,19 +537,7 @@ namespace DataWF.Data
                 {
                     tableGenerator.Generate(this);
                 }
-                //Check deleted columns
-                for (int i = 0; i < tableGenerator.Table.Columns.Count;)
-                {
-                    var column = tableGenerator.Table.Columns[i];
-                    if (column.Property != null && column.PropertyInfo == null)
-                    {
-                        tableGenerator.Table.Columns.RemoveInternal(column, i);
-                    }
-                    else
-                    {
-                        i++;
-                    }
-                }
+                tableGenerator.Table.RemoveDeletedColumns();
             }
 
             Procedures.CheckDeleted();
@@ -561,12 +549,12 @@ namespace DataWF.Data
 
             foreach (var item in items)
             {
-                rez.Append(((DBItem)item).FormatPatch());
+                rez.Append(item.FormatPatch());
             }
             return rez.ToString();
         }
 
-        public IEnumerable<DBForeignKey> GetChildRelations(DBTable dBTable)
+        public IEnumerable<DBForeignKey> GetChildRelations(DBTable target)
         {
             if (!cacheRelation)
             {
@@ -581,7 +569,7 @@ namespace DataWF.Data
                 cacheRelation = true;
 
             }
-            return dBTable.ChildRelations;
+            return target.ChildRelations;
         }
 
         [Invoker(typeof(DBSchema), nameof(DBSchema.DataBase))]
