@@ -454,6 +454,11 @@ namespace DataWF.Common
             }
         }
 
+        public void Reset()
+        {
+            OnListChanged(NotifyCollectionChangedAction.Reset);
+        }
+
         public virtual void InsertInternal(int index, T item)
         {
             if (item == null)
