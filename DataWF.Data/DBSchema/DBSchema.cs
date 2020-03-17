@@ -537,6 +537,19 @@ namespace DataWF.Data
                 {
                     tableGenerator.Generate(this);
                 }
+                //Check deleted columns
+                for (int i = 0; i < tableGenerator.Table.Columns.Count;)
+                {
+                    var column = tableGenerator.Table.Columns[i];
+                    if (column.Property != null && column.PropertyInfo == null)
+                    {
+                        tableGenerator.Table.Columns.RemoveInternal(column, i);
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
             }
 
             Procedures.CheckDeleted();
