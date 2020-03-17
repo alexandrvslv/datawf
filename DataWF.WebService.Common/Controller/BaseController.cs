@@ -184,6 +184,11 @@ namespace DataWF.WebService.Common
                     {
                         throw new InvalidOperationException("Some deserialization problem!");
                     }
+                    if ((value.UpdateState & DBUpdateState.Insert) != DBUpdateState.Insert)
+                    {
+                        value.Reject(transaction.Caller);
+                        return BadRequest($"Specified Id {value.PrimaryId} is used by another record!");
+                    }
                     if (IsDenied(value, transaction.Caller))
                     {
                         value.Reject(transaction.Caller);
