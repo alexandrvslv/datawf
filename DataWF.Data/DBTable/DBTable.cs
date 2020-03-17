@@ -528,7 +528,7 @@ namespace DataWF.Data
                 ?? Columns.GetByReferenceProperty(property);
         }
 
-        protected void SetItemType(Type type)
+        protected internal void SetItemType(Type type)
         {
             itemType = ItemTypes[0] = new DBItemType { Type = type };
             // Info = DBService.GetTableAttribute(type);

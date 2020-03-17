@@ -55,5 +55,11 @@ namespace DataWF.Data
             return table;
         }
 
+        public override DBTable Generate(DBSchema schema)
+        {
+            var table = base.Generate(schema);
+            table.SetItemType(ItemType);
+            return table;
+        }
     }
 }

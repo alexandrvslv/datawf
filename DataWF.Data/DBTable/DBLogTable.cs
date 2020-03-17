@@ -223,6 +223,6 @@ namespace DataWF.Data
             public override void SetValue(DBLogTable<T> target, DBColumn value) { }
         }
 
-        
+
     }
 }
