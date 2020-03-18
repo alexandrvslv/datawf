@@ -67,6 +67,11 @@ namespace DataWF.Data
                 while (row != null)
                 {
                     buf = row.ToString() + (buf.Length == 0 ? string.Empty : (separator + buf));
+                    if (row.Group == row || row.Group?.Group == row)
+                    {
+                        buf = "Self Reference" + buf;
+                        row = null;
+                    }
                     row = row.Group;
                 }
                 return buf;
@@ -132,7 +137,7 @@ namespace DataWF.Data
             }
             SetReference<T>((T)(group = value), Table.GroupKey);
         }
-        
+
         public bool GroupCompare(string column, string value)
         {
             DBColumn col = Table.Columns[column];
