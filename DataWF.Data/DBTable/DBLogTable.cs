@@ -81,7 +81,6 @@ namespace DataWF.Data
             {
                 baseTable = value ?? throw new ArgumentException("BaseTable set operation required not null value!");
                 BaseTableName = value.Name;
-                block = 50;
                 Name = value.Name + "_log";
                 Schema = value.Schema.LogSchema ?? value.Schema;
                 var seqName = value.SequenceName + "_log";

@@ -391,13 +391,13 @@ namespace DataWF.Data
 
         public static bool Equal<T>(T x, T y)
         {
-            if (typeof(T) == typeof(string))
+            if (StringComparer.Ordinal is IEqualityComparer<T> stringComparer)
             {
-                return ((IEqualityComparer<T>)StringComparer.Ordinal).Equals(x, y);
+                return stringComparer.Equals(x, y);
             }
-            if (typeof(T) == typeof(byte[]))
+            if (ByteArrayComparer.Default is IEqualityComparer<T> byteComparer)
             {
-                return ((IEqualityComparer<T>)ByteArrayComparer.Default).Equals(x, y);
+                return byteComparer.Equals(x, y);
             }
             return EqualityComparer<T>.Default.Equals(x, y);
         }
@@ -432,10 +432,6 @@ namespace DataWF.Data
                     return list[i].Value;
             return DBNull.Value;
         }
-
-
-
-
 
         public static List<int> AccessGroups { get; } = new List<int>();
 

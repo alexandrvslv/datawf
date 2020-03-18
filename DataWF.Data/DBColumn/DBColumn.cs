@@ -688,7 +688,8 @@ namespace DataWF.Data
                 || ColumnType == DBColumnTypes.Expression
                 || ColumnType == DBColumnTypes.Code)
                 return;
-            if (Pull != null && Pull.ItemType != DataType)
+            if (Pull != null &&
+                (Pull.ItemType != DataType))
             {
                 Pull.Clear();
                 pull = null;
@@ -698,6 +699,10 @@ namespace DataWF.Data
                 if (DataType == null)
                     throw new InvalidOperationException($"{nameof(DataType)} not specified!");
                 Pull = Pull.Fabric(DataType, Table.BlockSize);
+            }
+            else if (Pull.BlockSize != Table.BlockSize)
+            {
+                Pull.BlockSize = Table.BlockSize;
             }
         }
 
@@ -974,9 +979,15 @@ namespace DataWF.Data
 
         public T GetValue<T>(DBItem target)
         {
-            return Pull != null ? Pull.GetValue<T>(target.block, target.blockIndex)
-                : propertyInvoker is IValuedInvoker valuedInvoker ? valuedInvoker.GetValue<T>(target)
-                : (T)propertyInvoker.GetValue(target);
+            if (Pull != null)
+            {
+                return Pull.GetValue<T>(target.block, target.blockIndex);
+            }
+            if (propertyInvoker is IValuedInvoker valueInvoker)
+            {
+                return valueInvoker.GetValue<T>(target);
+            }
+            return (T)propertyInvoker.GetValue(target);
         }
 
         public object GetValue(object target)

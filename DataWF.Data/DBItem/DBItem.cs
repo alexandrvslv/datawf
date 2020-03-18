@@ -148,7 +148,7 @@ namespace DataWF.Data
         [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
         public virtual DateTime? DateCreate
         {
-            get => Table.DateKey == null ? null : GetValue<DateTime?>(Table.DateKey);
+            get => Table.DateKey == null ? (DateTime?)null : GetValue<DateTime?>(Table.DateKey);
             set => SetValue(value, Table.DateKey);
         }
 
@@ -156,7 +156,7 @@ namespace DataWF.Data
         [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System, Order = 101)]
         public DateTime? Stamp
         {
-            get => Table.StampKey == null ? null : GetValue<DateTime?>(Table.StampKey);
+            get => Table.StampKey == null ? (DateTime?)null : GetValue<DateTime?>(Table.StampKey);
             set => SetValue(value, Table.StampKey);
         }
 

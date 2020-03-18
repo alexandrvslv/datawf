@@ -299,6 +299,12 @@ namespace DataWF.Data
             }
         }
 
+        public override DBColumn CheckColumn(string name, Type type, ref bool newCol)
+        {
+            var column = base.CheckColumn(name, type, ref newCol);
+            return column is DBVirtualColumn virtualColumn ? virtualColumn.BaseColumn : column;
+        }
+
         public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
         {
             if (typeIndex == 0)

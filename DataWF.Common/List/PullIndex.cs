@@ -11,7 +11,6 @@ namespace DataWF.Data
 {
     public class NullablePullIndex<T, K> : PullIndex<T, K?> where T : class, IPullHandler where K : struct
     {
-
         public NullablePullIndex(Pull pull, object nullKey, IComparer valueComparer, IEqualityComparer keyComparer = null)
             : base(pull, nullKey.GetType() == typeof(K) ? (K?)(K)nullKey : (K?)nullKey, valueComparer, keyComparer)
         {
@@ -58,7 +57,7 @@ namespace DataWF.Data
 
         public PullIndex(Pull pull, object nullKey, IComparer valueComparer = null, IEqualityComparer keyComparer = null)
         {
-            Pull = (Pull<K>)pull;
+            Pull = (GenericPull<K>)pull;
             this.nullKey = (K)nullKey;
             this.valueComparer = (valueComparer as IComparer<T>) ?? Comparer<T>.Default;
             this.keyComparer = (keyComparer as IEqualityComparer<K>) ?? EqualityComparer<K>.Default;
@@ -67,7 +66,7 @@ namespace DataWF.Data
 
         public override Pull BasePull => Pull;
 
-        public Pull<K> Pull { get; }
+        public GenericPull<K> Pull { get; }
 
         public K NullKey => nullKey;
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,8 +15,8 @@ namespace DataWF.Common
         public static Pull Fabric(Type type, int blockSize)
         {
             Type gtype = type.IsValueType || type.IsEnum
-                ? typeof(NullablePull<>).MakeGenericType(type)
-                : typeof(Pull<>).MakeGenericType(type);
+                ? typeof(NullablePullArray<>).MakeGenericType(type)
+                : typeof(PullArray<>).MakeGenericType(type);
             return (Pull)EmitInvoker.CreateObject(gtype, ctorTypes, new object[] { blockSize }, true);
         }
 
@@ -62,12 +63,13 @@ namespace DataWF.Common
             return Helper.TwoToOneShift(block, blockIndex);
         }
 
+        protected int blockCount;
         protected int blockSize;
         private Type itemType;
 
-        internal Pull(int BlockSize)
+        internal Pull(int blockSize)
         {
-            blockSize = BlockSize;
+            BlockSize = blockSize;
         }
 
         public abstract object Get(int index);
@@ -86,7 +88,7 @@ namespace DataWF.Common
 
         public T GetValue<T>(short block, short blockIndex)
         {
-            return ((Pull<T>)this).GetValue(block, blockIndex);
+            return ((GenericPull<T>)this).GetValue(block, blockIndex);
         }
 
         public void SetValue<T>(int index, T value)
@@ -97,7 +99,7 @@ namespace DataWF.Common
 
         public void SetValue<T>(short block, short blockIndex, T value)
         {
-            ((Pull<T>)this).SetValue(block, blockIndex, value);
+            ((GenericPull<T>)this).SetValue(block, blockIndex, value);
         }
 
         public virtual int Capacity { get { return 0; } }
@@ -106,7 +108,7 @@ namespace DataWF.Common
             get { return blockSize; }
             set
             {
-                if (blockSize != 0)
+                if (blockCount == 0)
                 {
                     blockSize = value;
                 }
@@ -170,10 +172,37 @@ namespace DataWF.Common
         }
     }
 
-    public class Pull<T> : Pull, IEnumerable<T>
+    public class NullablePullArray<T> : PullArray<T?>, IEnumerable<T?> where T : struct
+    {
+        public NullablePullArray(int BlockSize) : base(BlockSize)
+        {
+            ItemType = typeof(T);
+        }
+
+        public override void Set(int index, object value)
+        {
+            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            SetValue(block, blockIndex, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
+        }
+
+        public override void Set(short block, short blockIndex, object value)
+        {
+            SetValue(block, blockIndex, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
+        }
+    }
+
+    public abstract class GenericPull<T> : Pull
+    {
+        internal GenericPull(int blockSize) : base(blockSize)
+        { }
+
+        public abstract T GetValue(short block, short blockIndex);
+        public abstract void SetValue(short block, short blockIndex, T value);
+    }
+
+    public class Pull<T> : GenericPull<T>, IEnumerable<T>
     {
         private readonly List<T[]> array = new List<T[]>();
-        private int blockCount;
         private int maxIndex;
 
         public Pull(int blockSize) : base(blockSize)
@@ -223,15 +252,16 @@ namespace DataWF.Common
             SetValue(block, blockIndex, (T)value);
         }
 
-        public T GetValue(short block, short blockIndex)
+        public override T GetValue(short block, short blockIndex)
         {
-            if (block >= blockCount)
+            if (block >= blockCount || array[block])
+            { 
                 return default(T);
-            var arrayBlock = array[block];
-            return arrayBlock != null ? arrayBlock[blockIndex] : default(T);
+            }
+            return array[block][blockIndex];
         }
 
-        public void SetValue(short block, short blockIndex, T value)
+        public override void SetValue(short block, short blockIndex, T value)
         {
             if (block >= blockCount)
             {
@@ -259,9 +289,7 @@ namespace DataWF.Common
                 var size = i == blockCount - 1 ? maxIndex : blockSize;
                 for (int j = 0; j < size; j++)
                 {
-                    if (block == null)
-                        yield return default(T);
-                    yield return block[j];
+                    yield return block == null ? default(T) : block[j];
                 }
             }
         }
@@ -274,9 +302,10 @@ namespace DataWF.Common
         public override void Trunc(int maxIndex)
         {
             Helper.OneToTwoShift(maxIndex, out var block, out var blockIndex);
-            while (block < array.Count - 1)
+            while (block < blockCount - 1)
             {
-                array.RemoveAt(array.Count - 1);
+                array.RemoveAt(blockCount - 1);
+                Interlocked.Decrement(ref blockCount);
             }
             if (block < array.Count && blockIndex + 1 < BlockSize)
             {
@@ -284,4 +313,141 @@ namespace DataWF.Common
             }
         }
     }
+
+    public class PullArray<T> : GenericPull<T>, IEnumerable<T>
+    {
+        private T[][] array = new T[32][];
+        private int maxIndex;
+
+        public PullArray(int blockSize) : base(blockSize)
+        {
+            ItemType = typeof(T);
+        }
+
+        public override int Capacity => array.Length * blockSize;
+
+        public int Count => ((blockCount - 1) * blockSize) + maxIndex;
+
+        public override void Clear()
+        {
+            for (int i = 0; i < blockCount; i++)
+            {
+                var item = array[i];
+                if (item != null)
+                {
+                    Array.Clear(item, 0, blockSize);
+                    array[i] = null;
+                }
+            }
+            blockCount = 0;
+            Array.Clear(array, 0, array.Length);
+
+        }
+
+        public override bool EqualNull(object value)
+        {
+            return value == null;
+        }
+
+        public override object Get(int index)
+        {
+            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            return GetValue(block, blockIndex);
+        }
+
+        public override object Get(short block, short blockIndex)
+        {
+            return GetValue(block, blockIndex);
+        }
+
+        public override void Set(int index, object value)
+        {
+            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            SetValue(block, blockIndex, (T)value);
+        }
+
+        public override void Set(short block, short blockIndex, object value)
+        {
+            SetValue(block, blockIndex, (T)value);
+        }
+
+        public override T GetValue(short block, short blockIndex)
+        {
+            if (block >= blockCount || array[block] == null)
+            {
+                return default(T);
+            }
+
+            return array[block][blockIndex];
+        }
+
+        public override void SetValue(short block, short blockIndex, T value)
+        {
+            if (block >= blockCount)
+            {
+                var blockAdd = (block + 1) - blockCount;
+                Interlocked.Add(ref blockCount, blockAdd);
+                if (blockCount >= array.Length)
+                {
+                    Reallocate(blockCount);
+                }
+            }
+            if (array[block] == null)
+            {
+                array[block] = new T[blockSize];
+                maxIndex = block == (blockCount - 1) ? 0 : maxIndex;
+            }
+            array[block][blockIndex] = value;
+            if (block == blockCount - 1)
+            {
+                maxIndex = Math.Max(maxIndex, blockIndex);
+            }
+        }
+
+        private void Reallocate(int minCount)
+        {
+            var size = array.Length;
+            while (size < minCount)
+            {
+                size += 32;
+            }
+            var temp = new T[size][];
+            array.CopyTo(temp, 0);
+            array = temp;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            for (int i = 0; i < blockCount; i++)
+            {
+                var block = array[i];
+                var size = i == blockCount - 1 ? maxIndex : blockSize;
+                for (int j = 0; j < size; j++)
+                {
+                    yield return block == null ? default(T) : block[j];
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public override void Trunc(int maxIndex)
+        {
+            Helper.OneToTwoShift(maxIndex, out var block, out var blockIndex);
+            while (block < blockCount - 1)
+            {
+                Array.Clear(array[blockCount - 1], 0, blockSize);
+                array[blockCount - 1] = null;
+                Interlocked.Decrement(ref blockCount);
+            }
+            if (block < blockCount && blockIndex + 1 < BlockSize)
+            {
+                Memset<T>(array[block], default(T), blockIndex + 1);
+            }
+        }
+    }
+
 }

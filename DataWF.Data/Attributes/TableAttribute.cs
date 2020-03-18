@@ -41,7 +41,7 @@ namespace DataWF.Data
         [DefaultValue(DBTableType.Table)]
         public DBTableType TableType { get; set; } = DBTableType.Table;
 
-        public int BlockSize { get; set; } = 200;
+        public int BlockSize { get; set; } = 256;
 
         public bool IsLoging { get; set; } = true;
 

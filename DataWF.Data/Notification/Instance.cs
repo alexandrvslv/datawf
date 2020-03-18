@@ -31,7 +31,7 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
 
-    [Table("rinstance", "User", BlockSize = 100)]
+    [Table("rinstance", "User", BlockSize = 128)]
     public class Instance : DBItem, IInstance
     {
         public static readonly DBTable<Instance> DBTable = GetTable<Instance>();

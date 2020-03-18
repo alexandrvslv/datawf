@@ -179,7 +179,7 @@ namespace DataWF.Data
         protected string sequenceName;
         protected bool caching = false;
         protected DBTableType type = DBTableType.Table;
-        protected int block = 500;
+        protected int blockSize = 256;
         internal object locker = new object();
         protected List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
         private DBItemType itemType;
@@ -260,8 +260,27 @@ namespace DataWF.Data
         [Browsable(false)]
         public virtual int BlockSize
         {
-            get => block;
-            set => block = value;
+            get => blockSize;
+            set
+            {
+                var i = 1;
+                var temp = value;
+                do
+                {
+                    i++;
+                    temp = temp / 2;
+                }
+                while (temp > 1);
+                temp = (int)Math.Pow(2, i);
+                if (temp != blockSize)
+                {
+                    blockSize = temp;
+                    foreach (var column in Columns)
+                    {
+                        column.CheckPull();
+                    }
+                }
+            }
         }
 
         public virtual string SqlName => name;
