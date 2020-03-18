@@ -23,6 +23,7 @@ using DataWF.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -66,13 +67,38 @@ namespace DataWF.WebService.Common
                     var propertyValue = invoker.GetValue(value);
                     if (Factory.ReferenceCheck && propertyValue is DBItem reference)
                     {
-                        if (Factory.referenceSet.Contains(reference))
+                        if (!reference.Access.GetFlag(AccessType.Read, Factory.CurrentUser)
+                            || Factory.referenceSet.Contains(reference))
+                        {
                             continue;
+                        }
                         else
+                        {
                             Factory.referenceSet.Add(reference);
+                        }
                     }
+
                     writer.WritePropertyName(invoker.Name);
                     JsonSerializer.Serialize(writer, propertyValue, propertyType, options);
+                }
+                else if (TypeHelper.IsEnumerable(propertyType))
+                {
+                    var enumerable = (IEnumerable)invoker.GetValue(value);
+                    if (enumerable != null)
+                    {
+                        writer.WritePropertyName(invoker.Name);
+                        writer.WriteStartArray();
+                        foreach (var item in enumerable)
+                        {
+                            if (item is DBItem reference
+                                && !reference.Access.GetFlag(AccessType.Read, Factory.CurrentUser))
+                            {
+                                continue;
+                            }
+                            JsonSerializer.Serialize(writer, item, item.GetType(), options);
+                        }
+                        writer.WriteEndArray();
+                    }
                 }
                 else if (propertyType == typeof(AccessValue))
                 {
