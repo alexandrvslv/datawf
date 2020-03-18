@@ -59,7 +59,7 @@ namespace DataWF.WebService.Common
             foreach (var invoker in value.Table.GetInvokers(valueType))
             {
                 propertyType = invoker.DataType;
-                if (TypeHelper.IsBaseType(invoker.DataType, typeof(DBItem)))
+                if (TypeHelper.IsBaseType(propertyType, typeof(DBItem)))
                 {
                     if (!includeReference || writer.CurrentDepth > maxDepth)
                         continue;
@@ -74,7 +74,7 @@ namespace DataWF.WebService.Common
                     writer.WritePropertyName(invoker.Name);
                     JsonSerializer.Serialize(writer, propertyValue, propertyType, options);
                 }
-                else if (invoker.DataType == typeof(AccessValue))
+                else if (propertyType == typeof(AccessValue))
                 {
                     var propertyValue = (AccessValue)invoker.GetValue(value);
                     var accessValue = propertyValue.GetFlags(Factory.CurrentUser);
