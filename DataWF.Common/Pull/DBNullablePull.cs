@@ -11,7 +11,7 @@ namespace DataWF.Common
 
         public override void Set(int index, object value)
         {
-            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            Helper.OneToTwoShift(index, out short block, out short blockIndex);
             SetValue(block, blockIndex, DBNullable<T>.CheckNull(value));
         }
 

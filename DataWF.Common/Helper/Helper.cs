@@ -131,18 +131,29 @@ namespace DataWF.Common
             return (a << 16) | (b & 0xFFFF);
         }
 
+        public static int TwoToOneShift(int a, int b)
+        {
+            return (a << 16) | (b & 0xFFFF);
+        }
+
         public static void OneToTwoShift(int value, out short a, out short b)
         {
             a = (short)(value >> 16);
             b = (short)(value & 0xFFFF);
         }
 
-        public static long TwoToOneShift(int a, int b)
+        public static void OneToTwoShift(int value, out int a, out int b)
+        {
+            a = (value >> 16);
+            b = (value & 0xFFFF);
+        }
+
+        public static long TwoToOneShiftLong(int a, int b)
         {
             return ((long)a << 32) | ((long)b & 0xFFFFFFFF);
         }
 
-        public static void OneToTwoShift(long value, out int a, out int b)
+        public static void OneToTwoShiftLong(long value, out int a, out int b)
         {
             a = (int)(value >> 32);
             b = (int)(value & 0xFFFFFFFF);

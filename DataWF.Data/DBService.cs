@@ -389,15 +389,33 @@ namespace DataWF.Data
             return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
         }
 
+        public static bool EqualClass<T>(T x, T y) where T : class
+        {
+            if (x is string xString && y is string yString)
+            {
+                return StringComparer.Ordinal.Equals(xString, yString);
+            }
+            if (x is byte[] xByte && y is byte[] yByte)
+            {
+                return ByteArrayComparer.Default.Equals(xByte, yByte);
+            }
+            return EqualityComparer<T>.Default.Equals(x, y);
+        }
+
+        public static bool EqualNullable<T>(T? x, T? y) where T : struct
+        {
+            return EqualityComparer<T?>.Default.Equals(x, y);
+        }
+
         public static bool Equal<T>(T x, T y)
         {
-            if (StringComparer.Ordinal is IEqualityComparer<T> stringComparer)
+            if (x is string xString && y is string yString)
             {
-                return stringComparer.Equals(x, y);
+                return StringComparer.Ordinal.Equals(xString, yString);
             }
-            if (ByteArrayComparer.Default is IEqualityComparer<T> byteComparer)
+            if (x is byte[] xByte && y is byte[] yByte)
             {
-                return byteComparer.Equals(x, y);
+                return ByteArrayComparer.Default.Equals(xByte, yByte);
             }
             return EqualityComparer<T>.Default.Equals(x, y);
         }

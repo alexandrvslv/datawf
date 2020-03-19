@@ -92,13 +92,11 @@ namespace DataWF.Common
             return list;
         }
 
-        //public static string GetPropertyString(string property)
-        //{
-        //    if (property == null)
-        //        return null;
-        //    string[] split = property.Sp_lit(new char[] { '.' });
-        //    return split[split.Length - 1];
-        //}
+        public static bool IsNullable(this Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
+
         public static Type CheckNullable(Type type)
         {
             return type == null ? null : //Nullable.GetUnderlyingType(type) ?? type;

@@ -7,7 +7,7 @@ namespace DataWF.Common
 {
     public class PullArray<T> : GenericPull<T>, IEnumerable<T>
     {
-        private T[][] array = new T[32][];
+        protected T[][] array = new T[32][];
         private int maxIndex;
 
         public PullArray(int blockSize) : base(blockSize)
@@ -41,7 +41,7 @@ namespace DataWF.Common
 
         public override object Get(int index)
         {
-            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            Helper.OneToTwoShift(index, out short block, out short blockIndex);
             return GetValue(block, blockIndex);
         }
 
@@ -52,7 +52,7 @@ namespace DataWF.Common
 
         public override void Set(int index, object value)
         {
-            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            Helper.OneToTwoShift(index, out short block, out short blockIndex);
             SetValue(block, blockIndex, (T)value);
         }
 
@@ -126,7 +126,7 @@ namespace DataWF.Common
 
         public override void Trunc(int maxIndex)
         {
-            Helper.OneToTwoShift(maxIndex, out var block, out var blockIndex);
+            Helper.OneToTwoShift(maxIndex, out short block, out short blockIndex);
             while (block < blockCount - 1)
             {
                 Array.Clear(array[blockCount - 1], 0, blockSize);

@@ -82,7 +82,7 @@ namespace DataWF.Common
 
         public T GetValue<T>(int index)
         {
-            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            Helper.OneToTwoShift(index, out short block, out short blockIndex);
             return GetValue<T>(block, blockIndex);
         }
 
@@ -93,7 +93,7 @@ namespace DataWF.Common
 
         public void SetValue<T>(int index, T value)
         {
-            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            Helper.OneToTwoShift(index, out short block, out short blockIndex);
             SetValue(block, blockIndex, value);
         }
 
