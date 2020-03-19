@@ -10,6 +10,7 @@ namespace DataWF.Common
     /// </summary>
     public class TreeComparer<T> : InvokerComparer<T, bool>, ITreeComparer where T : IGroup
     {
+        public static readonly TreeComparer<T> Default = new Common.TreeComparer<T>();
         public TreeComparer()
         { }
 
@@ -25,6 +26,11 @@ namespace DataWF.Common
         public override int Compare(T x, T y)
         {
             return GroupHelper.Compare(x, y, Comparer);
+        }
+
+        public override int Compare(object x, object y)
+        {
+            return Compare((T)x, (T)y);
         }
 
         public int Compare(IGroup x, IGroup y)
