@@ -760,6 +760,10 @@ namespace DataWF.Data
                 case DBDataType.DateTime:
                 case DBDataType.TimeStamp:
                     var dateValue = isNull ? (DateTime?)null : (DateTime?)transaction.Reader.GetDateTime(i);
+                    if (!isNull && (Keys & (DBColumnKeys.Date | DBColumnKeys.Stamp)) != 0)
+                    {
+                        dateValue = DateTime.SpecifyKind(dateValue.Value, DateTimeKind.Utc);
+                    }
                     row.SetValueNullable<DateTime>(dateValue, this, false);
                     break;
                 case DBDataType.Bool:
