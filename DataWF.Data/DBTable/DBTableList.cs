@@ -43,16 +43,16 @@ namespace DataWF.Data
         public override int AddInternal(DBTable item)
         {
             var index = base.AddInternal(item);
-            if (item is IDBVirtualTable)
+            if (item is IDBVirtualTable virtualTable)
             {
-                ((IDBVirtualTable)item).BaseTable.AddVirtual((IDBVirtualTable)item);
+                virtualTable.BaseTable.AddVirtual(virtualTable);
             }
             return index;
         }
 
         public void ApplyDefaultSort()
         {
-            ApplySort(new DBTableComparer());
+            ApplySort(DBTableComparer.Instance);
         }
     }
 }

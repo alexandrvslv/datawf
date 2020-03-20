@@ -342,7 +342,16 @@ namespace DataWF.Data
                 Load(query, loadParam, transaction);
                 queryChache.TryAdd(filter, query);
             }
-            return Select(query);
+            if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
+            {
+                var temp = Select(query).ToList();
+                ListHelper.QuickSort(temp, TreeComparer<IGroup>.Default);
+                return temp;
+            }
+            else
+            {
+                return Select(query);
+            }
         }
 
         public async ValueTask<IEnumerable<T>> LoadCacheAsync(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
@@ -353,7 +362,16 @@ namespace DataWF.Data
                 await LoadAsync(query, loadParam, transaction);
                 queryChache.TryAdd(filter, query);
             }
-            return Select(query);
+            if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
+            {
+                var temp = Select(query).ToList();
+                ListHelper.QuickSort(temp, TreeComparer<IGroup>.Default);
+                return temp;
+            }
+            else
+            {
+                return Select(query);
+            }
         }
 
         public override IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)

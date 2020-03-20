@@ -393,18 +393,13 @@ namespace DataWF.Data
         {
             if (x is string xString && y is string yString)
             {
-                return StringComparer.Ordinal.Equals(xString, yString);
+                return string.Equals(xString, yString, StringComparison.Ordinal);
             }
             if (x is byte[] xByte && y is byte[] yByte)
             {
                 return ByteArrayComparer.Default.Equals(xByte, yByte);
             }
             return EqualityComparer<T>.Default.Equals(x, y);
-        }
-
-        public static bool EqualNullable<T>(T? x, T? y) where T : struct
-        {
-            return EqualityComparer<T?>.Default.Equals(x, y);
         }
 
         public static bool Equal<T>(T x, T y)
