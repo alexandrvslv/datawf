@@ -27,7 +27,6 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-
     public class DBLogTable<T> : DBTable<T>, IDBLogTable where T : DBLogItem, new()
     {
         private DBTable baseTable;
@@ -184,6 +183,27 @@ namespace DataWF.Data
                 }
             }
             return await base.SaveItem(item, transaction);
+        }
+
+        public override void RemoveDeletedColumns()
+        {
+            base.RemoveDeletedColumns();
+            for (int i = 0; i < Columns.Count;)
+            {
+                var column = Columns[i];
+                if (column is DBLogColumn logColumn && logColumn.BaseColumn == null)
+                {
+                    column.RemoveConstraints();
+                    column.RemoveForeignKeys();
+                    column.RemoveIndexes();
+
+                    Columns.RemoveInternal(column, i);
+                }
+                else
+                {
+                    i++;
+                }
+            }
         }
 
         [Invoker(typeof(DBLogTable<>), nameof(BaseTableName))]
