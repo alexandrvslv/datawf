@@ -126,7 +126,11 @@ namespace DataWF.Data
 
         public T GetGroupReference<T>() where T : DBGroupItem, new()
         {
-            return (T)GetReference(Table.GroupKey, ref group);
+            GetReference(Table.GroupKey, ref group);
+            //Check recursion
+            if (group == this)
+                return null;
+            return (T)group;
         }
 
         public void SetGroupReference<T>(T value) where T : DBGroupItem, new()
