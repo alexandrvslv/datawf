@@ -30,7 +30,7 @@ namespace DataWF.Common
         public static void ExpandAll(IGroup item, bool expand)
         {
             IGroup g = item.Group;
-            while (g != null)
+            while (g != null && g != g.Group)
             {
                 g.Expand = expand;
                 g = g.Group;
@@ -40,7 +40,7 @@ namespace DataWF.Common
         public static bool GetAllParentExpand(IGroup item)
         {
             IGroup g = item.Group;
-            while (g != null)
+            while (g != null && g != g.Group)
             {
                 if (!g.Expand)
                     return false;
@@ -52,7 +52,7 @@ namespace DataWF.Common
         public static bool IsParent(IGroup item, IGroup parent)
         {
             IGroup g = item.Group;
-            while (g != null)
+            while (g != null && g != g.Group)
             {
                 if (g == parent)
                     return true;
@@ -66,7 +66,7 @@ namespace DataWF.Common
             if (addSender)
                 yield return (T)item;
             IGroup g = item.Group;
-            while (g != null)
+            while (g != null && g != g.Group)
             {
                 yield return (T)g;
                 g = g.Group;
@@ -83,7 +83,7 @@ namespace DataWF.Common
             var invoker = EmitInvoker.Initialize(item.GetType(), member);
             string rez = "";
             IGroup g = item;
-            while (g != null)
+            while (g != null && g != g.Group)
             {
                 object val = invoker.GetValue(g);
                 if (val != null)
@@ -96,7 +96,7 @@ namespace DataWF.Common
         public static IGroup TopGroup(IGroup item)
         {
             IGroup g = item;
-            while (g.Group != null)
+            while (g.Group != null && g != g.Group)
             {
                 g = g.Group;
             }
@@ -107,7 +107,7 @@ namespace DataWF.Common
         {
             level = 0;
             IGroup g = item;
-            while (g.Group != null)
+            while (g.Group != null && g != g.Group)
             {
                 level++;
                 g = g.Group;
@@ -119,7 +119,7 @@ namespace DataWF.Common
         {
             int level = 0;
             IGroup g = item;
-            while (g.Group != null)
+            while (g.Group != null && g != g.Group)
             {
                 level++;
                 g = g.Group;
@@ -187,9 +187,16 @@ namespace DataWF.Common
                 yield return group;
             foreach (var item in group.GetGroups())
             {
+                if (item == group)
+                {
+                    continue;
+                }
+
                 yield return item;
                 foreach (var subItem in GetSubGroups(item))
+                {
                     yield return subItem;
+                }
             }
         }
 
