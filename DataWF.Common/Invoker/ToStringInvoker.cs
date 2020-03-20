@@ -19,10 +19,4 @@ namespace DataWF.Common
         public override void SetValue(T target, string value)
         { }
     }
-
-    public class ToStringInvoker : ToStringInvoker<object>
-    {
-        public static readonly ToStringInvoker Default = new ToStringInvoker();
-
-    }
 }

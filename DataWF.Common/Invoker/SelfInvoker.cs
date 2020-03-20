@@ -15,9 +15,4 @@ namespace DataWF.Common
         public override void SetValue(T target, T value) { }
 
     }
-
-    public class SelfInvoker : SelfInvoker<object>
-    {
-        public static readonly SelfInvoker Default = new SelfInvoker();
-    }
 }
