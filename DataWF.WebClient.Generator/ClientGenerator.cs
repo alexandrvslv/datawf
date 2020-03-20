@@ -121,7 +121,7 @@ namespace DataWF.WebClient.Generator
             {
                 yield return SyntaxHelper.GenProperty($"{client}Client", client, false);
             }
-            
+
         }
 
         private IEnumerable<StatementSyntax> GenProviderClientsBody()
@@ -1212,15 +1212,14 @@ namespace DataWF.WebClient.Generator
             {
                 //yield return SF.ParseStatement($"{fieldName}.UpdateFilter();");
             }
-            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var idProperty))
-            {
-                var idFiledName = GetFieldName((string)idProperty);
-                yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
-                //yield return SF.ParseStatement($"var client = ({GetTypeString(property, false, "List")}Client)ClientProvider.Default.GetClient<{GetTypeString(property, false, "List")}>();");
-                yield return SF.ParseStatement($"{fieldName} = {GetTypeString(property, false, "List")}Client.Instance.Get({idFiledName}.Value,(item) =>{{ {fieldName} = item; OnPropertyChanged(nameof({ GetPropertyName(property)})); }});");
-                //yield return SF.ParseStatement($"{fieldName} = ClientProvider.Default.{GetTypeString(property, false, "List")}.Select({idFiledName}.Value);");
-                yield return SF.ParseStatement("}");
-            }
+            // Change - refence from single json
+            //if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var idProperty))
+            //{
+            //    var idFiledName = GetFieldName((string)idProperty);
+            //    yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
+            //    yield return SF.ParseStatement($"{fieldName} = {GetTypeString(property, false, "List")}Client.Instance.Get({idFiledName}.Value,(item) =>{{ {fieldName} = item; OnPropertyChanged(nameof({ GetPropertyName(property)}));}});");
+            //    yield return SF.ParseStatement("}");
+            //}
             yield return SF.ParseStatement($"return {fieldName};");
         }
 
@@ -1245,16 +1244,17 @@ namespace DataWF.WebClient.Generator
                     var idProperty = GetPrimaryKey(property.Reference ?? property.AllOf.FirstOrDefault()?.Reference ?? property.AnyOf.FirstOrDefault()?.Reference);
                     yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)};");
                 }
-                var objectProperty = GetReferenceProperty((JsonSchema)property.Parent, property.Name);
-                if (objectProperty != null)
-                {
-                    var objectFieldName = GetFieldName(objectProperty);
-                    yield return SF.ParseStatement($"if({objectFieldName}?.Id != value)");
-                    yield return SF.ParseStatement("{");
-                    yield return SF.ParseStatement($"{objectFieldName} = null;");
-                    yield return SF.ParseStatement($"OnPropertyChanged(nameof({GetPropertyName(objectProperty)}));");
-                    yield return SF.ParseStatement("}");
-                }
+                //Change - refence from single json
+                //var objectProperty = GetReferenceProperty((JsonSchema)property.Parent, property.Name);
+                //if (objectProperty != null)
+                //{
+                //    var objectFieldName = GetFieldName(objectProperty);
+                //    yield return SF.ParseStatement($"if({objectFieldName}?.Id != value)");
+                //    yield return SF.ParseStatement("{");
+                //    yield return SF.ParseStatement($"{objectFieldName} = null;");
+                //    yield return SF.ParseStatement($"OnPropertyChanged(nameof({GetPropertyName(objectProperty)}));");
+                //    yield return SF.ParseStatement("}");
+                //}
 
                 yield return SF.ParseStatement($"OnPropertyChanged(temp, value);");
             }

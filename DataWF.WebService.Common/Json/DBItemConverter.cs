@@ -52,9 +52,18 @@ namespace DataWF.WebService.Common
 
         public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
         {
+            bool includeReferencing = Factory.IncludeReferencing;
             bool includeReference = Factory.IncludeReference;
+            bool referenceCheck = Factory.ReferenceCheck;
+
             int maxDepth = Factory.MaxDepth;
             var valueType = value.GetType();
+
+            if (includeReference && referenceCheck)
+            {
+                Factory.referenceSet.Add(value);
+            }
+
             writer.WriteStartObject();
             Type propertyType;
             foreach (var invoker in value.Table.GetInvokers(valueType))
@@ -65,7 +74,7 @@ namespace DataWF.WebService.Common
                     if (!includeReference || writer.CurrentDepth > maxDepth)
                         continue;
                     var propertyValue = invoker.GetValue(value);
-                    if (Factory.ReferenceCheck && propertyValue is DBItem reference)
+                    if (referenceCheck && propertyValue is DBItem reference)
                     {
                         if (!reference.Access.GetFlag(AccessType.Read, Factory.CurrentUser)
                             || Factory.referenceSet.Contains(reference))
@@ -84,7 +93,7 @@ namespace DataWF.WebService.Common
                 else if (TypeHelper.IsEnumerable(propertyType))
                 {
                     var enumerable = (IEnumerable)invoker.GetValue(value);
-                    if (enumerable != null)
+                    if (enumerable != null && includeReferencing)
                     {
                         writer.WritePropertyName(invoker.Name);
                         writer.WriteStartArray();

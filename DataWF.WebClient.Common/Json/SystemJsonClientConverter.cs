@@ -44,6 +44,7 @@ namespace DataWF.Common
         public T Read(ref Utf8JsonReader jreader, T item, JsonSerializerOptions options)
         {
             var property = (PropertySerializationInfo)null;
+            var propertyType = (Type)null;
             var id = (object)null;
             var synchItem = item as ISynchronized;
             while (jreader.Read() && jreader.TokenType != JsonTokenType.EndObject)
@@ -51,31 +52,22 @@ namespace DataWF.Common
                 if (jreader.TokenType == JsonTokenType.PropertyName)
                 {
                     property = SerializationInfo.GetProperty(jreader.GetString());
+                    propertyType = property?.DataType;
                 }
                 else
                 {
                     if (property == null)
                     {
-                        Deserialize(ref jreader, null, options, null, null);
+                        Deserialize(ref jreader, null, options, null);
                         continue;
                     }
                     var currentValue = item != null
-                        && property.DataType != typeof(string)
-                        && !property.DataType.IsValueType
+                        && propertyType != typeof(string)
+                        && !propertyType.IsValueType
                         ? property.Invoker.GetValue(item)
                         : null;
 
-                    if (currentValue is IList listValue && synchItem != null && synchItem.SyncStatus == SynchronizedStatus.Load)
-                    {
-                        foreach (var listItem in listValue)
-                        {
-                            if (listItem is ISynchronized synchronized && synchronized.SyncStatus != SynchronizedStatus.Actual)
-                            {
-                                synchronized.SyncStatus = SynchronizedStatus.Load;
-                            }
-                        }
-                    }
-                    object value = Deserialize(ref jreader, property.DataType, options, currentValue, currentValue as IList);
+                    object value = Deserialize(ref jreader, property.DataType, options, currentValue);
 
                     if (string.Equals(property.Name, Client.TypeInvoker?.Name, StringComparison.Ordinal) && value != null)
                     {
@@ -161,7 +153,7 @@ namespace DataWF.Common
             return JsonSerializer.Deserialize(ref jreader, type, options);
         }
 
-        public object Deserialize(ref Utf8JsonReader jreader, Type type, JsonSerializerOptions options, object item, IList sourceList)
+        public object Deserialize(ref Utf8JsonReader jreader, Type type, JsonSerializerOptions options, object item)
         {
             object value = null;
             switch (jreader.TokenType)
@@ -170,7 +162,7 @@ namespace DataWF.Common
                     value = DeserializeObject(ref jreader, type, options, item);
                     break;
                 case JsonTokenType.StartArray:
-                    value = DeserializeArray(ref jreader, options, type, sourceList);
+                    value = DeserializeArray(ref jreader, options, type, item as IList);
                     break;
                 case JsonTokenType.String:
                 //value = jreader.GetString();
@@ -220,7 +212,7 @@ namespace DataWF.Common
                 }
                 while (jreader.Read() && jreader.TokenType != JsonTokenType.EndArray)
                 {
-                    var item = Deserialize(ref jreader, itemType, options, null, sourceList);
+                    var item = Deserialize(ref jreader, itemType, options, null);
                     //client != null? client.Converter.Read(ref jreader, null, options): 
                     if (item == null)
                     {

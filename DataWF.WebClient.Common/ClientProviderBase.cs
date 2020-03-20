@@ -116,6 +116,7 @@ namespace DataWF.Common
             {
                 client = httpMessageHandler != null ? new HttpClient(httpMessageHandler, false) : new HttpClient();
                 client.Timeout = TimeSpan.FromHours(1);
+                client.DefaultRequestHeaders.Add("json_include_ref", "True");
                 if (baseUrl != null)
                 {
                     client.BaseAddress = new Uri(baseUrl);
