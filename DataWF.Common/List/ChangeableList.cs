@@ -15,7 +15,7 @@ namespace DataWF.Common
             CheckStatus((T)item);
         }
 
-        public void CheckStatus(T item)
+        public virtual void CheckStatus(T item)
         {
             var syncItem = item as ISynchronized;
             if (syncItem.SyncStatus == SynchronizedStatus.Actual)

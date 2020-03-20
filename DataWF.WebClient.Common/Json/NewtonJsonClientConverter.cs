@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DataWF.Common
@@ -40,6 +41,7 @@ namespace DataWF.Common
             var property = (PropertySerializationInfo)null;
             var propertyType = (Type)null;
             var id = (object)null;
+            var isRef = true;
             var synchItem = item as ISynchronized;
             while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
             {
@@ -93,23 +95,25 @@ namespace DataWF.Common
                             item = Client.AddDownloads((K)id, item);
                         }
                         Client.IdInvoker.SetValue(item, id);
-
-                        if (item is ISynchronized synchronized)
-                        {
-                            synchItem = synchronized;
-                            if (synchItem.SyncStatus == SynchronizedStatus.Actual)
-                            {
-                                synchItem.SyncStatus = SynchronizedStatus.Load;
-                            }
-                        }
-
+                        synchItem = item as ISynchronized;
                         continue;
                     }
                     if (item == null)
                     {
                         throw new Exception("Wrong Json properties sequence!");
                     }
-                    if (synchItem != null && synchItem.SyncStatus != SynchronizedStatus.Load
+                    if (isRef && synchItem != null)
+                    {
+                        isRef = false;
+
+                        if (synchItem.SyncStatus == SynchronizedStatus.Actual
+                            || synchItem.SyncStatus == SynchronizedStatus.Suspend)
+                        {
+                            synchItem.SyncStatus = SynchronizedStatus.Load;
+                        }
+                    }
+                    if (synchItem != null
+                        && synchItem.SyncStatus != SynchronizedStatus.Load
                         && synchItem.Changes.ContainsKey(property.Name))
                     {
                         continue;
@@ -120,10 +124,13 @@ namespace DataWF.Common
             if (item == null)
                 return null;
 
-            if (synchItem != null && synchItem.SyncStatus == SynchronizedStatus.Load)
+            if (synchItem != null)
             {
-                synchItem.SyncStatus = SynchronizedStatus.Actual;
+                if ((!isRef && synchItem.SyncStatus == SynchronizedStatus.Load)
+                    || synchItem.SyncStatus == SynchronizedStatus.Suspend)
+                    synchItem.SyncStatus = SynchronizedStatus.Actual;
             }
+
             if (Client.RemoveDownloads((K)id))
             {
                 Client.Add(item);
@@ -187,49 +194,45 @@ namespace DataWF.Common
             var itemType = TypeHelper.GetItemType(type);
             var client = Client.Provider.GetClient(itemType);
             var temp = sourceList ?? (IList)EmitInvoker.CreateObject(type);
-            lock (temp)
+            var referenceList = temp as IReferenceList;
+            var referanceBuffer = (List<ISynchronized>)null;
+            if (referenceList != null && client != null
+                && referenceList.Owner.SyncStatus == SynchronizedStatus.Load)
             {
-                var referenceList = temp as IReferenceList;
-                if (referenceList != null
-                    && referenceList.Owner.SyncStatus == SynchronizedStatus.Load)
+                referanceBuffer = referenceList.TypeOf<ISynchronized>().Where(p => p.SyncStatus == SynchronizedStatus.Actual).ToList();
+                foreach (var item in referanceBuffer)
                 {
-                    foreach (var item in referenceList.TypeOf<ISynchronized>())
-                    {
-                        item.SyncStatus = SynchronizedStatus.Load;
-                    }
+                    item.SyncStatus = SynchronizedStatus.Suspend;
                 }
-                else
+            }
+            else
+            {
+                temp.Clear();
+            }
+            while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+            {
+                var item = Deserialize(jreader, itemType, serializer, null);
+                //client != null? client.Converter.Read(ref jreader, null, options): 
+                if (item == null)
                 {
-                    temp.Clear();
+                    continue;
                 }
-                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
-                {
-                    var item = Deserialize(jreader, itemType, serializer, null);
-                    //client != null? client.Converter.Read(ref jreader, null, options): 
-                    if (item == null)
-                    {
-                        continue;
-                    }
-                    temp.Add(item);
-                }
+                temp.Add(item);
+            }
 
-                if (referenceList != null
-                    && referenceList.Owner.SyncStatus == SynchronizedStatus.Load
-                    && client != null)
+            if (referanceBuffer != null)
+            {
+                for (var i = 0; i < referenceList.Count; i++)
                 {
-                    for (var i = 0; i < referenceList.Count; i++)
+                    var item = (ISynchronized)referenceList[i];
+                    if (referanceBuffer.Contains(item)
+                        && item.SyncStatus == SynchronizedStatus.Suspend)
                     {
-                        var item = referenceList[i];
-                        if (item is ISynchronized synched
-                            && synched.SyncStatus == SynchronizedStatus.Load)
+                        if (!client.Remove(item))
                         {
-
-                            if (!client.Remove(item))
-                            {
-                                referenceList.RemoveAt(i);
-                            }
-                            i--;
+                            referenceList.RemoveAt(i);
                         }
+                        i--;
                     }
                 }
             }

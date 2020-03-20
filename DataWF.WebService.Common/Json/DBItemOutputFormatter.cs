@@ -56,27 +56,28 @@ namespace DataWF.WebService.Common
             httpContext.DisableBuffering();
 
             var option = new JsonSerializerOptions();
-            option.InitDefaults(httpContext);
-
-
-            var objectType = context.Object?.GetType() ?? context.ObjectType ?? typeof(object);
-
-            if (TypeHelper.IsEnumerable(objectType))
+            using (var factory = new DBItemConverterFactory(httpContext))
             {
-                var pipeWriter = httpContext.Response.BodyWriter;
-                await WriteArray(pipeWriter, (IEnumerable)context.Object, objectType, option);
-                await pipeWriter.FlushAsync();
-            }
-            else
-            {
-                var pipeWriter = httpContext.Response.BodyWriter;
-                using (var jsonWriter = CreatetWriter(pipeWriter, option))
+                option.InitDefaults(factory);
+
+                var objectType = context.Object?.GetType() ?? context.ObjectType ?? typeof(object);
+
+                if (TypeHelper.IsEnumerable(objectType))
                 {
-                    JsonSerializer.Serialize(jsonWriter, context.Object, objectType, option);
+                    var pipeWriter = httpContext.Response.BodyWriter;
+                    await WriteArray(pipeWriter, (IEnumerable)context.Object, objectType, option);
+                    await pipeWriter.FlushAsync();
                 }
-                await pipeWriter.FlushAsync();
+                else
+                {
+                    var pipeWriter = httpContext.Response.BodyWriter;
+                    using (var jsonWriter = CreatetWriter(pipeWriter, option))
+                    {
+                        JsonSerializer.Serialize(jsonWriter, context.Object, objectType, option);
+                    }
+                    await pipeWriter.FlushAsync();
+                }
             }
-
         }
 
         private async Task WriteArray(PipeWriter pipeWriter, IEnumerable enumerable, Type objectType, JsonSerializerOptions option)

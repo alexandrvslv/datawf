@@ -322,6 +322,7 @@ namespace DataWF.WebService.Common
             {
                 CurrentUser = user,
                 IncludeReference = false,
+                IncludeReferencing = false,
             });
             var stream = new MemoryStream();
 

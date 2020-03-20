@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 
 namespace DataWF.WebService.Common
 {
-    public class DBItemConverterFactory : JsonConverterFactory
+    public class DBItemConverterFactory : JsonConverterFactory, IDisposable
     {
         //private readonly Dictionary<Type, JsonConverter> cache = new Dictionary<Type, JsonConverter>();
         private const string jsonIncludeRef = "json_include_ref";
@@ -65,7 +65,7 @@ namespace DataWF.WebService.Common
 
         public int MaxDepth
         {
-            get => maxDepth ?? (maxDepth = HttpContext?.ReadInt(jsonMaxDepth) ?? 5).Value;
+            get => maxDepth ?? (maxDepth = HttpContext?.ReadInt(jsonMaxDepth) ?? 4).Value;
             set => maxDepth = value;
         }
 
@@ -88,6 +88,14 @@ namespace DataWF.WebService.Common
             {
                 return options.GetConverter(typeToConvert);
             }
+        }
+
+        public void Dispose()
+        {
+            referenceSet?.Clear();
+            referenceSet = null;
+            context = null;
+            user = null;
         }
     }
 }

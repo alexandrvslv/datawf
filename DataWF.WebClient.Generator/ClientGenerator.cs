@@ -1217,7 +1217,7 @@ namespace DataWF.WebClient.Generator
             //{
             //    var idFiledName = GetFieldName((string)idProperty);
             //    yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
-            //    yield return SF.ParseStatement($"{fieldName} = {GetTypeString(property, false, "List")}Client.Instance.Get({idFiledName}.Value,(item) =>{{ {fieldName} = item; OnPropertyChanged(nameof({ GetPropertyName(property)}));}});");
+            //    yield return SF.ParseStatement($"{fieldName} = {GetTypeString(property, false, "List")}Client.Instance.Select({idFiledName}.Value);");
             //    yield return SF.ParseStatement("}");
             //}
             yield return SF.ParseStatement($"return {fieldName};");

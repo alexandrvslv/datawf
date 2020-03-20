@@ -1491,6 +1491,12 @@ namespace DataWF.Data
             return GetInvokers(typeof(T));
         }
 
+        public IEnumerable<IInvoker> GetRefInvokers()
+        {
+            yield return ItemTypeKey.PropertyInvoker;
+            yield return PrimaryKey.PropertyInvoker;
+        }
+
         public IEnumerable<IInvoker> GetInvokers(Type type)
         {
             foreach (var itemType in ItemTypes.Values)

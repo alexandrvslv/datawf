@@ -45,10 +45,10 @@ namespace DataWF.WebService.Common
 
         public DBItemConverterFactory Factory { get; set; }
 
-        public override bool CanConvert(Type objectType)
-        {
-            return TypeHelper.IsBaseType(objectType, typeof(T));
-        }
+        //public override bool CanConvert(Type objectType)
+        //{
+        //    return TypeHelper.IsBaseType(objectType, typeof(T));
+        //}
 
         public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
         {
@@ -59,14 +59,18 @@ namespace DataWF.WebService.Common
             int maxDepth = Factory.MaxDepth;
             var valueType = value.GetType();
 
+            var invokers = value.Table.GetInvokers(valueType);
             if (includeReference && referenceCheck)
             {
-                Factory.referenceSet.Add(value);
+                if (Factory.referenceSet.Contains(value))
+                    invokers = value.Table.GetRefInvokers();
+                else
+                    Factory.referenceSet.Add(value);
             }
 
             writer.WriteStartObject();
             Type propertyType;
-            foreach (var invoker in value.Table.GetInvokers(valueType))
+            foreach (var invoker in invokers)
             {
                 propertyType = invoker.DataType;
                 if (TypeHelper.IsBaseType(propertyType, typeof(DBItem)))
@@ -74,19 +78,6 @@ namespace DataWF.WebService.Common
                     if (!includeReference || writer.CurrentDepth > maxDepth)
                         continue;
                     var propertyValue = invoker.GetValue(value);
-                    if (referenceCheck && propertyValue is DBItem reference)
-                    {
-                        if (!reference.Access.GetFlag(AccessType.Read, Factory.CurrentUser)
-                            || Factory.referenceSet.Contains(reference))
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            Factory.referenceSet.Add(reference);
-                        }
-                    }
-
                     writer.WritePropertyName(invoker.Name);
                     JsonSerializer.Serialize(writer, propertyValue, propertyType, options);
                 }
