@@ -127,7 +127,7 @@ namespace DataWF.Data
         [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]
         public virtual int? ItemType
         {
-            get => Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey);
+            get => Table.ItemTypeKey == null ? 0 : GetValueNullable<int>(Table.ItemTypeKey);
             set => SetValue(value, Table.ItemTypeKey);
         }
 
@@ -141,14 +141,14 @@ namespace DataWF.Data
         [DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.Indexing, Order = 99)]
         public DBStatus? Status
         {
-            get => Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey) ?? DBStatus.Empty;
+            get => Table.StatusKey == null ? DBStatus.Empty : GetValueNullable<DBStatus>(Table.StatusKey) ?? DBStatus.Empty;
             set => SetValue(value, Table.StatusKey);
         }
 
         [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
         public virtual DateTime? DateCreate
         {
-            get => Table.DateKey == null ? (DateTime?)null : GetValue<DateTime?>(Table.DateKey);
+            get => Table.DateKey == null ? (DateTime?)null : GetValueNullable<DateTime>(Table.DateKey);
             set => SetValue(value, Table.DateKey);
         }
 
@@ -156,7 +156,7 @@ namespace DataWF.Data
         [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System, Order = 101)]
         public DateTime? Stamp
         {
-            get => Table.StampKey == null ? (DateTime?)null : GetValue<DateTime?>(Table.StampKey);
+            get => Table.StampKey == null ? (DateTime?)null : GetValueNullable<DateTime>(Table.StampKey);
             set => SetValue(value, Table.StampKey);
         }
 
@@ -464,7 +464,7 @@ namespace DataWF.Data
         {
             var field = column.GetValueNullable<T>(this);
 
-            if (DBService.EqualNullable<T>(field, value))
+            if (Nullable.Equals<T>(field, value))
             {
                 return;
             }
