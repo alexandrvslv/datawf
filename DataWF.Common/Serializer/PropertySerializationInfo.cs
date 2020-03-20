@@ -101,7 +101,7 @@ namespace DataWF.Common
 
         public override string ToString()
         {
-            return $"{Name} {DataType.Name} {Keys}";
+            return $"{Order} {Name} {DataType.Name} {Keys}";
         }
     }
 }

@@ -107,7 +107,7 @@ namespace DataWF.Common
         {
             var xValue = x == null ? null : Invoker.GetValue(x);
             var yValue = y == null ? null : Invoker.GetValue(y);
-            var rez = ListHelper.Equals(xValue, yValue);
+            var rez = ListHelper.Equal(xValue, yValue);
             //if (hash && rez == 0 && x != null && y != null)
             //    rez = x.GetHashCode().Equals(y.GetHashCode());
             return rez;
@@ -128,11 +128,16 @@ namespace DataWF.Common
         {
             if (obj is InvokerComparer comp)
             {
-                bool byasc = Direction == comp.Direction;
-                bool byacc = Invoker == comp.Invoker;
-                return byasc && byacc;
+                return Equals(comp);
             }
             return object.ReferenceEquals(this, obj);
+        }
+
+        private bool Equals(InvokerComparer comp)
+        {
+            bool byasc = Direction == comp.Direction;
+            bool byacc = Invoker == comp.Invoker;
+            return byasc && byacc;
         }
 
         public override int GetHashCode()

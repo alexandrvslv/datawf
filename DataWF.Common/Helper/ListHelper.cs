@@ -817,7 +817,7 @@ namespace DataWF.Common
             var type = TypeHelper.CheckNullable(typeof(T));
             if (type == typeof(string))
             {
-                return ((IEqualityComparer<T>)StringComparer.Ordinal).Equals(x, y);
+                return string.Equals(x?.ToString(), y?.ToString(), StringComparison.OrdinalIgnoreCase);
             }
             if (type == typeof(byte[]))
             {
@@ -826,6 +826,10 @@ namespace DataWF.Common
             if (type == typeof(DateTime))
             {
                 return ((IEqualityComparer<T>)DateTimePartComparer.Default).Equals(x, y);
+            }
+            if (x is IEquatable<T> equatable)
+            {
+                return equatable.Equals(y);
             }
             return EqualityComparer<T>.Default.Equals(x, y);
         }
@@ -844,10 +848,9 @@ namespace DataWF.Common
 
             if (x is Enum || y is Enum)
             {
-                x = (int)x;
-                y = (int)y;
+                result = ((int)x).Equals((int)y);
             }
-            if (x is string || y is string)
+            else if (x is string || y is string)
             {
                 result = string.Equals(x.ToString(), y.ToString(), StringComparison.OrdinalIgnoreCase);
             }
@@ -876,20 +879,17 @@ namespace DataWF.Common
             if (comp != null)
             {
                 result = comp.Compare(x, y);
-                hash = x != null && y != null;
+                hash = x != null && y != null && !EqualT(x, y);
             }
-            if (typeof(T) == typeof(string))
+            else if (x is string xs && y is string ys)
             {
-                result = ((IComparer<T>)StringComparer.Ordinal).Compare(x, y);
+                result = string.Compare(xs, ys, StringComparison.OrdinalIgnoreCase);
             }
-            else if (typeof(T) == typeof(DateTime) && x is DateTime xd && y is DateTime yd)
+            else if (x is DateTime xd && y is DateTime yd)
             {
-                if (xd.TimeOfDay == TimeSpan.Zero || yd.TimeOfDay == TimeSpan.Zero)
-                    result = xd.Date.CompareTo(yd.Date);
-                else
-                    result = xd.CompareTo(yd);
+                result = DateTimePartComparer.Default.Compare(xd, yd);
             }
-            else if (typeof(T) == typeof(byte[]) && x is byte[] xb && y is byte[] yb)
+            else if (x is byte[] xb && y is byte[] yb)
             {
                 result = xb.Length.CompareTo(yb.Length);
             }
@@ -900,6 +900,10 @@ namespace DataWF.Common
             else if (x is IComparable xc)
             {
                 result = xc.CompareTo(y);
+            }
+            else if (EqualT(x, y))
+            {
+                result = 0;
             }
             else
             {
@@ -919,7 +923,7 @@ namespace DataWF.Common
             if (comp != null)
             {
                 result = comp.Compare(x, y);
-                hash = x != null && y != null;
+                hash = x != null && y != null && !Equal(x, y);
             }
             else if (x == null)
             {
@@ -929,16 +933,13 @@ namespace DataWF.Common
             {
                 result = 1;
             }
-            else if (x is string sx && y is string sy)
+            else if (x is string xs && y is string ys)
             {
-                result = string.Compare(sx, sy, StringComparison.OrdinalIgnoreCase);
+                result = string.Compare(xs, ys, StringComparison.OrdinalIgnoreCase);
             }
             else if (x is DateTime xd && y is DateTime yd)
             {
-                if (xd.TimeOfDay == TimeSpan.Zero || yd.TimeOfDay == TimeSpan.Zero)
-                    result = xd.Date.CompareTo(yd.Date);
-                else
-                    result = xd.CompareTo(yd);
+                result = DateTimePartComparer.Default.Compare(xd, yd);
             }
             else if (x is byte[] xb && y is byte[] yb)
             {
@@ -947,6 +948,10 @@ namespace DataWF.Common
             else if (x is IComparable xc)//x.GetType() == y.GetType() &&
             {
                 result = xc.CompareTo(y);
+            }
+            else if (Equal(x, y))
+            {
+                result = 0;
             }
             else
             {
