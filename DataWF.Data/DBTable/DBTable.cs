@@ -928,12 +928,11 @@ namespace DataWF.Data
 
         int IComparable.CompareTo(object obj)
         {
-            if (obj is DBTable)
+            if (obj is DBTable table)
             {
-                DBTable ts = obj as DBTable;
-                return string.Compare(this.Name, ts.Name);
+                return DBTableComparer.Instance.Compare(this, table);
             }
-            return 1;
+            return -1;
         }
 
         #endregion
@@ -1787,7 +1786,7 @@ namespace DataWF.Data
             });
         }
 
-        public void RemoveDeletedColumns()
+        public virtual void RemoveDeletedColumns()
         {
             for (int i = 0; i < Columns.Count;)
             {
