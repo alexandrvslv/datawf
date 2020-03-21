@@ -94,7 +94,7 @@ namespace DataWF.Common
 
         public int Count => items.Count;
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public bool IsReadOnly => false;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
@@ -105,10 +105,7 @@ namespace DataWF.Common
         }
 
         [Browsable(false)]
-        public object SyncRoot
-        {
-            get { return items; }
-        }
+        public object SyncRoot => items;
 
         [JsonIgnore, XmlIgnore]
         public bool CheckUnique { get; set; } = true;
@@ -130,6 +127,8 @@ namespace DataWF.Common
                 }
             }
         }
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public bool IsHandled => PropertyChanged != null;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
@@ -515,7 +514,7 @@ namespace DataWF.Common
                 return CheckUnique ? index : -Math.Abs(index);
             }
             return CheckUnique
-                ? Contains(item) ? IndexOf(item) : -(items.Count + 1)
+                ? Contains(item) ? items.Count - 1 : -(items.Count + 1)
                 : -(items.Count + 1);
         }
 
