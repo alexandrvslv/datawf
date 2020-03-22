@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -62,40 +63,11 @@ namespace DataWF.Common
             }
         }
 
-        public object Picture
-        {
-            get { return Locale.GetImage(image); }
-        }
+        [JsonIgnore, XmlIgnore]
+        public object Picture => Locale.GetImage(image);
 
-        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, Browsable(false)]
-        public LocaleCategory Category { get { return Containers.FirstOrDefault() as LocaleCategory; } }
-
-        public void Merge(LocaleItem item)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string ToString()
-        {
-            return name;
-        }
-
-        public LocaleString Add(string value, CultureInfo culture)
-        {
-            var item = this[culture];
-            if (item == null)
-            {
-                item = new LocaleString(value, culture);
-                Add(item);
-            }
-            item.Value = value;
-            return item;
-        }
-
-        public LocaleString Add(string value, string cultureName)
-        {
-            return Add(value, CultureInfo.GetCultureInfo(cultureName));
-        }
+        [JsonIgnore, Browsable(false)]
+        public LocaleCategory Category => Containers.FirstOrDefault() as LocaleCategory;
 
         public LocaleString this[CultureInfo culture]
         {
@@ -127,7 +99,7 @@ namespace DataWF.Common
             set { this[CultureInfo.GetCultureInfo(cultureName)] = value; }
         }
 
-        [XmlIgnore, Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        [XmlIgnore, JsonIgnore]
         public string Value
         {
             get
@@ -148,7 +120,7 @@ namespace DataWF.Common
             }
         }
 
-        [XmlIgnore, Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        [XmlIgnore, JsonIgnore]
         public string Description
         {
             get { return this[Locale.Instance.Culture]?.Description ?? name; }
@@ -165,6 +137,32 @@ namespace DataWF.Common
                 item.Description = value;
                 OnPropertyChanged(nameof(Description));
             }
+        }
+        public void Merge(LocaleItem item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string ToString()
+        {
+            return name;
+        }
+
+        public LocaleString Add(string value, CultureInfo culture)
+        {
+            var item = this[culture];
+            if (item == null)
+            {
+                item = new LocaleString(value, culture);
+                Add(item);
+            }
+            item.Value = value;
+            return item;
+        }
+
+        public LocaleString Add(string value, string cultureName)
+        {
+            return Add(value, CultureInfo.GetCultureInfo(cultureName));
         }
 
         public string GetAllValues(string separator)

@@ -9,6 +9,7 @@ namespace DataWF.Common
 {
     public class Locale : SelectableList<LocaleCategory>
     {
+        public static Locale Instance = new Locale();
 
         private CultureInfo culture = CultureInfo.GetCultureInfo("en-US");
 
@@ -174,7 +175,53 @@ namespace DataWF.Common
             return GetImage(GetImageKey(category, name));
         }
 
-        public static Locale Instance = new Locale();
+        [Invoker(typeof(Locale), nameof(Locale.Version))]
+        public class VersionInvoker : Invoker<Locale, string>
+        {
+            public override string Name => nameof(Locale.Version);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(Locale target) => target.Version;
+
+            public override void SetValue(Locale target, string value) => target.Version = value;
+        }
+
+        [Invoker(typeof(Locale), nameof(Locale.Culture))]
+        public class CultureInvoker : Invoker<Locale, CultureInfo>
+        {
+            public override string Name => nameof(Locale.Culture);
+
+            public override bool CanWrite => true;
+
+            public override CultureInfo GetValue(Locale target) => target.Culture;
+
+            public override void SetValue(Locale target, CultureInfo value) => target.Culture = value;
+        }
+
+        [Invoker(typeof(Locale), nameof(Locale.Cultures))]
+        public class CulturesInvoker : Invoker<Locale, List<CultureInfo>>
+        {
+            public override string Name => nameof(Locale.Cultures);
+
+            public override bool CanWrite => true;
+
+            public override List<CultureInfo> GetValue(Locale target) => target.Cultures;
+
+            public override void SetValue(Locale target, List<CultureInfo> value) => target.Cultures = value;
+        }
+
+        [Invoker(typeof(Locale), nameof(Locale.Images))]
+        public class ImagesInvoker : Invoker<Locale, LocaleImageList>
+        {
+            public override string Name => nameof(Locale.Images);
+
+            public override bool CanWrite => true;
+
+            public override LocaleImageList GetValue(Locale target) => target.Images;
+
+            public override void SetValue(Locale target, LocaleImageList value) => target.Images = value;
+        }
     }
 }
 
