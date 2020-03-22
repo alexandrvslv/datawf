@@ -793,40 +793,40 @@ namespace DataWF.Data
 
         public virtual T LoadFromReader(DBTransaction transaction)
         {
-            T srow = null;
+            T item = null;
             var id = transaction.ReaderPrimaryKey >= 0 ? transaction.Reader.GetValue(transaction.ReaderPrimaryKey) : null;
             if (id != null)
             {
-                srow = SelectOne(PrimaryKey, id);
+                item = SelectOne(PrimaryKey, id);
 
-                if ((transaction.ReaderParam & DBLoadParam.Synchronize) == DBLoadParam.Synchronize)
+                if ((transaction.ReaderParam & (DBLoadParam.Synchronize | DBLoadParam.Referencing)) != 0)
                 {
-                    if (srow != null
+                    if (item != null
                         && transaction.ReaderStampKey >= 0
-                        && srow.Stamp.Value.CompareTo(transaction.Reader.GetDateTime(transaction.ReaderStampKey)) >= 0)
+                        && item.Stamp.Value.CompareTo(transaction.Reader.GetDateTime(transaction.ReaderStampKey)) >= 0)
                     {
-                        return srow;
+                        return item;
                     }
-                    else if (transaction.ReaderColumns.Count < Columns.Count)
+                    else if (transaction.ReaderColumns.Count < 3)
                     {
                         return LoadItem(id);
                     }
                 }
             }
-            if (srow == null)
+            if (item == null)
             {
                 var typeIndex = 0;
                 if (transaction.ReaderItemTypeKey >= 0)
                     typeIndex = transaction.Reader.GetInt32(transaction.ReaderItemTypeKey);
-                srow = (T)NewItem(transaction.ReaderState, false, typeIndex);
+                item = (T)NewItem(transaction.ReaderState, false, typeIndex);
             }
 
             for (int i = 0; i < transaction.ReaderColumns.Count; i++)
             {
                 var column = transaction.ReaderColumns[i];
-                column.LoadFromReader(transaction, srow, i);
+                column.LoadFromReader(transaction, item, i);
             }
-            return srow;
+            return item;
         }
 
         public override IEnumerable<DBItem> GetChangedItems()
