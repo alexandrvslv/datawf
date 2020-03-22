@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace DataWF.Common
 {
@@ -14,5 +15,14 @@ namespace DataWF.Common
         public object OldValue { get; }
 
         public object NewValue { get; }
+    }
+
+    public class PropertyChangedAggregateEventArgs : PropertyChangedEventArgs
+    {
+        public PropertyChangedAggregateEventArgs(string firstProperty) : base(firstProperty)
+        {
+        }
+
+        public List<PropertyChangedEventArgs> Items { get; } = new List<PropertyChangedEventArgs>();
     }
 }

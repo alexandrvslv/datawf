@@ -22,15 +22,15 @@ namespace DataWF.Common
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs arg)
         {
-            foreach (var handler in propertyChanged.GetInvocationList())
+            foreach (PropertyChangedEventHandler handler in propertyChanged.GetInvocationList())
             {
                 if (GlogalChangedHook == null || handler.Target is INotifyListPropertyChanged)
                 {
-                    ((PropertyChangedEventHandler)handler).Invoke(this, arg);
+                    handler.Invoke(this, arg);
                 }
                 else
                 {
-                    GlogalChangedHook((PropertyChangedEventHandler)handler, this, arg);
+                    GlogalChangedHook(handler, this, arg);
                 }
             }
         }
