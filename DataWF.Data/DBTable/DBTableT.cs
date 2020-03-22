@@ -464,22 +464,12 @@ namespace DataWF.Data
         {
             var list = new List<T>();
             var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);
+            if (transaction.ReaderParam == DBLoadParam.None)
+                transaction.ReaderParam = param;
             try
             {
                 transaction.AddCommand(command);
 
-                if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
-                {
-                    LoadReferenceBlock(command, transaction);
-                }
-
-                if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
-                {
-                    LoadReferencingBlock(command, transaction);
-                }
-
-                if (transaction.Canceled)
-                    return list;
                 var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
                 var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
 
@@ -498,11 +488,26 @@ namespace DataWF.Data
                         items.Capacity = arg.TotalCount;
                     //arg.TotalCount = Rows._items.Capacity;
                 }
-                //var buffer = new List<T>(arg.TotalCount == 0 ? 1 : arg.TotalCount);
                 if (transaction.Canceled)
                 {
                     return list;
                 }
+
+                if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
+                {
+                    LoadReferenceBlock(command, transaction);
+                }
+
+                if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
+                {
+                    LoadReferencingBlock(command, transaction);
+                }
+
+                if (transaction.Canceled)
+                {
+                    return list;
+                }
+
                 using (transaction.Reader = transaction.ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
                 {
                     CheckColumns(transaction);
@@ -559,22 +564,12 @@ namespace DataWF.Data
         {
             var list = new List<T>();
             var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);
+            if (transaction.ReaderParam == DBLoadParam.None)
+                transaction.ReaderParam = param;
             try
             {
                 transaction.AddCommand(command);
 
-                if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
-                {
-                    LoadReferenceBlock(command, transaction);
-                }
-
-                if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
-                {
-                    LoadReferencingBlock(command, transaction);
-                }
-
-                if (transaction.Canceled)
-                    return list;
                 var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
                 var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
 
@@ -593,11 +588,26 @@ namespace DataWF.Data
                         items.Capacity = arg.TotalCount;
                     //arg.TotalCount = Rows._items.Capacity;
                 }
-                //var buffer = new List<T>(arg.TotalCount == 0 ? 1 : arg.TotalCount);
                 if (transaction.Canceled)
                 {
                     return list;
                 }
+
+                if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
+                {
+                    LoadReferenceBlock(command, transaction);
+                }
+
+                if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
+                {
+                    LoadReferencingBlock(command, transaction);
+                }
+
+                if (transaction.Canceled)
+                {
+                    return list;
+                }
+
                 using (transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader))
                 {
                     CheckColumns(transaction);
