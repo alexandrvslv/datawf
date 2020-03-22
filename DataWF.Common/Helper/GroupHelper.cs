@@ -8,14 +8,14 @@ namespace DataWF.Common
     {
         public static void ApplyFilter(IFilterable filterable)
         {
-            filterable.FilterQuery.Parameters.Add(TreeInvoker.Instance.CreateParameter());
-            filterable.FilterQuery.Orders.Add(TreeInvoker.Instance.CreateComparer());
+            filterable.FilterQuery.Parameters.Add(TreeInvoker.Instance.CreateParameter(null));
+            filterable.FilterQuery.Orders.Add(TreeInvoker.Instance.CreateComparer(null));
         }
 
         public static void ApplyFilter<T>(IFilterable<T> filterable) where T : IGroup
         {
-            filterable.FilterQuery.Parameters.Add(TreeInvoker<T>.Instance.CreateParameter());
-            filterable.FilterQuery.Orders.Add(TreeInvoker<T>.Instance.CreateComparer());
+            filterable.FilterQuery.Parameters.Add(TreeInvoker<T>.Instance.CreateParameter<T>());
+            filterable.FilterQuery.Orders.Add(TreeInvoker<T>.Instance.CreateComparer<T>());
         }
 
         public static bool IsExpand(IGroup item)

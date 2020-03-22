@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace DataWF.Common
 {
-    public class QField : IIndexInvoker<object[], object, int>
+    public class QField : IIndexInvoker<object[], object, int>, IValuedInvoker<object>
     {
         public int Index { get; set; }
 
@@ -81,6 +81,16 @@ namespace DataWF.Common
         public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
         {
             return CheckItem((object[])item, typedValue, comparer, comparision);
+        }
+
+        public V GetValue<V>(object target)
+        {
+            return (V)GetValue(target);
+        }
+
+        public void SetValue<V>(object target, V value)
+        {
+            SetValue(target, value);
         }
     }
 

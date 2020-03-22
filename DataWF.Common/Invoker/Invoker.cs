@@ -2,13 +2,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 namespace DataWF.Common
 {
 
-    public abstract class Invoker<T, V> : IInvoker<T, V>, IValuedInvoker, IInvokerJson
+    public abstract class Invoker<T, V> : IInvoker<T, V>, IValuedInvoker<V>, IInvokerJson, IInvokerExtension
     {
         public abstract string Name { get; }
 
@@ -22,20 +23,18 @@ namespace DataWF.Common
 
         public abstract V GetValue(T target);
 
-        public L GetValue<L>(object target)
+        V IValuedInvoker<V>.GetValue(object target)
         {
-            var value = GetValue((T)target);
-            return Unsafe.As<V, L>(ref value);
+            return GetValue((T)target);
         }
 
         public object GetValue(object target) => GetValue((T)target);
 
         public abstract void SetValue(T target, V value);
 
-        public void SetValue<L>(object target, L value)
+        public void SetValue(object target, V value)
         {
-            var converted = Unsafe.As<L, V>(ref value);
-            SetValue((T)target, converted);
+            SetValue((T)target, value);
         }
 
         public void SetValue(object target, object value) => SetValue((T)target, (V)value);
@@ -50,24 +49,26 @@ namespace DataWF.Common
             return ListIndexFabric.Create<T, V>(this, concurrent);
         }
 
-        IQueryParameter IInvoker.CreateParameter()
+        public virtual IQueryParameter CreateParameter(Type type)
         {
-            return CreateParameter();
+            type = type ?? typeof(T);
+            return (IQueryParameter)Activator.CreateInstance(typeof(QueryParameter<>).MakeGenericType(type), (IInvoker)this);
         }
 
-        public virtual QueryParameter<T> CreateParameter()
+        public virtual QueryParameter<TT> CreateParameter<TT>()
         {
-            return new QueryParameter<T> { Invoker = this };
+            return new QueryParameter<TT> { Invoker = this };
         }
 
-        InvokerComparer IInvoker.CreateComparer()
+        public virtual InvokerComparer CreateComparer(Type type)
         {
-            return CreateComparer();
+            type = type ?? typeof(T);
+            return (InvokerComparer)Activator.CreateInstance(typeof(InvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, ListSortDirection.Ascending);
         }
 
-        public virtual InvokerComparer<T, V> CreateComparer()
+        public virtual InvokerComparer<TT> CreateComparer<TT>()
         {
-            return new InvokerComparer<T, V>(this);
+            return new InvokerComparer<TT, V>(this);
         }
 
         public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
@@ -75,21 +76,40 @@ namespace DataWF.Common
             return CheckItem((T)item, typedValue, comparer, comparision);
         }
 
-        public bool CheckItem(T item, object typedValue, CompareType comparer, IComparer comparision)
+        public virtual bool CheckItem(T item, object typedValue, CompareType comparer, IComparer comparision)
         {
-            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);//(IComparer<V>)
+            return ListHelper.CheckItemT<V>(GetValue(item), typedValue, comparer, (IComparer<V>)comparision);//
         }
 
-        public void WriteValue(Utf8JsonWriter writer, object item, JsonSerializerOptions option)
+        public virtual void WriteValue(Utf8JsonWriter writer, object item, JsonSerializerOptions option)
         {
             var value = GetValue((T)item);
             JsonSerializer.Serialize<V>(writer, value, option);
         }
 
-        public void ReadValue(ref Utf8JsonReader reader, object item, JsonSerializerOptions option)
+        public virtual void ReadValue(ref Utf8JsonReader reader, object item, JsonSerializerOptions option)
         {
             var value = JsonSerializer.Deserialize<V>(ref reader, option);
             SetValue((T)item, value);
+        }
+    }
+
+    public abstract class NullableInvoker<T, V> : Invoker<T, V?> where V : struct
+    {
+        public override InvokerComparer CreateComparer(Type type)
+        {
+            type = type ?? typeof(T);
+            return (InvokerComparer)Activator.CreateInstance(typeof(InvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, ListSortDirection.Ascending);
+        }
+
+        public override InvokerComparer<TT> CreateComparer<TT>()
+        {
+            return new NullableInvokerComparer<TT, V>(this);
+        }
+
+        public override bool CheckItem(T item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return ListHelper.CheckItemN<V>(GetValue(item), typedValue, comparer, (IComparer<V?>)comparision);//
         }
     }
 }

@@ -22,22 +22,31 @@ namespace DataWF.Common
         {
             target.Expand = value;
         }
-
-        public override QueryParameter<T> CreateParameter()
+        public override IQueryParameter CreateParameter(Type type)
         {
-            return new QueryParameter<T>()
-            {
-                Invoker = this,
-                Comparer = CompareType.Equal,
-                Value = true,
-                IsGlobal = true,
-                FormatIgnore = true,
-            };
+            var parameter = base.CreateParameter(type);
+            parameter.Value = true;
+            parameter.IsGlobal = true;
+            parameter.FormatIgnore = true;
+            return parameter;
         }
 
-        public override InvokerComparer<T, bool> CreateComparer()
+        public override QueryParameter<TT> CreateParameter<TT>()
         {
-            return new TreeComparer<T> { Invoker = this };
+            var parameter = base.CreateParameter<TT>();
+            parameter.Value = true;
+            parameter.IsGlobal = true;
+            parameter.FormatIgnore = true;
+            return parameter;
+        }
+        public override InvokerComparer CreateComparer(Type type)
+        {
+            type = type ?? typeof(T);
+            return (InvokerComparer)Activator.CreateInstance(typeof(TreeComparer<>).MakeGenericType(type));
+        }
+        public override InvokerComparer<TT> CreateComparer<TT>()
+        {
+            return (InvokerComparer<TT>)CreateComparer(typeof(TT));
         }
     }
 

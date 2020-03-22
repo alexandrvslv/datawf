@@ -69,10 +69,9 @@ namespace DataWF.WebService.Common
             }
 
             writer.WriteStartObject();
-            Type propertyType;
             foreach (var invoker in invokers)
             {
-                propertyType = invoker.DataType;
+                var propertyType = invoker.DataType;
                 if (TypeHelper.IsBaseType(propertyType, typeof(DBItem)))
                 {
                     if (!includeReference || writer.CurrentDepth > maxDepth)

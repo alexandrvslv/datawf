@@ -204,7 +204,7 @@ namespace DataWF.Common
         {
         }
 
-        public InvokerComparer(IInvoker<T, V> accessor, ListSortDirection direction = ListSortDirection.Ascending)
+        public InvokerComparer(IValuedInvoker<V> accessor, ListSortDirection direction = ListSortDirection.Ascending)
             : base(accessor, direction)
         {
         }
@@ -214,9 +214,9 @@ namespace DataWF.Common
         {
         }
 
-        public IInvoker<T, V> ValueInvoker
+        public IValuedInvoker<V> ValueInvoker
         {
-            get => (IInvoker<T, V>)Invoker;
+            get => (IValuedInvoker<V>)Invoker;
             set => Invoker = value;
         }
 
@@ -230,43 +230,85 @@ namespace DataWF.Common
             return CompareVal(x, (V)key);
         }
 
-        public int CompareVal(T x, V key)
+        public virtual int CompareVal(T x, V key)
         {
             var val = ValueInvoker.GetValue(x);
             var result = ListHelper.CompareT(val, key, null);
             return Direction == ListSortDirection.Ascending ? result : -result;
         }
 
-        //TODO nullable null compare
-        //public override int Compare(object x, object y)
-        //{
-        //    return Compare((T)x, (T)y);
-        //}
+        public override int Compare(object x, object y)
+        {
+            return Compare((T)x, (T)y);
+        }
 
-        //public override int Compare(T x, T y)
-        //{
-        //    var xValue = x == null ? default(V) : ValueInvoker.GetValue(x);
-        //    var yValue = y == null ? default(V) : ValueInvoker.GetValue(y);
-        //    var result = ListHelper.CompareT(xValue, yValue, null);
-        //    return Direction == ListSortDirection.Ascending ? result : -result;
-        //}
+        public override int Compare(T x, T y)
+        {
+            var xValue = x == null ? default(V) : ValueInvoker.GetValue(x);
+            var yValue = y == null ? default(V) : ValueInvoker.GetValue(y);
+            var result = ListHelper.CompareT(xValue, yValue, null);
+            return Direction == ListSortDirection.Ascending ? result : -result;
+        }
 
-        //public override bool EqualsObjects(object x, object y)
-        //{
-        //    return Equals((T)x, (T)y);
-        //}
+        public override bool EqualsObjects(object x, object y)
+        {
+            return Equals((T)x, (T)y);
+        }
 
-        //public override bool Equals(T x, T y)
-        //{
-        //    var xValue = x == null ? default(V) : ValueInvoker.GetValue(x);
-        //    var yValue = y == null ? default(V) : ValueInvoker.GetValue(y);
-        //    return ListHelper.EqualT(xValue, yValue);
-        //}
+        public override bool Equals(T x, T y)
+        {
+            var xValue = x == null ? default(V) : ValueInvoker.GetValue(x);
+            var yValue = y == null ? default(V) : ValueInvoker.GetValue(y);
+            return ListHelper.EqualT(xValue, yValue);
+        }
 
-        //public override int GetHashCode(T obj)
-        //{
-        //    var objValue = obj == null ? default(V) : ValueInvoker.GetValue(obj);
-        //    return objValue?.GetHashCode() ?? obj.GetHashCode();
-        //}
+        public override int GetHashCode(T obj)
+        {
+            var objValue = obj == null ? default(V) : ValueInvoker.GetValue(obj);
+            return objValue?.GetHashCode() ?? obj.GetHashCode();
+        }
+    }
+
+    public class NullableInvokerComparer<T, V> : InvokerComparer<T, V?> where V : struct
+    {
+        public NullableInvokerComparer()
+        { }
+
+        public NullableInvokerComparer(PropertyInfo info, ListSortDirection direction = ListSortDirection.Ascending)
+            : base(info, direction)
+        {
+        }
+
+        public NullableInvokerComparer(IValuedInvoker<V?> accessor, ListSortDirection direction = ListSortDirection.Ascending)
+            : base(accessor, direction)
+        {
+        }
+
+        public NullableInvokerComparer(string property, ListSortDirection direction = ListSortDirection.Ascending)
+            : base(property, direction)
+        {
+        }
+
+        public override int CompareVal(T x, V? key)
+        {
+            var val = ValueInvoker.GetValue(x);
+            var result = Nullable.Compare<V>(val, key);
+            return Direction == ListSortDirection.Ascending ? result : -result;
+        }
+
+        public override int Compare(T x, T y)
+        {
+            var xValue = x == null ? default(V) : ValueInvoker.GetValue(x);
+            var yValue = y == null ? default(V) : ValueInvoker.GetValue(y);
+            var result = Nullable.Compare<V>(xValue, yValue);
+            return Direction == ListSortDirection.Ascending ? result : -result;
+        }
+
+        public override bool Equals(T x, T y)
+        {
+            var xValue = x == null ? default(V) : ValueInvoker.GetValue(x);
+            var yValue = y == null ? default(V) : ValueInvoker.GetValue(y);
+            return Nullable.Equals<V>(xValue, yValue);
+        }
     }
 }

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace DataWF.Common
 {
-    public class IndexInvoker<T, V, K> : IIndexInvoker<T, V, K>
+    public class IndexInvoker<T, V, K> : IIndexInvoker<T, V, K>, IValuedInvoker<V>
     {
         public IndexInvoker(string name, Func<T, K, V> getAction, Action<T, K, V> setAction = null)
         {
@@ -98,5 +99,16 @@ namespace DataWF.Common
         {
             return CheckItem((T)item, typedValue, comparer, comparision);
         }
+
+        V IValuedInvoker<V>.GetValue(object target)
+        {
+            return GetValue((T)target);
+        }
+
+        public void SetValue(object target, V value)
+        {
+            SetValue((T)target, value);
+        }
+
     }
 }

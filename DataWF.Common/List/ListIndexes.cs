@@ -5,7 +5,7 @@ namespace DataWF.Common
 {
     public class ListIndexes<T> : IListIndexes<T>
     {
-        protected Dictionary<string, IListIndex<T>> indexes = new Dictionary<string, IListIndex<T>>(StringComparer.OrdinalIgnoreCase);
+        protected Dictionary<string, IListIndex<T>> indexes = new Dictionary<string, IListIndex<T>>(StringComparer.Ordinal);
 
         public bool Concurrent { get; set; }
 
@@ -16,9 +16,10 @@ namespace DataWF.Common
 
         public IListIndex Add(IInvoker invoker)
         {
-            if (!indexes.TryGetValue(invoker.Name, out var index))
+            if (!indexes.TryGetValue(invoker.Name, out var index)
+                && invoker is IInvokerExtension invokerExtension)
             {
-                index = (IListIndex<T>)invoker.CreateIndex(Concurrent);
+                index = (IListIndex<T>)invokerExtension.CreateIndex(Concurrent);
                 indexes.Add(invoker.Name, index);
             }
             return index;

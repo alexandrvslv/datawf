@@ -24,6 +24,16 @@ namespace DataWF.Common
                 return new[] { obj };
         }
 
+        public static IEnumerable<T> ToEnumerable<T>(this object obj)
+        {
+            if (obj is IEnumerable<T> enumerableObject)
+                return enumerableObject;
+            else if (obj is IEnumerable enumerable)
+                return enumerable.Cast<T>();
+            else
+                return new[] { (T)obj };
+        }
+
         public static bool Contains(IEnumerable enumerable, object value)
         {
             if (enumerable is IList list)
@@ -276,6 +286,71 @@ namespace DataWF.Common
             }
         }
 
+        public static bool CheckItemN<T>(T? x, object y, CompareType compare, IComparer<T?> comparer) where T : struct
+        {
+            bool result = false;
+            switch (compare.Type)
+            {
+                case CompareTypes.Equal:
+                    result = Nullable.Equals<T>(x, (T?)y);
+                    break;
+                case CompareTypes.Is:
+                    result = x == null;
+                    break;
+                case CompareTypes.Like:
+                    y = (y?.ToString() ?? string.Empty).Trim(new char[] { '%' });
+                    result = (x?.ToString() ?? string.Empty).IndexOf((string)y, 0, StringComparison.OrdinalIgnoreCase) >= 0;
+                    break;
+                case CompareTypes.In:
+                    if (x is Enum || y is Enum)
+                    {
+                        result = ((int)y & (int)(object)x) != 0;//TODO Find the way to aviod BOXING ((int)y & (int)x) != 0;
+                    }
+                    else if (y is string yString)
+                    {
+                        result = yString.IndexOf(x?.ToString(), StringComparison.OrdinalIgnoreCase) >= 0;
+                    }
+                    else
+                    {
+                        foreach (T? item in y?.ToEnumerable<T?>() ?? Enumerable.Empty<T?>())
+                        {
+                            if (Nullable.Equals<T>(x, item))
+                            {
+                                result = true;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                case CompareTypes.Contains:
+                    result = x?.ToEnumerable().Contains(y) ?? false;
+                    break;
+                case CompareTypes.Intersect:
+                    result = x?.ToEnumerable().Intersect(y?.ToEnumerable() ?? Enumerable.Empty<object>()).Any() ?? false;
+                    break;
+                default:
+                    int i = Nullable.Compare(x, (T?)y);
+                    switch (compare.Type)
+                    {
+                        case CompareTypes.Greater:
+                            result = i > 0;
+                            break;
+                        case CompareTypes.Less:
+                            result = i < 0;
+                            break;
+                        case CompareTypes.GreaterOrEqual:
+                            result = i >= 0;
+                            break;
+                        case CompareTypes.LessOrEqual:
+                            result = i <= 0;
+                            break;
+                    }
+                    break;
+            }
+
+            return compare.Not ? !result : result;
+        }
+
         public static bool CheckItemT<T>(T x, object y, CompareType compare, IComparer<T> comparer)
         {
             bool result = false;
@@ -292,22 +367,17 @@ namespace DataWF.Common
                     result = (x?.ToString() ?? string.Empty).IndexOf((string)y, 0, StringComparison.OrdinalIgnoreCase) >= 0;
                     break;
                 case CompareTypes.In:
-                    //if (!(x is string) && x is IEnumerable xlist)
-                    //{
-                    //    x = y;
-                    //    y = xlist;
-                    //}
                     if (x is Enum && y is Enum)
                     {
                         result = ((int)y & (int)(object)x) != 0;//TODO Find the way to aviod BOXING ((int)y & (int)x) != 0;
                     }
-                    else if (x is string xString && y is string yString)
+                    else if (y is string yString)
                     {
-                        result = yString.IndexOf(xString, StringComparison.OrdinalIgnoreCase) >= 0;
+                        result = yString.IndexOf(x?.ToString(), StringComparison.OrdinalIgnoreCase) >= 0;
                     }
                     else
                     {
-                        foreach (T item in y?.ToEnumerable() ?? Enumerable.Empty<object>())
+                        foreach (T item in y?.ToEnumerable<T>() ?? Enumerable.Empty<T>())
                         {
                             if (EqualT(x, item))
                             {
@@ -371,9 +441,9 @@ namespace DataWF.Common
                     {
                         result = ((int)y & (int)x) != 0;
                     }
-                    else if (x is string xString && y is string yString)
+                    else if (y is string yString)
                     {
-                        result = yString.IndexOf(xString, StringComparison.OrdinalIgnoreCase) >= 0;
+                        result = yString.IndexOf(x?.ToString(), StringComparison.OrdinalIgnoreCase) >= 0;
                     }
                     else
                     {

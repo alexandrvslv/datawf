@@ -11,17 +11,24 @@ namespace DataWF.Common
         Type TargetType { get; }
         bool CanWrite { get; }
 
-        IListIndex CreateIndex(bool concurrent);
-        IQueryParameter CreateParameter();
-        InvokerComparer CreateComparer();
-
         bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision);
     }
 
-    public interface IValuedInvoker : IInvoker
+    public interface IInvokerExtension
     {
-        V GetValue<V>(object target);
-        void SetValue<V>(object target, V value);
+        IListIndex CreateIndex(bool concurrent);
+
+        IQueryParameter CreateParameter(Type type);
+        QueryParameter<TT> CreateParameter<TT>();
+
+        InvokerComparer CreateComparer(Type type);
+        InvokerComparer<TT> CreateComparer<TT>();
+    }
+
+    public interface IValuedInvoker<V> : IInvoker
+    {
+        new V GetValue(object target);
+        void SetValue(object target, V value);
     }
 
     public interface IInvoker<T, V> : IInvoker
@@ -37,6 +44,11 @@ namespace DataWF.Common
     {
         void WriteValue(Utf8JsonWriter writer, object value, JsonSerializerOptions option);
         void ReadValue(ref Utf8JsonReader reader, object value, JsonSerializerOptions option);
+    }
 
+    public interface IInvokerJson<T> : IInvokerJson
+    {
+        void WriteValue(Utf8JsonWriter writer, T value, JsonSerializerOptions option);
+        void ReadValue(ref Utf8JsonReader reader, T value, JsonSerializerOptions option);
     }
 }
