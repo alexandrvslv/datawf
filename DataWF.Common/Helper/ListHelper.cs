@@ -814,22 +814,18 @@ namespace DataWF.Common
 
         public static bool EqualT<T>(T x, T y)
         {
-            var type = TypeHelper.CheckNullable(typeof(T));
-            if (type == typeof(string))
+            // var type = TypeHelper.CheckNullable(typeof(T));
+            if (x is string)
             {
                 return string.Equals(x?.ToString(), y?.ToString(), StringComparison.OrdinalIgnoreCase);
             }
-            if (type == typeof(byte[]))
+            if (x is byte[] xByte && y is byte[] yByte)
             {
-                return ((IEqualityComparer<T>)ByteArrayComparer.Default).Equals(x, y);
+                return ByteArrayComparer.Default.Equals(xByte, yByte);
             }
-            if (type == typeof(DateTime))
+            if (x is DateTime xDate && y is DateTime yDate)
             {
-                return ((IEqualityComparer<T>)DateTimePartComparer.Default).Equals(x, y);
-            }
-            if (x is IEquatable<T> equatable)
-            {
-                return equatable.Equals(y);
+                return DateTimePartComparer.Default.Equals(xDate, yDate);
             }
             return EqualityComparer<T>.Default.Equals(x, y);
         }
@@ -856,10 +852,7 @@ namespace DataWF.Common
             }
             else if (x is DateTime xDate && y is DateTime yDate)
             {
-                if (xDate.TimeOfDay == TimeSpan.Zero || yDate.TimeOfDay == TimeSpan.Zero)
-                    result = xDate.Date.Equals(yDate.Date);
-                else
-                    result = xDate.Equals(yDate);
+                return DateTimePartComparer.Default.Equals(xDate, yDate);
             }
             else if (x is byte[] xByte && y is byte[] yByte)
             {
