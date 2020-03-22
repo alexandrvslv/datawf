@@ -196,4 +196,9 @@ namespace DataWF.Data
         Delete
     }
 
+    public enum DBSetValueMode
+    {
+        Default,
+        Loading
+    }
 }

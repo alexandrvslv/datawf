@@ -315,7 +315,7 @@ namespace DataWF.Data
                     if (log.LogType == DBLogType.Insert)
                         continue;
                     row = log.BaseTable.NewItem(DBUpdateState.Insert, false);
-                    row.SetValue(log.BaseId, log.BaseTable.PrimaryKey, false);
+                    row.SetValue(log.BaseId, log.BaseTable.PrimaryKey, DBSetValueMode.Loading);
                 }
                 else if (log.LogType == DBLogType.Delete && !changed.ContainsKey(row))
                 {

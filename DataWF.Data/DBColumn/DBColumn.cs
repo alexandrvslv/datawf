@@ -731,30 +731,30 @@ namespace DataWF.Data
                 case DBDataType.String:
                 case DBDataType.Clob:
                     var stringValue = isNull ? null : transaction.Reader.GetString(i);
-                    row.SetValueClass<string>(stringValue, this, false);
+                    row.SetValueClass<string>(stringValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Int:
                     var intValue = isNull ? (int?)null : transaction.Reader.GetInt32(i);
                     if (DataType == typeof(int))
                     {
-                        row.SetValueNullable<int>(intValue, this, false);
+                        row.SetValueNullable<int>(intValue, this, DBSetValueMode.Loading);
                     }
                     else if (DataType == typeof(uint))
                     {
-                        row.SetValueNullable<uint>(isNull ? (uint?)null : (uint?)intValue, this, false);
+                        row.SetValueNullable<uint>(isNull ? (uint?)null : (uint?)intValue, this, DBSetValueMode.Loading);
                     }
                     else
                     {
-                        row.SetValue((object)intValue, this, false);
+                        row.SetValue((object)intValue, this, DBSetValueMode.Loading);
                     }
                     break;
                 case DBDataType.BigInt:
                     var longValue = isNull ? (long?)null : transaction.Reader.GetInt64(i);
-                    row.SetValueNullable<long>(longValue, this, false);
+                    row.SetValueNullable<long>(longValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.ShortInt:
                     var shortValue = isNull ? (short?)null : transaction.Reader.GetInt16(i);
-                    row.SetValueNullable<short>(shortValue, this, false);
+                    row.SetValueNullable<short>(shortValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Date:
                 case DBDataType.DateTime:
@@ -764,51 +764,51 @@ namespace DataWF.Data
                     {
                         dateValue = DateTime.SpecifyKind(dateValue.Value, DateTimeKind.Utc);
                     }
-                    row.SetValueNullable<DateTime>(dateValue, this, false);
+                    row.SetValueNullable<DateTime>(dateValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Bool:
                     var boolValue = isNull ? (bool?)null : transaction.Reader.GetBoolean(i);
-                    row.SetValueNullable<bool>(boolValue, this, false);
+                    row.SetValueNullable<bool>(boolValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Blob:
                 case DBDataType.ByteArray:
                     var arrayValue = isNull ? null : (byte[])transaction.Reader.GetValue(i);
-                    row.SetValueClass<byte[]>(arrayValue, this, false);
+                    row.SetValueClass<byte[]>(arrayValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.LargeObject:
                     var unitValue = isNull ? (uint?)null : transaction.ReadOID(i);
-                    row.SetValueNullable<uint>(unitValue, this, false);
+                    row.SetValueNullable<uint>(unitValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Decimal:
                     var decimalValue = isNull ? (decimal?)null : transaction.Reader.GetDecimal(i);
-                    row.SetValueNullable<decimal>(decimalValue, this, false);
+                    row.SetValueNullable<decimal>(decimalValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Double:
                     var doubleValue = isNull ? (double?)null : transaction.Reader.GetDouble(i);
-                    row.SetValueNullable<double>(doubleValue, this, false);
+                    row.SetValueNullable<double>(doubleValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Float:
                     var floatValue = isNull ? (float?)null : transaction.Reader.GetFloat(i);
-                    row.SetValueNullable<float>(floatValue, this, false);
+                    row.SetValueNullable<float>(floatValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.TimeSpan:
                     var spanValue = isNull ? (TimeSpan?)null : transaction.ReadTimeSpan(i);
-                    row.SetValueNullable<TimeSpan>(spanValue, this, false);
+                    row.SetValueNullable<TimeSpan>(spanValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.TinyInt:
                     var byteValue = isNull ? (byte?)null : transaction.Reader.GetByte(i);
                     if (DataType == typeof(sbyte))
                     {
-                        row.SetValueNullable<sbyte>(isNull ? (sbyte?)null : (sbyte?)byteValue, this, false);
+                        row.SetValueNullable<sbyte>(isNull ? (sbyte?)null : (sbyte?)byteValue, this, DBSetValueMode.Loading);
                     }
                     else
                     {
-                        row.SetValueNullable<byte>(byteValue, this, false);
+                        row.SetValueNullable<byte>(byteValue, this, DBSetValueMode.Loading);
                     }
                     break;
                 default:
                     var value = isNull ? null : transaction.Reader.GetValue(i);
-                    row.SetValue(value, this, false);
+                    row.SetValue(value, this, DBSetValueMode.Loading);
                     break;
             }
             //var value = transaction.DbConnection.System.ReadValue(this, transaction.Reader.GetValue(i));

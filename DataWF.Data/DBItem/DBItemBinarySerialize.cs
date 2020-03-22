@@ -90,7 +90,7 @@ namespace DataWF.Data
                 int column = br.ReadInt32();
                 object value = Helper.ReadBinary(br);
                 DBColumn dbColumn = row.Table.ParseColumn(map[column]);
-                row.SetValue(value, dbColumn, false);
+                row.SetValue(value, dbColumn, DBSetValueMode.Loading);
             }
             row.Accept((IUserIdentity)null);
         }

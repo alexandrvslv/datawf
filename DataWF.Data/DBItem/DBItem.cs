@@ -275,7 +275,7 @@ namespace DataWF.Data
 
                 SetValue(column.ParseValue(value),
                          column,
-                         column.ColumnType == DBColumnTypes.Default);
+                         DBSetValueMode.Default);
             }
         }
 
@@ -392,38 +392,44 @@ namespace DataWF.Data
 
         public void SetValue<T>(T value, DBColumn column)
         {
-            SetValue<T>(value, column, column.ColumnType == DBColumnTypes.Default);
+            SetValue<T>(value, column, DBSetValueMode.Default);
         }
 
         public void SetValueClass<T>(T value, DBColumn column) where T : class
         {
-            SetValueClass<T>(value, column, column.ColumnType == DBColumnTypes.Default);
+            SetValueClass<T>(value, column, DBSetValueMode.Default);
         }
 
         public void SetValueNullable<T>(T? value, DBColumn column) where T : struct
         {
-            SetValueNullable<T>(value, column, column.ColumnType == DBColumnTypes.Default);
+            SetValueNullable<T>(value, column, DBSetValueMode.Default);
         }
 
         public void SetValue(object value, DBColumn column)
         {
-            SetValue(value, column, column.ColumnType == DBColumnTypes.Default);
+            SetValue(value, column, DBSetValueMode.Default);
         }
 
-        public void SetValue<T>(T value, DBColumn column, bool check)
+        public void SetValue<T>(T value, DBColumn column, DBSetValueMode mode)
         {
-            var field = column.GetValue<T>(this);
+            if (mode == DBSetValueMode.Loading && !Attached)
+            {
+                column.SetValue<T>(this, value);
+                return;
+            }
+            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
+            var oldValue = column.GetValue<T>(this);
 
-            if (DBService.Equal<T>(field, value))
+            if (DBService.Equal<T>(oldValue, value))
             {
                 return;
             }
             if (check)
             {
-                RefreshOld(column, value, field);
+                RefreshOld(column, value, oldValue);
             }
 
-            OnPropertyChanging<T>(column.Property ?? column.Name, column, field);
+            OnPropertyChanging<T>(column.Property ?? column.Name, column, oldValue);
 
             column.SetValue<T>(this, value);
 
@@ -435,20 +441,26 @@ namespace DataWF.Data
             }
         }
 
-        public void SetValueClass<T>(T value, DBColumn column, bool check) where T : class
+        public void SetValueClass<T>(T value, DBColumn column, DBSetValueMode mode) where T : class
         {
-            var field = column.GetValue<T>(this);
+            if (mode == DBSetValueMode.Loading && !Attached)
+            {
+                column.SetValue<T>(this, value);
+                return;
+            }
+            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
+            var oldValue = column.GetValue<T>(this);
 
-            if (DBService.EqualClass<T>(field, value))
+            if (DBService.EqualClass<T>(oldValue, value))
             {
                 return;
             }
             if (check)
             {
-                RefreshOld(column, value, field);
+                RefreshOld(column, value, oldValue);
             }
 
-            OnPropertyChanging<T>(column.Property ?? column.Name, column, field);
+            OnPropertyChanging<T>(column.Property ?? column.Name, column, oldValue);
 
             column.SetValue<T>(this, value);
 
@@ -460,20 +472,26 @@ namespace DataWF.Data
             }
         }
 
-        public void SetValueNullable<T>(T? value, DBColumn column, bool check) where T : struct
+        public void SetValueNullable<T>(T? value, DBColumn column, DBSetValueMode mode) where T : struct
         {
-            var field = column.GetValueNullable<T>(this);
+            if (mode == DBSetValueMode.Loading && !Attached)
+            {
+                column.SetValueNullable<T>(this, value);
+                return;
+            }
+            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
+            var oldValue = column.GetValueNullable<T>(this);
 
-            if (Nullable.Equals<T>(field, value))
+            if (Nullable.Equals<T>(oldValue, value))
             {
                 return;
             }
             if (check)
             {
-                RefreshOld(column, value, field);
+                RefreshOld(column, value, oldValue);
             }
 
-            OnPropertyChanging<T?>(column.Property ?? column.Name, column, field);
+            OnPropertyChanging<T?>(column.Property ?? column.Name, column, oldValue);
 
             column.SetValueNullable<T>(this, value);
 
@@ -485,22 +503,26 @@ namespace DataWF.Data
             }
         }
 
-        public void SetValue(object value, DBColumn column, bool check)
+        public void SetValue(object value, DBColumn column, DBSetValueMode mode)
         {
-            //SetTag(column, tag);
+            if (mode == DBSetValueMode.Loading && !Attached)
+            {
+                column.SetValue(this, value);
+                return;
+            }
+            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
+            var oldValue = column.GetValue(this);
 
-            var field = column.GetValue(this);
-
-            if (DBService.Equal(field, value))
+            if (DBService.Equal(oldValue, value))
             {
                 return;
             }
             if (check)
             {
-                RefreshOld(column, value, field);
+                RefreshOld(column, value, oldValue);
             }
 
-            OnPropertyChanging(column.Property ?? column.Name, column, field);
+            OnPropertyChanging(column.Property ?? column.Name, column, oldValue);
 
             column.SetValue(this, value);
 
@@ -544,7 +566,7 @@ namespace DataWF.Data
 
                 if (Column.ColumnType == DBColumnTypes.Default || Column.ColumnType == DBColumnTypes.Query)
                 {
-                    SetValue(values[i], Column, false);
+                    SetValue(values[i], Column, DBSetValueMode.Loading);
                 }
             }
         }
@@ -559,7 +581,7 @@ namespace DataWF.Data
                 var column = Table.ParseColumn(kvp.Key);
                 if (column != null)
                 {
-                    SetValue(kvp.Value, column, false);
+                    SetValue(kvp.Value, column, DBSetValueMode.Loading);
                 }
             }
         }
@@ -666,7 +688,7 @@ namespace DataWF.Data
 
         public DBItem SetReference(DBItem value, DBColumn column)
         {
-            SetValue(value?.PrimaryId, column, column.ColumnType == DBColumnTypes.Default);
+            SetValue(value?.PrimaryId, column, DBSetValueMode.Default);
             return value;
         }
 
@@ -678,7 +700,7 @@ namespace DataWF.Data
             }
             else
             {
-                SetValue(value?.PrimaryId, column, column.ColumnType == DBColumnTypes.Default);
+                SetValue(value?.PrimaryId, column, DBSetValueMode.Default);
             }
             return value;
         }
@@ -849,7 +871,7 @@ namespace DataWF.Data
             }
             if (Table.ItemTypeKey != null)
             {
-                SetValueNullable<int>(itemType < 0 ? table.GetTypeIndex(GetType()) : itemType, table.ItemTypeKey, false);
+                SetValueNullable<int>(itemType < 0 ? table.GetTypeIndex(GetType()) : itemType, table.ItemTypeKey, DBSetValueMode.Loading);
             }
         }
 
@@ -858,7 +880,7 @@ namespace DataWF.Data
             foreach (DBColumn column in Table.Columns)
             {
                 if (!string.IsNullOrEmpty(column.DefaultValue))
-                    SetValue(column.ParseValue(column.DefaultValue), column, false);
+                    SetValue(column.ParseValue(column.DefaultValue), column, DBSetValueMode.Loading);
             }
         }
 
@@ -993,7 +1015,7 @@ namespace DataWF.Data
                     {
                         if (GetOld(column, out object old))
                         {
-                            SetValue(old, column, false);
+                            SetValue(old, column, DBSetValueMode.Loading);
                             RemoveOld(column);
                         }
                     }
@@ -1683,7 +1705,7 @@ namespace DataWF.Data
             if (Attached)
             {
                 await Save(transaction);
-                SetValue(null, column, false);
+                SetValue(null, column, DBSetValueMode.Loading);
             }
         }
 
