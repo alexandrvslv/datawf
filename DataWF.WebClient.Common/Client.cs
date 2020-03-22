@@ -332,14 +332,6 @@ namespace DataWF.Common
             }
         }
 
-        public virtual Task<List<T>> GetAsync(ProgressToken progressToken)
-        {
-            IsSynchronized = true;
-            return Task.FromResult<List<T>>(null);
-        }
-
-        public async Task<IEnumerable> GetAsync() => await GetAsync(ProgressToken.None);
-
         public string GetFilePath(IFileModel fileModel)
         {
             return GetFilePath(fileModel, $"/api/{typeof(T).Name}/DownloadFile/{{id}}");
@@ -355,11 +347,22 @@ namespace DataWF.Common
                 }
                 loadProgress = new LoadProgress<T>(filter, progressable);
                 loadProgress.Task = string.IsNullOrEmpty(filter)
-                    ? GetAsync(loadProgress.Token)
+                    ? LoadAsync(loadProgress.Token)
                     : SearchAsync(filter, loadProgress.Token);
             }
             return loadProgress;
         }
+
+        private async Task<List<T>> LoadAsync(ProgressToken token)
+        {
+            var list = await GetAsync(token);
+            IsSynchronized = true;
+            return list;
+        }
+
+        public virtual Task<List<T>> GetAsync(ProgressToken progressToken) => Task.FromResult<List<T>>(null);
+
+        public async Task<IEnumerable> GetAsync() => await GetAsync(ProgressToken.None);
 
         public virtual Task<List<T>> SearchAsync(string filter, ProgressToken progressToken) => Task.FromResult<List<T>>(null);
 
