@@ -99,7 +99,7 @@ namespace DataWF.Common
         public override InvokerComparer CreateComparer(Type type)
         {
             type = type ?? typeof(T);
-            return (InvokerComparer)Activator.CreateInstance(typeof(InvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, ListSortDirection.Ascending);
+            return (InvokerComparer)Activator.CreateInstance(typeof(NullableInvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, ListSortDirection.Ascending);
         }
 
         public override InvokerComparer<TT> CreateComparer<TT>()
