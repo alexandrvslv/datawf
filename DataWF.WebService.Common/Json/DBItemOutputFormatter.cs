@@ -119,7 +119,7 @@ namespace DataWF.WebService.Common
 
         private static void WriteByte(PipeWriter pipeWriter, byte value)
         {
-            var span = pipeWriter.GetSpan();
+            var span = pipeWriter.GetSpan(1);
             span[0] = value;
             pipeWriter.Advance(1);
         }
