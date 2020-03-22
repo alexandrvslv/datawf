@@ -199,10 +199,15 @@ namespace DataWF.Common
             if (referenceList != null && client != null
                 && referenceList.Owner.SyncStatus == SynchronizedStatus.Load)
             {
-                referanceBuffer = referenceList.TypeOf<ISynchronized>().Where(p => p.SyncStatus == SynchronizedStatus.Actual).ToList();
-                foreach (var item in referanceBuffer)
+                referanceBuffer = new List<ISynchronized>(referenceList.Count);
+                foreach (ISynchronized item in referenceList)
                 {
-                    item.SyncStatus = SynchronizedStatus.Suspend;
+                    if (item.SyncStatus == SynchronizedStatus.Actual
+                        && item.SyncStatus != SynchronizedStatus.Suspend)
+                    {
+                        item.SyncStatus = SynchronizedStatus.Suspend;
+                        referanceBuffer.Add(item);
+                    }
                 }
             }
             else
