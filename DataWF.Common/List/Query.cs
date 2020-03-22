@@ -75,6 +75,18 @@ namespace DataWF.Common
             }
         }
 
+        ICollection<IQueryParameter> IQuery.Parameters
+        {
+            get { return Parameters; }
+        }
+
+        ICollection<IComparer> IQuery.Orders
+        {
+            get { return Orders; }
+        }
+
+        public bool IsEnabled => ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => !p.FormatIgnore && p.IsEnabled);
+
         public event EventHandler OrdersChanged;
 
         public event EventHandler ParametersChanged;
@@ -87,21 +99,6 @@ namespace DataWF.Common
         internal void OnParametersChanged(object sender, EventArgs e)
         {
             ParametersChanged?.Invoke(sender, e);
-        }
-
-        ICollection<IQueryParameter> IQuery.Parameters
-        {
-            get { return Parameters; }
-        }
-
-        ICollection<IComparer> IQuery.Orders
-        {
-            get { return Orders; }
-        }
-
-        public bool IsEnabled
-        {
-            get { return ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => !p.FormatIgnore && p.IsEnabled); }
         }
 
         public void Clear()
@@ -117,16 +114,6 @@ namespace DataWF.Common
         public QueryParameter<T> Add(string property, object value)
         {
             return Parameters.Add(property, value);
-        }
-
-        public void Add(IQueryParameter parameter)
-        {
-            Add((QueryParameter<T>)parameter);
-        }
-
-        public void Add(QueryParameter<T> parameter)
-        {
-            Parameters.Add(parameter);
         }
 
         public QueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
@@ -191,18 +178,6 @@ namespace DataWF.Common
         public InvokerComparer AddOrder(IInvoker invoker, ListSortDirection sortDirection)
         {
             return Orders.AddOrUpdate(invoker, sortDirection);
-        }
-
-        public IQueryParameter AddTreeParameter()
-        {
-            var parameter = new QueryParameter<T>()
-            {
-                Invoker = new TreeInvoker<IGroup>(),
-                Comparer = CompareType.Equal,
-                Value = true
-            };
-            Parameters.Add(parameter);
-            return parameter;
         }
 
         public bool Remove(string parameter)

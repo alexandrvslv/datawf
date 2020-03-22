@@ -34,14 +34,14 @@ namespace DataWF.Common
             return parameter;
         }
 
-        public InvokerComparer<T> AddOrUpdate(IInvoker invoker, ListSortDirection sortDirection)
+        public InvokerComparer<T> AddOrUpdate(IInvoker invoker, ListSortDirection direction)
         {
             var item = this[invoker.Name];
             if (item == null)
             {
-                item = Add(invoker, sortDirection);
+                item = Add(invoker, direction);
             }
-            item.Direction = sortDirection;
+            item.Direction = direction;
             return item;
         }
 
@@ -69,7 +69,7 @@ namespace DataWF.Common
 
         bool ICollection<IComparer>.Contains(IComparer item)
         {
-            return Contains((InvokerComparer<T>)item);
+            return Contains((InvokerComparer)item);
         }
 
         bool ICollection<IComparer>.Remove(IComparer item)

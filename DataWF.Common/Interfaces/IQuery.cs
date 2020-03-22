@@ -25,12 +25,6 @@ namespace DataWF.Common
 
         InvokerComparer AddOrder(IInvoker invoker, ListSortDirection sortDirection);
 
-        IQueryParameter AddTreeParameter();
-
-        void Add(IQueryParameter parameter);
-
-        bool Remove(IQueryParameter parameter);
-
         void Clear();
 
         void ClearValues();
