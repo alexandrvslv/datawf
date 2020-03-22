@@ -113,14 +113,14 @@ namespace DataWF.Data
         public object PrimaryId
         {
             get => Table.PrimaryKey == null ? null : GetValue(Table.PrimaryKey);
-            set => this[Table.PrimaryKey] = value;
+            set => Table.PrimaryKey?.SetValue(this, value);
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public string PrimaryCode
         {
             get => Table.CodeKey == null ? null : GetValue<string>(Table.CodeKey);
-            set => this[Table.CodeKey] = value;
+            set => Table.CodeKey?.SetValue(this, value);
         }
 
         [Browsable(false), DefaultValue(0)]
@@ -128,7 +128,7 @@ namespace DataWF.Data
         public virtual int? ItemType
         {
             get => Table.ItemTypeKey == null ? 0 : GetValueNullable<int>(Table.ItemTypeKey);
-            set => SetValue(value, Table.ItemTypeKey);
+            set => Table.ItemTypeKey?.SetValueNullable(this, value);
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -142,14 +142,14 @@ namespace DataWF.Data
         public DBStatus? Status
         {
             get => Table.StatusKey == null ? DBStatus.Empty : GetValueNullable<DBStatus>(Table.StatusKey) ?? DBStatus.Empty;
-            set => SetValue(value, Table.StatusKey);
+            set => Table.StatusKey?.SetValueNullable(this, value);
         }
 
         [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
         public virtual DateTime? DateCreate
         {
             get => Table.DateKey == null ? (DateTime?)null : GetValueNullable<DateTime>(Table.DateKey);
-            set => SetValue(value, Table.DateKey);
+            set => Table.DateKey?.SetValueNullable(this, value);
         }
 
         [Browsable(false)]
@@ -157,7 +157,7 @@ namespace DataWF.Data
         public DateTime? Stamp
         {
             get => Table.StampKey == null ? (DateTime?)null : GetValueNullable<DateTime>(Table.StampKey);
-            set => SetValue(value, Table.StampKey);
+            set => Table.StampKey?.SetValueNullable(this, value);
         }
 
         IAccessValue IAccessable.Access { get => Access; set => Access = (AccessValue)value; }
