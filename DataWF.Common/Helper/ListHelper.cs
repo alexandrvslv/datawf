@@ -944,6 +944,14 @@ namespace DataWF.Common
                 result = comp.Compare(x, y);
                 hash = x != null && y != null && !EqualT(x, y);
             }
+            else if (x == null)
+            {
+                result = y == null ? 0 : -1;
+            }
+            else if (y == null)
+            {
+                result = 1;
+            }
             else if (x is string xs && y is string ys)
             {
                 result = string.Compare(xs, ys, StringComparison.OrdinalIgnoreCase);

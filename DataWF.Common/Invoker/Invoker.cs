@@ -60,15 +60,15 @@ namespace DataWF.Common
             return new QueryParameter<TT> { Invoker = this };
         }
 
-        public virtual InvokerComparer CreateComparer(Type type)
+        public virtual InvokerComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
         {
             type = type ?? typeof(T);
-            return (InvokerComparer)Activator.CreateInstance(typeof(InvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, ListSortDirection.Ascending);
+            return (InvokerComparer)Activator.CreateInstance(typeof(InvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, direction);
         }
 
-        public virtual InvokerComparer<TT> CreateComparer<TT>()
+        public virtual InvokerComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
         {
-            return new InvokerComparer<TT, V>(this);
+            return new InvokerComparer<TT, V>(this, direction);
         }
 
         public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
@@ -96,15 +96,15 @@ namespace DataWF.Common
 
     public abstract class NullableInvoker<T, V> : Invoker<T, V?> where V : struct
     {
-        public override InvokerComparer CreateComparer(Type type)
+        public override InvokerComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
         {
             type = type ?? typeof(T);
-            return (InvokerComparer)Activator.CreateInstance(typeof(NullableInvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, ListSortDirection.Ascending);
+            return (InvokerComparer)Activator.CreateInstance(typeof(NullableInvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, direction);
         }
 
-        public override InvokerComparer<TT> CreateComparer<TT>()
+        public override InvokerComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
         {
-            return new NullableInvokerComparer<TT, V>(this);
+            return new NullableInvokerComparer<TT, V>(this, direction);
         }
 
         public override bool CheckItem(T item, object typedValue, CompareType comparer, IComparer comparision)

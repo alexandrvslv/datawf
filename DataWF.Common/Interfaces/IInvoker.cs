@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections;
+using System.ComponentModel;
 using System.Text.Json;
 
 namespace DataWF.Common
@@ -21,8 +22,8 @@ namespace DataWF.Common
         IQueryParameter CreateParameter(Type type);
         QueryParameter<TT> CreateParameter<TT>();
 
-        InvokerComparer CreateComparer(Type type);
-        InvokerComparer<TT> CreateComparer<TT>();
+        InvokerComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending);
+        InvokerComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending);
     }
 
     public interface IValuedInvoker<V> : IInvoker

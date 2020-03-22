@@ -732,14 +732,16 @@ namespace DataWF.Common
                 if (column.EndsWith(" DESC", StringComparison.OrdinalIgnoreCase))
                     direction = ListSortDirection.Descending;
                 var index = column.IndexOf(" ", StringComparison.Ordinal);
-                comparerList.Add(new InvokerComparer<T>(index > 0 ? column.Substring(0, index) : column, direction));
+                var invoker = EmitInvoker.Initialize<T>(index > 0 ? column.Substring(0, index) : column) as IInvokerExtension;
+                comparerList.Add(invoker.CreateComparer<T>(direction));
             }
             ApplySortInternal(comparerList);
         }
 
         public void ApplySortInternal(string property, ListSortDirection direction)
         {
-            ApplySortInternal(new InvokerComparer<T>(property, direction));
+            var invoker = EmitInvoker.Initialize<T>(property) as IInvokerExtension;
+            ApplySortInternal(invoker.CreateComparer<T>(direction));
         }
 
         public virtual void ApplySortInternal(IComparer<T> comparer)

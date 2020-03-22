@@ -25,13 +25,17 @@ namespace DataWF.Common
 
         public InvokerComparer<T> Add(IInvoker invoker, ListSortDirection direction)
         {
-            var parameter = new InvokerComparer<T>
+            var comparer = (InvokerComparer<T>)null;
+            if (invoker is IInvokerExtension invokerExtension)
             {
-                Invoker = invoker,
-                Direction = direction
+                comparer = invokerExtension.CreateComparer<T>();
+            }
+            else
+            {
+                comparer = new InvokerComparer<T>(invoker, direction);
             };
-            Add(parameter);
-            return parameter;
+            Add(comparer);
+            return comparer;
         }
 
         public InvokerComparer<T> AddOrUpdate(IInvoker invoker, ListSortDirection direction)
