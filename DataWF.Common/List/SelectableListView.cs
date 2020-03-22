@@ -220,7 +220,7 @@ namespace DataWF.Common
             if (!query.Suspending)
             {
                 var parameters = query.FormatEnabled();
-                if (tempParameters?.Equals(parameters, StringComparison.Ordinal) ?? false)
+                if (string.Equals(tempParameters, parameters, StringComparison.Ordinal))
                 {
                     return;
                 }

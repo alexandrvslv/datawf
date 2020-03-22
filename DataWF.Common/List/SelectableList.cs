@@ -256,30 +256,11 @@ namespace DataWF.Common
                     if (args.Item2 is NotifyCollectionChangedEventArgs collectionArgs
                         && collectionArgs.Action == NotifyCollectionChangedAction.Add)
                     {
-                        var list = new List<object>(4);
-                        foreach (T item in collectionArgs.NewItems)
-                        {
-                            list.Add(item);
-                        }
-                        while (notifyQueue.TryPeek(out var next)
-                            && next.Item2 is NotifyCollectionChangedEventArgs nextArgs
-                            && nextArgs.Action == NotifyCollectionChangedAction.Add
-                            && notifyQueue.TryDequeue(out next))
-                        {
-                            foreach (T nextItem in nextArgs.NewItems)
-                            {
-                                list.Add(nextItem);
-                            }
-                        }
-                        if (list.Count > 1)
-                        {
-                            args = new Tuple<object, EventArgs>(args.Item1,
-                                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, list, collectionArgs.NewStartingIndex));
-                            //if (list.Count > 100)
-                            //{
-                            //    System.Diagnostics.Debug.WriteLine($"Join Add Notifications: {list.Count}");
-                            //}
-                        }
+                        args = MergeCollectionAdd(args, collectionArgs);
+                    }
+                    if (args.Item2 is PropertyChangedEventArgs propertyArgs)
+                    {
+                        args = MergeProperty(args, propertyArgs);
                     }
                     ProcessNotification(args.Item1, args.Item2);
                 }
@@ -288,6 +269,47 @@ namespace DataWF.Common
             {
                 notifySemafore.Release();
             }
+        }
+
+        private Tuple<object, EventArgs> MergeProperty(Tuple<object, EventArgs> args, PropertyChangedEventArgs propertyArgs)
+        {
+            while (notifyQueue.TryPeek(out var next)
+                && next.Item2 is PropertyChangedEventArgs nextArgs
+                && next.Item1.Equals(args.Item1)
+                && notifyQueue.TryDequeue(out next))
+            {
+            }
+            return args;
+        }
+
+        private Tuple<object, EventArgs> MergeCollectionAdd(Tuple<object, EventArgs> args, NotifyCollectionChangedEventArgs collectionArgs)
+        {
+            var list = new List<object>(4);
+            foreach (T item in collectionArgs.NewItems)
+            {
+                list.Add(item);
+            }
+            while (notifyQueue.TryPeek(out var next)
+                && next.Item2 is NotifyCollectionChangedEventArgs nextArgs
+                && nextArgs.Action == NotifyCollectionChangedAction.Add
+                && notifyQueue.TryDequeue(out next))
+            {
+                foreach (T nextItem in nextArgs.NewItems)
+                {
+                    list.Add(nextItem);
+                }
+            }
+            if (list.Count > 1)
+            {
+                args = new Tuple<object, EventArgs>(args.Item1,
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, list, collectionArgs.NewStartingIndex));
+                //if (list.Count > 100)
+                //{
+                //    System.Diagnostics.Debug.WriteLine($"Join Add Notifications: {list.Count}");
+                //}
+            }
+
+            return args;
         }
 
         private void ProcessNotification(object sender, EventArgs e)
@@ -387,7 +409,7 @@ namespace DataWF.Common
             if (IsSorted)
             {
                 if (index < 0)
-                    index = items.IndexOf(item);
+                    index = IndexOf(item);
                 int newindex = GetIndexBySort(item);
                 if (newindex < 0)
                     newindex = -newindex - 1;
@@ -514,7 +536,7 @@ namespace DataWF.Common
                 return CheckUnique ? index : -Math.Abs(index);
             }
             return CheckUnique
-                ? Contains(item) ? items.Count - 1 : -(items.Count + 1)
+                ? Contains(item) ? items.Count : -(items.Count + 1)
                 : -(items.Count + 1);
         }
 
@@ -653,8 +675,15 @@ namespace DataWF.Common
 
         public int IndexOf(T item)
         {
-            //if (comparer != null)
-            //    return ListHelper.BinarySearch(items, item, comparer);
+            if (comparer != null)
+            {
+                var index = ListHelper.BinarySearch(items, item, comparer);
+
+                if (index >= 0 && index < items.Count && item.Equals(items[index]))
+                {
+                    return index;
+                }
+            }
             return items.IndexOf(item);
         }
 
