@@ -86,6 +86,10 @@ namespace DataWF.WebService.Common
                     var enumerable = (IEnumerable)invoker.GetValue(value);
                     if (enumerable != null && includeReferencing)
                     {
+                        if (writer.CurrentDepth > maxDepth)
+                        {
+                            continue;
+                        }
                         writer.WritePropertyName(invoker.Name);
                         writer.WriteStartArray();
                         foreach (var item in enumerable)
