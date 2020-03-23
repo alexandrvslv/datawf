@@ -47,8 +47,8 @@ namespace DataWF.Common
                 case SynchronizedStatus.Actual:
                     if (changes.Any())
                     {
-                        Owner.SyncStatus = SynchronizedStatus.Edit;
                         Owner.Changes[OwnerProperty] = this;
+                        Owner.SyncStatus = SynchronizedStatus.Edit;
                         Owner.OnPropertyChanged(OwnerProperty);
                     }
                     break;

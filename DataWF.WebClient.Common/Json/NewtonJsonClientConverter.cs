@@ -170,6 +170,7 @@ namespace DataWF.Common
                 case JsonToken.Float:
                 case JsonToken.Bytes:
                 case JsonToken.Raw:
+                case JsonToken.Boolean:
                 //value = jreader.GetString();
                 //value = Helper.TextParse((string)value, type, null);
                 //break;
