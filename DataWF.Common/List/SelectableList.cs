@@ -46,7 +46,7 @@ namespace DataWF.Common
         public SelectableList(IEnumerable<T> items, IComparer<T> comparer = null) : this(items.Count())
         {
             this.comparer = comparer;
-            AddRangeInternal(items);
+            AddRangeInternal(items, false);
         }
 
 
@@ -527,15 +527,18 @@ namespace DataWF.Common
                 return index;
             }
         }
-
         protected int GetIndexForAdding(T item)
+        {
+            return GetIndexForAdding(item, CheckUnique);
+        }
+        protected int GetIndexForAdding(T item, bool checkUnique)
         {
             if (comparer != null)
             {
                 var index = ListHelper.BinarySearch(items, item, comparer);
-                return CheckUnique ? index : -Math.Abs(index);
+                return checkUnique ? index : -Math.Abs(index);
             }
-            return CheckUnique
+            return checkUnique
                 ? Contains(item) ? items.Count : -(items.Count + 1)
                 : -(items.Count + 1);
         }
@@ -612,14 +615,14 @@ namespace DataWF.Common
             Remove(items[index], index);
         }
 
-        public void AddRangeInternal(IEnumerable<T> list)
+        public void AddRangeInternal(IEnumerable<T> list, bool checkUnique)
         {
             lock (lockObject)
             {
                 int index = 0;
                 foreach (T item in list)
                 {
-                    index = GetIndexForAdding(item);
+                    index = GetIndexForAdding(item, checkUnique);
                     if (index < 0)
                     {
                         index = -index - 1;
@@ -636,7 +639,12 @@ namespace DataWF.Common
 
         public void AddRange(IEnumerable<T> items)
         {
-            AddRangeInternal(items);
+            AddRange(items, CheckUnique);
+        }
+
+        public void AddRange(IEnumerable<T> items, bool checkUnique)
+        {
+            AddRangeInternal(items, checkUnique);
             OnListChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
                 items is IList iList ? iList : items.ToList(),
                 0));

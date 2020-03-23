@@ -29,7 +29,7 @@ namespace DataWF.Common
 
         public NamedList(IEnumerable<T> items) : this()
         {
-            AddRangeInternal(items);
+            AddRangeInternal(items, false);
         }
 
         public T this[string param]

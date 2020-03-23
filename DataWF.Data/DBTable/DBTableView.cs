@@ -376,11 +376,11 @@ namespace DataWF.Data
             ClearInternal();
             if (!query.IsEmpty())
             {
-                AddRangeInternal(table.Select(query));
+                AddRangeInternal(table.Select(query), false);
             }
             else
             {
-                AddRangeInternal(table);
+                AddRangeInternal(table, false);
             }
             SortInternal();
             OnListChanged(NotifyCollectionChangedAction.Reset);

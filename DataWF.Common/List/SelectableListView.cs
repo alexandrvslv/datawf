@@ -287,7 +287,7 @@ namespace DataWF.Common
                     }
                     if (addList.Count > 0)
                     {
-                        AddRange(addList);
+                        AddRange(addList, false);
                     }
                     break;
             }

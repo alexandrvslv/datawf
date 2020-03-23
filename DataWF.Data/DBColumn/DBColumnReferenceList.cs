@@ -15,7 +15,7 @@ namespace DataWF.Data
 
         public DBColumnReferenceList(IEnumerable<DBColumn> columns) : this()
         {
-            AddRangeInternal(columns.Select(p => new DBColumnReference { Column = p }));
+            AddRangeInternal(columns.Select(p => new DBColumnReference { Column = p }), false);
         }
 
         [XmlIgnore, JsonIgnore]

@@ -20,7 +20,7 @@ namespace DataWF.Common
 
         public EnumItemList(IEnumerable<EnumItem> items) : this()
         {
-            AddRangeInternal(items);
+            AddRangeInternal(items, false);
         }
 
         public object Value

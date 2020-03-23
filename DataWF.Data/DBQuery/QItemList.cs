@@ -42,7 +42,7 @@ namespace DataWF.Data
 
         public QItemList(IEnumerable<T> items) : this()
         {
-            AddRangeInternal(items);
+            AddRangeInternal(items, false);
         }
 
         public QItemList(IQItemList owner) : this()
