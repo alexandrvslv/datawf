@@ -494,6 +494,7 @@ namespace DataWF.Data
                 && column.PropertyInvoker != null && column.PropertyInvoker != column
                 && column.PropertyInvoker.TargetType.IsAssignableFrom(type)
                 //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
+                && (column.Keys & DBColumnKeys.Stamp) != DBColumnKeys.Stamp
                 && (column.Keys & DBColumnKeys.Password) != DBColumnKeys.Password
                 && (column.Keys & DBColumnKeys.File) != DBColumnKeys.File;
         }
