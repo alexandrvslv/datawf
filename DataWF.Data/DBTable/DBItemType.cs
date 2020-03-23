@@ -60,7 +60,12 @@ namespace DataWF.Data
                     {
                         if (!table.IsSerializeableColumn(column, Type))
                             continue;
+
                         invokers.Add(column.PropertyInvoker);
+
+                        //if ((column.Keys & DBColumnKeys.Group) == DBColumnKeys.Group)
+                        //    continue;
+
                         if (column.ReferencePropertyInvoker != null)
                         {
                             invokers.Add(column.ReferencePropertyInvoker);

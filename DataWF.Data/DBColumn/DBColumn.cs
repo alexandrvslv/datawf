@@ -987,9 +987,9 @@ namespace DataWF.Data
             {
                 return Pull.GetValue<T>(target.block, target.blockIndex);
             }
-            if (propertyInvoker is IValuedInvoker valueInvoker)
+            if (propertyInvoker is IValuedInvoker<T> valueInvoker)
             {
-                return valueInvoker.GetValue<T>(target);
+                return valueInvoker.GetValue(target);
             }
             return (T)propertyInvoker.GetValue(target);
         }
@@ -1022,9 +1022,9 @@ namespace DataWF.Data
             {
                 Pull.SetValue<T>(target.block, target.blockIndex, value);
             }
-            else if (propertyInvoker is IValuedInvoker valueInvoker)
+            else if (propertyInvoker is IValuedInvoker<T> valueInvoker)
             {
-                valueInvoker.SetValue<T>(target, value);
+                valueInvoker.SetValue(target, value);
             }
             else
             {

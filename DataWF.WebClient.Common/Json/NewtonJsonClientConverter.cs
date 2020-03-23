@@ -202,8 +202,7 @@ namespace DataWF.Common
                 referanceBuffer = new List<ISynchronized>(referenceList.Count);
                 foreach (ISynchronized item in referenceList)
                 {
-                    if (item.SyncStatus == SynchronizedStatus.Actual
-                        && item.SyncStatus != SynchronizedStatus.Suspend)
+                    if (item.SyncStatus == SynchronizedStatus.Actual)
                     {
                         item.SyncStatus = SynchronizedStatus.Suspend;
                         referanceBuffer.Add(item);
@@ -227,17 +226,14 @@ namespace DataWF.Common
 
             if (referanceBuffer != null)
             {
-                for (var i = 0; i < referenceList.Count; i++)
+                foreach (var item in referanceBuffer)
                 {
-                    var item = (ISynchronized)referenceList[i];
-                    if (referanceBuffer.Contains(item)
-                        && item.SyncStatus == SynchronizedStatus.Suspend)
+                    if (item.SyncStatus == SynchronizedStatus.Suspend)
                     {
                         if (!client.Remove(item))
                         {
-                            referenceList.RemoveAt(i);
+                            referenceList.Remove(item);
                         }
-                        i--;
                     }
                 }
             }
