@@ -3680,7 +3680,10 @@ namespace DataWF.Gui
                 }
                 else if (TreeMode && TypeHelper.IsInterface(listType, typeof(IGroup)))
                 {
-                    filtered.FilterQuery.AddTreeParameter();
+                    var parameter = TreeInvoker<IGroup>.Instance.CreateParameter(ListType);
+                    filtered.FilterQuery.Parameters.Add(parameter);
+                    var comparer = TreeInvoker<IGroup>.Instance.CreateComparer(ListType);
+                    filtered.FilterQuery.Orders.Add(comparer);
                 }
             }
             else

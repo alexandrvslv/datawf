@@ -34,15 +34,6 @@ namespace DataWF.Module.Flow
             set => SetReference(document = value, DocumentKey);
         }
 
-        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
-        {
-            base.OnPropertyChanged(property, column, value);
-            if (Attached)
-            {
-                GetReference<Document>(DocumentKey, ref document, DBLoadParam.None)?.OnReferenceChanged(this);
-            }
-        }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
@@ -64,6 +55,15 @@ namespace DataWF.Module.Flow
         {
             get => GetReference(MessageKey, ref message);
             set => SetReference(message = value, MessageKey);
+        }
+
+        protected override void RaisePropertyChanged(string property)
+        {
+            base.RaisePropertyChanged(property);
+            if (Attached)
+            {
+                document?.OnReferenceChanged(this);
+            }
         }
 
 

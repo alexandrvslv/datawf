@@ -84,6 +84,11 @@ namespace DataWF.Data
                 return invokers;
             }
         }
+
+        public DBItem Create()
+        {
+            return Table.NewItem(DBUpdateState.Insert, true, Type);
+        }
     }
 
     public class DBItemTypeConverter : TypeConverter

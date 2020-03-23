@@ -999,6 +999,12 @@ namespace DataWF.Data
                 : NewItem(state, def);
         }
 
+        public DBItem NewItem(DBUpdateState state, bool def, Type type)
+        {
+            var typeIndex = ItemTypes.First(p => p.Value.Type == type).Key;
+            return NewItem(state, def, typeIndex, type);
+        }
+
         public DBItem NewItem(DBUpdateState state, bool def, int typeIndex, Type type)
         {
             var item = (DBItem)FormatterServices.GetUninitializedObject(type);

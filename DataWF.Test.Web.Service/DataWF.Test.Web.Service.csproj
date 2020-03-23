@@ -26,7 +26,7 @@
   </ItemGroup>
   <Target Name="CodeGenerator" BeforeTargets="PreBuildEvent">
     <Exec Command="dotnet tool restore" />
-    <Exec Command="dotnet wscodegen -m Controllers, Logs, Invokers -p $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Common.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Counterpart.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Messanger.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Flow.dll -o $(ProjectDir)Controllers" />
+    <Exec Command="dotnet wscodegen -m Controllers, Logs, Invokers -p $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/ -o $(ProjectDir)Controllers" />
   </Target>
   <Target Name="SwaggerToFile" AfterTargets="AfterBuild">
     <Exec Command="dotnet swagger tofile --output $(ProjectDir)wwwroot/swagger.json $(OutputPath)$(AssemblyName).dll v1" />

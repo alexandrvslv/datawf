@@ -186,7 +186,7 @@ namespace DataWF.Data.Gui
                         }
                         else
                         {
-                            toolAdd.DropDownItems.Add(new ToolItemType((s, e) => ShowNewItem((DBItem)((ToolItemType)s).Type.Constructor.Create()))
+                            toolAdd.DropDownItems.Add(new ToolItemType((s, e) => ShowNewItem(((ToolItemType)s).Type.Create()))
                             {
                                 Name = itemType.Type.FullName,
                                 Text = itemType.Type.Name,

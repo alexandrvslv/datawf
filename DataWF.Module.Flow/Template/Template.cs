@@ -95,7 +95,6 @@ namespace DataWF.Module.Flow
         public static DBColumn DocumentTypeKey => DBTable.ParseProperty(nameof(DocumentType), ref documentTypeKey);
         public static DBColumn IsFileKey => DBTable.ParseProperty(nameof(IsFile), ref isFileKey);
 
-        private DBItemType documentType;
         private Work work;
 
         public Template()
@@ -116,11 +115,7 @@ namespace DataWF.Module.Flow
         public virtual string Code
         {
             get => GetValue<string>(Table.CodeKey);
-            set
-            {
-                SetValue(value, Table.CodeKey);
-                documentType = null;
-            }
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
@@ -166,8 +161,8 @@ namespace DataWF.Module.Flow
         [DefaultValue(0), Column("document_type", 250)]
         public int? DocumentType
         {
-            get => GetValue<int?>(DocumentTypeKey);
-            set => SetValue(value, DocumentTypeKey);
+            get => GetValueNullable<int>(DocumentTypeKey);
+            set => SetValueNullable(value, DocumentTypeKey);
         }
 
         [Browsable(false)]
@@ -196,8 +191,8 @@ namespace DataWF.Module.Flow
         [Column("work_id")]
         public int? WorkId
         {
-            get => GetValue<int?>(WorkKey);
-            set => SetValue(value, WorkKey);
+            get => GetValueNullable<int>(WorkKey);
+            set => SetValueNullable(value, WorkKey);
         }
 
         [Reference(nameof(WorkId))]
@@ -260,22 +255,11 @@ namespace DataWF.Module.Flow
         //    }
         //}
 
-        [Browsable(false)]
-        public DBItemType DocumentTypeInfo
-        {
-            get
-            {
-                return documentType ?? (documentType =
-                  DocumentType != null && Document.DBTable.ItemTypes.TryGetValue(DocumentType.Value, out var temp)
-                  ? temp
-                  : Document.DBTable.ItemType);
-            }
-        }
 
         [ControllerMethod]
         public virtual Document CreateDocument()
         {
-            var document = (Document)DocumentTypeInfo.Constructor.Create();
+            var document = (Document)Document.DBTable.NewItem(DBUpdateState.Insert, true, DocumentType ?? 0);
             document.Template = this;
             return document;
         }

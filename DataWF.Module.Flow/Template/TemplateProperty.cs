@@ -37,15 +37,15 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValueNullable<int>(Table.PrimaryKey);
+            set => SetValueNullable(value, Table.PrimaryKey);
         }
 
         [Column("template_id"), Index("rtemplate_property_index", true)]
         public int? TemplateId
         {
-            get => GetValue<int?>(TemplateKey);
-            set => SetValue(value, TemplateKey);
+            get => GetValueNullable<int>(TemplateKey);
+            set => SetValueNullable(value, TemplateKey);
         }
 
         [Reference(nameof(TemplateId))]

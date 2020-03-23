@@ -66,7 +66,7 @@ namespace DataWF.Gui
             ValueColumn = new LayoutFieldColumn() { Name = "Value", FillWidth = true, StyleName = "Value", Invoker = new FieldValueInvoker() };
 
             Columns = new LayoutListInfo(
-                new LayoutColumn { Name = nameof(LayoutField.ToString), Editable = false, Width = 100, Invoker = ToStringInvoker.Instance },
+                new LayoutColumn { Name = nameof(LayoutField.ToString), Editable = false, Width = 100, Invoker = ToStringInvoker<object>.Instance },
                 new LayoutColumn { Name = nameof(LayoutField.Category), Visible = false, Invoker = categoryInvoker },
                 new LayoutColumn { Name = nameof(LayoutField.Order), Visible = false, Invoker = orderInvoker },
                 ValueColumn

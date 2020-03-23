@@ -965,7 +965,7 @@ namespace DataWF.Gui
             }
         }
 
-        public void Reset()
+        public void ResetCollection()
         {
             var list = GetItems().ToArray();
             Clear();

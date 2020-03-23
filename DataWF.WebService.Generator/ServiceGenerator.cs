@@ -74,7 +74,10 @@ namespace DataWF.WebService.Generator
                         var assembly = (Assembly)null;
                         try
                         {
-                            assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
+                            using (var resolver = new AssemblyResolver(file))
+                            {
+                                assembly = resolver.Assembly;
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -964,13 +967,14 @@ namespace DataWF.WebService.Generator
 
         private ClassDeclarationSyntax GenPropertyInvoker(string name, string definitionName, string propertyName, string propertyType, bool canWrite = true)
         {
+            var nullable = propertyType.IndexOf("?") > -1;
             return SF.ClassDeclaration(
                      attributeLists: SF.List(GenPropertyInvokerAttribute(definitionName, propertyName)),
                      modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
                      identifier: SF.Identifier(name + "<T>"),
                      typeParameterList: null,
                      baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
-                            SF.SimpleBaseType(SF.ParseTypeName($"Invoker<T, {propertyType}>")))),
+                            SF.SimpleBaseType(SF.ParseTypeName($"{(nullable ? "Nullable" : "")}Invoker<T, {(nullable ? propertyType.Replace("?", "") : propertyType)}>")))),
                      constraintClauses: SF.List(new TypeParameterConstraintClauseSyntax[] {
                          SF.TypeParameterConstraintClause(
                              name: SF.IdentifierName("T"),

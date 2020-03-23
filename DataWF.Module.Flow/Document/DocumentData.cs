@@ -218,12 +218,12 @@ namespace DataWF.Module.Flow
             get { return TemplateDataId != null; }
         }
 
-        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        protected override void RaisePropertyChanged(string property)
         {
-            base.OnPropertyChanged(property, column, value);
+            base.RaisePropertyChanged(property);
             if (Attached)
             {
-                GetReference<Document>(DocumentKey, ref document, DBLoadParam.None)?.OnReferenceChanged(this);
+                document?.OnReferenceChanged(this);
             }
         }
 

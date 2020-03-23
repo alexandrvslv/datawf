@@ -15,7 +15,7 @@ namespace DataWF.Test.Common
             for (int i = 0; i < 1000; i++)
             {
                 var index = Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
-                Helper.OneToTwoShift(index, out var left, out var right);
+                Helper.OneToTwoShift(index, out short left, out short right);
                 Debug.WriteLine($"pull index {i} = {index} left {left} right {right}");
                 pull.SetValue(index, i);
             }
@@ -35,7 +35,7 @@ namespace DataWF.Test.Common
             for (int i = 0; i < 1000; i++)
             {
                 var index = Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
-                Helper.OneToTwoShift(index, out var left, out var right);
+                Helper.OneToTwoShift(index, out short left, out short right);
                 Debug.WriteLine($"pull index {i} = {index} left {left} right {right}");
                 pull.SetValue<int?>(index, i);
             }
@@ -58,7 +58,7 @@ namespace DataWF.Test.Common
                 for (short j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOneShift(i, j);
-                    Helper.OneToTwoShift(value, out var a, out var b);
+                    Helper.OneToTwoShift(value, out short a, out short b);
                     Assert.AreEqual(i, a);
                     Assert.AreEqual(j, b);
                 }
@@ -118,7 +118,7 @@ namespace DataWF.Test.Common
                 for (int j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOneShift(i, j);
-                    Helper.OneToTwoShift(value, out var a, out var b);
+                    Helper.OneToTwoShift(value, out short a, out short b);
                     Assert.AreEqual(i, a);
                     Assert.AreEqual(j, b);
                 }

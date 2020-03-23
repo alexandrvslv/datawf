@@ -155,13 +155,13 @@ namespace DataWF.Module.Flow
             set => SetReference(reference = value, ReferenceKey);
         }
 
-        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        protected override void RaisePropertyChanged(string property)
         {
-            base.OnPropertyChanged(property, column, value);
+            base.RaisePropertyChanged(property);
 
             if (Attached)
             {
-                GetReference<Document>(ReferenceKey, ref reference, DBLoadParam.None)?.OnReferenceChanged(this);
+                reference?.OnReferenceChanged(this);
             }
         }
 

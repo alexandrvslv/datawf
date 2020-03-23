@@ -20,7 +20,7 @@ namespace DataWF.Gui
         {
             nodes = new LayoutNodeList<Node>(cats);
             columns = new LayoutListInfo(
-                new LayoutColumn { Name = nameof(Node.ToString), Editable = false, Width = 120, FillWidth = true, Invoker = ToStringInvoker.Instance },
+                new LayoutColumn { Name = nameof(Node.ToString), Editable = false, Width = 120, FillWidth = true, Invoker = ToStringInvoker<object>.Instance },
                 new LayoutColumn { Name = nameof(Node.Category), Visible = false, Invoker = categoryInvoker },
                 new LayoutColumn { Name = nameof(Node.Order), Visible = false, Invoker = orderInvoker })
             {

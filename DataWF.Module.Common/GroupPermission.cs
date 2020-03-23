@@ -407,11 +407,9 @@ namespace DataWF.Module.Common
             return ObjectName;
         }
 
-        public override void OnPropertyChanged([CallerMemberName] string property = null, DBColumn column = null, object value = null)
+        protected override void RaisePropertyChanged(string property)
         {
-            base.OnPropertyChanged(property, column, value);
+            base.RaisePropertyChanged(property);
         }
-
-
     }
 }
