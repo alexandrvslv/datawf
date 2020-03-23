@@ -196,48 +196,46 @@ namespace DataWF.Common
             var client = Client.Provider.GetClient(itemType);
             var temp = sourceList ?? (IList)EmitInvoker.CreateObject(type);
             var referenceList = temp as IReferenceList;
-            var referanceBuffer = (List<ISynchronized>)null;
             if (referenceList != null && client != null
                 && referenceList.Owner.SyncStatus == SynchronizedStatus.Load)
             {
-                referanceBuffer = new List<ISynchronized>(referenceList.Count);
-                foreach (ISynchronized item in referenceList)
+                var referanceBuffer = new HashSet<ISynchronized>((IEnumerable<ISynchronized>)referenceList);
+                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
                 {
-                    if (item.SyncStatus == SynchronizedStatus.Actual)
+#if NETSTANDARD2_0
+                    var item = client.Converter.Read(jreader, null, serializer);
+#else
+                    var item = Deserialize(jreader, itemType, serializer, null);
+#endif
+                    if (item is ISynchronized synched)
                     {
-                        item.SyncStatus = SynchronizedStatus.Suspend;
-                        referanceBuffer.Add(item);
+                        referenceList.Add(item);
+                        referanceBuffer.Remove(synched);
+                    }
+
+                }
+                foreach (var item in referanceBuffer)
+                {
+                    if (!client.Remove(item))
+                    {
+                        referenceList.Remove(item);
                     }
                 }
             }
             else
             {
                 temp.Clear();
-            }
-            while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
-            {
-                var item = Deserialize(jreader, itemType, serializer, null);
-                //client != null? client.Converter.Read(ref jreader, null, options): 
-                if (item == null)
+                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
                 {
-                    continue;
+                    var item = Deserialize(jreader, itemType, serializer, null);
+                    if (item == null)
+                    {
+                        continue;
+                    }
+                    temp.Add(item);
                 }
-                temp.Add(item);
             }
 
-            if (referanceBuffer != null)
-            {
-                foreach (var item in referanceBuffer)
-                {
-                    if (item.SyncStatus == SynchronizedStatus.Suspend)
-                    {
-                        if (!client.Remove(item))
-                        {
-                            referenceList.Remove(item);
-                        }
-                    }
-                }
-            }
             return temp;
         }
 
