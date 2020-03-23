@@ -10816,6 +10816,565 @@
         }
       }
     },
+    "/api/Instance/GetLogs/{filter}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "GetLogs",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstanceLog"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/GetItemLogs/{id}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "GetItemLogs",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstanceLog"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/UndoLog/{logId}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "UndoLog",
+        "parameters": [
+          {
+            "name": "logId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/RedoLog/{logId}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "RedoLog",
+        "parameters": [
+          {
+            "name": "logId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/RemoveLog/{logId}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "RemoveLog",
+        "parameters": [
+          {
+            "name": "logId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Get",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Instance"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Instance"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/Find/{filter}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Find",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Instance/Search": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "GetLink",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/{id}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/Package": {
+      "post": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/Merge/{id}": {
+      "delete": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Merge",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/Copy/{id}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Copy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/GenerateId": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "GenerateId",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "GenerateIds",
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Location/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -29130,6 +29689,60 @@
             "type": "string"
           }
         },
+        "x-type-id": 0
+      },
+      "InstanceLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBLogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Host": {
+            "type": "string"
+          },
+          "Port": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Active": {
+            "type": "boolean"
+          }
+        },
+        "x-type-id": 0
+      },
+      "Instance": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Host": {
+            "type": "string"
+          },
+          "Port": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Active": {
+            "type": "boolean"
+          }
+        },
+        "x-id": "Id",
         "x-type-id": 0
       },
       "MessageData": {

@@ -24,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\DataWF.WebService.Generator\AssemblyResolver.cs" Link="AssemblyResolver.cs" />
     <Compile Include="..\DataWF.WebService.Generator\CodeGeneratorMode.cs" Link="CodeGeneratorMode.cs" />
     <Compile Include="..\DataWF.WebService.Generator\ServiceGenerator.cs" Link="ServiceGenerator.cs" />
     <Compile Include="..\DataWF.WebService.Generator\SyntaxHelper.cs" Link="SyntaxHelper.cs" />
@@ -41,8 +42,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="3.1.2" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.4.0" />
-    <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="13.2.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.1.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="13.2.3" />
     <PackageReference Include="NUnit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
   </ItemGroup>
