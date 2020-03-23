@@ -113,7 +113,7 @@ namespace DataWF.Data
         public object PrimaryId
         {
             get => Table.PrimaryKey == null ? null : GetValue(Table.PrimaryKey);
-            set => Table.PrimaryKey?.SetValue(this, value);
+            set => Table.PrimaryKey?.SetValue(this, Table.PrimaryKey.ParseValue(value));
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]

@@ -230,12 +230,11 @@ namespace DataWF.Test.Data
         [Table(PositionTableName, "Default")]
         public class Position : DBItem
         {
+            public static readonly DBTable<Position> DBTable = GetTable<Position>();
+            public static readonly DBColumn IdKey = DBTable.ParseProperty(nameof(Id));
+            public static readonly DBColumn CodeKey = DBTable.ParseProperty(nameof(Code));
             private Position parent;
 
-            public static DBTable<Position> DBTable
-            {
-                get { return GetTable<Position>(); }
-            }
 
             public Position()
             {
@@ -244,16 +243,16 @@ namespace DataWF.Test.Data
             [Column("id", Keys = DBColumnKeys.Primary)]
             public int? Id
             {
-                get => GetProperty<int?>();
-                set => SetProperty(value);
+                get => GetValueNullable<int>(IdKey);
+                set => SetValueNullable(value, IdKey);
             }
 
             [Column("code", 20, Keys = DBColumnKeys.Code | DBColumnKeys.Unique | DBColumnKeys.Indexing)]
             [Index("positioncode", true)]
             public string Code
             {
-                get => GetProperty<string>();
-                set => SetProperty(value);
+                get => GetValue<string>(CodeKey);
+                set => SetValue(value, CodeKey);
             }
 
             [Column("parentid", Keys = DBColumnKeys.Group)]

@@ -21,7 +21,9 @@ using DataWF.Common;
 using System;
 using System.ComponentModel;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -57,6 +59,7 @@ namespace DataWF.Data
         [DefaultValue(0)]
         public int Scale { get; set; }
 
+        [JsonIgnore, XmlIgnore]
         public string NextQuery
         {
             get { return cacheQuery = cacheQuery ?? Schema.Connection.System.SequenceNextValue(this); }
