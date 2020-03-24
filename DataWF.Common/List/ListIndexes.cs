@@ -8,6 +8,7 @@ namespace DataWF.Common
         protected Dictionary<string, IListIndex<T>> indexes = new Dictionary<string, IListIndex<T>>(StringComparer.Ordinal);
 
         public bool Concurrent { get; set; }
+        public int Count => indexes.Count;
 
         public void Add(string name, IListIndex<T> index)
         {

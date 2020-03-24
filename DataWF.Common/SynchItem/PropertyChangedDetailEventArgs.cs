@@ -19,6 +19,11 @@ namespace DataWF.Common
 
     public class PropertyChangedAggregateEventArgs : PropertyChangedEventArgs
     {
+        public PropertyChangedAggregateEventArgs(PropertyChangedEventArgs firstProperty) : this(firstProperty.PropertyName)
+        {
+            Items.Add(firstProperty);
+        }
+
         public PropertyChangedAggregateEventArgs(string firstProperty) : base(firstProperty)
         {
         }

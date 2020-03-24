@@ -85,7 +85,8 @@ namespace DataWF.Common
             get { return Orders; }
         }
 
-        public bool IsEnabled => ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => !p.FormatIgnore && p.IsEnabled);
+        public bool IsEnabledFormatting => ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => !p.FormatIgnore && p.IsEnabled);
+        public bool IsEnabled => ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => p.IsEnabled);
 
         public event EventHandler OrdersChanged;
 

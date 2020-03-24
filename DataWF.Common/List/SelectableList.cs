@@ -273,13 +273,19 @@ namespace DataWF.Common
 
         private Tuple<object, EventArgs> MergeProperty(Tuple<object, EventArgs> args, PropertyChangedEventArgs propertyArgs)
         {
+            PropertyChangedAggregateEventArgs newArgs = null;
             while (notifyQueue.TryPeek(out var next)
                 && next.Item2 is PropertyChangedEventArgs nextArgs
                 && next.Item1.Equals(args.Item1)
                 && notifyQueue.TryDequeue(out next))
             {
+                if (newArgs == null)
+                {
+                    newArgs = new PropertyChangedAggregateEventArgs(propertyArgs);
+                }
+                newArgs.Items.Add(nextArgs);
             }
-            return args;
+            return newArgs == null ? args : new Tuple<object, EventArgs>(args.Item1, newArgs);
         }
 
         private Tuple<object, EventArgs> MergeCollectionAdd(Tuple<object, EventArgs> args, NotifyCollectionChangedEventArgs collectionArgs)
@@ -393,17 +399,18 @@ namespace DataWF.Common
 
         public void OnItemPropertyChanged(T item, int index, PropertyChangedEventArgs e)
         {
-            var lindex = indexes.GetIndex(e.PropertyName);
-            if (lindex != null)
+            if (indexes.Count > 0)
             {
-                if (e is PropertyChangedDetailEventArgs details)
+                if (e is PropertyChangedAggregateEventArgs aggregator)
                 {
-                    lindex.Remove(item, details.OldValue);
-                    lindex.Add(item, details.NewValue);
+                    foreach (var entry in aggregator.Items)
+                    {
+                        CheckIndex(item, entry);
+                    }
                 }
                 else
                 {
-                    lindex.Refresh(item);
+                    CheckIndex(item, e);
                 }
             }
             if (IsSorted)
@@ -433,6 +440,23 @@ namespace DataWF.Common
                 else
                 {
                     ItemPropertyChanged(item, e);
+                }
+            }
+        }
+
+        private void CheckIndex(T item, PropertyChangedEventArgs e)
+        {
+            var lindex = indexes.GetIndex(e.PropertyName);
+            if (lindex != null)
+            {
+                if (e is PropertyChangedDetailEventArgs details)
+                {
+                    lindex.Remove(item, details.OldValue);
+                    lindex.Add(item, details.NewValue);
+                }
+                else
+                {
+                    lindex.Refresh(item);
                 }
             }
         }

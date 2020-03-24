@@ -300,7 +300,7 @@ namespace DataWF.Common
             var checkItem = ListHelper.CheckItem(item, query);
             if (checkItem)
             {
-                if (query.IsGlobalParameter(e.PropertyName))
+                if (CheckIsGlobal(e))
                 {
                     if (!FilterQuery.Suspending)
                     {
@@ -327,6 +327,25 @@ namespace DataWF.Common
                 {
                     Remove(item, index);
                 }
+            }
+        }
+
+        private bool CheckIsGlobal(PropertyChangedEventArgs e)
+        {
+            if (!query.IsEnabled)
+                return false;
+            if (e is PropertyChangedAggregateEventArgs aggregator)
+            {
+                foreach (var entry in aggregator.Items)
+                {
+                    if (query.IsGlobalParameter(entry.PropertyName))
+                        return true;
+                }
+                return false;
+            }
+            else
+            {
+                return query.IsGlobalParameter(e.PropertyName);
             }
         }
 
