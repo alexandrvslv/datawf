@@ -86,6 +86,8 @@ namespace DataWF.Common
         {
             if (source == baseCollection)
                 return;
+            if (baseCollection == this)
+                return;
             SuspendHandling();
             source = baseCollection;
             selectableSource = baseCollection as ISelectable;
@@ -360,11 +362,7 @@ namespace DataWF.Common
 
         public override void Dispose()
         {
-            if (selectableSource != null && _listChangedHandler != null)
-            {
-                selectableSource.CollectionChanged -= _listChangedHandler;
-                selectableSource.ItemPropertyChanged -= _listItemChangedHandler;
-            }
+            SuspendHandling();
 
             base.Dispose();
         }
