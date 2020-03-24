@@ -284,7 +284,7 @@ namespace DataWF.Common
                     {
                         if (newItem != null
                             && ListHelper.CheckItem(newItem, query)
-                            && IndexOf(newItem) < 0)
+                            && GetIndexBySort(newItem) < 0)
                         {
                             addList.Add(newItem);
                         }
@@ -299,6 +299,11 @@ namespace DataWF.Common
 
         public virtual void OnSourceItemChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (FilterQuery.Suspending)
+            {
+                return;
+            }
+
             var item = (T)sender;
 
             var checkItem = ListHelper.CheckItem(item, query);
@@ -306,10 +311,7 @@ namespace DataWF.Common
             {
                 if (CheckIsGlobal(e))
                 {
-                    if (!FilterQuery.Suspending)
-                    {
-                        UpdateFilter();
-                    }
+                    UpdateFilter();
                 }
                 else
                 {
