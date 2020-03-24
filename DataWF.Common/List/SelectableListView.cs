@@ -282,7 +282,9 @@ namespace DataWF.Common
                     var addList = new List<T>();
                     foreach (T newItem in e.NewItems)
                     {
-                        if (newItem != null && ListHelper.CheckItem(newItem, query))
+                        if (newItem != null
+                            && ListHelper.CheckItem(newItem, query)
+                            && IndexOf(newItem) < 0)
                         {
                             addList.Add(newItem);
                         }
