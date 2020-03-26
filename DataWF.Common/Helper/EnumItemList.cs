@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace DataWF.Common
 {
@@ -16,6 +17,7 @@ namespace DataWF.Common
         public EnumItemList(Type type) : this(EnumItem.GetEnumItems(type))
         {
             Type = type;
+            Flags = type.GetCustomAttribute<FlagsAttribute>() != null;
         }
 
         public EnumItemList(IEnumerable<EnumItem> items) : this()
@@ -56,6 +58,7 @@ namespace DataWF.Common
         }
 
         public Type Type { get; }
+        public bool Flags { get; }
 
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -75,14 +78,21 @@ namespace DataWF.Common
             }
         }
 
-        //public EnumItem GetItem(object item)
-        //{
-        //    if (item.GetType() == Type)
-        //    {
-        //        return SelectOne(ValueInvoker.Name, item);
-        //    }
-        //    return (EnumItem)item;
-        //}
+        public EnumItem GetItem(object item)
+        {
+            if (item == null)
+            {
+                return null;
+            }
+
+            var enumItem = SelectOne(nameof(EnumItem.Value), item);
+            if (enumItem == null)
+            {
+                enumItem = new EnumItem(item);
+                Add(enumItem);
+            }
+            return enumItem;
+        }
 
         //public override int IndexOf(object item)
         //{

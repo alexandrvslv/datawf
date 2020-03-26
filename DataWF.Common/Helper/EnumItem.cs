@@ -10,6 +10,8 @@ namespace DataWF.Common
 {
     public class EnumItem : ICheck, INamed, INotifyPropertyChanged
     {
+        public static Dictionary<Type, EnumItemList> Cache = new Dictionary<Type, EnumItemList>();
+
         public static IEnumerable<EnumItem> GetEnumItems(Type type)
         {
             int index = 0;
@@ -37,8 +39,19 @@ namespace DataWF.Common
 
         public static string Format(object item)
         {
-            var name = item.ToString();
             var type = item.GetType();
+            if (!Cache.TryGetValue(type, out var list))
+            {
+                Cache[type] = list = new EnumItemList(type);
+            }
+            var enumItem = list.GetItem(item);
+
+            return enumItem?.Text;
+        }
+
+        internal static string FormatInternal(object item, Type type)
+        {
+            var name = item.ToString();
             var field = type.GetRuntimeField(name);
             if (field != null)
             {
@@ -46,9 +59,10 @@ namespace DataWF.Common
             }
             else if (type.GetCustomAttribute<FlagsAttribute>() != null)
             {
+                var itemValue = (int)item;
                 return string.Join(", ", Enum.GetValues(type)
                     .TypeOf<object>()
-                    .Where(p => ((int)p & (int)item) == (int)p)
+                    .Where(p => (int)p != 0 && ((int)p & itemValue) == (int)p)
                     .Select(p => FormatUI(p)));
             }
 
@@ -79,7 +93,7 @@ namespace DataWF.Common
         { }
 
         public EnumItem(object item)
-            : this(item, item.ToString(), FormatUI(item))
+            : this(item, item.ToString(), FormatInternal(item, item.GetType()))
         { }
 
         public EnumItem(object item, string name, string text)
