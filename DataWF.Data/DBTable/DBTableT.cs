@@ -247,7 +247,7 @@ namespace DataWF.Data
 
         public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
         {
-            column?.Index?.Remove(item, value);
+            column?.Index?.Remove((object)item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanging(item, property, column, value);
@@ -278,7 +278,7 @@ namespace DataWF.Data
                 return;
             }
 
-            column?.Index?.Add(item, value);
+            column?.Index?.Add((object)item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanged(item, property, column, value);
