@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
@@ -54,6 +55,19 @@ namespace DataWF.Common
         }
 
         public static IEnumerable<T> GetContainers<T>(PropertyChangedEventHandler handler)
+        {
+            if (handler == null)
+                yield break;
+            foreach (var invocator in handler.GetInvocationList())
+            {
+                if (invocator.Target is T container)
+                {
+                    yield return container;
+                }
+            }
+        }
+
+        public static IEnumerable<T> GetHandlers<T>(NotifyCollectionChangedEventHandler handler)
         {
             if (handler == null)
                 yield break;

@@ -847,7 +847,7 @@ namespace DataWF.Data
 
         public override string ToString()
         {
-            if (cacheToString.Length == 0)
+            if (string.IsNullOrEmpty(cacheToString))
                 cacheToString = GetRowText();
             return cacheToString;
         }

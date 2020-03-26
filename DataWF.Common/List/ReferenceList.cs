@@ -20,6 +20,7 @@ namespace DataWF.Common
         }
 
         public SynchronizedItem Owner { get; set; }
+
         public string OwnerProperty { get; set; }
 
         public override void CheckStatus(T item)

@@ -99,6 +99,8 @@ namespace DataWF.Common
             {
                 using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, routeParams))
                 {
+                    System.Diagnostics.Debug.WriteLine(request.RequestUri);
+
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, progressToken.CancellationToken).ConfigureAwait(false))
                     {
                         ProcessResponse(client, response);
