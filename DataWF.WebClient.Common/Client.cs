@@ -18,7 +18,7 @@ namespace DataWF.Common
     {
         private readonly ConcurrentDictionary<K, T> downloads;
         private ICrudClient baseClient;
-        private LoadProgress<T> loadProgress;
+        private ConcurrentDictionary<string, LoadProgress<T>> loadQueue = new ConcurrentDictionary<string, LoadProgress<T>>(StringComparer.OrdinalIgnoreCase);
         private SemaphoreSlim getActionSemaphore;
 
         public Client(Invoker<T, K?> idInvoker, Invoker<T, int?> typeInvoker, int typeId = 0)
@@ -339,18 +339,16 @@ namespace DataWF.Common
 
         public LoadProgress<T> Load(string filter, IProgressable progressable)
         {
-            if (loadProgress == null || loadProgress.Task.IsCompleted || loadProgress.Filter != filter)
+            filter = filter ?? string.Empty;
+            if (!loadQueue.TryGetValue(filter, out var loadTask) || loadTask.Token.IsCancelled)
             {
-                if (loadProgress != null && !loadProgress.Task.IsCompleted)
-                {
-                    loadProgress.Token.Cancel();
-                }
-                loadProgress = new LoadProgress<T>(filter, progressable);
-                loadProgress.Task = string.IsNullOrEmpty(filter)
-                    ? LoadAsync(loadProgress.Token)
-                    : SearchAsync(filter, loadProgress.Token);
+                loadQueue[filter] = loadTask = new LoadProgress<T>(filter, progressable);
+                loadTask.Task = string.IsNullOrEmpty(filter)
+                    ? LoadAsync(loadTask.Token)
+                    : SearchAsync(filter, loadTask.Token);
             }
-            return loadProgress;
+
+            return loadTask;
         }
 
         private async Task<List<T>> LoadAsync(ProgressToken token)
