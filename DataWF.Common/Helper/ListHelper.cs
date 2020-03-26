@@ -302,7 +302,7 @@ namespace DataWF.Common
                     result = (x?.ToString() ?? string.Empty).IndexOf((string)y, 0, StringComparison.OrdinalIgnoreCase) >= 0;
                     break;
                 case CompareTypes.In:
-                    if (x is Enum || y is Enum)
+                    if (x is Enum && y is Enum)
                     {
                         result = ((int)y & (int)(object)x) != 0;//TODO Find the way to aviod BOXING ((int)y & (int)x) != 0;
                     }
