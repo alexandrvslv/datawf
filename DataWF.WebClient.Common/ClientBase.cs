@@ -88,16 +88,17 @@ namespace DataWF.Common
         }
 
         public virtual async Task<R> Request<R>(ProgressToken progressToken,
-            string httpMethod = "GET",
-            string commandUrl = "/api",
-            string mediaType = "application/json",
-            object value = null,
+            HttpMethod httpMethod,
+            string commandUrl,// = "/api"
+            string mediaType,// = "application/json"
+            HttpJsonSettings jsonSettings,
+            object value,
             params object[] routeParams)
         {
             var client = GetHttpClient();
             try
             {
-                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, routeParams))
+                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, jsonSettings, value, routeParams))
                 {
                     System.Diagnostics.Debug.WriteLine(request.RequestUri);
 
@@ -176,7 +177,7 @@ namespace DataWF.Common
                             case System.Net.HttpStatusCode.Unauthorized:
                                 if (await Provider?.OnUnauthorized())
                                 {
-                                    return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, value, routeParams).ConfigureAwait(false);
+                                    return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, jsonSettings, value, routeParams).ConfigureAwait(false);
                                 }
                                 else
                                 {
@@ -277,9 +278,10 @@ namespace DataWF.Common
         }
 
         protected virtual HttpRequestMessage CreateRequest(ProgressToken progressToken,
-            string httpMethod = "GET",
-            string commandUrl = "/api",
-            string mediaType = "application/json",
+            HttpMethod httpMethod,
+            string commandUrl,
+            string mediaType,
+            HttpJsonSettings jsonSettings,
             object value = null,
             params object[] parameters)
         {
@@ -287,27 +289,25 @@ namespace DataWF.Common
             var request = new HttpRequestMessage()
             {
                 RequestUri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute),
+                Method = httpMethod
             };
-
-            if (httpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))
+            request.Headers.Add(HttpJsonSettings.JsonKeys, jsonSettings.Keys.ToString());
+            request.Headers.Add(HttpJsonSettings.JsonMaxDepth, jsonSettings.MaxDepth.ToString());
+            if (httpMethod.Method.Equals("GET", StringComparison.OrdinalIgnoreCase))
             {
                 Status = ClientStatus.Get;
-                request.Method = HttpMethod.Get;
             }
-            else if (httpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase))
+            else if (httpMethod.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
             {
                 Status = ClientStatus.Post;
-                request.Method = HttpMethod.Post;
             }
-            else if (httpMethod.Equals("PUT", StringComparison.OrdinalIgnoreCase))
+            else if (httpMethod.Method.Equals("PUT", StringComparison.OrdinalIgnoreCase))
             {
                 Status = ClientStatus.Put;
-                request.Method = HttpMethod.Put;
             }
-            else if (httpMethod.Equals("DELETE", StringComparison.OrdinalIgnoreCase))
+            else if (httpMethod.Method.Equals("DELETE", StringComparison.OrdinalIgnoreCase))
             {
                 Status = ClientStatus.Delete;
-                request.Method = HttpMethod.Delete;
             }
 
             if (value is Stream stream)

@@ -321,8 +321,7 @@ namespace DataWF.WebService.Common
             jsonOptions.InitDefaults(new DBItemConverterFactory
             {
                 CurrentUser = user,
-                IncludeReference = false,
-                IncludeReferencing = false,
+                HttpJsonSettings = HttpJsonSettings.None,
             });
             var stream = new MemoryStream();
 

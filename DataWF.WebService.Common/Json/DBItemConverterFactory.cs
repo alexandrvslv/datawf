@@ -11,17 +11,12 @@ namespace DataWF.WebService.Common
     public class DBItemConverterFactory : JsonConverterFactory, IDisposable
     {
         //private readonly Dictionary<Type, JsonConverter> cache = new Dictionary<Type, JsonConverter>();
-        private const string jsonIncludeRef = "json_include_ref";
-        private const string jsonIncludeRefing = "json_include_refing";
-        private const string jsonReferenceCheck = "json_ref_check";
-        private const string jsonMaxDepth = "json_max_depth";
+
         private readonly Type[] types = new Type[] { typeof(DBItemConverterFactory) };
         private HttpContext context;
         private IUserIdentity user;
-        private bool? includeReference;
-        private bool? includeReferencing;
-        private int? maxDepth;
-        private bool? referenceCheck;
+        private HttpJsonSettings? httpJsonSettings;
+
         internal HashSet<DBItem> referenceSet = new HashSet<DBItem>();
 
         public DBItemConverterFactory()
@@ -44,29 +39,10 @@ namespace DataWF.WebService.Common
             get => user ?? (user = HttpContext?.User?.GetCommonUser());
             set => user = value;
         }
-
-        public bool IncludeReference
+        public HttpJsonSettings HttpJsonSettings
         {
-            get => includeReference ?? (includeReference = HttpContext?.ReadBool(jsonIncludeRef) ?? true).Value;
-            set => includeReference = value;
-        }
-
-        public bool IncludeReferencing
-        {
-            get => includeReferencing ?? (includeReferencing = HttpContext?.ReadBool(jsonIncludeRefing) ?? true).Value;
-            set => includeReferencing = value;
-        }
-
-        public bool ReferenceCheck
-        {
-            get => referenceCheck ?? (referenceCheck = HttpContext?.ReadBool(jsonReferenceCheck) ?? true).Value;
-            set => referenceCheck = value;
-        }
-
-        public int MaxDepth
-        {
-            get => maxDepth ?? (maxDepth = HttpContext?.ReadInt(jsonMaxDepth) ?? 4).Value;
-            set => maxDepth = value;
+            get => httpJsonSettings ?? (httpJsonSettings = HttpContext?.ReadJsonSettings() ?? HttpJsonSettings.Default).Value;
+            set => httpJsonSettings = value;
         }
 
         public override bool CanConvert(Type typeToConvert)

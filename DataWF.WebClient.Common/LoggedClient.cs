@@ -13,32 +13,32 @@ namespace DataWF.Common
             : base(idInvoker, typeInvoker, typeId)
         { }
 
-        public abstract Task<List<L>> GetItemLogsAsync(K id, ProgressToken progressToken);
+        public abstract Task<List<L>> GetItemLogsAsync(K id, HttpJsonSettings settings, ProgressToken progressToken);
 
-        public Task<List<L>> GetItemLogsAsync(object id, ProgressToken progressToken)
-            => GetItemLogsAsync((K)id, progressToken);
+        public Task<List<L>> GetItemLogsAsync(object id, HttpJsonSettings settings, ProgressToken progressToken)
+            => GetItemLogsAsync((K)id, settings, progressToken);
 
         public async Task<IEnumerable> GetItemLogsAsync(object id)
-            => await GetItemLogsAsync(id, ProgressToken.None);
+            => await GetItemLogsAsync(id, HttpJsonSettings.Default, ProgressToken.None);
 
-        public abstract Task<List<L>> GetLogsAsync(string filter, ProgressToken progressToken);
+        public abstract Task<List<L>> GetLogsAsync(string filter, HttpJsonSettings settings, ProgressToken progressToken);
 
         public async Task<IEnumerable> GetLogsAsync(string filter)
-            => await GetLogsAsync(filter, ProgressToken.None);
+            => await GetLogsAsync(filter, HttpJsonSettings.Default, ProgressToken.None);
 
-        public abstract Task<T> RedoLogAsync(long logId, ProgressToken progressToken);
+        public abstract Task<T> RedoLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
 
         public async Task<object> RedoLogAsync(long logId)
-            => await RedoLogAsync(logId, ProgressToken.None);
+            => await RedoLogAsync(logId, HttpJsonSettings.Default, ProgressToken.None);
 
-        public abstract Task<bool> RemoveLogAsync(long logId, ProgressToken progressToken);
+        public abstract Task<bool> RemoveLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
 
         public async Task<bool> RemoveLogAsync(long logId)
-            => await RemoveLogAsync(logId, ProgressToken.None);
+            => await RemoveLogAsync(logId, HttpJsonSettings.Default, ProgressToken.None);
 
-        public abstract Task<T> UndoLogAsync(long logId, ProgressToken progressToken);
+        public abstract Task<T> UndoLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
 
         public async Task<object> UndoLogAsync(long logId)
-            => await UndoLogAsync(logId, ProgressToken.None);
+            => await UndoLogAsync(logId, HttpJsonSettings.Default, ProgressToken.None);
     }
 }

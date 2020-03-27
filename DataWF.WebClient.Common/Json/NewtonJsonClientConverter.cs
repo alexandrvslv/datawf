@@ -33,6 +33,10 @@ namespace DataWF.Common
 
         public override T ReadJson(JsonReader jreader, Type objectType, T existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
+            if (jreader.TokenType == JsonToken.Null)
+            {
+                return default(T);
+            }
             return Read(jreader, existingValue, serializer);
         }
 

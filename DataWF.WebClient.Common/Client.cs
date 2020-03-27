@@ -281,12 +281,12 @@ namespace DataWF.Common
         {
             if (item is ISynchronized synched)
                 synched.SyncStatus = SynchronizedStatus.Load;
-            return await GetAsync(IdInvoker.GetValue(item), ProgressToken.None).ConfigureAwait(false);
+            return await GetAsync(IdInvoker.GetValue(item), HttpJsonSettings.Default, ProgressToken.None).ConfigureAwait(false);
         }
 
         public async virtual Task<bool> Delete(T item)
         {
-            var result = await DeleteAsync(IdInvoker.GetValue(item), ProgressToken.None).ConfigureAwait(false);
+            var result = await DeleteAsync(IdInvoker.GetValue(item), HttpJsonSettings.Default, ProgressToken.None).ConfigureAwait(false);
             if (result)
             {
                 Remove(item);
@@ -323,7 +323,7 @@ namespace DataWF.Common
             try
             {
                 Debug.WriteLine($"Client.Get {typeof(T)} {id}");
-                var result = await GetAsync(id, ProgressToken.None).ConfigureAwait(false);
+                var result = await GetAsync(id, HttpJsonSettings.Default, ProgressToken.None).ConfigureAwait(false);
                 loadAction?.Invoke(result);
             }
             finally
@@ -337,83 +337,88 @@ namespace DataWF.Common
             return GetFilePath(fileModel, $"/api/{typeof(T).Name}/DownloadFile/{{id}}");
         }
 
-        public LoadProgress<T> Load(string filter, IProgressable progressable)
+        public async Task<List<T>> Load()
+        {
+            return await Load(string.Empty, HttpJsonSettings.Default, ProgressToken.None).Task.ConfigureAwait(false);
+        }
+
+        public LoadProgress<T> Load(string filter, HttpJsonSettings settings, ProgressToken progressToken)
         {
             filter = filter ?? string.Empty;
             if (!loadQueue.TryGetValue(filter, out var loadTask) || loadTask.Token.IsCancelled)
             {
-                loadQueue[filter] = loadTask = new LoadProgress<T>(filter, progressable);
+                loadQueue[filter] = loadTask = new LoadProgress<T>(filter, progressToken);
                 loadTask.Task = string.IsNullOrEmpty(filter)
-                    ? LoadAsync(loadTask.Token)
-                    : SearchAsync(filter, loadTask.Token);
+                    ? LoadAsync(settings, loadTask.Token)
+                    : SearchAsync(filter, settings, loadTask.Token);
             }
 
             return loadTask;
         }
 
-        private async Task<List<T>> LoadAsync(ProgressToken token)
+        private async Task<List<T>> LoadAsync(HttpJsonSettings settings, ProgressToken token)
         {
-            var list = await GetAsync(token);
+            var list = await GetAsync(settings, token);
             IsSynchronized = true;
             return list;
         }
 
-        public virtual Task<List<T>> GetAsync(ProgressToken progressToken) => Task.FromResult<List<T>>(null);
+        public virtual Task<List<T>> GetAsync(HttpJsonSettings settings, ProgressToken progressToken) => Task.FromResult<List<T>>(null);
 
-        public async Task<IEnumerable> GetAsync() => await GetAsync(ProgressToken.None);
+        public async Task<IEnumerable> GetAsync() => await GetAsync(HttpJsonSettings.Default, ProgressToken.None);
 
-        public virtual Task<List<T>> SearchAsync(string filter, ProgressToken progressToken) => Task.FromResult<List<T>>(null);
+        public virtual Task<List<T>> SearchAsync(string filter, HttpJsonSettings settings, ProgressToken progressToken) => Task.FromResult<List<T>>(null);
 
-        public async Task<IEnumerable> SearchAsync(string filter) => await SearchAsync(filter, ProgressToken.None);
+        public async Task<IEnumerable> SearchAsync(string filter) => await SearchAsync(filter, HttpJsonSettings.Default, ProgressToken.None);
 
-        public virtual Task<T> GetAsync(K id, ProgressToken progressToken) => Task.FromResult(default(T));
+        public virtual Task<T> GetAsync(K id, HttpJsonSettings settings, ProgressToken progressToken) => Task.FromResult(default(T));
 
-        public Task<T> GetAsync(object id, ProgressToken progressToken) => GetAsync((K)id, progressToken);
+        public Task<T> GetAsync(object id, HttpJsonSettings settings, ProgressToken progressToken) => GetAsync((K)id, settings, progressToken);
 
-        public async Task<object> GetAsync(object id) => await GetAsync((K)id, ProgressToken.None);
+        public async Task<object> GetAsync(object id) => await GetAsync((K)id, HttpJsonSettings.Default, ProgressToken.None);
 
-        public virtual Task<T> CopyAsync(K id, ProgressToken progressToken) => Task.FromResult(default(T));
+        public virtual Task<T> CopyAsync(K id, HttpJsonSettings settings, ProgressToken progressToken) => Task.FromResult(default(T));
 
-        public Task<T> CopyAsync(object id, ProgressToken progressToken) => CopyAsync((K)id, progressToken);
+        public Task<T> CopyAsync(object id, HttpJsonSettings settings, ProgressToken progressToken) => CopyAsync((K)id, settings, progressToken);
 
-        public async Task<object> CopyAsync(object id) => await CopyAsync((K)id, ProgressToken.None);
+        public async Task<object> CopyAsync(object id) => await CopyAsync((K)id, HttpJsonSettings.Default, ProgressToken.None);
 
-        public virtual Task<T> PutAsync(T value, ProgressToken progressToken) => Task.FromResult(value);
+        public virtual Task<T> PutAsync(T value, HttpJsonSettings settings, ProgressToken progressToken) => Task.FromResult(value);
 
-        public Task<T> PutAsync(object value, ProgressToken progressToken) => PutAsync((T)value, progressToken);
+        public Task<T> PutAsync(object value, HttpJsonSettings settings, ProgressToken progressToken) => PutAsync((T)value, settings, progressToken);
 
-        public async Task<object> PutAsync(object value) => await PutAsync((T)value, ProgressToken.None);
+        public async Task<object> PutAsync(object value) => await PutAsync((T)value, HttpJsonSettings.Default, ProgressToken.None);
 
-        public virtual Task<T> PostAsync(T value, ProgressToken progressToken) => Task.FromResult(value);
+        public virtual Task<T> PostAsync(T value, HttpJsonSettings settings, ProgressToken progressToken) => Task.FromResult(value);
 
-        public Task<T> PostAsync(object value, ProgressToken progressToken) => PostAsync((T)value, progressToken);
+        public Task<T> PostAsync(object value, HttpJsonSettings settings, ProgressToken progressToken) => PostAsync((T)value, settings, progressToken);
 
-        public async Task<object> PostAsync(object value) => await PostAsync((T)value, ProgressToken.None);
+        public async Task<object> PostAsync(object value) => await PostAsync((T)value, HttpJsonSettings.Default, ProgressToken.None);
 
-        public virtual Task<bool> DeleteAsync(K id, ProgressToken progressToken) => Task.FromResult(true);
+        public virtual Task<bool> DeleteAsync(K id, HttpJsonSettings settings, ProgressToken progressToken) => Task.FromResult(true);
 
-        public Task<bool> DeleteAsync(object id, ProgressToken progressToken) => DeleteAsync((K)id, progressToken);
+        public Task<bool> DeleteAsync(object id, HttpJsonSettings settings, ProgressToken progressToken) => DeleteAsync((K)id, settings, progressToken);
 
-        public Task<bool> DeleteAsync(object id) => DeleteAsync((K)id, ProgressToken.None);
+        public Task<bool> DeleteAsync(object id) => DeleteAsync((K)id, HttpJsonSettings.Default, ProgressToken.None);
 
-        public virtual Task<object> GenerateIdAsync(ProgressToken progressToken) => Task.FromResult<object>(null);
+        public virtual Task<object> GenerateIdAsync(HttpJsonSettings settings, ProgressToken progressToken) => Task.FromResult<object>(null);
 
-        public Task<object> GenerateId() => GenerateIdAsync(ProgressToken.None);
+        public Task<object> GenerateId() => GenerateIdAsync(HttpJsonSettings.Default, ProgressToken.None);
 
-        public virtual Task<T> MergeAsync(K id, List<string> ids, ProgressToken progressToken) => Task.FromResult<T>(null);
+        public virtual Task<T> MergeAsync(K id, List<string> ids, HttpJsonSettings settings, ProgressToken progressToken) => Task.FromResult<T>(null);
 
-        public Task<T> MergeAsync(T item, List<string> ids, ProgressToken progressToken)
-            => MergeAsync(IdInvoker.GetValue(item).Value, ids, ProgressToken.None);
+        public Task<T> MergeAsync(T item, List<string> ids, HttpJsonSettings settings, ProgressToken progressToken)
+            => MergeAsync(IdInvoker.GetValue(item).Value, ids, settings, ProgressToken.None);
 
-        public async Task<object> MergeAsync(object id, List<string> ids) => await MergeAsync((K)id, ids, ProgressToken.None);
+        public async Task<object> MergeAsync(object id, List<string> ids) => await MergeAsync((K)id, ids, HttpJsonSettings.Default, ProgressToken.None);
     }
 
     public class LoadProgress<T>
     {
-        public LoadProgress(string filter, IProgressable progressable)
+        public LoadProgress(string filter, ProgressToken token)
         {
             Filter = filter;
-            Token = new ProgressToken(progressable);
+            Token = token;
         }
         public ProgressToken Token { get; }
         public Task<List<T>> Task { get; set; }

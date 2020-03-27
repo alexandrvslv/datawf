@@ -676,7 +676,7 @@ namespace DataWF.WebClient.Generator
             //    yield return SF.ParseStatement($"await base.{actualName}({paramBuilder.ToString()}).ConfigureAwait(false);");
             //}
             var requestBuilder = new StringBuilder();
-            requestBuilder.Append($"await Request<{returnType}>(progressToken, \"{method}\", \"{path}\", \"{mediatype}\"");
+            requestBuilder.Append($"await Request<{returnType}>(progressToken, HttpMethod.{Helper.ToInitcap(method)}, \"{path}\", \"{mediatype}\", settings");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             if (bodyParameter == null)
             {
@@ -703,8 +703,13 @@ namespace DataWF.WebClient.Generator
                                                          modifiers: SF.TokenList(),
                                                          type: GetTypeDeclaration(parameter, false, "List"),
                                                          identifier: SF.Identifier(parameter.Name),
-                                                         @default: null);
+                                                         @default: null);            
             }
+            yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
+                                                        modifiers: SF.TokenList(),
+                                                        type: SF.ParseTypeName("HttpJsonSettings"),
+                                                        identifier: SF.Identifier("settings"),
+                                                        @default: null);
             yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
                                                         modifiers: SF.TokenList(),
                                                         type: SF.ParseTypeName("ProgressToken"),
