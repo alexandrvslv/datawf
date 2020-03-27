@@ -60,6 +60,11 @@ namespace DataWF.Common
             return new QueryParameter<TT> { Invoker = this };
         }
 
+        public virtual QueryParameter<TT> CreateParameter<TT>(CompareType compare, object value)
+        {
+            return new QueryParameter<TT> { Invoker = this, Comparer = compare, Value = value };
+        }
+
         public virtual InvokerComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
         {
             type = type ?? typeof(T);

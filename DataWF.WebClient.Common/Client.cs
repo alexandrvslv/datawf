@@ -337,9 +337,14 @@ namespace DataWF.Common
             return GetFilePath(fileModel, $"/api/{typeof(T).Name}/DownloadFile/{{id}}");
         }
 
-        public async Task<List<T>> Load()
+        public Task<List<T>> LoadAsync()
         {
-            return await Load(string.Empty, HttpJsonSettings.Default, ProgressToken.None).Task.ConfigureAwait(false);
+            return LoadAsync(string.Empty, HttpJsonSettings.Default, ProgressToken.None);
+        }
+
+        public async Task<List<T>> LoadAsync(string filter, HttpJsonSettings settings, ProgressToken progressToken)
+        {
+            return await Load(filter, settings, progressToken).Task.ConfigureAwait(false);
         }
 
         public LoadProgress<T> Load(string filter, HttpJsonSettings settings, ProgressToken progressToken)
