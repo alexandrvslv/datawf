@@ -19,12 +19,12 @@ namespace DataWF.Common
             => GetItemLogsAsync((K)id, settings, progressToken);
 
         public async Task<IEnumerable> GetItemLogsAsync(object id)
-            => await GetItemLogsAsync(id, HttpJsonSettings.Default, ProgressToken.None);
+            => await GetItemLogsAsync(id, HttpJsonSettings.OnlyReferenced, ProgressToken.None);
 
         public abstract Task<List<L>> GetLogsAsync(string filter, HttpJsonSettings settings, ProgressToken progressToken);
 
         public async Task<IEnumerable> GetLogsAsync(string filter)
-            => await GetLogsAsync(filter, HttpJsonSettings.Default, ProgressToken.None);
+            => await GetLogsAsync(filter, HttpJsonSettings.OnlyReferenced, ProgressToken.None);
 
         public abstract Task<T> RedoLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
 
