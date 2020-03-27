@@ -2,7 +2,7 @@
 {
     public struct HttpJsonSettings
     {
-        public static readonly HttpJsonSettings Default = new HttpJsonSettings();
+        public static readonly HttpJsonSettings Default = new HttpJsonSettings(HttpJsonKeys.Full);
         public static readonly HttpJsonSettings None = new HttpJsonSettings(HttpJsonKeys.None);
         public static readonly HttpJsonSettings OnlyReferencing = new HttpJsonSettings(HttpJsonKeys.Refing);
         public static readonly HttpJsonSettings OnlyReferenced = new HttpJsonSettings(HttpJsonKeys.Refed);
