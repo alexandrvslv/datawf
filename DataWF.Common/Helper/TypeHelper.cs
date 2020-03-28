@@ -34,7 +34,22 @@ namespace DataWF.Common
         private static readonly Dictionary<MemberInfo, bool> cacheIsXmlSerialize = new Dictionary<MemberInfo, bool>(200);
         private static readonly Dictionary<MemberInfo, object> cacheDefault = new Dictionary<MemberInfo, object>(200);
         private static readonly Dictionary<Type, object> cacheTypeDefault = new Dictionary<Type, object>(200);
-
+        private static readonly Dictionary<Type, string> codeTypes = new Dictionary<Type, string>
+        {
+            { typeof(void), "void" },
+            { typeof(byte), "byte" },
+            { typeof(sbyte), "sbyte" },
+            { typeof(ushort), "ushort" },
+            { typeof(short), "short" },
+            { typeof(uint), "uint" },
+            { typeof(int), "int" },
+            { typeof(ulong), "ulong" },
+            { typeof(long), "long" },
+            { typeof(float), "float" },
+            { typeof(double), "double" },
+            { typeof(decimal), "decimal" },
+            { typeof(string), "string" },
+        };
         public static PropertyInfo GetIndexProperty(Type itemType)
         {
             typeOneArray[0] = typeof(string);
@@ -761,9 +776,9 @@ namespace DataWF.Common
                     builder.Append(">");
                 }
             }
-            else if (type == typeof(void))
+            else if (codeTypes.TryGetValue(type, out var typeName))
             {
-                builder.Append("void");
+                builder.Append(typeName);
             }
             else
             {

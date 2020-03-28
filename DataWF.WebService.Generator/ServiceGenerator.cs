@@ -384,7 +384,8 @@ namespace DataWF.WebService.Generator
         {
             AddUsing(TypeHelper.CheckNullable(column.PropertyInfo.PropertyType), usings);
             var typeText = TypeHelper.FormatCode(column.PropertyInfo.PropertyType);
-
+            var nullable = typeText.IndexOf('?') >= 0 ? "Nullable" : string.Empty;
+            var nullableType = nullable.Length > 0 ? typeText.Replace("?", "") : typeText;
             yield return SF.PropertyDeclaration(
                    attributeLists: SF.List(GenLogPropertyAttributes(column, table, itemType)),
                    modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword) }),
@@ -396,12 +397,12 @@ namespace DataWF.WebService.Generator
                         kind: SyntaxKind.GetAccessorDeclaration,
                         attributeLists: SF.List<AttributeListSyntax>(),
                         modifiers: SF.TokenList(SF.Token(SyntaxKind.None)),
-                        expressionBody:SF.ArrowExpressionClause(SF.ParseExpression($"GetValue<{typeText}>({GetKeyName(column)});"))),
+                        expressionBody:SF.ArrowExpressionClause(SF.ParseExpression($"GetValue{nullable}<{nullableType}>({GetKeyName(column)});"))),
                     SF.AccessorDeclaration(
                         kind: SyntaxKind.SetAccessorDeclaration,
                         attributeLists: SF.List<AttributeListSyntax>(),
                         modifiers: SF.TokenList(SF.Token(SyntaxKind.None)),
-                        expressionBody:SF.ArrowExpressionClause(SF.ParseExpression($"SetValue(value, {GetKeyName(column)});"))),
+                        expressionBody:SF.ArrowExpressionClause(SF.ParseExpression($"SetValue{nullable}(value, {GetKeyName(column)});"))),
                        })),
                    expressionBody: null,
                    initializer: null,
@@ -970,7 +971,7 @@ namespace DataWF.WebService.Generator
             var nullable = propertyType.IndexOf("?") > -1;
             return SF.ClassDeclaration(
                      attributeLists: SF.List(GenPropertyInvokerAttribute(definitionName, propertyName)),
-                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
+                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
                      identifier: SF.Identifier(name + "<T>"),
                      typeParameterList: null,
                      baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(

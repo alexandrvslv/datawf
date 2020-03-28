@@ -149,7 +149,7 @@ namespace DataWF.Data
 
         private static long ParseCurrent(object result)
         {
-            return result == DBNull.Value ? 0 :
+            return result == null || result == DBNull.Value ? 0 :
                 result is long longvalue ? longvalue :
                 result is int intValue ? (long)intValue :
                 result is short shortValue ? (short)shortValue :

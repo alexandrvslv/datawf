@@ -87,8 +87,8 @@ EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems*{0968c296-837f-48c3-b310-7b2aa9452ef8}*SharedItemsImports = 13
-		DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems*{69c37c81-aead-4f49-bb18-0750387e680d}*SharedItemsImports = 4
-		DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems*{6dfefa1c-cbc0-4efc-bdac-ff46ba86b9f3}*SharedItemsImports = 4
+		DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems*{69c37c81-aead-4f49-bb18-0750387e680d}*SharedItemsImports = 5
+		DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems*{6dfefa1c-cbc0-4efc-bdac-ff46ba86b9f3}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
