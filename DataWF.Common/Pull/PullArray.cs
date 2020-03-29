@@ -7,7 +7,7 @@ namespace DataWF.Common
 {
     public class PullArray<T> : GenericPull<T>, IEnumerable<T>
     {
-        protected T[][] array = new T[32][];
+        protected T[][] array = new T[16][];
         private int maxIndex;
 
         public PullArray(int blockSize) : base(blockSize)

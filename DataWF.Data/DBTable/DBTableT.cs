@@ -804,22 +804,33 @@ namespace DataWF.Data
         public virtual T LoadFromReader(DBTransaction transaction)
         {
             T item = null;
-            var id = transaction.ReaderPrimaryKey >= 0 ? transaction.Reader.GetValue(transaction.ReaderPrimaryKey) : null;
-            if (id != null)
-            {
-                item = SelectOne(PrimaryKey, id);
 
-                if ((transaction.ReaderParam & (DBLoadParam.Synchronize | DBLoadParam.Referencing)) != 0)
+            if (transaction.ReaderPrimaryKey >= 0)
+            {
+                item = PrimaryKey.SelectOneFromReader<T>(transaction, transaction.ReaderPrimaryKey);
+            }
+            if (transaction.ReaderStampKey >= 0)
+            {
+                if (item != null && (transaction.ReaderParam & DBLoadParam.Referencing) != 0)
                 {
-                    if (item != null
-                        && transaction.ReaderStampKey >= 0
-                        && item.Stamp.Value.CompareTo(transaction.Reader.GetDateTime(transaction.ReaderStampKey)) >= 0)
+                    var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
+                    stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
+                    if (DateTime.Compare((DateTime)item.Stamp, stamp) >= 0)
                     {
                         return item;
                     }
-                    else if (transaction.ReaderColumns.Count < 3)
+                }
+                else if ((transaction.ReaderParam & DBLoadParam.Synchronize) != 0)
+                {
+                    var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
+                    stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
+                    if (item != null && DateTime.Compare((DateTime)item.Stamp, stamp) >= 0)
                     {
-                        return LoadItem(id);
+                        return item;
+                    }
+                    else if (transaction.ReaderColumns.Count < 4)
+                    {
+                        return LoadById(transaction.Reader.GetValue(transaction.ReaderPrimaryKey));
                     }
                 }
             }

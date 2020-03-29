@@ -815,6 +815,79 @@ namespace DataWF.Data
             //row.SetValue(value, this, false);
         }
 
+        internal F SelectOneFromReader<F>(DBTransaction transaction, int i) where F : DBItem
+        {
+            switch (DBDataType)
+            {
+                case DBDataType.String:
+                case DBDataType.Clob:
+                    var stringValue = transaction.Reader.GetString(i);
+                    return Index.SelectOne<F, string>(stringValue);
+                case DBDataType.Int:
+                    var intValue = transaction.Reader.GetInt32(i);
+                    if (DataType == typeof(int))
+                    {
+                        return Index.SelectOne<F, int?>(intValue);
+                    }
+                    else if (DataType == typeof(uint))
+                    {
+                        return Index.SelectOne<F, uint?>((uint)intValue);
+                    }
+                    break;
+                case DBDataType.BigInt:
+                    var longValue = transaction.Reader.GetInt64(i);
+                    return Index.SelectOne<F, long?>(longValue);
+                case DBDataType.ShortInt:
+                    var shortValue = transaction.Reader.GetInt16(i);
+                    return Index.SelectOne<F, short?>(shortValue);
+                case DBDataType.Date:
+                case DBDataType.DateTime:
+                case DBDataType.TimeStamp:
+                    var dateValue = transaction.Reader.GetDateTime(i);
+                    if ((Keys & (DBColumnKeys.Date | DBColumnKeys.Stamp)) != 0)
+                    {
+                        dateValue = DateTime.SpecifyKind(dateValue, DateTimeKind.Utc);
+                    }
+                    return Index.SelectOne<F, DateTime?>(dateValue);
+                case DBDataType.Bool:
+                    var boolValue = transaction.Reader.GetBoolean(i);
+                    return Index.SelectOne<F, bool?>(boolValue);
+                case DBDataType.Blob:
+                case DBDataType.ByteArray:
+                    var arrayValue = (byte[])transaction.Reader.GetValue(i);
+                    return Index.SelectOne<F, byte[]>(arrayValue);
+                case DBDataType.LargeObject:
+                    var uintValue = transaction.ReadOID(i);
+                    return Index.SelectOne<F, uint?>(uintValue);
+                case DBDataType.Decimal:
+                    var decimalValue = transaction.Reader.GetDecimal(i);
+                    return Index.SelectOne<F, decimal?>(decimalValue);
+                case DBDataType.Double:
+                    var doubleValue = transaction.Reader.GetDouble(i);
+                    return Index.SelectOne<F, double?>(doubleValue);
+                case DBDataType.Float:
+                    var floatValue = transaction.Reader.GetFloat(i);
+                    return Index.SelectOne<F, float?>(floatValue);
+                case DBDataType.TimeSpan:
+                    var spanValue = transaction.ReadTimeSpan(i);
+                    return Index.SelectOne<F, TimeSpan?>(spanValue);
+                case DBDataType.TinyInt:
+                    var byteValue = transaction.Reader.GetByte(i);
+                    if (DataType == typeof(sbyte))
+                    {
+                        return Index.SelectOne<F, sbyte?>((sbyte)byteValue);
+                    }
+                    else
+                    {
+                        return Index.SelectOne<F, byte?>((byte)byteValue);
+                    }
+                default:
+                    var value = transaction.Reader.GetValue(i);
+                    return Index.SelectOne<F>(value);
+            }
+            return default(F);
+        }
+
         protected void CheckIndex()
         {
             if (Index != null && Index.BasePull != pull)

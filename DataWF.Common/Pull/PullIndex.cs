@@ -36,6 +36,7 @@ namespace DataWF.Data
         public abstract IEnumerable<F> Select<F>(object value, CompareType compare) where F : class;
         public abstract object SelectOne(object value);
         public abstract F SelectOne<F>(object value) where F : class;
+        public abstract F SelectOne<F, K>(K value) where F : class;
         public abstract void Clear();
         public abstract void Dispose();
     }
@@ -230,6 +231,16 @@ namespace DataWF.Data
         public override F SelectOne<F>(object value)
         {
             var key = CheckNull(value);
+            if (store.TryGetValue(key, out var list))
+                return list[0] as F;
+            else
+                return default(F);
+        }
+
+        public override F SelectOne<F, KV>(KV value)
+        {
+            var key = Unsafe.As<KV, K>(ref value);
+            CheckNull(ref key);
             if (store.TryGetValue(key, out var list))
                 return list[0] as F;
             else
