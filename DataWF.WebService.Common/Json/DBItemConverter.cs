@@ -65,7 +65,7 @@ namespace DataWF.WebService.Common
             }
 
             writer.WriteStartObject();
-            foreach (var invoker in invokers)
+            foreach (IInvokerJson invoker in invokers)
             {
                 var propertyType = invoker.DataType;
                 if (TypeHelper.IsBaseType(propertyType, typeof(DBItem)))
@@ -73,7 +73,7 @@ namespace DataWF.WebService.Common
                     if (!settings.Referenced || writer.CurrentDepth > settings.MaxDepth)
                         continue;
                     var propertyValue = invoker.GetValue(value);
-                    writer.WritePropertyName(invoker.Name);
+                    writer.WritePropertyName(invoker.JsonName);
                     JsonSerializer.Serialize(writer, propertyValue, propertyType, options);
                 }
                 else if (TypeHelper.IsEnumerable(propertyType))
@@ -85,7 +85,7 @@ namespace DataWF.WebService.Common
                         {
                             continue;
                         }
-                        writer.WritePropertyName(invoker.Name);
+                        writer.WritePropertyName(invoker.JsonName);
                         writer.WriteStartArray();
                         foreach (var item in enumerable)
                         {
@@ -103,18 +103,13 @@ namespace DataWF.WebService.Common
                 {
                     var propertyValue = (AccessValue)invoker.GetValue(value);
                     var accessValue = propertyValue.GetFlags(Factory.CurrentUser);
-                    writer.WritePropertyName(invoker.Name);
+                    writer.WritePropertyName(invoker.JsonName);
                     JsonSerializer.Serialize<AccessType>(writer, accessValue, options);
-                }
-                else if (invoker is IInvokerJson jsonInvoker)
-                {
-                    writer.WritePropertyName(invoker.Name);
-                    jsonInvoker.WriteValue(writer, value, options);
                 }
                 else
                 {
-                    writer.WritePropertyName(invoker.Name);
-                    JsonSerializer.Serialize(writer, invoker.GetValue(value), propertyType, options);
+                    writer.WritePropertyName(invoker.JsonName);
+                    invoker.WriteValue(writer, value, options);
                 }
             }
 

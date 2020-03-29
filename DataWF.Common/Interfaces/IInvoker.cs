@@ -43,6 +43,7 @@ namespace DataWF.Common
     //Boxing optimization
     public interface IInvokerJson : IInvoker
     {
+        JsonEncodedText JsonName { get; }
         void WriteValue(Utf8JsonWriter writer, object value, JsonSerializerOptions option);
         void ReadValue(ref Utf8JsonReader reader, object value, JsonSerializerOptions option);
     }

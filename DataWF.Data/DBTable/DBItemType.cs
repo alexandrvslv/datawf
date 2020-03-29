@@ -58,7 +58,8 @@ namespace DataWF.Data
                     invokers = new List<IInvoker>(table.Columns.Count + (table.Generator?.Referencings.Count() ?? 0));
                     foreach (var column in table.Columns)
                     {
-                        if (!table.IsSerializeableColumn(column, Type))
+                        if (!table.IsSerializeableColumn(column, Type)
+                            || !(column.PropertyInvoker is IInvokerJson))
                             continue;
 
                         invokers.Add(column.PropertyInvoker);

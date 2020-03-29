@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace DataWF.Common
@@ -11,9 +12,18 @@ namespace DataWF.Common
 
     public abstract class Invoker<T, V> : IInvoker<T, V>, IValuedInvoker<V>, IInvokerJson, IInvokerExtension
     {
+        private JsonEncodedText? jsonName;
+
+        public Invoker()
+        {
+            DataType = typeof(V);
+        }
+
         public abstract string Name { get; }
 
-        public Type DataType { get { return typeof(V); } }
+        public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
+
+        public Type DataType { get; }// { get { return typeof(V); } }
 
         public Type TargetType { get { return typeof(T); } }
 
