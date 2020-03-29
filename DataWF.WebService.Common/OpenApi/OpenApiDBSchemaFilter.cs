@@ -21,6 +21,9 @@ namespace DataWF.WebService.Common
                 && !TypeHelper.IsEnumerable(context.Type)
                 && context.Type != typeof(object))
             {
+                if (context.Type.Name == "SafeFileHandle")
+                { }
+
                 schema.Type = "object";
                 schema.Properties.Clear();
                 schema.AdditionalPropertiesAllowed = true;
