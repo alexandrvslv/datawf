@@ -67,7 +67,7 @@ namespace DataWF.WebService.Common
                 //    }
                 //});
             }
-            else if (context.ApiDescription.SupportedResponseTypes.Any(p =>
+            if (context.ApiDescription.SupportedResponseTypes.Any(p =>
             {
                 return TypeHelper.IsBaseType(p.Type, typeof(Stream))
                 || TypeHelper.IsBaseType(TypeHelper.GetItemType(p.Type), typeof(Stream))
