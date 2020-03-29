@@ -17,30 +17,46 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using System;
 using System.Collections.Generic;
 
 namespace DataWF.Data
 {
     public class DBTableComparer : IComparer<DBTable>
     {
+        public static readonly DBTableComparer Instance = new DBTableComparer();
+
         public int Compare(DBTable x, DBTable y)
         {
             var rez = 0;
-            if (x is IDBVirtualTable || x is IDBLogTable)
+            if (x is IDBLogTable)
             {
-                if (!(y is IDBVirtualTable) && !(y is IDBLogTable))
+                if (!(y is IDBLogTable))
                 {
                     rez = 1;
                 }
             }
-            else if (y is IDBVirtualTable || y is IDBLogTable)
+            else if (y is IDBLogTable)
             {
-                rez = -11;
+                rez = -1;
             }
-
             if (rez == 0)
             {
-                rez = x.Name.CompareTo(y.Name);
+                if (x is IDBVirtualTable)
+                {
+                    if (!(y is IDBVirtualTable))
+                    {
+                        rez = 1;
+                    }
+                }
+                else if (y is IDBVirtualTable)
+                {
+                    rez = -1;
+                }
+            }
+            if (rez == 0)
+            {
+                rez = string.Compare(x.Name, y.Name, StringComparison.Ordinal);
             }
 
             return rez;

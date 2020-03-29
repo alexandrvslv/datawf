@@ -83,7 +83,7 @@ namespace DataWF.Common
         public void ReadCurrentAttribute(object element, TypeSerializationInfo info)
         {
             var member = info.GetProperty(Reader.Name);
-            if (member != null)
+            if (member != null && !member.IsReadOnly)
             {
                 member.Invoker.SetValue(element, member.TextParse(Reader.Value));
             }
@@ -112,7 +112,10 @@ namespace DataWF.Common
                     var mInfo = GetTypeInfo(mtype ?? member.DataType);
                     value = Read(member.Invoker.GetValue(element), mInfo);
                 }
-                member.Invoker.SetValue(element, value);
+                if (!member.IsReadOnly)
+                {
+                    member.Invoker.SetValue(element, value);
+                }
             }
             else
             {

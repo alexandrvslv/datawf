@@ -144,10 +144,12 @@ namespace DataWF.Data
                     {
                         if (Property == null)
                             Property = propertyInfo.Name;
-                        if (PropertyInvoker == this && Property == propertyInfo.Name)
+                        if (PropertyInvoker == this && string.Equals(Property, propertyInfo.Name, StringComparison.Ordinal))
                         {
                             PropertyInvoker = EmitInvoker.Initialize(propertyInfo, true);
                         }
+                        else
+                        { }
                     }
                     OnPropertyChanged(nameof(PropertyInfo));
                 }
@@ -289,7 +291,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false), Category("Localizing"), ReadOnly(true)]
+        [XmlIgnore, JsonIgnore, Browsable(false), Category("Localizing")]
         public bool IsCulture
         {
             get { return Culture != null; }
@@ -301,7 +303,7 @@ namespace DataWF.Data
             get { return gname; }
             set
             {
-                if (gname == value)
+                if (string.Equals(gname, value, StringComparison.Ordinal))
                     return;
                 gname = value;
                 cacheGroup = null;
@@ -686,7 +688,8 @@ namespace DataWF.Data
                 || ColumnType == DBColumnTypes.Expression
                 || ColumnType == DBColumnTypes.Code)
                 return;
-            if (Pull != null && Pull.ItemType != DataType)
+            if (Pull != null &&
+                (Pull.ItemType != DataType))
             {
                 Pull.Clear();
                 pull = null;
@@ -696,6 +699,10 @@ namespace DataWF.Data
                 if (DataType == null)
                     throw new InvalidOperationException($"{nameof(DataType)} not specified!");
                 Pull = Pull.Fabric(DataType, Table.BlockSize);
+            }
+            else if (Pull.BlockSize != Table.BlockSize)
+            {
+                Pull.BlockSize = Table.BlockSize;
             }
         }
 
@@ -718,89 +725,167 @@ namespace DataWF.Data
             {
                 return;
             }
+            var isNull = transaction.Reader.IsDBNull(i);
             switch (DBDataType)
             {
                 case DBDataType.String:
                 case DBDataType.Clob:
-                    var stringValue = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
-                    row.SetValue<string>(stringValue, this, false);
+                    var stringValue = isNull ? null : transaction.Reader.GetString(i);
+                    row.SetValueClass<string>(stringValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Int:
-                    var intValue = transaction.Reader.IsDBNull(i) ? null : (int?)transaction.Reader.GetInt32(i);
-                    if (DataType.IsEnum)
+                    var intValue = isNull ? (int?)null : transaction.Reader.GetInt32(i);
+                    if (DataType == typeof(int))
                     {
-                        row.SetValue((object)intValue, this, false);
+                        row.SetValueNullable<int>(intValue, this, DBSetValueMode.Loading);
                     }
                     else if (DataType == typeof(uint))
                     {
-                        row.SetValue<uint?>(intValue == null ? null : (uint?)intValue, this, false);
+                        row.SetValueNullable<uint>(isNull ? (uint?)null : (uint?)intValue, this, DBSetValueMode.Loading);
                     }
                     else
                     {
-                        row.SetValue<int?>(intValue, this, false);
+                        row.SetValue((object)intValue, this, DBSetValueMode.Loading);
                     }
                     break;
                 case DBDataType.BigInt:
-                    var longValue = transaction.Reader.IsDBNull(i) ? null : (long?)transaction.Reader.GetInt64(i);
-                    row.SetValue<long?>(longValue, this, false);
+                    var longValue = isNull ? (long?)null : transaction.Reader.GetInt64(i);
+                    row.SetValueNullable<long>(longValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.ShortInt:
-                    var shortValue = transaction.Reader.IsDBNull(i) ? null : (short?)transaction.Reader.GetInt16(i);
-                    row.SetValue<short?>(shortValue, this, false);
+                    var shortValue = isNull ? (short?)null : transaction.Reader.GetInt16(i);
+                    row.SetValueNullable<short>(shortValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Date:
                 case DBDataType.DateTime:
                 case DBDataType.TimeStamp:
-                    var dateValue = transaction.Reader.IsDBNull(i) ? null : (DateTime?)transaction.Reader.GetDateTime(i);
-                    row.SetValue<DateTime?>(dateValue, this, false);
+                    var dateValue = isNull ? (DateTime?)null : (DateTime?)transaction.Reader.GetDateTime(i);
+                    if (!isNull && (Keys & (DBColumnKeys.Date | DBColumnKeys.Stamp)) != 0)
+                    {
+                        dateValue = DateTime.SpecifyKind(dateValue.Value, DateTimeKind.Utc);
+                    }
+                    row.SetValueNullable<DateTime>(dateValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Bool:
-                    var boolValue = transaction.Reader.IsDBNull(i) ? null : (bool?)transaction.Reader.GetBoolean(i);
-                    row.SetValue<bool?>(boolValue, this, false);
+                    var boolValue = isNull ? (bool?)null : transaction.Reader.GetBoolean(i);
+                    row.SetValueNullable<bool>(boolValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Blob:
                 case DBDataType.ByteArray:
-                    var arrayValue = transaction.Reader.IsDBNull(i) ? null : (byte[])transaction.Reader.GetValue(i);
-                    row.SetValue<byte[]>(arrayValue, this, false);
+                    var arrayValue = isNull ? null : (byte[])transaction.Reader.GetValue(i);
+                    row.SetValueClass<byte[]>(arrayValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.LargeObject:
-                    var unitValue = transaction.Reader.IsDBNull(i) ? null : (uint?)transaction.Reader.GetValue(i);
-                    row.SetValue<uint?>(unitValue, this, false);
+                    var unitValue = isNull ? (uint?)null : transaction.ReadOID(i);
+                    row.SetValueNullable<uint>(unitValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Decimal:
-                    var decimalValue = transaction.Reader.IsDBNull(i) ? null : (decimal?)transaction.Reader.GetDecimal(i);
-                    row.SetValue<decimal?>(decimalValue, this, false);
+                    var decimalValue = isNull ? (decimal?)null : transaction.Reader.GetDecimal(i);
+                    row.SetValueNullable<decimal>(decimalValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Double:
-                    var doubleValue = transaction.Reader.IsDBNull(i) ? null : (double?)transaction.Reader.GetDouble(i);
-                    row.SetValue<double?>(doubleValue, this, false);
+                    var doubleValue = isNull ? (double?)null : transaction.Reader.GetDouble(i);
+                    row.SetValueNullable<double>(doubleValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Float:
-                    var floatValue = transaction.Reader.IsDBNull(i) ? null : (float?)transaction.Reader.GetFloat(i);
-                    row.SetValue<float?>(floatValue, this, false);
+                    var floatValue = isNull ? (float?)null : transaction.Reader.GetFloat(i);
+                    row.SetValueNullable<float>(floatValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.TimeSpan:
-                    var spanValue = transaction.Reader.IsDBNull(i) ? null : (TimeSpan?)transaction.Reader.GetValue(i);
-                    row.SetValue<TimeSpan?>(spanValue, this, false);
+                    var spanValue = isNull ? (TimeSpan?)null : transaction.ReadTimeSpan(i);
+                    row.SetValueNullable<TimeSpan>(spanValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.TinyInt:
-                    var byteValue = transaction.Reader.IsDBNull(i) ? null : (byte?)transaction.Reader.GetByte(i);
+                    var byteValue = isNull ? (byte?)null : transaction.Reader.GetByte(i);
                     if (DataType == typeof(sbyte))
                     {
-                        row.SetValue<sbyte?>(byteValue == null ? null : (sbyte?)byteValue, this, false);
+                        row.SetValueNullable<sbyte>(isNull ? (sbyte?)null : (sbyte?)byteValue, this, DBSetValueMode.Loading);
                     }
                     else
                     {
-                        row.SetValue<byte?>(byteValue, this, false);
+                        row.SetValueNullable<byte>(byteValue, this, DBSetValueMode.Loading);
                     }
                     break;
                 default:
-                    var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetValue(i);
-                    row.SetValue(value, this, false);
+                    var value = isNull ? null : transaction.Reader.GetValue(i);
+                    row.SetValue(value, this, DBSetValueMode.Loading);
                     break;
             }
             //var value = transaction.DbConnection.System.ReadValue(this, transaction.Reader.GetValue(i));
             //row.SetValue(value, this, false);
+        }
+
+        internal F SelectOneFromReader<F>(DBTransaction transaction, int i) where F : DBItem
+        {
+            switch (DBDataType)
+            {
+                case DBDataType.String:
+                case DBDataType.Clob:
+                    var stringValue = transaction.Reader.GetString(i);
+                    return Index.SelectOne<F, string>(stringValue);
+                case DBDataType.Int:
+                    var intValue = transaction.Reader.GetInt32(i);
+                    if (DataType == typeof(int))
+                    {
+                        return Index.SelectOne<F, int?>(intValue);
+                    }
+                    else if (DataType == typeof(uint))
+                    {
+                        return Index.SelectOne<F, uint?>((uint)intValue);
+                    }
+                    break;
+                case DBDataType.BigInt:
+                    var longValue = transaction.Reader.GetInt64(i);
+                    return Index.SelectOne<F, long?>(longValue);
+                case DBDataType.ShortInt:
+                    var shortValue = transaction.Reader.GetInt16(i);
+                    return Index.SelectOne<F, short?>(shortValue);
+                case DBDataType.Date:
+                case DBDataType.DateTime:
+                case DBDataType.TimeStamp:
+                    var dateValue = transaction.Reader.GetDateTime(i);
+                    if ((Keys & (DBColumnKeys.Date | DBColumnKeys.Stamp)) != 0)
+                    {
+                        dateValue = DateTime.SpecifyKind(dateValue, DateTimeKind.Utc);
+                    }
+                    return Index.SelectOne<F, DateTime?>(dateValue);
+                case DBDataType.Bool:
+                    var boolValue = transaction.Reader.GetBoolean(i);
+                    return Index.SelectOne<F, bool?>(boolValue);
+                case DBDataType.Blob:
+                case DBDataType.ByteArray:
+                    var arrayValue = (byte[])transaction.Reader.GetValue(i);
+                    return Index.SelectOne<F, byte[]>(arrayValue);
+                case DBDataType.LargeObject:
+                    var uintValue = transaction.ReadOID(i);
+                    return Index.SelectOne<F, uint?>(uintValue);
+                case DBDataType.Decimal:
+                    var decimalValue = transaction.Reader.GetDecimal(i);
+                    return Index.SelectOne<F, decimal?>(decimalValue);
+                case DBDataType.Double:
+                    var doubleValue = transaction.Reader.GetDouble(i);
+                    return Index.SelectOne<F, double?>(doubleValue);
+                case DBDataType.Float:
+                    var floatValue = transaction.Reader.GetFloat(i);
+                    return Index.SelectOne<F, float?>(floatValue);
+                case DBDataType.TimeSpan:
+                    var spanValue = transaction.ReadTimeSpan(i);
+                    return Index.SelectOne<F, TimeSpan?>(spanValue);
+                case DBDataType.TinyInt:
+                    var byteValue = transaction.Reader.GetByte(i);
+                    if (DataType == typeof(sbyte))
+                    {
+                        return Index.SelectOne<F, sbyte?>((sbyte)byteValue);
+                    }
+                    else
+                    {
+                        return Index.SelectOne<F, byte?>((byte)byteValue);
+                    }
+                default:
+                    var value = transaction.Reader.GetValue(i);
+                    return Index.SelectOne<F>(value);
+            }
+            return default(F);
         }
 
         protected void CheckIndex()
@@ -966,15 +1051,25 @@ namespace DataWF.Data
         public object GetValue(DBItem target)
         {
             return Pull != null ? Pull.Get(target.block, target.blockIndex)
-                : PropertyInvoker == this || !PropertyInvoker.TargetType.IsAssignableFrom(target.GetType()) ? null
-                : PropertyInvoker.GetValue(target);
+                : propertyInvoker?.GetValue(target);
         }
 
         public T GetValue<T>(DBItem target)
         {
-            return Pull != null ? Pull.GetValue<T>(target.block, target.blockIndex)
-                : PropertyInvoker == this || !PropertyInvoker.TargetType.IsAssignableFrom(target.GetType()) ? default(T)
-                : (T)PropertyInvoker.GetValue(target);
+            if (Pull != null)
+            {
+                return Pull.GetValue<T>(target.block, target.blockIndex);
+            }
+            if (propertyInvoker is IValuedInvoker<T> valueInvoker)
+            {
+                return valueInvoker.GetValue(target);
+            }
+            return (T)propertyInvoker.GetValue(target);
+        }
+
+        public T? GetValueNullable<T>(DBItem target) where T : struct
+        {
+            return ((NullablePullArray<T>)Pull).GetValue(target.block, target.blockIndex);
         }
 
         public object GetValue(object target)
@@ -990,7 +1085,7 @@ namespace DataWF.Data
             }
             else
             {
-                PropertyInvoker.SetValue(target, value);
+                propertyInvoker.SetValue(target, value);
             }
         }
 
@@ -1000,10 +1095,19 @@ namespace DataWF.Data
             {
                 Pull.SetValue<T>(target.block, target.blockIndex, value);
             }
+            else if (propertyInvoker is IValuedInvoker<T> valueInvoker)
+            {
+                valueInvoker.SetValue(target, value);
+            }
             else
             {
-                PropertyInvoker.SetValue(target, value);
+                propertyInvoker.SetValue(target, value);
             }
+        }
+
+        public void SetValueNullable<T>(DBItem target, T? value) where T : struct
+        {
+            ((NullablePullArray<T>)Pull).SetValue(target.block, target.blockIndex, value);
         }
 
         public void SetValue(object target, object value)
@@ -1136,6 +1240,62 @@ namespace DataWF.Data
             return buf;
         }
 
+        public void RemoveConstraints()
+        {
+            for (var j = 0; j < Table.Constraints.Count;)
+            {
+                var constraint = Table.Constraints[j];
+                if (constraint.Columns.Contains(this))
+                {
+                    constraint.Columns.Remove(this);
+                    if (constraint.Columns.Count == 0)
+                    {
+                        Table.Constraints.RemoveInternal(constraint, j);
+                    }
+                }
+                else
+                {
+                    j++;
+                }
+            }
+        }
+
+        public void RemoveForeignKeys()
+        {
+            for (var j = 0; j < Table.Foreigns.Count;)
+            {
+                var reference = Table.Foreigns[j];
+                if (reference.Column == this)
+                {
+                    Table.Foreigns.RemoveInternal(reference, j);
+                }
+                else
+                {
+                    j++;
+                }
+            }
+        }
+
+        public void RemoveIndexes()
+        {
+            for (var j = 0; j < Table.Indexes.Count;)
+            {
+                var index = Table.Indexes[j];
+                if (index.Columns.Contains(this))
+                {
+                    index.Columns.Remove(this);
+                    if (index.Columns.Count == 0)
+                    {
+                        Table.Indexes.RemoveInternal(index, j);
+                    }
+                }
+                else
+                {
+                    j++;
+                }
+            }
+        }
+
         public IListIndex CreateIndex(bool concurrent)
         {
             throw new NotImplementedException();
@@ -1144,6 +1304,26 @@ namespace DataWF.Data
         public override string ToString()
         {
             return base.ToString();
+        }
+
+        public IQueryParameter CreateParameter()
+        {
+            throw new NotImplementedException();
+        }
+
+        public InvokerComparer CreateComparer()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);
+        }
+
+        public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return CheckItem((DBItem)item, typedValue, comparer, comparision);
         }
 
         [Invoker(typeof(DBColumn), nameof(DBColumn.GroupName))]
@@ -1259,7 +1439,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.Size))]
         public class SizeInvoker<T> : Invoker<T, int> where T : DBColumn
         {
-            public static readonly SizeInvoker<T> Instance = new SizeInvoker<T>();
             public override string Name => nameof(DBColumn.Size);
 
             public override bool CanWrite => true;
@@ -1272,7 +1451,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.Scale))]
         public class ScaleInvoker<T> : Invoker<T, int> where T : DBColumn
         {
-            public static readonly ScaleInvoker<T> Instance = new ScaleInvoker<T>();
             public override string Name => nameof(DBColumn.Scale);
 
             public override bool CanWrite => true;
@@ -1285,7 +1463,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.CultureCode))]
         public class CultureCodeInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly CultureCodeInvoker<T> Instance = new CultureCodeInvoker<T>();
             public override string Name => nameof(DBColumn.CultureCode);
 
             public override bool CanWrite => true;
@@ -1298,7 +1475,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.Format))]
         public class FormatInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly FormatInvoker<T> Instance = new FormatInvoker<T>();
             public override string Name => nameof(DBColumn.Format);
 
             public override bool CanWrite => true;
@@ -1311,7 +1487,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.DBDataType))]
         public class DBDataTypeInvoker<T> : Invoker<T, DBDataType> where T : DBColumn
         {
-            public static readonly DBDataTypeInvoker<T> Instance = new DBDataTypeInvoker<T>();
             public override string Name => nameof(DBColumn.DBDataType);
 
             public override bool CanWrite => true;
@@ -1324,7 +1499,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.DataType))]
         public class DataTypeInvoker<T> : Invoker<T, Type> where T : DBColumn
         {
-            public static readonly DataTypeInvoker<T> Instance = new DataTypeInvoker<T>();
             public override string Name => nameof(DBColumn.DataType);
 
             public override bool CanWrite => true;
@@ -1337,7 +1511,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.ColumnType))]
         public class ColumnTypeInvoker<T> : Invoker<T, DBColumnTypes> where T : DBColumn
         {
-            public static readonly ColumnTypeInvoker<T> Instance = new ColumnTypeInvoker<T>();
             public override string Name => nameof(DBColumn.ColumnType);
 
             public override bool CanWrite => true;
@@ -1350,7 +1523,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.DefaultValue))]
         public class DefaultValueInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly DefaultValueInvoker<T> Instance = new DefaultValueInvoker<T>();
             public override string Name => nameof(DBColumn.DefaultValue);
 
             public override bool CanWrite => true;
@@ -1363,7 +1535,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.Query))]
         public class QueryInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly QueryInvoker<T> Instance = new QueryInvoker<T>();
             public override string Name => nameof(DBColumn.Query);
 
             public override bool CanWrite => true;
@@ -1376,7 +1547,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.SubList))]
         public class SubListInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly SubListInvoker<T> Instance = new SubListInvoker<T>();
             public override string Name => nameof(DBColumn.SubList);
 
             public override bool CanWrite => true;
@@ -1389,7 +1559,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.BoolTrue))]
         public class BoolTrueInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly BoolTrueInvoker<T> Instance = new BoolTrueInvoker<T>();
             public override string Name => nameof(DBColumn.BoolTrue);
 
             public override bool CanWrite => true;
@@ -1402,7 +1571,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBColumn), nameof(DBColumn.BoolFalse))]
         public class BoolFalseInvoker<T> : Invoker<T, string> where T : DBColumn
         {
-            public static readonly BoolFalseInvoker<T> Instance = new BoolFalseInvoker<T>();
             public override string Name => nameof(DBColumn.BoolFalse);
 
             public override bool CanWrite => true;
@@ -1410,6 +1578,30 @@ namespace DataWF.Data
             public override string GetValue(T target) => target.BoolFalse;
 
             public override void SetValue(T target, string value) => target.BoolFalse = value;
+        }
+
+        [Invoker(typeof(DBColumn), nameof(DBColumn.SqlName))]
+        public class SqlNameInvoker<T> : Invoker<T, string> where T : DBColumn
+        {
+            public override string Name => nameof(DBColumn.SqlName);
+
+            public override bool CanWrite => false;
+
+            public override string GetValue(T target) => target.SqlName;
+
+            public override void SetValue(T target, string value) { }
+        }
+
+        [Invoker(typeof(DBColumn), nameof(DBColumn.TargetType))]
+        public class TargetTypeInvoker<T> : Invoker<T, Type> where T : DBColumn
+        {
+            public override string Name => nameof(DBColumn.TargetType);
+
+            public override bool CanWrite => false;
+
+            public override Type GetValue(T target) => target.TargetType;
+
+            public override void SetValue(T target, Type value) { }
         }
     }
 }

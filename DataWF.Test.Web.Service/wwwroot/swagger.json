@@ -17,7 +17,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -47,7 +48,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           },
           {
@@ -55,7 +57,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -85,7 +88,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           },
           {
@@ -93,7 +97,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -126,7 +131,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           },
           {
@@ -134,7 +140,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -145,7 +152,8 @@
                 "type": "array",
                 "items": {
                   "$ref": "#/components/schemas/AccessItem"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -176,7 +184,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -215,7 +224,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           },
           {
@@ -223,7 +233,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -256,7 +267,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -267,7 +279,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -301,7 +314,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -538,7 +552,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Address"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Address/Search": {
+      "get": {
+        "tags": [
+          "Address"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -650,6 +699,42 @@
         }
       }
     },
+    "/api/Address/Package": {
+      "post": {
+        "tags": [
+          "Address"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Address"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Address"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Address/Merge/{id}": {
       "delete": {
         "tags": [
@@ -674,7 +759,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -792,7 +878,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -1029,7 +1116,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Book"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Book/Search": {
+      "get": {
+        "tags": [
+          "Book"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -1141,6 +1263,42 @@
         }
       }
     },
+    "/api/Book/Package": {
+      "post": {
+        "tags": [
+          "Book"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Book"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Book"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Book/Merge/{id}": {
       "delete": {
         "tags": [
@@ -1165,7 +1323,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -1283,7 +1442,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -1520,7 +1680,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/City"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/City/Search": {
+      "get": {
+        "tags": [
+          "City"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -1632,6 +1827,42 @@
         }
       }
     },
+    "/api/City/Package": {
+      "post": {
+        "tags": [
+          "City"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/City"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/City"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/City/Merge/{id}": {
       "delete": {
         "tags": [
@@ -1656,7 +1887,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -1774,7 +2006,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -2011,7 +2244,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Company"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Company/Search": {
+      "get": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -2123,6 +2391,42 @@
         }
       }
     },
+    "/api/Company/Package": {
+      "post": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Company"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Company"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Company/Merge/{id}": {
       "delete": {
         "tags": [
@@ -2147,7 +2451,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -2265,7 +2570,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -2502,7 +2808,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Continent"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Continent/Search": {
+      "get": {
+        "tags": [
+          "Continent"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -2614,6 +2955,42 @@
         }
       }
     },
+    "/api/Continent/Package": {
+      "post": {
+        "tags": [
+          "Continent"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Continent"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Continent"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Continent/Merge/{id}": {
       "delete": {
         "tags": [
@@ -2638,7 +3015,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -2756,7 +3134,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -2993,7 +3372,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Country"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Country/Search": {
+      "get": {
+        "tags": [
+          "Country"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -3105,6 +3519,42 @@
         }
       }
     },
+    "/api/Country/Package": {
+      "post": {
+        "tags": [
+          "Country"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Country"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Country"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Country/Merge/{id}": {
       "delete": {
         "tags": [
@@ -3129,7 +3579,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -3247,7 +3698,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -3484,7 +3936,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Currency"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Currency/Search": {
+      "get": {
+        "tags": [
+          "Currency"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -3596,6 +4083,42 @@
         }
       }
     },
+    "/api/Currency/Package": {
+      "post": {
+        "tags": [
+          "Currency"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Currency"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Currency"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Currency/Merge/{id}": {
       "delete": {
         "tags": [
@@ -3620,7 +4143,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -3738,7 +4262,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -3975,7 +4500,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Customer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Customer/Search": {
+      "get": {
+        "tags": [
+          "Customer"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -4087,6 +4647,42 @@
         }
       }
     },
+    "/api/Customer/Package": {
+      "post": {
+        "tags": [
+          "Customer"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Customer"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Customer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Customer/Merge/{id}": {
       "delete": {
         "tags": [
@@ -4111,7 +4707,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -4229,7 +4826,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -4466,7 +5064,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerAddress"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/CustomerAddress/Search": {
+      "get": {
+        "tags": [
+          "CustomerAddress"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -4578,6 +5211,42 @@
         }
       }
     },
+    "/api/CustomerAddress/Package": {
+      "post": {
+        "tags": [
+          "CustomerAddress"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustomerAddress"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerAddress"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/CustomerAddress/Merge/{id}": {
       "delete": {
         "tags": [
@@ -4602,7 +5271,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -4720,7 +5390,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -4957,7 +5628,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerReference"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/CustomerReference/Search": {
+      "get": {
+        "tags": [
+          "CustomerReference"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -5069,6 +5775,42 @@
         }
       }
     },
+    "/api/CustomerReference/Package": {
+      "post": {
+        "tags": [
+          "CustomerReference"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CustomerReference"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerReference"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/CustomerReference/Merge/{id}": {
       "delete": {
         "tags": [
@@ -5093,7 +5835,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -5279,7 +6022,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -5516,7 +6260,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Department"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Department/Search": {
+      "get": {
+        "tags": [
+          "Department"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -5628,6 +6407,42 @@
         }
       }
     },
+    "/api/Department/Package": {
+      "post": {
+        "tags": [
+          "Department"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Department"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Department"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Department/Merge/{id}": {
       "delete": {
         "tags": [
@@ -5652,7 +6467,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -5754,6 +6570,32 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/Diagnostics/collect": {
+      "get": {
+        "tags": [
+          "Diagnostics"
+        ],
+        "operationId": "GetCollect",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Diagnostics/diagnostics": {
+      "get": {
+        "tags": [
+          "Diagnostics"
+        ],
+        "operationId": "GetDiagnostics",
+        "responses": {
+          "200": {
+            "description": "Success"
           }
         }
       }
@@ -6015,7 +6857,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -6252,7 +7095,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Document"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Document/Search": {
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -6364,6 +7242,42 @@
         }
       }
     },
+    "/api/Document/Package": {
+      "post": {
+        "tags": [
+          "Document"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Document"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Document"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Document/Merge/{id}": {
       "delete": {
         "tags": [
@@ -6388,7 +7302,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -6583,7 +7498,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentComment"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/DocumentComment/Search": {
+      "get": {
+        "tags": [
+          "DocumentComment"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -6695,6 +7645,42 @@
         }
       }
     },
+    "/api/DocumentComment/Package": {
+      "post": {
+        "tags": [
+          "DocumentComment"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DocumentComment"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentComment"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentComment/Merge/{id}": {
       "delete": {
         "tags": [
@@ -6719,7 +7705,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -6837,7 +7824,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -7074,7 +8062,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentCustomer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/DocumentCustomer/Search": {
+      "get": {
+        "tags": [
+          "DocumentCustomer"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -7186,6 +8209,42 @@
         }
       }
     },
+    "/api/DocumentCustomer/Package": {
+      "post": {
+        "tags": [
+          "DocumentCustomer"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DocumentCustomer"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentCustomer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentCustomer/Merge/{id}": {
       "delete": {
         "tags": [
@@ -7210,7 +8269,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -7394,7 +8454,8 @@
                 "items": {
                   "type": "integer",
                   "format": "int64"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -7435,7 +8496,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -7582,7 +8644,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -7788,7 +8851,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentData"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/DocumentData/Search": {
+      "get": {
+        "tags": [
+          "DocumentData"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -7900,6 +8998,42 @@
         }
       }
     },
+    "/api/DocumentData/Package": {
+      "post": {
+        "tags": [
+          "DocumentData"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DocumentData"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentData"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentData/Merge/{id}": {
       "delete": {
         "tags": [
@@ -7924,7 +9058,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -8042,7 +9177,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -8279,7 +9415,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentReference"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/DocumentReference/Search": {
+      "get": {
+        "tags": [
+          "DocumentReference"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -8391,6 +9562,42 @@
         }
       }
     },
+    "/api/DocumentReference/Package": {
+      "post": {
+        "tags": [
+          "DocumentReference"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DocumentReference"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentReference"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentReference/Merge/{id}": {
       "delete": {
         "tags": [
@@ -8415,7 +9622,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -8533,7 +9741,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -8770,7 +9979,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentWork"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/DocumentWork/Search": {
+      "get": {
+        "tags": [
+          "DocumentWork"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -8882,6 +10126,42 @@
         }
       }
     },
+    "/api/DocumentWork/Package": {
+      "post": {
+        "tags": [
+          "DocumentWork"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DocumentWork"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentWork"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentWork/Merge/{id}": {
       "delete": {
         "tags": [
@@ -8906,7 +10186,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -9024,7 +10305,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -9054,7 +10336,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -9087,7 +10370,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -9324,7 +10608,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroupPermission"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/GroupPermission/Search": {
+      "get": {
+        "tags": [
+          "GroupPermission"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -9436,6 +10755,42 @@
         }
       }
     },
+    "/api/GroupPermission/Package": {
+      "post": {
+        "tags": [
+          "GroupPermission"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/GroupPermission"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroupPermission"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/GroupPermission/Merge/{id}": {
       "delete": {
         "tags": [
@@ -9460,7 +10815,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -9566,6 +10922,570 @@
         }
       }
     },
+    "/api/Instance/GetLogs/{filter}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "GetLogs",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstanceLog"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/GetItemLogs/{id}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "GetItemLogs",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstanceLog"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/UndoLog/{logId}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "UndoLog",
+        "parameters": [
+          {
+            "name": "logId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/RedoLog/{logId}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "RedoLog",
+        "parameters": [
+          {
+            "name": "logId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/RemoveLog/{logId}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "RemoveLog",
+        "parameters": [
+          {
+            "name": "logId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Get",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Instance"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Instance"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/Find/{filter}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Find",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Instance/Search": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/GetLink/{id}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "GetLink",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/{id}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/Package": {
+      "post": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Instance"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/Merge/{id}": {
+      "delete": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Merge",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/Copy/{id}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "Copy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/GenerateId": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "GenerateId",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "GenerateIds",
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Location/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -9578,7 +11498,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -9815,7 +11736,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Location"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Location/Search": {
+      "get": {
+        "tags": [
+          "Location"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -9927,6 +11883,42 @@
         }
       }
     },
+    "/api/Location/Package": {
+      "post": {
+        "tags": [
+          "Location"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Location"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Location"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Location/Merge/{id}": {
       "delete": {
         "tags": [
@@ -9951,7 +11943,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -10087,7 +12080,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -10135,7 +12129,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -10183,7 +12178,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -10231,7 +12227,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -10338,7 +12335,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Message"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Message/Search": {
+      "get": {
+        "tags": [
+          "Message"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -10450,6 +12482,42 @@
         }
       }
     },
+    "/api/Message/Package": {
+      "post": {
+        "tags": [
+          "Message"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Message"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Message"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Message/Merge/{id}": {
       "delete": {
         "tags": [
@@ -10474,7 +12542,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -10669,7 +12738,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MessageAddress"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/MessageAddress/Search": {
+      "get": {
+        "tags": [
+          "MessageAddress"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -10781,6 +12885,42 @@
         }
       }
     },
+    "/api/MessageAddress/Package": {
+      "post": {
+        "tags": [
+          "MessageAddress"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MessageAddress"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MessageAddress"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/MessageAddress/Merge/{id}": {
       "delete": {
         "tags": [
@@ -10805,7 +12945,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -11000,7 +13141,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MessageData"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/MessageData/Search": {
+      "get": {
+        "tags": [
+          "MessageData"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -11112,6 +13288,42 @@
         }
       }
     },
+    "/api/MessageData/Package": {
+      "post": {
+        "tags": [
+          "MessageData"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MessageData"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MessageData"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/MessageData/Merge/{id}": {
       "delete": {
         "tags": [
@@ -11136,7 +13348,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -11254,7 +13467,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -11491,7 +13705,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Persone"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Persone/Search": {
+      "get": {
+        "tags": [
+          "Persone"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -11603,6 +13852,42 @@
         }
       }
     },
+    "/api/Persone/Package": {
+      "post": {
+        "tags": [
+          "Persone"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Persone"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Persone"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Persone/Merge/{id}": {
       "delete": {
         "tags": [
@@ -11627,7 +13912,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -11745,7 +14031,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -11982,7 +14269,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersoneIdentify"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/PersoneIdentify/Search": {
+      "get": {
+        "tags": [
+          "PersoneIdentify"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -12094,6 +14416,42 @@
         }
       }
     },
+    "/api/PersoneIdentify/Package": {
+      "post": {
+        "tags": [
+          "PersoneIdentify"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PersoneIdentify"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersoneIdentify"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/PersoneIdentify/Merge/{id}": {
       "delete": {
         "tags": [
@@ -12118,7 +14476,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -12270,7 +14629,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -12507,7 +14867,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Position"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Position/Search": {
+      "get": {
+        "tags": [
+          "Position"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -12619,6 +15014,42 @@
         }
       }
     },
+    "/api/Position/Package": {
+      "post": {
+        "tags": [
+          "Position"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Position"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Position"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Position/Merge/{id}": {
       "delete": {
         "tags": [
@@ -12643,7 +15074,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -12888,7 +15320,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -13125,7 +15558,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Scheduler"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Scheduler/Search": {
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -13237,6 +15705,42 @@
         }
       }
     },
+    "/api/Scheduler/Package": {
+      "post": {
+        "tags": [
+          "Scheduler"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Scheduler"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Scheduler"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Scheduler/Merge/{id}": {
       "delete": {
         "tags": [
@@ -13261,7 +15765,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -13554,7 +16059,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -13791,7 +16297,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Stage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Stage/Search": {
+      "get": {
+        "tags": [
+          "Stage"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -13903,6 +16444,42 @@
         }
       }
     },
+    "/api/Stage/Package": {
+      "post": {
+        "tags": [
+          "Stage"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Stage"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Stage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Stage/Merge/{id}": {
       "delete": {
         "tags": [
@@ -13927,7 +16504,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -14045,7 +16623,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -14282,7 +16861,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageForeign"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/StageForeign/Search": {
+      "get": {
+        "tags": [
+          "StageForeign"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -14394,6 +17008,42 @@
         }
       }
     },
+    "/api/StageForeign/Package": {
+      "post": {
+        "tags": [
+          "StageForeign"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StageForeign"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageForeign"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/StageForeign/Merge/{id}": {
       "delete": {
         "tags": [
@@ -14418,7 +17068,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -14536,7 +17187,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -14773,7 +17425,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageParam"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/StageParam/Search": {
+      "get": {
+        "tags": [
+          "StageParam"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -14885,6 +17572,42 @@
         }
       }
     },
+    "/api/StageParam/Package": {
+      "post": {
+        "tags": [
+          "StageParam"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StageParam"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageParam"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/StageParam/Merge/{id}": {
       "delete": {
         "tags": [
@@ -14909,7 +17632,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -15027,7 +17751,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -15264,7 +17989,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageProcedure"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/StageProcedure/Search": {
+      "get": {
+        "tags": [
+          "StageProcedure"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -15376,6 +18136,42 @@
         }
       }
     },
+    "/api/StageProcedure/Package": {
+      "post": {
+        "tags": [
+          "StageProcedure"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StageProcedure"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageProcedure"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/StageProcedure/Merge/{id}": {
       "delete": {
         "tags": [
@@ -15400,7 +18196,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -15518,7 +18315,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -15755,7 +18553,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageReference"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/StageReference/Search": {
+      "get": {
+        "tags": [
+          "StageReference"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -15867,6 +18700,42 @@
         }
       }
     },
+    "/api/StageReference/Package": {
+      "post": {
+        "tags": [
+          "StageReference"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StageReference"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageReference"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/StageReference/Merge/{id}": {
       "delete": {
         "tags": [
@@ -15891,7 +18760,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -16009,7 +18879,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -16246,7 +19117,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageTemplate"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/StageTemplate/Search": {
+      "get": {
+        "tags": [
+          "StageTemplate"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -16358,6 +19264,42 @@
         }
       }
     },
+    "/api/StageTemplate/Package": {
+      "post": {
+        "tags": [
+          "StageTemplate"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StageTemplate"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageTemplate"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/StageTemplate/Merge/{id}": {
       "delete": {
         "tags": [
@@ -16382,7 +19324,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -16500,7 +19443,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -16737,7 +19681,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Statistic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Statistic/Search": {
+      "get": {
+        "tags": [
+          "Statistic"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -16849,6 +19828,42 @@
         }
       }
     },
+    "/api/Statistic/Package": {
+      "post": {
+        "tags": [
+          "Statistic"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Statistic"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Statistic"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Statistic/Merge/{id}": {
       "delete": {
         "tags": [
@@ -16873,7 +19888,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -17040,7 +20056,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -17070,7 +20087,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -17307,7 +20325,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Template"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Template/Search": {
+      "get": {
+        "tags": [
+          "Template"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -17419,6 +20472,42 @@
         }
       }
     },
+    "/api/Template/Package": {
+      "post": {
+        "tags": [
+          "Template"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Template"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Template"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Template/Merge/{id}": {
       "delete": {
         "tags": [
@@ -17443,7 +20532,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -17561,7 +20651,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -17798,7 +20889,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateData"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/TemplateData/Search": {
+      "get": {
+        "tags": [
+          "TemplateData"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -17910,6 +21036,42 @@
         }
       }
     },
+    "/api/TemplateData/Package": {
+      "post": {
+        "tags": [
+          "TemplateData"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TemplateData"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateData"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/TemplateData/Merge/{id}": {
       "delete": {
         "tags": [
@@ -17934,7 +21096,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -18086,7 +21249,8 @@
                 "items": {
                   "type": "integer",
                   "format": "int32"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -18127,7 +21291,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -18274,7 +21439,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -18480,7 +21646,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateFile"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/TemplateFile/Search": {
+      "get": {
+        "tags": [
+          "TemplateFile"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -18592,6 +21793,42 @@
         }
       }
     },
+    "/api/TemplateFile/Package": {
+      "post": {
+        "tags": [
+          "TemplateFile"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TemplateFile"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateFile"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/TemplateFile/Merge/{id}": {
       "delete": {
         "tags": [
@@ -18616,7 +21853,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -18734,7 +21972,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -18971,7 +22210,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateProperty"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/TemplateProperty/Search": {
+      "get": {
+        "tags": [
+          "TemplateProperty"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -19083,6 +22357,42 @@
         }
       }
     },
+    "/api/TemplateProperty/Package": {
+      "post": {
+        "tags": [
+          "TemplateProperty"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TemplateProperty"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateProperty"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/TemplateProperty/Merge/{id}": {
       "delete": {
         "tags": [
@@ -19107,7 +22417,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -19225,7 +22536,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -19462,7 +22774,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateReference"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/TemplateReference/Search": {
+      "get": {
+        "tags": [
+          "TemplateReference"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -19574,6 +22921,42 @@
         }
       }
     },
+    "/api/TemplateReference/Package": {
+      "post": {
+        "tags": [
+          "TemplateReference"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TemplateReference"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateReference"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/TemplateReference/Merge/{id}": {
       "delete": {
         "tags": [
@@ -19598,7 +22981,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -19852,7 +23236,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -20089,7 +23474,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/User/Search": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -20201,6 +23621,42 @@
         }
       }
     },
+    "/api/User/Package": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/User"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/User/Merge/{id}": {
       "delete": {
         "tags": [
@@ -20225,7 +23681,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -20458,7 +23915,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -20695,7 +24153,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserApplication"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/UserApplication/Search": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -20807,6 +24300,42 @@
         }
       }
     },
+    "/api/UserApplication/Package": {
+      "post": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/UserApplication"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserApplication"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/UserApplication/Merge/{id}": {
       "delete": {
         "tags": [
@@ -20831,7 +24360,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -20983,7 +24513,8 @@
                 "items": {
                   "type": "integer",
                   "format": "int32"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -21024,7 +24555,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -21171,7 +24703,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -21377,7 +24910,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserFile"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/UserFile/Search": {
+      "get": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -21489,6 +25057,42 @@
         }
       }
     },
+    "/api/UserFile/Package": {
+      "post": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/UserFile"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserFile"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/UserFile/Merge/{id}": {
       "delete": {
         "tags": [
@@ -21513,7 +25117,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -21665,7 +25270,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -21902,7 +25508,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserGroup"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/UserGroup/Search": {
+      "get": {
+        "tags": [
+          "UserGroup"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -22014,6 +25655,42 @@
         }
       }
     },
+    "/api/UserGroup/Package": {
+      "post": {
+        "tags": [
+          "UserGroup"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/UserGroup"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserGroup"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/UserGroup/Merge/{id}": {
       "delete": {
         "tags": [
@@ -22038,7 +25715,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -22233,7 +25911,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserReg"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/UserReg/Search": {
+      "get": {
+        "tags": [
+          "UserReg"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -22345,6 +26058,42 @@
         }
       }
     },
+    "/api/UserReg/Package": {
+      "post": {
+        "tags": [
+          "UserReg"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/UserReg"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserReg"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/UserReg/Merge/{id}": {
       "delete": {
         "tags": [
@@ -22369,7 +26118,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -22676,7 +26426,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -22913,7 +26664,42 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Work"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/Work/Search": {
+      "get": {
+        "tags": [
+          "Work"
+        ],
+        "operationId": "Search",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
             }
           }
         ],
@@ -23025,6 +26811,42 @@
         }
       }
     },
+    "/api/Work/Package": {
+      "post": {
+        "tags": [
+          "Work"
+        ],
+        "operationId": "PostPackage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Work"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Work"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Work/Merge/{id}": {
       "delete": {
         "tags": [
@@ -23049,7 +26871,8 @@
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "nullable": true
               }
             }
           }
@@ -23160,6 +26983,19 @@
     "schemas": {
       "AccessType": {
         "enum": [
+          0,
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          64,
+          127
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "None",
           "Read",
           "Create",
@@ -23167,9 +27003,20 @@
           "Delete",
           "Admin",
           "Accept",
-          "Download"
+          "Download",
+          "Full"
         ],
-        "type": "string",
+        "x-enumMembers": [
+          "None",
+          "Read",
+          "Create",
+          "Update",
+          "Delete",
+          "Admin",
+          "Accept",
+          "Download",
+          "Full"
+        ],
         "x-flags": 0
       },
       "AccessItem": {
@@ -23221,6 +27068,16 @@
       },
       "LocationType": {
         "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "Default",
           "Continent",
           "Country",
@@ -23228,10 +27085,28 @@
           "Region",
           "City"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "Default",
+          "Continent",
+          "Country",
+          "Currency",
+          "Region",
+          "City"
+        ]
       },
       "DBStatus": {
         "enum": [
+          0,
+          1,
+          2,
+          4,
+          8,
+          16,
+          32
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "Empty",
           "Actual",
           "New",
@@ -23240,7 +27115,15 @@
           "Delete",
           "Archive"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "Empty",
+          "Actual",
+          "New",
+          "Edit",
+          "Error",
+          "Delete",
+          "Archive"
+        ]
       },
       "DBItem": {
         "required": [
@@ -23289,6 +27172,42 @@
             "$ref": "#/components/schemas/DBItem"
           }
         ]
+      },
+      "City": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Location"
+          }
+        ],
+        "x-type-id": 5
+      },
+      "Continent": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Location"
+          }
+        ],
+        "x-type-id": 1
+      },
+      "Country": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Location"
+          }
+        ],
+        "x-type-id": 2
+      },
+      "Currency": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Location"
+          }
+        ],
+        "x-type-id": 3
       },
       "Location": {
         "required": [
@@ -23340,17 +27259,40 @@
             "format": "int32"
           }
         },
+        "discriminator": {
+          "propertyName": "ItemType",
+          "mapping": {
+            "0": "#/components/schemas/Location",
+            "5": "#/components/schemas/City",
+            "1": "#/components/schemas/Continent",
+            "2": "#/components/schemas/Country",
+            "3": "#/components/schemas/Currency"
+          }
+        },
         "x-id": "Id",
         "x-type-id": 0
       },
       "DBLogType": {
         "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "None",
           "Insert",
           "Update",
           "Delete"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "None",
+          "Insert",
+          "Update",
+          "Delete"
+        ]
       },
       "DBLogItem": {
         "required": [
@@ -23642,33 +27584,6 @@
         ],
         "x-type-id": 5
       },
-      "City": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Location"
-          }
-        ],
-        "x-type-id": 5
-      },
-      "Continent": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Location"
-          }
-        ],
-        "x-type-id": 1
-      },
-      "Country": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Location"
-          }
-        ],
-        "x-type-id": 2
-      },
       "CustomerLog": {
         "type": "object",
         "allOf": [
@@ -23748,6 +27663,15 @@
         ],
         "x-type-id": 1
       },
+      "Persone": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Customer"
+          }
+        ],
+        "x-type-id": 2
+      },
       "Customer": {
         "required": [
           "Id"
@@ -23771,15 +27695,15 @@
             "maxLength": 40,
             "type": "string"
           },
-          "ShortNameRU": {
-            "maxLength": 512,
-            "type": "string",
-            "x-culture": "ru-RU"
-          },
           "ShortNameEN": {
             "maxLength": 512,
             "type": "string",
             "x-culture": "en-US"
+          },
+          "ShortNameRU": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "ru-RU"
           },
           "NameRU": {
             "maxLength": 1024,
@@ -23828,6 +27752,14 @@
             "format": "int32"
           }
         },
+        "discriminator": {
+          "propertyName": "ItemType",
+          "mapping": {
+            "0": "#/components/schemas/Customer",
+            "1": "#/components/schemas/Company",
+            "2": "#/components/schemas/Persone"
+          }
+        },
         "x-id": "Id",
         "x-type-id": 0
       },
@@ -23863,15 +27795,6 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/LocationLog"
-          }
-        ],
-        "x-type-id": 3
-      },
-      "Currency": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Location"
           }
         ],
         "x-type-id": 3
@@ -23957,15 +27880,6 @@
         },
         "x-id": "Id",
         "x-type-id": 0
-      },
-      "Persone": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Customer"
-          }
-        ],
-        "x-type-id": 2
       },
       "CustomerReferenceLog": {
         "type": "object",
@@ -24227,15 +28141,24 @@
           "EMail": {
             "maxLength": 1024,
             "type": "string"
-          },
-          "Name": {
-            "type": "string"
           }
         },
         "x-id": "Id"
       },
       "UserRegType": {
         "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "None",
           "Password",
           "Authorization",
@@ -24245,7 +28168,16 @@
           "Transaction",
           "Reject"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "None",
+          "Password",
+          "Authorization",
+          "Start",
+          "Stop",
+          "Execute",
+          "Transaction",
+          "Reject"
+        ]
       },
       "UserRegItem": {
         "type": "object",
@@ -24255,6 +28187,13 @@
           },
           "ItemId": {
             "type": "string"
+          },
+          "LogTable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DBItem"
+            },
+            "readOnly": true
           },
           "LogId": {
             "type": "integer",
@@ -24338,11 +28277,22 @@
       },
       "UserAuthType": {
         "enum": [
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "Internal",
           "SMTP",
           "LDAP"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "Internal",
+          "SMTP",
+          "LDAP"
+        ]
       },
       "User": {
         "type": "object",
@@ -24672,705 +28622,6 @@
         "x-id": "Id",
         "x-type-id": 0
       },
-      "MemberTypes": {
-        "enum": [
-          "Constructor",
-          "Event",
-          "Field",
-          "Method",
-          "Property",
-          "TypeInfo",
-          "Custom",
-          "NestedType",
-          "All"
-        ],
-        "type": "string",
-        "x-flags": 1
-      },
-      "MethodAttributes": {
-        "enum": [
-          "ReuseSlot",
-          "ReuseSlot",
-          "Private",
-          "FamANDAssem",
-          "Assembly",
-          "Family",
-          "FamORAssem",
-          "Public",
-          "MemberAccessMask",
-          "UnmanagedExport",
-          "Static",
-          "Final",
-          "Virtual",
-          "HideBySig",
-          "VtableLayoutMask",
-          "VtableLayoutMask",
-          "CheckAccessOnOverride",
-          "Abstract",
-          "SpecialName",
-          "RTSpecialName",
-          "PinvokeImpl",
-          "HasSecurity",
-          "RequireSecObject",
-          "ReservedMask"
-        ],
-        "type": "string",
-        "x-flags": 0
-      },
-      "MethodImplAttributes": {
-        "enum": [
-          "Managed",
-          "Managed",
-          "Native",
-          "OPTIL",
-          "CodeTypeMask",
-          "CodeTypeMask",
-          "Unmanaged",
-          "Unmanaged",
-          "NoInlining",
-          "ForwardRef",
-          "Synchronized",
-          "NoOptimization",
-          "PreserveSig",
-          "AggressiveInlining",
-          "AggressiveOptimization",
-          "InternalCall",
-          "MaxMethodImplVal"
-        ],
-        "type": "string"
-      },
-      "CallingConventions": {
-        "enum": [
-          "Standard",
-          "VarArgs",
-          "Any",
-          "HasThis",
-          "ExplicitThis"
-        ],
-        "type": "string",
-        "x-flags": 1
-      },
-      "IntPtr": {
-        "type": "object",
-        "additionalProperties": false
-      },
-      "RuntimeMethodHandle": {
-        "type": "object"
-      },
-      "ModuleHandle": {
-        "type": "object"
-      },
-      "CustomAttributeTypedArgument": {
-        "type": "object"
-      },
-      "MemberInfo": {
-        "type": "object"
-      },
-      "CustomAttributeNamedArgument": {
-        "type": "object"
-      },
-      "CustomAttributeData": {
-        "type": "object"
-      },
-      "Module": {
-        "type": "object"
-      },
-      "MethodBase": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/MemberInfo"
-          }
-        ]
-      },
-      "ConstructorInfo": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/MethodBase"
-          }
-        ]
-      },
-      "EventAttributes": {
-        "enum": [
-          "None",
-          "SpecialName",
-          "ReservedMask",
-          "ReservedMask"
-        ],
-        "type": "string",
-        "x-flags": 0
-      },
-      "ParameterAttributes": {
-        "enum": [
-          "None",
-          "In",
-          "Out",
-          "Lcid",
-          "Retval",
-          "Optional",
-          "HasDefault",
-          "HasFieldMarshal",
-          "Reserved3",
-          "Reserved4",
-          "ReservedMask"
-        ],
-        "type": "string",
-        "x-flags": 0
-      },
-      "ParameterInfo": {
-        "type": "object"
-      },
-      "ICustomAttributeProvider": {
-        "type": "object"
-      },
-      "MethodInfo": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/MethodBase"
-          }
-        ]
-      },
-      "EventInfo": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/MemberInfo"
-          }
-        ]
-      },
-      "FieldAttributes": {
-        "enum": [
-          "PrivateScope",
-          "Private",
-          "FamANDAssem",
-          "Assembly",
-          "Family",
-          "FamORAssem",
-          "Public",
-          "FieldAccessMask",
-          "Static",
-          "InitOnly",
-          "Literal",
-          "NotSerialized",
-          "HasFieldRVA",
-          "SpecialName",
-          "RTSpecialName",
-          "HasFieldMarshal",
-          "PinvokeImpl",
-          "HasDefault",
-          "ReservedMask"
-        ],
-        "type": "string",
-        "x-flags": 0
-      },
-      "RuntimeFieldHandle": {
-        "type": "object"
-      },
-      "FieldInfo": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/MemberInfo"
-          }
-        ]
-      },
-      "PropertyAttributes": {
-        "enum": [
-          "None",
-          "SpecialName",
-          "RTSpecialName",
-          "HasDefault",
-          "Reserved2",
-          "Reserved3",
-          "Reserved4",
-          "ReservedMask"
-        ],
-        "type": "string",
-        "x-flags": 0
-      },
-      "PropertyInfo": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/MemberInfo"
-          }
-        ]
-      },
-      "GenericParameterAttributes": {
-        "enum": [
-          "None",
-          "Covariant",
-          "Contravariant",
-          "VarianceMask",
-          "ReferenceTypeConstraint",
-          "NotNullableValueTypeConstraint",
-          "DefaultConstructorConstraint",
-          "SpecialConstraintMask"
-        ],
-        "type": "string",
-        "x-flags": 0
-      },
-      "TypeAttributes": {
-        "enum": [
-          "NotPublic",
-          "NotPublic",
-          "NotPublic",
-          "NotPublic",
-          "Public",
-          "NestedPublic",
-          "NestedPrivate",
-          "NestedFamily",
-          "NestedAssembly",
-          "NestedFamANDAssem",
-          "VisibilityMask",
-          "VisibilityMask",
-          "SequentialLayout",
-          "ExplicitLayout",
-          "LayoutMask",
-          "ClassSemanticsMask",
-          "ClassSemanticsMask",
-          "Abstract",
-          "Sealed",
-          "SpecialName",
-          "RTSpecialName",
-          "Import",
-          "Serializable",
-          "WindowsRuntime",
-          "UnicodeClass",
-          "AutoClass",
-          "StringFormatMask",
-          "StringFormatMask",
-          "HasSecurity",
-          "ReservedMask",
-          "BeforeFieldInit",
-          "CustomFormatMask"
-        ],
-        "type": "string",
-        "x-flags": 0
-      },
-      "LayoutKind": {
-        "enum": [
-          "Sequential",
-          "Explicit",
-          "Auto"
-        ],
-        "type": "string"
-      },
-      "Attribute": {
-        "type": "object"
-      },
-      "StructLayoutAttribute": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Attribute"
-          }
-        ]
-      },
-      "RuntimeTypeHandle": {
-        "type": "object"
-      },
-      "TypeInfo": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Type"
-          }
-        ]
-      },
-      "SecurityRuleSet": {
-        "enum": [
-          "None",
-          "Level1",
-          "Level2"
-        ],
-        "type": "string"
-      },
-      "Assembly": {
-        "type": "object"
-      },
-      "Type": {
-        "type": "object",
-        "properties": {
-          "IsInterface": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "MemberType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/MemberTypes"
-              }
-            ],
-            "readOnly": true
-          },
-          "Namespace": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "AssemblyQualifiedName": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "FullName": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "Assembly": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Assembly"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          },
-          "Module": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Module"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          },
-          "IsNested": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "DeclaringType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Type"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          },
-          "DeclaringMethod": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/MethodBase"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          },
-          "ReflectedType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Type"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          },
-          "UnderlyingSystemType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Type"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          },
-          "IsTypeDefinition": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsArray": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsByRef": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsPointer": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsConstructedGenericType": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsGenericParameter": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsGenericTypeParameter": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsGenericMethodParameter": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsGenericType": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsGenericTypeDefinition": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsSZArray": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsVariableBoundArray": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsByRefLike": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "HasElementType": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "GenericTypeArguments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Type"
-            },
-            "nullable": true,
-            "readOnly": true
-          },
-          "GenericParameterPosition": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "GenericParameterAttributes": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/GenericParameterAttributes"
-              }
-            ],
-            "readOnly": true
-          },
-          "Attributes": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/TypeAttributes"
-              }
-            ],
-            "readOnly": true
-          },
-          "IsAbstract": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsImport": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsSealed": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsSpecialName": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsClass": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsNestedAssembly": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsNestedFamANDAssem": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsNestedFamily": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsNestedFamORAssem": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsNestedPrivate": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsNestedPublic": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsNotPublic": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsPublic": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsAutoLayout": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsExplicitLayout": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsLayoutSequential": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsAnsiClass": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsAutoClass": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsUnicodeClass": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsCOMObject": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsContextful": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsEnum": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsMarshalByRef": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsPrimitive": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsValueType": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsSignatureType": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsSecurityCritical": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsSecuritySafeCritical": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsSecurityTransparent": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "StructLayoutAttribute": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/StructLayoutAttribute"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          },
-          "TypeInitializer": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ConstructorInfo"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          },
-          "TypeHandle": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/RuntimeTypeHandle"
-              }
-            ],
-            "readOnly": true
-          },
-          "GUID": {
-            "type": "object",
-            "format": "uuid",
-            "readOnly": true
-          },
-          "BaseType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Type"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          },
-          "IsSerializable": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "ContainsGenericParameters": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsVisible": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "Name": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "CustomAttributes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CustomAttributeData"
-            },
-            "nullable": true,
-            "readOnly": true
-          },
-          "IsCollectible": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "MetadataToken": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "DBItemType": {
-        "type": "object",
-        "properties": {
-          "Type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Type"
-              }
-            ],
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "Template": {
         "required": [
           "Id"
@@ -25472,6 +28723,16 @@
       },
       "StageKey": {
         "enum": [
+          0,
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "None",
           "Stop",
           "Start",
@@ -25479,7 +28740,14 @@
           "Return",
           "AutoComplete"
         ],
-        "type": "string",
+        "x-enumMembers": [
+          "None",
+          "Stop",
+          "Start",
+          "System",
+          "Return",
+          "AutoComplete"
+        ],
         "x-flags": 0
       },
       "Stage": {
@@ -25543,6 +28811,18 @@
       },
       "DocInitType": {
         "enum": [
+          0,
+          1,
+          4,
+          8,
+          16,
+          32,
+          64,
+          128
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "Default",
           "References",
           "Data",
@@ -25552,7 +28832,16 @@
           "Refing",
           "Refed"
         ],
-        "type": "string",
+        "x-enumMembers": [
+          "Default",
+          "References",
+          "Data",
+          "Workflow",
+          "Customer",
+          "Comment",
+          "Refing",
+          "Refed"
+        ],
         "x-flags": 0
       },
       "DocumentData": {
@@ -26323,6 +29612,127 @@
         },
         "x-type-id": 0
       },
+      "MarshalByRefObject": {
+        "type": "object"
+      },
+      "IntPtr": {
+        "type": "object"
+      },
+      "CriticalFinalizerObject": {
+        "type": "object"
+      },
+      "SafeHandle": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CriticalFinalizerObject"
+          }
+        ],
+        "properties": {
+          "IsInvalid": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "IsClosed": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        }
+      },
+      "SafeHandleZeroOrMinusOneIsInvalid": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SafeHandle"
+          }
+        ]
+      },
+      "SafeFileHandle": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SafeHandleZeroOrMinusOneIsInvalid"
+          }
+        ]
+      },
+      "ActionResult": {
+        "type": "object"
+      },
+      "DayOfWeek": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday"
+        ],
+        "x-enumMembers": [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday"
+        ]
+      },
+      "StringSegment": {
+        "type": "object",
+        "properties": {
+          "Buffer": {
+            "type": "string",
+            "readOnly": true
+          },
+          "Offset": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "Length": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "Value": {
+            "type": "string",
+            "readOnly": true
+          },
+          "HasValue": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        }
+      },
+      "EntityTagHeaderValue": {
+        "type": "object",
+        "properties": {
+          "Tag": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StringSegment"
+              }
+            ],
+            "readOnly": true
+          },
+          "IsWeak": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        }
+      },
       "DocumentDataLog": {
         "type": "object",
         "allOf": [
@@ -26547,6 +29957,16 @@
       },
       "PermissionType": {
         "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "GSchema",
           "GBlock",
           "GTable",
@@ -26554,7 +29974,14 @@
           "GType",
           "GTypeMember"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "GSchema",
+          "GBlock",
+          "GTable",
+          "GColumn",
+          "GType",
+          "GTypeMember"
+        ]
       },
       "GroupPermission": {
         "required": [
@@ -26647,6 +30074,60 @@
             "type": "string"
           }
         },
+        "x-type-id": 0
+      },
+      "InstanceLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBLogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Host": {
+            "type": "string"
+          },
+          "Port": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Active": {
+            "type": "boolean"
+          }
+        },
+        "x-type-id": 0
+      },
+      "Instance": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Host": {
+            "type": "string"
+          },
+          "Port": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Active": {
+            "type": "boolean"
+          }
+        },
+        "x-id": "Id",
         "x-type-id": 0
       },
       "MessageData": {
@@ -26837,12 +30318,25 @@
       },
       "ParameterDirection": {
         "enum": [
+          1,
+          2,
+          3,
+          6
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "Input",
           "Output",
           "InputOutput",
           "ReturnValue"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "Input",
+          "Output",
+          "InputOutput",
+          "ReturnValue"
+        ]
       },
       "DBSchemaItem": {
         "required": [
@@ -26883,6 +30377,20 @@
       },
       "ProcedureTypes": {
         "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "Group",
           "Query",
           "Constant",
@@ -26894,7 +30402,18 @@
           "Table",
           "File"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "Group",
+          "Query",
+          "Constant",
+          "StoredProcedure",
+          "StoredFunction",
+          "Assembly",
+          "Source",
+          "Menu",
+          "Table",
+          "File"
+        ]
       },
       "DBProcedure": {
         "required": [
@@ -26937,11 +30456,22 @@
       },
       "StatusType": {
         "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "Information",
           "Warning",
           "Error"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "Information",
+          "Warning",
+          "Error"
+        ]
       },
       "StateInfo": {
         "type": "object",
@@ -26976,12 +30506,25 @@
       },
       "SchedulerType": {
         "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "Interval",
           "DayTime",
           "WeekDay",
           "Manual"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "Interval",
+          "DayTime",
+          "WeekDay",
+          "Manual"
+        ]
       },
       "SchedulerLog": {
         "type": "object",
@@ -27106,6 +30649,78 @@
         "x-id": "Id",
         "x-type-id": 0
       },
+      "StageParamProcudureType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Start",
+          "Manual",
+          "Check",
+          "Finish"
+        ],
+        "x-enumMembers": [
+          "Start",
+          "Manual",
+          "Check",
+          "Finish"
+        ]
+      },
+      "StageProcedure": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/StageParam"
+          }
+        ],
+        "properties": {
+          "ProcedureType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StageParamProcudureType"
+              }
+            ]
+          }
+        },
+        "x-type-id": 4
+      },
+      "StageReference": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/StageParam"
+          }
+        ],
+        "properties": {
+          "Next": {
+            "type": "boolean"
+          }
+        },
+        "x-type-id": 5
+      },
+      "StageTemplate": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/StageParam"
+          }
+        ],
+        "x-type-id": 3
+      },
+      "StageForeign": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/StageParam"
+          }
+        ],
+        "x-type-id": 2
+      },
       "StageParam": {
         "required": [
           "Id"
@@ -27142,49 +30757,18 @@
             "type": "string"
           }
         },
+        "discriminator": {
+          "propertyName": "ItemType",
+          "mapping": {
+            "0": "#/components/schemas/StageParam",
+            "4": "#/components/schemas/StageProcedure",
+            "5": "#/components/schemas/StageReference",
+            "3": "#/components/schemas/StageTemplate",
+            "2": "#/components/schemas/StageForeign"
+          }
+        },
         "x-id": "Id",
         "x-type-id": 0
-      },
-      "StageReference": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/StageParam"
-          }
-        ],
-        "properties": {
-          "Next": {
-            "type": "boolean"
-          }
-        },
-        "x-type-id": 5
-      },
-      "StageParamProcudureType": {
-        "enum": [
-          "Start",
-          "Manual",
-          "Check",
-          "Finish"
-        ],
-        "type": "string"
-      },
-      "StageProcedure": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/StageParam"
-          }
-        ],
-        "properties": {
-          "ProcedureType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/StageParamProcudureType"
-              }
-            ]
-          }
-        },
-        "x-type-id": 4
       },
       "StageLog": {
         "type": "object",
@@ -27277,15 +30861,6 @@
         ],
         "x-type-id": 2
       },
-      "StageForeign": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/StageParam"
-          }
-        ],
-        "x-type-id": 2
-      },
       "StageProcedureLog": {
         "type": "object",
         "allOf": [
@@ -27323,15 +30898,6 @@
         "allOf": [
           {
             "$ref": "#/components/schemas/StageParamLog"
-          }
-        ],
-        "x-type-id": 3
-      },
-      "StageTemplate": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/StageParam"
           }
         ],
         "x-type-id": 3
@@ -27805,10 +31371,19 @@
       },
       "UserApplicationType": {
         "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "NewAccount",
           "ResetPassword"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "NewAccount",
+          "ResetPassword"
+        ]
       },
       "UserApplication": {
         "required": [
@@ -28163,6 +31738,17 @@
       },
       "WebSocketState": {
         "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
           "None",
           "Connecting",
           "Open",
@@ -28171,7 +31757,15 @@
           "Closed",
           "Aborted"
         ],
-        "type": "string"
+        "x-enumMembers": [
+          "None",
+          "Connecting",
+          "Open",
+          "CloseSent",
+          "CloseReceived",
+          "Closed",
+          "Aborted"
+        ]
       },
       "DefaultItem": {
         "type": "object"
@@ -28187,6 +31781,23 @@
           "Id": {
             "type": "integer",
             "format": "int32"
+          },
+          "Date": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "UserEmail": {
+            "type": "string",
+            "readOnly": true
+          },
+          "State": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebSocketState"
+              }
+            ],
+            "readOnly": true
           },
           "Address": {
             "type": "string"

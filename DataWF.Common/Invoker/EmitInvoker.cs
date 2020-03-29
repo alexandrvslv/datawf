@@ -22,14 +22,14 @@ namespace DataWF.Common
     /// </summary>
     public static class EmitInvoker
     {
-        private static readonly Dictionary<MetadataToken, Type> cacheGenericInvokers = new Dictionary<MetadataToken, Type>(10);
+        private static readonly Dictionary<MetadataToken, Type> cacheGenericInvokers = new Dictionary<MetadataToken, Type>(300);
         private static readonly Dictionary<MetadataToken, IInvoker> cacheInvokers = new Dictionary<MetadataToken, IInvoker>(500);
         private static readonly Dictionary<MetadataToken, EmitConstructor> cacheCtors = new Dictionary<MetadataToken, EmitConstructor>(500);
 
         static EmitInvoker()
         {
             var methoInfo = TypeHelper.GetMemberInfo(typeof(object), nameof(ToString));
-            cacheInvokers[GetToken(methoInfo)] = ToStringInvoker.Instance;
+            cacheInvokers[GetToken(methoInfo)] = ToStringInvoker<object>.Instance;
         }
         public static void DeleteCache()
         {
@@ -108,17 +108,14 @@ namespace DataWF.Common
             var propertyInfo = TypeHelper.GetPropertyInfo(invoker.TargetType, invoker.PropertyName);
             if (propertyInfo != null)
             {
-                if (invoker.TargetType.IsGenericTypeDefinition)
+                if (type.IsGenericType
+                    || invoker.TargetType.IsGenericTypeDefinition)
                 {
                     var token = GetToken(propertyInfo);
                     cacheGenericInvokers[token] = type;
                 }
                 else
                 {
-                    if (type.IsGenericType)
-                    {
-                        type = type.MakeGenericType(invoker.GenericType ?? invoker.TargetType);
-                    }
                     RegisterInvoker(propertyInfo, (IInvoker)Activator.CreateInstance(type));
                 }
             }
@@ -129,9 +126,9 @@ namespace DataWF.Common
             RegisterInvoker(TypeHelper.GetMemberInfo(type, memberName), invoker);
         }
 
-        public static void RegisterInvoker(MemberInfo memeberInfo, IInvoker invoker)
+        public static void RegisterInvoker(MemberInfo memberInfo, IInvoker invoker)
         {
-            var token = GetToken(memeberInfo);
+            var token = GetToken(memberInfo);
             cacheInvokers[token] = invoker;
         }
 
@@ -184,7 +181,6 @@ namespace DataWF.Common
             if (info == null)
                 return null;
             var token = GetToken(info);
-            var baseInfo = (MemberInfo)null;
             if (cache)
             {
                 if (cacheInvokers.TryGetValue(token, out var invoker))
@@ -192,28 +188,27 @@ namespace DataWF.Common
                     return invoker;
                 }
 
-                baseInfo = info.GetMemberBaseDefinition();
+                var baseInfo = info.GetMemberBaseDefinition();
                 var baseToken = GetToken(baseInfo);
                 if (cacheInvokers.TryGetValue(baseToken, out invoker))
                 {
                     return invoker;
                 }
-                else// if (!baseInfo.IsGeneric())
+                if (baseInfo.DeclaringType.IsGenericType && !baseInfo.DeclaringType.IsGenericTypeDefinition)
                 {
-                    token = baseToken;
-                    info = baseInfo;
-                }
-
-                if (info.DeclaringType.IsGenericType && !info.DeclaringType.IsGenericTypeDefinition)
-                {
-                    var genericType = info.DeclaringType.GetGenericTypeDefinition();
-                    var genericMember = TypeHelper.GetMemberInfo(genericType, info.Name);
-                    var genericToken = GetToken(genericMember);
+                    var genericType = baseInfo.DeclaringType.GetGenericTypeDefinition();
+                    var genericInfo = TypeHelper.GetMemberInfo(genericType, baseInfo.Name);
+                    var genericToken = GetToken(genericInfo);
                     if (cacheGenericInvokers.TryGetValue(genericToken, out var genericInvokerType))
                     {
                         var type = genericInvokerType.MakeGenericType(info.DeclaringType.GetGenericArguments());
                         return cacheInvokers[token] = (IInvoker)Activator.CreateInstance(type);
                     }
+                }
+                else if (cacheGenericInvokers.TryGetValue(baseToken, out var genericInvokerType))
+                {
+                    var type = genericInvokerType.MakeGenericType(info.DeclaringType);
+                    return cacheInvokers[token] = (IInvoker)Activator.CreateInstance(type);
                 }
             }
             return cacheInvokers[token] = Initialize(info, null);
@@ -260,7 +255,8 @@ namespace DataWF.Common
             {
                 if (string.Equals(info.Name, nameof(Object.ToString), StringComparison.Ordinal))
                 {
-                    result = ToStringInvoker.Instance;
+                    var type = typeof(ToStringInvoker<>).MakeGenericType(info.DeclaringType);
+                    result = (IInvoker)CreateObject(type);
                 }
                 else
                 {
@@ -289,15 +285,16 @@ namespace DataWF.Common
         //			cFieldSet[GetToken(setInfo)] = setHandler = GetInvokerSet(setInfo);
         //	}
         //}
-        public static int CompareKey(string member, object x, object key, IComparer comparer)
-        {
-            return CompareKey(Initialize(x.GetType(), member), x, key, comparer);
-        }
 
-        public static int CompareKey(IInvoker accesor, object x, object key, IComparer comparer)
-        {
-            return ListHelper.Compare(accesor.GetValue(x), key, comparer, false);
-        }
+        //public static int CompareKey(string member, object x, object key, IComparer comparer)
+        //{
+        //    return CompareKey(Initialize(x.GetType(), member), x, key, comparer);
+        //}
+
+        //public static int CompareKey(IInvoker accesor, object x, object key, IComparer comparer)
+        //{
+        //    return ListHelper.Compare(accesor.GetValue(x), key, comparer);
+        //}
 
         public static T CreateObject<T>(bool cache = true)
         {

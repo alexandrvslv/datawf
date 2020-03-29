@@ -124,6 +124,15 @@ namespace DataWF.WebService.Common
                 smtpSection.Bind(smtpSetting);
             }
             services.Configure<SMTPSetting>(smtpSection);
+
+            var ldapSetting = new LDAPSetting();
+            var ldapSection = configuration.GetSection("LdapSetting");
+            if (ldapSection != null)
+            {
+                ldapSection.Bind(ldapSetting);
+            }
+            services.Configure<SMTPSetting>(ldapSection);
+
             services.AddControllers(options =>
             {
                 options.CacheProfiles.Add("Never", new CacheProfile()
@@ -132,18 +141,12 @@ namespace DataWF.WebService.Common
                     NoStore = true,
                     Duration = 0
                 });
-                options.OutputFormatters.Insert(0, new DBItemJsonOutputFormatter());
+                options.SuppressOutputFormatterBuffering = true;
+                options.OutputFormatters.Insert(0, new DBItemOutputFormatter());
             }).AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.InitDefaults();
-            });//).ConfigureApiBehaviorOptions(options =>
-            //{
-            //    options.SuppressConsumesConstraintForFormFileParameters = true;
-            //    options.SuppressInferBindingSourcesForParameters = true;
-            //    options.SuppressModelStateInvalidFilter = true;
-            //    options.SuppressMapClientErrors = true;
-            //    options.ClientErrorMapping[404].Link = "https://httpstatuses.com/404";
-            //});
+            });
 
 
             foreach (var validator in services.Where(s => s.ServiceType == typeof(IObjectModelValidator)).ToList())
@@ -206,14 +209,9 @@ namespace DataWF.WebService.Common
               });
         }
 
-        public static IApplicationBuilder UseSwagger(this IApplicationBuilder app, string name, string url = "/swagger/v1/swagger.json")
+        public static IApplicationBuilder UseSwaggerUI(this IApplicationBuilder app, string name, string url = "/swagger/v1/swagger.json")
         {
-            //app.UseHttpMethodOverride
-            return app.UseSwagger(c =>
-            {
-
-            })
-            .UseSwaggerUI(c =>
+            return app.UseSwaggerUI(c =>
             {
                 // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
                 // specifying the Swagger JSON endpoint.

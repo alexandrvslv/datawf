@@ -6,19 +6,20 @@
     }
 
 
-    public class StatusableStatusInvoker<T> : Invoker<T, DBStatus>
+    public class StatusableStatusInvoker<T> : Invoker<T, DBStatus> where T : IStatusable
     {
         public static readonly StatusableStatusInvoker<T> Default = new StatusableStatusInvoker<T>();
         public override string Name => nameof(IStatusable.Status);
         public override bool CanWrite => true;
 
-        public override DBStatus GetValue(T target) => target is IStatusable statusable ? statusable.Status : DBStatus.Empty;
+        public override DBStatus GetValue(T target) => target.Status;
 
-        public override void SetValue(T target, DBStatus value)
-        {
-            if (target is IStatusable statusable)
-                statusable.Status = value;
-        }
+        public override void SetValue(T target, DBStatus value) => target.Status = value;
+    }
+
+    public class StatusableStatusInvoker : StatusableStatusInvoker<IStatusable>
+    {
+
     }
 }
 

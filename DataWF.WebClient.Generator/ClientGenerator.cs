@@ -20,7 +20,7 @@ namespace DataWF.WebClient.Generator
             "GetAsync",
             "PutAsync",
             "PostAsync",
-            "FindAsync",
+            "SearchAsync",
             "DeleteAsync",
             "CopyAsync",
             "GenerateIdAsync",
@@ -55,6 +55,7 @@ namespace DataWF.WebClient.Generator
             usings = new List<UsingDirectiveSyntax>() {
                 SyntaxHelper.CreateUsingDirective("DataWF.Common") ,
                 SyntaxHelper.CreateUsingDirective("System") ,
+                SyntaxHelper.CreateUsingDirective("System.Collections"),
                 SyntaxHelper.CreateUsingDirective("System.Collections.Generic") ,
                 SyntaxHelper.CreateUsingDirective("System.ComponentModel") ,
                 SyntaxHelper.CreateUsingDirective("System.ComponentModel.DataAnnotations") ,
@@ -116,70 +117,11 @@ namespace DataWF.WebClient.Generator
                            initializer: null,
                            body: SF.Block(GenProviderConstructorBody()));
 
-            //yield return SyntaxHelper.GenProperty("string", "BaseUrl", true);
-            //yield return SyntaxHelper.GenProperty("AuthorizationInfo", "Authorization", true);
-
-            //yield return SF.PropertyDeclaration(
-            //        attributeLists: SF.List<AttributeListSyntax>(),
-            //        modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
-            //        type: SF.ParseTypeName("IEnumerable<IClient>"),
-            //        explicitInterfaceSpecifier: null,
-            //        identifier: SF.Identifier("Clients"),
-            //        accessorList: SF.AccessorList(SF.List(new[] {
-            //            SF.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration,  SF.Block(GenProviderClientsBody()))
-            //        })),
-            //        expressionBody: null,
-            //        initializer: null,
-            //        semicolonToken: SF.Token(SyntaxKind.None));
-
             foreach (var client in cacheClients.Keys)
             {
                 yield return SyntaxHelper.GenProperty($"{client}Client", client, false);
             }
 
-            //yield return SF.MethodDeclaration(
-            //   attributeLists: SF.List<AttributeListSyntax>(),
-            //       modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword) }),
-            //       returnType: SF.ParseTypeName("ICRUDClient<T>"),
-            //       explicitInterfaceSpecifier: null,
-            //       identifier: SF.Identifier("GetClient"),
-            //       typeParameterList: SF.TypeParameterList(SF.SingletonSeparatedList(SF.TypeParameter("T"))),
-            //       parameterList: SF.ParameterList(),
-            //       constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-            //       body: SF.Block(new[] { SF.ParseStatement("return Clients.OfType<ICRUDClient<T>>().FirstOrDefault();") }),
-            //       semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
-
-            //yield return SF.MethodDeclaration(
-            //   attributeLists: SF.List<AttributeListSyntax>(),
-            //       modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword) }),
-            //       returnType: SF.ParseTypeName("ICRUDClient"),
-            //       explicitInterfaceSpecifier: null,
-            //       identifier: SF.Identifier("GetClient"),
-            //       typeParameterList: null,
-            //       parameterList: SF.ParameterList(SF.SingletonSeparatedList(SF.Parameter(
-            //           attributeLists: SF.List<AttributeListSyntax>(),
-            //           modifiers: SF.TokenList(),
-            //           type: SF.ParseTypeName("Type"),
-            //           identifier: SF.Identifier("type"),
-            //           @default: null))),
-            //       constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-            //       body: SF.Block(new[] { SF.ParseStatement("return Clients.OfType<ICRUDClient>().FirstOrDefault(p=>p.ItemType == type);") }),
-            //       semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
-
-            //yield return SF.MethodDeclaration(
-            //   attributeLists: SF.List<AttributeListSyntax>(),
-            //       modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword) }),
-            //       returnType: SF.ParseTypeName("ICRUDClient"),
-            //       explicitInterfaceSpecifier: null,
-            //       identifier: SF.Identifier("GetClient"),
-            //       typeParameterList: null,
-            //       parameterList: SF.ParameterList(SF.SeparatedList(new[]{
-            //           SF.Parameter( attributeLists: SF.List<AttributeListSyntax>(), modifiers: SF.TokenList(), type: SF.ParseTypeName("Type"), identifier: SF.Identifier("type"), @default: null),
-            //           SF.Parameter( attributeLists: SF.List<AttributeListSyntax>(), modifiers: SF.TokenList(), type: SF.ParseTypeName("int"), identifier: SF.Identifier("typeId"), @default: null)
-            //       })),
-            //       constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-            //       body: SF.Block(new[] { SF.ParseStatement("return Clients.OfType<ICRUDClient>().FirstOrDefault(p => TypeHelper.IsBaseType(p.ItemType, type) && p.TypeId == typeId);") }),
-            //       semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
         }
 
         private IEnumerable<StatementSyntax> GenProviderClientsBody()
@@ -356,51 +298,48 @@ namespace DataWF.WebClient.Generator
             if (cache.Count > 0)
             {
                 yield return SF.MethodDeclaration(
-               attributeLists: SF.List<AttributeListSyntax>(),
-                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
-                   returnType: SF.ParseTypeName("bool"),
-                   explicitInterfaceSpecifier: null,
-                   identifier: SF.Identifier("Remove"),
-                   typeParameterList: null,
-                   parameterList: SF.ParameterList(
-                       SF.SeparatedList(new[] {
-                           SF.Parameter(
-                               attributeLists: SF.List<AttributeListSyntax>(),
-                               modifiers: SF.TokenList(),
-                               type: SF.ParseTypeName(clientName),
-                               identifier: SF.Identifier("item"),
-                               @default: null) })),
-                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                   body: SF.Block(GenClientRemoveOverrideBody(clientName, idKey, typeKey, typeId, cache)),
-                   semicolonToken: SF.Token(SyntaxKind.None));
+                    attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.ProtectedKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                    returnType: SF.ParseTypeName("void"),
+                    explicitInterfaceSpecifier: null,
+                    identifier: SF.Identifier("OnRemoved"),
+                    typeParameterList: null,
+                    parameterList: SF.ParameterList(
+                        SF.SeparatedList(new[] {
+                            SF.Parameter(
+                                attributeLists: SF.List<AttributeListSyntax>(),
+                                modifiers: SF.TokenList(),
+                                type: SF.ParseTypeName("IList"),
+                                identifier: SF.Identifier("items"),
+                                @default: null) })),
+                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                    body: SF.Block(GenClientRemoveOverrideBody(clientName, idKey, typeKey, typeId, cache)),
+                    semicolonToken: SF.Token(SyntaxKind.None));
                 yield return SF.MethodDeclaration(
-               attributeLists: SF.List<AttributeListSyntax>(),
-                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
-                   returnType: SF.ParseTypeName("bool"),
-                   explicitInterfaceSpecifier: null,
-                   identifier: SF.Identifier("Add"),
-                   typeParameterList: null,
-                   parameterList: SF.ParameterList(
-                       SF.SeparatedList(new[] {
-                           SF.Parameter(
-                               attributeLists: SF.List<AttributeListSyntax>(),
-                               modifiers: SF.TokenList(),
-                               type: SF.ParseTypeName(clientName),
-                               identifier: SF.Identifier("item"),
-                               @default: null) })),
-                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                   body: SF.Block(GenClientAddOverrideBody(clientName, idKey, typeKey, typeId, cache)),
-                   semicolonToken: SF.Token(SyntaxKind.None));
+                    attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.ProtectedKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                    returnType: SF.ParseTypeName("void"),
+                    explicitInterfaceSpecifier: null,
+                    identifier: SF.Identifier("OnAdded"),
+                    typeParameterList: null,
+                    parameterList: SF.ParameterList(
+                        SF.SeparatedList(new[] {
+                                SF.Parameter(
+                                    attributeLists: SF.List<AttributeListSyntax>(),
+                                    modifiers: SF.TokenList(),
+                                    type: SF.ParseTypeName("IList"),
+                                    identifier: SF.Identifier("items"),
+                                    @default: null) })),
+                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                    body: SF.Block(GenClientAddOverrideBody(clientName, idKey, typeKey, typeId, cache)),
+                    semicolonToken: SF.Token(SyntaxKind.None));
             }
         }
 
         private IEnumerable<StatementSyntax> GenClientRemoveOverrideBody(string clientName, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId, HashSet<RefField> cache)
         {
-            yield return SF.ParseStatement($"var removed = base.Remove(item);");
-            if (cache.Count > 0)
-            {
-                yield return SF.ParseStatement("if(removed){");
-            }
+            yield return SF.ParseStatement($"base.OnRemoved(items);");
+            yield return SF.ParseStatement($"foreach ({clientName} item in items){{");
             foreach (var refField in cache)
             {
                 yield return SF.ParseStatement($"if(item.{refField.KeyName} != null){{");
@@ -408,20 +347,13 @@ namespace DataWF.WebClient.Generator
                 yield return SF.ParseStatement($"item{refField.ValueName}?.{refField.PropertyName}.Remove(item);");
                 yield return SF.ParseStatement("}");
             }
-            if (cache.Count > 0)
-            {
-                yield return SF.ParseStatement("}");
-            }
-            yield return SF.ParseStatement($"return removed;");
+            yield return SF.ParseStatement("}");
         }
 
         private IEnumerable<StatementSyntax> GenClientAddOverrideBody(string clientName, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId, HashSet<RefField> cache)
         {
-            yield return SF.ParseStatement($"var added = base.Add(item);");
-            if (cache.Count > 0)
-            {
-                yield return SF.ParseStatement("if(added){");
-            }
+            yield return SF.ParseStatement($"base.OnAdded(items);");
+            yield return SF.ParseStatement($"foreach ({clientName} item in items){{");
             foreach (var refField in cache)
             {
                 yield return SF.ParseStatement($"if(item.{refField.KeyName} != null){{");
@@ -429,11 +361,7 @@ namespace DataWF.WebClient.Generator
                 yield return SF.ParseStatement($"item{refField.ValueName}?.{refField.PropertyName}.Add(item);");
                 yield return SF.ParseStatement("}");
             }
-            if (cache.Count > 0)
-            {
-                yield return SF.ParseStatement("}");
-            }
-            yield return SF.ParseStatement($"return added;");
+            yield return SF.ParseStatement("}");
         }
 
         private HashSet<RefField> GetClientReferences(JsonSchema clientSchema)
@@ -748,7 +676,7 @@ namespace DataWF.WebClient.Generator
             //    yield return SF.ParseStatement($"await base.{actualName}({paramBuilder.ToString()}).ConfigureAwait(false);");
             //}
             var requestBuilder = new StringBuilder();
-            requestBuilder.Append($"await Request<{returnType}>(progressToken, \"{method}\", \"{path}\", \"{mediatype}\"");
+            requestBuilder.Append($"await Request<{returnType}>(progressToken, HttpMethod.{Helper.ToInitcap(method)}, \"{path}\", \"{mediatype}\", settings");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             if (bodyParameter == null)
             {
@@ -775,8 +703,13 @@ namespace DataWF.WebClient.Generator
                                                          modifiers: SF.TokenList(),
                                                          type: GetTypeDeclaration(parameter, false, "List"),
                                                          identifier: SF.Identifier(parameter.Name),
-                                                         @default: null);
+                                                         @default: null);            
             }
+            yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
+                                                        modifiers: SF.TokenList(),
+                                                        type: SF.ParseTypeName("HttpJsonSettings"),
+                                                        identifier: SF.Identifier("settings"),
+                                                        @default: null);
             yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
                                                         modifiers: SF.TokenList(),
                                                         type: SF.ParseTypeName("ProgressToken"),
@@ -824,42 +757,34 @@ namespace DataWF.WebClient.Generator
 
         private IEnumerable<EnumMemberDeclarationSyntax> GenDefinitionEnumMemebers(JsonSchema schema)
         {
-            var value = -1;
-            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-flags", out var flags) && flags is long lflags)
+            object[] names = null;
+            if (schema.ExtensionData != null
+                && schema.ExtensionData.TryGetValue("x-enumNames", out var enumNames))
             {
-                value = (int)lflags;
+                names = (object[])enumNames;
+            }
+            object[] members = null;
+            if (schema.ExtensionData != null
+                && schema.ExtensionData.TryGetValue("x-enumMembers", out var enumMembers))
+            {
+                members = (object[])enumMembers;
             }
             int i = 0;
             var definitionName = GetDefinitionName(schema);
             foreach (var item in schema.Enumeration)
             {
-                var sitem = item.ToString().Replace(" ", "");
-                if (!Char.IsLetter(sitem[0]))
-                {
-                    sitem = definitionName[0] + sitem;
-                }
-                yield return SF.EnumMemberDeclaration(attributeLists: SF.List(GenDefinitionEnumMemberAttribute(item)),
+                var sitem = schema.EnumerationNames[i];
+                var memeber = members?[i].ToString() ?? sitem;
+                //if (!Char.IsLetter(sitem[0]))
+                //{
+                //    sitem = definitionName[0] + sitem;
+                //}
+                yield return SF.EnumMemberDeclaration(attributeLists: SF.SingletonList(SyntaxHelper.GenAttributeList("EnumMember", $"Value = \"{memeber}\"")),
                         identifier: SF.Identifier(sitem),
-                        equalsValue: value >= 0
-                            ? SF.EqualsValueClause(SF.Token(SyntaxKind.EqualsToken), SF.ParseExpression(value.ToString()))
-                            : null);
+                        equalsValue: SF.EqualsValueClause(SF.Token(SyntaxKind.EqualsToken), SF.ParseExpression(item.ToString())));
 
                 i++;
-                if (value == 0)
-                {
-                    value = 1;
-                }
-                else if (value > 0)
-                {
-                    value *= 2;
-                }
             }
-        }
-
-        private IEnumerable<AttributeListSyntax> GenDefinitionEnumMemberAttribute(object item)
-        {
-            //[System.Runtime.Serialization.EnumMember(Value = "Empty")]
-            yield return SyntaxHelper.GenAttributeList("EnumMember", $"Value = \"{item.ToString()}\"");
         }
 
         private MemberDeclarationSyntax GenDefinitionClass(JsonSchema schema)
@@ -884,7 +809,7 @@ namespace DataWF.WebClient.Generator
             }
             else
             {
-                //yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IContainerNotifyPropertyChanged)));
+                //yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IEntryNotifyPropertyChanged)));
                 if (schema.Id == "DBItem")
                     yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(SynchronizedItem)));
                 else
@@ -1006,14 +931,14 @@ namespace DataWF.WebClient.Generator
 
         private ClassDeclarationSyntax GenDefinitionClassPropertyInvoker(string name, string definitionName, string propertyName, string propertyType)
         {
-
+            var nullable = propertyType.IndexOf("?") > -1;
             return SF.ClassDeclaration(
                      attributeLists: SF.List(GenDefinitionClassPropertyInvokerAttribute(definitionName, propertyName)),
                      modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
                      identifier: SF.Identifier(name + "<T>"),
                      typeParameterList: null,
                      baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
-                            SF.SimpleBaseType(SF.ParseTypeName($"Invoker<T, {propertyType}>")))),
+                            SF.SimpleBaseType(SF.ParseTypeName($"{(nullable ? "Nullable" : "")}Invoker<T, {(nullable ? propertyType.Replace("?", "") : propertyType)}>")))),
                      constraintClauses: SF.List(new TypeParameterConstraintClauseSyntax[] {
                          SF.TypeParameterConstraintClause(
                              name: SF.IdentifierName("T"),
@@ -1292,15 +1217,14 @@ namespace DataWF.WebClient.Generator
             {
                 //yield return SF.ParseStatement($"{fieldName}.UpdateFilter();");
             }
-            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var idProperty))
-            {
-                var idFiledName = GetFieldName((string)idProperty);
-                yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
-                //yield return SF.ParseStatement($"var client = ({GetTypeString(property, false, "List")}Client)ClientProvider.Default.GetClient<{GetTypeString(property, false, "List")}>();");
-                yield return SF.ParseStatement($"{fieldName} = {GetTypeString(property, false, "List")}Client.Instance.Get({idFiledName}.Value,(item) =>{{ {fieldName} = item; OnPropertyChanged(nameof({ GetPropertyName(property)})); }});");
-                //yield return SF.ParseStatement($"{fieldName} = ClientProvider.Default.{GetTypeString(property, false, "List")}.Select({idFiledName}.Value);");
-                yield return SF.ParseStatement("}");
-            }
+            // Change - refence from single json
+            //if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var idProperty))
+            //{
+            //    var idFiledName = GetFieldName((string)idProperty);
+            //    yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
+            //    yield return SF.ParseStatement($"{fieldName} = {GetTypeString(property, false, "List")}Client.Instance.Select({idFiledName}.Value);");
+            //    yield return SF.ParseStatement("}");
+            //}
             yield return SF.ParseStatement($"return {fieldName};");
         }
 
@@ -1325,13 +1249,14 @@ namespace DataWF.WebClient.Generator
                     var idProperty = GetPrimaryKey(property.Reference ?? property.AllOf.FirstOrDefault()?.Reference ?? property.AnyOf.FirstOrDefault()?.Reference);
                     yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)};");
                 }
+                //Change - refence from single json
                 var objectProperty = GetReferenceProperty((JsonSchema)property.Parent, property.Name);
                 if (objectProperty != null)
                 {
                     var objectFieldName = GetFieldName(objectProperty);
                     yield return SF.ParseStatement($"if({objectFieldName}?.Id != value)");
                     yield return SF.ParseStatement("{");
-                    yield return SF.ParseStatement($"{objectFieldName} = null;");
+                    yield return SF.ParseStatement($"{objectFieldName} = value == null ? null : {GetTypeString(objectProperty, false, "List")}Client.Instance.Select(value.Value);");
                     yield return SF.ParseStatement($"OnPropertyChanged(nameof({GetPropertyName(objectProperty)}));");
                     yield return SF.ParseStatement("}");
                 }
@@ -1485,6 +1410,10 @@ namespace DataWF.WebClient.Generator
             switch (schema.Type)
             {
                 case JsonObjectType.Integer:
+                    if (schema.IsEnumeration)
+                    {
+                        goto case JsonObjectType.Object;
+                    }
                     if (schema.Format == "int64")
                     {
                         return "long" + (nullable ? "?" : string.Empty);

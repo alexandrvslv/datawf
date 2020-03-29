@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -21,6 +25,10 @@ namespace DataWF.Common
         protected SelectableListView<T> defaultView;
         private bool isSynchronized;
         protected object lockObject = new object();
+        //Async notify
+        private SemaphoreSlim notifySemafore;
+        private ConcurrentQueue<Tuple<object, EventArgs>> notifyQueue;
+        private bool asyncNotification;
 
         public SelectableList(int capacity)
         {
@@ -38,59 +46,42 @@ namespace DataWF.Common
         public SelectableList(IEnumerable<T> items, IComparer<T> comparer = null) : this(items.Count())
         {
             this.comparer = comparer;
-            AddRangeInternal(items);
+            AddRangeInternal(items, false);
         }
 
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-        public event PropertyChangedEventHandler PropertyChanged;
-        public event PropertyChangedEventHandler ItemPropertyChanged;
 
-        [XmlIgnore, Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public ListIndexes<T> Indexes => indexes;
 
-        [XmlIgnore, Browsable(false)]
-        public ListIndexes<T> Indexes
-        {
-            get { return indexes; }
-        }
-
-        [XmlIgnore, Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public int Capacity
         {
-            get { return items.Capacity; }
-            set { items.Capacity = value; }
+            get => items.Capacity;
+            set => items.Capacity = value;
         }
 
-        [Browsable(false)]
-        public bool IsFixedSize
-        {
-            get { return false; }
-        }
+        [JsonIgnore, Browsable(false)]
+        public bool IsFixedSize => false;
 
-        [XmlIgnore]
+        [JsonIgnore, XmlIgnore]
         [Browsable(false)]
         public Type ItemType
         {
-            get { return type; }
-            set { type = value; }
+            get => type;
+            set => type = value;
         }
 
-        [Browsable(false)]
-        public bool IsSorted
-        {
-            get { return comparer != null; }
-        }
+        [JsonIgnore, Browsable(false)]
+        public bool IsSorted => comparer != null;
 
+        [JsonIgnore]
         public IComparer<T> Comparer => comparer;
 
         IComparer ISortable.Comparer => comparer as IComparer;
 
-        IFilterable ISortable.DefaultView
-        {
-            get { return DefaultView; }
-        }
+        IFilterable ISortable.DefaultView => DefaultView;
 
-        [XmlIgnore, Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public SelectableListView<T> DefaultView
         {
             get
@@ -101,29 +92,56 @@ namespace DataWF.Common
             }
         }
 
-        public int Count
-        {
-            get { return items.Count; }
-        }
+        public int Count => items.Count;
 
-        [Browsable(false)]
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public bool IsReadOnly => false;
 
-        [Browsable(false), XmlIgnore]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual bool IsSynchronized
         {
-            get { return isSynchronized; }
-            set { isSynchronized = value; }
+            get => isSynchronized;
+            set => isSynchronized = value;
         }
 
         [Browsable(false)]
-        public object SyncRoot
+        public object SyncRoot => items;
+
+        [JsonIgnore, XmlIgnore]
+        public bool CheckUnique { get; set; } = true;
+
+        [JsonIgnore]
+        public bool Disposed => items == null;
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public bool AsyncNotification
         {
-            get { return items; }
+            get => asyncNotification;
+            set
+            {
+                asyncNotification = value;
+                if (asyncNotification)
+                {
+                    notifySemafore = new SemaphoreSlim(1, 1);
+                    notifyQueue = new ConcurrentQueue<Tuple<object, EventArgs>>();
+                }
+            }
         }
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public bool IsHandled => PropertyChanged != null;
+
+        public IEnumerable<TT> GetHandlers<TT>() => TypeHelper.GetHandlers<TT>(CollectionChanged);
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public IEnumerable<IFilterable> Views => TypeHelper.GetHandlers<IFilterable>(CollectionChanged);
+
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler ItemPropertyChanged;
+
 
         #region Use Index
         IEnumerable ISelectable.Select(IQuery query)
@@ -219,18 +237,106 @@ namespace DataWF.Common
             }
         }
 
-        public bool Disposed
+        private void EnqueueNotification(object sender, EventArgs e)
         {
-            get { return items == null; }
+            notifyQueue.Enqueue(new Tuple<object, EventArgs>(sender, e));
+
+            if (notifySemafore.CurrentCount == 1)
+            {
+                notifySemafore.Wait();
+                _ = DequeueNotification();
+            }
         }
 
-        [XmlIgnore, Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
-        public bool CheckUnique { get; set; } = true;
-
-        public virtual void OnListChanged(NotifyCollectionChangedEventArgs e)
+        private async ValueTask DequeueNotification()
         {
-            CollectionChanged?.Invoke(this, e);
-            OnPropertyChanged(nameof(SyncRoot));
+            await notifySemafore.WaitAsync(30);//Delay
+            try
+            {
+                while (notifyQueue.TryDequeue(out var args))
+                {
+                    if (args.Item2 is NotifyCollectionChangedEventArgs collectionArgs
+                        && collectionArgs.Action == NotifyCollectionChangedAction.Add)
+                    {
+                        args = MergeCollectionAdd(args, collectionArgs);
+                    }
+                    if (args.Item2 is PropertyChangedEventArgs propertyArgs)
+                    {
+                        args = MergeProperty(args, propertyArgs);
+                    }
+                    ProcessNotification(args.Item1, args.Item2);
+                }
+            }
+            finally
+            {
+                notifySemafore.Release();
+            }
+        }
+
+        private Tuple<object, EventArgs> MergeProperty(Tuple<object, EventArgs> args, PropertyChangedEventArgs propertyArgs)
+        {
+            PropertyChangedAggregateEventArgs newArgs = null;
+            while (notifyQueue.TryPeek(out var next)
+                && next.Item2 is PropertyChangedEventArgs nextArgs
+                && next.Item1.Equals(args.Item1)
+                && notifyQueue.TryDequeue(out next))
+            {
+                if (newArgs == null)
+                {
+                    newArgs = new PropertyChangedAggregateEventArgs(propertyArgs);
+                }
+                newArgs.Items.Add(nextArgs);
+            }
+            return newArgs == null ? args : new Tuple<object, EventArgs>(args.Item1, newArgs);
+        }
+
+        private Tuple<object, EventArgs> MergeCollectionAdd(Tuple<object, EventArgs> args, NotifyCollectionChangedEventArgs collectionArgs)
+        {
+            var list = new List<object>(4);
+            foreach (T item in collectionArgs.NewItems)
+            {
+                list.Add(item);
+            }
+            while (notifyQueue.TryPeek(out var next)
+                && next.Item2 is NotifyCollectionChangedEventArgs nextArgs
+                && nextArgs.Action == NotifyCollectionChangedAction.Add
+                && notifyQueue.TryDequeue(out next))
+            {
+                foreach (T nextItem in nextArgs.NewItems)
+                {
+                    list.Add(nextItem);
+                }
+            }
+            if (list.Count > 1)
+            {
+                args = new Tuple<object, EventArgs>(args.Item1,
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, list, collectionArgs.NewStartingIndex));
+                //if (list.Count > 100)
+                //{
+                //    System.Diagnostics.Debug.WriteLine($"Join Add Notifications: {list.Count}");
+                //}
+            }
+
+            return args;
+        }
+
+        private void ProcessNotification(object sender, EventArgs e)
+        {
+            if (e is NotifyCollectionChangedEventArgs collectionArgs)
+            {
+                CollectionChanged?.Invoke(this, collectionArgs);
+            }
+            else if (e is PropertyChangedEventArgs propertyArgs)
+            {
+                if (sender == this)
+                {
+                    PropertyChanged?.Invoke(sender, propertyArgs);
+                }
+                else
+                {
+                    ItemPropertyChanged?.Invoke(sender, propertyArgs);
+                }
+            }
         }
 
         public virtual void OnListChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
@@ -255,9 +361,36 @@ namespace DataWF.Common
             OnListChanged(args);
         }
 
+        public virtual void OnListChanged(NotifyCollectionChangedEventArgs e)
+        {
+            if (CollectionChanged != null)
+            {
+                if (AsyncNotification)
+                {
+                    EnqueueNotification(this, e);
+                }
+                else
+                {
+                    CollectionChanged(this, e);
+                }
+            }
+            OnPropertyChanged(nameof(SyncRoot));
+        }
+
         protected virtual void OnPropertyChanged([CallerMemberName]string property = "")
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            if (PropertyChanged != null)
+            {
+                var args = new PropertyChangedEventArgs(property);
+                if (AsyncNotification)
+                {
+                    EnqueueNotification(this, args);
+                }
+                else
+                {
+                    PropertyChanged(this, args);
+                }
+            }
         }
 
         public virtual void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -268,23 +401,24 @@ namespace DataWF.Common
 
         public void OnItemPropertyChanged(T item, int index, PropertyChangedEventArgs e)
         {
-            var lindex = indexes.GetIndex(e.PropertyName);
-            if (lindex != null)
+            if (indexes.Count > 0)
             {
-                if (e is PropertyChangedDetailEventArgs details)
+                if (e is PropertyChangedAggregateEventArgs aggregator)
                 {
-                    lindex.Remove(item, details.OldValue);
-                    lindex.Add(item, details.NewValue);
+                    foreach (var entry in aggregator.Items)
+                    {
+                        CheckIndex(item, entry);
+                    }
                 }
                 else
                 {
-                    lindex.Refresh(item);
+                    CheckIndex(item, e);
                 }
             }
             if (IsSorted)
             {
                 if (index < 0)
-                    index = items.IndexOf(item);
+                    index = IndexOf(item);
                 int newindex = GetIndexBySort(item);
                 if (newindex < 0)
                     newindex = -newindex - 1;
@@ -299,7 +433,34 @@ namespace DataWF.Common
                     OnListChanged(NotifyCollectionChangedAction.Move, item, newindex, index);
                 }
             }
-            ItemPropertyChanged?.Invoke(item, e);
+            if (ItemPropertyChanged != null)
+            {
+                if (AsyncNotification)
+                {
+                    EnqueueNotification(item, e);
+                }
+                else
+                {
+                    ItemPropertyChanged(item, e);
+                }
+            }
+        }
+
+        private void CheckIndex(T item, PropertyChangedEventArgs e)
+        {
+            var lindex = indexes.GetIndex(e.PropertyName);
+            if (lindex != null)
+            {
+                if (e is PropertyChangedDetailEventArgs details)
+                {
+                    lindex.Remove(item, details.OldValue);
+                    lindex.Add(item, details.NewValue);
+                }
+                else
+                {
+                    lindex.Refresh(item);
+                }
+            }
         }
 
         public bool IsFirst(T item)
@@ -338,6 +499,11 @@ namespace DataWF.Common
                 ClearInternal();
                 OnListChanged(NotifyCollectionChangedAction.Reset);
             }
+        }
+
+        public void Reset()
+        {
+            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public virtual void InsertInternal(int index, T item)
@@ -387,16 +553,19 @@ namespace DataWF.Common
                 return index;
             }
         }
-
         protected int GetIndexForAdding(T item)
+        {
+            return GetIndexForAdding(item, CheckUnique);
+        }
+        protected int GetIndexForAdding(T item, bool checkUnique)
         {
             if (comparer != null)
             {
                 var index = ListHelper.BinarySearch(items, item, comparer);
-                return CheckUnique ? index : -Math.Abs(index);
+                return checkUnique ? index : -Math.Abs(index);
             }
-            return CheckUnique
-                ? Contains(item) ? IndexOf(item) : -(items.Count + 1)
+            return checkUnique
+                ? Contains(item) ? items.Count : -(items.Count + 1)
                 : -(items.Count + 1);
         }
 
@@ -472,6 +641,67 @@ namespace DataWF.Common
             Remove(items[index], index);
         }
 
+        public void AddRangeInternal(IEnumerable<T> list, bool checkUnique)
+        {
+            lock (lockObject)
+            {
+                int index = 0;
+                foreach (T item in list)
+                {
+                    index = GetIndexForAdding(item, checkUnique);
+                    if (index < 0)
+                    {
+                        index = -index - 1;
+                        if (index > items.Count)
+                        {
+                            index = items.Count;
+                        }
+
+                        InsertInternal(index, item);
+                    }
+                }
+            }
+        }
+
+        public void AddRange(IEnumerable<T> items)
+        {
+            AddRange(items, CheckUnique);
+        }
+
+        public void AddRange(IEnumerable<T> items, bool checkUnique)
+        {
+            AddRangeInternal(items, checkUnique);
+            OnListChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                items is IList iList ? iList : items.ToList(),
+                0));
+        }
+
+        private void RemoveRangeInternal(IEnumerable<T> items)
+        {
+            lock (lockObject)
+            {
+                int index = 0;
+                foreach (T item in items)
+                {
+                    index = IndexOf(item);
+                    if (index == -1)
+                    {
+                        continue;
+                    }
+
+                    RemoveInternal(item, index);
+                }
+            }
+        }
+
+        public void RemoveRange(IEnumerable<T> items)
+        {
+            RemoveRangeInternal(items);
+            OnListChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
+                items is IList iList ? iList : items.ToList(),
+                0));
+        }
+
         public virtual int IndexOf(object item)
         {
             return IndexOf((T)item);
@@ -479,8 +709,15 @@ namespace DataWF.Common
 
         public int IndexOf(T item)
         {
-            //if (comparer != null)
-            //    return ListHelper.BinarySearch(items, item, comparer);
+            if (comparer != null)
+            {
+                var index = ListHelper.BinarySearch(items, item, comparer);
+
+                if (index >= 0 && index < items.Count && item.Equals(items[index]))
+                {
+                    return index;
+                }
+            }
             return items.IndexOf(item);
         }
 
@@ -529,14 +766,16 @@ namespace DataWF.Common
                 if (column.EndsWith(" DESC", StringComparison.OrdinalIgnoreCase))
                     direction = ListSortDirection.Descending;
                 var index = column.IndexOf(" ", StringComparison.Ordinal);
-                comparerList.Add(new InvokerComparer<T>(index > 0 ? column.Substring(0, index) : column, direction));
+                var invoker = EmitInvoker.Initialize<T>(index > 0 ? column.Substring(0, index) : column) as IInvokerExtension;
+                comparerList.Add(invoker.CreateComparer<T>(direction));
             }
             ApplySortInternal(comparerList);
         }
 
         public void ApplySortInternal(string property, ListSortDirection direction)
         {
-            ApplySortInternal(new InvokerComparer<T>(property, direction));
+            var invoker = EmitInvoker.Initialize<T>(property) as IInvokerExtension;
+            ApplySortInternal(invoker.CreateComparer<T>(direction));
         }
 
         public virtual void ApplySortInternal(IComparer<T> comparer)
@@ -645,7 +884,7 @@ namespace DataWF.Common
 
         public virtual bool Contains(T item)
         {
-            if (item is IContainerNotifyPropertyChanged containered && propertyHandler != null)
+            if (item is IEntryNotifyPropertyChanged containered && propertyHandler != null)
             {
                 return containered.Containers.Contains(this);
             }
@@ -674,28 +913,88 @@ namespace DataWF.Common
             return new ThreadSafeEnumerator<T>(items);
         }
 
-        public void AddRangeInternal(IEnumerable<T> list)
+        [Invoker(typeof(SelectableList<>), nameof(Disposed))]
+        public class DisposedInvoker : Invoker<SelectableList<T>, bool>
         {
-            foreach (T item in list)
-            {
-                AddInternal(item);
-            }
+            public override string Name => nameof(SelectableList<T>.Disposed);
+
+            public override bool CanWrite => false;
+
+            public override bool GetValue(SelectableList<T> target) => target.Disposed;
+
+            public override void SetValue(SelectableList<T> target, bool value) { }
         }
 
-        public void AddRange(IEnumerable<T> list)
+        [Invoker(typeof(SelectableList<>), nameof(IsFixedSize))]
+        public class IsFixedSizeInvoker : Invoker<SelectableList<T>, bool>
         {
-            AddRangeInternal(list);
-            OnListChanged(NotifyCollectionChangedAction.Reset);
+            public override string Name => nameof(SelectableList<T>.IsFixedSize);
+
+            public override bool CanWrite => false;
+
+            public override bool GetValue(SelectableList<T> target) => target.IsFixedSize;
+
+            public override void SetValue(SelectableList<T> target, bool value) { }
         }
 
-        public void RemoveRange(IEnumerable<T> toDelete)
+        [Invoker(typeof(SelectableList<>), nameof(IsReadOnly))]
+        public class IsReadOnlyInvoker : Invoker<SelectableList<T>, bool>
         {
-            foreach (T item in toDelete)
-            {
-                Remove(item);
-            }
+            public override string Name => nameof(SelectableList<T>.IsReadOnly);
+
+            public override bool CanWrite => false;
+
+            public override bool GetValue(SelectableList<T> target) => target.IsReadOnly;
+
+            public override void SetValue(SelectableList<T> target, bool value) { }
         }
 
+        [Invoker(typeof(SelectableList<>), nameof(IsSorted))]
+        public class IsSortedInvoker : Invoker<SelectableList<T>, bool>
+        {
+            public override string Name => nameof(SelectableList<T>.IsSorted);
 
+            public override bool CanWrite => false;
+
+            public override bool GetValue(SelectableList<T> target) => target.IsSorted;
+
+            public override void SetValue(SelectableList<T> target, bool value) { }
+        }
+
+        [Invoker(typeof(SelectableList<>), nameof(Comparer))]
+        public class ComparerInvoker : Invoker<SelectableList<T>, IComparer<T>>
+        {
+            public override string Name => nameof(SelectableList<T>.Comparer);
+
+            public override bool CanWrite => false;
+
+            public override IComparer<T> GetValue(SelectableList<T> target) => target.Comparer;
+
+            public override void SetValue(SelectableList<T> target, IComparer<T> value) { }
+        }
+
+        [Invoker(typeof(SelectableList<>), nameof(Count))]
+        public class CountInvoker : Invoker<SelectableList<T>, int>
+        {
+            public override string Name => nameof(SelectableList<T>.Count);
+
+            public override bool CanWrite => false;
+
+            public override int GetValue(SelectableList<T> target) => target.Count;
+
+            public override void SetValue(SelectableList<T> target, int value) { }
+        }
+
+        [Invoker(typeof(SelectableList<>), nameof(SyncRoot))]
+        public class SyncRootInvoker : Invoker<SelectableList<T>, object>
+        {
+            public override string Name => nameof(SelectableList<T>.SyncRoot);
+
+            public override bool CanWrite => false;
+
+            public override object GetValue(SelectableList<T> target) => target.SyncRoot;
+
+            public override void SetValue(SelectableList<T> target, object value) { }
+        }
     }
 }

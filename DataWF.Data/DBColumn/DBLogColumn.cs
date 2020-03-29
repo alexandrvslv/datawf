@@ -113,7 +113,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBLogColumn), nameof(DBLogColumn.BaseColumn))]
         public class BaseColumnInvoker<T> : Invoker<T, DBColumn> where T : DBLogColumn
         {
-            public static readonly BaseColumnInvoker<T> Instance = new BaseColumnInvoker<T>();
             public override string Name => nameof(DBLogColumn.BaseColumn);
 
             public override bool CanWrite => true;
@@ -121,6 +120,18 @@ namespace DataWF.Data
             public override DBColumn GetValue(T target) => target.BaseColumn;
 
             public override void SetValue(T target, DBColumn value) => target.BaseColumn = value;
+        }
+
+        [Invoker(typeof(DBLogColumn), nameof(LogTable))]
+        public class LogTableInvoker<T> : Invoker<T, IDBLogTable> where T : DBLogColumn
+        {
+            public override string Name => nameof(DBLogColumn.LogTable);
+
+            public override bool CanWrite => false;
+
+            public override IDBLogTable GetValue(T target) => target.LogTable;
+
+            public override void SetValue(T target, IDBLogTable value) { }
         }
     }
 }

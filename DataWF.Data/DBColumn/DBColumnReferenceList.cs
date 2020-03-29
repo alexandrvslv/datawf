@@ -15,7 +15,7 @@ namespace DataWF.Data
 
         public DBColumnReferenceList(IEnumerable<DBColumn> columns) : this()
         {
-            AddRangeInternal(columns.Select(p => new DBColumnReference { Column = p }));
+            AddRangeInternal(columns.Select(p => new DBColumnReference { Column = p }), false);
         }
 
         [XmlIgnore, JsonIgnore]
@@ -37,6 +37,17 @@ namespace DataWF.Data
             Add(new DBColumnReference { ColumnName = column });
         }
 
+        public bool Remove(DBColumn column)
+        {
+            var refernce = Get(column);
+            if (refernce != null)
+            {
+                Remove(refernce);
+                return true;
+            }
+            return false;
+        }
+
         public bool Contains(DBColumn column)
         {
             return Contains(column.FullName);
@@ -44,7 +55,17 @@ namespace DataWF.Data
 
         public bool Contains(string column)
         {
-            return Select(DBColumnReferenceColumnNameInvoker.Instance, CompareType.Equal, column).Any();
+            return Get(column) != null;
+        }
+
+        public DBColumnReference Get(DBColumn column)
+        {
+            return Get(column.FullName);
+        }
+
+        public DBColumnReference Get(string column)
+        {
+            return Select(DBColumnReferenceColumnNameInvoker.Instance, CompareType.Equal, column).FirstOrDefault();
         }
 
         protected override void OnPropertyChanged(string property)

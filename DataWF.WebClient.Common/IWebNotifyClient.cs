@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -13,7 +14,8 @@ namespace DataWF.Common
         bool CloseRequest { get; }
         Task Close();
         void Listen();
-        void Send(byte[] data);
+        Task Send(byte[] data);
+        Task Send(Stream data);
         Task RegisterNotify(Uri uri, string autorization);
     }
 }

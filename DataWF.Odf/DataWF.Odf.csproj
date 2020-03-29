@@ -5,9 +5,9 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Odf</RootNamespace>
     <AssemblyName>DataWF.Odf</AssemblyName>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
-    
+
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -23,7 +23,7 @@
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-  </PropertyGroup>  
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
   </ItemGroup>

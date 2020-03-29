@@ -237,7 +237,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
             var command = (SqliteCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = $oid");
             command.Parameters.AddWithValue($"$oid", (long)oid);
             transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (transaction.Reader.Read())
+            if (await transaction.ReadAsync())
             {
                 return ((SqliteDataReader)transaction.Reader).GetStream(1);
             }
@@ -278,6 +278,16 @@ select last_insert_rowid();");
         {
             var sqlReader = (SqliteDataReader)reader;
             return sqlReader.ReadAsync();
+        }
+
+        public override uint GetOID(IDataReader reader, int index)
+        {
+            return ((SqliteDataReader)reader).GetFieldValue<uint>(index);
+        }
+
+        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        {
+            return ((SqliteDataReader)reader).GetTimeSpan(index);
         }
     }
 }

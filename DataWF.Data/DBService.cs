@@ -389,21 +389,30 @@ namespace DataWF.Data
             return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
         }
 
+        public static bool EqualClass<T>(T x, T y) where T : class
+        {
+            if (x is string xString && y is string yString)
+            {
+                return string.Equals(xString, yString, StringComparison.Ordinal);
+            }
+            if (x is byte[] xByte && y is byte[] yByte)
+            {
+                return ByteArrayComparer.Default.Equals(xByte, yByte);
+            }
+            return EqualityComparer<T>.Default.Equals(x, y);
+        }
+
         public static bool Equal<T>(T x, T y)
         {
-            if (x == null)
+            if (x is string xString && y is string yString)
             {
-                return y == null;
+                return StringComparer.Ordinal.Equals(xString, yString);
             }
-
-            var equal = false;
-            if (x is string strX && y is string strY)
-                equal = string.Equals(strX, strY, StringComparison.Ordinal);
-            else if (x is byte[] byteX && y is byte[] byteY)
-                equal = Helper.CompareByte(byteX, byteY);
-            else
-                equal = EqualityComparer<T>.Default.Equals(x, y);
-            return equal;
+            if (x is byte[] xByte && y is byte[] yByte)
+            {
+                return ByteArrayComparer.Default.Equals(xByte, yByte);
+            }
+            return EqualityComparer<T>.Default.Equals(x, y);
         }
 
         public static bool Equal(object x, object y)
@@ -412,16 +421,18 @@ namespace DataWF.Data
             {
                 return y == null;
             }
+            if (y == null)
+            {
+                return false;
+            }
 
             var equal = false;
-            if (x is string strX && y is string strY)
-                equal = string.Equals(strX, strY, StringComparison.Ordinal);
-            else if (x is Enum && y is int intY)
-                equal = ((int)x).Equals(intY);
-            else if (y is Enum && x is int intX)
-                equal = ((int)y).Equals(intX);
+            if (x.GetType() == typeof(string))
+                equal = string.Equals(x.ToString(), y.ToString(), StringComparison.Ordinal);
+            else if (x is Enum || y is Enum)
+                equal = ((int)x).Equals((int)y);
             else if (x is byte[] byteX && y is byte[] byteY)
-                equal = Helper.CompareByte(byteX, byteY);
+                equal = Helper.CompareByteAsSpan(byteX, byteY);
             else
                 equal = x.Equals(y);
             return equal;
@@ -434,10 +445,6 @@ namespace DataWF.Data
                     return list[i].Value;
             return DBNull.Value;
         }
-
-
-
-
 
         public static List<int> AccessGroups { get; } = new List<int>();
 

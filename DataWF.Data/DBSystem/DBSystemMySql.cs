@@ -133,7 +133,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
             var command = (MySqlCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = @oid");
             command.Parameters.AddWithValue($"@oid", (long)oid);
             transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (transaction.Reader.Read())
+            if (await transaction.ReadAsync())
             {
                 return ((MySqlDataReader)transaction.Reader).GetStream(1);
             }
@@ -143,7 +143,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
         public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
         {
             var command = (MySqlCommand)transaction.AddCommand(@"insert into db_lob (lob_data) values (@lob_data);");
-            command.Parameters.Add("@lob_data", MySqlDbType.LongBlob).Value = Helper.GetBytes(value);
+            command.Parameters.Add("@lob_data", MySqlDbType.LongBlob).Value = await Helper.GetBytesAsync(value);
             await transaction.ExecuteQueryAsync(command);
             return (uint)command.LastInsertedId;
         }
@@ -167,6 +167,16 @@ select seq from db_sequence where name = '{sequence.Name}';";
         {
             var sqlReader = (MySqlDataReader)reader;
             return sqlReader.ReadAsync();
+        }
+
+        public override uint GetOID(IDataReader reader, int index)
+        {
+            return ((MySqlDataReader)reader).GetUInt32(index);
+        }
+
+        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        {
+            return ((MySqlDataReader)reader).GetTimeSpan(index);
         }
     }
 }

@@ -8,9 +8,10 @@ namespace DataWF.Common
 {
     public struct AccessItem : IAccessItem
     {
-        public static readonly AccessItem Empty = new AccessItem();
+        public static readonly AccessItem Empty = new AccessItem(null);
         private IAccessIdentity identity;
         private int identityId;
+
         public AccessItem(bool isUser, int identityId, AccessType data)
         {
             IsUser = isUser;
@@ -59,7 +60,7 @@ namespace DataWF.Common
         public AccessType Access { get; set; }
 
         [XmlIgnore, JsonIgnore]
-        public bool IsEmpty => IdentityId <= 0;
+        public bool IsEmpty => IdentityId < 0;
 
         [XmlIgnore, JsonIgnore, DefaultValue(false)]
         public bool Read
@@ -153,6 +154,38 @@ namespace DataWF.Common
                         Access |= AccessType.Accept;
                     else
                         Access &= ~AccessType.Accept;
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, DefaultValue(false)]
+        public bool Download
+        {
+            get { return (Access & AccessType.Download) == AccessType.Download; }
+            set
+            {
+                if (Accept != value)
+                {
+                    if (value)
+                        Access |= AccessType.Download;
+                    else
+                        Access &= ~AccessType.Download;
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, DefaultValue(false)]
+        public bool Full
+        {
+            get { return (Access & AccessType.Full) == AccessType.Full; }
+            set
+            {
+                if (Accept != value)
+                {
+                    if (value)
+                        Access |= AccessType.Full;
+                    else
+                        Access &= ~AccessType.Full;
                 }
             }
         }

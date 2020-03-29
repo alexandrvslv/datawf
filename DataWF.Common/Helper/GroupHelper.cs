@@ -6,39 +6,16 @@ namespace DataWF.Common
 {
     public static class GroupHelper
     {
-        public static QueryParameter<G> CreateTreeFilter<G>() where G : IGroup
+        public static void ApplyFilter(IFilterable filterable)
         {
-            return new QueryParameter<G>()
-            {
-                Invoker = TreeInvoker<G>.Instance,
-                Comparer = CompareType.Equal,
-                Value = true,
-                IsGlobal = true,
-                FormatIgnore = true,
-            };
+            filterable.FilterQuery.Parameters.Add(TreeInvoker.Instance.CreateParameter(null));
+            filterable.FilterQuery.Orders.Add(TreeInvoker.Instance.CreateComparer(null));
         }
 
-        public static void Filter(IFilterable filterable)
+        public static void ApplyFilter<T>(IFilterable<T> filterable) where T : IGroup
         {
-            var type = TypeHelper.GetItemType(filterable);
-            filterable.FilterQuery.Parameters.Add(CreateTreeFilter(type));
-            filterable.FilterQuery.Orders.Add(CreateTreeComparer(type));
-        }
-
-        public static IQueryParameter CreateTreeFilter(Type type)
-        {
-            var parameter = (IQueryParameter)EmitInvoker.CreateObject(typeof(QueryParameter<>).MakeGenericType(type));
-            parameter.Invoker = (IInvoker)EmitInvoker.CreateObject(typeof(TreeInvoker<>).MakeGenericType(type));
-            parameter.Comparer = CompareType.Equal;
-            parameter.Value = true;
-            parameter.IsGlobal = true;
-            parameter.FormatIgnore = true;
-            return parameter;
-        }
-
-        public static IComparer CreateTreeComparer(Type type)
-        {
-            return (IComparer)EmitInvoker.CreateObject(typeof(TreeComparer<>).MakeGenericType(type));
+            filterable.FilterQuery.Parameters.Add(TreeInvoker<T>.Instance.CreateParameter<T>());
+            filterable.FilterQuery.Orders.Add(TreeInvoker<T>.Instance.CreateComparer<T>());
         }
 
         public static bool IsExpand(IGroup item)
@@ -53,7 +30,7 @@ namespace DataWF.Common
         public static void ExpandAll(IGroup item, bool expand)
         {
             IGroup g = item.Group;
-            while (g != null)
+            while (g != null && g != g.Group)
             {
                 g.Expand = expand;
                 g = g.Group;
@@ -63,7 +40,7 @@ namespace DataWF.Common
         public static bool GetAllParentExpand(IGroup item)
         {
             IGroup g = item.Group;
-            while (g != null)
+            while (g != null && g != g.Group)
             {
                 if (!g.Expand)
                     return false;
@@ -75,7 +52,7 @@ namespace DataWF.Common
         public static bool IsParent(IGroup item, IGroup parent)
         {
             IGroup g = item.Group;
-            while (g != null)
+            while (g != null && g != g.Group)
             {
                 if (g == parent)
                     return true;
@@ -89,7 +66,7 @@ namespace DataWF.Common
             if (addSender)
                 yield return (T)item;
             IGroup g = item.Group;
-            while (g != null)
+            while (g != null && g != g.Group)
             {
                 yield return (T)g;
                 g = g.Group;
@@ -106,7 +83,7 @@ namespace DataWF.Common
             var invoker = EmitInvoker.Initialize(item.GetType(), member);
             string rez = "";
             IGroup g = item;
-            while (g != null)
+            while (g != null && g != g.Group)
             {
                 object val = invoker.GetValue(g);
                 if (val != null)
@@ -119,7 +96,7 @@ namespace DataWF.Common
         public static IGroup TopGroup(IGroup item)
         {
             IGroup g = item;
-            while (g.Group != null)
+            while (g.Group != null && g != g.Group)
             {
                 g = g.Group;
             }
@@ -130,7 +107,7 @@ namespace DataWF.Common
         {
             level = 0;
             IGroup g = item;
-            while (g.Group != null)
+            while (g.Group != null && g != g.Group)
             {
                 level++;
                 g = g.Group;
@@ -142,7 +119,7 @@ namespace DataWF.Common
         {
             int level = 0;
             IGroup g = item;
-            while (g.Group != null)
+            while (g.Group != null && g != g.Group)
             {
                 level++;
                 g = g.Group;
@@ -201,22 +178,29 @@ namespace DataWF.Common
                 }
             }
 
-            return ListHelper.Compare(ox, oy, comp, true);
+            return ListHelper.Compare(ox, oy, comp);
         }
 
         public static IEnumerable<IGroup> GetSubGroups(IGroup group, bool addSender = false)
         {
-            if(addSender)
+            if (addSender)
                 yield return group;
             foreach (var item in group.GetGroups())
             {
+                if (item == group)
+                {
+                    continue;
+                }
+
                 yield return item;
                 foreach (var subItem in GetSubGroups(item))
+                {
                     yield return subItem;
+                }
             }
         }
 
-        
+
     }
 
 }

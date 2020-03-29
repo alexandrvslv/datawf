@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DataWF.Gui
 {
-    public interface ILayoutItem : IContainerNotifyPropertyChanged, INamed, IEnumerable<ILayoutItem>
+    public interface ILayoutItem : IEntryNotifyPropertyChanged, INamed, IEnumerable<ILayoutItem>
     {
         //Rectangle Bound { get; set; }
 

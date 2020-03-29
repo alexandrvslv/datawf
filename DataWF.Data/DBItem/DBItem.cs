@@ -113,51 +113,51 @@ namespace DataWF.Data
         public object PrimaryId
         {
             get => Table.PrimaryKey == null ? null : GetValue(Table.PrimaryKey);
-            set => this[Table.PrimaryKey] = value;
+            set => Table.PrimaryKey?.SetValue(this, Table.PrimaryKey.ParseValue(value));
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public string PrimaryCode
         {
             get => Table.CodeKey == null ? null : GetValue<string>(Table.CodeKey);
-            set => this[Table.CodeKey] = value;
+            set => Table.CodeKey?.SetValue(this, value);
         }
 
         [Browsable(false), DefaultValue(0)]
         [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]
         public virtual int? ItemType
         {
-            get => Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey);
-            set => SetValue(value, Table.ItemTypeKey);
+            get => Table.ItemTypeKey == null ? 0 : GetValueNullable<int>(Table.ItemTypeKey);
+            set => Table.ItemTypeKey?.SetValueNullable(this, value);
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         DBStatus IStatusable.Status
         {
-            get => Status ?? DBStatus.Empty;
+            get => (DBStatus)Status;
             set => Status = value;
         }
 
         [DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.Indexing, Order = 99)]
         public DBStatus? Status
         {
-            get => Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault();
-            set => SetValue(value, Table.StatusKey);
+            get => Table.StatusKey == null ? DBStatus.Empty : GetValueNullable<DBStatus>(Table.StatusKey) ?? DBStatus.Empty;
+            set => Table.StatusKey?.SetValueNullable(this, value);
         }
 
         [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
         public virtual DateTime? DateCreate
         {
-            get => Table.DateKey == null ? null : GetValue<DateTime?>(Table.DateKey);
-            set => SetValue(value, Table.DateKey);
+            get => Table.DateKey == null ? (DateTime?)null : GetValueNullable<DateTime>(Table.DateKey);
+            set => Table.DateKey?.SetValueNullable(this, value);
         }
 
         [Browsable(false)]
         [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System, Order = 101)]
         public DateTime? Stamp
         {
-            get => Table.StampKey == null ? null : GetValue<DateTime?>(Table.StampKey);
-            set => SetValue(value, Table.StampKey);
+            get => Table.StampKey == null ? (DateTime?)null : GetValueNullable<DateTime>(Table.StampKey);
+            set => Table.StampKey?.SetValueNullable(this, value);
         }
 
         IAccessValue IAccessable.Access { get => Access; set => Access = (AccessValue)value; }
@@ -275,7 +275,7 @@ namespace DataWF.Data
 
                 SetValue(column.ParseValue(value),
                          column,
-                         column.ColumnType == DBColumnTypes.Default);
+                         DBSetValueMode.Default);
             }
         }
 
@@ -334,6 +334,11 @@ namespace DataWF.Data
             return column.GetValue<T>(this);
         }
 
+        public T? GetValueNullable<T>(DBColumn column) where T : struct
+        {
+            return column.GetValueNullable<T>(this);
+        }
+
         public T GetProperty<T>([CallerMemberName] string property = null)
         {
             return GetValue<T>(Table.Columns.GetByProperty(property));
@@ -370,47 +375,65 @@ namespace DataWF.Data
             UpdateState = temp;
             //DBService.OnEdited(args);
         }
-
         public void SetProperty<T>(T value, [CallerMemberName] string property = null)
         {
             SetValue<T>(value, Table.Columns.GetByProperty(property));
         }
 
-        //public void SetProperty(object value, [CallerMemberName] string property = null)
-        //{
-        //    SetValue(value, Table.Columns.GetByProperty(property));
-        //}
+        public void SetPropertyNullable<T>(T? value, [CallerMemberName] string property = null) where T : struct
+        {
+            SetValueNullable<T>(value, Table.Columns.GetByProperty(property));
+        }
+
+        public void SetPropertyClass<T>(T value, [CallerMemberName] string property = null) where T : class
+        {
+            SetValueClass<T>(value, Table.Columns.GetByProperty(property));
+        }
 
         public void SetValue<T>(T value, DBColumn column)
         {
-            SetValue<T>(value, column, column.ColumnType == DBColumnTypes.Default);
+            SetValue<T>(value, column, DBSetValueMode.Default);
+        }
+
+        public void SetValueClass<T>(T value, DBColumn column) where T : class
+        {
+            SetValueClass<T>(value, column, DBSetValueMode.Default);
+        }
+
+        public void SetValueNullable<T>(T? value, DBColumn column) where T : struct
+        {
+            SetValueNullable<T>(value, column, DBSetValueMode.Default);
         }
 
         public void SetValue(object value, DBColumn column)
         {
-            SetValue(value, column, column.ColumnType == DBColumnTypes.Default);
+            SetValue(value, column, DBSetValueMode.Default);
         }
 
-        public void SetValue<T>(T value, DBColumn column, bool check)
+        public void SetValue<T>(T value, DBColumn column, DBSetValueMode mode)
         {
-            //SetTag(column, tag);
+            if (mode == DBSetValueMode.Loading && !Attached)
+            {
+                column.SetValue<T>(this, value);
+                return;
+            }
+            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
+            var oldValue = column.GetValue<T>(this);
 
-            var field = column.GetValue<T>(this);
-
-            if (DBService.Equal<T>(field, value))
+            if (DBService.Equal<T>(oldValue, value))
             {
                 return;
             }
             if (check)
             {
-                RefreshOld(column, value, field);
+                RefreshOld(column, value, oldValue);
             }
 
-            OnPropertyChanging(column.Property ?? column.Name, column, field);
+            OnPropertyChanging<T>(column.Property ?? column.Name, column, oldValue);
 
             column.SetValue<T>(this, value);
 
-            OnPropertyChanged(column.Property ?? column.Name, column, value);
+            OnPropertyChanged<T>(column.Property ?? column.Name, column, value);
 
             if (check)
             {
@@ -418,22 +441,88 @@ namespace DataWF.Data
             }
         }
 
-        public void SetValue(object value, DBColumn column, bool check)
+        public void SetValueClass<T>(T value, DBColumn column, DBSetValueMode mode) where T : class
         {
-            //SetTag(column, tag);
+            if (mode == DBSetValueMode.Loading && !Attached)
+            {
+                column.SetValue<T>(this, value);
+                return;
+            }
+            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
+            var oldValue = column.GetValue<T>(this);
 
-            var field = column.GetValue(this);
-
-            if (DBService.Equal(field, value))
+            if (DBService.EqualClass<T>(oldValue, value))
             {
                 return;
             }
             if (check)
             {
-                RefreshOld(column, value, field);
+                RefreshOld(column, value, oldValue);
             }
 
-            OnPropertyChanging(column.Property ?? column.Name, column, field);
+            OnPropertyChanging<T>(column.Property ?? column.Name, column, oldValue);
+
+            column.SetValue<T>(this, value);
+
+            OnPropertyChanged<T>(column.Property ?? column.Name, column, value);
+
+            if (check)
+            {
+                CheckState(null);
+            }
+        }
+
+        public void SetValueNullable<T>(T? value, DBColumn column, DBSetValueMode mode) where T : struct
+        {
+            if (mode == DBSetValueMode.Loading && !Attached)
+            {
+                column.SetValueNullable<T>(this, value);
+                return;
+            }
+            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
+            var oldValue = column.GetValueNullable<T>(this);
+
+            if (Nullable.Equals<T>(oldValue, value))
+            {
+                return;
+            }
+            if (check)
+            {
+                RefreshOld(column, value, oldValue);
+            }
+
+            OnPropertyChanging<T?>(column.Property ?? column.Name, column, oldValue);
+
+            column.SetValueNullable<T>(this, value);
+
+            OnPropertyChanged<T?>(column.Property ?? column.Name, column, value);
+
+            if (check)
+            {
+                CheckState(null);
+            }
+        }
+
+        public void SetValue(object value, DBColumn column, DBSetValueMode mode)
+        {
+            if (mode == DBSetValueMode.Loading && !Attached)
+            {
+                column.SetValue(this, value);
+                return;
+            }
+            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
+            var oldValue = column.GetValue(this);
+
+            if (DBService.Equal(oldValue, value))
+            {
+                return;
+            }
+            if (check)
+            {
+                RefreshOld(column, value, oldValue);
+            }
+
+            OnPropertyChanging(column.Property ?? column.Name, column, oldValue);
 
             column.SetValue(this, value);
 
@@ -477,7 +566,7 @@ namespace DataWF.Data
 
                 if (Column.ColumnType == DBColumnTypes.Default || Column.ColumnType == DBColumnTypes.Query)
                 {
-                    SetValue(values[i], Column, false);
+                    SetValue(values[i], Column, DBSetValueMode.Loading);
                 }
             }
         }
@@ -492,7 +581,7 @@ namespace DataWF.Data
                 var column = Table.ParseColumn(kvp.Key);
                 if (column != null)
                 {
-                    SetValue(kvp.Value, column, false);
+                    SetValue(kvp.Value, column, DBSetValueMode.Loading);
                 }
             }
         }
@@ -599,7 +688,7 @@ namespace DataWF.Data
 
         public DBItem SetReference(DBItem value, DBColumn column)
         {
-            SetValue(value?.PrimaryId, column, column.ColumnType == DBColumnTypes.Default);
+            SetValue(value?.PrimaryId, column, DBSetValueMode.Default);
             return value;
         }
 
@@ -611,7 +700,7 @@ namespace DataWF.Data
             }
             else
             {
-                SetValue(value?.PrimaryId, column, column.ColumnType == DBColumnTypes.Default);
+                SetValue(value?.PrimaryId, column, DBSetValueMode.Default);
             }
             return value;
         }
@@ -758,7 +847,7 @@ namespace DataWF.Data
 
         public override string ToString()
         {
-            if (cacheToString.Length == 0)
+            if (string.IsNullOrEmpty(cacheToString))
                 cacheToString = GetRowText();
             return cacheToString;
         }
@@ -782,7 +871,7 @@ namespace DataWF.Data
             }
             if (Table.ItemTypeKey != null)
             {
-                SetValue<int?>(itemType < 0 ? table.GetTypeIndex(GetType()) : itemType, table.ItemTypeKey, false);
+                SetValueNullable<int>(itemType < 0 ? table.GetTypeIndex(GetType()) : itemType, table.ItemTypeKey, DBSetValueMode.Loading);
             }
         }
 
@@ -791,7 +880,7 @@ namespace DataWF.Data
             foreach (DBColumn column in Table.Columns)
             {
                 if (!string.IsNullOrEmpty(column.DefaultValue))
-                    SetValue(column.ParseValue(column.DefaultValue), column, false);
+                    SetValue(column.ParseValue(column.DefaultValue), column, DBSetValueMode.Loading);
             }
         }
 
@@ -926,7 +1015,7 @@ namespace DataWF.Data
                     {
                         if (GetOld(column, out object old))
                         {
-                            SetValue(old, column, false);
+                            SetValue(old, column, DBSetValueMode.Loading);
                             RemoveOld(column);
                         }
                     }
@@ -1016,25 +1105,52 @@ namespace DataWF.Data
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangingEventHandler PropertyChanging;
 
-        public virtual void OnPropertyChanging(string property, DBColumn column = null, object value = null)
+        protected void OnPropertyChanging<V>(string property, DBColumn column = null, V value = default(V))
+        {
+            if (Attached)
+            {
+                Table.OnItemChanging<V>(this, property, column, value);
+            }
+            RaisePropertyChanging(property);
+        }
+
+        protected void OnPropertyChanging(string property, DBColumn column = null, object value = null)
         {
             if (Attached)
             {
                 Table.OnItemChanging(this, property, column, value);
             }
+            RaisePropertyChanging(property);
+        }
+
+        protected virtual void RaisePropertyChanging(string property)
+        {
             PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(property));
         }
 
-        public virtual void OnPropertyChanged([CallerMemberName]string property = null, DBColumn column = null, object value = null)
+        protected void OnPropertyChanged<V>([CallerMemberName]string property = null, DBColumn column = null, V value = default(V))
         {
             if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
             {
                 cacheToString = string.Empty;
             }
-            //if (string.IsNullOrEmpty(property))
-            //{
-            //    RemoveTag();
-            //}
+            if (Attached)
+            {
+                Table.OnItemChanged<V>(this, property, column, value);
+                if (property == nameof(Access) && access != null)
+                {
+                    access = ReadAccess();
+                }
+            }
+            RaisePropertyChanged(property);
+        }
+
+        protected void OnPropertyChanged([CallerMemberName]string property = null, DBColumn column = null, object value = null)
+        {
+            if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
+            {
+                cacheToString = string.Empty;
+            }
             if (Attached)
             {
                 Table.OnItemChanged(this, property, column, value);
@@ -1043,8 +1159,14 @@ namespace DataWF.Data
                     access = ReadAccess();
                 }
             }
+            RaisePropertyChanged(property);
+        }
+
+        protected virtual void RaisePropertyChanged(string property)
+        {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
+
         #endregion
 
         public void Refresh(IUserIdentity user)
@@ -1583,7 +1705,7 @@ namespace DataWF.Data
             if (Attached)
             {
                 await Save(transaction);
-                SetValue(null, column, false);
+                SetValue(null, column, DBSetValueMode.Loading);
             }
         }
 
@@ -1656,7 +1778,7 @@ namespace DataWF.Data
         public async Task SetLOB(Stream value, DBColumn column, DBTransaction transaction)
         {
             var oid = await Table.System.SetLOB(value, transaction);
-            SetValue<uint?>(oid, column);
+            SetValueNullable<uint>(oid, column);
             await Save(transaction);
         }
 

@@ -3,38 +3,22 @@ using System;
 
 namespace DataWF.Test.Common
 {
-    public class TestExactInlinePropertyInvoker : IInvoker<TestClass, int>
+    public class TestExactInlinePropertyInvoker : Invoker<TestClass, int>
     {
         public TestExactInlinePropertyInvoker()
         {
-            Name = "Group.Struct.Width";
-            DataType = typeof(int);
         }
 
-        public bool CanWrite { get { return true; } }
+        public override bool CanWrite { get { return true; } }
 
-        public Type TargetType { get { return typeof(TestClass); } }
+        public override string Name => "Group.Struct.Width";
 
-        public Type DataType { get; set; }
-
-        public string Name { get; set; }
-
-        public IListIndex CreateIndex(bool concurrent)
-        {
-            return new ListIndex<TestClass, int>(this, int.MinValue);
-        }
-
-        public int GetValue(TestClass target)
+        public override int GetValue(TestClass target)
         {
             return target.Group?.Struct.Width ?? 0;
         }
 
-        public object GetValue(object target)
-        {
-            return GetValue((TestClass)target);
-        }
-
-        public void SetValue(TestClass target, int value)
+        public override void SetValue(TestClass target, int value)
         {
             var temp = target.Group;
             if (temp != null)
@@ -43,11 +27,6 @@ namespace DataWF.Test.Common
                 g.Width = value;
                 temp.Struct = g;
             }
-        }
-
-        public void SetValue(object target, object value)
-        {
-            SetValue((TestClass)target, (int)value);
         }
     }
 }

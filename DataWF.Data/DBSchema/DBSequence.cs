@@ -21,7 +21,9 @@ using DataWF.Common;
 using System;
 using System.ComponentModel;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -57,6 +59,7 @@ namespace DataWF.Data
         [DefaultValue(0)]
         public int Scale { get; set; }
 
+        [JsonIgnore, XmlIgnore]
         public string NextQuery
         {
             get { return cacheQuery = cacheQuery ?? Schema.Connection.System.SequenceNextValue(this); }
@@ -146,7 +149,7 @@ namespace DataWF.Data
 
         private static long ParseCurrent(object result)
         {
-            return result == DBNull.Value ? 0 :
+            return result == null || result == DBNull.Value ? 0 :
                 result is long longvalue ? longvalue :
                 result is int intValue ? (long)intValue :
                 result is short shortValue ? (short)shortValue :
@@ -229,6 +232,18 @@ namespace DataWF.Data
             public override DBDataType GetValue(DBSequence target) => target.DBDataType;
 
             public override void SetValue(DBSequence target, DBDataType value) => target.DBDataType = value;
+        }
+
+        [Invoker(typeof(DBSequence), nameof(DBSequence.NextQuery))]
+        public class NextQueryInvoker : Invoker<DBSequence, string>
+        {
+            public override string Name => nameof(DBSequence.NextQuery);
+
+            public override bool CanWrite => false;
+
+            public override string GetValue(DBSequence target) => target.NextQuery;
+
+            public override void SetValue(DBSequence target, string value) { }
         }
     }
 }

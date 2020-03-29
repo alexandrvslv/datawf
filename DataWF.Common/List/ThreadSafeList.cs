@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace DataWF.Common
@@ -13,6 +14,11 @@ namespace DataWF.Common
         public ThreadSafeList(int capacity)
         {
             list = new List<T>(capacity);
+        }
+
+        public ThreadSafeList(T item) : this(1)
+        {
+            list.Add(item);
         }
 
         public int Count => list.Count;
@@ -70,6 +76,11 @@ namespace DataWF.Common
         public void AddRange(IEnumerable<T> enumerable)
         {
             list.AddRange(enumerable);
+        }
+
+        public T SelectOne()
+        {
+            return list.Count > 0 ? list[0] : default(T);
         }
     }
 }

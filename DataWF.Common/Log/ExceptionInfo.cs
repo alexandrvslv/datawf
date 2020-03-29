@@ -37,22 +37,22 @@ namespace DataWF.Common
         [Category("EMail")]
         public string Subject { get; set; }
 
-        [Category("Misc"), ReadOnly(true)]
+        [Category("Misc")]
         public string Stack
         {
             get { return Exception.StackTrace; }
         }
 
-        [Category("Misc"), ReadOnly(true)]
+        [Category("Misc")]
         public string Help
         {
             get { return Exception.HelpLink; }
         }
 
-        [Category("Misc"), ReadOnly(true)]
+        [Category("Misc")]
         public DateTime Date { get; }
 
-        [Category("Misc"), ReadOnly(true)]
+        [Category("Misc")]
         public string Modules { get; }
 
         [Category("Data")]

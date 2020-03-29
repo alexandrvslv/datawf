@@ -12,7 +12,7 @@ namespace DataWF.Test.Common
     public class TestInvoker
     {
         private const int value = 3;
-        private const int count = 200000;
+        private const int count = 1000000;
         private TestClass testReference;
 
         [SetUp]

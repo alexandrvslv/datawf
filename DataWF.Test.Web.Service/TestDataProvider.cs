@@ -16,6 +16,7 @@ namespace DataWF.Test.Web.Service
         public override void Generate()
         {
             Schema.Generate(new[] {
+                typeof(DataWF.Data.Instance).Assembly,
                 typeof(Module.Common.User).Assembly,
                 typeof(Module.Counterpart.Customer).Assembly,
                 typeof(Module.Messanger.Message).Assembly,

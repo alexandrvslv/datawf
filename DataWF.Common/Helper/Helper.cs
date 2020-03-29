@@ -131,18 +131,29 @@ namespace DataWF.Common
             return (a << 16) | (b & 0xFFFF);
         }
 
+        public static int TwoToOneShift(int a, int b)
+        {
+            return (a << 16) | (b & 0xFFFF);
+        }
+
         public static void OneToTwoShift(int value, out short a, out short b)
         {
             a = (short)(value >> 16);
             b = (short)(value & 0xFFFF);
         }
 
-        public static long TwoToOneShift(int a, int b)
+        public static void OneToTwoShift(int value, out int a, out int b)
+        {
+            a = (value >> 16);
+            b = (value & 0xFFFF);
+        }
+
+        public static long TwoToOneShiftLong(int a, int b)
         {
             return ((long)a << 32) | ((long)b & 0xFFFFFFFF);
         }
 
-        public static void OneToTwoShift(long value, out int a, out int b)
+        public static void OneToTwoShiftLong(long value, out int a, out int b)
         {
             a = (int)(value >> 32);
             b = (int)(value & 0xFFFFFFFF);
@@ -383,7 +394,7 @@ namespace DataWF.Common
         //http://stackoverflow.com/questions/43289/comparing-two-byte-arrays-in-net/8808245#8808245
         public static unsafe bool CompareByte(byte[] a1, byte[] a2)
         {
-            if ((a1 == null && a2 == null) || a1 == a2)
+            if (a1 == a2)
                 return true;
             if (a1 == null || a2 == null || a1.Length != a2.Length)
                 return false;
@@ -411,6 +422,17 @@ namespace DataWF.Common
                     if (*((byte*)x1) != *((byte*)x2)) return false;
                 return true;
             }
+        }
+
+        public static bool CompareByteAsSpan(byte[] a1, byte[] a2)
+        {
+            return ByteArrayComparer.Default.Equals(a1, a2);
+        }
+
+        //https://stackoverflow.com/a/48599119/4682355
+        public static bool CompareByte(ReadOnlySpan<byte> a1, in ReadOnlySpan<byte> a2)
+        {
+            return ByteArrayComparer.Default.EqualsAsSpan(a1, a2);
         }
 
         public static void CopyStream(Stream input, Stream output, int bufferSize)
@@ -703,6 +725,20 @@ namespace DataWF.Common
                 zipStream.CopyTo(outStream);
                 outStream.Position = 0;
                 return outStream;
+            }
+        }
+
+        public static async Task<byte[]> GetBytesAsync(Stream stream)
+        {
+            if (stream is MemoryStream memStream)
+                return memStream.ToArray();
+            else
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await stream.CopyToAsync(memoryStream);
+                    return memoryStream.ToArray();
+                }
             }
         }
 
@@ -1362,6 +1398,8 @@ namespace DataWF.Common
                     buf = (byte)intValue;
                 else if (type.IsEnum)
                     buf = Enum.ToObject(type, intValue);
+                else if (type == typeof(long))
+                    buf = (long)intValue;
             }
             else if (value is long longValue)
             {

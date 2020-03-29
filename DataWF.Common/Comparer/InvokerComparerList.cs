@@ -9,18 +9,14 @@ namespace DataWF.Common
     public class InvokerComparerList : List<IComparer>, IComparerList
     {
         public InvokerComparerList() : this(new List<IComparer>())
-        {
-        }
+        { }
 
         public InvokerComparerList(IEnumerable<IComparer> comparers)
             : base(comparers)
-        {
-        }
+        { }
 
         public virtual int Compare(object x, object y)
         {
-            if ((x == null && y == null) || (x != null && x.Equals(y)))
-                return 0;
             for (int i = 0; i < Count; i++)
             {
                 int retval = this[i].Compare(x, y);
@@ -56,15 +52,12 @@ namespace DataWF.Common
 
     public class InvokerComparerList<T> : List<IComparer<T>>, IComparerList<T>, IComparer
     {
-
         public InvokerComparerList()
-        {
-        }
+        { }
 
         public InvokerComparerList(IEnumerable<IComparer<T>> comparers)
             : base(comparers)
-        {
-        }
+        { }
 
         public virtual int Compare(T x, T y)
         {

@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public class LocaleImage : IContainerNotifyPropertyChanged
+    public class LocaleImage : IEntryNotifyPropertyChanged
     {
         public static event Func<LocaleImage, object> ImageCache;
 
@@ -89,7 +89,7 @@ namespace DataWF.Common
         }
 
         [XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         public event PropertyChangedEventHandler PropertyChanged;
 

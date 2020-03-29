@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBColumnReference : IContainerNotifyPropertyChanged
+    public class DBColumnReference : IEntryNotifyPropertyChanged
     {
         private string columnName;
         private DBColumn column;
@@ -45,7 +45,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         [Browsable(false), XmlIgnore, JsonIgnore]
         public DBColumnReferenceList List

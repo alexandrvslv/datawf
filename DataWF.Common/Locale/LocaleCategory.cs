@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public class LocaleCategory : SelectableList<LocaleItem>, ICloneable, IContainerNotifyPropertyChanged
+    public class LocaleCategory : SelectableList<LocaleItem>, ICloneable, IEntryNotifyPropertyChanged
     {
         private string name = "";
 
@@ -14,7 +14,7 @@ namespace DataWF.Common
                 new ListIndex<LocaleItem, string>(LocaleItem.NameInvoker.Instance, ListIndexFabric.GetNullKey<string>(), StringComparer.Ordinal));
         }
 
-        [ReadOnly(true), DefaultValue("")]
+        [DefaultValue("")]
         public string Name
         {
             get { return name; }

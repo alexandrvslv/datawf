@@ -12,6 +12,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataWF.WebService.Common
@@ -21,24 +22,56 @@ namespace DataWF.WebService.Common
     [LoggerAndFormatter]
     public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
     {
+        private static bool IsDenied(T value, IUserIdentity user)
+        {
+            if (value.Access.GetFlag(AccessType.Admin, user))
+                return false;
+            return ((value.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert
+                && !value.Access.GetFlag(AccessType.Create, user))
+                || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update
+                && !value.Access.GetFlag(AccessType.Update, user));
+        }
+
         protected DBTable<T> table;
-        private static readonly FormOptions formOptions = new FormOptions();
 
         public BaseController()
         {
+            Interlocked.Increment(ref MemoryLeak.Controllers.DiagnosticsController.Requests);
             table = DBTable.GetTable<T>();
         }
 
         public IUserIdentity CurrentUser => User.GetCommonUser();
 
         [HttpGet]
-        public Task<ActionResult<IEnumerable<T>>> Get()
+        public ValueTask<ActionResult<IEnumerable<T>>> Get()
         {
-            return Find(string.Empty);
+            return Search(string.Empty);
         }
 
+        [Obsolete("Use Search instead!")]
         [HttpGet("Find/{filter}")]
-        public async Task<ActionResult<IEnumerable<T>>> Find([FromRoute]string filter)
+        public async ValueTask<ActionResult<IEnumerable<T>>> Find([FromRoute]string filter)
+        {
+            try
+            {
+                var user = CurrentUser;
+                if (!table.Access.GetFlag(AccessType.Read, user))
+                {
+                    return Forbid();
+                }
+                var result = await table.LoadCacheAsync(filter, DBLoadParam.Referencing);
+                return new ActionResult<IEnumerable<T>>(result.Where(p => p.Access.GetFlag(AccessType.Read, user)
+                                                              && p.PrimaryId != null
+                                                              && (p.UpdateState & DBUpdateState.Insert) == 0));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex, null);
+            }
+        }
+
+        [HttpGet("Search")]
+        public async ValueTask<ActionResult<IEnumerable<T>>> Search([FromQuery]string filter)
         {
             try
             {
@@ -82,7 +115,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<T>> Get([FromRoute]K id)
+        public async ValueTask<ActionResult<T>> Get([FromRoute]K id)
         {
             var value = default(T);
             try
@@ -105,6 +138,41 @@ namespace DataWF.WebService.Common
             }
         }
 
+        [HttpPost("Package")]
+        public async Task<ActionResult<IEnumerable<T>>> PostPackage([FromBody]List<T> values)
+        {
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            {
+                T current = null;
+                try
+                {
+                    if (values == null)
+                    {
+                        throw new InvalidOperationException("Some deserialization problem!");
+                    }
+                    foreach (var value in values)
+                    {
+                        current = value;
+                        if (IsDenied(value, transaction.Caller))
+                        {
+                            table.RejectChanges(values, transaction.Caller);
+                            transaction.Rollback();
+                            return Forbid();
+                        }
+                        await value.Save(transaction);
+                    }
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    table.RejectChanges(values, transaction.Caller);
+                    transaction.Rollback();
+                    return BadRequest(ex, current);
+                }
+            }
+            return Ok(values);
+        }
+
         [HttpPost]
         public async Task<ActionResult<T>> Post([FromBody]T value)
         {
@@ -116,16 +184,15 @@ namespace DataWF.WebService.Common
                     {
                         throw new InvalidOperationException("Some deserialization problem!");
                     }
-                    if (!value.Access.GetFlag(AccessType.Admin, transaction.Caller))
+                    if ((value.UpdateState & DBUpdateState.Insert) != DBUpdateState.Insert)
                     {
-                        if (((value.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert
-                            && !value.Access.GetFlag(AccessType.Create, transaction.Caller))
-                            || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update
-                            && !value.Access.GetFlag(AccessType.Update, transaction.Caller)))
-                        {
-                            value.Reject(transaction.Caller);
-                            return Forbid();
-                        }
+                        value.Reject(transaction.Caller);
+                        return BadRequest($"Specified Id {value.PrimaryId} is used by another record!");
+                    }
+                    if (IsDenied(value, transaction.Caller))
+                    {
+                        value.Reject(transaction.Caller);
+                        return Forbid();
                     }
                     await value.Save(transaction);
                     transaction.Commit();
@@ -150,14 +217,10 @@ namespace DataWF.WebService.Common
                     {
                         throw new InvalidOperationException("Some deserialization problem!");
                     }
-                    if (!value.Access.GetFlag(AccessType.Admin, transaction.Caller))
+                    if (IsDenied(value, transaction.Caller))
                     {
-                        if (((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update
-                        && !value.Access.GetFlag(AccessType.Update, transaction.Caller)))
-                        {
-                            value.Reject(transaction.Caller);
-                            return Forbid();
-                        }
+                        value.Reject(transaction.Caller);
+                        return Forbid();
                     }
                     await value.Save(transaction);
                     transaction.Commit();
@@ -312,6 +375,7 @@ namespace DataWF.WebService.Common
 
         protected async Task<UploadModel> Upload()
         {
+            var formOptions = new FormOptions();
             var result = new UploadModel() { ModificationDate = DateTime.UtcNow };
             var formAccumulator = new KeyValueAccumulator();
             var boundary = MultipartRequestHelper.GetBoundary(
@@ -344,7 +408,7 @@ namespace DataWF.WebService.Common
                             leaveOpen: true))
                         {
                             // The value length limit is enforced by MultipartBodyLengthLimit
-                            var value = streamReader.ReadToEnd();
+                            var value = await streamReader.ReadToEndAsync();
                             if (String.Equals(value, "undefined", StringComparison.OrdinalIgnoreCase))
                             {
                                 value = String.Empty;
@@ -369,6 +433,7 @@ namespace DataWF.WebService.Common
 
         protected async Task<UploadModel> Upload(bool inMemory)
         {
+            var formOptions = new FormOptions();
             var formAccumulator = new KeyValueAccumulator();
             var result = new UploadModel();
 

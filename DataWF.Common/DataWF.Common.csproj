@@ -5,8 +5,8 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Common</RootNamespace>
     <AssemblyName>DataWF.Common</AssemblyName>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <!--<LangVersion>7.1</LangVersion>-->
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <!--<LangVersion>8.0</LangVersion>-->
     <Platforms>AnyCPU</Platforms>
 
   </PropertyGroup>
@@ -15,7 +15,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;NETSTANDARD2_0</DefineConstants>
+    <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -24,7 +24,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
-    <DefineConstants>TRACE;NETSTANDARD2_0</DefineConstants>
+    <DefineConstants>TRACE;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -38,7 +38,7 @@
     <PackageReference Include="Portable.Xaml" Version="0.24.0" />
     <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.6.0" />    
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.0" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
     <PackageReference Include="System.Text.Json" Version="4.7.1" />
   </ItemGroup>

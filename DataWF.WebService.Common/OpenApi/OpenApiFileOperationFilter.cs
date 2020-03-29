@@ -16,58 +16,10 @@ namespace DataWF.WebService.Common
         {
             if (context.MethodInfo.CustomAttributes.Any(p => p.AttributeType == typeof(DisableFormValueModelBindingAttribute)))
             {
-                operation.RequestBody = new OpenApiRequestBody
-                {
-                    Content = new Dictionary<string, OpenApiMediaType>
-                    {
-                        { "multipart/form-data",
-                            new OpenApiMediaType
-                            {
-                                Schema = new OpenApiSchema
-                                {
-                                    Type = "object",
-                                    Properties = new Dictionary<string, OpenApiSchema>
-                                    {
-                                        { "file",
-                                            new OpenApiSchema
-                                            {
-                                                Type="array",
-                                                Items = new OpenApiSchema
-                                                {
-                                                    Type="string",
-                                                    Format="binary"
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                };
-
-                //operation.Parameters.Add(new OpenApiParameter
-                //{
-                //    Name = "file",
-                //    In = null,
-                //    Description = "Upload File multipart/form-data",
-                //    Required = true,
-                //    Content = new Dictionary<string, OpenApiMediaType>
-                //    {
-                //        { "application/octet-stream",
-                //            new OpenApiMediaType
-                //            {
-                //                Schema = new OpenApiSchema
-                //                {
-                //                    Type = "string",
-                //                    Format="binary"
-                //                }
-                //            }
-                //        }
-                //    }
-                //});
+                operation.RequestBody = GenFileResponce();
             }
-            else if (context.ApiDescription.SupportedResponseTypes.Any(p =>
+
+            if (context.ApiDescription.SupportedResponseTypes.Any(p =>
             {
                 return TypeHelper.IsBaseType(p.Type, typeof(Stream))
                 || TypeHelper.IsBaseType(TypeHelper.GetItemType(p.Type), typeof(Stream))
@@ -106,6 +58,39 @@ namespace DataWF.WebService.Common
                 operation.RequestBody.Content.Remove("text/json");
                 operation.RequestBody?.Content.Remove("application/*+json");
             }
+        }
+
+        private static OpenApiRequestBody GenFileResponce()
+        {
+            return new OpenApiRequestBody
+            {
+                Content = new Dictionary<string, OpenApiMediaType>
+                {
+                        { "multipart/form-data",
+                            new OpenApiMediaType
+                            {
+                                Schema = new OpenApiSchema
+                                {
+                                    Type = "object",
+                                    Properties = new Dictionary<string, OpenApiSchema>
+                                    {
+                                        { "file",
+                                            new OpenApiSchema
+                                            {
+                                                Type="array",
+                                                Items = new OpenApiSchema
+                                                {
+                                                    Type="string",
+                                                    Format="binary"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                }
+            };
         }
     }
 }

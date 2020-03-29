@@ -2,8 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -12,8 +11,16 @@ namespace DataWF.Common
     {
         string BaseUrl { get; set; }
         IEnumerable<IClient> Clients { get; }
-        AuthorizationInfo Authorization { get; set; }
-        JsonSerializerOptions JsonSerializerOptions { get; }
+        string AuthorizationScheme { get; set; }
+        string AuthorizationToken { get; set; }
+        Func<Task<bool>> UnauthorizedError { get; set; }
+#if NETSTANDARD2_0
+        Newtonsoft.Json.JsonSerializerSettings JsonSettings { get; }
+#else
+        System.Text.Json.JsonSerializerOptions JsonSettings { get; }
+#endif  
+        HttpClient CreateHttpClient(HttpMessageHandler httpMessageHandler = null);
+        Task<bool> OnUnauthorized();
         ICrudClient<T> GetClient<T>();
         ICrudClient GetClient(Type type);
         ICrudClient GetClient(Type type, int typeId);
@@ -43,7 +50,7 @@ namespace DataWF.Common
         IEnumerable<object> GetChanges();
         Task<object> GenerateId();
         Task<bool> DeleteAsync(object id);
-        Task<IEnumerable> FindAsync(string filter);
+        Task<IEnumerable> SearchAsync(string filter);
         Task<IEnumerable> GetAsync();
         Task<object> GetAsync(object id);
         Task<object> CopyAsync(object id);
@@ -55,21 +62,21 @@ namespace DataWF.Common
 
     public interface ICrudClient<T> : ICrudClient
     {
-        SelectableList<T> Items { get; }
+        ChangeableList<T> Items { get; }
         bool Add(T item);
         bool Remove(T item);
         Task<T> Get(T item);
         T Get(object id);
         Task<bool> Delete(T item);
-        LoadProgress<T> Load(string filter, IProgressable progressable);
-        Task<List<T>> FindAsync(string filter, ProgressToken progressToken);
-        Task<List<T>> GetAsync(ProgressToken progressToken);
-        Task<T> GetAsync(object id, ProgressToken progressToken);
-        Task<T> CopyAsync(object id, ProgressToken progressToken);
-        Task<T> PostAsync(T value, ProgressToken progressToken);
-        Task<T> PutAsync(T value, ProgressToken progressToken);
-        Task<bool> DeleteAsync(object id, ProgressToken progressToken);
-        Task<T> MergeAsync(T value, List<string> ids, ProgressToken progressToken);
+        LoadProgress<T> Load(string filter, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<List<T>> SearchAsync(string filter, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<List<T>> GetAsync(HttpJsonSettings settings, ProgressToken progressToken);
+        Task<T> GetAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<T> CopyAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<T> PostAsync(T value, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<T> PutAsync(T value, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<bool> DeleteAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<T> MergeAsync(T value, List<string> ids, HttpJsonSettings settings, ProgressToken progressToken);
     }
 
     public interface ILoggedClient
@@ -84,12 +91,12 @@ namespace DataWF.Common
 
     public interface ILoggedClient<T, L> : ILoggedClient
     {
-        Task<List<L>> GetLogsAsync(string filter, ProgressToken progressToken);
-        Task<List<L>> GetItemLogsAsync(object id, ProgressToken progressToken);
+        Task<List<L>> GetLogsAsync(string filter, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<List<L>> GetItemLogsAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
 
-        Task<T> UndoLogAsync(long logId, ProgressToken progressToken);
-        Task<T> RedoLogAsync(long logId, ProgressToken progressToken);
-        Task<bool> RemoveLogAsync(long logId, ProgressToken progressToken);
+        Task<T> UndoLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<T> RedoLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<bool> RemoveLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
     }
 
     public interface IFileClient

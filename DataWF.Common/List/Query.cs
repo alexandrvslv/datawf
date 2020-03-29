@@ -75,6 +75,19 @@ namespace DataWF.Common
             }
         }
 
+        ICollection<IQueryParameter> IQuery.Parameters
+        {
+            get { return Parameters; }
+        }
+
+        ICollection<IComparer> IQuery.Orders
+        {
+            get { return Orders; }
+        }
+
+        public bool IsEnabledFormatting => ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => !p.FormatIgnore && p.IsEnabled);
+        public bool IsEnabled => ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => p.IsEnabled);
+
         public event EventHandler OrdersChanged;
 
         public event EventHandler ParametersChanged;
@@ -87,21 +100,6 @@ namespace DataWF.Common
         internal void OnParametersChanged(object sender, EventArgs e)
         {
             ParametersChanged?.Invoke(sender, e);
-        }
-
-        ICollection<IQueryParameter> IQuery.Parameters
-        {
-            get { return Parameters; }
-        }
-
-        ICollection<IComparer> IQuery.Orders
-        {
-            get { return Orders; }
-        }
-
-        public bool IsEnabled
-        {
-            get { return ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => !p.FormatIgnore && p.IsEnabled); }
         }
 
         public void Clear()
@@ -119,16 +117,6 @@ namespace DataWF.Common
             return Parameters.Add(property, value);
         }
 
-        public void Add(IQueryParameter parameter)
-        {
-            Add((QueryParameter<T>)parameter);
-        }
-
-        public void Add(QueryParameter<T> parameter)
-        {
-            Parameters.Add(parameter);
-        }
-
         public QueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
         {
             return Parameters.Add(logic, invoker, comparer, value, group);
@@ -141,22 +129,36 @@ namespace DataWF.Common
 
         public QueryParameter<T> AddOrUpdate(IInvoker invoker, CompareType comparer, object value)
         {
-            var parameter = Parameters[invoker.Name];
+            var parameter = GetParameter(invoker);
             return AddOrUpdate(parameter?.Logic ?? LogicType.And, invoker, parameter?.Comparer ?? comparer, value);
         }
 
         public QueryParameter<T> AddOrUpdate(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
         {
-            var parameter = Parameters[invoker.Name];
+            var parameter = GetParameter(invoker);
             if (parameter == null)
             {
-                parameter = Parameters.Add(logic, invoker, comparer, null);
+                parameter = Parameters.Add(logic, invoker, comparer, value, group);
             }
             parameter.Logic = logic;
             parameter.Comparer = comparer;
             parameter.Value = value;
             parameter.Group = group;
             return parameter;
+        }
+        private QueryParameter<T> GetParameter(IInvoker invoker)
+        {
+            return Parameters[invoker.Name];
+        }
+
+        IQueryParameter IQuery.GetParameter(string name)
+        {
+            return GetParameter(name);
+        }
+
+        private QueryParameter<T> GetParameter(string name)
+        {
+            return Parameters[name];
         }
 
         IQueryParameter IQuery.Add(string property, object value)
@@ -177,18 +179,6 @@ namespace DataWF.Common
         public InvokerComparer AddOrder(IInvoker invoker, ListSortDirection sortDirection)
         {
             return Orders.AddOrUpdate(invoker, sortDirection);
-        }
-
-        public IQueryParameter AddTreeParameter()
-        {
-            var parameter = new QueryParameter<T>()
-            {
-                Invoker = new TreeInvoker<IGroup>(),
-                Comparer = CompareType.Equal,
-                Value = true
-            };
-            Parameters.Add(parameter);
-            return parameter;
         }
 
         public bool Remove(string parameter)

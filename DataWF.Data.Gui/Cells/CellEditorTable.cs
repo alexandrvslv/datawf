@@ -125,7 +125,7 @@ namespace DataWF.Data.Gui
                 while (getReferenceStack.TryPop(out PDBTableParam item))
                 {
                     item.Row.GetReference(item.Column, DBLoadParam.Load);
-                    item.Row.OnPropertyChanged(item.Column.Name, item.Column);
+                    //item.Row.OnPropertyChanged(item.Column.Name, item.Column);
                 }
             }
         }

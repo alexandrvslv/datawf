@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace DataWF.Common
 {
-    public class ReferenceList<T> : SelectableList<T>, IReferenceList where T : SynchronizedItem
+    public class ReferenceList<T> : ChangeableList<T>, IReferenceList where T : SynchronizedItem
     {
         public ReferenceList()
         {
@@ -20,54 +20,41 @@ namespace DataWF.Common
         }
 
         public SynchronizedItem Owner { get; set; }
+
         public string OwnerProperty { get; set; }
 
-        public override void OnListChanged(NotifyCollectionChangedEventArgs e)
+        public override void CheckStatus(T item)
         {
-            base.OnListChanged(e);
-            IList items = e.Action == NotifyCollectionChangedAction.Add
-                ? e.NewItems
-                : e.Action == NotifyCollectionChangedAction.Reset
-                || e.Action == NotifyCollectionChangedAction.Remove
-                ? (IList)this.items
-                : null;
-            if (items != null)
+            if (Owner.SyncStatus == SynchronizedStatus.Load)
             {
-                CheckOwnerStatus(items);
+                return;
             }
+            base.CheckStatus(item);
         }
 
-        public override int Add(T item)
+        protected override void OnItemStatusChanged(T item)
         {
-            if (Contains(item))
-                return -1;
-            return base.Add(item);
-        }
+            base.OnItemStatusChanged(item);
 
-        public void CheckOwnerStatus(IEnumerable items)
-        {
             switch (Owner.SyncStatus)
             {
                 case SynchronizedStatus.New:
-                    if (items.Cast<T>().Any(p => p.SyncStatus == SynchronizedStatus.New
-                    || p.SyncStatus == SynchronizedStatus.Edit))
+                    if (changes.Any())
                     {
                         Owner.Changes[OwnerProperty] = this;
                         Owner.OnPropertyChanged(OwnerProperty);
                     }
                     break;
                 case SynchronizedStatus.Actual:
-                    if (items.Cast<T>().Any(p => p.SyncStatus == SynchronizedStatus.New
-                    || p.SyncStatus == SynchronizedStatus.Edit))
+                    if (changes.Any())
                     {
-                        Owner.SyncStatus = SynchronizedStatus.Edit;
                         Owner.Changes[OwnerProperty] = this;
+                        Owner.SyncStatus = SynchronizedStatus.Edit;
                         Owner.OnPropertyChanged(OwnerProperty);
                     }
                     break;
                 case SynchronizedStatus.Edit:
-                    if (!this.Any(p => p.SyncStatus != SynchronizedStatus.Actual
-                    && p.SyncStatus != SynchronizedStatus.Load))
+                    if (!changes.Any())
                     {
                         if (Owner.Changes.Remove(OwnerProperty) && Owner.Changes.Count == 0)
                         {

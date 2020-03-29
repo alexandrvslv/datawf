@@ -527,7 +527,7 @@ namespace DataWF.Module.FlowGui
             {
                 var list = new DBTableView<Document>((QParam)null, DBViewKeys.Static | DBViewKeys.Empty)
                 {
-                    ItemType = documents[0].Template.DocumentTypeInfo.Type
+                    ItemType = documents[0].GetType()
                 };
                 list.AddRange(documents);
 

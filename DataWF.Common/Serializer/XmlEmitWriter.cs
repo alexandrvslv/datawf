@@ -97,7 +97,7 @@ namespace DataWF.Common
                 foreach (var attribute in info.GetAttributes())
                 {
                     var value = attribute.Invoker.GetValue(element);
-                    if (value == null || attribute.CheckDefault(value))
+                    if (value == null || attribute.CheckDefault(value) || attribute.IsReadOnly || !attribute.IsWriteable)
                         continue;
                     WriteAttribute(attribute, value);
                 }
@@ -105,7 +105,7 @@ namespace DataWF.Common
                 foreach (var property in info.GetContents())
                 {
                     var value = property.Invoker.GetValue(element);
-                    if (value == null)
+                    if (value == null || property.IsReadOnly || !property.IsWriteable)
                         continue;
 
                     var mtype = property.DataType;

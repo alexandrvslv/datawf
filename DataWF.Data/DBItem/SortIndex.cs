@@ -166,7 +166,7 @@ namespace DataWF.Data
                         buf = (List<DBItem>)ListHelper.Copy(index, 0, first - 1);
                     else
                     {
-                        if (ListHelper.Compare(row, index[0], comparer, false) < 0)
+                        if (ListHelper.Compare(row, index[0], comparer) < 0)
                             buf = (List<DBItem>)ListHelper.Copy(index);
                     }
                     break;
@@ -175,7 +175,7 @@ namespace DataWF.Data
                         buf = (List<DBItem>)ListHelper.Copy(index, 0, last);
                     else
                     {
-                        if (ListHelper.Compare(row, index[0], comparer, false) < 0)
+                        if (ListHelper.Compare(row, index[0], comparer) < 0)
                             buf = (List<DBItem>)ListHelper.Copy(index);
                     }
                     break;
@@ -184,7 +184,7 @@ namespace DataWF.Data
                         buf = (List<DBItem>)ListHelper.Copy(index, first, index.Count - 1);
                     else
                     {
-                        if (ListHelper.Compare(row, index[0], comparer, false) > 0)
+                        if (ListHelper.Compare(row, index[0], comparer) > 0)
                             buf = (List<DBItem>)ListHelper.Copy(index);
                     }
                     break;
@@ -193,7 +193,7 @@ namespace DataWF.Data
                         buf = (List<DBItem>)ListHelper.Copy(index, last + 1, index.Count - 1);
                     else
                     {
-                        if (ListHelper.Compare(row, index[0], comparer, false) > 0)
+                        if (ListHelper.Compare(row, index[0], comparer) > 0)
                             buf = (List<DBItem>)ListHelper.Copy(index);
                     }
                     break;

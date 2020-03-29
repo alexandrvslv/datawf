@@ -19,8 +19,10 @@
 */
 using DataWF.Common;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
@@ -31,6 +33,7 @@ namespace DataWF.Data
     {
         private Type type;
         private DBTable table;
+        private List<IInvoker> invokers;
 
         public DBItemType()
         { }
@@ -38,18 +41,55 @@ namespace DataWF.Data
         public Type Type
         {
             get { return type; }
-            set
-            {
-                type = value;
-                Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes, false);
-            }
+            set { type = value; }
         }
 
         [XmlIgnore, JsonIgnore]
-        public EmitConstructor Constructor { get; set; }
+        public DBTable Table => table ?? (table = DBTable.GetTable(Type));
 
         [XmlIgnore, JsonIgnore]
-        public DBTable Table => table ?? (table = DBTable.GetTable(Type));
+        public virtual List<IInvoker> Invokers
+        {
+            get
+            {
+                if (invokers == null)
+                {
+                    var table = Table;
+                    invokers = new List<IInvoker>(table.Columns.Count + (table.Generator?.Referencings.Count() ?? 0));
+                    foreach (var column in table.Columns)
+                    {
+                        if (!table.IsSerializeableColumn(column, Type)
+                            || !(column.PropertyInvoker is IInvokerJson))
+                            continue;
+
+                        invokers.Add(column.PropertyInvoker);
+
+                        //if ((column.Keys & DBColumnKeys.Group) == DBColumnKeys.Group)
+                        //    continue;
+
+                        if (column.ReferencePropertyInvoker != null)
+                        {
+                            invokers.Add(column.ReferencePropertyInvoker);
+                        }
+                    }
+                    if (table.Generator != null)
+                    {
+                        foreach (var refing in table.Generator.Referencings)
+                        {
+                            if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(Type))
+                                continue;
+                            invokers.Add(refing.PropertyInvoker);
+                        }
+                    }
+                }
+                return invokers;
+            }
+        }
+
+        public DBItem Create()
+        {
+            return Table.NewItem(DBUpdateState.Insert, true, Type);
+        }
     }
 
     public class DBItemTypeConverter : TypeConverter

@@ -174,7 +174,7 @@ namespace DataWF.WebService.Common
             var property = (string)null;
             var type = (Type)null;
             var jsonOptions = new JsonSerializerOptions();
-            jsonOptions.InitDefaults(new DBItemJsonConverter { CurrentUser = client.User });
+            jsonOptions.InitDefaults(new DBItemConverterFactory { CurrentUser = client.User });
 
             var span = new ReadOnlySpan<byte>(stream.GetBuffer(), 0, (int)stream.Length);
             var jreader = new Utf8JsonReader(span);
@@ -318,10 +318,10 @@ namespace DataWF.WebService.Common
         {
             bool haveValue = false;
             var jsonOptions = new JsonSerializerOptions();
-            jsonOptions.InitDefaults(new DBItemJsonConverter
+            jsonOptions.InitDefaults(new DBItemConverterFactory
             {
                 CurrentUser = user,
-                IncludeReference = false,
+                HttpJsonSettings = HttpJsonSettings.None,
             });
             var stream = new MemoryStream();
 

@@ -39,8 +39,8 @@ namespace DataWF.Common
         {
             if (handle)
             {
-                _listChangedHandler = SourceListChanged;
-                _listItemChangedHandler = SourceItemChanged;
+                _listChangedHandler = OnSourceListChanged;
+                _listItemChangedHandler = OnSourceItemChanged;
             }
             SetCollection(baseCollection);
         }
@@ -49,32 +49,6 @@ namespace DataWF.Common
         {
             get { return source; }
             set { SetCollection(value); }
-        }
-
-        public void SetCollection(IEnumerable baseCollection)
-        {
-            if (source == baseCollection)
-                return;
-            if (selectableSource != null && _listChangedHandler != null)
-            {
-                selectableSource.CollectionChanged -= _listChangedHandler;
-                selectableSource.ItemPropertyChanged -= _listItemChangedHandler;
-            }
-
-            source = baseCollection;
-            selectableSource = baseCollection as ISelectable;
-
-            if (selectableSource != null && _listChangedHandler != null)
-            {
-                selectableSource.CollectionChanged += _listChangedHandler;
-                selectableSource.ItemPropertyChanged += _listItemChangedHandler;
-            }
-            UpdateFilter();
-        }
-
-        public override bool Contains(T item)
-        {
-            return base.Contains(item);
         }
 
         public Query<T> FilterQuery
@@ -97,6 +71,50 @@ namespace DataWF.Common
                     }
                 }
             }
+        }
+
+        public InvokerComparerList SortDescriptions
+        {
+            get { return null; }
+        }
+
+        IQuery IFilterable.FilterQuery => FilterQuery;
+
+        public event EventHandler FilterChanged;
+
+        public void SetCollection(IEnumerable baseCollection)
+        {
+            if (source == baseCollection)
+                return;
+            if (baseCollection == this)
+                return;
+            SuspendHandling();
+            source = baseCollection;
+            selectableSource = baseCollection as ISelectable;
+            UpdateFilter();
+        }
+
+        private void ResumeHandling()
+        {
+            if (selectableSource != null && _listChangedHandler != null)
+            {
+                selectableSource.CollectionChanged += _listChangedHandler;
+                selectableSource.ItemPropertyChanged += _listItemChangedHandler;
+            }
+        }
+
+        private void SuspendHandling()
+        {
+            if (selectableSource != null && _listChangedHandler != null)
+            {
+                selectableSource.CollectionChanged -= _listChangedHandler;
+                selectableSource.ItemPropertyChanged -= _listItemChangedHandler;
+            }
+        }
+
+        public override bool Contains(T item)
+        {
+            return base.Contains(item);
         }
 
         private void OrdersChanged(object sender, EventArgs args)
@@ -143,15 +161,6 @@ namespace DataWF.Common
             }
         }
 
-        public InvokerComparerList SortDescriptions
-        {
-            get { return null; }
-        }
-
-        IQuery IFilterable.FilterQuery => FilterQuery;
-
-        public event EventHandler FilterChanged;
-
         public override object NewItem()
         {
             return selectableSource?.NewItem() ?? base.NewItem();
@@ -180,11 +189,7 @@ namespace DataWF.Common
             {
                 try
                 {
-                    if (selectableSource != null && _listChangedHandler != null)
-                    {
-                        selectableSource.CollectionChanged -= _listChangedHandler;
-                        selectableSource.ItemPropertyChanged -= _listItemChangedHandler;
-                    }
+                    SuspendHandling();
                     ClearInternal();
                     if (list == null)
                     {
@@ -207,11 +212,7 @@ namespace DataWF.Common
                 }
                 finally
                 {
-                    if (selectableSource != null && _listChangedHandler != null)
-                    {
-                        selectableSource.CollectionChanged += _listChangedHandler;
-                        selectableSource.ItemPropertyChanged += _listItemChangedHandler;
-                    }
+                    ResumeHandling();
                 }
             }
         }
@@ -221,7 +222,7 @@ namespace DataWF.Common
             if (!query.Suspending)
             {
                 var parameters = query.FormatEnabled();
-                if (tempParameters?.Equals(parameters, StringComparison.Ordinal) ?? false)
+                if (string.Equals(tempParameters, parameters, StringComparison.Ordinal))
                 {
                     return;
                 }
@@ -241,62 +242,76 @@ namespace DataWF.Common
             OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
-        public virtual void SourceListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        public virtual void OnSourceListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            T newItem = e.NewItems == null ? default(T) : e.NewItems.TypeOf<T>().FirstOrDefault();
-            T oldItem = e.OldItems == null ? default(T) : e.OldItems.TypeOf<T>().FirstOrDefault();
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Reset:
                     UpdateFilter();
                     break;
                 case NotifyCollectionChangedAction.Move:
-                    if (newItem != null)
+                    foreach (T newItem in e.NewItems)
                     {
-                        SourceItemChanged(newItem, new PropertyChangedEventArgs(string.Empty));
+                        if (newItem != null)
+                        {
+                            OnSourceItemChanged(newItem, new PropertyChangedEventArgs(string.Empty));
+                        }
                     }
                     break;
                 case NotifyCollectionChangedAction.Replace:
-                    if (oldItem != null)
+                    foreach (T oldItem in e.OldItems)
                     {
-                        Remove(oldItem);
+                        if (oldItem != null)
+                        {
+                            Remove(oldItem);
+                        }
                     }
                     goto case NotifyCollectionChangedAction.Add;
                 case NotifyCollectionChangedAction.Remove:
-                    if (oldItem != null)
+                    var removeList = new List<T>();
+                    foreach (T oldItem in e.OldItems)
                     {
-                        Remove(oldItem);
+                        if (oldItem != null)
+                        {
+                            Remove(oldItem);
+                        }
                     }
+                    RemoveRange(removeList);
                     break;
                 case NotifyCollectionChangedAction.Add:
-                    if (newItem != null && ListHelper.CheckItem(newItem, query))
+                    var addList = new List<T>();
+                    foreach (T newItem in e.NewItems)
                     {
-                        if (!query.IsEnabled && comparer == null)
+                        if (newItem != null
+                            && ListHelper.CheckItem(newItem, query)
+                            && GetIndexBySort(newItem) < 0)
                         {
-                            base.Add(newItem);
+                            addList.Add(newItem);
                         }
-                        else
-                        {
-                            base.Add(newItem);
-                        }
+                    }
+                    if (addList.Count > 0)
+                    {
+                        AddRange(addList, false);
                     }
                     break;
             }
         }
 
-        public virtual void SourceItemChanged(object sender, PropertyChangedEventArgs e)
+        public virtual void OnSourceItemChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (FilterQuery.Suspending)
+            {
+                return;
+            }
+
             var item = (T)sender;
 
             var checkItem = ListHelper.CheckItem(item, query);
             if (checkItem)
             {
-                if (query.IsGlobalParameter(e.PropertyName))
+                if (CheckIsGlobal(e))
                 {
-                    if (!FilterQuery.Suspending)
-                    {
-                        UpdateFilter();
-                    }
+                    UpdateFilter();
                 }
                 else
                 {
@@ -321,6 +336,25 @@ namespace DataWF.Common
             }
         }
 
+        private bool CheckIsGlobal(PropertyChangedEventArgs e)
+        {
+            if (!query.IsEnabled)
+                return false;
+            if (e is PropertyChangedAggregateEventArgs aggregator)
+            {
+                foreach (var entry in aggregator.Items)
+                {
+                    if (query.IsGlobalParameter(entry.PropertyName))
+                        return true;
+                }
+                return false;
+            }
+            else
+            {
+                return query.IsGlobalParameter(e.PropertyName);
+            }
+        }
+
         public virtual void RemoveFilter()
         {
             if (query.Parameters.Count > 0)
@@ -332,11 +366,7 @@ namespace DataWF.Common
 
         public override void Dispose()
         {
-            if (selectableSource != null && _listChangedHandler != null)
-            {
-                selectableSource.CollectionChanged -= _listChangedHandler;
-                selectableSource.ItemPropertyChanged -= _listItemChangedHandler;
-            }
+            SuspendHandling();
 
             base.Dispose();
         }

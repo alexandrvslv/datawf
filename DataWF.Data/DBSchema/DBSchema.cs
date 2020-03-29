@@ -262,7 +262,7 @@ namespace DataWF.Data
                 IsSynchronizing = false;
             }
         }
-        
+
         public IEnumerable<DBTableInfo> GetTablesInfo(string schemaName = null, string tableName = null)
         {
             return System.GetTablesInfo(Connection, schemaName, tableName);
@@ -514,10 +514,10 @@ namespace DataWF.Data
             {
                 foreach (var type in assembly.GetExportedTypes().Where(item => item.IsClass))
                 {
-                    var tableAttribute = DBTable.GetTableAttribute(type);
-                    if (tableAttribute != null)
+                    var tableGenerator = DBTable.GetTableAttribute(type);
+                    if (tableGenerator != null)
                     {
-                        attributes.Add(tableAttribute);
+                        attributes.Add(tableGenerator);
                     }
                     else
                     {
@@ -527,9 +527,17 @@ namespace DataWF.Data
                 Procedures.Generate(assembly);
             }
 
-            foreach (var tableAttribute in attributes)
+            foreach (var tableGenerator in attributes)
             {
-                tableAttribute.Generate(this);
+                if (tableGenerator is LogTableGenerator)
+                {
+                    tableGenerator.Generate(logSchema);
+                }
+                else
+                {
+                    tableGenerator.Generate(this);
+                }
+                tableGenerator.Table.RemoveDeletedColumns();
             }
 
             Procedures.CheckDeleted();
@@ -541,12 +549,12 @@ namespace DataWF.Data
 
             foreach (var item in items)
             {
-                rez.Append(((DBItem)item).FormatPatch());
+                rez.Append(item.FormatPatch());
             }
             return rez.ToString();
         }
 
-        public IEnumerable<DBForeignKey> GetChildRelations(DBTable dBTable)
+        public IEnumerable<DBForeignKey> GetChildRelations(DBTable target)
         {
             if (!cacheRelation)
             {
@@ -561,7 +569,7 @@ namespace DataWF.Data
                 cacheRelation = true;
 
             }
-            return dBTable.ChildRelations;
+            return target.ChildRelations;
         }
 
         [Invoker(typeof(DBSchema), nameof(DBSchema.DataBase))]
@@ -578,7 +586,7 @@ namespace DataWF.Data
         }
 
         [Invoker(typeof(DBSchema), nameof(DBSchema.ConnectionName))]
-        public class ConnectionNameInvoker<T> : Invoker<T, string> where T: DBSchema
+        public class ConnectionNameInvoker<T> : Invoker<T, string> where T : DBSchema
         {
             public static readonly ConnectionNameInvoker<T> Instance = new ConnectionNameInvoker<T>();
             public override string Name => nameof(DBSchema.ConnectionName);

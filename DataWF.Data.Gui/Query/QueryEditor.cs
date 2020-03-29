@@ -177,7 +177,7 @@ namespace DataWF.Data.Gui
             {
                 Name = nameof(ToString),
                 Width = 120,
-                Invoker = ToStringInvoker.Instance
+                Invoker = ToStringInvoker<object>.Instance
             });
             listParams.ListInfo.Columns.Add(new LayoutColumn()
             {

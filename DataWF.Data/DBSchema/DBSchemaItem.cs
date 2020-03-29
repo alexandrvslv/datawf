@@ -27,7 +27,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DataWF.Data
 {
-    public abstract class DBSchemaItem : IContainerNotifyPropertyChanged, IComparable, ICloneable, IAccessable, IDBSchemaItem
+    public abstract class DBSchemaItem : IEntryNotifyPropertyChanged, IComparable, ICloneable, IAccessable, IDBSchemaItem
     {
         protected string name;
         protected string oldname;
@@ -52,7 +52,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         [Browsable(false), XmlIgnore, JsonIgnore]
         public virtual DBSchema Schema
@@ -208,8 +208,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.DisplayName))]
         public class DisplayNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
         {
-            public static readonly DisplayNameInvoker<T> Instance = new DisplayNameInvoker<T>();
-
             public override string Name => nameof(DBSchemaItem.DisplayName);
 
             public override bool CanWrite => true;
@@ -222,8 +220,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.OldName))]
         public class OldNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
         {
-            public static readonly OldNameInvoker<T> Instance = new OldNameInvoker<T>();
-
             public override string Name => nameof(DBSchemaItem.OldName);
 
             public override bool CanWrite => true;
@@ -231,6 +227,18 @@ namespace DataWF.Data
             public override string GetValue(T target) => target.OldName;
 
             public override void SetValue(T target, string value) => target.OldName = value;
+        }
+
+        [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.FullName))]
+        public class FullNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
+        {
+            public override string Name => nameof(DBSchemaItem.FullName);
+
+            public override bool CanWrite => false;
+
+            public override string GetValue(T target) => target.FullName;
+
+            public override void SetValue(T target, string value) { }
         }
     }
 }

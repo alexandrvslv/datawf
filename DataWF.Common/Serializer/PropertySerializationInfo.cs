@@ -13,6 +13,7 @@ namespace DataWF.Common
         Writeable = 4,
         Required = 8,
         ChangeSensitive = 16,
+        ReadOnly = 32,
     }
 
     public class PropertySerializationInfo : INamed
@@ -33,8 +34,10 @@ namespace DataWF.Common
                 keys |= PropertySerializationInfoKeys.Writeable;
             if (TypeHelper.IsRequired(property))
                 keys |= PropertySerializationInfoKeys.Required;
-            else if (TypeHelper.IsJsonSynchronized(property))
+            if (TypeHelper.IsJsonSynchronized(property))
                 keys |= PropertySerializationInfoKeys.ChangeSensitive;
+            if (TypeHelper.IsReadOnly(property))
+                keys |= PropertySerializationInfoKeys.ReadOnly;
             Keys = keys;
             Order = TypeHelper.GetOrder(property, order);
             Invoker = EmitInvoker.Initialize(property, true);
@@ -66,11 +69,14 @@ namespace DataWF.Common
 
         public bool IsWriteable => (Keys & PropertySerializationInfoKeys.Writeable) == PropertySerializationInfoKeys.Writeable;
 
+        public bool IsReadOnly => (Keys & PropertySerializationInfoKeys.ReadOnly) == PropertySerializationInfoKeys.ReadOnly;
+
         public int Order { get; set; }
 
         public object Default { get; }
 
         public ValueSerializer Serialazer { get; }
+
 
         public bool CheckDefault(object value)
         {
@@ -95,7 +101,7 @@ namespace DataWF.Common
 
         public override string ToString()
         {
-            return $"{Name} {DataType.Name} {Keys}";
+            return $"{Order} {Name} {DataType.Name} {Keys}";
         }
     }
 }

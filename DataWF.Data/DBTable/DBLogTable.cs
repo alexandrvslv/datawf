@@ -27,7 +27,6 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-
     public class DBLogTable<T> : DBTable<T>, IDBLogTable where T : DBLogItem, new()
     {
         private DBTable baseTable;
@@ -81,7 +80,6 @@ namespace DataWF.Data
             {
                 baseTable = value ?? throw new ArgumentException("BaseTable set operation required not null value!");
                 BaseTableName = value.Name;
-                block = 50;
                 Name = value.Name + "_log";
                 Schema = value.Schema.LogSchema ?? value.Schema;
                 var seqName = value.SequenceName + "_log";
@@ -187,10 +185,30 @@ namespace DataWF.Data
             return await base.SaveItem(item, transaction);
         }
 
-        [Invoker(typeof(DBLogTable<>), nameof(BaseTableName), GenericType = typeof(DBLogItem))]
+        public override void RemoveDeletedColumns()
+        {
+            base.RemoveDeletedColumns();
+            for (int i = 0; i < Columns.Count;)
+            {
+                var column = Columns[i];
+                if (column is DBLogColumn logColumn && logColumn.BaseColumn == null)
+                {
+                    column.RemoveConstraints();
+                    column.RemoveForeignKeys();
+                    column.RemoveIndexes();
+
+                    Columns.RemoveInternal(column, i);
+                }
+                else
+                {
+                    i++;
+                }
+            }
+        }
+
+        [Invoker(typeof(DBLogTable<>), nameof(BaseTableName))]
         public class BaseTableNameInvoker : Invoker<DBLogTable<T>, string>
         {
-            public static readonly BaseTableNameInvoker Instance = new BaseTableNameInvoker();
             public override string Name => nameof(DBLogTable<T>.BaseTableName);
 
             public override bool CanWrite => true;
@@ -199,5 +217,31 @@ namespace DataWF.Data
 
             public override void SetValue(DBLogTable<T> target, string value) => target.BaseTableName = value;
         }
+
+        [Invoker(typeof(DBLogTable<>), nameof(BaseKey))]
+        public class BaseKeyInvoker : Invoker<DBLogTable<T>, DBColumn>
+        {
+            public override string Name => nameof(DBLogTable<T>.BaseKey);
+
+            public override bool CanWrite => false;
+
+            public override DBColumn GetValue(DBLogTable<T> target) => target.BaseKey;
+
+            public override void SetValue(DBLogTable<T> target, DBColumn value) { }
+        }
+
+        [Invoker(typeof(DBLogTable<>), nameof(UserLogKey))]
+        public class UserLogKeyInvoker : Invoker<DBLogTable<T>, DBColumn>
+        {
+            public override string Name => nameof(DBLogTable<T>.UserLogKey);
+
+            public override bool CanWrite => false;
+
+            public override DBColumn GetValue(DBLogTable<T> target) => target.UserLogKey;
+
+            public override void SetValue(DBLogTable<T> target, DBColumn value) { }
+        }
+
+
     }
 }

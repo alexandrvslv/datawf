@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
@@ -18,6 +19,7 @@ namespace DataWF.Common
     /// </summary>
     public static class TypeHelper
     {
+        private static readonly Type genericEnumerable = typeof(IEnumerable<>);
         private static readonly Type[] typeOneArray = { typeof(string) };
         private static readonly Dictionary<string, MemberInfo> casheNames = new Dictionary<string, MemberInfo>(200, StringComparer.Ordinal);
 
@@ -32,7 +34,22 @@ namespace DataWF.Common
         private static readonly Dictionary<MemberInfo, bool> cacheIsXmlSerialize = new Dictionary<MemberInfo, bool>(200);
         private static readonly Dictionary<MemberInfo, object> cacheDefault = new Dictionary<MemberInfo, object>(200);
         private static readonly Dictionary<Type, object> cacheTypeDefault = new Dictionary<Type, object>(200);
-
+        private static readonly Dictionary<Type, string> codeTypes = new Dictionary<Type, string>
+        {
+            { typeof(void), "void" },
+            { typeof(byte), "byte" },
+            { typeof(sbyte), "sbyte" },
+            { typeof(ushort), "ushort" },
+            { typeof(short), "short" },
+            { typeof(uint), "uint" },
+            { typeof(int), "int" },
+            { typeof(ulong), "ulong" },
+            { typeof(long), "long" },
+            { typeof(float), "float" },
+            { typeof(double), "double" },
+            { typeof(decimal), "decimal" },
+            { typeof(string), "string" },
+        };
         public static PropertyInfo GetIndexProperty(Type itemType)
         {
             typeOneArray[0] = typeof(string);
@@ -52,13 +69,26 @@ namespace DataWF.Common
             return itemType.GetProperty("Item", parameters);
         }
 
-        public static IEnumerable<INotifyListPropertyChanged> GetContainers(PropertyChangedEventHandler handler)
+        public static IEnumerable<T> GetContainers<T>(PropertyChangedEventHandler handler)
         {
             if (handler == null)
                 yield break;
             foreach (var invocator in handler.GetInvocationList())
             {
-                if (invocator.Target is INotifyListPropertyChanged container)
+                if (invocator.Target is T container)
+                {
+                    yield return container;
+                }
+            }
+        }
+
+        public static IEnumerable<T> GetHandlers<T>(NotifyCollectionChangedEventHandler handler)
+        {
+            if (handler == null)
+                yield break;
+            foreach (var invocator in handler.GetInvocationList())
+            {
+                if (invocator.Target is T container)
                 {
                     yield return container;
                 }
@@ -91,19 +121,17 @@ namespace DataWF.Common
             return list;
         }
 
-        //public static string GetPropertyString(string property)
-        //{
-        //    if (property == null)
-        //        return null;
-        //    string[] split = property.Sp_lit(new char[] { '.' });
-        //    return split[split.Length - 1];
-        //}
+        public static bool IsNullable(this Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
+
         public static Type CheckNullable(Type type)
         {
-            return type == null ? null : Nullable.GetUnderlyingType(type) ?? type;
-            //type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)
-            //   ? type.GetGenericArguments()[0]
-            //   : type
+            return type == null ? null : //Nullable.GetUnderlyingType(type) ?? type;
+            type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)
+               ? type.GetGenericArguments()[0]
+               : type;
         }
 
         public static bool IsDictionary(Type type)
@@ -166,7 +194,7 @@ namespace DataWF.Common
                     var code = index >= 0 ? value.Substring(0, index) : value;
                     type = Type.GetType(code);
 
-                    var byName = !code.Contains('.');
+                    var byName = code.IndexOf('.') < 0;
 
                     foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                     {
@@ -362,10 +390,7 @@ namespace DataWF.Common
         public static bool IsSerializeWriteable(PropertyInfo info)
         {
             var attribute = info.GetCustomAttribute<JsonIgnoreSerializationAttribute>(false);
-            if (attribute != null)
-                return false;
-            else
-                return true;
+            return attribute == null;
         }
 
         public static bool IsSerializeAttribute(Type type)
@@ -399,7 +424,7 @@ namespace DataWF.Common
                 Type itemType = GetMemberType(info);
                 if (itemType.IsSubclassOf(typeof(Delegate))
                     || (itemType == info.DeclaringType && itemType.IsValueType)
-                    || (info is PropertyInfo && (!((PropertyInfo)info).CanWrite || IsIndex((PropertyInfo)info)))
+                    || (info is PropertyInfo propertyInfo && IsIndex(propertyInfo))
                     || string.Equals(info.Name, "BindingContext", StringComparison.Ordinal))
                     //!IsDictionary(itemType) && !IsCollection(itemType)
                     flag = true;
@@ -673,6 +698,13 @@ namespace DataWF.Common
         public static Type GetItemType(Type type)
         {
             Type t = typeof(object);
+            foreach (var inter in type.GetInterfaces())
+            {
+                if (inter.IsGenericType && inter.GetGenericTypeDefinition() == genericEnumerable)
+                {
+                    return inter.GetGenericArguments()[0];
+                }
+            }
             if (type.IsGenericType)
             {
                 t = type.GetGenericArguments().FirstOrDefault();
@@ -744,9 +776,9 @@ namespace DataWF.Common
                     builder.Append(">");
                 }
             }
-            else if (type == typeof(void))
+            else if (codeTypes.TryGetValue(type, out var typeName))
             {
-                builder.Append("void");
+                builder.Append(typeName);
             }
             else
             {

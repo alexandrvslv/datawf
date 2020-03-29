@@ -47,9 +47,12 @@ namespace DataWF.Common
         {
             if (!Dictionary.TryGetValue(key, out var refs))
             {
-                Dictionary[key] = refs = new ThreadSafeList<T>(1);
+                Dictionary[key] = refs = new ThreadSafeList<T>(item);
             }
-            refs.Add(item);
+            else
+            {
+                refs.Add(item);
+            }
         }
 
         public void Remove(T item)
@@ -61,21 +64,33 @@ namespace DataWF.Common
 
         public void Remove(T item, K key)
         {
-            if (!Dictionary.TryGetValue(key, out var refs) || !refs.Remove(item))
+            if (!Dictionary.TryGetValue(key, out var refs) || !refs.Contains(item))
             {
-                foreach (var entry in Dictionary)
+                RemoveScan(item, ref key, ref refs);
+            }
+            if (refs != null)
+            {
+                if (refs.Count == 1)
                 {
-                    if (entry.Value.Remove(item))
-                    {
-                        key = entry.Key;
-                        refs = entry.Value;
-                        break;
-                    }
+                    Dictionary.Remove(key);
+                }
+                else
+                {
+                    refs.Remove(item);
                 }
             }
-            if (refs != null && refs.Count == 0)
+        }
+
+        private void RemoveScan(T item, ref K key, ref ThreadSafeList<T> refs)
+        {
+            foreach (var entry in Dictionary)
             {
-                Dictionary.Remove(key);
+                if (entry.Value.Contains(item))
+                {
+                    key = entry.Key;
+                    refs = entry.Value;
+                    break;
+                }
             }
         }
 
@@ -89,7 +104,7 @@ namespace DataWF.Common
         {
             if (Dictionary.TryGetValue(key, out var list))
             {
-                return list.Count > 0 ? list[0] : default(T);
+                return list[0];
             }
             return default(T);
         }
@@ -269,8 +284,13 @@ namespace DataWF.Common
 
         public void Refresh(T item)
         {
-            Remove(item);
-            Add(item);
+            var key = Invoker.GetValue(item);
+            CheckNull(ref key);
+            if (!Dictionary.TryGetValue(key, out var refs) || !refs.Contains(item))
+            {
+                Remove(item, key);
+                Add(item, key);
+            }
         }
 
         public void Add(object item)

@@ -12,23 +12,20 @@ namespace DataWF.WebService.Common
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
+            context.HttpContext.DisableBuffering();
             WebNotifyService.Instance.SetCurrentAction(context);
         }
 
         //https://stackoverflow.com/a/52623772/4682355
-        public override void OnActionExecuted(ActionExecutedContext context)
-        {
-            //options.OutputFormatters.RemoveType<JsonOutputFormatter>();
-            //var settings = new JsonSerializerSettings() { ContractResolver = DBItemContractResolver.Instance };
-            //settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-            //options.OutputFormatters.Insert(0, new ClaimsJsonOutputFormatter(settings, ArrayPool<char>.Shared));
-            //memory leak
-            //if (context.Result is ObjectResult objectResult)
-            //{
-            //    var options = new JsonSerializerOptions();
-            //    options.InitDefaults(context.HttpContext);
-            //    objectResult.Formatters.Add(new SystemTextJsonOutputFormatter(options));
-            //}
-        }
+        //public override void OnActionExecuted(ActionExecutedContext context)
+        //{
+        //    //memory leak
+        //    if (context.Result is ObjectResult objectResult)
+        //    {
+        //        var options = new JsonSerializerOptions();
+        //        options.InitDefaults(context.HttpContext);
+        //        objectResult.Formatters.Add(new SystemTextJsonOutputFormatter(options));
+        //    }
+        //}
     }
 }

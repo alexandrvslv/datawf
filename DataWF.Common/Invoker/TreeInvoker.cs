@@ -1,57 +1,58 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace DataWF.Common
 {
-    public class TreeInvoker : IInvoker
+    public class TreeInvoker<T> : Invoker<T, bool> where T : IGroup
     {
-        public Type DataType => typeof(bool);
-
-        public virtual Type TargetType => typeof(IGroup);
-
-        public bool CanWrite => true;
-
-        public string Name { get => nameof(IGroup.IsExpanded); set { } }
-
-        public virtual IListIndex CreateIndex(bool concurrent)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual object GetValue(object target)
-        {
-            return ((IGroup)target).IsExpanded;
-        }
-
-        public virtual void SetValue(object target, object value)
-        {
-            ((IGroup)target).Expand = (bool)value;
-        }
-    }
-
-    public class TreeInvoker<T> : TreeInvoker, IInvoker<T, bool> where T : IGroup
-    {
-        public static readonly IInvoker<T, bool> Instance = new TreeInvoker<T>();
+        public static readonly TreeInvoker<T> Instance = new TreeInvoker<T>();
 
         public TreeInvoker()
         { }
 
-        public override Type TargetType { get { return typeof(T); } }
+        public override string Name { get => nameof(IGroup.IsExpanded); }
 
-        public override IListIndex CreateIndex(bool concurrent)
-        {
-            return ListIndexFabric.Create<T, bool>(this, concurrent);
-        }
+        public override bool CanWrite => true;
 
-        public bool GetValue(T target)
+        public override bool GetValue(T target)
         {
             return target.IsExpanded;
         }
 
-        public void SetValue(T target, bool value)
+        public override void SetValue(T target, bool value)
         {
             target.Expand = value;
         }
+        public override IQueryParameter CreateParameter(Type type)
+        {
+            var parameter = base.CreateParameter(type);
+            parameter.Value = true;
+            parameter.IsGlobal = true;
+            parameter.FormatIgnore = true;
+            return parameter;
+        }
+
+        public override QueryParameter<TT> CreateParameter<TT>()
+        {
+            var parameter = base.CreateParameter<TT>();
+            parameter.Value = true;
+            parameter.IsGlobal = true;
+            parameter.FormatIgnore = true;
+            return parameter;
+        }
+        public override InvokerComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
+        {
+            type = type ?? typeof(T);
+            return (InvokerComparer)Activator.CreateInstance(typeof(TreeComparer<>).MakeGenericType(type));
+        }
+        public override InvokerComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
+        {
+            return (InvokerComparer<TT>)CreateComparer(typeof(TT), direction);
+        }
     }
 
+    public class TreeInvoker : TreeInvoker<IGroup>
+    {
+    }
 }
 

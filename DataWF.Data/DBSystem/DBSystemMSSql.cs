@@ -206,7 +206,7 @@ namespace DataWF.Data
             var command = (SqlCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = @oid");
             command.Parameters.AddWithValue($"@oid", (long)oid);
             transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (transaction.Reader.Read())
+            if (await transaction.ReadAsync())
             {
                 return ((SqlDataReader)transaction.Reader).GetStream(1);
             }
@@ -246,6 +246,16 @@ select @oid;");
         {
             var sqlReader = (SqlDataReader)reader;
             return sqlReader.ReadAsync();
+        }
+
+        public override uint GetOID(IDataReader reader, int index)
+        {
+            return ((SqlDataReader)reader).GetFieldValue<uint>(index);
+        }
+
+        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        {
+            return ((SqlDataReader)reader).GetTimeSpan(index);
         }
     }
 }

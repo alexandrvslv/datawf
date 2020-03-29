@@ -9,15 +9,6 @@ using System.Text.RegularExpressions;
 
 namespace DataWF.Data
 {
-    public class NullablePullIndex<T, K> : PullIndex<T, K?> where T : class, IPullHandler where K : struct
-    {
-
-        public NullablePullIndex(Pull pull, object nullKey, IComparer valueComparer, IEqualityComparer keyComparer = null)
-            : base(pull, nullKey.GetType() == typeof(K) ? (K?)(K)nullKey : (K?)nullKey, valueComparer, keyComparer)
-        {
-        }
-    }
-
     public abstract class PullIndex : IDisposable
     {
         public abstract Pull BasePull { get; }
@@ -26,12 +17,26 @@ namespace DataWF.Data
         public abstract void RefreshSort(object item);
         public abstract void Add(object item);
         public abstract void Add(object item, object value);
+        public void Add<T, V>(T item, V value) where T : class, IPullHandler
+        {
+            var pull = (PullIndex<T, V>)this;
+            pull.CheckNull(ref value);
+            pull.Add(item, value);
+        }
+
         public abstract void Remove(object item);
         public abstract void Remove(object item, object value);
+        public void Remove<T, V>(T item, V value) where T : class, IPullHandler
+        {
+            var pull = (PullIndex<T, V>)this;
+            pull.CheckNull(ref value);
+            pull.Remove(item, value);
+        }
         public abstract IEnumerable Select(object value, CompareType compare);
         public abstract IEnumerable<F> Select<F>(object value, CompareType compare) where F : class;
         public abstract object SelectOne(object value);
         public abstract F SelectOne<F>(object value) where F : class;
+        public abstract F SelectOne<F, K>(K value) where F : class;
         public abstract void Clear();
         public abstract void Dispose();
     }
@@ -45,7 +50,7 @@ namespace DataWF.Data
 
         public PullIndex(Pull pull, object nullKey, IComparer valueComparer = null, IEqualityComparer keyComparer = null)
         {
-            Pull = (Pull<K>)pull;
+            Pull = (GenericPull<K>)pull;
             this.nullKey = (K)nullKey;
             this.valueComparer = (valueComparer as IComparer<T>) ?? Comparer<T>.Default;
             this.keyComparer = (keyComparer as IEqualityComparer<K>) ?? EqualityComparer<K>.Default;
@@ -54,7 +59,7 @@ namespace DataWF.Data
 
         public override Pull BasePull => Pull;
 
-        public Pull<K> Pull { get; }
+        public GenericPull<K> Pull { get; }
 
         public K NullKey => nullKey;
 
@@ -104,7 +109,7 @@ namespace DataWF.Data
             {
                 if (!store.TryGetValue(key, out ThreadSafeList<T> list))
                 {
-                    store[key] = new ThreadSafeList<T>(1) { item };
+                    store[key] = new ThreadSafeList<T>(item);
                 }
                 else
                 {
@@ -200,7 +205,7 @@ namespace DataWF.Data
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CheckNull(ref K key)
+        public void CheckNull(ref K key)
         {
             if (keyComparer.Equals(key, default(K)))
             {
@@ -226,6 +231,16 @@ namespace DataWF.Data
         public override F SelectOne<F>(object value)
         {
             var key = CheckNull(value);
+            if (store.TryGetValue(key, out var list))
+                return list[0] as F;
+            else
+                return default(F);
+        }
+
+        public override F SelectOne<F, KV>(KV value)
+        {
+            var key = Unsafe.As<KV, K>(ref value);
+            CheckNull(ref key);
             if (store.TryGetValue(key, out var list))
                 return list[0] as F;
             else

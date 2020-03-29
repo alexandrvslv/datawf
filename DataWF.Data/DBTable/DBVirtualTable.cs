@@ -245,6 +245,41 @@ namespace DataWF.Data
             }
         }
 
+        public override void OnItemChanging<V>(DBItem item, string property, DBColumn column, V value)
+        {
+            if (item is T && item.GetType() == typeof(T))
+            {
+                base.OnItemChanging<V>(item, property, column == null ? null : Columns[column.Name], value);
+            }
+        }
+
+        public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
+        {
+            if (item is T && item.GetType() == typeof(T))
+            {
+                base.OnItemChanging(item, property, column == null ? null : Columns[column.Name], value);
+            }
+        }
+
+        public override void OnItemChanged<V>(DBItem item, string property, DBColumn column, V value)
+        {
+            if (item is T tItem && tItem.GetType() == typeof(T))
+            {
+                if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(column?.Name) && !BaseTable.CheckItem(tItem, FilterQuery)))
+                {
+                    if (items.Remove(tItem))
+                    {
+                        CheckViews(item, NotifyCollectionChangedAction.Remove);
+                        RemoveIndexes(tItem);
+                    }
+                }
+                else
+                {
+                    base.OnItemChanged<V>(item, property, column == null ? null : Columns[column.Name], value);
+                }
+            }
+        }
+
         public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
         {
             if (item is T tItem && tItem.GetType() == typeof(T))
@@ -264,12 +299,10 @@ namespace DataWF.Data
             }
         }
 
-        public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
+        public override DBColumn CheckColumn(string name, Type type, ref bool newCol)
         {
-            if (item is T && item.GetType() == typeof(T))
-            {
-                base.OnItemChanging(item, property, column == null ? null : Columns[column.Name], value);
-            }
+            var column = base.CheckColumn(name, type, ref newCol);
+            return column is DBVirtualColumn virtualColumn ? virtualColumn.BaseColumn : column;
         }
 
         public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
@@ -389,7 +422,7 @@ namespace DataWF.Data
                 }
             }
         }
-        [Invoker(typeof(DBVirtualTable<>), nameof(BaseTableName), GenericType = typeof(DBItem))]
+        [Invoker(typeof(DBVirtualTable<>), nameof(BaseTableName))]
         public class BaseTableNameInvoker : Invoker<DBVirtualTable<T>, string>
         {
             public static readonly BaseTableNameInvoker Instance = new BaseTableNameInvoker();

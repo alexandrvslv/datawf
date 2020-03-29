@@ -1,7 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#if NETSTANDARD2_0
+using Newtonsoft.Json;
+#else
 using System.Text.Json;
-using System.Text.Json.Serialization;
+#endif
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
@@ -10,7 +16,12 @@ namespace DataWF.Common
         private static readonly Dictionary<Type, ICrudClient> crudClients = new Dictionary<Type, ICrudClient>();
         private static readonly Dictionary<Type, Dictionary<int, ICrudClient>> crudTypedClients = new Dictionary<Type, Dictionary<int, ICrudClient>>();
         private readonly SelectableList<IClient> clients = new SelectableList<IClient>();
-        private readonly Lazy<JsonSerializerOptions> serializeSettings;
+
+        private static HttpClient client;
+        private string baseUrl;
+        private string authorizationToken;
+        private HttpMessageHandler httpMessageHandler;
+
         public static ICrudClient<T> Get<T>()
         {
             return (ICrudClient<T>)Get(typeof(T));
@@ -23,35 +34,109 @@ namespace DataWF.Common
 
         public ClientProviderBase()
         {
-            serializeSettings = new Lazy<JsonSerializerOptions>(() =>
+#if NETSTANDARD2_0
+            JsonSettings = new JsonSerializerSettings()
             {
-                var options = new JsonSerializerOptions
-                {
 #if DEBUG
-                    WriteIndented = true,
+                Formatting = Formatting.Indented,
 #endif
-                    DefaultBufferSize = 128 * 1024,
-                    AllowTrailingCommas = true,
-                    // Use the default property (As Is).
-                    PropertyNamingPolicy = null,
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                };
-                // Configure a converters.
-                options.Converters.Add(new JsonStringEnumConverter());
-                options.Converters.Add(new JsonClientConverterFactory(this));
-                return options;
-            });
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+                ContractResolver = new NewtonJsonContractResolver(this)
+            };
+            //JsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+#else
+            JsonSettings = new JsonSerializerOptions
+            {
+#if DEBUG
+            WriteIndented = true,
+#endif
+            DefaultBufferSize = 82 * 1024,
+            AllowTrailingCommas = true,
+            // Use the default property (As Is).
+            PropertyNamingPolicy = null,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            //JsonSettings.Converters.Add(new JsonStringEnumConverter());
+            JsonSettings.Converters.Add(new TimeSpanConverter());
+            JsonSettings.Converters.Add(new SystemJsonConverterFactory(this));
+#endif
         }
 
-        public JsonSerializerOptions JsonSerializerOptions { get { return serializeSettings.Value; } }
+#if NETSTANDARD2_0
+        public JsonSerializerSettings JsonSettings { get; }
+#else
+        public JsonSerializerOptions JsonSettings { get; }
 
-        public AuthorizationInfo Authorization { get; set; }
+#endif
+        public string AuthorizationScheme { get; set; } = "Bearer";
+        public string AuthorizationToken
+        {
+            get => authorizationToken;
+            set
+            {
+                if (authorizationToken != value)
+                {
+                    authorizationToken = value;
+                    if (client != null)
+                    {
+                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(AuthorizationScheme, AuthorizationToken);
+                    }
+                }
+            }
+        }
 
-        public string BaseUrl { get; set; }
+        public Func<Task<bool>> UnauthorizedError { get; set; }
+
+        public string BaseUrl
+        {
+            get => baseUrl;
+            set
+            {
+                if (baseUrl != value)
+                {
+                    baseUrl = value;
+                    if (client != null)
+                    {
+                        client.Dispose();
+                        client = null;
+                        //CreateHttpClient(httpMessageHandler);
+                    }
+                }
+            }
+        }
 
         public SelectableList<IClient> Clients => clients;
 
         IEnumerable<IClient> IClientProvider.Clients => Clients;
+
+        public virtual HttpClient CreateHttpClient(HttpMessageHandler httpMessageHandler = null)
+        {
+            this.httpMessageHandler = httpMessageHandler;
+            if (client == null)
+            {
+                client = httpMessageHandler != null ? new HttpClient(httpMessageHandler, false) : new HttpClient();
+                client.Timeout = TimeSpan.FromHours(1);
+                
+                if (baseUrl != null)
+                {
+                    client.BaseAddress = new Uri(baseUrl);
+                }
+                if (AuthorizationToken != null)
+                {
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(AuthorizationScheme, AuthorizationToken);
+                }
+            }
+            return client;
+        }
+
+        public async Task<bool> OnUnauthorized()
+        {
+            if (UnauthorizedError != null)
+            {
+                return await UnauthorizedError();
+            }
+            return false;
+        }
 
         protected void Add(IClient client)
         {

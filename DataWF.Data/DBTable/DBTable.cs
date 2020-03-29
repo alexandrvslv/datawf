@@ -179,10 +179,9 @@ namespace DataWF.Data
         protected string sequenceName;
         protected bool caching = false;
         protected DBTableType type = DBTableType.Table;
-        protected int block = 500;
+        protected int blockSize = 256;
         internal object locker = new object();
         protected List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
-        protected List<IInvoker> invokers;
         private DBItemType itemType;
         private int itemTypeIndex = 0;
 
@@ -261,8 +260,27 @@ namespace DataWF.Data
         [Browsable(false)]
         public virtual int BlockSize
         {
-            get => block;
-            set => block = value;
+            get => blockSize;
+            set
+            {
+                var i = 1;
+                var temp = value;
+                do
+                {
+                    i++;
+                    temp = temp / 2;
+                }
+                while (temp > 1);
+                temp = (int)Math.Pow(2, i);
+                if (temp != blockSize)
+                {
+                    blockSize = temp;
+                    foreach (var column in Columns)
+                    {
+                        column.CheckPull();
+                    }
+                }
+            }
         }
 
         public virtual string SqlName => name;
@@ -432,38 +450,6 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual List<IInvoker> Invokers
-        {
-            get
-            {
-                if (invokers == null)
-                {
-                    invokers = new List<IInvoker>(Columns.Count + (this.Generator?.Referencings.Count() ?? 0));
-                    foreach (var column in Columns)
-                    {
-                        if (!IsSerializeableColumn(column))
-                            continue;
-                        invokers.Add(column);
-                        if (column.ReferencePropertyInvoker != null)
-                        {
-                            invokers.Add(column.ReferencePropertyInvoker);
-                        }
-                    }
-                    if (Generator != null)
-                    {
-                        foreach (var refing in Generator.Referencings)
-                        {
-                            if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(ItemType.Type))
-                                continue;
-                            invokers.Add(refing.PropertyInvoker);
-                        }
-                    }
-                }
-                return invokers;
-            }
-        }
-
         [Category("Column")]
         public virtual DBColumnList<DBColumn> Columns { get; set; }
 
@@ -494,18 +480,21 @@ namespace DataWF.Data
 
         public abstract void CopyTo(DBItem[] array, int arrayIndex);
 
+        public abstract void OnItemChanging<V>(DBItem item, string property, DBColumn column, V value);
+        public abstract void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
+        public abstract void OnItemChanged<V>(DBItem item, string proeprty, DBColumn column, V value);
         public abstract void OnItemChanged(DBItem item, string proeprty, DBColumn column, object value);
 
-        public abstract void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
 
         public abstract void Trunc();
 
-        public bool IsSerializeableColumn(DBColumn column)
+        public bool IsSerializeableColumn(DBColumn column, Type type)
         {
             return column.Property != null
-                && column.PropertyInvoker != null
-                && column.PropertyInvoker.TargetType.IsAssignableFrom(ItemType.Type)
+                && column.PropertyInvoker != null && column.PropertyInvoker != column
+                && column.PropertyInvoker.TargetType.IsAssignableFrom(type)
                 //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
+                && (column.Keys & DBColumnKeys.Stamp) != DBColumnKeys.Stamp
                 && (column.Keys & DBColumnKeys.Password) != DBColumnKeys.Password
                 && (column.Keys & DBColumnKeys.File) != DBColumnKeys.File;
         }
@@ -528,7 +517,7 @@ namespace DataWF.Data
                 ?? Columns.GetByReferenceProperty(property);
         }
 
-        protected void SetItemType(Type type)
+        protected internal void SetItemType(Type type)
         {
             itemType = ItemTypes[0] = new DBItemType { Type = type };
             // Info = DBService.GetTableAttribute(type);
@@ -940,12 +929,11 @@ namespace DataWF.Data
 
         int IComparable.CompareTo(object obj)
         {
-            if (obj is DBTable)
+            if (obj is DBTable table)
             {
-                DBTable ts = obj as DBTable;
-                return string.Compare(this.Name, ts.Name);
+                return DBTableComparer.Instance.Compare(this, table);
             }
-            return 1;
+            return -1;
         }
 
         #endregion
@@ -971,9 +959,14 @@ namespace DataWF.Data
 
         public void RejectChanges(IUserIdentity user)
         {
-            foreach (var row in GetChangedItems().ToList())
+            RejectChanges(GetChangedItems().ToList(), user);
+        }
+
+        public void RejectChanges(IEnumerable<DBItem> items, IUserIdentity user)
+        {
+            foreach (var item in items)
             {
-                row.Reject(user);
+                item.Reject(user);
             }
         }
 
@@ -1005,6 +998,12 @@ namespace DataWF.Data
             return type != null
                 ? NewItem(state, def, typeIndex, type.Type)
                 : NewItem(state, def);
+        }
+
+        public DBItem NewItem(DBUpdateState state, bool def, Type type)
+        {
+            var typeIndex = ItemTypes.First(p => p.Value.Type == type).Key;
+            return NewItem(state, def, typeIndex, type);
         }
 
         public DBItem NewItem(DBUpdateState state, bool def, int typeIndex, Type type)
@@ -1148,7 +1147,7 @@ namespace DataWF.Data
                 //case CompareTypes.Is:
                 //    return val1.Equals(DBNull.Value) ? !comparer.Not : comparer.Not;
                 case CompareTypes.Equal:
-                    return ListHelper.Equal(val1, val2, false) ? !comparer.Not : comparer.Not;
+                    return ListHelper.Equal(val1, val2) ? !comparer.Not : comparer.Not;
                 case CompareTypes.Like:
                     var r = val2 is Regex ? (Regex)val2 : Helper.BuildLike(val2.ToString());
                     return r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
@@ -1174,11 +1173,11 @@ namespace DataWF.Data
                     var between = val2 as QBetween;
                     if (between == null)
                         throw new Exception("Expect QBetween but Get " + val2 == null ? "null" : val2.GetType().FullName);
-                    return ListHelper.Compare(val1, between.Min.GetValue(item), null, false) >= 0
-                                     && ListHelper.Compare(val1, between.Max.GetValue(item), null, false) <= 0;
+                    return ListHelper.Compare(val1, between.Min.GetValue(item), null) >= 0
+                                     && ListHelper.Compare(val1, between.Max.GetValue(item), null) <= 0;
                 default:
                     bool f = false;
-                    int rez = ListHelper.Compare(val1, val2, null, false);
+                    int rez = ListHelper.Compare(val1, val2, null);
                     switch (comparer.Type)
                     {
                         case CompareTypes.Greater:
@@ -1480,7 +1479,6 @@ namespace DataWF.Data
 
         internal void ClearCache()
         {
-            invokers = null;
             dmlInsert = null;
             dmlInsertSequence = null;
             dmlDelete = null;
@@ -1493,6 +1491,27 @@ namespace DataWF.Data
             groupKey = DBColumn.EmptyKey;
             stateKey = DBColumn.EmptyKey;
             imageKey = DBColumn.EmptyKey;
+        }
+
+        public IEnumerable<IInvoker> GetInvokers<T>()
+        {
+            return GetInvokers(typeof(T));
+        }
+
+        public IEnumerable<IInvoker> GetRefInvokers()
+        {
+            yield return ItemTypeKey.PropertyInvoker;
+            yield return PrimaryKey.PropertyInvoker;
+        }
+
+        public IEnumerable<IInvoker> GetInvokers(Type type)
+        {
+            foreach (var itemType in ItemTypes.Values)
+            {
+                if (itemType.Type == type)
+                    return itemType.Invokers;
+            }
+            return itemType.Invokers;
         }
 
         public IInvoker GetInvoker(string property)
@@ -1780,6 +1799,26 @@ namespace DataWF.Data
             });
         }
 
+        public virtual void RemoveDeletedColumns()
+        {
+            for (int i = 0; i < Columns.Count;)
+            {
+                var column = Columns[i];
+                if (column.Property != null && column.PropertyInfo == null)
+                {
+                    column.RemoveConstraints();
+                    column.RemoveForeignKeys();
+                    column.RemoveIndexes();
+
+                    Columns.RemoveInternal(column, i);
+                }
+                else
+                {
+                    i++;
+                }
+            }
+        }
+
         [Invoker(typeof(DBTable), nameof(DBTable.GroupName))]
         public class GroupNameInvoker : Invoker<DBTable, string>
         {
@@ -1900,7 +1939,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBTable), nameof(DBTable.ColumnGroups))]
         public class ColumnGroupsInvoker : Invoker<DBTable, DBColumnGroupList>
         {
-            public static readonly ColumnGroupsInvoker Instance = new ColumnGroupsInvoker();
             public override string Name => nameof(DBTable.ColumnGroups);
 
             public override bool CanWrite => true;
@@ -1913,7 +1951,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBTable), nameof(DBTable.Indexes))]
         public class IndexesInvoker : Invoker<DBTable, DBIndexList>
         {
-            public static readonly IndexesInvoker Instance = new IndexesInvoker();
             public override string Name => nameof(DBTable.Indexes);
 
             public override bool CanWrite => true;
@@ -1926,7 +1963,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBTable), nameof(DBTable.Foreigns))]
         public class ForeignsInvoker : Invoker<DBTable, DBForeignList>
         {
-            public static readonly ForeignsInvoker Instance = new ForeignsInvoker();
             public override string Name => nameof(DBTable.Foreigns);
 
             public override bool CanWrite => true;
@@ -1939,7 +1975,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBTable), nameof(DBTable.Constraints))]
         public class ConstraintsInvoker : Invoker<DBTable, DBConstraintList<DBConstraint>>
         {
-            public static readonly ConstraintsInvoker Instance = new ConstraintsInvoker();
             public override string Name => nameof(DBTable.Constraints);
 
             public override bool CanWrite => true;
@@ -1952,7 +1987,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBTable), nameof(DBTable.ItemTypes))]
         public class ItemTypesInvoker : Invoker<DBTable, Dictionary<int, DBItemType>>
         {
-            public static readonly ItemTypesInvoker Instance = new ItemTypesInvoker();
             public override string Name => nameof(DBTable.ItemTypes);
 
             public override bool CanWrite => true;
@@ -1965,7 +1999,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBTable), nameof(DBTable.Query))]
         public class QueryInvoker : Invoker<DBTable, string>
         {
-            public static readonly QueryInvoker Instance = new QueryInvoker();
             public override string Name => nameof(DBTable.Query);
 
             public override bool CanWrite => true;
@@ -1978,7 +2011,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBTable), nameof(DBTable.Type))]
         public class TypeInvoker : Invoker<DBTable, DBTableType>
         {
-            public static readonly TypeInvoker Instance = new TypeInvoker();
             public override string Name => nameof(DBTable.Type);
 
             public override bool CanWrite => true;
@@ -1991,7 +2023,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBTable), nameof(DBTable.IsCaching))]
         public class IsCachingInvoker : Invoker<DBTable, bool>
         {
-            public static readonly IsCachingInvoker Instance = new IsCachingInvoker();
             public override string Name => nameof(DBTable.IsCaching);
 
             public override bool CanWrite => true;
@@ -2004,7 +2035,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBTable), nameof(DBTable.ComDelete))]
         public class ComDeleteInvoker : Invoker<DBTable, string>
         {
-            public static readonly ComDeleteInvoker Instance = new ComDeleteInvoker();
             public override string Name => nameof(DBTable.ComDelete);
 
             public override bool CanWrite => true;
@@ -2017,7 +2047,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBTable), nameof(DBTable.ComInsert))]
         public class ComInsertInvoker : Invoker<DBTable, string>
         {
-            public static readonly ComInsertInvoker Instance = new ComInsertInvoker();
             public override string Name => nameof(DBTable.ComInsert);
 
             public override bool CanWrite => true;
@@ -2030,7 +2059,6 @@ namespace DataWF.Data
         [Invoker(typeof(DBTable), nameof(DBTable.ComUpdate))]
         public class ComUpdateInvoker : Invoker<DBTable, string>
         {
-            public static readonly ComUpdateInvoker Instance = new ComUpdateInvoker();
             public override string Name => nameof(DBTable.ComUpdate);
 
             public override bool CanWrite => true;
@@ -2038,6 +2066,66 @@ namespace DataWF.Data
             public override string GetValue(DBTable target) => target.ComUpdate;
 
             public override void SetValue(DBTable target, string value) => target.ComUpdate = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.SqlName))]
+        public class SqlNameInvoker : Invoker<DBTable, string>
+        {
+            public override string Name => nameof(DBTable.SqlName);
+
+            public override bool CanWrite => false;
+
+            public override string GetValue(DBTable target) => target.SqlName;
+
+            public override void SetValue(DBTable target, string value) { }
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.Count))]
+        public class CountInvoker : Invoker<DBTable, int>
+        {
+            public override string Name => nameof(DBTable.Count);
+
+            public override bool CanWrite => false;
+
+            public override int GetValue(DBTable target) => target.Count;
+
+            public override void SetValue(DBTable target, int value) { }
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.IsReadOnly))]
+        public class IsReadOnlyInvoker : Invoker<DBTable, bool>
+        {
+            public override string Name => nameof(DBTable.IsReadOnly);
+
+            public override bool CanWrite => false;
+
+            public override bool GetValue(DBTable target) => target.IsReadOnly;
+
+            public override void SetValue(DBTable target, bool value) { }
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.DefaultItemsView))]
+        public class DefaultItemsViewInvoker : Invoker<DBTable, IDBTableView>
+        {
+            public override string Name => nameof(DBTable.DefaultItemsView);
+
+            public override bool CanWrite => false;
+
+            public override IDBTableView GetValue(DBTable target) => target.DefaultItemsView;
+
+            public override void SetValue(DBTable target, IDBTableView value) { }
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.ChildRelations))]
+        public class ChildRelationsInvoker : Invoker<DBTable, List<DBForeignKey>>
+        {
+            public override string Name => nameof(DBTable.ChildRelations);
+
+            public override bool CanWrite => false;
+
+            public override List<DBForeignKey> GetValue(DBTable target) => target.ChildRelations;
+
+            public override void SetValue(DBTable target, List<DBForeignKey> value) { }
         }
     }
 }

@@ -15,6 +15,8 @@ namespace DataWF.Common
 
         event EventHandler ParametersChanged;
 
+        IQueryParameter GetParameter(string name);
+
         IQueryParameter Add(string property, object value);
 
         IQueryParameter Add(LogicType logic, IInvoker invoker, CompareType comparer, object value);
@@ -22,12 +24,6 @@ namespace DataWF.Common
         IQueryParameter AddOrUpdate(LogicType logic, IInvoker invoker, CompareType comparer, object value);
 
         InvokerComparer AddOrder(IInvoker invoker, ListSortDirection sortDirection);
-
-        IQueryParameter AddTreeParameter();
-
-        void Add(IQueryParameter parameter);
-
-        bool Remove(IQueryParameter parameter);
 
         void Clear();
 

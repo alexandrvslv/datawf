@@ -37,11 +37,17 @@ namespace DataWF.Common
                         Changes.Clear();
                     }
                     if (syncStatus == SynchronizedStatus.Actual
-                        || syncStatus == SynchronizedStatus.Edit)
-                        foreach (var container in Containers.OfType<IReferenceList>())
+                        || syncStatus == SynchronizedStatus.Edit
+                        || syncStatus == SynchronizedStatus.New)
+                    {
+                        foreach (var container in Containers)
                         {
-                            container.CheckOwnerStatus(new[] { this });
+                            if (container is IChangeableList changableList)
+                            {
+                                changableList.CheckStatus(this);
+                            }
                         }
+                    }
                 }
             }
         }
@@ -60,7 +66,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    if (ListHelper.Equal(cacheValue, newValue, false))
+                    if (ListHelper.Equal(cacheValue, newValue))
                     {
                         Changes.Remove(propertyName);
                         if (syncStatus == SynchronizedStatus.Edit

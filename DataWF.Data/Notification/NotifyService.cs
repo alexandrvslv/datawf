@@ -211,7 +211,7 @@ namespace DataWF.Data
                     {
                         var res = x.Table.CompareTo(y.Table);
                         //res = res != 0 ? res : string.Compare(x.Item.GetType().Name, y.Item.GetType().Name, StringComparison.Ordinal);
-                        res = res != 0 ? res : ListHelper.Compare(x.ItemId, y.ItemId, null, false);
+                        res = res != 0 ? res : ListHelper.Compare(x.ItemId, y.ItemId, null);
                         return res != 0 ? res : x.Type.CompareTo(y.Type);
                     });
 

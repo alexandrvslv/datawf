@@ -12,11 +12,13 @@ namespace DataWF.Common
         Delete = 8,
         Admin = 16,
         Accept = 32,
-        Download = 64
+        Download = 64,
+        Full = Download | Accept | Admin | Delete | Update | Create | Read
     }
 
     public enum IdentityType
     {
-
+        Group,
+        User
     }
 }

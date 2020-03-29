@@ -9,11 +9,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
-using System.Runtime.Serialization;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -32,7 +28,6 @@ namespace DataWF.Common
 
         private string baseUrl;
         private IClientProvider provider;
-        private static HttpClient client;
 
         public ClientBase()
         {
@@ -57,20 +52,12 @@ namespace DataWF.Common
             set { baseUrl = value; }
         }
 
-        partial void ProcessResponse(HttpClient client, HttpResponseMessage response);
-
-        protected virtual HttpClient CreateHttpClient()
+        public virtual HttpClient GetHttpClient()
         {
-            if (client == null)
-            {
-                //var handler = new HttpClientHandler()
-                //{
-                //    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-                //};
-                client = new HttpClient() { Timeout = TimeSpan.FromHours(1) };
-            }
-            return client;
+            return Provider.CreateHttpClient();
         }
+
+        partial void ProcessResponse(HttpClient client, HttpResponseMessage response);
 
         protected virtual void Validation(object value)
         {
@@ -101,17 +88,20 @@ namespace DataWF.Common
         }
 
         public virtual async Task<R> Request<R>(ProgressToken progressToken,
-            string httpMethod = "GET",
-            string commandUrl = "/api",
-            string mediaType = "application/json",
-            object value = null,
+            HttpMethod httpMethod,
+            string commandUrl,// = "/api"
+            string mediaType,// = "application/json"
+            HttpJsonSettings jsonSettings,
+            object value,
             params object[] routeParams)
         {
-            var client = CreateHttpClient();
+            var client = GetHttpClient();
             try
             {
-                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, routeParams))
+                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, jsonSettings, value, routeParams))
                 {
+                    System.Diagnostics.Debug.WriteLine(request.RequestUri);
+
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, progressToken.CancellationToken).ConfigureAwait(false))
                     {
                         ProcessResponse(client, response);
@@ -165,19 +155,29 @@ namespace DataWF.Common
                                         }
                                         else
                                         {
-                                            result = await JsonSerializer.DeserializeAsync<R>(encodedStream, Provider.JsonSerializerOptions).ConfigureAwait(false);
+#if NETSTANDARD2_0
+                                            var jsonSerializer = Newtonsoft.Json.JsonSerializer.Create(Provider.JsonSettings);
+                                            using (var sreader = new StreamReader(encodedStream))
+                                            using (var jreader = new Newtonsoft.Json.JsonTextReader(sreader))
+                                            {
+                                                result = (R)jsonSerializer.Deserialize(jreader, typeof(R));
+                                            }
+#else
+                                            result = await System.Text.Json.JsonSerializer.DeserializeAsync<R>(encodedStream, Provider.JsonSettings).ConfigureAwait(false);
+#endif
                                             if (encodedStream.CanWrite)
                                             {
-                                                encodedStream.CopyTo(File.OpenWrite("output.json"));
+                                                using (var file = File.OpenWrite("output.json"))
+                                                    encodedStream.CopyTo(file);
                                             }
                                         }
                                     }
                                 }
                                 break;
                             case System.Net.HttpStatusCode.Unauthorized:
-                                if (await Provider?.Authorization?.OnUnauthorizedError())
+                                if (await Provider?.OnUnauthorized())
                                 {
-                                    return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, value, routeParams).ConfigureAwait(false);
+                                    return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, jsonSettings, value, routeParams).ConfigureAwait(false);
                                 }
                                 else
                                 {
@@ -278,25 +278,37 @@ namespace DataWF.Common
         }
 
         protected virtual HttpRequestMessage CreateRequest(ProgressToken progressToken,
-            string httpMethod = "GET",
-            string commandUrl = "/api",
-            string mediaType = "application/json",
+            HttpMethod httpMethod,
+            string commandUrl,
+            string mediaType,
+            HttpJsonSettings jsonSettings,
             object value = null,
             params object[] parameters)
         {
-            Status =
-                httpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Post :
-                httpMethod.Equals("PUT", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Put :
-                httpMethod.Equals("DELETE", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Delete :
-                ClientStatus.Get;
 
             var request = new HttpRequestMessage()
             {
                 RequestUri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute),
-                Method = new HttpMethod(httpMethod)
+                Method = httpMethod
             };
-
-            Provider?.Authorization?.FillRequest(request);
+            request.Headers.Add(HttpJsonSettings.JsonKeys, jsonSettings.Keys.ToString());
+            request.Headers.Add(HttpJsonSettings.JsonMaxDepth, jsonSettings.MaxDepth.ToString());
+            if (httpMethod.Method.Equals("GET", StringComparison.OrdinalIgnoreCase))
+            {
+                Status = ClientStatus.Get;
+            }
+            else if (httpMethod.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
+            {
+                Status = ClientStatus.Post;
+            }
+            else if (httpMethod.Method.Equals("PUT", StringComparison.OrdinalIgnoreCase))
+            {
+                Status = ClientStatus.Put;
+            }
+            else if (httpMethod.Method.Equals("DELETE", StringComparison.OrdinalIgnoreCase))
+            {
+                Status = ClientStatus.Delete;
+            }
 
             if (value is Stream stream)
             {
@@ -315,14 +327,26 @@ namespace DataWF.Common
             else if (value != null)
             {
                 Validation(value);
-                var text = JsonSerializer.Serialize(value, value.GetType(), Provider.JsonSerializerOptions);
+#if NETSTANDARD2_0
+                string text;
+                var serializer = Newtonsoft.Json.JsonSerializer.Create(Provider.JsonSettings);
+                using (var writer = new StringWriter())
+                using (var jwriter = new Newtonsoft.Json.JsonTextWriter(writer))
+                {
+                    serializer.Serialize(jwriter, value);
+                    jwriter.Flush();
+                    text = writer.ToString();
+                }
+#else
+                var text = System.Text.Json.JsonSerializer.Serialize(value, value.GetType(), Provider.JsonSettings);
+#endif
                 request.Content = new StringContent(text, Encoding.UTF8, "application/json");
             }
-            if (httpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))
+            if (request.Method == HttpMethod.Get)
             {
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
             }
-            if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase))
+            if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase))// && request.Version.Major < 2
             {
                 request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("br"));
             }
@@ -343,7 +367,7 @@ namespace DataWF.Common
                 }
                 if (parameters.Length <= i)
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentOutOfRangeException(nameof(parameters));
                 }
 
                 urlBuilder.Append(Uri.EscapeDataString(ConvertToString(parameters[i++], CultureInfo.InvariantCulture)));
@@ -357,7 +381,7 @@ namespace DataWF.Common
             return urlBuilder;
         }
 
-        protected string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
+        protected string ConvertToString(object value, CultureInfo cultureInfo)
         {
             if (value is Enum)
             {

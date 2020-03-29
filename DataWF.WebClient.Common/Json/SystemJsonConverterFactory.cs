@@ -1,17 +1,19 @@
-﻿using System;
+﻿using Newtonsoft.Json.Serialization;
+using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace DataWF.Common
 {
-    public class JsonClientConverterFactory : JsonConverterFactory
+    public class SystemJsonConverterFactory : JsonConverterFactory
     {
-        public JsonClientConverterFactory(IClientProvider provider)
+        public SystemJsonConverterFactory(IClientProvider provider)
         {
             Provider = provider;
         }
 
         public IClientProvider Provider { get; }
+
         public override bool CanConvert(Type typeToConvert)
         {
             return Provider.GetClient(typeToConvert) != null;

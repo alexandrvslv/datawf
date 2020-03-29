@@ -12,7 +12,7 @@ namespace DataWF.Data
                 throw new ArgumentException($"Type is null on column {column.FullName}");
 
             //Type gtype = typeof(DBNullablePullIndex<>).MakeGenericType(column.DataType);
-            return PullIndexFabric.Create(column.Pull, typeof(DBItem), column.DataType, list.DefaultComparer);
+            return PullIndexFabric.Create(column.Pull, list.ItemType.Type, column.DataType, list.DefaultComparer);
         }
     }
 

@@ -27,7 +27,8 @@ namespace DataWF.Common
         {
             Current = this;
         }
-
+        public string Host { get; set; }
+        public int? Port { get; set; }
         public string Domain { get; set; }
         public bool SSL { get; set; }
         public string DefaultUser { get; set; }
