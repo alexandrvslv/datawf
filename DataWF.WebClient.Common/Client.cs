@@ -62,9 +62,10 @@ namespace DataWF.Common
             }
         }
 
-        public T NewLoadItem()
+        public T NewLoadItem(K p)
         {
             var newItem = new T();
+            IdInvoker.SetValue(newItem, p);
             if (newItem is ISynchronized synched)
             {
                 synched.SyncStatus = SynchronizedStatus.Load;
@@ -120,13 +121,7 @@ namespace DataWF.Common
 
         public T AddDownloads(K id, Func<K, T> newItem)
         {
-            var item = downloads?.GetOrAdd(id, newItem) ?? GetBaseClient()?.AddDownloads(id, newItem) as T;
-            if (item == null)
-            {
-                item = NewLoadItem();
-                SetDownloads((K)id, item);
-            }
-            return item;
+            return downloads?.GetOrAdd(id, newItem) ?? GetBaseClient()?.AddDownloads(id, newItem) as T;
         }
 
         public object GetDownloads(object id)
@@ -267,9 +262,14 @@ namespace DataWF.Common
             return Select((K)id);
         }
 
+        public virtual T SelectNoDownloads(K id)
+        {
+            return Items.SelectOne<K?>(IdInvoker.Name, (K?)id);
+        }
+
         public virtual T Select(K id)
         {
-            return Items.SelectOne(IdInvoker.Name, (K?)id) ?? GetDownloads(id);
+            return Items.SelectOne<K?>(IdInvoker.Name, (K?)id) ?? GetDownloads(id);
         }
 
         public virtual T Get(object id)
@@ -350,7 +350,9 @@ namespace DataWF.Common
         public LoadProgress<T> Load(string filter, HttpJsonSettings settings, ProgressToken progressToken)
         {
             filter = filter ?? string.Empty;
-            if (!loadQueue.TryGetValue(filter, out var loadTask) || loadTask.Token.IsCancelled)
+            if (!loadQueue.TryGetValue(filter, out var loadTask)
+                || loadTask.Task.Status == TaskStatus.Faulted
+                || loadTask.Task.Status == TaskStatus.Canceled)
             {
                 loadQueue[filter] = loadTask = new LoadProgress<T>(filter, progressToken);
                 loadTask.Task = string.IsNullOrEmpty(filter)

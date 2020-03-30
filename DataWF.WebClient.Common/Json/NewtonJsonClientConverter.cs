@@ -12,7 +12,7 @@ namespace DataWF.Common
     {
         public NewtonJsonClientConverter()
         {
-            SerializationInfo = new TypeSerializationInfo(typeof(T));
+            SerializationInfo = Serialization.Instance.GetTypeInfo(typeof(T));
         }
 
         public NewtonJsonClientConverter(Client<T, K> client) : this()
@@ -44,7 +44,7 @@ namespace DataWF.Common
         {
             var property = (PropertySerializationInfo)null;
             var propertyType = (Type)null;
-            var id = (object)null;
+            var id = (K?)null;
             var isRef = true;
             var synchItem = item as ISynchronized;
             while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
@@ -85,14 +85,14 @@ namespace DataWF.Common
                     }
                     if (string.Equals(property.Name, Client.IdInvoker?.Name, StringComparison.Ordinal))
                     {
-                        id = value;
+                        id = (K?)value;
                         if (item == null && id != null)
                         {
-                            item = Client.Select((K)id) ?? Client.SelectBase(id);
-                        }
-                        if (item == null)
-                        {
-                            item = Client.AddDownloads((K)id, (p) => Client.NewLoadItem());
+                            item = Client.SelectNoDownloads((K)id);
+                            if (item == null)
+                            {
+                                item = Client.AddDownloads((K)id, Client.NewLoadItem);
+                            }
                         }
                         else if (!Client.Items.Contains(item))
                         {
@@ -110,8 +110,7 @@ namespace DataWF.Common
                     {
                         isRef = false;
 
-                        if (synchItem.SyncStatus == SynchronizedStatus.Actual
-                            || synchItem.SyncStatus == SynchronizedStatus.Suspend)
+                        if (synchItem.SyncStatus == SynchronizedStatus.Actual)
                         {
                             synchItem.SyncStatus = SynchronizedStatus.Load;
                         }
@@ -130,8 +129,7 @@ namespace DataWF.Common
 
             if (synchItem != null)
             {
-                if ((!isRef && synchItem.SyncStatus == SynchronizedStatus.Load)
-                    || synchItem.SyncStatus == SynchronizedStatus.Suspend)
+                if ((!isRef && synchItem.SyncStatus == SynchronizedStatus.Load))
                     synchItem.SyncStatus = SynchronizedStatus.Actual;
             }
 
@@ -196,14 +194,15 @@ namespace DataWF.Common
                 { }
                 return null;
             }
-            var itemType = TypeHelper.GetItemType(type);
+            var typeInfo = Serialization.Instance.GetTypeInfo(type);
+            var itemType = typeInfo.ListItemType;
             var client = Client.Provider.GetClient(itemType);
             var temp = sourceList ?? (IList)EmitInvoker.CreateObject(type);
             var referenceList = temp as IReferenceList;
             if (referenceList != null && client != null
                 && referenceList.Owner.SyncStatus == SynchronizedStatus.Load)
             {
-                var referanceBuffer = new HashSet<ISynchronized>((IEnumerable<ISynchronized>)referenceList);
+                //var referanceBuffer = new HashSet<ISynchronized>((IEnumerable<ISynchronized>)referenceList);
                 while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
                 {
 #if NETSTANDARD2_0
@@ -211,20 +210,20 @@ namespace DataWF.Common
 #else
                     var item = Deserialize(jreader, itemType, serializer, null);
 #endif
-                    if (item is ISynchronized synched)
-                    {
-                        referenceList.Add(item);
-                        referanceBuffer.Remove(synched);
-                    }
+                    referenceList.Add(item);
+                    //if (item is ISynchronized synched)
+                    //{                       
+                    //    referanceBuffer.Remove(synched);
+                    //}
 
                 }
-                foreach (var item in referanceBuffer)
-                {
-                    if (!client.Remove(item))
-                    {
-                        referenceList.Remove(item);
-                    }
-                }
+                //foreach (var item in referanceBuffer)
+                //{
+                //    if (!client.Remove(item))
+                //    {
+                //        referenceList.Remove(item);
+                //    }
+                //}
             }
             else
             {

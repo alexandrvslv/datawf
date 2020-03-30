@@ -243,16 +243,17 @@ namespace DataWF.Common
 
             if (notifySemafore.CurrentCount == 1)
             {
-                notifySemafore.Wait();
-                _ = DequeueNotification();
+                Task.Run(DequeueNotification);
             }
         }
 
-        private async ValueTask DequeueNotification()
+        private void DequeueNotification()
         {
-            await notifySemafore.WaitAsync(30);//Delay
+            if (!notifySemafore.Wait(1))
+                return;
             try
             {
+                notifySemafore.Wait(30);
                 while (notifyQueue.TryDequeue(out var args))
                 {
                     if (args.Item2 is NotifyCollectionChangedEventArgs collectionArgs

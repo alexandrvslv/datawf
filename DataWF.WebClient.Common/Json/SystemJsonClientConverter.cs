@@ -13,7 +13,7 @@ namespace DataWF.Common
     {
         public SystemJsonClientConverter()
         {
-            SerializationInfo = new TypeSerializationInfo(typeof(T));
+            SerializationInfo = Serialization.Instance.GetTypeInfo(typeof(T));
         }
 
         public SystemJsonClientConverter(Client<T, K> client) : this()
@@ -90,11 +90,11 @@ namespace DataWF.Common
                         id = value;
                         if (item == null && id != null)
                         {
-                            item = Client.Select((K)id) ?? Client.SelectBase(id);
-                        }
-                        if (item == null)
-                        {
-                            item = Client.AddDownloads((K)id, (p) => Client.NewLoadItem());
+                            item = Client.SelectNoDownloads((K)id);
+                            if (item == null)
+                            {
+                                item = Client.AddDownloads((K)id, Client.NewLoadItem);
+                            }
                         }
                         else if (!Client.Items.Contains(item))
                         {
@@ -112,8 +112,7 @@ namespace DataWF.Common
                     {
                         isRef = false;
 
-                        if (synchItem.SyncStatus == SynchronizedStatus.Actual
-                            || synchItem.SyncStatus == SynchronizedStatus.Suspend)
+                        if (synchItem.SyncStatus == SynchronizedStatus.Actual)
                         {
                             synchItem.SyncStatus = SynchronizedStatus.Load;
                         }
@@ -131,8 +130,7 @@ namespace DataWF.Common
 
             if (synchItem != null)
             {
-                if ((!isRef && synchItem.SyncStatus == SynchronizedStatus.Load)
-                    || synchItem.SyncStatus == SynchronizedStatus.Suspend)
+                if ((!isRef && synchItem.SyncStatus == SynchronizedStatus.Load))
                     synchItem.SyncStatus = SynchronizedStatus.Actual;
             }
 
