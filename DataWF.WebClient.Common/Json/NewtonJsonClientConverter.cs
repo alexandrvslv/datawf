@@ -98,7 +98,6 @@ namespace DataWF.Common
                         {
                             item = Client.AddDownloads((K)id, item);
                         }
-                        Client.IdInvoker.SetValue(item, id);
                         synchItem = item as ISynchronized;
                         continue;
                     }
@@ -106,20 +105,19 @@ namespace DataWF.Common
                     {
                         throw new Exception("Wrong Json properties sequence!");
                     }
-                    if (isRef && synchItem != null)
+
+                    if (synchItem != null)
                     {
                         isRef = false;
-
                         if (synchItem.SyncStatus == SynchronizedStatus.Actual)
                         {
                             synchItem.SyncStatus = SynchronizedStatus.Load;
                         }
-                    }
-                    if (synchItem != null
-                        && synchItem.SyncStatus != SynchronizedStatus.Load
-                        && synchItem.Changes.ContainsKey(property.Name))
-                    {
-                        continue;
+                        else if (synchItem.SyncStatus != SynchronizedStatus.Load
+                             && synchItem.Changes.ContainsKey(property.Name))
+                        {
+                            continue;
+                        }
                     }
                     property.Invoker.SetValue(item, value);
                 }
@@ -129,7 +127,7 @@ namespace DataWF.Common
 
             if (synchItem != null)
             {
-                if ((!isRef && synchItem.SyncStatus == SynchronizedStatus.Load))
+                if (!isRef && synchItem.SyncStatus == SynchronizedStatus.Load)
                     synchItem.SyncStatus = SynchronizedStatus.Actual;
             }
 
@@ -199,10 +197,17 @@ namespace DataWF.Common
             var client = Client.Provider.GetClient(itemType);
             var temp = sourceList ?? (IList)EmitInvoker.CreateObject(type);
             var referenceList = temp as IReferenceList;
-            if (referenceList != null && client != null
-                && referenceList.Owner.SyncStatus == SynchronizedStatus.Load)
+            if (referenceList != null && client != null)
             {
-                //var referanceBuffer = new HashSet<ISynchronized>((IEnumerable<ISynchronized>)referenceList);
+                var isLoad = referenceList.Owner.SyncStatus == SynchronizedStatus.Load
+                    || referenceList.Owner.SyncStatus == SynchronizedStatus.Actual;
+                if (isLoad)
+                {
+                    foreach (ISynchronized item in referenceList)
+                    {
+                        item.SyncStatus = SynchronizedStatus.Load;
+                    }
+                }
                 while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
                 {
 #if NETSTANDARD2_0
@@ -210,11 +215,10 @@ namespace DataWF.Common
 #else
                     var item = Deserialize(jreader, itemType, serializer, null);
 #endif
-                    referenceList.Add(item);
-                    //if (item is ISynchronized synched)
-                    //{                       
-                    //    referanceBuffer.Remove(synched);
-                    //}
+                    if (item is ISynchronized synched)
+                    {
+                        referenceList.Add(item);
+                    }
 
                 }
                 //foreach (var item in referanceBuffer)

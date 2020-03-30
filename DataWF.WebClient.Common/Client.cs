@@ -65,12 +65,11 @@ namespace DataWF.Common
         public T NewLoadItem(K p)
         {
             var newItem = new T();
-            IdInvoker.SetValue(newItem, p);
             if (newItem is ISynchronized synched)
             {
                 synched.SyncStatus = SynchronizedStatus.Load;
             }
-
+            IdInvoker.SetValue(newItem, p);
             return newItem;
         }
 

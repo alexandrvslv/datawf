@@ -402,7 +402,7 @@ namespace DataWF.Data
 
         public override uint GetOID(IDataReader reader, int index)
         {
-            return ((NpgsqlDataReader)reader).GetDataTypeOID(index);
+            return ((NpgsqlDataReader)reader).GetFieldValue<uint>(index);
         }
 
         public override TimeSpan GetTimeSpan(IDataReader reader, int index)
