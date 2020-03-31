@@ -38,7 +38,7 @@ namespace DataWF.Common
             return GetValue((T)target);
         }
 
-        public object GetValue(object target) => GetValue((T)target);
+        public virtual object GetValue(object target) => GetValue((T)target);
 
         public abstract void SetValue(T target, V value);
 
@@ -47,7 +47,7 @@ namespace DataWF.Common
             SetValue((T)target, value);
         }
 
-        public void SetValue(object target, object value) => SetValue((T)target, (V)value);
+        public virtual void SetValue(object target, object value) => SetValue((T)target, (V)value);
 
         public override string ToString()
         {
