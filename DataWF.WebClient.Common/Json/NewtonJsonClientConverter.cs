@@ -58,7 +58,7 @@ namespace DataWF.Common
                 {
                     if (property == null)
                     {
-                        Deserialize(jreader, null, serializer, null);
+                        Read(jreader, null, serializer, null);
                         continue;
                     }
                     var currentValue = item != null
@@ -67,7 +67,7 @@ namespace DataWF.Common
                         ? property.Invoker.GetValue(item)
                         : null;
 
-                    object value = Deserialize(jreader, property.DataType, serializer, currentValue);
+                    object value = Read(jreader, property.DataType, serializer, currentValue);
 
                     if (string.Equals(property.Name, Client.TypeInvoker?.Name, StringComparison.Ordinal) && value != null)
                     {
@@ -106,18 +106,15 @@ namespace DataWF.Common
                         throw new Exception("Wrong Json properties sequence!");
                     }
 
-                    if (synchItem != null)
+                    isRef = false;
+                    if (synchItem.SyncStatus == SynchronizedStatus.Actual)
                     {
-                        isRef = false;
-                        if (synchItem.SyncStatus == SynchronizedStatus.Actual)
-                        {
-                            synchItem.SyncStatus = SynchronizedStatus.Load;
-                        }
-                        else if (synchItem.SyncStatus != SynchronizedStatus.Load
-                             && synchItem.Changes.ContainsKey(property.Name))
-                        {
-                            continue;
-                        }
+                        synchItem.SyncStatus = SynchronizedStatus.Load;
+                    }
+                    else if (synchItem.SyncStatus != SynchronizedStatus.Load
+                         && synchItem.Changes.ContainsKey(property.Name))
+                    {
+                        continue;
                     }
                     property.Invoker.SetValue(item, value);
                 }
@@ -125,45 +122,26 @@ namespace DataWF.Common
             if (item == null)
                 return null;
 
-            if (synchItem != null)
-            {
-                if (!isRef && synchItem.SyncStatus == SynchronizedStatus.Load)
-                    synchItem.SyncStatus = SynchronizedStatus.Actual;
-            }
+            if (!isRef && synchItem.SyncStatus == SynchronizedStatus.Load)
+                synchItem.SyncStatus = SynchronizedStatus.Actual;
 
-            if (Client.RemoveDownloads((K)id))
+            if (!isRef && Client.RemoveDownloads((K)id))
             {
                 Client.Add(item);
             }
             return item;
         }
 
-        public virtual object DeserializeObject(JsonReader jreader, Type type, JsonSerializer serializer, object item)
-        {
-            type = item?.GetType() ?? type;
-            if (type == null)
-            {
-                while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
-                { }
-                return null;
-            }
-            //var client = Client.Provider.GetClient(type);
-            //if (client != null)
-            //    return (T)client.Converter.Read(ref jreader, item, options);
-            //else
-            return serializer.Deserialize(jreader, type);
-        }
-
-        public object Deserialize(JsonReader jreader, Type type, JsonSerializer serializer, object item)
+        public object Read(JsonReader jreader, Type type, JsonSerializer serializer, object item)
         {
             object value = null;
             switch (jreader.TokenType)
             {
                 case JsonToken.StartObject:
-                    value = DeserializeObject(jreader, type, serializer, item);
+                    value = ReadObject(jreader, type, serializer, item);
                     break;
                 case JsonToken.StartArray:
-                    value = DeserializeArray(jreader, serializer, type, item as IList);
+                    value = ReadArray(jreader, serializer, type, item as IList);
                     break;
                 case JsonToken.String:
                 case JsonToken.Date:
@@ -184,7 +162,27 @@ namespace DataWF.Common
             return value;
         }
 
-        protected virtual IList DeserializeArray(JsonReader jreader, JsonSerializer serializer, Type type, IList sourceList)
+        public virtual object ReadObject(JsonReader jreader, Type type, JsonSerializer serializer, object item)
+        {
+            type = item?.GetType() ?? type;
+            if (type == null)
+            {
+                while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
+                { }
+                return null;
+            }
+
+#if NETSTANDARD2_0
+            var client = Client.Provider.GetClient(type);
+            if (client != null)
+                return client.Converter.Read(jreader, null, serializer);
+            else
+#endif
+                return serializer.Deserialize(jreader, type);
+        }
+
+
+        protected virtual IList ReadArray(JsonReader jreader, JsonSerializer serializer, Type type, IList sourceList)
         {
             if (type == null)
             {
@@ -213,7 +211,7 @@ namespace DataWF.Common
 #if NETSTANDARD2_0
                     var item = client.Converter.Read(jreader, null, serializer);
 #else
-                    var item = Deserialize(jreader, itemType, serializer, null);
+                    var item = Read(jreader, itemType, serializer, null);
 #endif
                     if (item is ISynchronized synched)
                     {
@@ -234,7 +232,7 @@ namespace DataWF.Common
                 temp.Clear();
                 while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
                 {
-                    var item = Deserialize(jreader, itemType, serializer, null);
+                    var item = Read(jreader, itemType, serializer, null);
                     if (item == null)
                     {
                         continue;
@@ -277,7 +275,7 @@ namespace DataWF.Common
                 }
                 else if (value is IList list)
                 {
-                    SerializeArray(jwriter, list, serializer);
+                    WriteArray(jwriter, list, serializer);
                 }
                 else
                 {
@@ -287,7 +285,7 @@ namespace DataWF.Common
             jwriter.WriteEndObject();
         }
 
-        public void Serialize(JsonWriter jwriter, object item, JsonSerializer serializer, TypeSerializationInfo info = null)
+        public void Write(JsonWriter jwriter, object item, JsonSerializer serializer, TypeSerializationInfo info = null)
         {
             var type = item?.GetType();
             if (type == null || (info?.IsAttribute ?? TypeHelper.IsSerializeAttribute(type)))
@@ -296,7 +294,7 @@ namespace DataWF.Common
             }
             else if (item is IList list)
             {
-                SerializeArray(jwriter, list, serializer);
+                WriteArray(jwriter, list, serializer);
             }
             else
             {
@@ -304,18 +302,19 @@ namespace DataWF.Common
             }
         }
 
-        protected virtual void SerializeArray(JsonWriter jwriter, IList list, JsonSerializer serializer)
+        protected virtual void WriteArray(JsonWriter jwriter, IList list, JsonSerializer serializer)
         {
             jwriter.WriteStartArray();
-            var itemType = TypeHelper.GetItemType(list);
-            var itemInfo = Serialization.Instance.GetTypeInfo(itemType);
+            var listInfo = Serialization.Instance.GetTypeInfo(list.GetType());
+            var itemType = listInfo.ListItemType;
+            var itemInfo = listInfo.ListItemTypeInfo;
             foreach (var item in list)
             {
                 if (item is ISynchronized isSynch && isSynch.SyncStatus == SynchronizedStatus.Actual)
                 {
                     continue;
                 }
-                Serialize(jwriter, item, serializer, itemInfo);
+                Write(jwriter, item, serializer, itemInfo);
             }
             jwriter.WriteEndArray();
         }
