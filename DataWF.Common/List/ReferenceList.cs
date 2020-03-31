@@ -24,11 +24,7 @@ namespace DataWF.Common
         public string OwnerProperty { get; set; }
 
         public override void CheckStatus(T item)
-        {
-            if (Owner.SyncStatus == SynchronizedStatus.Load)
-            {
-                return;
-            }
+        {            
             base.CheckStatus(item);
         }
 
