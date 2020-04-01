@@ -45,8 +45,8 @@ namespace DataWF.Common
             }
             IsDictionary = TypeHelper.IsDictionary(type);
 
-            Properties = new NamedList<PropertySerializationInfo>();
-            Properties.Indexes.Add(IsAttributeInvoker.Instance);
+            Properties = new NamedList<PropertySerializationInfo>(6, (ListIndex<PropertySerializationInfo, string>)PropertySerializationInfo.NameInvoker.Instance.CreateIndex(false));
+            Properties.Indexes.Add(PropertySerializationInfo.IsAttributeInvoker.Instance);
             int order = 0;
             foreach (var property in properties)
             {
@@ -63,7 +63,7 @@ namespace DataWF.Common
 
                 Properties.Add(new PropertySerializationInfo(property, ++order));
             }
-            Properties.ApplySortInternal(OrderInvoker.Instance.CreateComparer<PropertySerializationInfo>());
+            Properties.ApplySortInternal(PropertySerializationInfo.OrderInvoker.Instance.CreateComparer<PropertySerializationInfo>());
         }
 
         public Type Type { get; }
@@ -90,9 +90,9 @@ namespace DataWF.Common
 
         public EmitConstructor ListConstructor { get; }
 
-        public IEnumerable<PropertySerializationInfo> GetAttributes() => Properties.Select(IsAttributeInvoker.Instance, CompareType.Equal, true);
+        public IEnumerable<PropertySerializationInfo> GetAttributes() => Properties.Select(PropertySerializationInfo.IsAttributeInvoker.Instance, CompareType.Equal, true);
 
-        public IEnumerable<PropertySerializationInfo> GetContents() => Properties.Select(IsAttributeInvoker.Instance, CompareType.Equal, false);
+        public IEnumerable<PropertySerializationInfo> GetContents() => Properties.Select(PropertySerializationInfo.IsAttributeInvoker.Instance, CompareType.Equal, false);
 
         public NamedList<PropertySerializationInfo> Properties { get; private set; }
 
@@ -117,33 +117,7 @@ namespace DataWF.Common
                 : Helper.TextParse(value, Type);
         }
 
-        [Invoker(typeof(PropertySerializationInfo), nameof(PropertySerializationInfo.IsAttribute))]
-        public class IsAttributeInvoker : Invoker<PropertySerializationInfo, bool>
-        {
-            public static readonly IsAttributeInvoker Instance = new IsAttributeInvoker();
 
-            public override string Name => nameof(PropertySerializationInfo.IsAttribute);
-
-            public override bool CanWrite => false;
-
-            public override bool GetValue(PropertySerializationInfo target) => target.IsAttribute;
-
-            public override void SetValue(PropertySerializationInfo target, bool value) { }
-        }
-
-        [Invoker(typeof(PropertySerializationInfo), nameof(PropertySerializationInfo.Order))]
-        public class OrderInvoker : Invoker<PropertySerializationInfo, int>
-        {
-            public static readonly OrderInvoker Instance = new OrderInvoker();
-
-            public override string Name => nameof(PropertySerializationInfo.Order);
-
-            public override bool CanWrite => false;
-
-            public override int GetValue(PropertySerializationInfo target) => target.Order;
-
-            public override void SetValue(PropertySerializationInfo target, int value) => target.Order = value;
-        }
     }
 
 }

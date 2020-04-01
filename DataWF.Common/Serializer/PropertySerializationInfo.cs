@@ -103,5 +103,47 @@ namespace DataWF.Common
         {
             return $"{Order} {Name} {DataType.Name} {Keys}";
         }
+
+        [Invoker(typeof(PropertySerializationInfo), nameof(IsAttribute))]
+        public class IsAttributeInvoker : Invoker<PropertySerializationInfo, bool>
+        {
+            public static readonly IsAttributeInvoker Instance = new IsAttributeInvoker();
+
+            public override string Name => nameof(IsAttribute);
+
+            public override bool CanWrite => false;
+
+            public override bool GetValue(PropertySerializationInfo target) => target.IsAttribute;
+
+            public override void SetValue(PropertySerializationInfo target, bool value) { }
+        }
+
+        [Invoker(typeof(PropertySerializationInfo), nameof(Order))]
+        public class OrderInvoker : Invoker<PropertySerializationInfo, int>
+        {
+            public static readonly OrderInvoker Instance = new OrderInvoker();
+
+            public override string Name => nameof(Order);
+
+            public override bool CanWrite => false;
+
+            public override int GetValue(PropertySerializationInfo target) => target.Order;
+
+            public override void SetValue(PropertySerializationInfo target, int value) => target.Order = value;
+        }
+
+        [Invoker(typeof(PropertySerializationInfo), nameof(Name))]
+        public class NameInvoker : Invoker<PropertySerializationInfo, string>
+        {
+            public static readonly NameInvoker Instance = new NameInvoker();
+
+            public override string Name => nameof(Name);
+
+            public override bool CanWrite => false;
+
+            public override string GetValue(PropertySerializationInfo target) => target.Name;
+
+            public override void SetValue(PropertySerializationInfo target, string value) => target.Name = value;
+        }
     }
 }

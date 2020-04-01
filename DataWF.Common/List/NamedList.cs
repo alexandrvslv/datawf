@@ -8,24 +8,22 @@ namespace DataWF.Common
     {
         private ListIndex<T, string> nameIndex;
 
-        public NamedList(int capacity) : base(capacity)
+        public NamedList(int capacity, ListIndex<T, string> nameIndex) : base(capacity)
         {
-            AddIndex();
+            this.nameIndex = nameIndex;
+            Indexes.Add(nameof(INamed.Name), nameIndex);
         }
 
-        public NamedList()
-        {
-            AddIndex();
-        }
-
-        private void AddIndex()
-        {
-            nameIndex = new ListIndex<T, string>(
+        public NamedList(int capacity) : this(capacity, new ListIndex<T, string>(
                 NamedNameInvoker<T>.Instance,
                 ListIndexFabric.GetNullKey<string>(),
                 StringComparer.Ordinal,
-                true);
-            Indexes.Add(nameof(INamed.Name), nameIndex);
+                false))
+        {
+        }
+
+        public NamedList() : this(4)
+        {
         }
 
         public NamedList(IEnumerable<T> items) : this()
