@@ -23,39 +23,39 @@ using System.Collections.Generic;
 
 namespace DataWF.Common
 {
-    public class ThreadSafeEnumerable<T> : IEnumerable<T>
+    public struct EmptyEnumerator<T> : IEnumerator<T>
     {
-        private IList<T> items;
+        public static readonly EmptyEnumerator<T> Default = new EmptyEnumerator<T>();
 
-        public ThreadSafeEnumerable(IList<T> items)
-        {
-            Items = items;
-        }
+        public T Current => default(T);
 
-        public IList<T> Items { get => items; set => items = value; }
+        object IEnumerator.Current => null;
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            return new ThreadSafeEnumerator<T>(Items);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        public void Dispose() { }
+        public bool MoveNext() => false;
+        public void Reset() { }
     }
 
-    public class ThreadSafeEnumerator<T> : IEnumerator<T>
+    public struct ThreadSafeEnumerator<T> : IEnumerator<T>
     {
-        private int i = -1;
+        private int i;
         private IList<T> items;
+        private T current;
 
         public ThreadSafeEnumerator(IList<T> items)
         {
+            i = -1;
             this.items = items;
+            current = default(T);
         }
 
-        public T Current { get; private set; }
+        public T Current
+        {
+            get => current;
+            private set => current = value;
+        }
+
+        object IEnumerator.Current => Current;
 
         public void Dispose()
         {
@@ -64,17 +64,15 @@ namespace DataWF.Common
             i = -1;
         }
 
-        object IEnumerator.Current
-        {
-            get { return Current; }
-        }
-
         public bool MoveNext()
         {
             i++;
             if (items.Count <= i)
             {
-                Current = default(T);
+                if (i > 0)
+                {
+                    Current = default(T);
+                }
                 return false;
             }
             try

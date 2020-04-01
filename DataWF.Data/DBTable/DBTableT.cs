@@ -211,17 +211,17 @@ namespace DataWF.Data
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return new ThreadSafeEnumerator<T>(items);
+            return items.Count == 0 ? (IEnumerator)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
         }
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator()
         {
-            return new ThreadSafeEnumerator<T>(items);
+            return items.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
         }
 
         public override IEnumerator<DBItem> GetEnumerator()
         {
-            return new ThreadSafeEnumerator<T>(items);
+            return items.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
         }
 
         #endregion

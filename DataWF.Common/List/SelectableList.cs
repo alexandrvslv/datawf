@@ -894,7 +894,7 @@ namespace DataWF.Common
 
         public void CopyTo(T[] array, int index)
         {
-            items.CopyTo(0, array, index, Math.Min(array.Length - index, Count));
+            items.CopyTo(0, array, index, Math.Min(array.Length - index, items.Count));
         }
 
         void ICollection.CopyTo(Array array, int index)
@@ -911,7 +911,7 @@ namespace DataWF.Common
 
         public IEnumerator<T> GetEnumerator()
         {
-            return new ThreadSafeEnumerator<T>(items);
+            return items.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
         }
 
         [Invoker(typeof(SelectableList<>), nameof(Disposed))]

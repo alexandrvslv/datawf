@@ -40,13 +40,13 @@ namespace DataWF.Common
 
         public bool Contains(T item) => list.Contains(item);
 
-        public void CopyTo(T[] array, int arrayIndex) => list.CopyTo(array);
+        public void CopyTo(T[] array, int arrayIndex) => list.CopyTo(array, arrayIndex);
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public bool Remove(T item) => list.Remove(item);
 
-        public IEnumerator<T> GetEnumerator() => new ThreadSafeEnumerator<T>(list);
+        public IEnumerator<T> GetEnumerator() => list.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(list);
 
         public int BinarySearch(T item, IComparer<T> comparer)
         {
