@@ -23,7 +23,8 @@ namespace DataWF.Common
             nameIndex = new ListIndex<T, string>(
                 NamedNameInvoker<T>.Instance,
                 ListIndexFabric.GetNullKey<string>(),
-                StringComparer.Ordinal);
+                StringComparer.Ordinal,
+                true);
             Indexes.Add(nameof(INamed.Name), nameIndex);
         }
 
