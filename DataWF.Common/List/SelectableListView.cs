@@ -185,7 +185,7 @@ namespace DataWF.Common
 
         protected void UpdateInternal(IEnumerable<T> list)
         {
-            //lock (lockObject)
+            lock (lockObject)
             {
                 try
                 {
