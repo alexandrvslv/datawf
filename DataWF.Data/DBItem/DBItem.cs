@@ -39,7 +39,7 @@ namespace DataWF.Data
 
     [DataContract]
     //[JsonConverter(typeof(DBItemJsonConverter))]
-    public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IDBTableContent, IPullHandler
+    public class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IDBTableContent, IPullHandler
     {
         public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
 
@@ -308,6 +308,19 @@ namespace DataWF.Data
             }
         }
 
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public bool Check
+        {
+            get => (state & DBItemState.Check) == DBItemState.Check;
+            set
+            {
+                if (Check != value)
+                {
+                    state = value ? state | DBItemState.Check : state & ~DBItemState.Check;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public bool GetOld(DBColumn column, out object value)
         {
@@ -1256,24 +1269,10 @@ namespace DataWF.Data
             return CompareTo(obj as DBItem);
         }
 
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public bool Check
+        public virtual int CompareTo(DBItem obj)
         {
-            get => (state & DBItemState.Check) == DBItemState.Check;
-            set
-            {
-                if (Check != value)
-                {
-                    state = value ? state | DBItemState.Check : state & ~DBItemState.Check;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public int CompareTo(DBItem obj)
-        {
-            return obj == null ? 1 : obj.table == table ? handler.CompareTo(obj.handler) :
-                GetHashCode().CompareTo(obj.GetHashCode());
+            return obj == null ? 1 : table.index == obj.table.index ? handler.CompareTo(obj.handler) :
+                table.index.CompareTo(obj.table.index);
         }
 
         public string FormatPatch()

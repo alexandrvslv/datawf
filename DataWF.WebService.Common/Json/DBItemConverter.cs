@@ -25,6 +25,7 @@ using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -85,12 +86,20 @@ namespace DataWF.WebService.Common
                         {
                             continue;
                         }
+                        var typedEnumerable = enumerable.TypeOf<DBItem>();
+                        if (typedEnumerable.FirstOrDefault() is DBGroupItem)
+                        {
+                            var buffer = typedEnumerable.ToList();
+                            ListHelper.QuickSort(buffer, TreeComparer<IGroup>.Default);
+                            typedEnumerable = buffer;
+                        }
+
                         writer.WritePropertyName(invoker.JsonName);
                         writer.WriteStartArray();
-                        foreach (var item in enumerable)
+
+                        foreach (var item in typedEnumerable)
                         {
-                            if (item is DBItem reference
-                                && !reference.Access.GetFlag(AccessType.Read, Factory.CurrentUser))
+                            if (!item.Access.GetFlag(AccessType.Read, Factory.CurrentUser))
                             {
                                 continue;
                             }

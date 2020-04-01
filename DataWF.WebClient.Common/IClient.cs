@@ -39,7 +39,7 @@ namespace DataWF.Common
         Type ItemType { get; }
         int TypeId { get; }
         bool Add(object item);
-        bool Remove(object item);
+        bool Remove(object item);        
         object AddDownloads(object id, object item);
         bool RemoveDownloads(object id);
         object GetDownloads(object id);

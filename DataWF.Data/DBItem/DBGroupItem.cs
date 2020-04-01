@@ -39,21 +39,21 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public object GroupId
         {
-            get { return GetValue(Table.GroupKey); }
-            set { SetGroupValue(value); }
+            get => GetValue(Table.GroupKey);
+            set => SetGroupValue(value);
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual DBGroupItem Group
         {
-            get { return GetGroupReference<DBGroupItem>(); }
-            set { SetGroupReference(value); }
+            get => GetGroupReference<DBGroupItem>();
+            set => SetGroupReference(value);
         }
 
         IGroup IGroup.Group
         {
-            get { return Group; }
-            set { Group = value as DBGroupItem; }
+            get => Group;
+            set => Group = value as DBGroupItem;
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -79,15 +79,12 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public bool IsExpanded
-        {
-            get { return GroupHelper.GetAllParentExpand(this); }
-        }
+        public bool IsExpanded => GroupHelper.GetAllParentExpand(this);
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool Expand
         {
-            get { return (state & DBItemState.Expand) == DBItemState.Expand; }
+            get => (state & DBItemState.Expand) == DBItemState.Expand;
             set
             {
                 if (Expand != value)
@@ -124,9 +121,9 @@ namespace DataWF.Data
             group = null;
         }
 
-        public T GetGroupReference<T>() where T : DBGroupItem, new()
+        public T GetGroupReference<T>(DBLoadParam loadParam = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBGroupItem, new()
         {
-            GetReference(Table.GroupKey, ref group);
+            GetReference(Table.GroupKey, ref group, loadParam);
             //Check recursion
             if (group == this)
                 return null;

@@ -45,6 +45,8 @@ namespace DataWF.Data
         private static readonly Dictionary<Type, DBTable> cacheTables = new Dictionary<Type, DBTable>();
         private static readonly Dictionary<Type, TableGenerator> cacheTableAttributes = new Dictionary<Type, TableGenerator>();
         private static readonly Dictionary<Type, ItemTypeGenerator> cacheItemTypeAttributes = new Dictionary<Type, ItemTypeGenerator>();
+        private static int tableIndex;
+        protected internal readonly int index = ++tableIndex;
 
         public static void ClearAttributeCache()
         {

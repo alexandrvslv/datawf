@@ -13,7 +13,7 @@
         public static readonly string JsonReference = "json_ref";
         public static readonly string JsonMaxDepth = "json_max_depth";
 
-        public HttpJsonSettings(HttpJsonKeys keys = HttpJsonKeys.Full, int maxDepth = 4)
+        public HttpJsonSettings(HttpJsonKeys keys = HttpJsonKeys.Full, int maxDepth = 3)
         {
             MaxDepth = maxDepth;
             Keys = keys;
