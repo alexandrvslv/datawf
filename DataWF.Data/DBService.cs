@@ -116,6 +116,14 @@ namespace DataWF.Data
                 change = new DBSchemaChange() { Item = item, Change = type };
                 Changes.Add(change);
             }
+            if (item is DBTable table)
+            {
+                foreach (var column in table.Columns)
+                {
+                    OnDBSchemaChanged(column, DDLType.Create);
+                }
+            }
+
             DBSchemaChanged?.Invoke(item, new DBSchemaChangedArgs { Item = item, Type = type });
         }
 
@@ -232,7 +240,6 @@ namespace DataWF.Data
         {
             if (Changes.Count == 0)
                 return;
-            var builder = new StringBuilder();
             foreach (var schema in schems)
             {
                 foreach (var item in Changes.Where(p => p.Item.Schema == schema))
@@ -240,48 +247,50 @@ namespace DataWF.Data
                     string val = item.Generate();
                     if (item.Check && !string.IsNullOrEmpty(val))
                     {
-                        builder.Append("-- ");
-                        builder.AppendLine(item.ToString());
-                        builder.AppendLine(val);
-                        builder.AppendLine("go");
-                        builder.AppendLine();
+                        CommitChanges(schema, item, val);
                     }
                     item.Item.OldName = null;
                 }
-                if (builder.Length > 0)
-                {
-                    CommitChanges(schema, builder);
-                }
             }
-            Serialization.Serialize(Changes, $"SchemaDiff_{DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")}.xml");
+            Serialization.Serialize(Changes, $"SchemaDiff_{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.xml");
             Changes.Clear();
             Save();
         }
 
-        public static void CommitChanges(DBSchema schema, StringBuilder builder)
+        public static void CommitChanges(DBSchema schema, DBSchemaChange item, string commands)
         {
-            foreach (var command in schema.Connection.SplitGoQuery(builder.ToString()))
+            foreach (var command in schema.Connection.SplitGoQuery(commands))
             {
                 try
                 {
-#if DEBUG
-                    Console.WriteLine(command);
-#endif
+                    Console.WriteLine($"sqlinfo: {item}");
+                    Console.Write(command);
                     schema.Connection.ExecuteQuery(command);
+                    Console.WriteLine($"sqlinfo: success");
                 }
                 catch (Exception ex)
                 {
-                    if (ex.Message.IndexOf("already exist", StringComparison.OrdinalIgnoreCase) >= 0
-                        || ex.Message.IndexOf("42701:") >= 0
-                        || ex.Message.IndexOf("42P07:") >= 0
-                        || ex.Message.IndexOf("42710:") >= 0)
+                    if (ex is Npgsql.PostgresException postgresException)
                     {
+                        if (string.Equals(postgresException.SqlState, "42701", StringComparison.Ordinal)
+                           || string.Equals(postgresException.SqlState, "42P07", StringComparison.Ordinal)
+                           || string.Equals(postgresException.SqlState, "42710", StringComparison.Ordinal)
+                           || string.Equals(postgresException.SqlState, "42P16", StringComparison.Ordinal))
+                        {
+                            Console.WriteLine($"sqlinfo: skip already exist");
+                            continue;
+                        }
+                    }
+                    //TODO MSSql, MySql, Oracle, Sqlite
+                    if (ex.Message.IndexOf("already exist", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        Console.WriteLine($"sqlinfo: skip already exist");
                         continue;
                     }
                     throw ex;
                 }
             }
-            builder.Clear();
+            Console.WriteLine();
         }
 
         public static string BuildChangesQuery(DBSchema schema)
