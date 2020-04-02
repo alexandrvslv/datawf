@@ -26,7 +26,7 @@ namespace DataWF.Common
         private bool isSynchronized;
         protected object lockObject = new object();
         //Async notify
-        private SemaphoreSlim notifySemafore;
+        private int notifySemafore = 0;
         private ConcurrentQueue<Tuple<object, EventArgs>> notifyQueue;
         private bool asyncNotification;
 
@@ -122,7 +122,6 @@ namespace DataWF.Common
                 asyncNotification = value;
                 if (asyncNotification)
                 {
-                    notifySemafore = new SemaphoreSlim(1, 1);
                     notifyQueue = new ConcurrentQueue<Tuple<object, EventArgs>>();
                 }
             }
@@ -241,19 +240,17 @@ namespace DataWF.Common
         {
             notifyQueue.Enqueue(new Tuple<object, EventArgs>(sender, e));
 
-            if (notifySemafore.CurrentCount == 1)
+            if (Interlocked.CompareExchange(ref notifySemafore, 1, 0) == 0)
             {
-                Task.Run(DequeueNotification);
+                _ = DequeueNotification();
             }
         }
 
-        private void DequeueNotification()
+        private async Task DequeueNotification()
         {
-            if (!notifySemafore.Wait(1))
-                return;
             try
             {
-                notifySemafore.Wait(30);
+                await Task.Delay(30);
                 while (notifyQueue.TryDequeue(out var args))
                 {
                     if (args.Item2 is NotifyCollectionChangedEventArgs collectionArgs
@@ -270,7 +267,7 @@ namespace DataWF.Common
             }
             finally
             {
-                notifySemafore.Release();
+                Interlocked.Decrement(ref notifySemafore);
             }
         }
 
