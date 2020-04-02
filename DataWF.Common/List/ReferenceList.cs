@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
     public class ReferenceList<T> : ChangeableList<T>, IReferenceList where T : SynchronizedItem
     {
+        private ISelectable<T> source;
+
         public ReferenceList()
         {
             Indexes.Concurrent = true;
@@ -19,12 +23,30 @@ namespace DataWF.Common
             OwnerProperty = ownerProperty;
         }
 
+        public ReferenceList(SynchronizedItem owner, string ownerProperty, ISelectable<T> source) : this(owner, ownerProperty)
+        {
+            Source = source;
+        }
+
+        [XmlIgnore, JsonIgnore]
         public SynchronizedItem Owner { get; set; }
 
         public string OwnerProperty { get; set; }
 
+        [XmlIgnore, JsonIgnore]
+        public ISelectable<T> Source
+        {
+            get => source;
+            set
+            {
+                if (source == value)
+                    return;
+                source = value;
+            }
+        }
+
         public override void CheckStatus(T item)
-        {            
+        {
             base.CheckStatus(item);
         }
 
@@ -65,6 +87,30 @@ namespace DataWF.Common
                     }
                     break;
             }
+        }
+
+        [Invoker(typeof(ReferenceList<>), nameof(Owner))]
+        public class OwnerInvoker : Invoker<ReferenceList<T>, SynchronizedItem>
+        {
+            public override string Name => nameof(ReferenceList<T>.Owner);
+
+            public override bool CanWrite => true;
+
+            public override SynchronizedItem GetValue(ReferenceList<T> target) => target.Owner;
+
+            public override void SetValue(ReferenceList<T> target, SynchronizedItem value) { target.Owner = value; }
+        }
+
+        [Invoker(typeof(ReferenceList<>), nameof(OwnerProperty))]
+        public class OwnerPropertyInvoker : Invoker<ReferenceList<T>, string>
+        {
+            public override string Name => nameof(ReferenceList<T>.OwnerProperty);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(ReferenceList<T> target) => target.OwnerProperty;
+
+            public override void SetValue(ReferenceList<T> target, string value) { target.OwnerProperty = value; }
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 
 namespace DataWF.Common
 {
@@ -16,6 +17,7 @@ namespace DataWF.Common
         protected IEnumerable source;
         protected ISelectable selectableSource;
         private string tempParameters;
+        private int updatingFilter;
 
         public SelectableListView(Query<T> filter)
         {
@@ -84,10 +86,11 @@ namespace DataWF.Common
 
         public void SetCollection(IEnumerable baseCollection)
         {
-            if (source == baseCollection)
+            if (source == baseCollection
+                || this == baseCollection)
+            {
                 return;
-            if (baseCollection == this)
-                return;
+            }
             SuspendHandling();
             source = baseCollection;
             selectableSource = baseCollection as ISelectable;
@@ -185,6 +188,8 @@ namespace DataWF.Common
 
         protected void UpdateInternal(IEnumerable<T> list)
         {
+            if (Interlocked.CompareExchange(ref updatingFilter, 1, 0) != 0)
+                return;
             lock (lockObject)
             {
                 try
@@ -213,6 +218,7 @@ namespace DataWF.Common
                 finally
                 {
                     ResumeHandling();
+                    Interlocked.Decrement(ref updatingFilter);
                 }
             }
         }
@@ -244,6 +250,10 @@ namespace DataWF.Common
 
         public virtual void OnSourceListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            if (updatingFilter == 1 || FilterQuery.Suspending)
+            {
+                return;
+            }
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Reset:
@@ -271,6 +281,8 @@ namespace DataWF.Common
                     var removeList = new List<T>();
                     foreach (T oldItem in e.OldItems)
                     {
+                        if (updatingFilter == 1)
+                            return;
                         if (oldItem != null)
                         {
                             Remove(oldItem);
@@ -282,6 +294,8 @@ namespace DataWF.Common
                     var addList = new List<T>();
                     foreach (T newItem in e.NewItems)
                     {
+                        if (updatingFilter == 1)
+                            return;
                         if (newItem != null
                             && ListHelper.CheckItem(newItem, query)
                             && GetIndexBySort(newItem) < 0)
@@ -299,7 +313,7 @@ namespace DataWF.Common
 
         public virtual void OnSourceItemChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (FilterQuery.Suspending)
+            if (updatingFilter == 1 || FilterQuery.Suspending)
             {
                 return;
             }

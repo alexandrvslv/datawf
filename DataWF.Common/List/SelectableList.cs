@@ -246,7 +246,7 @@ namespace DataWF.Common
             }
         }
 
-        private async Task DequeueNotification()
+        private async ValueTask DequeueNotification()
         {
             try
             {
