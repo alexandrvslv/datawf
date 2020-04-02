@@ -71,13 +71,13 @@ namespace DataWF.Common
             {
                 if (i > 0)
                 {
-                    Current = default(T);
+                    current = default(T);
                 }
                 return false;
             }
             try
             {
-                Current = items[i];
+                current = items[i];
             }
             catch (Exception e)
             {
