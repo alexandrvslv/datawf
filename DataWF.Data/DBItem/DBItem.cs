@@ -112,23 +112,23 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public object PrimaryId
         {
-            get => Table.PrimaryKey == null ? null : GetValue(Table.PrimaryKey);
-            set => Table.PrimaryKey?.SetValue(this, Table.PrimaryKey.ParseValue(value));
+            get => Table.PrimaryKey?.GetValue(this);
+            set => SetValue(Table.PrimaryKey.ParseValue(value), Table.PrimaryKey);
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public string PrimaryCode
         {
-            get => Table.CodeKey == null ? null : GetValue<string>(Table.CodeKey);
-            set => Table.CodeKey?.SetValue(this, value);
+            get => Table.CodeKey?.GetValue<string>(this);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Browsable(false), DefaultValue(0)]
         [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]
         public virtual int? ItemType
         {
-            get => Table.ItemTypeKey == null ? 0 : GetValueNullable<int>(Table.ItemTypeKey);
-            set => Table.ItemTypeKey?.SetValueNullable(this, value);
+            get => Table.ItemTypeKey?.GetValueNullable<int>(this);
+            set => SetValueNullable(value, Table.ItemTypeKey);
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -141,23 +141,23 @@ namespace DataWF.Data
         [DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.Indexing, Order = 99)]
         public DBStatus? Status
         {
-            get => Table.StatusKey == null ? DBStatus.Empty : GetValueNullable<DBStatus>(Table.StatusKey) ?? DBStatus.Empty;
-            set => Table.StatusKey?.SetValueNullable(this, value);
+            get => Table.StatusKey?.GetValueNullable<DBStatus>(this) ?? DBStatus.Empty;
+            set => SetValueNullable(value, Table.StatusKey);
         }
 
         [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
         public virtual DateTime? DateCreate
         {
-            get => Table.DateKey == null ? (DateTime?)null : GetValueNullable<DateTime>(Table.DateKey);
-            set => Table.DateKey?.SetValueNullable(this, value);
+            get => Table.DateKey?.GetValueNullable<DateTime>(this);
+            set => SetValueNullable(value, Table.DateKey);
         }
 
         [Browsable(false)]
         [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System, Order = 101)]
         public DateTime? Stamp
         {
-            get => Table.StampKey == null ? (DateTime?)null : GetValueNullable<DateTime>(Table.StampKey);
-            set => Table.StampKey?.SetValueNullable(this, value);
+            get => Table.StampKey?.GetValueNullable<DateTime>(this);
+            set => SetValueNullable(value, Table.StampKey);
         }
 
         IAccessValue IAccessable.Access { get => Access; set => Access = (AccessValue)value; }
