@@ -39,12 +39,14 @@ namespace DataWF.Common
     public struct ThreadSafeEnumerator<T> : IEnumerator<T>
     {
         private int i;
+        private readonly int count;
         private IList<T> items;
         private T current;
 
         public ThreadSafeEnumerator(IList<T> items)
         {
             i = -1;
+            count = items.Count;
             this.items = items;
             current = default(T);
         }
@@ -67,7 +69,7 @@ namespace DataWF.Common
         public bool MoveNext()
         {
             i++;
-            if (items.Count <= i)
+            if (count <= i)
             {
                 if (i > 0)
                 {
@@ -78,12 +80,13 @@ namespace DataWF.Common
             try
             {
                 current = items[i];
+                return true;
             }
             catch (Exception e)
             {
                 Helper.OnException(e);
+                return false;
             }
-            return true;
         }
 
         public void Reset()
