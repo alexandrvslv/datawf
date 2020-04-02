@@ -107,27 +107,33 @@ namespace DataWF.Common
                     }
 
                     isRef = false;
-                    if (synchItem.SyncStatus == SynchronizedStatus.Actual)
+                    lock (synchItem)
                     {
-                        synchItem.SyncStatus = SynchronizedStatus.Load;
+                        if (synchItem.SyncStatus == SynchronizedStatus.Actual)
+                        {
+                            synchItem.SyncStatus = SynchronizedStatus.Load;
+                        }
+                        else if (synchItem.SyncStatus != SynchronizedStatus.Load
+                             && synchItem.Changes.ContainsKey(property.Name))
+                        {
+                            continue;
+                        }
+                        property.Invoker.SetValue(item, value);
                     }
-                    else if (synchItem.SyncStatus != SynchronizedStatus.Load
-                         && synchItem.Changes.ContainsKey(property.Name))
-                    {
-                        continue;
-                    }
-                    property.Invoker.SetValue(item, value);
                 }
             }
             if (item == null)
                 return null;
 
-            if (!isRef && synchItem.SyncStatus == SynchronizedStatus.Load)
-                synchItem.SyncStatus = SynchronizedStatus.Actual;
-
-            if (!isRef && Client.RemoveDownloads((K)id))
+            lock (synchItem)
             {
-                Client.Add(item);
+                if (!isRef && synchItem.SyncStatus == SynchronizedStatus.Load)
+                    synchItem.SyncStatus = SynchronizedStatus.Actual;
+
+                if (!isRef && Client.RemoveDownloads((K)id))
+                {
+                    Client.Add(item);
+                }
             }
             return item;
         }
