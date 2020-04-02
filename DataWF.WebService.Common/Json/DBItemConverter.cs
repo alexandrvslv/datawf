@@ -59,7 +59,7 @@ namespace DataWF.WebService.Common
             var invokers = value.Table.GetInvokers(valueType);
             if (settings.Referenced && settings.Reference)
             {
-                if (Factory.referenceSet.Contains(value))
+                if (writer.CurrentDepth > 0 && Factory.referenceSet.Contains(value))
                     invokers = value.Table.GetRefInvokers();
                 else
                     Factory.referenceSet.Add(value);
