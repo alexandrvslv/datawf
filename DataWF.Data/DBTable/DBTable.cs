@@ -46,7 +46,6 @@ namespace DataWF.Data
         private static readonly Dictionary<Type, TableGenerator> cacheTableAttributes = new Dictionary<Type, TableGenerator>();
         private static readonly Dictionary<Type, ItemTypeGenerator> cacheItemTypeAttributes = new Dictionary<Type, ItemTypeGenerator>();
         private static int tableIndex;
-        protected internal readonly int index = ++tableIndex;
 
         public static void ClearAttributeCache()
         {
@@ -171,7 +170,11 @@ namespace DataWF.Data
         private DBSequence cacheSequence;
         public IComparer DefaultComparer;
         public int Hash = -1;
+        protected internal readonly int index = ++tableIndex;
         protected internal ConcurrentQueue<int> FreeHandlers = new ConcurrentQueue<int>();
+        private ConcurrentDictionary<Type, List<IInvokerJson>> invokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
+        private ConcurrentDictionary<Type, List<IInvokerJson>> refingInvokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
+        private IInvokerJson[] refInvoker;
 
         protected string query;
         protected string comInsert;
@@ -186,7 +189,6 @@ namespace DataWF.Data
         protected List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
         private DBItemType itemType;
         private int itemTypeIndex = 0;
-
 
         protected DBTable(string name = null) : base(name)
         {
@@ -1495,25 +1497,61 @@ namespace DataWF.Data
             imageKey = DBColumn.EmptyKey;
         }
 
-        public IEnumerable<IInvoker> GetInvokers<T>()
+        public IEnumerable<IInvokerJson> GetRefInvokers()
+        {
+            return refInvoker ?? (refInvoker = new IInvokerJson[] { (IInvokerJson)ItemTypeKey.PropertyInvoker, (IInvokerJson)PrimaryKey.PropertyInvoker });
+        }
+
+        public IEnumerable<IInvokerJson> GetRefingInvokers<T>()
+        {
+            return GetRefingInvokers(typeof(T));
+        }
+
+        public IEnumerable<IInvokerJson> GetRefingInvokers(Type t)
+        {
+            return refingInvokers.GetOrAdd(t, CreateInvokers);
+            List<IInvokerJson> CreateInvokers(Type type)
+            {
+                var refingInvokers = new List<IInvokerJson>(Generator?.Referencings.Count() ?? 0);
+                if (Generator != null)
+                {
+                    foreach (var refing in Generator.Referencings)
+                    {
+                        if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(type))
+                            continue;
+                        refingInvokers.Add((IInvokerJson)refing.PropertyInvoker);
+                    }
+                }
+                return refingInvokers;
+            }
+        }
+
+        public IEnumerable<IInvokerJson> GetInvokers<T>()
         {
             return GetInvokers(typeof(T));
         }
 
-        public IEnumerable<IInvoker> GetRefInvokers()
+        public IEnumerable<IInvokerJson> GetInvokers(Type t)
         {
-            yield return ItemTypeKey.PropertyInvoker;
-            yield return PrimaryKey.PropertyInvoker;
-        }
-
-        public IEnumerable<IInvoker> GetInvokers(Type type)
-        {
-            foreach (var itemType in ItemTypes.Values)
+            return invokers.GetOrAdd(t, CreateInvokers);
+            List<IInvokerJson> CreateInvokers(Type type)
             {
-                if (itemType.Type == type)
-                    return itemType.Invokers;
+                var invokers = new List<IInvokerJson>(Columns.Count);
+                foreach (var column in Columns)
+                {
+                    if (!IsSerializeableColumn(column, type)
+                        || !(column.PropertyInvoker is IInvokerJson))
+                        continue;
+
+                    invokers.Add((IInvokerJson)column.PropertyInvoker);
+
+                    if (column.ReferencePropertyInvoker != null)
+                    {
+                        invokers.Add((IInvokerJson)column.ReferencePropertyInvoker);
+                    }
+                }
+                return invokers;
             }
-            return itemType.Invokers;
         }
 
         public IInvoker GetInvoker(string property)

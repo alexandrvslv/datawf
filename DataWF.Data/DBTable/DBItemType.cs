@@ -24,6 +24,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -33,58 +34,20 @@ namespace DataWF.Data
     {
         private Type type;
         private DBTable table;
-        private List<IInvoker> invokers;
-
+        
         public DBItemType()
         { }
 
         public Type Type
         {
-            get { return type; }
-            set { type = value; }
+            get => type;
+            set => type = value;
         }
 
         [XmlIgnore, JsonIgnore]
         public DBTable Table => table ?? (table = DBTable.GetTable(Type));
 
-        [XmlIgnore, JsonIgnore]
-        public virtual List<IInvoker> Invokers
-        {
-            get
-            {
-                if (invokers == null)
-                {
-                    var table = Table;
-                    invokers = new List<IInvoker>(table.Columns.Count + (table.Generator?.Referencings.Count() ?? 0));
-                    foreach (var column in table.Columns)
-                    {
-                        if (!table.IsSerializeableColumn(column, Type)
-                            || !(column.PropertyInvoker is IInvokerJson))
-                            continue;
-
-                        invokers.Add(column.PropertyInvoker);
-
-                        //if ((column.Keys & DBColumnKeys.Group) == DBColumnKeys.Group)
-                        //    continue;
-
-                        if (column.ReferencePropertyInvoker != null)
-                        {
-                            invokers.Add(column.ReferencePropertyInvoker);
-                        }
-                    }
-                    if (table.Generator != null)
-                    {
-                        foreach (var refing in table.Generator.Referencings)
-                        {
-                            if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(Type))
-                                continue;
-                            invokers.Add(refing.PropertyInvoker);
-                        }
-                    }
-                }
-                return invokers;
-            }
-        }
+       
 
         public DBItem Create()
         {

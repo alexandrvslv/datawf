@@ -55,14 +55,19 @@ namespace DataWF.WebService.Common
         {
             var settings = Factory.HttpJsonSettings;
             var valueType = value.GetType();
-
+            var isRef = false;
             var invokers = value.Table.GetInvokers(valueType);
             if (settings.Referenced && settings.Reference)
             {
                 if (writer.CurrentDepth > 0 && Factory.referenceSet.Contains(value))
+                {
+                    isRef = true;
                     invokers = value.Table.GetRefInvokers();
+                }
                 else
+                {
                     Factory.referenceSet.Add(value);
+                }
             }
 
             writer.WriteStartObject();
@@ -72,41 +77,17 @@ namespace DataWF.WebService.Common
                 if (TypeHelper.IsBaseType(propertyType, typeof(DBItem)))
                 {
                     if (!settings.Referenced || writer.CurrentDepth > settings.MaxDepth)
-                        continue;
-                    var propertyValue = invoker.GetValue(value);
-                    writer.WritePropertyName(invoker.JsonName);
-                    JsonSerializer.Serialize(writer, propertyValue, propertyType, options);
-                }
-                else if (TypeHelper.IsEnumerable(propertyType))
-                {
-                    var enumerable = (IEnumerable)invoker.GetValue(value);
-                    if (enumerable != null && settings.Referencing)
                     {
-                        if (writer.CurrentDepth > settings.MaxDepth)
-                        {
-                            continue;
-                        }
-                        var typedEnumerable = enumerable.TypeOf<DBItem>();
-                        if (typedEnumerable.FirstOrDefault() is DBGroupItem)
-                        {
-                            var buffer = typedEnumerable.ToList();
-                            ListHelper.QuickSort(buffer, TreeComparer<IGroup>.Default);
-                            typedEnumerable = buffer;
-                        }
-
-                        writer.WritePropertyName(invoker.JsonName);
-                        writer.WriteStartArray();
-
-                        foreach (var item in typedEnumerable)
-                        {
-                            if (!item.Access.GetFlag(AccessType.Read, Factory.CurrentUser))
-                            {
-                                continue;
-                            }
-                            JsonSerializer.Serialize(writer, item, item.GetType(), options);
-                        }
-                        writer.WriteEndArray();
+                        continue;
                     }
+
+                    var item = (DBItem)invoker.GetValue(value);
+                    if (!(item?.Access.GetFlag(AccessType.Read, Factory.CurrentUser) ?? true))
+                    {
+                        continue;
+                    }
+                    writer.WritePropertyName(invoker.JsonName);
+                    JsonSerializer.Serialize(writer, item, propertyType, options);
                 }
                 else if (propertyType == typeof(AccessValue))
                 {
@@ -119,6 +100,40 @@ namespace DataWF.WebService.Common
                 {
                     writer.WritePropertyName(invoker.JsonName);
                     invoker.WriteValue(writer, value, options);
+                }
+            }
+            if (settings.Referencing && writer.CurrentDepth <= settings.MaxDepth && !isRef)
+            {
+                foreach (IInvokerJson invoker in value.Table.GetRefingInvokers(valueType))
+                {
+                    writer.WritePropertyName(invoker.JsonName);
+
+                    var typedEnumerable = invoker.GetValue(value)?.ToEnumerable<DBItem>();
+                    if (typedEnumerable != null)
+                    {
+                        if (typedEnumerable.FirstOrDefault() is DBGroupItem)
+                        {
+                            var buffer = typedEnumerable.ToList();
+                            ListHelper.QuickSort(buffer, TreeComparer<IGroup>.Default);
+                            typedEnumerable = buffer;
+                        }
+
+                        writer.WriteStartArray();
+
+                        foreach (var item in typedEnumerable)
+                        {
+                            if (!item.Access.GetFlag(AccessType.Read, Factory.CurrentUser))
+                            {
+                                continue;
+                            }
+                            JsonSerializer.Serialize(writer, item, item.GetType(), options);
+                        }
+                        writer.WriteEndArray();
+                    }
+                    else
+                    {
+                        writer.WriteNullValue();
+                    }
                 }
             }
 
