@@ -34,7 +34,14 @@ namespace DataWF.Common
 
         public static string FormatUI(object item)
         {
-            return Locale.Get(item.GetType(), Format(item));
+            var type = item.GetType();
+            if (!Cache.TryGetValue(type, out var list))
+            {
+                Cache[type] = list = new EnumItemList(type);
+            }
+            var enumItem = list.GetItem(item);
+
+            return enumItem?.TextUI;
         }
 
         public static string Format(object item)
@@ -101,6 +108,7 @@ namespace DataWF.Common
             Value = item;
             Name = name;
             Text = text;
+            TextUI = Locale.Get(item.GetType(), text);
         }
 
         public int Index { get; set; }
@@ -110,6 +118,8 @@ namespace DataWF.Common
         public string Name { get; set; }
 
         public string Text { get; set; }
+
+        public string TextUI { get; set; }
 
         public bool Check
         {
@@ -189,6 +199,19 @@ namespace DataWF.Common
             public override string GetValue(EnumItem target) => target.Text;
 
             public override void SetValue(EnumItem target, string value) => target.Text = value;
+        }
+
+        [Invoker(typeof(EnumItem), nameof(EnumItem.TextUI))]
+        public class TextUIInvoker : Invoker<EnumItem, string>
+        {
+            public static readonly TextInvoker Instance = new TextInvoker();
+            public override string Name => nameof(EnumItem.TextUI);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(EnumItem target) => target.TextUI;
+
+            public override void SetValue(EnumItem target, string value) => target.TextUI = value;
         }
 
         [Invoker(typeof(EnumItem), nameof(EnumItem.Index))]

@@ -58,6 +58,7 @@ namespace DataWF.Common
         }
 
         public Type Type { get; }
+
         public bool Flags { get; }
 
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
