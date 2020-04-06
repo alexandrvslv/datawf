@@ -124,12 +124,14 @@ namespace DataWF.WebService.Common
                     var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
                     if (value == null)
                     {
+                        transaction.Rollback();
                         return NotFound();
                     }
                     if (!accessColumn.Access.GetFlag(AccessType.Admin, CurrentUser)
                         && !value.Access.GetFlag(AccessType.Admin, CurrentUser)
                         && !table.Access.GetFlag(AccessType.Admin, CurrentUser))
                     {
+                        transaction.Rollback();
                         return Forbid();
                     }
                     value.Access = new AccessValue(accessItems);
@@ -172,12 +174,14 @@ namespace DataWF.WebService.Common
                         var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
                         if (value == null)
                         {
+                            transaction.Rollback();
                             return NotFound();
                         }
                         if (!accessColumn.Access.GetFlag(AccessType.Admin, CurrentUser)
                             && !value.Access.GetFlag(AccessType.Admin, CurrentUser)
                             && !table.Access.GetFlag(AccessType.Admin, CurrentUser))
                         {
+                            transaction.Rollback();
                             return Forbid();
                         }
                         value.Access = temp;
