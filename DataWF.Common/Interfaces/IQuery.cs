@@ -11,6 +11,8 @@ namespace DataWF.Common
 
         ICollection<IComparer> Orders { get; }
 
+        ITreeComparer TreeComparer { get; set; }
+
         bool Suspending { get; set; }
 
         event EventHandler ParametersChanged;

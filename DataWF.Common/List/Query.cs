@@ -13,6 +13,7 @@ namespace DataWF.Common
         private QueryParameterList<T> parameters;
         private QueryOrdersList<T> orders;
         private bool suspend;
+        private ITreeComparer treeComparer;
 
         public Query()
         { }
@@ -45,7 +46,7 @@ namespace DataWF.Common
 
         public QueryParameterList<T> Parameters
         {
-            get { return parameters ?? (Parameters = new QueryParameterList<T>(this)); }
+            get => parameters ?? (Parameters = new QueryParameterList<T>(this));
             set
             {
                 if (parameters != value)
@@ -61,7 +62,7 @@ namespace DataWF.Common
 
         public QueryOrdersList<T> Orders
         {
-            get { return orders ?? (Orders = new QueryOrdersList<T>(this)); }
+            get => orders ?? (Orders = new QueryOrdersList<T>(this));
             set
             {
                 if (orders != value)
@@ -75,17 +76,25 @@ namespace DataWF.Common
             }
         }
 
-        ICollection<IQueryParameter> IQuery.Parameters
-        {
-            get { return Parameters; }
-        }
+        ICollection<IQueryParameter> IQuery.Parameters => Parameters;
 
-        ICollection<IComparer> IQuery.Orders
+        ICollection<IComparer> IQuery.Orders => Orders;
+
+        public ITreeComparer TreeComparer
         {
-            get { return Orders; }
+            get => treeComparer;
+            set
+            {
+                if (treeComparer != value)
+                {
+                    treeComparer = value;
+                    OnOrdersChanged(treeComparer, EventArgs.Empty);
+                }
+            }
         }
 
         public bool IsEnabledFormatting => ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => !p.FormatIgnore && p.IsEnabled);
+
         public bool IsEnabled => ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => p.IsEnabled);
 
         public event EventHandler OrdersChanged;
@@ -196,11 +205,22 @@ namespace DataWF.Common
             return Parameters.Remove(parameter);
         }
 
-        public InvokerComparerList<T> GetComparer()
+        public IComparer<T> GetComparer()
         {
             if (Orders.Count > 0)
             {
-                return new InvokerComparerList<T>(Orders);
+                var comparer = new InvokerComparerList<T>(Orders);
+                if (TreeComparer != null)
+                {
+                    TreeComparer.Comparer = comparer;
+                    return (IComparer<T>)TreeComparer;
+                }
+                return comparer;
+            }
+            else if (TreeComparer != null)
+            {
+                TreeComparer.Comparer = null;
+                return (IComparer<T>)TreeComparer;
             }
             return null;
         }

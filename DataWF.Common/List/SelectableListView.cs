@@ -140,6 +140,11 @@ namespace DataWF.Common
                     ApplySort((IComparer<T>)FilterQuery.GetComparer());
                 }
             }
+            else
+            {
+                comparer = null;
+                ApplySort((IComparer<T>)FilterQuery.GetComparer());
+            }
         }
 
         private void ParametersChanged(object sender, EventArgs args)
