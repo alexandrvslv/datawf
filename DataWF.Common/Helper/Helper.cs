@@ -1225,6 +1225,10 @@ namespace DataWF.Common
             }
             else if (value is DateTime dateValue)
             {
+                if (dateValue.Kind == DateTimeKind.Utc)
+                {
+                    dateValue = dateValue.ToLocalTime();
+                }
                 if (format == null)
                     result = dateValue.ToString(info.DateTimeFormat);
                 else
