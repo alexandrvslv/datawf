@@ -809,7 +809,7 @@ namespace DataWF.Data
             {
                 item = PrimaryKey.SelectOneFromReader<T>(transaction, transaction.ReaderPrimaryKey);
             }
-            if (transaction.ReaderStampKey >= 0)
+            if (transaction.ReaderStampKey >= 0 && !transaction.Reader.IsDBNull(transaction.ReaderStampKey))
             {
                 if (item != null && (transaction.ReaderParam & DBLoadParam.Referencing) != 0)
                 {
