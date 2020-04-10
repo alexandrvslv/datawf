@@ -1700,7 +1700,7 @@ namespace DataWF.Data
 
         public async Task SetStream(Stream stream, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
-            SetValue(Helper.GetBytes(stream), column);
+            SetValue(await Helper.GetBytesAsync(stream), column);
             if (Attached)
             {
                 await Save(transaction);
