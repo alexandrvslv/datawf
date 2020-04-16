@@ -292,7 +292,7 @@ namespace DataWF.Data
                                         Reference = split[1],
                                         Code = code
                                     };
-                                    names.Add(defName.Range.Start.ToString(), defName);
+                                    names[defName.Range.Start.ToString()] = defName;
                                 }
                             }
                         }
@@ -722,15 +722,15 @@ namespace DataWF.Data
                     reference.Row = r;
                     cell.CellReference = reference.ToString();
 
-                    if (cell.CellFormula!=null)
+                    if (cell.CellFormula != null)
                     {
                         if (cell.CellValue != null)
                         {
                             cell.CellValue.Remove();
                         }
-                        if(cell.CellFormula.FormulaType == null || cell.CellFormula.FormulaType == Excel.CellFormulaValues.Normal)
+                        if (cell.CellFormula.FormulaType == null || cell.CellFormula.FormulaType == Excel.CellFormulaValues.Normal)
                         {
-                            cell.CellFormula.Text = Regex.Replace(cell.CellFormula.Text, "[A-Z]" + oldRow.ToString(), (m)=>m.Value.Replace(oldRow.ToString(), r.ToString()));
+                            cell.CellFormula.Text = Regex.Replace(cell.CellFormula.Text, "[A-Z]" + oldRow.ToString(), (m) => m.Value.Replace(oldRow.ToString(), r.ToString()));
                         }
                     }
                 }
@@ -838,7 +838,7 @@ namespace DataWF.Data
                         cell.CellFormula.Text = Regex.Replace(masterCell.CellFormula.Text, "[A-Z]" + masterReference.Row.ToString(), (m) => m.Value.Replace(masterReference.Row.ToString(), r.ToString()));
                     }
                 }
-                
+
             }
             WriteCell(cell, value, sharedStrings);
 
