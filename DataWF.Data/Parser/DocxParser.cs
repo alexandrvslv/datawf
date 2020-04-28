@@ -93,12 +93,19 @@ namespace DataWF.Data
         public void FillTable(OpenXmlElement element, QResult query)
         {
             var row = FindParent<Word.TableRow>(element);
-            var prg = row.Descendants<Word.Paragraph>().FirstOrDefault();
+            var prg = FindParent<Word.Paragraph>(element);
+            var hCell = FindParent<Word.TableCell>(element);
+            var hList = row.Descendants<Word.TableCell>().ToList();
+            var hIndex = hList.IndexOf(hCell);
             //element.Remove();
             Word.TableRow prow = null;
             foreach (object[] data in query.Values)
             {
-                Word.TableCell cell = row.GetFirstChild<Word.TableCell>();
+                var cell = row.GetFirstChild<Word.TableCell>();
+                while (hList.IndexOf(cell) != hIndex)
+                {
+                    cell = cell.NextSibling<Word.TableCell>();
+                }
                 foreach (object value in data)
                 {
                     if (cell != null)
@@ -129,6 +136,7 @@ namespace DataWF.Data
                     prow.InsertAfterSelf<Word.TableRow>(row);
                 prow = row;
                 row = (Word.TableRow)row.Clone();
+                hList = row.Descendants<Word.TableCell>().ToList();
             }
         }
 

@@ -74,12 +74,26 @@ namespace DataWF.Data
         {
             var temp = code.Split(new char[] { ':' });
             object val = null;
-
             string procedureCode = code;
             string param = null;
             string localize = null;
 
-            if (temp.Length > 0)
+            var codeAttribute = parameters.ParseCode(procedureCode);
+            if (codeAttribute != null)
+            {
+                val = parameters.GetValue(codeAttribute);
+            }
+            else
+            {
+                var procedure = DBService.Schems.ParseProcedure(procedureCode, parameters.ProcedureCategory);
+                if (procedure != null)
+                    try { val = procedure.Execute(parameters); }
+                    catch (Exception ex) { val = ex.Message; }
+            }
+
+
+
+            if (val == null && temp.Length > 0)
             {
                 string type = temp[0].Trim();
                 if (type.Equals("c", StringComparison.OrdinalIgnoreCase))
@@ -114,22 +128,6 @@ namespace DataWF.Data
                     culture = CultureInfo.GetCultureInfo(localize);
                 }
                 val = Helper.TextDisplayFormat(val, param, culture);
-            }
-
-            if (val == null)
-            {
-                var codeAttribute = parameters.ParseCode(procedureCode);
-                if (codeAttribute != null)
-                {
-                    val = parameters.GetValue(codeAttribute);
-                }
-                else
-                {
-                    var procedure = DBService.Schems.ParseProcedure(procedureCode, parameters.ProcedureCategory);
-                    if (procedure != null)
-                        try { val = procedure.Execute(parameters); }
-                        catch (Exception ex) { val = ex.Message; }
-                }
             }
 
             return val;
