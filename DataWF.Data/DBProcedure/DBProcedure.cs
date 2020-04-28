@@ -749,6 +749,8 @@ namespace DataWF.Data
                 parameters.Add("documentid", document.PrimaryId);
                 foreach (DBColumn column in document.Table.Columns)
                 {
+                    if (!document.Table.IsSerializeableColumn(column, document.GetType()))
+                        continue;
                     object val = document[column];
                     if (val != null)
                     {
