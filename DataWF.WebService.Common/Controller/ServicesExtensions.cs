@@ -28,7 +28,7 @@ namespace DataWF.WebService.Common
     {
         public static IServiceCollection Services { get; private set; }
 
-        public static IServiceCollection AddCompression(this IServiceCollection services)
+        public static IServiceCollection AddCompression(this IServiceCollection services, CompressionLevel compressionLevel = CompressionLevel.Fastest)
         {
             services.AddResponseCompression(options =>
             {
@@ -39,11 +39,11 @@ namespace DataWF.WebService.Common
             });
             services.Configure<GzipCompressionProviderOptions>(options =>
             {
-                options.Level = CompressionLevel.Fastest;
+                options.Level = compressionLevel;
             });
             services.Configure<BrotliCompressionProviderOptions>(options =>
             {
-                options.Level = CompressionLevel.Fastest;
+                options.Level = compressionLevel;
             });
             return services;
         }
