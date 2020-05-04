@@ -93,6 +93,7 @@ namespace DataWF.Data
         public void FillTable(OpenXmlElement element, QResult query)
         {
             var row = FindParent<Word.TableRow>(element);
+            var orow = (Word.TableRow)row.Clone();
             var prg = FindParent<Word.Paragraph>(element);
             var hCell = FindParent<Word.TableCell>(element);
             var hList = row.Descendants<Word.TableCell>().ToList();
@@ -123,10 +124,7 @@ namespace DataWF.Data
                         }
                         else
                         {
-                            Word.Text text = new Word.Text() { Text = value.ToString(), Space = SpaceProcessingModeValues.Preserve };
-                            run = new Word.Run();
-                            run.Append(text);
-                            paragraph.Append(run);
+                            ReplaceString(paragraph, value.ToString());                          
                         }
 
                         cell = cell.NextSibling<Word.TableCell>();
@@ -135,7 +133,7 @@ namespace DataWF.Data
                 if (row.Parent == null)
                     prow.InsertAfterSelf<Word.TableRow>(row);
                 prow = row;
-                row = (Word.TableRow)row.Clone();
+                row = (Word.TableRow)orow.Clone();
                 hList = row.Descendants<Word.TableCell>().ToList();
             }
         }
@@ -151,7 +149,18 @@ namespace DataWF.Data
         {
             var text = element.Descendants<Word.Text>().FirstOrDefault();
             var run = text == null ? element.Descendants<Word.Run>().FirstOrDefault() : FindParent<Word.Run>(text);
-            var runp = run.Parent;
+            var runp = (OpenXmlElement)null;
+            if (run == null)
+            {
+                runp = element;
+                run = new Word.Run();
+                runp.Append(run);
+            }
+            else
+            {
+                runp = run.Parent;
+
+            }
             var paragraph = FindParent<Word.Paragraph>(runp);
             run.RsidRunProperties = null;
             run.RemoveAllChildren<Word.Text>();
