@@ -35,10 +35,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="Portable.Xaml" Version="0.24.0" />
+    <PackageReference Include="Portable.Xaml" Version="0.25.0" />
     <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
     <PackageReference Include="System.Text.Json" Version="4.7.1" />
   </ItemGroup>
