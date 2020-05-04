@@ -36,6 +36,7 @@ namespace DataWF.WebService.Common
                 options.Providers.Add<GzipCompressionProvider>();
                 options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
                         new[] { "application/json", "text/json" });
+                options.EnableForHttps = true;
             });
             services.Configure<GzipCompressionProviderOptions>(options =>
             {
