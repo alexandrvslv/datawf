@@ -112,6 +112,25 @@ namespace DataWF.Common
     {
         Task<Stream> DownloadLogFileAsync(long logId, ProgressToken progressToken);
     }
+
+    public interface IModelView<T> : IModelView
+    {
+        IClient BaseClient { get; }
+        new T SelectedItem { get; set; }
+        new IFilterable<T> Items { get; set; }
+        new Query<T> Filter { get; set; }
+    }
+
+    public interface ICrudModelView<T> : IModelView<T>
+    {
+        bool AccessCreate { get; }
+        bool AccessRead { get; }
+        bool AccessUpdate { get; }
+        bool AccessAdmin { get; }
+
+        Task<IEnumerable<T>> Load(string filter);
+    }
+
     public enum ClientStatus
     {
         None,

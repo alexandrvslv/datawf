@@ -12,9 +12,27 @@ namespace DataWF.Common
         IQuery Filter { get; set; }
         object SelectedItem { get; set; }
         IEnumerable<object> SelectedItems { get; set; }
+        bool PreventLoad { get; set; }
+        bool AllowStatus { get; }
+        ModelViewStatus Status { get; }
 
+        event EventHandler SelectedItemChanged;
+        event EventHandler StatusChanged;
+        Task Get();
+        bool CanEdit(object item);
         Task Save(object item);
         Task Save(object item, ProgressToken token);
+    }
 
+    public enum ModelViewStatus
+    {
+        None,
+        Compleate,
+        Loading,
+        Saving,
+        Deleting,
+        Creating,
+        Uploading,
+        Downloading
     }
 }
