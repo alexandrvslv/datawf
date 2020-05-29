@@ -35,11 +35,12 @@ namespace DataWF.Common
     public interface ICrudClient : IClient
     {
         IClientConverter Converter { get; }
+        IList Items { get; }
         bool IsSynchronized { get; set; }
         Type ItemType { get; }
         int TypeId { get; }
         bool Add(object item);
-        bool Remove(object item);        
+        bool Remove(object item);
         object AddDownloads(object id, object item);
         bool RemoveDownloads(object id);
         object GetDownloads(object id);
@@ -62,7 +63,7 @@ namespace DataWF.Common
 
     public interface ICrudClient<T> : ICrudClient
     {
-        ChangeableList<T> Items { get; }
+        new ChangeableList<T> Items { get; }
         bool Add(T item);
         bool Remove(T item);
         Task<T> Get(T item);

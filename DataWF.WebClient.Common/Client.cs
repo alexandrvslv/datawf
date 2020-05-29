@@ -50,6 +50,8 @@ namespace DataWF.Common
 
         public Type ItemType { get { return typeof(T); } }
 
+        IList ICrudClient.Items => Items;
+
         public ChangeableList<T> Items { get; set; } = new ChangeableList<T> { AsyncNotification = true };
 
         public bool IsSynchronized
