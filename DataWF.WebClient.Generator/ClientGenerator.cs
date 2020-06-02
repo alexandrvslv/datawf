@@ -707,6 +707,8 @@ namespace DataWF.WebClient.Generator
         {
             foreach (var parameter in descriptor.Operation.Parameters)
             {
+                if (parameter.Kind == OpenApiParameterKind.Header)
+                    continue;
                 yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
                                                          modifiers: SF.TokenList(),
                                                          type: GetTypeDeclaration(parameter, false, "List"),
