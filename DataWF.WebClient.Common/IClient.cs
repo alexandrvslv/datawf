@@ -119,8 +119,8 @@ namespace DataWF.Common
         IClient BaseClient { get; }
         new T SelectedItem { get; set; }
         new IFilterable<T> Items { get; set; }
-        new Query<T> Filter { get; set; }
-        
+        new Query<T> Filter { get; set; }        
+
         Task<IEnumerable<T>> Get(string filter, HttpPageSettings list = null);
     }
 

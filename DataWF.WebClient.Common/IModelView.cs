@@ -13,6 +13,7 @@ namespace DataWF.Common
         IQuery Filter { get; set; }
         object SelectedItem { get; set; }
         IEnumerable<object> SelectedItems { get; set; }
+        bool VirtualMode { get; set; }
         bool PreventLoad { get; set; }
         bool AllowStatus { get; }
         ModelViewStatus Status { get; }
