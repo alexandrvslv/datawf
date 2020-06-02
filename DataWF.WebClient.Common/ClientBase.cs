@@ -158,27 +158,7 @@ namespace DataWF.Common
                                         {
                                             if (value is HttpPageSettings pages)
                                             {
-                                                IEnumerable<string> values = null;
-                                                if (response.Headers.TryGetValues(HttpPageSettings.XListCount, out values)
-                                                    && int.TryParse(values.FirstOrDefault(), out var countValue))
-                                                {
-                                                    pages.ListCount = countValue;
-                                                }
-                                                if (response.Headers.TryGetValues(HttpPageSettings.XPageIndex, out values)
-                                                    && int.TryParse(values.FirstOrDefault(), out var pageIndex))
-                                                {
-                                                    pages.PageIndex = pageIndex;
-                                                }
-                                                if (response.Headers.TryGetValues(HttpPageSettings.XPageSize, out values)
-                                                    && int.TryParse(values.FirstOrDefault(), out var pageLegth))
-                                                {
-                                                    pages.PageSize = pageLegth;
-                                                }
-                                                if (response.Headers.TryGetValues(HttpPageSettings.XPageCount, out values)
-                                                    && int.TryParse(values.FirstOrDefault(), out var pageCount))
-                                                {
-                                                    pages.PageCount = pageCount;
-                                                }
+                                                ReadPageSettings(response, pages);
                                             }
 #if NETSTANDARD2_0
                                             var jsonSerializer = Newtonsoft.Json.JsonSerializer.Create(Provider.JsonSettings);
@@ -190,10 +170,10 @@ namespace DataWF.Common
 #else
                                             result = await System.Text.Json.JsonSerializer.DeserializeAsync<R>(encodedStream, Provider.JsonSettings).ConfigureAwait(false);
 #endif
-                                            if (encodedStream.CanWrite)
+                                            if (value is HttpPageSettings rPages && rPages.ListCount == 0
+                                                && result is IList rlist && rlist.Count > 0)
                                             {
-                                                using (var file = File.OpenWrite("output.json"))
-                                                    encodedStream.CopyTo(file);
+                                                rPages.ListCount = rlist.Count;
                                             }
                                         }
                                     }
@@ -243,6 +223,31 @@ namespace DataWF.Common
                 {
                     throw ex;
                 }
+            }
+        }
+
+        private static void ReadPageSettings(HttpResponseMessage response, HttpPageSettings pages)
+        {
+            IEnumerable<string> values = null;
+            if (response.Headers.TryGetValues(HttpPageSettings.XListCount, out values)
+                && int.TryParse(values.FirstOrDefault(), out var countValue))
+            {
+                pages.ListCount = countValue;
+            }
+            if (response.Headers.TryGetValues(HttpPageSettings.XPageIndex, out values)
+                && int.TryParse(values.FirstOrDefault(), out var pageIndex))
+            {
+                pages.PageIndex = pageIndex;
+            }
+            if (response.Headers.TryGetValues(HttpPageSettings.XPageSize, out values)
+                && int.TryParse(values.FirstOrDefault(), out var pageLegth))
+            {
+                pages.PageSize = pageLegth;
+            }
+            if (response.Headers.TryGetValues(HttpPageSettings.XPageCount, out values)
+                && int.TryParse(values.FirstOrDefault(), out var pageCount))
+            {
+                pages.PageCount = pageCount;
             }
         }
 
