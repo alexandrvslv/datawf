@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -262,7 +263,7 @@ namespace DataWF.Data
         {
             if (tables.Count == 1)
             {
-                DBColumn column = tables[0].Table.ParseColumn(word) ?? tables[0].Table.ParseProperty(word);
+                DBColumn column = tables[0].Table.ParseColumnProperty(word);
                 if (column != null)
                     return column;
             }
@@ -272,7 +273,7 @@ namespace DataWF.Data
                 foreach (var table in tables)
                     if (prefix.Equals(table.Text, StringComparison.OrdinalIgnoreCase) ||
                         prefix.Equals(table.Alias, StringComparison.OrdinalIgnoreCase))
-                        return table.Table.ParseColumn(word) ?? Table.ParseProperty(word);
+                        return table.Table.ParseColumnProperty(word);
             }
             var q = Query as QQuery;
             while (q != this)
@@ -333,7 +334,7 @@ namespace DataWF.Data
             QQuery sub = null;
             QOrder order = null;
 
-            string prefix = null;
+            List<string> prefix = new List<string>();
             string word = string.Empty;
             if (Table == null)
             {
@@ -367,7 +368,10 @@ namespace DataWF.Data
             {
                 var c = i < query.Length ? query[i] : '\n';
                 if (c == '.')
-                    prefix = word;
+                {
+                    prefix.Add(word);
+                    word = string.Empty;
+                }
                 else if (c == '\'' || c == ' ' || c == ',' || c == '(' || c == ')' || c == '\n' || c == '\r' || c == '!' || c == '=' || c == '>' || c == '<')//word.Length > 0 && 
                 {
                     //if (c == ' ')
@@ -379,12 +383,12 @@ namespace DataWF.Data
                     }
                     else if (word.Equals("from", StringComparison.OrdinalIgnoreCase))
                     {
-                        prefix = null;
+                        prefix.Clear();
                         state = QParcerState.From;
                     }
                     else if (word.Equals("where", StringComparison.OrdinalIgnoreCase))
                     {
-                        prefix = null;
+                        prefix.Clear();
                         table = null;
                         state = QParcerState.Where;
                     }
@@ -438,9 +442,9 @@ namespace DataWF.Data
                                                 var scolumn = ParseColumn(word);
                                                 if (scolumn != null)
                                                 {
-                                                    column = new QColumn(scolumn) { Prefix = prefix };
+                                                    column = new QColumn(scolumn) { Prefix = prefix.FirstOrDefault() };
                                                     columns.Add(column);
-                                                    prefix = null;
+                                                    prefix.Clear();
                                                 }
                                             }
                                         }
@@ -538,6 +542,7 @@ namespace DataWF.Data
                                                 {
                                                     parameter.Logic = new LogicType(lg);
                                                 }
+                                                prefix.Clear();
                                             }
                                             else
                                             {
@@ -546,29 +551,57 @@ namespace DataWF.Data
                                                 {
                                                     func = new QFunc(fn);
                                                     parameter.SetValue(func);
+                                                    prefix.Clear();
                                                 }
                                                 else
                                                 {
                                                     var wcolumn = ParseColumn(word);
-                                                    if (wcolumn != null)
+                                                    if (wcolumn != null && (prefix.Count == 0 || tables.Any(p => string.Equals(p.Alias, prefix.FirstOrDefault()))))
                                                     {
-                                                        column = new QColumn(wcolumn) { Prefix = prefix };
-                                                        prefix = null;
+                                                        column = new QColumn(wcolumn) { Prefix = prefix.FirstOrDefault() };
+                                                        prefix.Clear();
                                                         parameter.SetValue(column);
                                                     }
                                                     else
                                                     {
                                                         if (parameter.ValueLeft == null)
                                                         {
-                                                            var invoker = EmitInvoker.Initialize(Table.ItemType.Type, word);
-                                                            if (invoker != null)
+                                                            if (prefix.Count > 0)
                                                             {
-                                                                parameter.SetValue(new QReflection(invoker));
+                                                                var pQuery = this;
+                                                                var pTable = Table;
+                                                                foreach (var pcolumn in prefix)
+                                                                {
+                                                                    var dbColumn = pTable.ParseColumnProperty(pcolumn);
+                                                                    if (dbColumn == null)
+                                                                        break;
+                                                                    column = new QColumn(dbColumn);
+                                                                    parameter.SetValue(column);
+                                                                    parameter.Comparer = CompareType.In;
+                                                                    pTable = dbColumn.ReferenceTable;
+                                                                    pQuery = new QQuery("", pTable, new[] { pTable.PrimaryKey }, pQuery);
+                                                                    parameter.SetValue(pQuery);
+                                                                    parameter = pQuery.Parameters.Add();
+                                                                }
+                                                                var lastColumn = pTable.ParseColumnProperty(word);
+                                                                column = new QColumn(lastColumn);
+                                                                parameter.SetValue(column);
+                                                                prefix.Clear();
+                                                            }
+                                                            else
+                                                            {
+                                                                var invoker = EmitInvoker.Initialize(Table.ItemType.Type, word);
+                                                                if (invoker != null)
+                                                                {
+                                                                    parameter.SetValue(new QReflection(invoker));
+                                                                    prefix.Clear();
+                                                                }
                                                             }
                                                         }
                                                         else// if (parameter.Column != null)
                                                         {
                                                             parameter.SetValue(new QValue(word, parameter.Column));
+                                                            prefix.Clear();
                                                         }
                                                     }
                                                 }
@@ -669,9 +702,9 @@ namespace DataWF.Data
 
                                 if (cl != null)
                                 {
-                                    order = new QOrder(cl) { Prefix = prefix };
+                                    order = new QOrder(cl) { Prefix = prefix.FirstOrDefault() };
                                     orders.Add(order);
-                                    prefix = null;
+                                    prefix.Clear();
                                 }
                                 else if (word.Equals("asc", StringComparison.OrdinalIgnoreCase))
                                 {
