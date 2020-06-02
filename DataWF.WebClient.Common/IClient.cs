@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataWF.WebClient.Common;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -51,8 +52,8 @@ namespace DataWF.Common
         IEnumerable<object> GetChanges();
         Task<object> GenerateId();
         Task<bool> DeleteAsync(object id);
-        Task<IEnumerable> SearchAsync(string filter);
-        Task<IEnumerable> GetAsync();
+        Task<IEnumerable> SearchAsync(string filter, HttpPageSettings list);
+        Task<IEnumerable> GetAsync(HttpPageSettings list);
         Task<object> GetAsync(object id);
         Task<object> CopyAsync(object id);
         Task<object> PostAsync(object value);
@@ -69,9 +70,9 @@ namespace DataWF.Common
         Task<T> Get(T item);
         T Get(object id);
         Task<bool> Delete(T item);
-        LoadProgress<T> Load(string filter, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<List<T>> SearchAsync(string filter, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<List<T>> GetAsync(HttpJsonSettings settings, ProgressToken progressToken);
+        LoadProgress<T> Load(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<List<T>> SearchAsync(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<List<T>> GetAsync(HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> GetAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> CopyAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> PostAsync(T value, HttpJsonSettings settings, ProgressToken progressToken);
@@ -82,8 +83,8 @@ namespace DataWF.Common
 
     public interface ILoggedClient
     {
-        Task<IEnumerable> GetLogsAsync(string filter);
-        Task<IEnumerable> GetItemLogsAsync(object id);
+        Task<IEnumerable> GetLogsAsync(string filter, HttpPageSettings list);
+        Task<IEnumerable> GetItemLogsAsync(object id, HttpPageSettings list);
 
         Task<object> UndoLogAsync(long logId);
         Task<object> RedoLogAsync(long logId);
@@ -92,8 +93,8 @@ namespace DataWF.Common
 
     public interface ILoggedClient<T, L> : ILoggedClient
     {
-        Task<List<L>> GetLogsAsync(string filter, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<List<L>> GetItemLogsAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<List<L>> GetLogsAsync(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<List<L>> GetItemLogsAsync(object id, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
 
         Task<T> UndoLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> RedoLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
@@ -119,6 +120,8 @@ namespace DataWF.Common
         new T SelectedItem { get; set; }
         new IFilterable<T> Items { get; set; }
         new Query<T> Filter { get; set; }
+        
+        Task<IEnumerable<T>> Get(string filter, HttpPageSettings list = null);
     }
 
     public interface ICrudModelView<T> : IModelView<T>
@@ -128,7 +131,7 @@ namespace DataWF.Common
         bool AccessUpdate { get; }
         bool AccessAdmin { get; }
 
-        Task<IEnumerable<T>> Load(string filter);
+        Task<IEnumerable<T>> GetInternal(string filter, HttpPageSettings list = null);
     }
 
     public enum ClientStatus

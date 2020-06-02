@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -285,6 +286,29 @@ namespace DataWF.Common
                     yield return typed;
             }
         }
+        //public class BitConvert<T> where T : struct
+        //{
+        //    [StructLayout(LayoutKind.Explicit)]
+        //    struct EnumUnion32
+        //    {
+        //        [FieldOffset(0)]
+        //        public T Enum;
+        //        [FieldOffset(0)]
+        //        public int Int;
+        //    }
+        //    public static int Enum32ToInt(T e)
+        //    {
+        //        var u = default(EnumUnion32);
+        //        u.Enum = e;
+        //        return u.Int;
+        //    }
+        //    public static T IntToEnum32(int value)
+        //    {
+        //        var u = default(EnumUnion32);
+        //        u.Int = value;
+        //        return u.Enum;
+        //    }
+        //}
 
         public static bool CheckItemN<T>(T? x, object y, CompareType compare, IComparer<T?> comparer) where T : struct
         {
@@ -942,7 +966,7 @@ namespace DataWF.Common
             if (comp != null)
             {
                 result = comp.Compare(x, y);
-                hash = x != null && y != null && !EqualT(x, y);
+                hash = x != null && y != null && result == 0 && !EqualT(x, y);
             }
             else if (x == null)
             {
@@ -994,7 +1018,7 @@ namespace DataWF.Common
             if (comp != null)
             {
                 result = comp.Compare(x, y);
-                hash = x != null && y != null && !Equal(x, y);
+                hash = x != null && y != null && result == 0 && !Equal(x, y);
             }
             else if (x == null)
             {

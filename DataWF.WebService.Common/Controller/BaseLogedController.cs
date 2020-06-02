@@ -13,7 +13,7 @@ namespace DataWF.WebService.Common
         where L : DBLogItem, new()
     {
         [HttpGet("GetLogs/{filter}")]
-        public ActionResult<IEnumerable<L>> GetLogs([FromRoute]string filter)
+        public ActionResult<IEnumerable<L>> GetLogs([FromRoute] string filter)
         {
             try
             {
@@ -29,11 +29,14 @@ namespace DataWF.WebService.Common
                 }
                 using (var query = new QQuery(filter, (DBTable)logTable))
                 {
-                    return new ActionResult<IEnumerable<L>>(logTable.LoadItems(query, DBLoadParam.Referencing)
-                                                              .Where(p => p.Access.GetFlag(AccessType.Read, user)
-                                                              && p.PrimaryId != null
-                                                              && (p.UpdateState & DBUpdateState.Insert) == 0)
-                                                              .TypeOf<L>());
+                    var result = logTable.LoadItems(query, DBLoadParam.Referencing)
+                                          .Where(p => p.Access.GetFlag(AccessType.Read, user)
+                                          && p.PrimaryId != null
+                                          && (p.UpdateState & DBUpdateState.Insert) == 0)
+                                          .TypeOf<L>();
+                    
+                    result = Pagination(result);
+                    return new ActionResult<IEnumerable<L>>(result);
                 }
             }
             catch (Exception ex)
@@ -43,7 +46,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("GetItemLogs/{id}")]
-        public ActionResult<IEnumerable<L>> GetItemLogs([FromRoute]K id)
+        public ActionResult<IEnumerable<L>> GetItemLogs([FromRoute] K id)
         {
             try
             {
@@ -56,12 +59,13 @@ namespace DataWF.WebService.Common
                 using (var query = new QQuery((DBTable)logTable))
                 {
                     query.BuildParam(logTable.BaseKey, id);
-
-                    return new ActionResult<IEnumerable<L>>(logTable.LoadItems(query, DBLoadParam.None)
-                                                              .Where(p => p.Access.GetFlag(AccessType.Read, user)
-                                                              && p.PrimaryId != null
-                                                              && (p.UpdateState & DBUpdateState.Insert) == 0)
-                                                              .TypeOf<L>());
+                    var result = logTable.LoadItems(query, DBLoadParam.None)
+                                         .Where(p => p.Access.GetFlag(AccessType.Read, user)
+                                         && p.PrimaryId != null
+                                         && (p.UpdateState & DBUpdateState.Insert) == 0)
+                                         .TypeOf<L>();
+                    result = Pagination(result);
+                    return new ActionResult<IEnumerable<L>>(result);
 
                 };
             }
@@ -72,7 +76,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("UndoLog/{logId}")]
-        public async Task<ActionResult<T>> UndoLog([FromRoute]long logId)
+        public async Task<ActionResult<T>> UndoLog([FromRoute] long logId)
         {
             var user = CurrentUser;
             var logItem = (DBLogItem)table.LogTable.LoadItemById(logId);
@@ -103,7 +107,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("RedoLog/{logId}")]
-        public async Task<ActionResult<T>> RedoLog([FromRoute]long logId)
+        public async Task<ActionResult<T>> RedoLog([FromRoute] long logId)
         {
             var user = CurrentUser;
             var logItem = (DBLogItem)table.LogTable.LoadItemById(logId);
@@ -134,7 +138,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("RemoveLog/{logId}")]
-        public virtual async Task<ActionResult<bool>> RemoveLog([FromRoute]long logId)
+        public virtual async Task<ActionResult<bool>> RemoveLog([FromRoute] long logId)
         {
             var user = CurrentUser;
             if (!table.Access.GetFlag(AccessType.Admin, user))

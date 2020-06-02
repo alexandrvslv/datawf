@@ -354,23 +354,34 @@ namespace DataWF.Data
             }
         }
 
-        public async ValueTask<IEnumerable<T>> LoadCacheAsync(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
+        public bool ParseQuery(string filter, out QQuery query)
         {
-            if (!queryChache.TryGetValue(filter, out var query))
+            query = null;
+            if (!queryChache.TryGetValue(filter, out query))
             {
                 query = new QQuery(filter, this);
-                await LoadAsync(query, loadParam, transaction);
                 queryChache.TryAdd(filter, query);
+                return false;
             }
+            return true;
+        }
+
+        public async ValueTask<IEnumerable<T>> LoadCacheAsync(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
+        {
+            if (!ParseQuery(filter, out var query))
+            {
+                await LoadAsync(query, loadParam, transaction);
+            }
+            var result = Select(query);
             if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
             {
-                var temp = Select(query).ToList();
+                var temp = result.ToList();
                 ListHelper.QuickSort(temp, TreeComparer<IGroup>.Default);
                 return temp;
             }
             else
             {
-                return Select(query);
+                return result;
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataWF.WebClient.Common;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace DataWF.Common
 
         event EventHandler SelectedItemChanged;
         event EventHandler StatusChanged;
-        Task Get();
+        Task Get(HttpPageSettings pages = null);
         bool CanEdit(object item);
         Task Save(object item);
         Task Save(object item, ProgressToken token);

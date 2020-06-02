@@ -1,4 +1,5 @@
 ﻿using Brotli;
+using DataWF.WebClient.Common;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -100,7 +101,7 @@ namespace DataWF.Common
             {
                 using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, jsonSettings, value, routeParams))
                 {
-                    System.Diagnostics.Debug.WriteLine(request.RequestUri);
+                    System.Diagnostics.Debug.WriteLine($"{request.RequestUri} {value}");
 
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, progressToken.CancellationToken).ConfigureAwait(false))
                     {
@@ -155,6 +156,30 @@ namespace DataWF.Common
                                         }
                                         else
                                         {
+                                            if (value is HttpPageSettings pages)
+                                            {
+                                                IEnumerable<string> values = null;
+                                                if (response.Headers.TryGetValues(HttpPageSettings.XListCount, out values)
+                                                    && int.TryParse(values.FirstOrDefault(), out var countValue))
+                                                {
+                                                    pages.ListCount = countValue;
+                                                }
+                                                if (response.Headers.TryGetValues(HttpPageSettings.XPageIndex, out values)
+                                                    && int.TryParse(values.FirstOrDefault(), out var pageIndex))
+                                                {
+                                                    pages.PageIndex = pageIndex;
+                                                }
+                                                if (response.Headers.TryGetValues(HttpPageSettings.XPageSize, out values)
+                                                    && int.TryParse(values.FirstOrDefault(), out var pageLegth))
+                                                {
+                                                    pages.PageSize = pageLegth;
+                                                }
+                                                if (response.Headers.TryGetValues(HttpPageSettings.XPageCount, out values)
+                                                    && int.TryParse(values.FirstOrDefault(), out var pageCount))
+                                                {
+                                                    pages.PageCount = pageCount;
+                                                }
+                                            }
 #if NETSTANDARD2_0
                                             var jsonSerializer = Newtonsoft.Json.JsonSerializer.Create(Provider.JsonSettings);
                                             using (var sreader = new StreamReader(encodedStream))
@@ -291,8 +316,8 @@ namespace DataWF.Common
                 RequestUri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute),
                 Method = httpMethod
             };
-            request.Headers.Add(HttpJsonSettings.JsonKeys, jsonSettings.Keys.ToString());
-            request.Headers.Add(HttpJsonSettings.JsonMaxDepth, jsonSettings.MaxDepth.ToString());
+            request.Headers.Add(HttpJsonSettings.XJsonKeys, jsonSettings.Keys.ToString());
+            request.Headers.Add(HttpJsonSettings.XJsonMaxDepth, jsonSettings.MaxDepth.ToString());
             if (httpMethod.Method.Equals("GET", StringComparison.OrdinalIgnoreCase))
             {
                 Status = ClientStatus.Get;
@@ -323,6 +348,11 @@ namespace DataWF.Common
                     { new ProgressStreamContent(progressToken, stream, 81920), Path.GetFileNameWithoutExtension(fileName), fileName }
                 };
                 request.Content = content;
+            }
+            else if (value is HttpPageSettings listSettings)
+            {
+                request.Headers.Add(HttpPageSettings.XListFrom, listSettings.ListFrom.ToString());
+                request.Headers.Add(HttpPageSettings.XListTo, listSettings.ListTo.ToString());
             }
             else if (value != null)
             {

@@ -889,7 +889,10 @@ namespace DataWF.WebService.Generator
                 {
                     yield return SF.ParseStatement($"{prTransaction}.Commit();");
                 }
-
+                if (TypeHelper.IsEnumerable(returnType))
+                {
+                    yield return SF.ParseStatement($"result = Pagination(result);");
+                }
                 if (!isVoid)
                 {
                     if (attribute.ReturnHtml)

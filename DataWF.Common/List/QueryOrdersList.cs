@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Text;
 
 namespace DataWF.Common
 {
@@ -84,6 +86,20 @@ namespace DataWF.Common
         IEnumerator<IComparer> IEnumerable<IComparer>.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public string Format()
+        {
+            if (Count == 0)
+                return string.Empty;
+            var builder = new StringBuilder(" order by ");
+            foreach (var comparer in this)
+            {
+                comparer.Format(builder);
+                builder.Append(",");
+            }
+            builder.Length--;
+            return builder.ToString();
         }
     }
 }

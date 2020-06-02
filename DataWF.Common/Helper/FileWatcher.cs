@@ -13,7 +13,7 @@ namespace DataWF.Common
         private bool disposed;
 
         //https://stackoverflow.com/a/721743
-        public FileWatcher(string filePath, IFileModel model, IFileModelView modelView, bool enabled = true, FileWatcherService service = null)
+        public FileWatcher(string filePath, IFileModel model, object modelView, bool enabled = true, FileWatcherService service = null)
         {
             Model = model;
 
@@ -110,7 +110,7 @@ namespace DataWF.Common
 
         public IFileModel Model { get; set; }
 
-        public IFileModelView ModelView { get; }
+        public object ModelView { get; }
 
         public bool IsChanged
         {

@@ -234,7 +234,7 @@ namespace DataWF.Common
             }
         }
 
-        public string Format(bool ckeckEmpty = true)
+        public string Format(bool ckeckEmpty = true, bool formatOrder = false)
         {
             var logic = false;
             var builder = new StringBuilder();
@@ -246,6 +246,10 @@ namespace DataWF.Common
                 }
                 parametr.Format(builder, logic);
                 logic = true;
+            }
+            if (formatOrder)
+            {
+                builder.Append(Orders.Format());
             }
             return builder.ToString();
         }

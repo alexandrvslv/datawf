@@ -54,6 +54,7 @@ namespace DataWF.WebClient.Generator
         {
             usings = new List<UsingDirectiveSyntax>() {
                 SyntaxHelper.CreateUsingDirective("DataWF.Common") ,
+                SyntaxHelper.CreateUsingDirective("DataWF.WebClient.Common") ,
                 SyntaxHelper.CreateUsingDirective("System") ,
                 SyntaxHelper.CreateUsingDirective("System.Collections"),
                 SyntaxHelper.CreateUsingDirective("System.Collections.Generic") ,
@@ -680,7 +681,14 @@ namespace DataWF.WebClient.Generator
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             if (bodyParameter == null)
             {
-                requestBuilder.Append(", null");
+                if (returnType.StartsWith("List<", StringComparison.Ordinal))
+                {
+                    requestBuilder.Append(", pages");
+                }
+                else
+                {
+                    requestBuilder.Append(", null");
+                }
             }
             else
             {
@@ -703,7 +711,18 @@ namespace DataWF.WebClient.Generator
                                                          modifiers: SF.TokenList(),
                                                          type: GetTypeDeclaration(parameter, false, "List"),
                                                          identifier: SF.Identifier(parameter.Name),
-                                                         @default: null);            
+                                                         @default: null);
+            }
+
+            var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
+            var returnType = GetReturningType(descriptor);
+            if (bodyParameter == null && returnType.StartsWith("List<", StringComparison.Ordinal))
+            {
+                yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
+                                                        modifiers: SF.TokenList(),
+                                                        type: SF.ParseTypeName("HttpPageSettings"),
+                                                        identifier: SF.Identifier("pages"),
+                                                        @default: null);
             }
             yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
                                                         modifiers: SF.TokenList(),

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DataWF.WebClient.Common;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -13,18 +14,18 @@ namespace DataWF.Common
             : base(idInvoker, typeInvoker, typeId)
         { }
 
-        public abstract Task<List<L>> GetItemLogsAsync(K id, HttpJsonSettings settings, ProgressToken progressToken);
+        public abstract Task<List<L>> GetItemLogsAsync(K id, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
 
-        public Task<List<L>> GetItemLogsAsync(object id, HttpJsonSettings settings, ProgressToken progressToken)
-            => GetItemLogsAsync((K)id, settings, progressToken);
+        public Task<List<L>> GetItemLogsAsync(object id, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken)
+            => GetItemLogsAsync((K)id, list, settings, progressToken);
 
-        public async Task<IEnumerable> GetItemLogsAsync(object id)
-            => await GetItemLogsAsync(id, new HttpJsonSettings(HttpJsonKeys.Refed, 2), ProgressToken.None);
+        public async Task<IEnumerable> GetItemLogsAsync(object id, HttpPageSettings list)
+            => await GetItemLogsAsync(id, list, new HttpJsonSettings(HttpJsonKeys.Refed, 2), ProgressToken.None);
 
-        public abstract Task<List<L>> GetLogsAsync(string filter, HttpJsonSettings settings, ProgressToken progressToken);
+        public abstract Task<List<L>> GetLogsAsync(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
 
-        public async Task<IEnumerable> GetLogsAsync(string filter)
-            => await GetLogsAsync(filter, new HttpJsonSettings(HttpJsonKeys.Refed, 2), ProgressToken.None);
+        public async Task<IEnumerable> GetLogsAsync(string filter, HttpPageSettings list)
+            => await GetLogsAsync(filter, list, new HttpJsonSettings(HttpJsonKeys.Refed, 2), ProgressToken.None);
 
         public abstract Task<T> RedoLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
 

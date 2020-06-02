@@ -50,7 +50,7 @@ namespace DataWF.WebService.Common
 
         [Obsolete("Use Search instead!")]
         [HttpGet("Find/{filter}")]
-        public async ValueTask<ActionResult<IEnumerable<T>>> Find([FromRoute]string filter)
+        public async ValueTask<ActionResult<IEnumerable<T>>> Find([FromRoute] string filter)
         {
             try
             {
@@ -71,7 +71,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("Search")]
-        public async ValueTask<ActionResult<IEnumerable<T>>> Search([FromQuery]string filter)
+        public async ValueTask<ActionResult<IEnumerable<T>>> Search([FromQuery] string filter)
         {
             try
             {
@@ -80,10 +80,29 @@ namespace DataWF.WebService.Common
                 {
                     return Forbid();
                 }
-                var result = await table.LoadCacheAsync(filter, DBLoadParam.Referencing);
-                return new ActionResult<IEnumerable<T>>(result.Where(p => p.Access.GetFlag(AccessType.Read, user)
-                                                              && p.PrimaryId != null
-                                                              && (p.UpdateState & DBUpdateState.Insert) == 0));
+                if (!table.ParseQuery(filter, out var query))
+                {
+                    await table.LoadAsync(query, DBLoadParam.Referencing);
+                }
+
+                var result = table.Select(query).Where(p => p.Access.GetFlag(AccessType.Read, user)
+                                                         && p.PrimaryId != null
+                                                         && (p.UpdateState & DBUpdateState.Insert) == 0);
+                if (query.Orders.Count > 0)
+                {
+                    var list = result.ToList();
+                    query.Sort<T>(list);
+                    result = list;
+                }
+                else if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
+                {
+                    var list = result.ToList();
+                    ListHelper.QuickSort(list, TreeComparer<IGroup>.Default);
+                    result = list;
+                }
+                result = Pagination(result);
+
+                return new ActionResult<IEnumerable<T>>(result);
             }
             catch (Exception ex)
             {
@@ -91,8 +110,45 @@ namespace DataWF.WebService.Common
             }
         }
 
+        public IEnumerable<F> Pagination<F>(IEnumerable<F> result)
+        {
+            var pages = HttpContext.ReadPageSettings();
+            if (pages != null)
+            {
+                pages.ListCount = result.Count();
+
+                if (pages.Mode == WebClient.Common.HttpPageMode.Page)
+                {
+                    pages.ListFrom = pages.PageIndex * pages.PageSize;
+                    pages.ListTo = (pages.ListFrom + pages.PageSize) - 1;
+
+                    if (pages.ListTo > pages.ListCount - 1)
+                    {
+                        pages.ListTo = pages.ListCount - 1;
+                    }
+                }
+                else if (pages.Mode == WebClient.Common.HttpPageMode.List)
+                {
+                    pages.PageSize = pages.BufferLength;
+                    pages.PageIndex = pages.ListFrom / pages.PageSize;
+                }
+                pages.PageCount = pages.ListCount / pages.PageSize;
+                if ((pages.ListCount % pages.PageSize) > 0)
+                {
+                    pages.PageCount++;
+                }
+
+
+                HttpContext.WritePageSettings(pages);
+
+                result = result.Skip(pages.ListFrom).Take(pages.BufferLength);
+            }
+
+            return result;
+        }
+
         [HttpGet("GetLink/{id}")]
-        public ActionResult<LinkModel> GetLink([FromRoute]K id)
+        public ActionResult<LinkModel> GetLink([FromRoute] K id)
         {
             try
             {
@@ -115,7 +171,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("{id}")]
-        public async ValueTask<ActionResult<T>> Get([FromRoute]K id)
+        public async ValueTask<ActionResult<T>> Get([FromRoute] K id)
         {
             var value = default(T);
             try
@@ -139,7 +195,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPost("Package")]
-        public async Task<ActionResult<IEnumerable<T>>> PostPackage([FromBody]List<T> values)
+        public async Task<ActionResult<IEnumerable<T>>> PostPackage([FromBody] List<T> values)
         {
             using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
@@ -174,7 +230,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPost]
-        public async Task<ActionResult<T>> Post([FromBody]T value)
+        public async Task<ActionResult<T>> Post([FromBody] T value)
         {
             using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
@@ -207,7 +263,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPut]
-        public async Task<ActionResult<T>> Put([FromBody]T value)
+        public async Task<ActionResult<T>> Put([FromBody] T value)
         {
             using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
@@ -235,7 +291,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpDelete("Merge/{id}")]
-        public async Task<ActionResult<T>> Merge([FromRoute]K id, [FromBody]List<string> ids)
+        public async Task<ActionResult<T>> Merge([FromRoute] K id, [FromBody] List<string> ids)
         {
             using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
@@ -267,7 +323,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult<bool>> Delete([FromRoute]K id)
+        public async Task<ActionResult<bool>> Delete([FromRoute] K id)
         {
             var value = default(T);
             using (var transaction = new DBTransaction(table.Connection, CurrentUser))
@@ -298,7 +354,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("Copy/{id}")]
-        public ActionResult<T> Copy([FromRoute]K id)
+        public ActionResult<T> Copy([FromRoute] K id)
         {
             var value = default(T);
             try
@@ -336,7 +392,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("GenerateIds/{count}")]
-        public ActionResult<List<K>> GenerateIds([FromRoute]int count)
+        public ActionResult<List<K>> GenerateIds([FromRoute] int count)
         {
             try
             {

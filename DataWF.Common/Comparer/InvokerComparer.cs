@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -190,6 +191,16 @@ namespace DataWF.Common
         public virtual int GetHashCode(T obj)
         {
             return base.GetHashCode(obj);
+        }
+
+        public void Format(StringBuilder builder)
+        {
+            builder.Append(ToString());
+        }
+
+        public override string ToString()
+        {
+            return $" {Invoker.Name} {(Direction == ListSortDirection.Ascending ? "ASC" : "DESC")} ";
         }
     }
 
