@@ -272,7 +272,7 @@ namespace DataWF.Data
                 foreach (var table in tables)
                     if (prefix.Equals(table.Text, StringComparison.OrdinalIgnoreCase) ||
                         prefix.Equals(table.Alias, StringComparison.OrdinalIgnoreCase))
-                        return table.Table.ParseColumn(word)?? Table.ParseProperty(word);
+                        return table.Table.ParseColumn(word) ?? Table.ParseProperty(word);
             }
             var q = Query as QQuery;
             while (q != this)
@@ -674,9 +674,19 @@ namespace DataWF.Data
                                     prefix = null;
                                 }
                                 else if (word.Equals("asc", StringComparison.OrdinalIgnoreCase))
-                                    order.Direction = ListSortDirection.Ascending;
+                                {
+                                    if (order != null)
+                                    {
+                                        order.Direction = ListSortDirection.Ascending;
+                                    }
+                                }
                                 else if (word.Equals("desc", StringComparison.OrdinalIgnoreCase))
-                                    order.Direction = ListSortDirection.Descending;
+                                {
+                                    if (order != null)
+                                    {
+                                        order.Direction = ListSortDirection.Descending;
+                                    }
+                                }
                                 break;
                         }
                     }
