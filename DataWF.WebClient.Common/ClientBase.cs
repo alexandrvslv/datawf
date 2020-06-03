@@ -239,11 +239,11 @@ namespace DataWF.Common
             {
                 pages.PageIndex = pageIndex;
             }
-            if (response.Headers.TryGetValues(HttpPageSettings.XPageSize, out values)
-                && int.TryParse(values.FirstOrDefault(), out var pageLegth))
-            {
-                pages.PageSize = pageLegth;
-            }
+            //if (response.Headers.TryGetValues(HttpPageSettings.XPageSize, out values)
+            //    && int.TryParse(values.FirstOrDefault(), out var pageLegth))
+            //{
+            //    pages.PageSize = pageLegth;
+            //}
             if (response.Headers.TryGetValues(HttpPageSettings.XPageCount, out values)
                 && int.TryParse(values.FirstOrDefault(), out var pageCount))
             {
