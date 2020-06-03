@@ -19,6 +19,8 @@
 */
 
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 using DataWF.Common;
 
 namespace DataWF.Data
@@ -31,7 +33,7 @@ namespace DataWF.Data
         [Column("user_id", Keys = DBColumnKeys.View)]
         public abstract int? UserId { get; set; }
 
-
+        [XmlIgnore, JsonIgnore]
         public abstract DBUser DBUser { get; set; }
 
         IUserIdentity IUserReg.UserIdentity => DBUser;

@@ -21,8 +21,8 @@ namespace DataWF.WebService.Common
                 && !TypeHelper.IsEnumerable(context.Type)
                 && context.Type != typeof(object))
             {
-                if (context.Type.Name == "SafeFileHandle")
-                { }
+                //if (context.Type.Name == "UserReg")
+                //{ }
 
                 schema.Type = "object";
                 schema.Properties.Clear();
@@ -108,6 +108,7 @@ namespace DataWF.WebService.Common
                 var propertyType = TypeHelper.CheckNullable(property.DataType);
                 var columnAttribute = property.Property.GetCustomAttribute<ColumnAttribute>()
                     ?? property.Property.GetCustomAttribute<LogColumnAttribute>();
+                var referenceAttribute = property.Property.GetCustomAttribute<ReferenceAttribute>();
                 if (columnAttribute != null
                     && (columnAttribute.Keys & DBColumnKeys.Access) != 0
                     && propertyType == typeof(AccessValue))
@@ -136,6 +137,10 @@ namespace DataWF.WebService.Common
                     {
                         schema.Required.Add(property.Name);
                     }
+                }
+                if (referenceAttribute != null)
+                {
+                    propertySchema.Extensions.Add("x-id", new OpenApiString(referenceAttribute.ColumnProperty));
                 }
                 if (property.Default != null)
                 {
@@ -214,12 +219,13 @@ namespace DataWF.WebService.Common
                 ApplyColumn(schema, columnSchema, column);
                 if (column.ReferencePropertyInfo != null)
                 {
-                    var refPropertyType = column.ReferencePropertyInfo.PropertyType;
-                    var referenceSchema = context.SchemaGenerator.GenerateSchema(refPropertyType, context.SchemaRepository);
-                    var schemaProperty = new OpenApiSchema() { AllOf = new List<OpenApiSchema> { referenceSchema } };
-                    schemaProperty.Extensions.Add("x-id", new OpenApiString(column.PropertyName));
-                    schema.Properties.Add(column.ReferencePropertyInfo.Name, schemaProperty);
+                    GenerateReferenceProperty(schema, context, column);
                 }
+            }
+            foreach (var column in table.Columns.Where(p => p.ReferencePropertyInfo?.GetGetMethod()?.GetBaseDefinition().DeclaringType == type
+                                                         && p.PropertyInfo?.GetGetMethod()?.GetBaseDefinition()?.DeclaringType != type))
+            {
+                GenerateReferenceProperty(schema, context, column);
             }
             if (table.Referencings != null)
             {
@@ -233,6 +239,15 @@ namespace DataWF.WebService.Common
                     schema.Properties.Add(refing.PropertyInfo.Name, refingSchema);
                 }
             }
+        }
+
+        private static void GenerateReferenceProperty(OpenApiSchema schema, SchemaFilterContext context, ColumnGenerator column)
+        {
+            var refPropertyType = column.ReferencePropertyInfo.PropertyType;
+            var referenceSchema = context.SchemaGenerator.GenerateSchema(refPropertyType, context.SchemaRepository);
+            var propertySchema = new OpenApiSchema() { AllOf = new List<OpenApiSchema> { referenceSchema } };
+            propertySchema.Extensions.Add("x-id", new OpenApiString(column.PropertyName));
+            schema.Properties.Add(column.ReferencePropertyInfo.Name, propertySchema);
         }
 
         public void ApplyColumn(OpenApiSchema schema, OpenApiSchema columnSchema, ColumnGenerator column)
