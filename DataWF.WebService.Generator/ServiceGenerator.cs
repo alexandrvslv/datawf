@@ -269,7 +269,9 @@ namespace DataWF.WebService.Generator
         {
             if (!table.Attribute.IsLoging)
                 return null;
-            var baseName = $"DBLogItem";
+            var logType = TypeHelper.ParseType("LogItem") ?? TypeHelper.ParseType("DBLogItem");
+            AddUsing(logType, usings);
+            var baseName = logType.Name;
 
             var baseType = itemType.BaseType;
             while (baseType.IsGenericType)

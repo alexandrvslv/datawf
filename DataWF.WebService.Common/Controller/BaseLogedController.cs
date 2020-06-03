@@ -27,17 +27,22 @@ namespace DataWF.WebService.Common
                 {
                     filter = $"({filter}) and {virtualTable.ItemTypeKey?.Property} = {virtualTable.ItemTypeIndex}";
                 }
-                using (var query = new QQuery(filter, (DBTable)logTable))
+                if (!logTable.ParseQuery(filter, out var query))
                 {
-                    var result = logTable.LoadItems(query, DBLoadParam.Referencing)
-                                          .Where(p => p.Access.GetFlag(AccessType.Read, user)
-                                          && p.PrimaryId != null
-                                          && (p.UpdateState & DBUpdateState.Insert) == 0)
-                                          .TypeOf<L>();
-                    
-                    result = Pagination(result);
-                    return new ActionResult<IEnumerable<L>>(result);
+                    var buffer = logTable.LoadItems(query, DBLoadParam.Referencing)
+                                     .Where(p => p.Access.GetFlag(AccessType.Read, user)
+                                                 && p.PrimaryId != null
+                                                 && (p.UpdateState & DBUpdateState.Insert) == 0);
                 }
+                var result = logTable.SelectItems(query).OfType<L>();
+                if (query.Orders.Count > 0)
+                {
+                    var list = result.ToList();
+                    query.Sort(list);
+                    result = list;
+                }
+                result = Pagination(result);
+                return new ActionResult<IEnumerable<L>>(result);
             }
             catch (Exception ex)
             {
@@ -51,29 +56,16 @@ namespace DataWF.WebService.Common
             try
             {
                 var logTable = table.LogTable;
-                var user = CurrentUser;
-                if (!table.Access.GetFlag(AccessType.Read, user))
-                {
-                    return Forbid();
-                }
-                using (var query = new QQuery((DBTable)logTable))
-                {
-                    query.BuildParam(logTable.BaseKey, id);
-                    var result = logTable.LoadItems(query, DBLoadParam.None)
-                                         .Where(p => p.Access.GetFlag(AccessType.Read, user)
-                                         && p.PrimaryId != null
-                                         && (p.UpdateState & DBUpdateState.Insert) == 0)
-                                         .TypeOf<L>();
-                    result = Pagination(result);
-                    return new ActionResult<IEnumerable<L>>(result);
+                return GetLogs($"{logTable.BaseKey.SqlName} = {id}");
 
-                };
             }
             catch (Exception ex)
             {
                 return BadRequest(ex, null);
             }
         }
+
+
 
         [HttpGet("UndoLog/{logId}")]
         public async Task<ActionResult<T>> UndoLog([FromRoute] long logId)

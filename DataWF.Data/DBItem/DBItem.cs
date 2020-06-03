@@ -1202,7 +1202,7 @@ namespace DataWF.Data
             }
         }
 
-        public void Clear()
+        public void Free()
         {
             Detach();
             foreach (DBColumn column in Table.Columns)

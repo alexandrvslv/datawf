@@ -36,7 +36,6 @@ namespace DataWF.Data
         public static readonly string UserLogKeyName = "userlog_id";
 
         private DBItem baseItem;
-        private DBUserReg userLog;
 
         public DBLogItem()
         { }
@@ -65,20 +64,6 @@ namespace DataWF.Data
         {
             get => GetValue<long?>(LogTable.UserLogKey);
             set => SetValue(value, LogTable.UserLogKey);
-        }
-
-        [XmlIgnore, JsonIgnore]
-        public DBUserReg UserReg
-        {
-            get => userLog ?? (userLog = (DBUserReg)UserLogTable?.LoadItemById(UserRegId));
-            set => UserRegId = (long?)(userLog = value)?.PrimaryId;
-        }
-
-        [Column("loguser_id", ColumnType = DBColumnTypes.Code)]
-        public int? LogUserId
-        {
-            get => UserReg?.UserId;
-            set { }
         }
 
         [LogColumn("item_type", "item_type_log", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0), DefaultValue(0)]
@@ -134,6 +119,12 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public IDBLogTable LogTable => (IDBLogTable)Table;
+
+        public virtual DBUser GetUser()
+        {
+            var reg = (DBUserReg)UserLogTable?.LoadItemById(UserRegId);
+            return reg?.DBUser;
+        }
 
         public async Task<DBItem> Redo(DBTransaction transaction)
         {
@@ -417,30 +408,6 @@ namespace DataWF.Data
             public override long? GetValue(T target) => target.UserRegId;
 
             public override void SetValue(T target, long? value) => target.UserRegId = value;
-        }
-
-        [Invoker(typeof(DBLogItem), nameof(DBLogItem.UserReg))]
-        public class UserRegInvoker<T> : Invoker<T, DBUserReg> where T : DBLogItem
-        {
-            public override string Name => nameof(DBLogItem.UserReg);
-
-            public override bool CanWrite => true;
-
-            public override DBUserReg GetValue(T target) => target.UserReg;
-
-            public override void SetValue(T target, DBUserReg value) => target.UserReg = value;
-        }
-
-        [Invoker(typeof(DBLogItem), nameof(DBLogItem.LogUserId))]
-        public class LogUserIdInvoker<T> : Invoker<T, int?> where T : DBLogItem
-        {
-            public override string Name => nameof(DBLogItem.LogUserId);
-
-            public override bool CanWrite => false;
-
-            public override int? GetValue(T target) => target.LogUserId;
-
-            public override void SetValue(T target, int? value) { }
         }
 
         [Invoker(typeof(DBLogItem), nameof(DBLogItem.BaseId))]

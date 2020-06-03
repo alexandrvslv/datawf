@@ -130,7 +130,7 @@ namespace DataWF.Data
             {
                 if (log.Status == DBStatus.New)
                 {
-                    string name = log.UserReg?.DBUser?.Name;
+                    string name = log.GetUser()?.Name;
                     if (user.IndexOf(name, StringComparison.Ordinal) < 0)
                         user += name + "; ";
                     foreach (var logColumn in log.LogTable.GetLogColumns())

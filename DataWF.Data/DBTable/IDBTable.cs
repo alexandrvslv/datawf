@@ -142,6 +142,8 @@ namespace DataWF.Data
         IEnumerable<DBItem> SelectItems(QQuery qQuery);
         IEnumerable<DBItem> SelectItems(string qQuery);
         IEnumerable<object> SelectQuery(DBItem item, QQuery query, CompareType compare);
+
+        bool ParseQuery(string filter, out QQuery query);
         void Trunc();
     }
 }

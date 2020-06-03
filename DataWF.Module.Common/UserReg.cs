@@ -91,9 +91,9 @@ namespace DataWF.Module.Common
                 userLog = new UserReg { User = user, Parent = userLog, RegType = UserRegType.Transaction };
                 await userLog.Save(arg.Transaction);
             }
-            if (arg.LogItem != null)
+            if (arg.LogItem is LogItem logItem)
             {
-                arg.LogItem.UserReg = userLog;
+                logItem.UserReg = userLog;
             }
             RowLoged?.Invoke(null, arg);
         }

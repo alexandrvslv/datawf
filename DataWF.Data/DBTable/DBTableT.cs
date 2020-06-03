@@ -19,7 +19,6 @@ namespace DataWF.Data
         protected readonly List<T> items = new List<T>();
         protected readonly List<T> insertItems = new List<T>();
         protected readonly List<IDBTableView> queryViews = new List<IDBTableView>(1);
-        private readonly ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
 
         public DBTable()
         {
@@ -183,6 +182,7 @@ namespace DataWF.Data
             lock (Lock)
             {
                 Hash = -1;
+                queryChache.Clear();
                 var temp = items.ToArray();
                 items.Clear();
                 ClearColumnsData(true);
@@ -354,18 +354,6 @@ namespace DataWF.Data
             }
         }
 
-        public bool ParseQuery(string filter, out QQuery query)
-        {
-            query = null;
-            if (!queryChache.TryGetValue(filter, out query))
-            {
-                query = new QQuery(filter, this);
-                queryChache.TryAdd(filter, query);
-                return false;
-            }
-            return true;
-        }
-
         public async ValueTask<IEnumerable<T>> LoadCacheAsync(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
         {
             if (!ParseQuery(filter, out var query))
@@ -437,6 +425,7 @@ namespace DataWF.Data
             {
                 IsSynchronized = true;
             }
+
             return buf;
         }
 

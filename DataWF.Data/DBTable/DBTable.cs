@@ -174,6 +174,7 @@ namespace DataWF.Data
         protected internal ConcurrentQueue<int> FreeHandlers = new ConcurrentQueue<int>();
         private ConcurrentDictionary<Type, List<IInvokerJson>> invokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
         private ConcurrentDictionary<Type, List<IInvokerJson>> refingInvokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
+        protected readonly ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
         private IInvokerJson[] refInvoker;
 
         protected string query;
@@ -1857,6 +1858,18 @@ namespace DataWF.Data
                     i++;
                 }
             }
+        }
+
+        public bool ParseQuery(string filter, out QQuery query)
+        {
+            query = null;
+            if (!queryChache.TryGetValue(filter, out query))
+            {
+                query = new QQuery(filter, this);
+                queryChache.TryAdd(filter, query);
+                return false;
+            }
+            return true;
         }
 
         [Invoker(typeof(DBTable), nameof(DBTable.GroupName))]
