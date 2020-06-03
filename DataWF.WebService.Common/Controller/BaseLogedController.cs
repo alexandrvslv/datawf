@@ -23,12 +23,13 @@ namespace DataWF.WebService.Common
                 {
                     return Forbid();
                 }
-                if (table is IDBVirtualTable virtualTable && virtualTable.ItemTypeIndex != 0)
-                {
-                    filter = $"({filter}) and {virtualTable.ItemTypeKey?.Property} = {virtualTable.ItemTypeIndex}";
-                }
+                
                 if (!logTable.ParseQuery(filter, out var query))
                 {
+                    if (table is IDBVirtualTable virtualTable && virtualTable.ItemTypeIndex != 0)
+                    {
+                        query.BuildParam(logTable.ItemTypeKey, virtualTable.ItemTypeIndex);                        
+                    }
                     var buffer = logTable.LoadItems(query, DBLoadParam.Referencing)
                                      .Where(p => p.Access.GetFlag(AccessType.Read, user)
                                                  && p.PrimaryId != null
