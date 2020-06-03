@@ -20,7 +20,7 @@ namespace DataWF.Common
 
         event EventHandler SelectedItemChanged;
         event EventHandler StatusChanged;
-        Task Get(HttpPageSettings pages = null);
+        Task<IEnumerable> Get(HttpPageSettings pages = null);
         bool CanEdit(object item);
         Task Save(object item);
         Task Save(object item, ProgressToken token);
