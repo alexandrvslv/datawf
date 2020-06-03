@@ -27272,108 +27272,6 @@
         "x-id": "Id",
         "x-type-id": 0
       },
-      "DBLogType": {
-        "enum": [
-          0,
-          1,
-          2,
-          3
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "None",
-          "Insert",
-          "Update",
-          "Delete"
-        ],
-        "x-enumMembers": [
-          "None",
-          "Insert",
-          "Update",
-          "Delete"
-        ]
-      },
-      "DBLogItem": {
-        "required": [
-          "LogId"
-        ],
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBItem"
-          }
-        ],
-        "properties": {
-          "LogId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "LogType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/DBLogType"
-              }
-            ]
-          },
-          "UserRegId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "LogUserId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "BaseId": {
-            "type": "string",
-            "readOnly": true
-          }
-        },
-        "x-id": "LogId"
-      },
-      "AddressLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBLogItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "LocationId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Location": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Location"
-              }
-            ],
-            "x-id": "LocationId"
-          },
-          "PostIndex": {
-            "type": "string"
-          },
-          "StreetRU": {
-            "type": "string"
-          },
-          "StreetEN": {
-            "type": "string"
-          },
-          "Floor": {
-            "type": "string"
-          },
-          "ExternalId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "x-type-id": 0
-      },
       "Address": {
         "required": [
           "Id"
@@ -27425,243 +27323,6 @@
         },
         "x-id": "Id",
         "x-type-id": 0
-      },
-      "LinkModel": {
-        "type": "object",
-        "properties": {
-          "ProtocolLink": {
-            "type": "string"
-          },
-          "WebLink": {
-            "type": "string"
-          }
-        }
-      },
-      "Book": {
-        "required": [
-          "Id"
-        ],
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBGroupItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Code": {
-            "maxLength": 512,
-            "type": "string"
-          },
-          "ParentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Parent": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Book"
-              }
-            ],
-            "x-id": "ParentId"
-          },
-          "NameRU": {
-            "maxLength": 1024,
-            "type": "string",
-            "x-culture": "ru-RU"
-          },
-          "NameEN": {
-            "maxLength": 1024,
-            "type": "string",
-            "x-culture": "en-US"
-          },
-          "Value": {
-            "type": "string"
-          },
-          "ExternalId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "x-id": "Id",
-        "x-type-id": 0
-      },
-      "BookLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBLogItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Code": {
-            "type": "string"
-          },
-          "ParentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Parent": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Book"
-              }
-            ],
-            "x-id": "ParentId"
-          },
-          "NameRU": {
-            "type": "string"
-          },
-          "NameEN": {
-            "type": "string"
-          },
-          "Value": {
-            "type": "string"
-          },
-          "ExternalId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "x-type-id": 0
-      },
-      "LocationLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBLogItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Code": {
-            "type": "string"
-          },
-          "CodeI": {
-            "type": "string"
-          },
-          "ParentId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Parent": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Location"
-              }
-            ],
-            "x-id": "ParentId"
-          },
-          "NameRU": {
-            "type": "string"
-          },
-          "NameEN": {
-            "type": "string"
-          },
-          "ExternalId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "x-type-id": 0
-      },
-      "CityLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LocationLog"
-          }
-        ],
-        "x-type-id": 5
-      },
-      "CustomerLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBLogItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "INN": {
-            "type": "string"
-          },
-          "Code": {
-            "type": "string"
-          },
-          "ShortNameRU": {
-            "type": "string"
-          },
-          "ShortNameEN": {
-            "type": "string"
-          },
-          "NameRU": {
-            "type": "string"
-          },
-          "NameEN": {
-            "type": "string"
-          },
-          "EMail": {
-            "type": "string"
-          },
-          "Phone": {
-            "type": "string"
-          },
-          "CountryId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Country": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Country"
-              }
-            ],
-            "x-id": "CountryId"
-          },
-          "AddressId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Address": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Address"
-              }
-            ],
-            "x-id": "AddressId"
-          },
-          "Key": {
-            "type": "string"
-          },
-          "ExternalId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "x-type-id": 0
-      },
-      "CompanyLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/CustomerLog"
-          }
-        ],
-        "x-type-id": 1
       },
       "Persone": {
         "type": "object",
@@ -27771,219 +27432,6 @@
           }
         ],
         "x-type-id": 1
-      },
-      "ContinentLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LocationLog"
-          }
-        ],
-        "x-type-id": 1
-      },
-      "CountryLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LocationLog"
-          }
-        ],
-        "x-type-id": 2
-      },
-      "CurrencyLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LocationLog"
-          }
-        ],
-        "x-type-id": 3
-      },
-      "CustomerAddressLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBLogItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "CustomerId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Customer": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Customer"
-              }
-            ],
-            "x-id": "CustomerId"
-          },
-          "AddressId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Address": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Address"
-              }
-            ],
-            "x-id": "AddressId"
-          }
-        },
-        "x-type-id": 0
-      },
-      "CustomerAddress": {
-        "required": [
-          "Id"
-        ],
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "CustomerId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Customer": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Customer"
-              }
-            ],
-            "x-id": "CustomerId"
-          },
-          "AddressId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Address": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Address"
-              }
-            ],
-            "x-id": "AddressId"
-          }
-        },
-        "x-id": "Id",
-        "x-type-id": 0
-      },
-      "CustomerReferenceLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBLogItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "CompanyId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Company": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Company"
-              }
-            ],
-            "x-id": "CompanyId"
-          },
-          "PersoneId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Persone": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Persone"
-              }
-            ],
-            "x-id": "PersoneId"
-          },
-          "EMail": {
-            "type": "string"
-          },
-          "Phone": {
-            "type": "string"
-          },
-          "ExternalId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "x-type-id": 0
-      },
-      "CustomerReference": {
-        "required": [
-          "Id"
-        ],
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "CompanyId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Company": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Company"
-              }
-            ],
-            "x-id": "CompanyId"
-          },
-          "PersoneId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Persone": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Persone"
-              }
-            ],
-            "x-id": "PersoneId"
-          },
-          "EMail": {
-            "maxLength": 1024,
-            "type": "string"
-          },
-          "Phone": {
-            "maxLength": 1024,
-            "type": "string"
-          },
-          "ExternalId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "x-id": "Id",
-        "x-type-id": 0
       },
       "Department": {
         "required": [
@@ -28119,6 +27567,25 @@
         "x-id": "Id",
         "x-type-id": 0
       },
+      "UserAuthType": {
+        "enum": [
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Internal",
+          "SMTP",
+          "LDAP"
+        ],
+        "x-enumMembers": [
+          "Internal",
+          "SMTP",
+          "LDAP"
+        ]
+      },
       "DBUser": {
         "required": [
           "Id"
@@ -28144,6 +27611,101 @@
           }
         },
         "x-id": "Id"
+      },
+      "User": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBUser"
+          }
+        ],
+        "properties": {
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "Abbreviation": {
+            "maxLength": 4,
+            "type": "string"
+          },
+          "NameRU": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "DepartmentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Department": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Department"
+              }
+            ],
+            "x-id": "DepartmentId"
+          },
+          "PositionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Position": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Position"
+              }
+            ],
+            "x-id": "PositionId"
+          },
+          "Super": {
+            "type": "boolean",
+            "default": "False"
+          },
+          "Phone": {
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "IsTemporaryPassword": {
+            "type": "boolean"
+          },
+          "AuthType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserAuthType"
+              }
+            ]
+          },
+          "AddessId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddessId"
+          }
+        },
+        "x-type-id": 0
       },
       "UserRegType": {
         "enum": [
@@ -28178,6 +27740,61 @@
           "Transaction",
           "Reject"
         ]
+      },
+      "DBLogType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "None",
+          "Insert",
+          "Update",
+          "Delete"
+        ],
+        "x-enumMembers": [
+          "None",
+          "Insert",
+          "Update",
+          "Delete"
+        ]
+      },
+      "DBLogItem": {
+        "required": [
+          "LogId"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "LogId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "LogType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DBLogType"
+              }
+            ]
+          },
+          "UserRegId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "BaseId": {
+            "type": "string",
+            "readOnly": true
+          }
+        },
+        "x-id": "LogId"
       },
       "UserRegItem": {
         "type": "object",
@@ -28275,34 +27892,432 @@
         },
         "x-type-id": 0
       },
-      "UserAuthType": {
-        "enum": [
-          1,
-          2,
-          3
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Internal",
-          "SMTP",
-          "LDAP"
-        ],
-        "x-enumMembers": [
-          "Internal",
-          "SMTP",
-          "LDAP"
-        ]
-      },
-      "User": {
+      "LogItem": {
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBUser"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
+          "UserReg": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserReg"
+              }
+            ]
+          },
+          "LogUserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "LogUser": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ]
+          }
+        }
+      },
+      "AddressLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "LocationId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Location": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              }
+            ],
+            "x-id": "LocationId"
+          },
+          "PostIndex": {
+            "type": "string"
+          },
+          "StreetRU": {
+            "type": "string"
+          },
+          "StreetEN": {
+            "type": "string"
+          },
+          "Floor": {
+            "type": "string"
+          },
           "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
+      },
+      "LinkModel": {
+        "type": "object",
+        "properties": {
+          "ProtocolLink": {
+            "type": "string"
+          },
+          "WebLink": {
+            "type": "string"
+          }
+        }
+      },
+      "Book": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBGroupItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "maxLength": 512,
+            "type": "string"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Book"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "NameRU": {
+            "maxLength": 1024,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
+          "NameEN": {
+            "maxLength": 1024,
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "Value": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
+      },
+      "BookLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Book"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "Value": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
+      },
+      "LocationLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "CodeI": {
+            "type": "string"
+          },
+          "ParentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Parent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              }
+            ],
+            "x-id": "ParentId"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
+      },
+      "CityLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LocationLog"
+          }
+        ],
+        "x-type-id": 5
+      },
+      "CustomerLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "INN": {
+            "type": "string"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "ShortNameRU": {
+            "type": "string"
+          },
+          "ShortNameEN": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "EMail": {
+            "type": "string"
+          },
+          "Phone": {
+            "type": "string"
+          },
+          "CountryId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Country": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Country"
+              }
+            ],
+            "x-id": "CountryId"
+          },
+          "AddressId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddressId"
+          },
+          "Key": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
+      },
+      "CompanyLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CustomerLog"
+          }
+        ],
+        "x-type-id": 1
+      },
+      "ContinentLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LocationLog"
+          }
+        ],
+        "x-type-id": 1
+      },
+      "CountryLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LocationLog"
+          }
+        ],
+        "x-type-id": 2
+      },
+      "CurrencyLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LocationLog"
+          }
+        ],
+        "x-type-id": 3
+      },
+      "CustomerAddressLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CustomerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Customer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Customer"
+              }
+            ],
+            "x-id": "CustomerId"
+          },
+          "AddressId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddressId"
+          }
+        },
+        "x-type-id": 0
+      },
+      "CustomerAddress": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CustomerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Customer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Customer"
+              }
+            ],
+            "x-id": "CustomerId"
+          },
+          "AddressId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Address": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "x-id": "AddressId"
+          }
+        },
+        "x-id": "Id",
+        "x-type-id": 0
+      },
+      "CustomerReferenceLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
             "type": "integer",
             "format": "int32"
           },
@@ -28318,82 +28333,91 @@
             ],
             "x-id": "CompanyId"
           },
-          "Abbreviation": {
-            "maxLength": 4,
+          "PersoneId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Persone": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Persone"
+              }
+            ],
+            "x-id": "PersoneId"
+          },
+          "EMail": {
             "type": "string"
           },
-          "NameRU": {
-            "maxLength": 512,
-            "type": "string",
-            "x-culture": "ru-RU"
+          "Phone": {
+            "type": "string"
           },
-          "NameEN": {
-            "maxLength": 512,
-            "type": "string",
-            "x-culture": "en-US"
-          },
-          "DepartmentId": {
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
+      },
+      "CustomerReference": {
+        "required": [
+          "Id"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBItem"
+          }
+        ],
+        "properties": {
+          "Id": {
             "type": "integer",
             "format": "int32"
           },
-          "Department": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Department"
-              }
-            ],
-            "x-id": "DepartmentId"
-          },
-          "PositionId": {
+          "CompanyId": {
             "type": "integer",
             "format": "int32"
           },
-          "Position": {
+          "Company": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/Position"
+                "$ref": "#/components/schemas/Company"
               }
             ],
-            "x-id": "PositionId"
+            "x-id": "CompanyId"
           },
-          "Super": {
-            "type": "boolean",
-            "default": "False"
+          "PersoneId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Persone": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Persone"
+              }
+            ],
+            "x-id": "PersoneId"
+          },
+          "EMail": {
+            "maxLength": 1024,
+            "type": "string"
           },
           "Phone": {
             "maxLength": 1024,
             "type": "string"
           },
-          "IsTemporaryPassword": {
-            "type": "boolean"
-          },
-          "AuthType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/UserAuthType"
-              }
-            ]
-          },
-          "AddessId": {
+          "ExternalId": {
             "type": "integer",
             "format": "int32"
-          },
-          "Address": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Address"
-              }
-            ],
-            "x-id": "AddessId"
           }
         },
+        "x-id": "Id",
         "x-type-id": 0
       },
       "DepartmentLog": {
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -29485,7 +29509,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -29559,7 +29583,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -29738,7 +29762,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -29795,7 +29819,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -29834,7 +29858,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -30041,7 +30065,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -30081,7 +30105,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -30170,7 +30194,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -30257,7 +30281,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -30531,7 +30555,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -30775,7 +30799,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -30824,7 +30848,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -30907,7 +30931,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -30973,7 +30997,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -31037,7 +31061,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -31079,7 +31103,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -31105,7 +31129,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -31135,7 +31159,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -31263,7 +31287,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -31485,7 +31509,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -31555,7 +31579,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -31693,7 +31717,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
@@ -31821,7 +31845,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/LogItem"
           }
         ],
         "properties": {
