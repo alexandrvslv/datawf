@@ -61,7 +61,7 @@ namespace DataWF.Data
             Direction = direction;
             property = column;
             buffered = property != null && property.Name == PropertyName;
-            refernce = property != null && property.IsReference;
+            refernce = property != null && property.IsReference && typeof(K) == typeof(string);
         }
 
         public DBComparer(DBColumn column, ListSortDirection direction = ListSortDirection.Ascending)

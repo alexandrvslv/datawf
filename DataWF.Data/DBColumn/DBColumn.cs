@@ -713,7 +713,12 @@ namespace DataWF.Data
 
         public IComparer CreateComparer<T>(ListSortDirection direction = ListSortDirection.Ascending) where T : DBItem
         {
-            var type = typeof(DBComparer<,>).MakeGenericType(typeof(T), GetDataType());
+            var keyType = GetDataType();
+            if (IsReference)
+            {
+                keyType = typeof(string);
+            }
+            var type = typeof(DBComparer<,>).MakeGenericType(typeof(T), keyType);
             return (IComparer)EmitInvoker.CreateObject(type,
                 new Type[] { typeof(DBColumn), typeof(ListSortDirection) },
                 new object[] { this, direction }, true);
