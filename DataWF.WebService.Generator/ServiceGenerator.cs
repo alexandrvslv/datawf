@@ -71,28 +71,37 @@ namespace DataWF.WebService.Generator
                     var files = Directory.GetFiles(fullPath, "*.dll");
                     foreach (var file in files)
                     {
-                        var assembly = (Assembly)null;
-                        try
-                        {
-                            using (var resolver = new AssemblyResolver(file))
-                            {
-                                assembly = resolver.Assembly;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Helper.OnException(ex);
-                            Console.WriteLine($"Warning: Can't Load Assembly {file} {ex.Message}");
-                        }
+                        var assembly = ResolveAssembly(file);
                         if (assembly != null)
                             yield return assembly;
                     }
                 }
                 else
                 {
-                    yield return AssemblyLoadContext.Default.LoadFromAssemblyPath(fullPath);
+                    var assembly = ResolveAssembly(fullPath);
+                    if (assembly != null)
+                        yield return assembly;
                 }
             }
+        }
+
+        private static Assembly ResolveAssembly(string file)
+        {
+            var assembly = (Assembly)null;
+            try
+            {
+                using (var resolver = new AssemblyResolver(file))
+                {
+                    assembly = resolver.Assembly;
+                }
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+                Console.WriteLine($"Warning: Can't Load Assembly {file} {ex.Message}");
+            }
+
+            return assembly;
         }
 
         public void Generate()
