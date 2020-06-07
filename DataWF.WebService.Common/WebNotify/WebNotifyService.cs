@@ -247,7 +247,6 @@ namespace DataWF.WebService.Common
                         && connection.State != WebSocketState.Connecting))
                     {
                         Remove(connection);
-                        i--;
                         continue;
                     }
                     using (var stream = WriteData(list, connection.User))
