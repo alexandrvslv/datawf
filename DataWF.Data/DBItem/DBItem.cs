@@ -162,25 +162,10 @@ namespace DataWF.Data
 
         IAccessValue IAccessable.Access { get => Access; set => Access = (AccessValue)value; }
 
-        //[XmlIgnore, JsonIgnore, NotMapped, Browsable(false)]
         [Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
         public virtual AccessValue Access
         {
-            get
-            {
-                if (access == null)
-                {
-                    if (Table.AccessKey != null)
-                    {
-                        access = ReadAccess();
-                    }
-                    if (access == null)
-                    {
-                        return Table.Access;
-                    }
-                }
-                return access;
-            }
+            get => InternalAccess ?? Table.Access;
             set
             {
                 if (Table.AccessKey != null)
@@ -190,6 +175,9 @@ namespace DataWF.Data
                 access = value;
             }
         }
+
+        [XmlIgnore, JsonIgnore, NotMapped, Browsable(false)]
+        public AccessValue InternalAccess => access ?? (access = ReadAccess());
 
         //[Browsable(false)]
         //public virtual string Name
@@ -956,7 +944,7 @@ namespace DataWF.Data
 
         private AccessValue ReadAccess()
         {
-            var accessData = GetValue<byte[]>(Table.AccessKey);
+            var accessData = Table.AccessKey != null ? GetValue<byte[]>(Table.AccessKey) : null;
             return accessData != null ? new AccessValue(accessData) : null;
         }
 
@@ -1141,7 +1129,7 @@ namespace DataWF.Data
             PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(property));
         }
 
-        protected void OnPropertyChanged<V>([CallerMemberName]string property = null, DBColumn column = null, V value = default(V))
+        protected void OnPropertyChanged<V>([CallerMemberName] string property = null, DBColumn column = null, V value = default(V))
         {
             if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
             {
@@ -1158,7 +1146,7 @@ namespace DataWF.Data
             RaisePropertyChanged(property);
         }
 
-        protected void OnPropertyChanged([CallerMemberName]string property = null, DBColumn column = null, object value = null)
+        protected void OnPropertyChanged([CallerMemberName] string property = null, DBColumn column = null, object value = null)
         {
             if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
             {

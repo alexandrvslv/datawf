@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 
@@ -14,6 +15,43 @@ namespace DataWF.Common
         public static implicit operator AccessValue(byte[] value)
         {
             return new AccessValue(value);
+        }
+
+        public static AccessValue operator &(AccessValue a, AccessValue b)
+        {
+            AccessValue c = new AccessValue();
+            foreach (var aItem in a.Items)
+            {
+                if (b.items.TryGetValue(aItem.Identity, out var bItem))
+                {
+                    c.Add(aItem.Identity, aItem.Access & bItem.Access);
+                }
+            }
+            return c;
+        }
+
+        public static AccessValue operator |(AccessValue a, AccessValue b)
+        {
+            AccessValue c = new AccessValue();
+            foreach (var aItem in a.Items)
+            {
+                if (b.items.TryGetValue(aItem.Identity, out var bItem))
+                {
+                    c.Add(aItem.Identity, aItem.Access | bItem.Access);
+                }
+                else
+                {
+                    c.Add(aItem.Identity, aItem.Access);
+                }
+            }
+            foreach (var bItem in b.Items)
+            {
+                if (!a.items.TryGetValue(bItem.Identity, out var aItem))
+                {
+                    c.Add(bItem.Identity, bItem.Access);
+                }
+            }
+            return c;
         }
 
         private readonly Dictionary<IAccessIdentity, AccessItem> items = new Dictionary<IAccessIdentity, AccessItem>(1);
