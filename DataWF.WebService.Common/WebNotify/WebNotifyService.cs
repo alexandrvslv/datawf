@@ -225,16 +225,21 @@ namespace DataWF.WebService.Common
             {
                 return;
             }
-
-            base.OnSendChanges(list);
+            try
+            {
+                base.OnSendChanges(list);
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+            }
             await SendToWebClients(list);
         }
 
         private async Task SendToWebClients(NotifyMessageItem[] list)
         {
-            for (int i = 0; i < connections.Count; i++)
+            foreach (var connection in connections.ToList())
             {
-                var connection = connections[i];
                 try
                 {
                     if (connection?.Socket == null
@@ -249,11 +254,12 @@ namespace DataWF.WebService.Common
                     {
                         if (stream == null)
                             continue;
-                        var buffer = new byte[8 * 1024];
+                        var bufferLength = 8 * 1024;
+                        var buffer = new byte[bufferLength];
 
                         while (stream.Position < stream.Length)
                         {
-                            var count = stream.Read(buffer, 0, buffer.Length);
+                            var count = stream.Read(buffer, 0, bufferLength);
 
                             await connection.Socket.SendAsync(new ArraySegment<byte>(buffer, 0, count)
                                 , WebSocketMessageType.Binary
