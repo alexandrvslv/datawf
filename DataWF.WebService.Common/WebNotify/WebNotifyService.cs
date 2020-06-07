@@ -66,7 +66,7 @@ namespace DataWF.WebService.Common
             Helper.Logs.Add(new StateInfo("Web Request", action, address) { User = user?.Name });
         }
 
-        public void Register(WebSocket socket, IUserIdentity user, string address)
+        public WebNotifyConnection Register(WebSocket socket, IUserIdentity user, string address)
         {
             var client = GetBySocket(socket);
             if (client == null)
@@ -79,6 +79,7 @@ namespace DataWF.WebService.Common
                 };
                 connections.Add(client);
             }
+            return client;
         }
 
         public IEnumerable<WebNotifyConnection> GetConnections()
@@ -124,11 +125,10 @@ namespace DataWF.WebService.Common
         }
 
         //https://github.com/radu-matei/websocket-manager/blob/blog-article/src/WebSocketManager/WebSocketManagerMiddleware.cs
-        public async Task ListenAsync(WebSocket socket)
+        public async Task ListenAsync(WebNotifyConnection connection)
         {
             var buffer = new ArraySegment<byte>(new byte[8192]);
-            var client = GetBySocket(socket);
-            while (socket.State == WebSocketState.Open)
+            while (connection.Socket.State == WebSocketState.Open)
             {
                 try
                 {
@@ -137,7 +137,7 @@ namespace DataWF.WebService.Common
                     {
                         do
                         {
-                            result = await socket.ReceiveAsync(buffer, CancellationToken.None);
+                            result = await connection.Socket.ReceiveAsync(buffer, CancellationToken.None);
                             if (result.Count > 0)
                             {
                                 stream.Write(buffer.Array, buffer.Offset, result.Count);
@@ -149,11 +149,11 @@ namespace DataWF.WebService.Common
                         {
                             case WebSocketMessageType.Binary:
                             case WebSocketMessageType.Text:
-                                OnMessageReceive(client, stream);
+                                OnMessageReceive(connection, stream);
                                 break;
                             case WebSocketMessageType.Close:
-                                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Good luck!", CancellationToken.None);
-                                Remove(client);
+                                await connection.Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Good luck!", CancellationToken.None);
+                                Remove(connection);
                                 return;
                         }
                     }
@@ -162,7 +162,7 @@ namespace DataWF.WebService.Common
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
-                    Remove(client);
+                    Remove(connection);
                 }
 
             }
