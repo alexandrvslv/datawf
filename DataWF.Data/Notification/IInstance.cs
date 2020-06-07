@@ -26,13 +26,15 @@ namespace DataWF.Data
     public interface IInstance
     {
         bool? Active { get; set; }
-        long Count { get; set; }
         IPEndPoint EndPoint { get; set; }
         string Host { get; set; }
         int? Id { get; set; }
         bool IsCurrent { get; }
-        long Length { get; set; }
         int? Port { get; set; }
+        long ReceiveCount { get; set; }
+        long ReceiveLength { get; set; }
+        long SendCount { get; set; }
+        long SendLength { get; set; }
 
         void Delete();
         Task Save(IUserIdentity user);

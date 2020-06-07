@@ -71,14 +71,14 @@ namespace DataWF.Data
             set => SetValue(value, Table.PrimaryKey);
         }
 
-        [Column("instance_host")]
+        [Column("instance_host", Keys = DBColumnKeys.View)]
         public string Host
         {
             get => GetValue<string>(HostKey);
             set => SetValue(value, HostKey);
         }
 
-        [Column("instance_port")]
+        [Column("instance_port", Keys = DBColumnKeys.View)]
         public int? Port
         {
             get => GetValue<int?>(PortKey);
@@ -104,12 +104,22 @@ namespace DataWF.Data
             }
         }
 
+        [JsonIgnore, XmlIgnore]
         public bool IsCurrent { get; internal set; }
 
-        public long Count { get; set; }
+        public long ReceiveCount { get; set; }
 
         [DefaultFormat("size")]
-        public long Length { get; set; }
+        public long ReceiveLength { get; set; }
 
+        public long SendCount { get; set; }
+
+        [DefaultFormat("size")]
+        public long SendLength { get; set; }
+
+        public override string ToString()
+        {
+            return $"{EndPoint} Sent: {SendCount}({Helper.LenghtFormat(SendLength)}) Receive: {ReceiveCount}({ReceiveLength})";
+        }
     }
 }

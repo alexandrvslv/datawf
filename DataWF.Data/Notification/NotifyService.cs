@@ -53,7 +53,7 @@ namespace DataWF.Data
             instance = await Instance.GetByNetId(endPoint, true, User);
 
             byte[] temp = instance.EndPoint.GetBytes();
-            Send(temp, null, SocketMessageType.Login);
+            Send(temp, null, SocketMessageType.Login, true);
 
             DBService.RowAccept = OnCommit;
             runEvent.Reset();
@@ -91,12 +91,12 @@ namespace DataWF.Data
                             Data = Serialize(items)
                         });
                     }
-                    Send(buffer, item.EndPoint);
+                    Send(buffer, item.EndPoint, item);
                 }
             }
         }
 
-        public void Send(byte[] data, IInstance address = null, SocketMessageType type = SocketMessageType.Data)
+        public void Send(byte[] data, IInstance address = null, SocketMessageType type = SocketMessageType.Data, bool checkState = false)
         {
             var buffer = EndPointMessage.Write(new EndPointMessage()
             {
@@ -113,17 +113,40 @@ namespace DataWF.Data
 
             foreach (IInstance item in Instance.DBTable)
             {
-                if (CheckAddress(item, address))
+                if (CheckAddress(item, address, checkState))
                 {
-                    Send(buffer, item.EndPoint);
+                    Send(buffer, item.EndPoint, item);
                 }
             }
         }
 
-        private bool CheckAddress(IInstance item, IInstance address)
+        protected override void OnDataSend(UdpServerEventArgs arg)
         {
+            base.OnDataSend(arg);
+            if (arg.Tag is IInstance instance)
+            {
+                instance.SendCount++;
+                instance.SendLength = arg.Length;
+            }
+        }
+
+        protected override void OnDataException(UdpServerEventArgs arg)
+        {
+            base.OnDataException(arg);
+            if (arg.Tag is IInstance instance)
+            {
+                instance.Active = false;
+            }
+        }
+
+        private bool CheckAddress(IInstance item, IInstance address, bool checkState = false)
+        {
+            if (checkState)
+            {
+                item.Active = null;
+            }
             return (address == null || item == address)
-                && item.Active.Value
+                && (checkState || item.Active == true)
                 && item.EndPoint != null
                 && !item.EndPoint.Equals(endPoint)
                 && !IPAddress.Loopback.Equals(item.EndPoint.Address);
@@ -166,8 +189,8 @@ namespace DataWF.Data
             var sender = Instance.DBTable.LoadById(message.SenderName);
             if (sender == null)
                 return;
-            sender.Count++;
-            sender.Length += message.Lenght;
+            sender.ReceiveCount++;
+            sender.ReceiveLength += message.Lenght;
 
             switch (message.Type)
             {
