@@ -142,8 +142,8 @@ namespace DataWF.Data
                 {
                     var xReference = buffered ? x.GetReference(property) : x.GetReference(PropertyName);
                     var yReference = buffered ? y.GetReference(property) : y.GetReference(PropertyName);
-                    xValue = (K)(object)xReference.ToString();
-                    yValue = (K)(object)yReference.ToString();
+                    xValue = (K)(object)xReference?.ToString();
+                    yValue = (K)(object)yReference?.ToString();
                 }
                 else
                 {
