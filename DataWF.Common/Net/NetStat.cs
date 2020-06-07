@@ -1,40 +1,34 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Threading;
 
 namespace DataWF.Common
 {
     public static class NetStat
     {
-        private static readonly SelectableList<NetStatItem> items = new SelectableList<NetStatItem>();
+        private static readonly SelectableList<NetStatEntry> items = new SelectableList<NetStatEntry> { AsyncNotification = true };
+        private static IListIndex<NetStatEntry, string> nameIndex;
 
         static NetStat()
         {
-            items.Indexes.Add(new ActionInvoker<NetStatItem, string>(nameof(NetStatItem.Name), (item) => item.Name));
+            nameIndex = (IListIndex<NetStatEntry, string>)items.Indexes.Add(NetStatEntry.NameInvoker.Instance);
         }
 
-        public static SelectableList<NetStatItem> Items { get { return items; } }
+        public static SelectableList<NetStatEntry> Items => items;
 
         public static void Set(string name, int inc, long size)
         {
-            var item = items.SelectOne(nameof(NetStatItem.Name), name);
+            var item = (NetStatEntry)nameIndex.SelectOne(name);
             if (item == null)
             {
-                item = new NetStatItem { Name = name };
+                item = new NetStatEntry { Name = name };
                 items.Add(item);
             }
-            item.Count += inc;
-            item.Length += size;
+            Interlocked.Add(ref item.count, inc);
+            Interlocked.Add(ref item.length, size);
             items.OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
-    }
-
-    public class NetStatItem
-    {
-        public string Name { get; set; }
-        public int Count { get; set; }
-        [DefaultFormat("size")]
-        public long Length { get; set; }
     }
 }

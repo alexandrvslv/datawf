@@ -8,12 +8,6 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public class UdpServerEventArgs : EventArgs
-    {
-        public IPEndPoint Point { get; set; }
-        public int Length { get; set; }
-        public byte[] Data { get; set; }
-    }
 
     public class UdpServer : IDisposable
     {
@@ -45,7 +39,7 @@ namespace DataWF.Common
         private IPEndPoint listenerEndPoint;
         private readonly ManualResetEventSlim receiveEvent = new ManualResetEventSlim(false);
 
-        public event EventHandler<ExceptionEventArgs> DataException;
+        public event EventHandler<UdpServerEventArgs> DataException;
         public event EventHandler<UdpServerEventArgs> DataLoad;
         public event EventHandler<UdpServerEventArgs> DataSend;
 
@@ -107,11 +101,12 @@ namespace DataWF.Common
         {
             if (!online)
                 return;
+            var arg = result.AsyncState as UdpServerEventArgs;
             try
             {
                 receiveEvent.Set();
                 var point = new IPEndPoint(IPAddress.Any, listenerEndPoint.Port);
-                var arg = result.AsyncState as UdpServerEventArgs;
+
                 arg.Data = listener.EndReceive(result, ref point);
                 arg.Length = arg.Data.Length;
                 arg.Point = point;
@@ -119,8 +114,9 @@ namespace DataWF.Common
             }
             catch (Exception ex)
             {
+                arg.Exception = ex;
                 //if (ex is SocketException && ((SocketException)ex).ErrorCode == 10060)
-                OnDataException(new ExceptionEventArgs(ex));
+                OnDataException(arg);
             }
         }
 
@@ -134,11 +130,11 @@ namespace DataWF.Common
             Send(Encoding.UTF8.GetBytes(data), TcpServer.ParseEndPoint(address));
         }
 
-        public void Send(byte[] data, IPEndPoint address)
+        public void Send(byte[] data, IPEndPoint address, object tag = null)
         {
             if (address != null && data != null)
             {
-                var param = new UdpServerEventArgs { Data = data, Point = address };
+                var param = new UdpServerEventArgs { Data = data, Point = address, Tag = tag };
                 sender.BeginSend(data, data.Length, address, SendCallback, param);
             }
         }
@@ -155,27 +151,30 @@ namespace DataWF.Common
             }
             catch (Exception ex)
             {
-                OnDataException(new ExceptionEventArgs(ex));
+                arg.Exception = ex;
+                OnDataException(arg);
             }
         }
 
         protected virtual void OnDataSend(UdpServerEventArgs arg)
         {
-            DataSend?.Invoke(this, arg);
             NetStat.Set("Data Send", 1, arg.Length);
+            DataSend?.Invoke(this, arg);
 
         }
 
         protected virtual void OnDataLoad(UdpServerEventArgs arg)
         {
-            DataLoad?.Invoke(this, arg);
             NetStat.Set("Data Receive", 1, arg.Length);
+            DataLoad?.Invoke(this, arg);
         }
 
-        protected virtual void OnDataException(ExceptionEventArgs ex)
+        protected virtual void OnDataException(UdpServerEventArgs arg)
         {
-            DataException?.Invoke(this, ex);
-            Helper.OnException(ex.Exception);
+            NetStat.Set("Errors", 1, arg.Data?.Length ?? 0);
+            DataException?.Invoke(this, arg);
+
+            Helper.OnException(arg.Exception);
         }
 
         public virtual void Dispose()
