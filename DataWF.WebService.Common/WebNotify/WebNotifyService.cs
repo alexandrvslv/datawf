@@ -128,7 +128,7 @@ namespace DataWF.WebService.Common
         public async Task ListenAsync(WebNotifyConnection connection)
         {
             var buffer = new ArraySegment<byte>(new byte[8192]);
-            while (connection.Socket.State == WebSocketState.Open)
+            while (connection.Socket?.State == WebSocketState.Open)
             {
                 try
                 {
