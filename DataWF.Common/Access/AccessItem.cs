@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -6,11 +7,21 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public struct AccessItem : IAccessItem
+    public struct AccessItem : IAccessItem, IEquatable<AccessItem>
     {
         public static readonly AccessItem Empty = new AccessItem(null);
         private IAccessIdentity identity;
         private int identityId;
+
+        public static bool operator ==(AccessItem a, AccessItem b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(AccessItem a, AccessItem b)
+        {
+            return !a.Equals(b);
+        }
 
         public AccessItem(bool isUser, int identityId, AccessType data)
         {
@@ -190,6 +201,18 @@ namespace DataWF.Common
             }
         }
 
+        public override bool Equals(object obj)
+        {
+            return obj is AccessItem item ? Equals(item) : false;
+        }
+
+        public bool Equals(AccessItem item)
+        {
+            return IsUser == item.IsUser
+                   && IdentityId == item.IdentityId
+                   && Access == item.Access;
+        }
+
         internal void Serialize(BinaryWriter writer)
         {
             writer.Write(IsUser);
@@ -200,6 +223,15 @@ namespace DataWF.Common
         public static AccessItem Deserialize(BinaryReader reader, bool user)
         {
             return new AccessItem(user ? reader.ReadBoolean() : false, reader.ReadInt32(), (AccessType)reader.ReadInt32());
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = 1380532211;
+            hashCode = hashCode * -1521134295 + IdentityId.GetHashCode();
+            hashCode = hashCode * -1521134295 + IsUser.GetHashCode();
+            hashCode = hashCode * -1521134295 + Access.GetHashCode();
+            return hashCode;
         }
     }
 }

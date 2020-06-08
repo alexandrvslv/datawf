@@ -22,9 +22,19 @@ namespace DataWF.Common
             AccessValue c = new AccessValue();
             foreach (var aItem in a.Items)
             {
-                if (b.items.TryGetValue(aItem.Identity, out var bItem))
+                var bItem = b.Get(aItem.Identity);
+                if (bItem != AccessItem.Empty)
                 {
                     c.Add(aItem.Identity, aItem.Access & bItem.Access);
+                }                
+            }
+
+            foreach (var bItem in b.Items)
+            {
+                var aItem = a.Get(bItem.Identity);
+                if (aItem != AccessItem.Empty)
+                {
+                    c.Add(bItem.Identity, aItem.Access & bItem.Access);
                 }
             }
             return c;
