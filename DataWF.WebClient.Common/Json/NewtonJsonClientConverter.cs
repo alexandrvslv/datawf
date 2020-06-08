@@ -69,9 +69,9 @@ namespace DataWF.Common
 
                     object value = Read(jreader, property.DataType, serializer, currentValue);
 
-                    if (string.Equals(property.Name, Client.TypeInvoker?.Name, StringComparison.Ordinal) && value != null)
+                    if (string.Equals(property.Name, Client.TypeInvoker?.Name, StringComparison.Ordinal))
                     {
-                        var typeId = (int)value;
+                        var typeId = value == null ? 0 : (int)value;
                         if (typeId != Client.TypeId)
                         {
                             var client = Client.Provider.GetClient(typeof(T), typeId);
