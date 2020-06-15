@@ -16,7 +16,6 @@ namespace DataWF.Common
         public FileWatcher(string filePath, IFileModel model, object modelView, bool enabled = true, FileWatcherService service = null)
         {
             Model = model;
-
             ModelView = modelView;
             FilePath = filePath;
             Service = service ?? FileWatcherService.Instance;
