@@ -1696,8 +1696,9 @@ namespace DataWF.Data
             }
         }
 
-        public MemoryStream GetMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public virtual MemoryStream GetMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
+            OnGetStream(column, transaction);
             var memoryStream = (MemoryStream)null;
             var temp = GetValue<byte[]>(column);
             if (temp != null)
@@ -1709,8 +1710,9 @@ namespace DataWF.Data
             return memoryStream;
         }
 
-        public FileStream GetFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public virtual FileStream GetFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
         {
+            OnGetStream(column, transaction);
             var fileStream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
             var temp = GetValue<byte[]>(column);
             if (temp != null)
@@ -1722,6 +1724,10 @@ namespace DataWF.Data
 
             Table.System.ReadSequential(this, column, fileStream, transaction, bufferSize);
             return fileStream;
+        }
+
+        protected virtual void OnGetStream(DBColumn column, DBTransaction transaction)
+        {
         }
 
         public Stream GetZipMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
@@ -1774,8 +1780,9 @@ namespace DataWF.Data
             return GetLOB(Table.FileLOBKey, transaction, bufferSize);
         }
 
-        public Task<Stream> GetLOB(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public virtual Task<Stream> GetLOB(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
+            OnGetStream(column, transaction);
             var oid = GetValue<uint?>(column);
             if (oid == null)
                 return null;
