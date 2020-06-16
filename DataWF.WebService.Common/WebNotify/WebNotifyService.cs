@@ -12,6 +12,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace DataWF.WebService.Common
 {
@@ -105,17 +106,18 @@ namespace DataWF.WebService.Common
             if (connection != null)
             {
                 await connection.Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Internal Server Close.", CancellationToken.None);
-                await Remove(connection);
+                Remove(connection);
             }
         }
 
-        public virtual async ValueTask<bool> Remove(WebNotifyConnection connection)
+        public virtual bool Remove(WebNotifyConnection connection)
         {
             var removed = false;
             try
             {
                 if ((removed = connections.Remove(connection)))
                 {
+                    Debug.WriteLine($"Remove webSocket from {connection.UserEmail}");
                     connection?.Dispose();
                 }
             }
@@ -132,55 +134,68 @@ namespace DataWF.WebService.Common
         public async Task ListenAsync(WebNotifyConnection connection)
         {
             var buffer = new ArraySegment<byte>(new byte[8192]);
-            while (connection.Socket?.State == WebSocketState.Open)
+            while (CheckConnection(connection))
             {
                 try
                 {
                     WebSocketReceiveResult result = null;
-                    using (var stream = new MemoryStream())
+                    var stream = new MemoryStream();
+                    do
                     {
-                        do
+                        result = await connection.Socket.ReceiveAsync(buffer, CancellationToken.None);
+                        if (result.Count > 0)
                         {
-                            result = await connection.Socket.ReceiveAsync(buffer, CancellationToken.None);
-                            if (result.Count > 0)
-                            {
-                                stream.Write(buffer.Array, buffer.Offset, result.Count);
-                            }
-                        }
-                        while (!result.EndOfMessage);
-
-                        switch (result.MessageType)
-                        {
-                            case WebSocketMessageType.Binary:
-                            case WebSocketMessageType.Text:
-                                OnMessageReceive(connection, stream);
-                                break;
-                            case WebSocketMessageType.Close:
-                                await connection.Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Good luck!", CancellationToken.None);
-                                await Remove(connection);
-                                return;
+                            stream.Write(buffer.Array, buffer.Offset, result.Count);
                         }
                     }
+                    while (!result.EndOfMessage);
 
+                    switch (result.MessageType)
+                    {
+                        case WebSocketMessageType.Binary:
+                        case WebSocketMessageType.Text:
+                            _ = OnMessageReceive(connection, stream);
+                            break;
+                        case WebSocketMessageType.Close:
+                            stream.Dispose();
+                            await connection.Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Good luck!", CancellationToken.None);
+                            Remove(connection);
+                            return;
+                    }
                 }
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
-                    _ = Remove(connection);
                 }
-
             }
+            Remove(connection);
         }
 
-        protected virtual object OnMessageReceive(WebNotifyConnection connection, MemoryStream stream)
+        protected virtual async Task<object> OnMessageReceive(WebNotifyConnection connection, MemoryStream stream)
+        {
+            await Task.Delay(10).ConfigureAwait(false);
+
+            object obj = LoadMessage(connection, stream);
+            if (obj is WebNotifyRegistration registration)
+            {
+                connection.Platform = registration.Platform;
+                connection.Application = registration.Application;
+                connection.Version = registration.Version;
+                connection.VersionValue = Version.TryParse(connection.Version, out var version) ? version : new Version("1.0.0.0");
+            }
+            ReceiveMessage?.Invoke(this, new WebNotifyEventArgs(connection, obj));
+            return obj;
+        }
+
+        protected object LoadMessage(WebNotifyConnection connection, MemoryStream stream)
         {
             stream.Position = 0;
-            var property = (string)null;
-            var type = (Type)null;
             var jsonOptions = new JsonSerializerOptions();
             jsonOptions.InitDefaults(new DBItemConverterFactory { CurrentUser = connection.User });
-            var obj = (object)null;
             var span = new ReadOnlySpan<byte>(stream.GetBuffer(), 0, (int)stream.Length);
+            var property = (string)null;
+            var type = (Type)null;
+            var obj = (object)null;
             var jreader = new Utf8JsonReader(span);
             {
                 while (jreader.Read())
@@ -203,22 +218,15 @@ namespace DataWF.WebService.Common
                             {
                                 property = null;
                                 obj = JsonSerializer.Deserialize(ref jreader, type, jsonOptions);
-
-                                if (obj is WebNotifyRegistration data)
-                                {
-                                    connection.Platform = data.Platform;
-                                    connection.Application = data.Application;
-                                    connection.Version = data.Version;
-                                    connection.VersionValue = Version.TryParse(connection.Version, out var version) ? version : new Version("1.0.0.0");
-                                    break;
-                                }
                             }
                             break;
                     }
                 }
             }
-
-            ReceiveMessage?.Invoke(this, new WebNotifyEventArgs(connection, obj));
+#if DEBUG
+            Debug.WriteLine($"Receive Message {DateTime.UtcNow} Length: {stream.Length} ");
+#endif
+            stream.Dispose();
             return obj;
         }
 
@@ -247,7 +255,7 @@ namespace DataWF.WebService.Common
                 {
                     if (!CheckConnection(connection))
                     {
-                        await Remove(connection);
+                        Remove(connection);
                         continue;
                     }
                     using (var stream = WriteData(list, connection.User))
@@ -295,6 +303,9 @@ namespace DataWF.WebService.Common
                     , stream.Position == stream.Length
                     , CancellationToken.None);
             }
+#if DEBUG
+            Debug.WriteLine($"Send Message {DateTime.UtcNow} Length: {stream.Length} ");
+#endif
         }
 
         public async Task SendObject(WebNotifyConnection connection, object data)
@@ -371,6 +382,7 @@ namespace DataWF.WebService.Common
                 writer.WritePropertyName("Value");
                 JsonSerializer.Serialize(writer, data, data.GetType(), jsonOptions);
                 writer.WriteEndObject();
+                writer.Flush();
             }
             return stream;
         }
