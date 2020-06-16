@@ -63,6 +63,7 @@ namespace DataWF.Data
         FileName = 1 << 24,
         FileLOB = 1 << 25,
         FileLastWrite = 1 << 26,
+        UtcDate = 1 << 27
     }
 
     public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>
@@ -765,7 +766,7 @@ namespace DataWF.Data
                 case DBDataType.DateTime:
                 case DBDataType.TimeStamp:
                     var dateValue = isNull ? (DateTime?)null : (DateTime?)transaction.Reader.GetDateTime(i);
-                    if (!isNull && (Keys & (DBColumnKeys.Date | DBColumnKeys.Stamp | DBColumnKeys.FileLastWrite)) != 0)
+                    if (!isNull && (Keys & (DBColumnKeys.UtcDate)) != 0)
                     {
                         dateValue = DateTime.SpecifyKind(dateValue.Value, DateTimeKind.Utc);
                     }
@@ -849,7 +850,7 @@ namespace DataWF.Data
                 case DBDataType.DateTime:
                 case DBDataType.TimeStamp:
                     var dateValue = transaction.Reader.GetDateTime(i);
-                    if ((Keys & (DBColumnKeys.Date | DBColumnKeys.Stamp)) != 0)
+                    if ((Keys & (DBColumnKeys.UtcDate)) != 0)
                     {
                         dateValue = DateTime.SpecifyKind(dateValue, DateTimeKind.Utc);
                     }

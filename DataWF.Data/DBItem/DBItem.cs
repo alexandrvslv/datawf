@@ -145,7 +145,7 @@ namespace DataWF.Data
             set => SetValueNullable(value, Table.StatusKey);
         }
 
-        [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
+        [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 100)]
         public virtual DateTime? DateCreate
         {
             get => Table.DateKey?.GetValueNullable<DateTime>(this);
@@ -153,7 +153,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System, Order = 101)]
+        [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 101)]
         public DateTime? Stamp
         {
             get => Table.StampKey?.GetValueNullable<DateTime>(this);

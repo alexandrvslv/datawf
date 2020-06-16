@@ -1833,8 +1833,8 @@ namespace DataWF.Data
             {
                 new DBColumn { Name = "type_id", Keys = DBColumnKeys.ItemType, DBDataType = DBDataType.Int },
                 new DBColumn { Name = "unid", Keys = DBColumnKeys.Primary, DBDataType = DBDataType.Int },
-                new DBColumn { Name = "datec", Keys = DBColumnKeys.Date, DBDataType = DBDataType.DateTime },
-                new DBColumn { Name = "dateu", Keys = DBColumnKeys.Stamp, DBDataType = DBDataType.DateTime },
+                new DBColumn { Name = "datec", Keys = DBColumnKeys.Date| DBColumnKeys.UtcDate, DBDataType = DBDataType.DateTime },
+                new DBColumn { Name = "dateu", Keys = DBColumnKeys.Stamp| DBColumnKeys.UtcDate, DBDataType = DBDataType.DateTime },
                 new DBColumn { Name = "stateid", Keys = DBColumnKeys.State, DBDataType = DBDataType.Decimal, Size = 28 },
                 new DBColumn { Name = "access", Keys = DBColumnKeys.Access, DBDataType = DBDataType.Blob, Size = 2000 }
             });

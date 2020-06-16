@@ -73,7 +73,7 @@ namespace DataWF.Data
             set => base.ItemType = value;
         }
 
-        [Column("datecreate", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
+        [Column("datecreate", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 100)]
         public override DateTime? DateCreate
         {
             get => base.DateCreate;
