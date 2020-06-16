@@ -293,11 +293,9 @@ namespace DataWF.WebService.Common
             stream.Position = 0;
             var bufferLength = 8 * 1024;
             var buffer = new byte[bufferLength];
-
-            while (stream.Position < stream.Length)
+            var count = 0;
+            while ((count = stream.Read(buffer, 0, bufferLength)) > 0)
             {
-                var count = stream.Read(buffer, 0, bufferLength);
-
                 await connection.Socket.SendAsync(new ArraySegment<byte>(buffer, 0, count)
                     , WebSocketMessageType.Binary
                     , stream.Position == stream.Length

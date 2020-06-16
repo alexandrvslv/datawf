@@ -132,15 +132,18 @@ namespace DataWF.Common
 
         public async Task Send(Stream stream, int bufferSize, CancellationToken cancellationToken)
         {
-            var buffer = new ArraySegment<byte>(new byte[bufferSize]);
-            int result = 0;
-            int total = 0;
             try
             {
-                while ((result = await stream.ReadAsync(buffer.Array, 0, buffer.Count, cancellationToken)) != 0)
+                stream.Position = 0;
+                var bufferLength = 8 * 1024;
+                var buffer = new byte[bufferLength];
+                var count = 0;
+                while ((count = stream.Read(buffer, 0, bufferLength)) > 0)
                 {
-                    total += result;
-                    await socket.SendAsync(buffer, WebSocketMessageType.Binary, result < buffer.Count, cancellationToken);
+                    await socket.SendAsync(new ArraySegment<byte>(buffer, 0, count)
+                        , WebSocketMessageType.Binary
+                        , stream.Position == stream.Length
+                        , CancellationToken.None);
                 }
             }
             catch (Exception ex)
