@@ -26,7 +26,7 @@ namespace DataWF.Common
                 if (bItem != AccessItem.Empty)
                 {
                     c.Add(aItem.Identity, aItem.Access & bItem.Access);
-                }                
+                }
             }
 
             foreach (var bItem in b.Items)

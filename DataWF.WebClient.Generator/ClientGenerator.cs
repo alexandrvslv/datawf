@@ -1428,6 +1428,10 @@ namespace DataWF.WebClient.Generator
 
         private string GetTypeString(JsonSchema schema, bool nullable, string listType = "SelectableList")
         {
+            if (!nullable && schema.IsNullableRaw == true)
+            {
+                nullable = true;
+            }
             switch (schema.Type)
             {
                 case JsonObjectType.Integer:

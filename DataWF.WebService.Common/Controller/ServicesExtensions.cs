@@ -227,14 +227,14 @@ namespace DataWF.WebService.Common
             var service = new WebNotifyService();
             if (removeHandler != null)
             {
-                service.RemoveClient += removeHandler;
+                service.RemoveConnection += removeHandler;
             }
-            return services.AddSingleton(service);
+            return services.AddSingleton<IWebNotifyService>(service);
         }
 
         public static IApplicationBuilder UseWebSocketNotify(this IApplicationBuilder app)
         {
-            var service = app.ApplicationServices.GetService<WebNotifyService>();
+            var service = app.ApplicationServices.GetService<IWebNotifyService>();
             service.Start();
 
             var webSocketOptions = new WebSocketOptions()

@@ -10,7 +10,13 @@ namespace DataWF.WebService.Common
             Message = message;
         }
 
+        public WebNotifyEventArgs(WebNotifyConnection client, object data) : this(client, null)
+        {
+            Data = data;
+        }
+
         public WebNotifyConnection Client { get; }
         public string Message { get; }
+        public object Data;
     }
 }

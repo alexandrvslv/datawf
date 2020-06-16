@@ -180,9 +180,9 @@ namespace DataWF.WebService.Common
                             });
         }
 
-        private static Utf8JsonWriter CreatetWriter(Stream stram, JsonSerializerOptions option)
+        private static Utf8JsonWriter CreatetWriter(Stream stream, JsonSerializerOptions option)
         {
-            return new Utf8JsonWriter(stram,
+            return new Utf8JsonWriter(stream,
                             new JsonWriterOptions
                             {
                                 Indented = option.WriteIndented,

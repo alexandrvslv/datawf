@@ -36,8 +36,12 @@ namespace DataWF.WebService.Common
         public IUserIdentity User { get; set; }
 
         public string Platform { get; set; }
+
         public string Application { get; set; }
+
         public string Version { get; set; }
+        [JsonIgnore]
+        public Version VersionValue { get; internal set; }
 
         public void Dispose()
         {

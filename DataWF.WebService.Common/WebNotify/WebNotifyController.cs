@@ -15,12 +15,12 @@ namespace DataWF.WebService.Common
     [LoggerAndFormatter]
     public class WebNotifyController : ControllerBase
     {
-        public WebNotifyController(WebNotifyService service)
+        public WebNotifyController(IWebNotifyService service)
         {
             Service = service;
         }
 
-        public WebNotifyService Service { get; }
+        public IWebNotifyService Service { get; }
 
 
         [HttpGet()]

@@ -20,7 +20,7 @@ namespace DataWF.WebService.Common
 
         [HttpGet("DownloadFile/{id}")]
         [ProducesResponseType(typeof(FileStreamResult), 200)]
-        public async Task<ActionResult<Stream>> DownloadFile([FromRoute]K id)
+        public virtual async Task<ActionResult<Stream>> DownloadFile([FromRoute] K id)
         {
             var transaction = new DBTransaction(table.Connection, CurrentUser);
             try
@@ -44,7 +44,7 @@ namespace DataWF.WebService.Common
 
         [HttpPost("DownloadFiles")]
         [ProducesResponseType(typeof(FileStreamResult), 200)]
-        public async Task<ActionResult<Stream>> DownloadFiles([FromBody]List<K> ids)
+        public virtual async Task<ActionResult<Stream>> DownloadFiles([FromBody] List<K> ids)
         {
             try
             {
@@ -125,7 +125,7 @@ namespace DataWF.WebService.Common
         [DisableFormValueModelBinding]
         [DisableRequestSizeLimit]
         [Obsolete("Use UploadFile(id)")]
-        public async Task<ActionResult> UploadFile([FromRoute]K id, [FromRoute]string fileName)
+        public async Task<ActionResult> UploadFile([FromRoute] K id, [FromRoute] string fileName)
         {
             if (table.FileNameKey == null)
             {
@@ -187,7 +187,7 @@ namespace DataWF.WebService.Common
         [HttpPost("UploadFile/{id}")]
         [DisableFormValueModelBinding]
         [DisableRequestSizeLimit]
-        public async Task<ActionResult> UploadFile([FromRoute]K id)
+        public virtual async Task<ActionResult> UploadFile([FromRoute] K id)
         {
             if (table.FileNameKey == null)
             {
@@ -246,7 +246,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("DownloadLogFile/{logId}")]
-        public async Task<ActionResult<Stream>> DownloadLogFile([FromRoute]long logId)
+        public virtual async Task<ActionResult<Stream>> DownloadLogFile([FromRoute] long logId)
         {
             var transaction = new DBTransaction(table.Connection, CurrentUser);
             try

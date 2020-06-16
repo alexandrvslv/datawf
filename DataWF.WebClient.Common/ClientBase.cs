@@ -404,9 +404,15 @@ namespace DataWF.Common
                 {
                     throw new ArgumentOutOfRangeException(nameof(parameters));
                 }
-
-                urlBuilder.Append(Uri.EscapeDataString(ConvertToString(parameters[i++], CultureInfo.InvariantCulture)));
-
+                var entry = ConvertToString(parameters[i++], CultureInfo.InvariantCulture);
+                if (entry.Length > 0)
+                {
+                    urlBuilder.Append(Uri.EscapeDataString(entry));
+                }
+                else if (urlBuilder[urlBuilder.Length - 1] == '/')
+                {
+                    urlBuilder.Length -= 1;
+                }
                 c = m.Index + m.Length;
             }
             if (c < url.Length)
@@ -418,6 +424,8 @@ namespace DataWF.Common
 
         protected string ConvertToString(object value, CultureInfo cultureInfo)
         {
+            if (value == null)
+                return string.Empty;
             if (value is Enum)
             {
                 return EnumItem.Format(value);

@@ -15,14 +15,14 @@ using System.Threading.Tasks;
 
 namespace DataWF.WebService.Common
 {
-    public class WebNotifyService : NotifyService
+    public class WebNotifyService : NotifyService, IWebNotifyService
     {
-        private readonly SelectableList<WebNotifyConnection> connections = new SelectableList<WebNotifyConnection>();
+        protected readonly SelectableList<WebNotifyConnection> connections = new SelectableList<WebNotifyConnection>();
 
         public static WebNotifyService Instance { get; private set; }
 
         public event EventHandler<WebNotifyEventArgs> ReceiveMessage;
-        public event EventHandler<WebNotifyEventArgs> RemoveClient;
+        public event EventHandler<WebNotifyEventArgs> RemoveConnection;
 
         public WebNotifyService()
         {
@@ -66,20 +66,20 @@ namespace DataWF.WebService.Common
             Helper.Logs.Add(new StateInfo("Web Request", action, address) { User = user?.Name });
         }
 
-        public WebNotifyConnection Register(WebSocket socket, IUserIdentity user, string address)
+        public virtual WebNotifyConnection Register(WebSocket socket, IUserIdentity user, string address)
         {
-            var client = GetBySocket(socket);
-            if (client == null)
+            var connection = GetBySocket(socket);
+            if (connection == null)
             {
-                client = new WebNotifyConnection
+                connection = new WebNotifyConnection
                 {
                     Socket = socket,
                     User = user,
                     Address = address,
                 };
-                connections.Add(client);
+                connections.Add(connection);
             }
-            return client;
+            return connection;
         }
 
         public IEnumerable<WebNotifyConnection> GetConnections()
@@ -100,28 +100,32 @@ namespace DataWF.WebService.Common
             await CloseAsync(GetBySocket(socket));
         }
 
-        public async Task CloseAsync(WebNotifyConnection client)
+        public async Task CloseAsync(WebNotifyConnection connection)
         {
-            if (client != null)
+            if (connection != null)
             {
-                await client.Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Internal Server Close.", CancellationToken.None);
-                Remove(client);
+                await connection.Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Internal Server Close.", CancellationToken.None);
+                await Remove(connection);
             }
         }
 
-        private void Remove(WebNotifyConnection client)
+        public virtual async ValueTask<bool> Remove(WebNotifyConnection connection)
         {
+            var removed = false;
             try
             {
-                connections.Remove(client);
-                client?.Dispose();
+                if ((removed = connections.Remove(connection)))
+                {
+                    connection?.Dispose();
+                }
             }
             catch (Exception ex)
             {
                 Helper.OnException(ex);
             }
 
-            RemoveClient?.Invoke(this, new WebNotifyEventArgs(client));
+            RemoveConnection?.Invoke(this, new WebNotifyEventArgs(connection));
+            return removed;
         }
 
         //https://github.com/radu-matei/websocket-manager/blob/blog-article/src/WebSocketManager/WebSocketManagerMiddleware.cs
@@ -153,7 +157,7 @@ namespace DataWF.WebService.Common
                                 break;
                             case WebSocketMessageType.Close:
                                 await connection.Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Good luck!", CancellationToken.None);
-                                Remove(connection);
+                                await Remove(connection);
                                 return;
                         }
                     }
@@ -162,20 +166,20 @@ namespace DataWF.WebService.Common
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
-                    Remove(connection);
+                    _ = Remove(connection);
                 }
 
             }
         }
 
-        private void OnMessageReceive(WebNotifyConnection client, MemoryStream stream)
+        protected virtual object OnMessageReceive(WebNotifyConnection connection, MemoryStream stream)
         {
             stream.Position = 0;
             var property = (string)null;
             var type = (Type)null;
             var jsonOptions = new JsonSerializerOptions();
-            jsonOptions.InitDefaults(new DBItemConverterFactory { CurrentUser = client.User });
-
+            jsonOptions.InitDefaults(new DBItemConverterFactory { CurrentUser = connection.User });
+            var obj = (object)null;
             var span = new ReadOnlySpan<byte>(stream.GetBuffer(), 0, (int)stream.Length);
             var jreader = new Utf8JsonReader(span);
             {
@@ -195,28 +199,27 @@ namespace DataWF.WebService.Common
                             }
                             break;
                         case JsonTokenType.StartObject:
-                            if (property == "Value" && type != null)
+                            if (string.Equals(property, "Value", StringComparison.Ordinal) && type != null)
                             {
                                 property = null;
-                                var obj = JsonSerializer.Deserialize(ref jreader, type, jsonOptions);
+                                obj = JsonSerializer.Deserialize(ref jreader, type, jsonOptions);
 
                                 if (obj is WebNotifyRegistration data)
                                 {
-                                    client.Platform = data.Platform;
-                                    client.Application = data.Application;
-                                    client.Version = data.Version;
-                                    return;
+                                    connection.Platform = data.Platform;
+                                    connection.Application = data.Application;
+                                    connection.Version = data.Version;
+                                    connection.VersionValue = Version.TryParse(connection.Version, out var version) ? version : new Version("1.0.0.0");
+                                    break;
                                 }
                             }
                             break;
                     }
                 }
             }
-            if (ReceiveMessage != null)
-            {
-                var message = Encoding.UTF8.GetString(span);
-                ReceiveMessage(this, new WebNotifyEventArgs(client, message));
-            }
+
+            ReceiveMessage?.Invoke(this, new WebNotifyEventArgs(connection, obj));
+            return obj;
         }
 
         protected override async void OnSendChanges(NotifyMessageItem[] list)
@@ -242,35 +245,63 @@ namespace DataWF.WebService.Common
             {
                 try
                 {
-                    if (connection?.Socket == null
-                        || (connection.State != WebSocketState.Open
-                        && connection.State != WebSocketState.Connecting))
+                    if (!CheckConnection(connection))
                     {
-                        Remove(connection);
+                        await Remove(connection);
                         continue;
                     }
                     using (var stream = WriteData(list, connection.User))
                     {
                         if (stream == null)
                             continue;
-                        var bufferLength = 8 * 1024;
-                        var buffer = new byte[bufferLength];
-
-                        while (stream.Position < stream.Length)
-                        {
-                            var count = stream.Read(buffer, 0, bufferLength);
-
-                            await connection.Socket.SendAsync(new ArraySegment<byte>(buffer, 0, count)
-                                , WebSocketMessageType.Binary
-                                , stream.Position == stream.Length
-                                , CancellationToken.None);
-                        }
+                        await SendStream(connection, stream);
                     }
                 }
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
                 }
+            }
+        }
+
+        public bool CheckConnection(WebNotifyConnection connection)
+        {
+            return connection?.Socket != null
+                && (connection.State == WebSocketState.Open
+                || connection.State == WebSocketState.Connecting);
+        }
+
+        public async Task SendText(WebNotifyConnection connection, string text)
+        {
+            var buffer = System.Text.Encoding.UTF8.GetBytes(text);
+            using (var stream = new MemoryStream(buffer))
+            {
+                await SendStream(connection, stream);
+            }
+        }
+
+        public async Task SendStream(WebNotifyConnection connection, Stream stream)
+        {
+            stream.Position = 0;
+            var bufferLength = 8 * 1024;
+            var buffer = new byte[bufferLength];
+
+            while (stream.Position < stream.Length)
+            {
+                var count = stream.Read(buffer, 0, bufferLength);
+
+                await connection.Socket.SendAsync(new ArraySegment<byte>(buffer, 0, count)
+                    , WebSocketMessageType.Binary
+                    , stream.Position == stream.Length
+                    , CancellationToken.None);
+            }
+        }
+
+        public async Task SendObject(WebNotifyConnection connection, object data)
+        {
+            using (var stream = WriteData(data, connection.User))
+            {
+                await SendStream(connection, stream);
             }
         }
 
@@ -319,6 +350,31 @@ namespace DataWF.WebService.Common
             return list.ToArray();
         }
 
+        protected MemoryStream WriteData(object data, IUserIdentity user)
+        {
+            var jsonOptions = new JsonSerializerOptions();
+            jsonOptions.InitDefaults(new DBItemConverterFactory
+            {
+                CurrentUser = user,
+                HttpJsonSettings = HttpJsonSettings.None,
+            });
+            var stream = new MemoryStream();
+
+            using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+            {
+                Encoder = jsonOptions.Encoder,
+                Indented = jsonOptions.WriteIndented
+            }))
+            {
+                writer.WriteStartObject();
+                writer.WriteString("Type", data.GetType().Name);
+                writer.WritePropertyName("Value");
+                JsonSerializer.Serialize(writer, data, data.GetType(), jsonOptions);
+                writer.WriteEndObject();
+            }
+            return stream;
+        }
+
         private MemoryStream WriteData(NotifyMessageItem[] list, IUserIdentity user)
         {
             bool haveValue = false;
@@ -351,8 +407,7 @@ namespace DataWF.WebService.Common
                         }
                         itemType = item.Table.ItemType.Type;
                         writer.WriteStartObject();
-                        writer.WritePropertyName("Type");
-                        writer.WriteStringValue(itemType.Name);
+                        writer.WriteString("Type", itemType.Name);
                         writer.WritePropertyName("Items");
                         writer.WriteStartArray();
                     }
@@ -361,12 +416,9 @@ namespace DataWF.WebService.Common
                     {
                         id = item.ItemId;
                         writer.WriteStartObject();
-                        writer.WritePropertyName("Diff");
-                        writer.WriteNumberValue((int)item.Type);
-                        writer.WritePropertyName("User");
-                        writer.WriteNumberValue(item.UserId);
-                        writer.WritePropertyName("Id");
-                        writer.WriteStringValue(item.ItemId.ToString());
+                        writer.WriteNumber("Diff", (int)item.Type);
+                        writer.WriteNumber("User", item.UserId);
+                        writer.WriteString("Id", item.ItemId.ToString());
                         if (item.Type != DBLogType.Delete)
                         {
                             var value = item.Table.LoadItemById(item.ItemId);

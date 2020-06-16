@@ -184,7 +184,7 @@ namespace DataWF.Common
                 return client.Converter.Read(jreader, null, serializer);
             else
 #endif
-                return serializer.Deserialize(jreader, type);
+            return serializer.Deserialize(jreader, type);
         }
 
 
