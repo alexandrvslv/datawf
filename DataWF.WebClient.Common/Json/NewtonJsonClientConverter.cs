@@ -94,6 +94,10 @@ namespace DataWF.Common
                                 item = Client.AddDownloads((K)id, Client.NewLoadItem);
                             }
                         }
+                        else if (id == null)
+                        {
+                            item = (T)Client.NewItem();
+                        }
                         else if (!Client.Items.Contains(item))
                         {
                             item = Client.AddDownloads((K)id, item);
@@ -130,7 +134,7 @@ namespace DataWF.Common
                 if (!isRef && synchItem.SyncStatus == SynchronizedStatus.Load)
                     synchItem.SyncStatus = SynchronizedStatus.Actual;
 
-                if (!isRef && Client.RemoveDownloads((K)id))
+                if (!isRef && id != null && Client.RemoveDownloads((K)id))
                 {
                     Client.Add(item);
                 }
@@ -184,7 +188,7 @@ namespace DataWF.Common
                 return client.Converter.Read(jreader, null, serializer);
             else
 #endif
-            return serializer.Deserialize(jreader, type);
+                return serializer.Deserialize(jreader, type);
         }
 
 
