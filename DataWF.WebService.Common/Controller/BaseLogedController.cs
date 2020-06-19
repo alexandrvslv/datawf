@@ -23,12 +23,12 @@ namespace DataWF.WebService.Common
                 {
                     return Forbid();
                 }
-                
+
                 if (!logTable.ParseQuery(filter, out var query))
                 {
                     if (table is IDBVirtualTable virtualTable && virtualTable.ItemTypeIndex != 0)
                     {
-                        query.BuildParam(logTable.ItemTypeKey, virtualTable.ItemTypeIndex);                        
+                        query.BuildParam(logTable.ItemTypeKey, virtualTable.ItemTypeIndex);
                     }
                     var buffer = logTable.LoadItems(query, DBLoadParam.Referencing)
                                      .Where(p => p.Access.GetFlag(AccessType.Read, user)
@@ -65,8 +65,6 @@ namespace DataWF.WebService.Common
                 return BadRequest(ex, null);
             }
         }
-
-
 
         [HttpGet("UndoLog/{logId}")]
         public async Task<ActionResult<T>> UndoLog([FromRoute] long logId)

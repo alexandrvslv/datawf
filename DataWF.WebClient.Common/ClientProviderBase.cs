@@ -100,6 +100,7 @@ namespace DataWF.Common
                         client.Dispose();
                         client = null;
                         //CreateHttpClient(httpMessageHandler);
+                        ClearCache();
                     }
                 }
             }
@@ -116,7 +117,7 @@ namespace DataWF.Common
             {
                 client = httpMessageHandler != null ? new HttpClient(httpMessageHandler, false) : new HttpClient();
                 client.Timeout = TimeSpan.FromHours(1);
-                
+
                 if (baseUrl != null)
                 {
                     client.BaseAddress = new Uri(baseUrl);
@@ -168,6 +169,13 @@ namespace DataWF.Common
                         types[crudClient.TypeId] = crudClient;
                     }
                 }
+            }
+        }
+        protected virtual void ClearCache()
+        {
+            foreach (var crudClient in clients.TypeOf<ICrudClient>())
+            {
+                crudClient.Items.Clear();
             }
         }
 

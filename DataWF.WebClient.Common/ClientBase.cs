@@ -29,6 +29,7 @@ namespace DataWF.Common
 
         private string baseUrl;
         private IClientProvider provider;
+        private Environment.SpecialFolder defaultFolder = Environment.SpecialFolder.LocalApplicationData;
 
         public ClientBase()
         {
@@ -85,7 +86,7 @@ namespace DataWF.Common
         public string GetFilePath(string fileName, Uri uri)
         {
             var indentifier = uri.LocalPath.Replace("/", "");
-            return Helper.GetDocumentsFullPath(fileName, indentifier);
+            return Helper.GetDocumentsFullPath(fileName, indentifier, defaultFolder);
         }
 
         public virtual async Task<R> Request<R>(ProgressToken progressToken,
