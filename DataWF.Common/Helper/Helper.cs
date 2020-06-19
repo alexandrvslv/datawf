@@ -610,13 +610,13 @@ namespace DataWF.Common
             }
         }
 
-        public static string GetDocumentsFullPath(string fileName, string identifier)
+        public static string GetDocumentsFullPath(string fileName, string identifier, Environment.SpecialFolder folder = Environment.SpecialFolder.LocalApplicationData)
         {
             if (string.IsNullOrEmpty(fileName))
             {
                 return null;
             }
-            var path = Path.Combine(GetDirectory(true), "Documents", identifier);
+            var path = Path.Combine(GetDirectory(folder, true), "Documents", identifier);
             Directory.CreateDirectory(path);
             return Path.Combine(path, fileName);
         }
