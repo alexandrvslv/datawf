@@ -249,12 +249,14 @@ namespace DataWF.Common
             return Helper.Parse(id, IdInvoker.DataType);
         }
 
-        public IEnumerable<object> GetChanges()
+        IEnumerable<object> ICrudClient.GetChanges()
         {
-            return Items.Cast<ISynchronized>().Where(p =>
-                        p != null
-                        && (p.SyncStatus == SynchronizedStatus.New
-                        || p.SyncStatus == SynchronizedStatus.Edit));
+            return Items.GetChanged();
+        }
+
+        public IEnumerable<T> GetChanges()
+        {
+            return Items.GetChanged();
         }
 
         public object Select(object id)

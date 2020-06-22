@@ -69,6 +69,7 @@ namespace DataWF.Common
         bool Remove(T item);
         Task<T> Get(T item);
         T Get(object id);
+        new IEnumerable<T> GetChanges();
         Task<bool> Delete(T item);
         LoadProgress<T> Load(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
         Task<List<T>> SearchAsync(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
@@ -119,7 +120,7 @@ namespace DataWF.Common
         IClient BaseClient { get; }
         new T SelectedItem { get; set; }
         new IFilterable<T> Items { get; set; }
-        new Query<T> Filter { get; set; }        
+        new Query<T> Filter { get; set; }
 
         Task<IEnumerable<T>> Get(string filter, HttpPageSettings list = null);
     }
