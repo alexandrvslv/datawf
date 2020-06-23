@@ -11,7 +11,7 @@ namespace DataWF.Common
         { }
 
         public FieldInvoker(string name)
-            : this((FieldInfo)TypeHelper.GetMemberInfo(typeof(T), name))
+            : this((FieldInfo)TypeHelper.GetMemberInfo(typeof(T), name, out _, false))
         { }
 
         public static Func<T, V> GetFieldGetInvoker(FieldInfo info)

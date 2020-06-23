@@ -12,7 +12,7 @@ namespace DataWF.Common
         { }
 
         public PropertyInvoker(string name)
-            : this((PropertyInfo)TypeHelper.GetMemberInfo(typeof(T), name))
+            : this((PropertyInfo)TypeHelper.GetMemberInfo(typeof(T), name, out _, false))
         { }
 
         public static Func<T, V> GetEmitGet(MethodInfo info)
@@ -76,21 +76,19 @@ namespace DataWF.Common
         //https://www.codeproject.com/Articles/584720/Expression-Based-Property-Getters-and-Setters
         public static Func<T, V> GetExpressionGet(PropertyInfo info)
         {
-            var paramExpression = Expression.Parameter(typeof(T), "value");
-            var propertyGetterExpression = Expression.Property(paramExpression, info.Name);
-            return Expression.Lambda<Func<T, V>>(propertyGetterExpression, paramExpression).Compile();
+            var param = Expression.Parameter(typeof(T), "target");
+            var property = Expression.Property(param, info);
+
+            return Expression.Lambda<Func<T, V>>(property, param).Compile();
         }
 
         public static Action<T, V> GetExpressionSet(PropertyInfo info)
         {
-            var paramTarget = Expression.Parameter(typeof(T));
-            var paramValue = Expression.Parameter(typeof(V), info.Name);
-            var propertyGetterExpression = Expression.Property(paramTarget, info.Name);
+            var param = Expression.Parameter(typeof(T), "target");
+            var value = Expression.Parameter(typeof(V), "value");
+            var proeprty = Expression.Property(param, info);
 
-            return Expression.Lambda<Action<T, V>>
-            (
-                Expression.Assign(propertyGetterExpression, paramValue), paramTarget, paramValue
-            ).Compile();
+            return Expression.Lambda<Action<T, V>>(Expression.Assign(proeprty, value), param, value).Compile();
         }
     }
 

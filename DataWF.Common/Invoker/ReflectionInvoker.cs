@@ -13,11 +13,11 @@ namespace DataWF.Common
             Name = name;
             List = TypeHelper.GetMemberInfoList(type, name);
             Last = List.Last();
-            DataType = TypeHelper.GetMemberType(Last);
+            DataType = TypeHelper.GetMemberType(Last.Info);
             TargetType = type;
         }
 
-        public bool CanWrite { get { return Last is FieldInfo || (Last is PropertyInfo && ((PropertyInfo)Last).CanWrite); } }
+        public bool CanWrite => Last.Info is FieldInfo || (Last.Info is PropertyInfo && ((PropertyInfo)Last.Info).CanWrite);
 
         public Type DataType { get; set; }
 
@@ -25,9 +25,9 @@ namespace DataWF.Common
 
         public string Name { get; set; }
 
-        public List<MemberInfo> List { get; private set; }
+        public List<MemberParseInfo> List { get; private set; }
 
-        public MemberInfo Last { get; private set; }
+        public MemberParseInfo Last { get; private set; }
 
         public object GetValue(object target)
         {
@@ -49,7 +49,7 @@ namespace DataWF.Common
                 if (info == Last)
                 {
                     SetValue(info, target, value);
-                    if (info.DeclaringType.IsValueType && temp != null)
+                    if (info.Info.DeclaringType.IsValueType && temp != null)
                     {
                         SetValue(List[List.Count - 2], temp, target);
                     }
@@ -64,12 +64,19 @@ namespace DataWF.Common
             }
         }
 
-        public void SetValue(MemberInfo info, object target, object value)
+        public void SetValue(MemberParseInfo info, object target, object value)
         {
-            switch (info)
+            switch (info.Info)
             {
                 case PropertyInfo pInfo:
-                    pInfo.SetValue(target, value);
+                    if (info.Index != null)
+                    {
+                        pInfo.SetValue(target, value, new object[] { info.Index });
+                    }
+                    else
+                    {
+                        pInfo.SetValue(target, value);
+                    }
                     break;
                 case FieldInfo fInfo:
                     fInfo.SetValue(target, value);
@@ -77,12 +84,12 @@ namespace DataWF.Common
             }
         }
 
-        public object GetValue(MemberInfo info, object target)
+        public object GetValue(MemberParseInfo info, object target)
         {
-            switch (info)
+            switch (info.Info)
             {
                 case PropertyInfo pInfo:
-                    return pInfo.GetValue(target);
+                    return info.Index != null ? pInfo.GetValue(target, new object[] { info.Index }) : pInfo.GetValue(target);
                 case FieldInfo fInfo:
                     return fInfo.GetValue(target);
                 case MethodInfo mInfo:

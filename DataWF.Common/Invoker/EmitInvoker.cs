@@ -28,7 +28,7 @@ namespace DataWF.Common
 
         static EmitInvoker()
         {
-            var methoInfo = TypeHelper.GetMemberInfo(typeof(object), nameof(ToString));
+            var methoInfo = TypeHelper.GetMemberInfo(typeof(object), nameof(ToString), out _, false);
             cacheInvokers[GetToken(methoInfo)] = ToStringInvoker<object>.Instance;
         }
         public static void DeleteCache()
@@ -123,7 +123,7 @@ namespace DataWF.Common
 
         public static void RegisterInvoker(Type type, string memberName, IInvoker invoker)
         {
-            RegisterInvoker(TypeHelper.GetMemberInfo(type, memberName), invoker);
+            RegisterInvoker(TypeHelper.GetMemberInfo(type, memberName, out _, false), invoker);
         }
 
         public static void RegisterInvoker(MemberInfo memberInfo, IInvoker invoker)
@@ -149,12 +149,12 @@ namespace DataWF.Common
             var list = TypeHelper.GetMemberInfoList(type, property);
             if (list.Count == 1)
             {
-                return Initialize(list[0], true);
+                return Initialize(list[0].Info, list[0].Index == null, list[0].Index);
             }
             if (list.Count > 1)
             {
-                MemberInfo last = list.Last();
-                var emittype = typeof(ComplexInvoker<,>).MakeGenericType(type, TypeHelper.GetMemberType(last));
+                var last = list.Last();
+                var emittype = typeof(ComplexInvoker<,>).MakeGenericType(type, TypeHelper.GetMemberType(last.Info));
                 return (IInvoker)CreateObject(emittype, new[] { typeof(string), typeof(List<MemberInfo>) }, new object[] { property, list }, true);
             }
             return null;
@@ -176,7 +176,7 @@ namespace DataWF.Common
             return cacheCtors[token] = new EmitConstructor(info);
         }
 
-        public static IInvoker Initialize(MemberInfo info, bool cache)
+        public static IInvoker Initialize(MemberInfo info, bool cache, object index = null)
         {
             if (info == null)
                 return null;
@@ -197,7 +197,7 @@ namespace DataWF.Common
                 if (baseInfo.DeclaringType.IsGenericType && !baseInfo.DeclaringType.IsGenericTypeDefinition)
                 {
                     var genericType = baseInfo.DeclaringType.GetGenericTypeDefinition();
-                    var genericInfo = TypeHelper.GetMemberInfo(genericType, baseInfo.Name);
+                    var genericInfo = TypeHelper.GetMemberInfo(genericType, baseInfo.Name, out index, false);
                     var genericToken = GetToken(genericInfo);
                     if (cacheGenericInvokers.TryGetValue(genericToken, out var genericInvokerType))
                     {
@@ -211,7 +211,7 @@ namespace DataWF.Common
                     return cacheInvokers[token] = (IInvoker)Activator.CreateInstance(type);
                 }
             }
-            return cacheInvokers[token] = Initialize(info, null);
+            return cacheInvokers[token] = Initialize(info, index);
         }
 
         public static IInvoker Initialize(MemberInfo info, object index = null)
@@ -322,7 +322,7 @@ namespace DataWF.Common
                 types[i] = parameters[i]?.GetType() ?? typeof(object);
             }
 
-            return Invoke((MethodInfo)TypeHelper.GetMemberInfo(type, name, false, types), item, parameters);
+            return Invoke((MethodInfo)TypeHelper.GetMemberInfo(type, name, out _, false, types), item, parameters);
         }
 
         public static object Invoke(MethodInfo info, object item, params object[] pars)
@@ -334,7 +334,7 @@ namespace DataWF.Common
 
         public static object GetValue(Type type, string name, object item)
         {
-            return GetValue(TypeHelper.GetMemberInfo(type, name, false), item);
+            return GetValue(TypeHelper.GetMemberInfo(type, name, out _, false), item);
         }
 
         public static object GetValue(MemberInfo info, object item)
@@ -353,7 +353,7 @@ namespace DataWF.Common
 
         public static void SetValue(Type type, string name, object item, object value)
         {
-            SetValue(TypeHelper.GetMemberInfo(type, name, false), item, value);
+            SetValue(TypeHelper.GetMemberInfo(type, name, out _, false), item, value);
         }
 
         public static void SetValue(MemberInfo info, object item, object value)

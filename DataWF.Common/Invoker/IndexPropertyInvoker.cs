@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection.Emit;
 using System.Reflection;
+using System.Linq.Expressions;
 
 namespace DataWF.Common
 {
@@ -93,6 +94,25 @@ namespace DataWF.Common
 
             il.Emit(OpCodes.Ret);
             return (Action<T, K, V>)method.CreateDelegate(typeof(Action<T, K, V>));
+        }
+
+        public static Func<T, V, K> GetExpressionGet(PropertyInfo info)
+        {
+            var index = Expression.Parameter(typeof(K), "index");
+            var target = Expression.Parameter(typeof(T), "target");
+            var property = Expression.Property(target, info, index);
+
+            return Expression.Lambda<Func<T, V, K>>(property, target, index).Compile();
+        }
+
+        public static Action<T, V, K> GetExpressionSet(PropertyInfo info)
+        {
+            var index = Expression.Parameter(typeof(K), "index");
+            var target = Expression.Parameter(typeof(T), "target");
+            var value = Expression.Parameter(typeof(V), "value");
+            var property = Expression.Property(target, info, index);
+
+            return Expression.Lambda<Action<T, V, K>>(Expression.Assign(property, value), target, value, index).Compile();
         }
     }
 

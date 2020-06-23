@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -14,12 +15,12 @@ namespace DataWF.Common
         {
         }
 
-        public CompaundInvoker(string property, List<MemberInfo> list)
+        public CompaundInvoker(string property, List<MemberParseInfo> list)
         {
             this.property = property;
             foreach (var info in list)
             {
-                invokers.Add(EmitInvoker.Initialize(info, true));
+                invokers.Add(EmitInvoker.Initialize(info.Info, info.Index == null, info.Index));
             }
             lastInvoker = invokers.LastOrDefault();
         }
