@@ -196,6 +196,8 @@ namespace DataWF.WebService.Common
             var property = (string)null;
             var type = (Type)null;
             var obj = (object)null;
+            connection.ReceiveCount++;
+            connection.ReceiveLength += stream.Length;
             var jreader = new Utf8JsonReader(span);
             {
                 while (jreader.Read())
@@ -267,6 +269,8 @@ namespace DataWF.WebService.Common
                 }
                 catch (Exception ex)
                 {
+                    connection.SendErrors++;
+                    connection.SendError = ex.Message;
                     Helper.OnException(ex);
                 }
             }
@@ -301,6 +305,8 @@ namespace DataWF.WebService.Common
                     , stream.Position == stream.Length
                     , CancellationToken.None);
             }
+            connection.SendCount++;
+            connection.SendLength += stream.Length;
 #if DEBUG
             Debug.WriteLine($"Send Message {DateTime.UtcNow} Length: {stream.Length} ");
 #endif

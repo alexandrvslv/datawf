@@ -41,7 +41,13 @@ namespace DataWF.WebService.Common
 
         public string Version { get; set; }
         [JsonIgnore]
-        public Version VersionValue { get; internal set; }
+        public Version VersionValue { get; set; }
+        public int ReceiveCount { get; set; }
+        public long ReceiveLength { get; set; }
+        public int SendCount { get; set; }
+        public long SendLength { get; set; }
+        public int SendErrors { get; set; }
+        public string SendError { get; set; }
 
         public void Dispose()
         {
