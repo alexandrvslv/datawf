@@ -263,6 +263,16 @@ namespace DataWF.WebService.Common
                     transaction.Dispose();
                     return Forbid();
                 }
+                var baseItem = logItem.BaseItem;
+                if (baseItem != null && baseItem != DBItem.EmptyItem)
+                {
+                    if (!(baseItem.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
+                    && !(baseItem.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
+                    {
+                        transaction.Dispose();
+                        return Forbid();
+                    }
+                }
                 var fileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
                 if (fileName == null)
                 {
