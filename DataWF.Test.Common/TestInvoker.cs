@@ -24,6 +24,7 @@ namespace DataWF.Test.Common
                 Name = "Name",
                 X = value,
                 Y = value,
+                Array = new int[] { 1, value, 3 },
                 Struct = new TestStruct()
                 {
                     Field = value,
@@ -35,6 +36,7 @@ namespace DataWF.Test.Common
                     Name = "Goup",
                     X = value,
                     Y = value,
+                    Array = new int[] { 1, value, 3 },
                     Struct = new TestStruct()
                     {
                         Field = value,
@@ -108,7 +110,7 @@ namespace DataWF.Test.Common
 
         #region Property
         [Test()]
-        public void PropertyEmit()
+        public void PropertyExpression()
         {
             TestProperty(new PropertyInvoker<TestClass, int>("X"));
         }
@@ -124,7 +126,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void PropertyExact()
         {
-            TestProperty(new TestExactPropertyInvoker());
+            TestProperty(new TestPropertyInvoker());
         }
 
         [Test()]
@@ -133,24 +135,14 @@ namespace DataWF.Test.Common
             var invoker = new ReflectionInvoker(typeof(TestClass), "X");
             var x = (int)invoker.GetValue(testReference);
             Assert.AreEqual(value, x, "Reflection Fail Get Operation");
-            x++;
-            invoker.SetValue(testReference, x);
+            invoker.SetValue(testReference, x + 1);
             Assert.AreEqual(value + 1, testReference.X, "Reflection Fail Set Operation");
-        }
-
-        private void TestProperty(IInvoker<TestClass, int> invoker, [CallerMemberName]string name = null)
-        {
-            var x = invoker.GetValue(testReference);
-            Assert.AreEqual(value, x, $"{name} Fail Get Operation");
-            x++;
-            invoker.SetValue(testReference, x);
-            Assert.AreEqual(value + 1, testReference.X, $"{name} Fail Set Operation");
         }
 
         [Test()]
         public void BenchmarkPropertyExact()
         {
-            Benchmark("Property", "Exact", new TestExactPropertyInvoker());
+            Benchmark("Property", "Exact", new TestPropertyInvoker());
         }
 
         [Test()]
@@ -162,7 +154,7 @@ namespace DataWF.Test.Common
         }
 
         [Test()]
-        public void BenchmarkPropertyEmit()
+        public void BenchmarkPropertyExpression()
         {
             Benchmark("Property", "Emit", new PropertyInvoker<TestClass, int>("X"));
         }
@@ -170,7 +162,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingPropertyExact()
         {
-            BenchmarkBoxing("Property", "Exact", new TestExactPropertyInvoker());
+            BenchmarkBoxing("Property", "Exact", new TestPropertyInvoker());
         }
 
         [Test()]
@@ -182,9 +174,9 @@ namespace DataWF.Test.Common
         }
 
         [Test()]
-        public void BenchmarkBoxingPropertyEmit()
+        public void BenchmarkBoxingPropertyExpression()
         {
-            BenchmarkBoxing("Property", "Emit", new ComplexInvoker<TestClass, int>("X"));
+            BenchmarkBoxing("Property", "Emit", new PropertyInvoker<TestClass, int>("X"));
         }
 
         [Test()]
@@ -194,9 +186,54 @@ namespace DataWF.Test.Common
         }
         #endregion
 
+        #region Property Index
+        [Test()]
+        public void PropertyIndexExpression()
+        {
+            TestProperty(new IndexPropertyInvoker<TestClass, int, int>("Item[1]"));
+        }
+
+        [Test()]
+        public void PropertyIndexAction()
+        {
+            TestProperty(new ActionIndexInvoker<TestClass, int, int>("Item[1]",
+                                                               (item, index) => item[index],
+                                                               (item, index, value) => item[index] = value)
+            { Index = 1 });
+        }
+
+        [Test()]
+        public void PropertyIndexExact()
+        {
+            TestProperty(new TestIndexInvoker(1));
+        }
+
+        [Test()]
+        public void BenchmarkIndexPropertyExact()
+        {
+            Benchmark("Property", "Exact", new TestIndexInvoker(1));
+        }
+
+        [Test()]
+        public void BenchmarkIndexPropertyAction()
+        {
+            Benchmark("Property", "Action", new ActionIndexInvoker<TestClass, int, int>("Item[1]",
+                                                               (item, index) => item[index],
+                                                               (item, index, value) => item[index] = value)
+            { Index = 1 });
+        }
+
+        [Test()]
+        public void BenchmarkIndexPropertyExpression()
+        {
+            Benchmark("Property", "Expression", new IndexPropertyInvoker<TestClass, int, int>("Item[1]"));
+        }
+
+        #endregion
+
         #region Inline Property
         [Test()]
-        public void InlinePropertyEmit()
+        public void InlinePropertyExpression()
         {
             TestInlineProperty(new ComplexInvoker<TestClass, int>("Group.Struct.Width"));
         }
@@ -220,7 +257,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void InlinePropertyExact()
         {
-            TestInlineProperty(new TestExactInlinePropertyInvoker());
+            TestInlineProperty(new TestInlinePropertyInvoker());
         }
 
         [Test()]
@@ -229,24 +266,22 @@ namespace DataWF.Test.Common
             var invoker = new ReflectionInvoker(typeof(TestClass), "Group.Struct.Width");
             var width = (int)invoker.GetValue(testReference);
             Assert.AreEqual(value, width, "Reflection Fail Get Operation");
-            width++;
-            invoker.SetValue(testReference, width);
+            invoker.SetValue(testReference, width + 1);
             Assert.AreEqual(value + 1, testReference.Group.Struct.Width, "Reflection Fail Set Operation");
         }
 
-        private void TestInlineProperty(IInvoker<TestClass, int> invoker, [CallerMemberName]string name = null)
+        private void TestInlineProperty(IInvoker<TestClass, int> invoker, [CallerMemberName] string name = null)
         {
             var width = invoker.GetValue(testReference);
             Assert.AreEqual(value, width, $"{name} Fail Get Operation");
-            width++;
-            invoker.SetValue(testReference, width);
+            invoker.SetValue(testReference, width + 1);
             Assert.AreEqual(value + 1, testReference.Group.Struct.Width, $"{name} Fail Set Operation");
         }
 
         [Test()]
         public void BenchmarkInlinePropertyExact()
         {
-            Benchmark("Inline Property", "Exact", new TestExactInlinePropertyInvoker());
+            Benchmark("Inline Property", "Exact", new TestInlinePropertyInvoker());
         }
 
         [Test()]
@@ -266,7 +301,7 @@ namespace DataWF.Test.Common
         }
 
         [Test()]
-        public void BenchmarkInlinePropertyEmit()
+        public void BenchmarkInlinePropertyExpression()
         {
             Benchmark("Inline Property", "Emit", new ComplexInvoker<TestClass, int>("Group.Struct.Width"));
         }
@@ -274,7 +309,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingInlinePropertyExact()
         {
-            BenchmarkBoxing("Inline Property", "Exact", new TestExactInlinePropertyInvoker());
+            BenchmarkBoxing("Inline Property", "Exact", new TestInlinePropertyInvoker());
         }
 
         [Test()]
@@ -294,9 +329,9 @@ namespace DataWF.Test.Common
         }
 
         [Test()]
-        public void BenchmarkBoxingInlinePropertyEmit()
+        public void BenchmarkBoxingInlinePropertyExpression()
         {
-            BenchmarkBoxing("Inline Property", "Emit", new ComplexInvoker<TestClass, int>("Group.Struct.Width"));
+            BenchmarkBoxing("Inline Property", "Expression", new ComplexInvoker<TestClass, int>("Group.Struct.Width"));
         }
 
         [Test()]
@@ -309,7 +344,7 @@ namespace DataWF.Test.Common
 
         #region Field
         [Test()]
-        public void FieldEmit()
+        public void FieldExpression()
         {
             TestField(new FieldInvoker<TestClass, int>("Field"));
         }
@@ -325,7 +360,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void FieldExact()
         {
-            TestField(new TestExactFieldInvoker());
+            TestField(new TestFieldInvoker());
         }
 
         [Test()]
@@ -339,7 +374,7 @@ namespace DataWF.Test.Common
             Assert.AreEqual(value + 1, testReference.Field, "Reflection Fail Set Operation");
         }
 
-        private void TestField(IInvoker<TestClass, int> invoker, [CallerMemberName]string name = null)
+        private void TestField(IInvoker<TestClass, int> invoker, [CallerMemberName] string name = null)
         {
             var x = invoker.GetValue(testReference);
             Assert.AreEqual(value, x, $"{name} Fail Get Operation");
@@ -351,7 +386,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkFieldExact()
         {
-            Benchmark("Field", "Exact", new TestExactFieldInvoker());
+            Benchmark("Field", "Exact", new TestFieldInvoker());
         }
 
         [Test()]
@@ -363,15 +398,15 @@ namespace DataWF.Test.Common
         }
 
         [Test()]
-        public void BenchmarkFieldEmit()
+        public void BenchmarkFieldExpression()
         {
-            Benchmark("Field", "Emit", new FieldInvoker<TestClass, int>("Field"));
+            Benchmark("Field", "Expression", new FieldInvoker<TestClass, int>("Field"));
         }
 
         [Test()]
         public void BenchmarkBoxingFieldExact()
         {
-            BenchmarkBoxing("Field", "Exact", new TestExactFieldInvoker());
+            BenchmarkBoxing("Field", "Exact", new TestFieldInvoker());
         }
 
         [Test()]
@@ -383,9 +418,9 @@ namespace DataWF.Test.Common
         }
 
         [Test()]
-        public void BenchmarkBoxingFieldEmit()
+        public void BenchmarkBoxingFieldExpression()
         {
-            BenchmarkBoxing("Field", "Emit", new FieldInvoker<TestClass, int>("Field"));
+            BenchmarkBoxing("Field", "Expression", new FieldInvoker<TestClass, int>("Field"));
         }
 
         [Test()]
@@ -397,23 +432,32 @@ namespace DataWF.Test.Common
 
         #region Inline Field
         [Test()]
-        public void InlineFieldEmit()
+        public void InlineFieldExpression()
         {
-            TestInlineField(new ComplexInvoker<TestClass, int>("Struct.Field"));
+            TestInlineField(new ComplexInvoker<TestClass, int>("Group.Struct.Field"));
         }
 
         [Test()]
         public void InlineFieldAction()
         {
-            TestInlineField(new ActionInvoker<TestClass, int>("Struct.Field",
-                                                        (item) => item.Struct.Field,
-                                                        (item, value) => { var temp = item.Struct; temp.Field = value; item.Struct = temp; }));
+            TestInlineField(new ActionInvoker<TestClass, int>("Group.Struct.Field",
+                                                        (item) => item.Group?.Struct.Field ?? 0,
+                                                        (item, value) =>
+                                                        {
+                                                            var group = item.Group;
+                                                            if (group != null)
+                                                            {
+                                                                var temp = group.Struct;
+                                                                temp.Field = value;
+                                                                group.Struct = temp;
+                                                            }
+                                                        }));
         }
 
         [Test()]
         public void InlineFieldExact()
         {
-            TestInlineField(new TestExactInlineFieldInvoker());
+            TestInlineField(new TestInlineFieldInvoker());
         }
 
         [Test()]
@@ -427,19 +471,19 @@ namespace DataWF.Test.Common
             Assert.AreEqual(value + 1, testReference.Struct.Field, "Reflection Fail Set Operation");
         }
 
-        private void TestInlineField(IInvoker<TestClass, int> invoker, [CallerMemberName]string name = null)
+        private void TestInlineField(IInvoker<TestClass, int> invoker, [CallerMemberName] string name = null)
         {
             var x = invoker.GetValue(testReference);
             Assert.AreEqual(value, x, $"{name} Fail Get Operation");
             x++;
             invoker.SetValue(testReference, x);
-            Assert.AreEqual(value + 1, testReference.Struct.Field, $"{name} Fail Set Operation");
+            Assert.AreEqual(value + 1, testReference.Group.Struct.Field, $"{name} Fail Set Operation");
         }
 
         [Test()]
         public void BenchmarkInlineFieldExact()
         {
-            Benchmark("Inline Field", "Exact", new TestExactInlineFieldInvoker());
+            Benchmark("Inline Field", "Exact", new TestInlineFieldInvoker());
         }
 
         [Test()]
@@ -451,15 +495,15 @@ namespace DataWF.Test.Common
         }
 
         [Test()]
-        public void BenchmarkInlineFieldEmit()
+        public void BenchmarkInlineFieldExpression()
         {
-            Benchmark("Inline Field", "Emit", new ComplexInvoker<TestClass, int>("Struct.Field"));
+            Benchmark("Inline Field", "Expression", new ComplexInvoker<TestClass, int>("Struct.Field"));
         }
 
         [Test()]
         public void BenchmarkBoxingInlineFieldExact()
         {
-            BenchmarkBoxing("Inline Field", "Exact", new TestExactInlineFieldInvoker());
+            BenchmarkBoxing("Inline Field", "Exact", new TestInlineFieldInvoker());
         }
 
         [Test()]
@@ -471,9 +515,9 @@ namespace DataWF.Test.Common
         }
 
         [Test()]
-        public void BenchmarkBoxingInlineFieldEmit()
+        public void BenchmarkBoxingInlineFieldExpression()
         {
-            BenchmarkBoxing("Inline Field", "Emit", new ComplexInvoker<TestClass, int>("Struct.Field"));
+            BenchmarkBoxing("Inline Field", "Expression", new ComplexInvoker<TestClass, int>("Struct.Field"));
         }
 
         [Test()]
@@ -483,7 +527,16 @@ namespace DataWF.Test.Common
         }
         #endregion
 
-        public void Benchmark<T, V>(string category, string name, IInvoker<T, V> invoker)
+        private void TestProperty(IInvoker<TestClass, int> invoker, [CallerMemberName] string name = null)
+        {
+            var x = invoker.GetValue(testReference);
+            Assert.AreEqual(value, x, $"{name} Fail Get Operation");
+            invoker.SetValue(testReference, x + 1);
+            Assert.AreEqual(value + 1, invoker.GetValue(testReference), $"{name} Fail Set Operation");
+        }
+
+
+        public void Benchmark(string category, string name, IInvoker<TestClass, int> invoker)
         {
             Stopwatch watch = new Stopwatch();
             watch.Reset();
@@ -491,7 +544,7 @@ namespace DataWF.Test.Common
             for (int i = 0; i < count; i++)
             {
                 var width = invoker.GetValue(testReference);
-                width = default(V);
+                width += 1;
                 invoker.SetValue(testReference, width);
             }
             watch.Stop();
@@ -505,8 +558,8 @@ namespace DataWF.Test.Common
             watch.Start();
             for (int i = 0; i < count; i++)
             {
-                var width = invoker.GetValue(testReference);
-                width = 0;
+                var width = (int)invoker.GetValue(testReference);
+                width += 1;
                 invoker.SetValue(testReference, width);
             }
             watch.Stop();

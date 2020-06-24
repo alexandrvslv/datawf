@@ -537,26 +537,29 @@ namespace DataWF.Common
         public static PropertyInfo GetPropertyInfo(Type type, string name, out object index, bool generic, params Type[] types)
         {
             index = null;
+            string indexName = null;
             var propertyName = name;
             var paramIndexBegin = name.IndexOf('[');
             if (paramIndexBegin > -1)
             {
                 propertyName = name.Substring(0, paramIndexBegin);
                 var paramIndexEnd = name.IndexOf(']');
-                index = name.Substring(paramIndexBegin + 1, paramIndexEnd - paramIndexBegin);
-
+                indexName = name.Substring(paramIndexBegin + 1, paramIndexEnd - (paramIndexBegin + 1));
+                index = indexName;
             }
-            foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            var isItem = string.Equals(propertyName, "Item", StringComparison.Ordinal);
+            foreach (var property in properties)
             {
                 //var method = property.CanWrite ? property.GetGetMethod() : property.GetSetMethod();
                 if (string.Equals(property.Name, propertyName, StringComparison.Ordinal))//&& method.IsGenericMethod == generic
                 {
                     var parameters = property.GetIndexParameters();
-                    if (parameters.Length == 1 && index != null)
+                    if (parameters.Length == 1 && indexName != null)
                     {
                         var parameterType = parameters[0].ParameterType;
-                        index = Helper.Parse(index, parameterType);
-                        if (types == null || types.Length == 0)
+                        index = Helper.Parse(indexName, parameterType);
+                        if (index != null && (types == null || types.Length == 0))
                         {
                             types = new[] { parameterType };
                         }
@@ -564,7 +567,24 @@ namespace DataWF.Common
                     if (CompareParameters(parameters, types))
                         return property;
                 }
+                else if (isItem)
+                {
+                    var parameters = property.GetIndexParameters();
+                    if (parameters.Length == 1 && indexName != null)
+                    {
+                        var parameterType = parameters[0].ParameterType;
+                        index = Helper.Parse(indexName, parameterType);
+                        if (index != null && (types == null || types.Length == 0))
+                        {
+                            types = new[] { parameterType };
+                        }
+                        if (CompareParameters(parameters, types))
+                            return property;
+                    }
+
+                }
             }
+
 
             return null;
         }

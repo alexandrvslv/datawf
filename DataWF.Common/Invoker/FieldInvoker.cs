@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Reflection.Emit;
 using System.Reflection;
+using System.Linq.Expressions;
 
 namespace DataWF.Common
 {
     public class FieldInvoker<T, V> : ActionInvoker<T, V>
     {
         public FieldInvoker(FieldInfo info)
-            : base(info.Name, GetFieldGetInvoker(info), GetFieldSetInvoker(info))
+            : base(info.Name, GetExpressionGet(info), GetExpressionSet(info))
         { }
 
         public FieldInvoker(string name)
@@ -68,6 +69,23 @@ namespace DataWF.Common
             il.Emit(OpCodes.Ret);
 
             return (Action<T, V>)dynamicMethod.CreateDelegate(typeof(Action<T, V>));
+        }
+
+        public static Func<T, V> GetExpressionGet(FieldInfo info)
+        {
+            var param = Expression.Parameter(typeof(T), "target");
+            var property = Expression.Field(param, info);
+
+            return Expression.Lambda<Func<T, V>>(property, param).Compile();
+        }
+
+        public static Action<T, V> GetExpressionSet(FieldInfo info)
+        {
+            var param = Expression.Parameter(typeof(T), "target");
+            var value = Expression.Parameter(typeof(V), "value");
+            var proeprty = Expression.Field(param, info);
+
+            return Expression.Lambda<Action<T, V>>(Expression.Assign(proeprty, value), param, value).Compile();
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Reflection.Emit;
 
 namespace DataWF.Common
 {
-    public class MethodInvoker<T, V> : IndexInvoker<T, V, object[]>
+    public class MethodInvoker<T, V> : ActionIndexInvoker<T, V, object[]>
     {
         public MethodInvoker(MethodInfo infoGet)
             : base(infoGet.Name, GetMethodInvoker(infoGet))
