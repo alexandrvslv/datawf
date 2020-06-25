@@ -134,8 +134,16 @@ namespace DataWF.Common
                         {
                             var param = r == 0 ? target : locals[r - 1];
                             var setValue = r == list.Count - 1 ? value : locals[r];
-                            var call = Call(param, info, r);
-                            body.Add(Expression.Assign(call, setValue));
+
+                            if (TypeHelper.CanWrite(info.Info))
+                            {
+                                var call = Call(param, info, r);
+                                body.Add(Expression.Assign(call, setValue));
+                            }
+                            else
+                            {
+                                return null;
+                            }
                         }
                     }
                 }

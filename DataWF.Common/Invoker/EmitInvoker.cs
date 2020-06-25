@@ -155,7 +155,7 @@ namespace DataWF.Common
             {
                 var last = list.Last();
                 var emittype = typeof(ComplexInvoker<,>).MakeGenericType(type, TypeHelper.GetMemberType(last.Info));
-                return (IInvoker)CreateObject(emittype, new[] { typeof(string), typeof(List<MemberInfo>) }, new object[] { property, list }, true);
+                return (IInvoker)CreateObject(emittype, new[] { typeof(string), typeof(List<MemberParseInfo>) }, new object[] { property, list }, true);
             }
             return null;
         }

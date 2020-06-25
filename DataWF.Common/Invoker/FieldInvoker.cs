@@ -81,6 +81,10 @@ namespace DataWF.Common
 
         public static Action<T, V> GetExpressionSet(FieldInfo info)
         {
+            if (info.IsInitOnly)
+            {
+                return null;
+            }
             var param = Expression.Parameter(typeof(T), "target");
             var value = Expression.Parameter(typeof(V), "value");
             var proeprty = Expression.Field(param, info);

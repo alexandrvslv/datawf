@@ -126,6 +126,18 @@ namespace DataWF.Common
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
         }
 
+        public static bool CanWrite(MemberInfo info)
+        {
+            if (info is PropertyInfo propertyInfo
+                && (propertyInfo.CanWrite
+                || propertyInfo.GetSetMethod() != null))
+                return true;
+            else if (info is FieldInfo fieldInfo
+                && !fieldInfo.IsInitOnly)
+                return true;
+            return false;
+        }
+
         public static Type CheckNullable(Type type)
         {
             return type == null ? null : //Nullable.GetUnderlyingType(type) ?? type;
