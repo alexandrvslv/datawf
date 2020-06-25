@@ -100,21 +100,21 @@ namespace DataWF.Common
             return interfaceType.IsAssignableFrom(type);
         }
 
-        public static List<MemberInfo> GetMemberInfoList(Type type, string property)
+        public static List<MemberParseInfo> GetMemberInfoList(Type type, string property)
         {
-            var list = new List<MemberInfo>();
+            var list = new List<MemberParseInfo>();
             MemberInfo last = null;
             int i, s = 0;
             do
             {
                 i = property.IndexOf('.', s);
                 var memberName = property.Substring(s, (i > 0 ? i : property.Length) - s);
-                last = GetMemberInfo(last == null ? type : GetMemberType(last), memberName, false);
+                last = GetMemberInfo(last == null ? type : GetMemberType(last), memberName, out var index, false);
                 if (last == null)
                 {
                     break;
                 }
-                list.Add(last);
+                list.Add(new MemberParseInfo(last, index));
                 s = i + 1;
             }
             while (i > 0);
@@ -124,6 +124,18 @@ namespace DataWF.Common
         public static bool IsNullable(this Type type)
         {
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
+
+        public static bool CanWrite(MemberInfo info)
+        {
+            if (info is PropertyInfo propertyInfo
+                && (propertyInfo.CanWrite
+                || propertyInfo.GetSetMethod() != null))
+                return true;
+            else if (info is FieldInfo fieldInfo
+                && !fieldInfo.IsInitOnly)
+                return true;
+            return false;
         }
 
         public static Type CheckNullable(Type type)
@@ -503,23 +515,33 @@ namespace DataWF.Common
             return (PropertyInfo)minfo;
         }
 
-        public static MemberInfo GetMemberInfo(Type type, string name, bool generic = false, params Type[] types)
+        public static MemberInfo GetMemberInfo(Type type, string name)
         {
+            return GetMemberInfo(type, name, out _, false);
+        }
+
+        public static MemberInfo GetMemberInfo(Type type, string name, out object index, bool generic, params Type[] types)
+        {
+            index = null;
             if (type == null || name == null)
                 return null;
-            string cachename = string.Format("{0}.{1}{2}", type.FullName, name, generic ? "G" : "");
-            foreach (var t in types)
-                cachename += t.Name;
-            if (casheNames.TryGetValue(cachename, out MemberInfo mi))
-                return mi;
-
+            MemberInfo mi = null;
+            string cacheName = null;
+            if (name.IndexOf('[') < 0 || generic)
+            {
+                cacheName = string.Format("{0}.{1}{2}", type.FullName, name, generic ? "G" : "");
+                foreach (var t in types)
+                    cacheName += t.Name;
+                if (casheNames.TryGetValue(cacheName, out mi))
+                    return mi;
+            }
             if (type.IsInterface && string.Equals(name, nameof(ToString), StringComparison.Ordinal))
             {
                 mi = typeof(object).GetMethod(name, types);
             }
             if (mi == null)
             {
-                mi = GetPropertyInfo(type, name, generic, types);
+                mi = GetPropertyInfo(type, name, out index, generic, types);
             }
             if (mi == null)
             {
@@ -529,21 +551,66 @@ namespace DataWF.Common
             {
                 mi = GetMethodInfo(type, name, generic, types);
             }
-            casheNames[cachename] = mi;
+            if (cacheName != null)
+            {
+                casheNames[cacheName] = mi;
+            }
             return mi;
         }
 
-        public static PropertyInfo GetPropertyInfo(Type type, string name, bool generic, Type[] types)
+        public static PropertyInfo GetPropertyInfo(Type type, string name, out object index, bool generic, params Type[] types)
         {
-            foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+            index = null;
+            string indexName = null;
+            var propertyName = name;
+            var paramIndexBegin = name.IndexOf('[');
+            if (paramIndexBegin > -1)
+            {
+                propertyName = name.Substring(0, paramIndexBegin);
+                var paramIndexEnd = name.IndexOf(']');
+                indexName = name.Substring(paramIndexBegin + 1, paramIndexEnd - (paramIndexBegin + 1));
+                index = indexName;
+            }
+            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            var isItem = string.Equals(propertyName, "Item", StringComparison.Ordinal);
+            foreach (var property in properties)
             {
                 //var method = property.CanWrite ? property.GetGetMethod() : property.GetSetMethod();
-                if (string.Equals(property.Name, name, StringComparison.Ordinal))//&& method.IsGenericMethod == generic
+                if (string.Equals(property.Name, propertyName, StringComparison.Ordinal))//&& method.IsGenericMethod == generic
                 {
-                    if (CompareParameters(property.GetIndexParameters(), types))
+                    var parameters = property.GetIndexParameters();
+
+                    if (isItem && indexName != null && parameters.Length == 1)
+                    {
+                        var parameterType = parameters[0].ParameterType;
+                        index = Helper.Parse(indexName, parameterType);
+                        if (index != null && (types == null || types.Length == 0))
+                        {
+                            types = new[] { parameterType };
+                        }
+                    }
+
+                    if (CompareParameters(parameters, types))
                         return property;
                 }
+                else if (isItem && indexName != null)
+                {
+                    var parameters = property.GetIndexParameters();
+                    if (parameters.Length == 1)
+                    {
+                        var parameterType = parameters[0].ParameterType;
+                        index = Helper.Parse(indexName, parameterType);
+                        if (index != null && (types == null || types.Length == 0))
+                        {
+                            types = new[] { parameterType };
+                        }
+                        if (CompareParameters(parameters, types))
+                            return property;
+                    }
+
+                }
             }
+
 
             return null;
         }

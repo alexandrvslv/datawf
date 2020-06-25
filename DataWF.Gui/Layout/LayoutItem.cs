@@ -285,6 +285,14 @@ namespace DataWF.Gui
             base.InsertInternal(index, item);
         }
 
+        public override void AddRangeInternal(IEnumerable<T> list, bool checkUnique)
+        {
+            foreach (var item in list)
+            {
+                AddInternal(item);
+            }
+        }
+
         public override int AddInternal(T item)
         {
             if (Contains(item))

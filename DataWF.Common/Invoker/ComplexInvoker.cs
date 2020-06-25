@@ -3,13 +3,14 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Linq.Expressions;
 
 namespace DataWF.Common
 {
     public class ComplexInvoker<T, V> : ActionInvoker<T, V>
     {
-        public ComplexInvoker(string property, List<MemberInfo> list)
-            : base(property, GetInvokerGet(property, list), GetInvokerSet(property, list))
+        public ComplexInvoker(string property, List<MemberParseInfo> list)
+            : base(property, GetExpressionGet(property, list), GetExpressionSet(property, list))
         {
 
         }
@@ -19,10 +20,146 @@ namespace DataWF.Common
         {
         }
 
-        public static Func<T, V> GetInvokerGet(string name, List<MemberInfo> list)
+        public static Func<T, V> GetExpressionGet(string name, List<MemberParseInfo> list)
+        {
+            var type = typeof(T);
+            var body = (Expression)null;
+            var target = Expression.Parameter(typeof(T), "target");
+            for (int i = 0; i < list.Count; i++)
+            {
+                var info = list[i];
+                var param = (Expression)null;
+                if (i == 0)
+                {
+                    param = target;
+                }
+                else
+                {
+                    param = body;
+                }
+                Expression call = Call(param, info, i);
+                body = CreateNullPropagationExpression(body ?? param, call, info.Info);
+            }
+            return Expression.Lambda<Func<T, V>>(body, target).Compile();
+        }
+
+        private static Expression Call(Expression param, MemberParseInfo info, int i)
+        {
+            var call = (Expression)null;
+            if (info.Info is PropertyInfo propertyInfo)
+            {
+                if (info.Index != null)
+                {
+                    var index = Expression.Constant(info.Index, info.Index.GetType());
+                    call = Expression.Property(param, propertyInfo, index);
+                }
+                else
+                {
+                    call = Expression.Property(param, propertyInfo);
+                }
+            }
+            else if (info.Info is FieldInfo fieldInfo)
+            {
+                call = Expression.Field(param, fieldInfo);
+            }
+            else if (info.Info is MethodInfo methodInfo)
+            {
+                call = Expression.Call(param, methodInfo);
+            }
+
+            return call;
+        }
+
+        //https://stackoverflow.com/a/39617419/4682355
+        public static Expression CreateNullPropagationExpression(Expression o, Expression call, MemberInfo memberInfo)
+        {
+            Expression propertyAccess = call;
+
+            var propertyType = TypeHelper.GetMemberType(memberInfo);
+
+            if (propertyType.IsValueType && !TypeHelper.IsNullable(propertyType))
+                return propertyAccess;
+
+            var nullResult = Expression.Default(propertyAccess.Type);
+
+            var condition = Expression.Equal(o, Expression.Constant(null, o.Type));
+
+            return Expression.Condition(condition, nullResult, propertyAccess);
+        }
+
+        public static Action<T, V> GetExpressionSet(string name, List<MemberParseInfo> list)
+        {
+            var last = list.Last();
+            var first = list.First();
+            var target = Expression.Parameter(typeof(T), "target");
+            var value = Expression.Parameter(typeof(V), "value");
+            var returnLabel = Expression.Label();
+            var locals = new ParameterExpression[list.Count - 1];
+            var labels = new LabelTarget[list.Count];
+            List<Expression> body = new List<Expression>();
+            for (int i = 0; i < list.Count - 1; i++)
+            {
+                var info = list[i];
+                locals[i] = Expression.Variable(TypeHelper.GetMemberType(info.Info), info.Info.Name.ToLower());
+            }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                labels[i] = Expression.Label();
+            }
+            int j = 0;
+            for (int i = 0; i < list.Count; i++)
+            {
+                var info = list[i];
+                var type = TypeHelper.GetMemberType(info.Info);
+                if (i < list.Count - 1)
+                {
+                    var call = Call(i == 0 ? target : locals[i - 1], info, i);
+                    body.Add(Expression.Assign(locals[i], call));
+
+                    if (!type.IsValueType || TypeHelper.IsNullable(type))
+                    {
+                        body.Add(Expression.IfThenElse(Expression.Equal(locals[i], Expression.Constant(null, type)),
+                            Expression.Return(returnLabel),
+                            Expression.Label(labels[j++])));
+                    }
+                }
+                else
+                {
+                    for (int r = list.Count - 1; r >= 0; r--)
+                    {
+                        info = list[r];
+                        type = TypeHelper.GetMemberType(info.Info);
+                        if (type.IsValueType || r == list.Count - 1)
+                        {
+                            var param = r == 0 ? target : locals[r - 1];
+                            var setValue = r == list.Count - 1 ? value : locals[r];
+
+                            if (TypeHelper.CanWrite(info.Info))
+                            {
+                                var call = Call(param, info, r);
+                                body.Add(Expression.Assign(call, setValue));
+                            }
+                            else
+                            {
+                                return null;
+                            }
+                        }
+                    }
+                }
+            }
+            if (j > 0)
+            {
+                body.Add(Expression.Label(returnLabel));
+            }
+
+            return Expression.Lambda<Action<T, V>>(Expression.Block(locals, body), target, value).Compile();
+        }
+
+        public static Func<T, V> GetInvokerGet(string name, List<MemberParseInfo> list)
         {
             var first = list.First();
-            var method = new DynamicMethod($"{first.DeclaringType.Name}.{name}Get",
+            var method = new DynamicMethod($"{first.Info.DeclaringType.Name}.{name}Get",
                                            typeof(V),
                                            new Type[] { typeof(T) },
                                            true);
@@ -33,12 +170,12 @@ namespace DataWF.Common
             for (int i = 0; i < list.Count; i++)
             {
                 var info = list[i];
-                locals[i] = il.DeclareLocal(TypeHelper.GetMemberType(info));
+                locals[i] = il.DeclareLocal(TypeHelper.GetMemberType(info.Info));
             }
             for (int i = 0; i < lables.Length; i++)
             {
                 var info = list[i / 2];
-                if (!TypeHelper.GetMemberType(info).IsValueType)
+                if (!TypeHelper.GetMemberType(info.Info).IsValueType)
                     lables[i] = il.DefineLabel();
             }
 
@@ -47,8 +184,8 @@ namespace DataWF.Common
             for (int i = 0; i < list.Count; i++)
             {
                 var info = list[i];
-                var type = TypeHelper.GetMemberType(info);
-                EmitCallGet(il, info);
+                var type = TypeHelper.GetMemberType(info.Info);
+                EmitCallGet(il, info.Info);
                 if (i < list.Count - 1)
                 {
                     il.Emit(OpCodes.Stloc, locals[i]);
@@ -68,24 +205,24 @@ namespace DataWF.Common
             return (Func<T, V>)method.CreateDelegate(typeof(Func<T, V>));
         }
 
-        public static Action<T, V> GetInvokerSet(string name, List<MemberInfo> list)
+        public static Action<T, V> GetInvokerSet(string name, List<MemberParseInfo> list)
         {
             var last = list.Last();
             foreach (var item in list)
             {
-                if (item is PropertyInfo
-                    && ((PropertyInfo)item).PropertyType.IsValueType
-                    && (!((PropertyInfo)item).CanWrite || ((PropertyInfo)item).GetSetMethod() == null))
+                if (item.Info is PropertyInfo propertyInfo
+                    && propertyInfo.PropertyType.IsValueType
+                    && (!propertyInfo.CanWrite || propertyInfo.GetSetMethod() == null))
                     return null;
             }
-            if (last is MethodInfo
-                || (last is PropertyInfo
-                    && (!((PropertyInfo)last).CanWrite || ((PropertyInfo)last).GetSetMethod() == null)))
+            if (last.Info is MethodInfo
+                || (last.Info is PropertyInfo lastPropertyInfo
+                    && (!lastPropertyInfo.CanWrite || lastPropertyInfo.GetSetMethod() == null)))
             {
                 return null;
             }
             var first = list.First();
-            DynamicMethod method = new DynamicMethod($"{first.DeclaringType.Name}.{name}Set",
+            DynamicMethod method = new DynamicMethod($"{first.Info.DeclaringType.Name}.{name}Set",
                                                      typeof(void),
                                                      new Type[] { typeof(T), typeof(V) }, true);
 
@@ -95,7 +232,7 @@ namespace DataWF.Common
             for (int i = 0; i < list.Count - 1; i++)
             {
                 var info = list[i];
-                locals[i] = il.DeclareLocal(TypeHelper.GetMemberType(info));
+                locals[i] = il.DeclareLocal(TypeHelper.GetMemberType(info.Info));
             }
             for (int i = 0; i <= list.Count; i++)
             {
@@ -106,10 +243,10 @@ namespace DataWF.Common
             for (int i = 0; i < list.Count; i++)
             {
                 var info = list[i];
-                var type = TypeHelper.GetMemberType(info);
+                var type = TypeHelper.GetMemberType(info.Info);
                 if (i < list.Count - 1)
                 {
-                    EmitCallGet(il, info);
+                    EmitCallGet(il, info.Info);
 
                     il.Emit(OpCodes.Stloc, locals[i]);
                     if (!type.IsValueType)
@@ -123,11 +260,11 @@ namespace DataWF.Common
                 else
                 {
                     il.Emit(OpCodes.Ldarg_1);
-                    EmitCallSet(il, info);
+                    EmitCallSet(il, info.Info);
                     for (int r = list.Count - 2; r >= 0; r--)
                     {
                         info = list[r];
-                        type = TypeHelper.GetMemberType(info);
+                        type = TypeHelper.GetMemberType(info.Info);
                         if (type.IsValueType)
                         {
                             if (r == 0)
@@ -135,7 +272,7 @@ namespace DataWF.Common
                             else
                                 EmitLoadLocal(il, locals[r - 1]);
                             il.Emit(OpCodes.Ldloc, locals[r]);//EmitLoadLocal(il, locals[r]);
-                            EmitCallSet(il, info);
+                            EmitCallSet(il, info.Info);
                         }
                     }
                 }

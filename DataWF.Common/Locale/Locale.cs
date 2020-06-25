@@ -121,7 +121,7 @@ namespace DataWF.Common
             var builder = new StringBuilder();
             foreach (var info in TypeHelper.GetMemberInfoList(type, name))
             {
-                builder.Append(Get(GetTypeCategory(type), info.Name));
+                builder.Append(Get(GetTypeCategory(type), info.Info.Name));
                 builder.Append(separator);
             }
             builder.Length -= separator.Length;

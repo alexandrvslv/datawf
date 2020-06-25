@@ -1,13 +1,25 @@
 ﻿using System;
 using System.Reflection.Emit;
 using System.Reflection;
+using System.Linq.Expressions;
 
 namespace DataWF.Common
 {
-    public class IndexPropertyInvoker<T, V, K> : IndexInvoker<T, V, K>
+    public class IndexPropertyInvoker<T, V, K> : ActionIndexInvoker<T, V, K>
     {
+        public static IndexPropertyInvoker<T, V, K> Create(string name)
+        {
+            var property = (PropertyInfo)TypeHelper.GetMemberInfo(typeof(T), name, out var index, false);
+            return new IndexPropertyInvoker<T, V, K>(property, index);
+        }
+
+        public IndexPropertyInvoker(PropertyInfo info, object index)
+            : this(info, (K)index)
+        {
+        }
+
         public IndexPropertyInvoker(PropertyInfo info, K index)
-            : base(info.Name, GetInvokerGet(info.GetGetMethod()), info.CanWrite ? GetInvokerSet(info.GetSetMethod()) : null)
+            : base(info.Name, GetExpressionGet(info), info.CanWrite ? GetExpressionSet(info) : null)
         {
             Index = index;
         }
@@ -93,6 +105,25 @@ namespace DataWF.Common
 
             il.Emit(OpCodes.Ret);
             return (Action<T, K, V>)method.CreateDelegate(typeof(Action<T, K, V>));
+        }
+
+        public static Func<T, K, V> GetExpressionGet(PropertyInfo info)
+        {
+            var index = Expression.Parameter(typeof(K), "index");
+            var target = Expression.Parameter(typeof(T), "target");
+            var property = Expression.Property(target, info, index);
+
+            return Expression.Lambda<Func<T, K, V>>(property, target, index).Compile();
+        }
+
+        public static Action<T, K, V> GetExpressionSet(PropertyInfo info)
+        {
+            var index = Expression.Parameter(typeof(K), "index");
+            var target = Expression.Parameter(typeof(T), "target");
+            var value = Expression.Parameter(typeof(V), "value");
+            var property = Expression.Property(target, info, index);
+
+            return Expression.Lambda<Action<T, K, V>>(Expression.Assign(property, value), target, index, value).Compile();
         }
     }
 
