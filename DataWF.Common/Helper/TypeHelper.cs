@@ -503,6 +503,11 @@ namespace DataWF.Common
             return (PropertyInfo)minfo;
         }
 
+        public static MemberInfo GetMemberInfo(Type type, string name)
+        {
+            return GetMemberInfo(type, name, out _, false);
+        }
+
         public static MemberInfo GetMemberInfo(Type type, string name, out object index, bool generic, params Type[] types)
         {
             index = null;
