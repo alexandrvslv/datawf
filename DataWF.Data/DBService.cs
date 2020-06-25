@@ -81,52 +81,6 @@ namespace DataWF.Data
 
         public static event EventHandler<DBSchemaChangedArgs> DBSchemaChanged;
 
-        public static void OnDBSchemaChanged(DBSchemaItem item, DDLType type)
-        {
-            if (type == DDLType.Default
-                || !item.Containers.Any()
-                || item.Schema == null
-                || !item.Schema.Containers.Any()
-                || item.Schema.IsSynchronizing)
-                return;
-            if (item is IDBTableContent tabled)
-            {
-                if (tabled.Table is IDBVirtualTable || !tabled.Table.Containers.Any())
-                    return;
-                if (item is DBColumn column && column.ColumnType != DBColumnTypes.Default)
-                    return;
-            }
-            DBSchemaChange change = null;
-
-            var list = Changes.Select(DBSchemaChangeItemInvoker, CompareType.Equal, item).ToList();
-
-            if (list.Count > 0)
-            {
-                change = list[0];
-                if (change.Change != type)
-                {
-                    if (change.Change == DDLType.Create && type == DDLType.Alter)
-                        return;
-                    change = null;
-                }
-            }
-
-            if (change == null)
-            {
-                change = new DBSchemaChange() { Item = item, Change = type };
-                Changes.Add(change);
-            }
-            if (item is DBTable table)
-            {
-                foreach (var column in table.Columns)
-                {
-                    OnDBSchemaChanged(column, DDLType.Create);
-                }
-            }
-
-            DBSchemaChanged?.Invoke(item, new DBSchemaChangedArgs { Item = item, Type = type });
-        }
-
         //public static event DBItemEditEventHandler RowAdded;
 
         //internal static void OnAdded(DBItem e)
@@ -236,13 +190,79 @@ namespace DataWF.Data
             get { return schems; }
         }
 
+        public static void OnDBSchemaChanged(DBSchemaItem item, DDLType type)
+        {
+            if (type == DDLType.Default
+                || !item.Containers.Any()
+                || item.Schema == null
+                || !item.Schema.Containers.Any()
+                || item.Schema.IsSynchronizing)
+                return;
+            if (item is IDBTableContent tabled)
+            {
+                if (tabled.Table is IDBVirtualTable || !tabled.Table.Containers.Any())
+                    return;
+                if (item is DBColumn column && column.ColumnType != DBColumnTypes.Default)
+                    return;
+            }
+            DBSchemaChange change = null;
+
+            var list = Changes.Select(DBSchemaChangeItemInvoker, CompareType.Equal, item).ToList();
+
+            if (list.Count > 0)
+            {
+                change = list[0];
+                if (change.Change != type)
+                {
+                    if (change.Change == DDLType.Create && type == DDLType.Alter)
+                        return;
+                    change = null;
+                }
+            }
+
+            if (change == null)
+            {
+                change = new DBSchemaChange() { Item = item, Change = type, Order = Changes.Count };
+                Changes.Add(change);
+            }
+            if (item is DBTable table)
+            {
+                foreach (var column in table.Columns)
+                {
+                    OnDBSchemaChanged(column, DDLType.Create);
+                }
+            }
+
+            DBSchemaChanged?.Invoke(item, new DBSchemaChangedArgs { Item = item, Type = type });
+        }
+
         public static void CommitChanges()
         {
             if (Changes.Count == 0)
                 return;
             foreach (var schema in schems)
             {
-                foreach (var item in Changes.Where(p => p.Item.Schema == schema))
+                var chages = Changes.Where(p => p.Item.Schema == schema).ToList();
+                chages.Sort((a, b) =>
+                {
+                    if (a.Item is DBTable tableA)
+                    {
+                        if (b.Item is DBTable tableB)
+                        {
+                            return DBTableComparer.Instance.Compare(tableA, tableB, true);
+                        }
+                        else
+                        {
+                            return -1;
+                        }
+                    }
+                    else if (b.Item is DBTable)
+                    {
+                        return 1;
+                    }
+                    return a.Order.CompareTo(b.Order);
+                });
+                foreach (var item in chages)
                 {
                     string val = item.Generate();
                     if (item.Check && !string.IsNullOrEmpty(val))
@@ -498,5 +518,7 @@ namespace DataWF.Data
             get { return check; }
             set { check = value; }
         }
+
+        public int Order { get; set; }
     }
 }

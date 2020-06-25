@@ -389,7 +389,7 @@ namespace DataWF.Data
             foreach (DBForeignKey reference in BaseTable.Foreigns)
             {
                 var existColumn = ParseColumn(reference.Column.Name);
-                if (existColumn == null)
+                if (existColumn == null || reference.Reference == null)
                     continue;
                 var exist = Foreigns.GetByColumns(existColumn, reference.Reference);
                 if (exist == null)

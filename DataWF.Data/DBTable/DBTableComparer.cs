@@ -19,6 +19,7 @@
 */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Data
 {
@@ -26,37 +27,59 @@ namespace DataWF.Data
     {
         public static readonly DBTableComparer Instance = new DBTableComparer();
 
-        public int Compare(DBTable x, DBTable y)
+        public int Compare(DBTable a, DBTable b)
+        {
+            return Compare(a, b, false);
+        }
+
+        public int Compare(DBTable a, DBTable b, bool referenceCheck)
         {
             var rez = 0;
-            if (x is IDBLogTable)
+            if (a is IDBLogTable)
             {
-                if (!(y is IDBLogTable))
+                if (!(b is IDBLogTable))
                 {
                     rez = 1;
                 }
             }
-            else if (y is IDBLogTable)
+            else if (b is IDBLogTable)
             {
                 rez = -1;
             }
             if (rez == 0)
             {
-                if (x is IDBVirtualTable)
+                if (a is IDBVirtualTable)
                 {
-                    if (!(y is IDBVirtualTable))
+                    if (!(b is IDBVirtualTable))
                     {
                         rez = 1;
                     }
                 }
-                else if (y is IDBVirtualTable)
+                else if (b is IDBVirtualTable)
                 {
                     rez = -1;
                 }
             }
             if (rez == 0)
             {
-                rez = string.Compare(x.Name, y.Name, StringComparison.Ordinal);
+                if (referenceCheck)
+                {
+                    var referenceA = a.Columns.GetIsReference().Select(p => p.ReferenceTableName);
+                    var referenceB = b.Columns.GetIsReference().Select(p => p.ReferenceTableName);
+
+                    if (referenceA.Contains(b.FullName))
+                    {
+                        rez = 1;
+                    }
+                    else if (referenceB.Contains(a.FullName))
+                    {
+                        rez = -1;
+                    }
+                }
+                if (rez == 0)
+                {
+                    rez = string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+                }
             }
 
             return rez;

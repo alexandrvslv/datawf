@@ -37,7 +37,7 @@ namespace DataWF.Data
             Indexes.Add(DBColumn.ReferencePropertyNameInvoker<T>.Instance);
             Indexes.Add(DBColumn.IsViewInvoker<T>.Instance);
             Indexes.Add(DBColumn.IsReferenceInvoker<T>.Instance);
-            Indexes.Add(DBColumn.ReferenceTableInvoker<T>.Instance);
+            //Indexes.Add(DBColumn.ReferenceTableInvoker<T>.Instance);
         }
 
         protected override void OnPropertyChanged(string property)
@@ -144,7 +144,7 @@ namespace DataWF.Data
 
         public IEnumerable<DBColumn> GetByReference(DBTable table)
         {
-            return Select(DBColumn.ReferenceTableInvoker<T>.Instance, CompareType.Equal, table.Name);
+            return Select(DBColumn.ReferenceTableNameInvoker<T>.Instance, CompareType.Equal, table.Name);
         }
 
         public IEnumerable<DBColumn> GetIsReference()
@@ -190,5 +190,5 @@ namespace DataWF.Data
         }
     }
 
-   
+
 }

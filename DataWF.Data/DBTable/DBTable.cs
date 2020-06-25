@@ -490,7 +490,6 @@ namespace DataWF.Data
         public abstract void OnItemChanged<V>(DBItem item, string proeprty, DBColumn column, V value);
         public abstract void OnItemChanged(DBItem item, string proeprty, DBColumn column, object value);
 
-
         public abstract void Trunc();
 
         public bool IsSerializeableColumn(DBColumn column, Type type)

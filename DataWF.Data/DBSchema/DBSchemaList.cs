@@ -141,29 +141,11 @@ namespace DataWF.Data
         {
             if (string.IsNullOrEmpty(name))
                 return null;
-            DBColumn column = null;
             DBTable table = ParseTable(name, schema);
 
             int index = name.LastIndexOf('.');
             name = index < 0 ? name : name.Substring(index + 1);
-            if (schema == null)
-                schema = DefaultSchema;
-
-
-            if (table != null)
-            {
-                column = table.ParseColumn(name);
-            }
-            else if (schema != null)
-            {
-                foreach (var t in schema.Tables)
-                {
-                    column = t.Columns[name];
-                    if (column != null)
-                        break;
-                }
-            }
-            return column;
+            return table?.ParseColumn(name);
         }
 
         public DBTable ParseTableByTypeName(string code)

@@ -42,6 +42,7 @@ namespace DataWF.Data
 
         public override int AddInternal(DBTable item)
         {
+            item.Schema = Schema;
             var index = base.AddInternal(item);
             if (item is IDBVirtualTable virtualTable)
             {

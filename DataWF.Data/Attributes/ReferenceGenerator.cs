@@ -92,9 +92,10 @@ namespace DataWF.Data
             {
                 throw new Exception($"{nameof(ReferenceAttribute)} is not initialized!");
             }
+            var referenceTable = CheckReference();
+
             if (ForeignKey == null)
             {
-                var referenceTable = CheckReference();
 
                 ForeignKey = new DBForeignKey()
                 {
@@ -106,6 +107,7 @@ namespace DataWF.Data
                 Table.Table.Foreigns.Add(ForeignKey);
             }
             Column.Column.IsReference = true;
+            ForeignKey.Reference = referenceTable.PrimaryKey;
             ForeignKey.Property = PropertyInfo.Name;
             ForeignKey.PropertyInfo = PropertyInfo;
             if (ForeignKey.Invoker == null)
