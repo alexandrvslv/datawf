@@ -50,7 +50,7 @@ namespace DataWF.Common
             {
                 if (info.Index != null)
                 {
-                    var index = Expression.Parameter(info.Index.GetType());
+                    var index = Expression.Constant(info.Index, info.Index.GetType());
                     call = Expression.Property(param, propertyInfo, index);
                 }
                 else

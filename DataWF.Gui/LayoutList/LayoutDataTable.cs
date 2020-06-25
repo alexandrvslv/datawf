@@ -40,7 +40,7 @@ namespace DataWF.Gui
                     {
                         Name = name,
                         DataColumn = column,
-                        Invoker = new IndexInvoker<DataRowView, object, int>(name,
+                        Invoker = new ActionIndexInvoker<DataRowView, object, int>(name,
                                                                       (row, index) => row[index],
                                                                       (row, index, value) => row[index] = value)
                         {

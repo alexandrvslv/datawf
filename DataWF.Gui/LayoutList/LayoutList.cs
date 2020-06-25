@@ -2390,7 +2390,7 @@ namespace DataWF.Gui
         public virtual LayoutField CreateField(LayoutFieldInfo info, LayoutField group, string name)
         {
             var member = TypeHelper.GetMemberInfoList(FieldType, name).LastOrDefault();
-            var categoryName = TypeHelper.GetCategory(member);
+            var categoryName = TypeHelper.GetCategory(member.Info);
             if (group != null)
                 categoryName = group.CategoryName;
             var category = info.Categories[categoryName];
@@ -2505,18 +2505,18 @@ namespace DataWF.Gui
             {
                 cell.Invoker = EmitInvoker.Initialize(type, cell.Name);
             }
-            cell.Format = TypeHelper.GetDefaultFormat(member);
-            cell.Description = TypeHelper.GetDescription(member);
-            cell.Password = TypeHelper.IsPassword(member);
-            cell.ReadOnly = TypeHelper.IsReadOnly(member);
+            cell.Format = TypeHelper.GetDefaultFormat(member.Info);
+            cell.Description = TypeHelper.GetDescription(member.Info);
+            cell.Password = TypeHelper.IsPassword(member.Info);
+            cell.ReadOnly = TypeHelper.IsReadOnly(member.Info);
 
             if (cell is LayoutColumn)
             {
                 if (cell.Visible && checkView)
                 {
-                    ((LayoutColumn)cell).Visible = TypeHelper.GetBrowsable(member);
+                    ((LayoutColumn)cell).Visible = TypeHelper.GetBrowsable(member.Info);
                 }
-                ((LayoutColumn)cell).Validate = TypeHelper.IsPassword(member);
+                ((LayoutColumn)cell).Validate = TypeHelper.IsPassword(member.Info);
                 if (((LayoutColumn)cell).Map == null && cell.DataType.IsPrimitive)
                 {
                     ((LayoutColumn)cell).Width *= 0.7;

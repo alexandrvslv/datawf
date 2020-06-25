@@ -20,4 +20,5 @@ namespace DataWF.Test.Common
         public override void SetValue(TestClass target, int index, int value) => target[index] = value;
 
     }
+
 }

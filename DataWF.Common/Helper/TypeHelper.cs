@@ -508,12 +508,16 @@ namespace DataWF.Common
             index = null;
             if (type == null || name == null)
                 return null;
-            string cachename = string.Format("{0}.{1}{2}", type.FullName, name, generic ? "G" : "");
-            foreach (var t in types)
-                cachename += t.Name;
-            if (casheNames.TryGetValue(cachename, out MemberInfo mi))
-                return mi;
-
+            MemberInfo mi = null;
+            string cacheName = null;
+            if (name.IndexOf('[') < 0 || generic)
+            {
+                cacheName = string.Format("{0}.{1}{2}", type.FullName, name, generic ? "G" : "");
+                foreach (var t in types)
+                    cacheName += t.Name;
+                if (casheNames.TryGetValue(cacheName, out mi))
+                    return mi;
+            }
             if (type.IsInterface && string.Equals(name, nameof(ToString), StringComparison.Ordinal))
             {
                 mi = typeof(object).GetMethod(name, types);
@@ -530,7 +534,10 @@ namespace DataWF.Common
             {
                 mi = GetMethodInfo(type, name, generic, types);
             }
-            casheNames[cachename] = mi;
+            if (cacheName != null)
+            {
+                casheNames[cacheName] = mi;
+            }
             return mi;
         }
 
@@ -555,7 +562,8 @@ namespace DataWF.Common
                 if (string.Equals(property.Name, propertyName, StringComparison.Ordinal))//&& method.IsGenericMethod == generic
                 {
                     var parameters = property.GetIndexParameters();
-                    if (parameters.Length == 1 && indexName != null)
+
+                    if (isItem && indexName != null && parameters.Length == 1)
                     {
                         var parameterType = parameters[0].ParameterType;
                         index = Helper.Parse(indexName, parameterType);
@@ -564,13 +572,14 @@ namespace DataWF.Common
                             types = new[] { parameterType };
                         }
                     }
+
                     if (CompareParameters(parameters, types))
                         return property;
                 }
-                else if (isItem)
+                else if (isItem && indexName != null)
                 {
                     var parameters = property.GetIndexParameters();
-                    if (parameters.Length == 1 && indexName != null)
+                    if (parameters.Length == 1)
                     {
                         var parameterType = parameters[0].ParameterType;
                         index = Helper.Parse(indexName, parameterType);

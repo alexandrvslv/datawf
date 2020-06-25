@@ -59,7 +59,7 @@ namespace DataWF.Test.Common
                 testReference = new TestClass();
             }
             watch.Stop();
-            BenchmarkResult.Add("Ctors", "Exact", watch.Elapsed);
+            BenchmarkResult.Add("Ctors", "Direct", watch.Elapsed);
         }
 
         [Test()]
@@ -74,7 +74,7 @@ namespace DataWF.Test.Common
                 testReference = (TestClass)ctor.Create();
             }
             watch.Stop();
-            BenchmarkResult.Add("Ctors", "Emit", watch.Elapsed);
+            BenchmarkResult.Add("Ctors", "Expression", watch.Elapsed);
         }
 
         [Test()]
@@ -142,7 +142,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkPropertyExact()
         {
-            Benchmark("Property", "Exact", new TestPropertyInvoker());
+            Benchmark("Property", "Direct", new TestPropertyInvoker());
         }
 
         [Test()]
@@ -156,13 +156,13 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkPropertyExpression()
         {
-            Benchmark("Property", "Emit", new PropertyInvoker<TestClass, int>("X"));
+            Benchmark("Property", "Expression", new PropertyInvoker<TestClass, int>("X"));
         }
 
         [Test()]
         public void BenchmarkBoxingPropertyExact()
         {
-            BenchmarkBoxing("Property", "Exact", new TestPropertyInvoker());
+            BenchmarkBoxing("Property", "Direct", new TestPropertyInvoker());
         }
 
         [Test()]
@@ -176,7 +176,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingPropertyExpression()
         {
-            BenchmarkBoxing("Property", "Emit", new PropertyInvoker<TestClass, int>("X"));
+            BenchmarkBoxing("Property", "Expression", new PropertyInvoker<TestClass, int>("X"));
         }
 
         [Test()]
@@ -190,7 +190,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void PropertyIndexExpression()
         {
-            TestProperty(new IndexPropertyInvoker<TestClass, int, int>("Item[1]"));
+            TestProperty(IndexPropertyInvoker<TestClass, int, int>.Create("Item[1]"));
         }
 
         [Test()]
@@ -211,13 +211,13 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkIndexPropertyExact()
         {
-            Benchmark("Property", "Exact", new TestIndexInvoker(1));
+            Benchmark("Index", "Direct", new TestIndexInvoker(1));
         }
 
         [Test()]
         public void BenchmarkIndexPropertyAction()
         {
-            Benchmark("Property", "Action", new ActionIndexInvoker<TestClass, int, int>("Item[1]",
+            Benchmark("Index", "Action", new ActionIndexInvoker<TestClass, int, int>("Item[1]",
                                                                (item, index) => item[index],
                                                                (item, index, value) => item[index] = value)
             { Index = 1 });
@@ -226,7 +226,28 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkIndexPropertyExpression()
         {
-            Benchmark("Property", "Expression", new IndexPropertyInvoker<TestClass, int, int>("Item[1]"));
+            Benchmark("Index", "Expression", IndexPropertyInvoker<TestClass, int, int>.Create("Item[1]"));
+        }
+
+
+        [Test()]
+        public void BenchmarkIndexInlinePropertyExact()
+        {
+            Benchmark("Inline Index", "Direct", new TestInlineIndexInvoker());
+        }
+
+        [Test()]
+        public void BenchmarkIndexInlinePropertyAction()
+        {
+            Benchmark("Inline Index", "Action", new ActionInvoker<TestClass, int>("Group.Item[1]",
+                                                               (item) => item.Group?[1] ?? 0,
+                                                               (item, value) => item.Group[1] = value));
+        }
+
+        [Test()]
+        public void BenchmarkIndexInlinePropertyExpression()
+        {
+            Benchmark("Inline Index", "Expression", new ComplexInvoker<TestClass, int>("Group.Item[1]"));
         }
 
         #endregion
@@ -281,7 +302,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkInlinePropertyExact()
         {
-            Benchmark("Inline Property", "Exact", new TestInlinePropertyInvoker());
+            Benchmark("Inline Property", "Direct", new TestInlinePropertyInvoker());
         }
 
         [Test()]
@@ -309,7 +330,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingInlinePropertyExact()
         {
-            BenchmarkBoxing("Inline Property", "Exact", new TestInlinePropertyInvoker());
+            BenchmarkBoxing("Inline Property", "Direct", new TestInlinePropertyInvoker());
         }
 
         [Test()]
@@ -386,7 +407,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkFieldExact()
         {
-            Benchmark("Field", "Exact", new TestFieldInvoker());
+            Benchmark("Field", "Direct", new TestFieldInvoker());
         }
 
         [Test()]
@@ -406,7 +427,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingFieldExact()
         {
-            BenchmarkBoxing("Field", "Exact", new TestFieldInvoker());
+            BenchmarkBoxing("Field", "Direct", new TestFieldInvoker());
         }
 
         [Test()]
@@ -483,7 +504,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkInlineFieldExact()
         {
-            Benchmark("Inline Field", "Exact", new TestInlineFieldInvoker());
+            Benchmark("Inline Field", "Direct", new TestInlineFieldInvoker());
         }
 
         [Test()]
@@ -503,7 +524,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingInlineFieldExact()
         {
-            BenchmarkBoxing("Inline Field", "Exact", new TestInlineFieldInvoker());
+            BenchmarkBoxing("Inline Field", "Direct", new TestInlineFieldInvoker());
         }
 
         [Test()]

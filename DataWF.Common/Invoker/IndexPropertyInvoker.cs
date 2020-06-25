@@ -7,9 +7,10 @@ namespace DataWF.Common
 {
     public class IndexPropertyInvoker<T, V, K> : ActionIndexInvoker<T, V, K>
     {
-        public IndexPropertyInvoker(string name)
-            : this((PropertyInfo)TypeHelper.GetMemberInfo(typeof(T), name, out var index, false), index)
+        public static IndexPropertyInvoker<T, V, K> Create(string name)
         {
+            var property = (PropertyInfo)TypeHelper.GetMemberInfo(typeof(T), name, out var index, false);
+            return new IndexPropertyInvoker<T, V, K>(property, index);
         }
 
         public IndexPropertyInvoker(PropertyInfo info, object index)

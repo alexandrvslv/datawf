@@ -23,7 +23,7 @@ namespace DataWF.Common
 
         public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
 
-        public Type DataType { get; }// { get { return typeof(V); } }
+        public Type DataType { get; set; }// { get { return typeof(V); } }
 
         public Type TargetType { get { return typeof(T); } }
 
@@ -106,25 +106,6 @@ namespace DataWF.Common
         {
             var value = JsonSerializer.Deserialize<V>(ref reader, option);
             SetValue((T)item, value);
-        }
-    }
-
-    public abstract class NullableInvoker<T, V> : Invoker<T, V?> where V : struct
-    {
-        public override InvokerComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
-        {
-            type = type ?? typeof(T);
-            return (InvokerComparer)Activator.CreateInstance(typeof(NullableInvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, direction);
-        }
-
-        public override InvokerComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
-        {
-            return new NullableInvokerComparer<TT, V>(this, direction);
-        }
-
-        public override bool CheckItem(T item, object typedValue, CompareType comparer, IComparer comparision)
-        {
-            return ListHelper.CheckItemN<V>(GetValue(item), typedValue, comparer, (IComparer<V?>)comparision);//
         }
     }
 }

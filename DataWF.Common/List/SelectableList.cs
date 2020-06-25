@@ -375,7 +375,7 @@ namespace DataWF.Common
             OnPropertyChanged(nameof(SyncRoot));
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName]string property = "")
+        protected virtual void OnPropertyChanged([CallerMemberName] string property = "")
         {
             if (PropertyChanged != null)
             {
@@ -639,7 +639,7 @@ namespace DataWF.Common
             Remove(items[index], index);
         }
 
-        public void AddRangeInternal(IEnumerable<T> list, bool checkUnique)
+        public virtual void AddRangeInternal(IEnumerable<T> list, bool checkUnique)
         {
             lock (lockObject)
             {
