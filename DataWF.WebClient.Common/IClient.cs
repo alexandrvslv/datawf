@@ -117,7 +117,6 @@ namespace DataWF.Common
 
     public interface IModelView<T> : IModelView
     {
-        IClient BaseClient { get; }
         new T SelectedItem { get; set; }
         new IFilterable<T> Items { get; set; }
         new Query<T> Filter { get; set; }
