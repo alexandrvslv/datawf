@@ -30,9 +30,9 @@ using Excel = DocumentFormat.OpenXml.Spreadsheet;
 
 namespace DataWF.Data
 {
-    public class XlsxDomParser : XlsxSaxParser
+    public class XlsxDomFormatter : XlsxSaxFormatter
     {
-        public override string Parse(Stream stream, string fileName, ExecuteArgs param)
+        public override string Fill(Stream stream, string fileName, ExecuteArgs param)
         {
             // bool flag = false;
             stream.Position = 0;

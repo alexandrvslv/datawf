@@ -404,7 +404,7 @@ namespace DataWF.Data.Gui
 
             using (var xl = DocumentFormat.OpenXml.Packaging.SpreadsheetDocument.Open(fileName, false))
             {
-                var sp = XlsxSaxParser.ReadStringTable(xl.WorkbookPart.SharedStringTablePart);
+                var sp = XlsxSaxFormatter.ReadStringTable(xl.WorkbookPart.SharedStringTablePart);
                 foreach (var part in xl.WorkbookPart.WorksheetParts)
                 {
                     var worksheet = part.Worksheet;
@@ -424,7 +424,7 @@ namespace DataWF.Data.Gui
                                 {
                                     if (celement is DocumentFormat.OpenXml.Spreadsheet.Cell cell)
                                     {
-                                        DBColumn column = new DBColumn(XlsxSaxParser.ReadCell(cell, sp));
+                                        DBColumn column = new DBColumn(XlsxSaxFormatter.ReadCell(cell, sp));
                                         table.Columns.Add(column);
                                     }
                                 }
@@ -444,7 +444,7 @@ namespace DataWF.Data.Gui
                                 {
                                     if (celement is DocumentFormat.OpenXml.Spreadsheet.Cell cell && index < table.Columns.Count)
                                     {
-                                        drow[index] = XlsxSaxParser.ReadCell(cell, sp);
+                                        drow[index] = XlsxSaxFormatter.ReadCell(cell, sp);
                                         index++;
                                     }
                                 }

@@ -28,16 +28,16 @@ using System.IO;
 
 namespace DataWF.Data
 {
-    public abstract class DocumentParser
+    public abstract class DocumentFormatter
     {
-        static readonly Dictionary<string, DocumentParser> cache = new Dictionary<string, DocumentParser>(3, StringComparer.OrdinalIgnoreCase);
+        static readonly Dictionary<string, DocumentFormatter> cache = new Dictionary<string, DocumentFormatter>(3, StringComparer.OrdinalIgnoreCase);
 
-        static DocumentParser()
+        static DocumentFormatter()
         {
-            cache[".odt"] = new OdtParser();
-            cache[".docx"] = new DocxParser();
-            cache[".xlsx"] = new XlsxSaxParser();
-            cache[".xlsm"] = new XlsxSaxParser();
+            cache[".odt"] = new OdtFormatter();
+            cache[".docx"] = new DocxFormatter();
+            cache[".xlsx"] = new XlsxSaxFormatter();
+            cache[".xlsm"] = new XlsxSaxFormatter();
         }
 
         public static string GetTempFileName(string fileName)
@@ -62,13 +62,13 @@ namespace DataWF.Data
         {
             var ext = Path.GetExtension(fileName);
             if (cache.TryGetValue(ext, out var parser))
-                return parser.Parse(stream, fileName, param);
+                return parser.Fill(stream, fileName, param);
             else
                 return stream is FileStream fileStream ? fileStream.Name : null;
             //throw new NotSupportedException(ext);
         }
 
-        public abstract string Parse(Stream stream, string fileName, ExecuteArgs param);
+        public abstract string Fill(Stream stream, string fileName, ExecuteArgs param);
 
         public object ParseString(ExecuteArgs parameters, string code)
         {

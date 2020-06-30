@@ -102,7 +102,7 @@ namespace DataWF.Data.Gui
         }
     }
 
-    public class XlsxSaxExport : XlsxSaxParser, IExport
+    public class XlsxSaxExport : XlsxSaxFormatter, IExport
     {
         public Row GetRow(SheetData sheetData, int r, bool check)
         {

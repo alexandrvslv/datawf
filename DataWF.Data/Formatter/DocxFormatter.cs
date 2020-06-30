@@ -31,24 +31,24 @@ using Word = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DataWF.Data
 {
-    public class DocxParser : DocumentParser
+    public class DocxFormatter : DocumentFormatter
     {
-        public override string Parse(Stream stream, string fileName, ExecuteArgs param)
+        public override string Fill(Stream stream, string fileName, ExecuteArgs param)
         {
             stream.Position = 0;
             using (var wd = WordprocessingDocument.Open(stream, true))
             {
-                ParseDocxPart(wd.MainDocumentPart.Document, param);
+                FillDocxPart(wd.MainDocumentPart.Document, param);
                 foreach (var header in wd.MainDocumentPart.HeaderParts)
                 {
-                    ParseDocxPart(header.Header, param);
+                    FillDocxPart(header.Header, param);
                 }
                 stream.Flush();
             }
             return stream is FileStream fileStream ? fileStream.Name : null;
         }
 
-        public void ParseDocxPart(OpenXmlPartRootElement doc, ExecuteArgs param)
+        public void FillDocxPart(OpenXmlPartRootElement doc, ExecuteArgs param)
         {
             var list = new List<Word.SdtElement>();
             Find<Word.SdtElement>(doc, list);
@@ -124,7 +124,7 @@ namespace DataWF.Data
                         }
                         else
                         {
-                            ReplaceString(paragraph, value.ToString());                          
+                            ReplaceString(paragraph, value.ToString());
                         }
 
                         cell = cell.NextSibling<Word.TableCell>();

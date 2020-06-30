@@ -28,9 +28,9 @@ using System.IO;
 
 namespace DataWF.Data
 {
-    public class OdtParser : DocumentParser
+    public class OdtFormatter : DocumentFormatter
     {
-        public override string Parse(Stream stream, string fileName, ExecuteArgs param)
+        public override string Fill(Stream stream, string fileName, ExecuteArgs param)
         {
             TextDocument doc = new TextDocument(stream);
             OdtProcessor processor = new OdtProcessor(doc);

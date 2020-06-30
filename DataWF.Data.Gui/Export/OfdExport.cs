@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace DataWF.Data.Gui
 {
-    public class OfdExport : OdtParser, IExport
+    public class OfdExport : OdtFormatter, IExport
     {
         public Doc.Odf.Row GetRow(Doc.Odf.Table sheetData, int r, bool check)
         {
