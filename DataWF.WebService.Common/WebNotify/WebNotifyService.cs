@@ -117,7 +117,7 @@ namespace DataWF.WebService.Common
             {
                 if ((removed = connections.Remove(connection)))
                 {
-                    Debug.WriteLine($"Remove webSocket from {connection.UserEmail}");
+                    Debug.WriteLine($"Remove webSocket from {connection?.UserEmail}");
                     connection?.Dispose();
                 }
             }

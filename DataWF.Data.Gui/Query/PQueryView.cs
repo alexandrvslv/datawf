@@ -51,7 +51,7 @@ namespace DataWF.Data.Gui
                 {
                     if (dialog.Run(ParentWindow))
                     {
-                        DocumentParser.Execute(Procedure, new ExecuteArgs() { Parameters = parameters, Result = Query });
+                        DocumentFormatter.Execute(Procedure, new ExecuteArgs() { Parameters = parameters, Result = Query });
                         System.Diagnostics.Process.Start(dialog.FileName);
                     }
                 }

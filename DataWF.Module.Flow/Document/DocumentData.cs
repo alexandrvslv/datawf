@@ -338,7 +338,7 @@ namespace DataWF.Module.Flow
 
         public virtual string Execute(DocumentExecuteArgs param, Stream stream)
         {
-            return DocumentParser.Execute(stream, FileName, param);
+            return DocumentFormatter.Execute(stream, FileName, param);
         }
 
         public BackgroundWorker ExecuteAsync(DocumentExecuteArgs param)
