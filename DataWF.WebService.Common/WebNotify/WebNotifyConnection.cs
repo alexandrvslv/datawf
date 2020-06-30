@@ -48,6 +48,7 @@ namespace DataWF.WebService.Common
         public long SendLength { get; set; }
         public int SendErrors { get; set; }
         public string SendError { get; set; }
+        public int SendingCount { get; internal set; }
 
         public void Dispose()
         {

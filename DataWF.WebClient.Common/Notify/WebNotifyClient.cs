@@ -49,7 +49,7 @@ namespace DataWF.Common
                     var recieve = await ReadData();
                     if (recieve != null)
                     {
-                        OnReceiveMessage?.Invoke(this, new WebNotifyClientEventArgs(recieve));
+                        _ = OnMessageRecieved(recieve);
                     }
                 }
                 catch (Exception ex)
@@ -63,6 +63,11 @@ namespace DataWF.Common
                     OnError?.Invoke(this, new ExceptionEventArgs(ex));
                 }
             }
+        }
+
+        private Task OnMessageRecieved(byte[] recieve)
+        {
+            return Task.Run(() => OnReceiveMessage?.Invoke(this, new WebNotifyClientEventArgs(recieve)));
         }
 
         public async Task<byte[]> ReadData()
@@ -130,12 +135,11 @@ namespace DataWF.Common
             return Send(stream, 8 * 1024, CancellationToken.None);
         }
 
-        public async Task Send(Stream stream, int bufferSize, CancellationToken cancellationToken)
+        public async Task Send(Stream stream, int bufferLength, CancellationToken cancellationToken)
         {
             try
             {
                 stream.Position = 0;
-                var bufferLength = 8 * 1024;
                 var buffer = new byte[bufferLength];
                 var count = 0;
                 while ((count = stream.Read(buffer, 0, bufferLength)) > 0)

@@ -298,12 +298,21 @@ namespace DataWF.WebService.Common
             var bufferLength = 8 * 1024;
             var buffer = new byte[bufferLength];
             var count = 0;
-            while ((count = stream.Read(buffer, 0, bufferLength)) > 0)
+            connection.SendingCount++;
+            using (var timeout = new CancellationTokenSource(5000))
             {
-                await connection.Socket.SendAsync(new ArraySegment<byte>(buffer, 0, count)
-                    , WebSocketMessageType.Binary
-                    , stream.Position == stream.Length
-                    , CancellationToken.None);
+                while ((count = stream.Read(buffer, 0, bufferLength)) > 0)
+                {
+                    await connection.Socket.SendAsync(new ArraySegment<byte>(buffer, 0, count)
+                        , WebSocketMessageType.Binary
+                        , stream.Position == stream.Length
+                        , timeout.Token);
+                    if (timeout.IsCancellationRequested)
+                    {
+                        throw new TimeoutException($"Timeout of sending message {Helper.LenghtFormat(stream.Length)}");
+                    }
+                    timeout.CancelAfter(5000);
+                }
             }
             connection.SendCount++;
             connection.SendLength += stream.Length;
@@ -443,7 +452,7 @@ namespace DataWF.WebService.Common
                                 && value.PrimaryId != null)
                             {
                                 writer.WritePropertyName("Value");
-                                JsonSerializer.Serialize(writer, value, value?.GetType(), jsonOptions);
+                                JsonSerializer.Serialize(writer, value, value.GetType(), jsonOptions);
                                 haveValue = true;
                             }
                         }
