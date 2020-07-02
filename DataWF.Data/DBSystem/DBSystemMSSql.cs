@@ -20,6 +20,7 @@ namespace DataWF.Data
                     {DBDataType.Clob, "nvarchar(max)"},
                     {DBDataType.DateTime, "datetime"},
                     {DBDataType.ByteArray, "varbinary{0}"},
+                    {DBDataType.ByteSerializable, "varbinary{0}"},
                     {DBDataType.Blob, "varbinary(max)"},
                     {DBDataType.LargeObject, "integer"},
                     {DBDataType.BigInt, "bigint"},
@@ -144,7 +145,7 @@ namespace DataWF.Data
             command.AppendLine($"select {idparam};");
         }
 
-        public override void WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        public override object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
             var dbParameter = (SqlParameter)parameter;
             switch (dbParameter.DbType)
@@ -169,7 +170,7 @@ namespace DataWF.Data
             {
                 parameter.Direction = ParameterDirection.Output;
             }
-            base.WriteValue(command, parameter, value, column);
+            return base.WriteValue(command, parameter, value, column);
         }
 
         public override string FormatQColumn(DBColumn column, string tableAlias)

@@ -1,19 +1,20 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using DataWF.Data.Geometry;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataWF.Test.Data
 {
     [TestFixture]
-    public class TestORM
+    public partial class TestORM
     {
-        private const string SchemaName = "test";
-        private const string EmployerTableName = "tb_employer";
-        private const string PositionTableName = "tb_position";
+        public const string SchemaName = "test";
+        public const string EmployerTableName = "tb_employer";
+        public const string PositionTableName = "tb_position";
+        public const string FigureTableName = "tb_figure";
         private DBSchema schema;
 
         [SetUp]
@@ -34,33 +35,33 @@ namespace DataWF.Test.Data
         }
 
         [Test]
-        public void GenerateSqlite()
+        public Task GenerateSqlite()
         {
-            Generate(DBService.Connections["TestSqlLite"]);
+            return Generate(DBService.Connections["TestSqlLite"]);
         }
 
         [Test]
-        public void GeneratePostgres()
+        public Task GeneratePostgres()
         {
-            Generate(DBService.Connections["TestPostgres"]);
+            return Generate(DBService.Connections["TestPostgres"]);
         }
 
         [Test]
-        public void GenerateOracle()
+        public Task GenerateOracle()
         {
-            Generate(DBService.Connections["TestOracle"]);
+            return Generate(DBService.Connections["TestOracle"]);
         }
 
         [Test]
-        public void GenerateMySql()
+        public Task GenerateMySql()
         {
-            Generate(DBService.Connections["TestMySql"]);
+            return Generate(DBService.Connections["TestMySql"]);
         }
 
         [Test]
-        public void GenerateMsSql()
+        public Task GenerateMsSql()
         {
-            Generate(DBService.Connections["TestMSSql"]);
+            return Generate(DBService.Connections["TestMSSql"]);
         }
 
         [Test]
@@ -73,7 +74,7 @@ namespace DataWF.Test.Data
             Serialization.Deserialize(file, DBService.Schems);
             Assert.AreEqual(2, DBService.Schems.Count);
 
-            Assert.AreEqual(2, schem.Tables.Count);
+            Assert.AreEqual(3, schem.Tables.Count);
             var table = schem.Tables[EmployerTableName];
             Assert.IsNotNull(table);
             Assert.IsInstanceOf<DBTable<Employer>>(table);
@@ -82,7 +83,7 @@ namespace DataWF.Test.Data
             Assert.AreEqual(typeof(int), column.DataType);
         }
 
-        public async void Generate(DBConnection connection)
+        public async Task Generate(DBConnection connection)
         {
             Assert.AreEqual(true, connection.CheckConnection(), $"Connection Fail!");
             schema = DBSchema.Generate(GetType().Assembly, SchemaName);
@@ -90,6 +91,7 @@ namespace DataWF.Test.Data
             Assert.IsNotNull(schema, "Attribute Generator Fail. On Schema");
             Assert.IsNotNull(Employer.DBTable, "Attribute Generator Fail. On Employer Table");
             Assert.IsNotNull(Position.DBTable, "Attribute Generator Fail. On Position Table");
+            Assert.IsNotNull(Figure.DBTable, "Attribute Generator Fail. On Figure Table");
 
             var idColumn = Employer.DBTable.Columns["id"];
             Assert.IsNotNull(idColumn, "Attribute Generator Fail. On Column Employer Id");
@@ -104,6 +106,8 @@ namespace DataWF.Test.Data
             var result = schema.GetTablesInfo(connection.Schema, EmployerTableName);
             Assert.IsTrue(result.Count() == 1, "Generate Sql Table / Get Information Fail.");
             result = schema.GetTablesInfo(connection.Schema, PositionTableName);
+            Assert.IsTrue(result.Count() == 1, "Generate Sql Table / Get Information Fail.");
+            result = schema.GetTablesInfo(connection.Schema, FigureTableName);
             Assert.IsTrue(result.Count() == 1, "Generate Sql Table / Get Information Fail.");
             //Insert
             var employer = new Employer()
@@ -171,8 +175,44 @@ namespace DataWF.Test.Data
 
             await Position.DBTable.Save();
             Position.DBTable.Clear();
-            var positions = Position.DBTable.Load();
-            Assert.AreEqual(7, positions.Count(), "Insert/Read several Fail");
+            var positions = await Position.DBTable.LoadAsync();
+            Assert.AreEqual(7, positions.Count(), "Insert/Read several positions Fail");
+
+            //Insert Geometry
+            var polygon = new Polygon2D(new Point2D[] { new Point2D(10D, 10D), new Point2D(10D, 20D), new Point2D(20D, 20D), new Point2D(20D, 10D) });
+            var bounds = polygon.Bounds;
+            Assert.AreEqual(new Rectangle2D(10, 10, 20, 20), bounds, "Geometry Polygon get Bounds!");
+            var location = bounds.BottomLeft;
+            Assert.AreEqual(new Point2D(10, 10), location, "Geometry Rectangle get BottomLeft!");
+            var matrix = Matrix2D.CreateIdentity();
+
+            var polygon125 = new Polygon2D(new Point2D[] { new Point2D(-10D, -10D), new Point2D(-10D, 10D), new Point2D(10D, 10D), new Point2D(10D, -10D) });
+
+            Figure.DBTable.Add(new Figure()
+            {
+                Matrix = matrix,
+                Location = location,
+                Box = bounds,
+                Polygon = polygon
+            });
+            Figure.DBTable.Add(new Figure()
+            {
+                Id = 125,
+                Matrix = Matrix2D.CreateIdentity(),
+                Location = polygon125.Bounds.BottomLeft,
+                Box = polygon125.Bounds,
+                Polygon = polygon125
+            });
+            await Figure.DBTable.Save();
+            Figure.DBTable.Clear();
+            var figures = await Figure.DBTable.LoadAsync();
+            Assert.AreEqual(2, figures.Count(), "Insert/Read several figures Fail");
+            var figure = Figure.DBTable.LoadById(125);
+            Assert.IsNotNull(figure, "Insert/Read figure Id 125 Fail");
+            Assert.AreEqual(new Point2D(-10, -10), figure.Location, "Read/Write Geometry Point Fail!");
+            Assert.AreEqual(new Rectangle2D(-10, -10, 10, 10), figure.Box, "Read/Write Geometry Rectangle Fail!");
+            Assert.AreEqual(new Matrix2D(1, 0, 0, 0, 1, 0, 0, 0, 1), figure.Matrix, "Read/Write Geometry Matrix Fail!");
+            Assert.AreEqual(polygon125, figure.Polygon, "Read/Write Geometry Polygon Fail!");
 
             //GetById
             employer = Employer.DBTable.LoadById(1);
@@ -220,213 +260,8 @@ namespace DataWF.Test.Data
             }
         }
 
-        public enum EmployerType
-        {
-            Type1,
-            Type2,
-            Type3,
-        }
-
-        [Table(PositionTableName, "Default")]
-        public class Position : DBItem
-        {
-            public static readonly DBTable<Position> DBTable = GetTable<Position>();
-            public static readonly DBColumn IdKey = DBTable.ParseProperty(nameof(Id));
-            public static readonly DBColumn CodeKey = DBTable.ParseProperty(nameof(Code));
-            private Position parent;
-
-
-            public Position()
-            {
-            }
-
-            [Column("id", Keys = DBColumnKeys.Primary)]
-            public int? Id
-            {
-                get => GetValueNullable<int>(IdKey);
-                set => SetValueNullable(value, IdKey);
-            }
-
-            [Column("code", 20, Keys = DBColumnKeys.Code | DBColumnKeys.Unique | DBColumnKeys.Indexing)]
-            [Index("positioncode", true)]
-            public string Code
-            {
-                get => GetValue<string>(CodeKey);
-                set => SetValue(value, CodeKey);
-            }
-
-            [Column("parentid", Keys = DBColumnKeys.Group)]
-            public int? ParentId
-            {
-                get => GetProperty<int?>();
-                set => SetProperty(value);
-            }
-
-            [Reference(nameof(ParentId))]
-            public Position Parent
-            {
-                get => GetPropertyReference<Position>(ref parent);
-                set => parent = SetPropertyReference(value);
-            }
-
-            [Column("name", 200, Keys = DBColumnKeys.Culture)]
-            public string Name
-            {
-                get => GetName();
-                set => SetName(value);
-            }
-
-            [Column("description")]
-            public string Description
-            {
-                get => GetProperty<string>();
-                set => SetProperty(value);
-            }
-        }
-
         public class EmployerTable : DBTable<Employer>
         {
-
-        }
-
-        [Table(EmployerTableName, "Default")]
-        public class Employer : DBItem
-        {
-            private Position position;
-
-            public static DBTable<Employer> DBTable
-            {
-                get { return GetTable<Employer>(); }
-            }
-
-            public Employer()
-            {
-            }
-
-            [Column("id", Keys = DBColumnKeys.Primary)]
-            public int? Id
-            {
-                get => GetProperty<int?>();
-                set => SetProperty(value);
-            }
-
-            [Column("identifier", 20, Keys = DBColumnKeys.Code), Index("employeridentifier", true)]
-            public string Identifier
-            {
-                get => GetProperty<string>();
-                set => SetProperty(value);
-            }
-
-            [Column("positionid")]
-            public int? PositionId
-            {
-                get => GetProperty<int?>();
-                set => SetProperty(value);
-            }
-
-            [Reference(nameof(PositionId))]
-            public Position Position
-            {
-                get => GetPropertyReference<Position>(ref position);
-                set => SetPropertyReference(position = value);
-            }
-
-            [Column("typeid", Keys = DBColumnKeys.ElementType), DefaultValue(EmployerType.Type2)]
-            public EmployerType? Type
-            {
-                get => GetProperty<EmployerType?>();
-                set => SetProperty(value);
-            }
-
-            [Column("longid")]
-            public long? LongId
-            {
-                get => GetProperty<long?>();
-                set => SetProperty(value);
-            }
-
-            [Column("height")]
-            public short? Height
-            {
-                get => GetProperty<short?>();
-                set => SetProperty(value);
-            }
-
-            [Column("weight")]
-            public float? Weight
-            {
-                get => GetProperty<float?>();
-                set => SetProperty(value);
-            }
-
-            [Column("dweight")]
-            public double? DWeight
-            {
-                get => GetProperty<double?>();
-                set => SetProperty(value);
-            }
-
-            [Column("salary", 23, 3)]
-            public decimal? Salary
-            {
-                get => GetProperty<decimal?>();
-                set => SetProperty(value);
-            }
-
-            [Column("age")]
-            public byte? Age
-            {
-                get => GetProperty<byte?>();
-                set => SetProperty(value);
-            }
-
-            [Column("lodar")]
-            public bool? Lodar
-            {
-                get => GetProperty<bool?>();
-                set => SetProperty(value);
-            }
-
-            [Column("name", 20, Keys = DBColumnKeys.Culture)]
-            public string Name
-            {
-                get => GetName();
-                set => SetName(value);
-            }
-        }
-    }
-
-    public class AccessGroupBung : IGroupIdentity, IPrimaryKey
-    {
-        public int? Id { get; set; }
-
-        public string Name { get; set; }
-        public bool Expand { get; set; }
-        public IGroup Group { get; set; }
-
-        public bool IsCompaund => false;
-
-        public bool IsExpanded => true;
-
-        public string AuthenticationType => Name;
-
-        public bool IsAuthenticated => true;
-
-        public object PrimaryKey { get => Id; set => Id = (int)value; }
-
-        public int CompareTo(object obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool ContainsIdentity(IUserIdentity user)
-        {
-            return true;
-        }
-
-        public IEnumerable<IGroup> GetGroups()
-        {
-            return Enumerable.Empty<IGroup>();
         }
     }
 }

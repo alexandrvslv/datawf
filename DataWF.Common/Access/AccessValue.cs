@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace DataWF.Common
 {
-    public class AccessValue : IAccessValue//, IEnumerable<AccessItem>
+    public class AccessValue : IAccessValue, IByteSerializable//, IEnumerable<AccessItem>
     {
         public static IIdCollection<IGroupIdentity> Groups = new IdCollection<IGroupIdentity>();
         public static IIdCollection<IUserIdentity> Users = new IdCollection<IUserIdentity>();
@@ -132,7 +132,7 @@ namespace DataWF.Common
             Add(new AccessItem(group, type));
         }
 
-        public byte[] Write()
+        public byte[] Serialize()
         {
             byte[] buffer = null;
             var stream = new MemoryStream();

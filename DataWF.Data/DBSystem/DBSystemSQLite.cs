@@ -21,6 +21,7 @@ namespace DataWF.Data
                     {DBDataType.Clob, "clob"},
                     {DBDataType.DateTime, "datetime"},
                     {DBDataType.ByteArray, "blob"},
+                    {DBDataType.ByteSerializable, "blob"},
                     {DBDataType.LargeObject, "integer"},
                     {DBDataType.Blob, "blob"},
                     {DBDataType.BigInt, "bigint"},

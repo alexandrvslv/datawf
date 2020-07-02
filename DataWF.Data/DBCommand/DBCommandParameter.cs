@@ -64,7 +64,8 @@ namespace DataWF.Data
                 case DBDataType.DateTime: DbType = DbType.DateTime; break;
                 case DBDataType.TimeStamp: DbType = DbType.DateTime2; break;
                 case DBDataType.Blob:
-                case DBDataType.ByteArray: DbType = DbType.Binary; break;
+                case DBDataType.ByteArray:
+                case DBDataType.ByteSerializable: DbType = DbType.Binary; break;
                 case DBDataType.String: DbType = DbType.StringFixedLength; break;
                 case DBDataType.Clob: DbType = DbType.String; break;
             }

@@ -86,7 +86,7 @@ namespace DataWF.Data
         DateTime,
         TimeStamp,
         TimeSpan,
-        Blob,        
+        Blob,
         ByteArray,
         Decimal,
         Double,
@@ -97,7 +97,8 @@ namespace DataWF.Data
         TinyInt,
         Bool,
         LargeObject,
-        Object
+        Object,
+        ByteSerializable,
     }
 
     public enum DBCommandTypes

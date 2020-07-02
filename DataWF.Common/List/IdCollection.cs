@@ -8,7 +8,8 @@ namespace DataWF.Common
     {
         public T GetById(object id)
         {
-            return items.FirstOrDefault(p => p is IPrimaryKey primaryKey && primaryKey.PrimaryKey == id);
+            return items.FirstOrDefault(p => p is IPrimaryKey primaryKey
+                                          && (primaryKey.PrimaryKey?.Equals(id) ?? false));
         }
     }
 }

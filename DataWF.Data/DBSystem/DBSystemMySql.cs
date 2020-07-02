@@ -21,6 +21,7 @@ namespace DataWF.Data
                     {DBDataType.Clob, "text"},
                     {DBDataType.DateTime, "datetime"},
                     {DBDataType.ByteArray, "varbinary{0}"},
+                    {DBDataType.ByteSerializable, "varbinary{0}"},
                     {DBDataType.Blob, "longblob"},
                     {DBDataType.LargeObject, "integer"},
                     {DBDataType.BigInt, "bigint"},
@@ -117,7 +118,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
             {
                 ddl.AppendLine($"use {schema.DataBase};");
                 ddl.AppendLine($"create table db_sequence(name varchar(512) not null primary key, seq long);");
-                ddl.AppendLine($"create table db_lob(oid bigint not null primary key AUTO_INCREMENT, lob_data largeblob);");
+                ddl.AppendLine($"create table db_lob(oid bigint not null primary key AUTO_INCREMENT, lob_data longblob);");
             }
         }
 

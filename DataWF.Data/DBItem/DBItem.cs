@@ -170,7 +170,7 @@ namespace DataWF.Data
             {
                 if (Table.AccessKey != null)
                 {
-                    SetValue(value?.Write(), Table.AccessKey);
+                    SetValue(value?.Serialize(), Table.AccessKey);
                 }
                 access = value;
             }

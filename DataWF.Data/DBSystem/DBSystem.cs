@@ -767,7 +767,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return builder.ToString();
         }
 
-        public virtual void WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        public virtual object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
             if (value == null)
             {
@@ -777,7 +777,12 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             {
                 value = (int)value;
             }
+            else if (value is IByteSerializable serializable)
+            {
+                value = serializable.Serialize();
+            }
             parameter.Value = value;
+            return value;
         }
 
         public virtual uint GetOID(IDataReader reader, int index)

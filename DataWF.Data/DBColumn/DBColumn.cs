@@ -174,7 +174,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public virtual string Property
         {
-            get { return property; }
+            get => property;
             set
             {
                 if (property != value)
@@ -210,7 +210,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public virtual string ReferenceProperty
         {
-            get { return referenceProperty; }
+            get => referenceProperty;
             set
             {
                 if (referenceProperty != value)
@@ -222,12 +222,12 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public bool CanWrite { get { return true; } }
+        public bool CanWrite => true;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public Pull Pull
         {
-            get { return pull; }
+            get => pull;
             internal set
             {
                 if (pull != value)
@@ -241,28 +241,25 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public PullIndex Index
         {
-            get { return index; }
-            set { index = value; }
+            get => index;
+            set => index = value;
         }
 
         [Category("Name")]
-        public override string FullName
-        {
-            get { return string.Format("{0}.{1}.{2}", Schema?.Name, Table?.Name, name); }
-        }
+        public override string FullName => string.Format("{0}.{1}.{2}", Schema?.Name, Table?.Name, name);
 
 
         [XmlText, DefaultValue((string)null)]
         public string SubList
         {
-            get { return subList; }
-            set { subList = value; }
+            get => subList;
+            set => subList = value;
         }
 
         [Browsable(false), Category("Add")]
         public virtual string CultureCode
         {
-            get { return culture; }
+            get => culture;
             set
             {
                 if (value == culture)
@@ -293,15 +290,12 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false), Category("Localizing")]
-        public bool IsCulture
-        {
-            get { return Culture != null; }
-        }
+        public bool IsCulture => Culture != null;
 
         [Browsable(false), Category("Add")]
         public virtual string GroupName
         {
-            get { return gname; }
+            get => gname;
             set
             {
                 if (string.Equals(gname, value, StringComparison.Ordinal))
@@ -335,7 +329,7 @@ namespace DataWF.Data
         [Category("Database"), DefaultValue(DBColumnKeys.None)]
         public virtual DBColumnKeys Keys
         {
-            get { return keys; }
+            get => keys;
             set
             {
                 if (Keys != value)
@@ -353,7 +347,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public string BoolTrue
         {
-            get { return btrue; }
+            get => btrue;
             set
             {
                 if (btrue == value)
@@ -366,7 +360,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public string BoolFalse
         {
-            get { return bfalse; }
+            get => bfalse;
             set
             {
                 if (bfalse == value)
@@ -379,7 +373,7 @@ namespace DataWF.Data
         [Category("Database")]
         public string Format
         {
-            get { return format; }
+            get => format;
             set
             {
                 format = value;
@@ -390,7 +384,7 @@ namespace DataWF.Data
         [Browsable(false), Category("Database"), XmlIgnore, JsonIgnore]
         public int Order
         {
-            get { return order; }
+            get => order;
             set
             {
                 if (order == value)
@@ -401,10 +395,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Category("Database")]
-        public string ReferenceTableName
-        {
-            get { return Table?.Foreigns.GetByColumn(this)?.FirstOrDefault()?.ReferenceTableName; }
-        }
+        public string ReferenceTableName => Table?.Foreigns.GetByColumn(this)?.FirstOrDefault()?.ReferenceTableName;
 
         [XmlIgnore, JsonIgnore, Category("Database")]
         public DBTable ReferenceTable
@@ -429,15 +420,12 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false), Category("Database")]
-        public bool IsView
-        {
-            get { return (Keys & DBColumnKeys.View) == DBColumnKeys.View; }
-        }
+        public bool IsView => (Keys & DBColumnKeys.View) == DBColumnKeys.View;
 
         [XmlIgnore, JsonIgnore, Browsable(false), Category("Database")]
         public bool IsReference
         {
-            get { return (Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference; }
+            get => (Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference;
             set
             {
                 if (value != IsReference)
@@ -454,7 +442,7 @@ namespace DataWF.Data
         [Category("Database")]
         public virtual DBDataType DBDataType
         {
-            get { return type; }
+            get => type;
             set
             {
                 if (type == value)
@@ -488,12 +476,12 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public Type TargetType { get { return typeof(DBItem); } }
+        public Type TargetType => typeof(DBItem);
 
         [Browsable(false), Category("Database")]
         public virtual Type DataType
         {
-            get { return dataType; }
+            get => dataType;
             set
             {
                 if (dataType == value)
@@ -548,6 +536,8 @@ namespace DataWF.Data
                     DBDataType = DBDataType.TimeSpan;
                 else if (value.IsEnum)
                     DBDataType = DBDataType.Int;
+                else if (TypeHelper.IsInterface(value, typeof(IByteSerializable)))
+                    DBDataType = DBDataType.ByteSerializable;
                 else
                     DBDataType = DBDataType.Object;
             }
@@ -559,7 +549,7 @@ namespace DataWF.Data
         [Category("Database")]
         public string DefaultValue
         {
-            get { return cdefault; }
+            get => cdefault;
             set
             {
                 if (cdefault == value)
@@ -572,7 +562,7 @@ namespace DataWF.Data
         [Category("Database"), DefaultValue(DBColumnTypes.Default)]
         public virtual DBColumnTypes ColumnType
         {
-            get { return ctype; }
+            get => ctype;
             set
             {
                 if (ctype == value)
@@ -585,7 +575,7 @@ namespace DataWF.Data
         [Category("Database")]
         public string Query
         {
-            get { return query; }
+            get => query;
             set
             {
                 if (query == value)
@@ -598,7 +588,7 @@ namespace DataWF.Data
         [Category("Database"), DefaultValue(0)]
         public virtual int Size
         {
-            get { return size; }
+            get => size;
             set
             {
                 if (size != value)
@@ -626,7 +616,7 @@ namespace DataWF.Data
         [Category("Database"), DefaultValue(0)]
         public virtual int Scale
         {
-            get { return scale; }
+            get => scale;
             set
             {
                 if (scale != value)
@@ -638,52 +628,28 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public virtual string SqlName
-        {
-            get { return Name; }
-        }
+        public virtual string SqlName => Name;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public bool IsPrimaryKey
-        {
-            get { return (Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary; }
-        }
+        public bool IsPrimaryKey => (Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public bool IsTypeKey
-        {
-            get { return (Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType; }
-        }
+        public bool IsTypeKey => (Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public bool IsNotNull
-        {
-            get { return (Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull; }
-        }
+        public bool IsNotNull => (Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public bool IsSystem
-        {
-            get { return (Keys & DBColumnKeys.System) == DBColumnKeys.System; }
-        }
+        public bool IsSystem => (Keys & DBColumnKeys.System) == DBColumnKeys.System;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public bool IsFile
-        {
-            get { return (Keys & DBColumnKeys.File) == DBColumnKeys.File; }
-        }
+        public bool IsFile => (Keys & DBColumnKeys.File) == DBColumnKeys.File;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public bool IsFileName
-        {
-            get { return (Keys & DBColumnKeys.FileName) == DBColumnKeys.FileName; }
-        }
+        public bool IsFileName => (Keys & DBColumnKeys.FileName) == DBColumnKeys.FileName;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public bool IsFileLOB
-        {
-            get { return (Keys & DBColumnKeys.FileLOB) == DBColumnKeys.FileLOB; }
-        }
+        public bool IsFileLOB => (Keys & DBColumnKeys.FileLOB) == DBColumnKeys.FileLOB;
 
 
         [JsonIgnore, XmlIgnore]
@@ -786,6 +752,12 @@ namespace DataWF.Data
                 case DBDataType.ByteArray:
                     var arrayValue = isNull ? null : (byte[])transaction.Reader.GetValue(i);
                     row.SetValueClass<byte[]>(arrayValue, this, DBSetValueMode.Loading);
+                    break;
+                case DBDataType.ByteSerializable:
+                    var byteArray = isNull ? null : (byte[])transaction.Reader.GetValue(i);
+                    var serializable = isNull ? null : (IByteSerializable)Activator.CreateInstance(DataType);
+                    serializable?.Deserialize(byteArray);
+                    row.SetValue((object)serializable, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.LargeObject:
                     var unitValue = isNull ? (uint?)null : transaction.ReadOID(i);

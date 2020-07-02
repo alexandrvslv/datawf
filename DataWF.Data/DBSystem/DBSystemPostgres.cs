@@ -21,6 +21,7 @@ namespace DataWF.Data
                     {DBDataType.Clob, "text"},
                     {DBDataType.DateTime, "timestamp"},
                     {DBDataType.ByteArray, "bytea"},
+                    {DBDataType.ByteSerializable, "bytea"},
                     {DBDataType.Blob, "bytea"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
@@ -60,6 +61,10 @@ namespace DataWF.Data
             if (connection.Pool != null)
             {
                 nConnection.Pooling = (bool)connection.Pool;
+                if (connection.Pool == true)
+                {
+                    nConnection.NoResetOnClose = true;
+                }
             }
             nConnection.MaxPoolSize = 400;
             nConnection.ConnectionIdleLifetime = 200;
@@ -67,8 +72,8 @@ namespace DataWF.Data
             //performance
             nConnection.ReadBufferSize = 40960;
             nConnection.WriteBufferSize = 40960;
-            nConnection.NoResetOnClose = true;
             nConnection.Enlist = false;
+
             return nConnection;
         }
 
@@ -154,7 +159,6 @@ namespace DataWF.Data
         {
             if (ddlType == DDLType.Create)
             {
-
                 ddl.AppendLine($"create tablespace ts_{schema.DataBase} owner {schema.Connection.User} location '{schema.Connection.Path}';");
             }
             else if (ddlType == DDLType.Drop)
@@ -195,9 +199,9 @@ namespace DataWF.Data
             return $"drop view if exists {name}; create view {name} as";
         }
 
-        public override void WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        public override object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
-            base.WriteValue(command, parameter, value, column);
+            value = base.WriteValue(command, parameter, value, column);
             if (column != null)
             {
                 if (column.DBDataType == DBDataType.TimeSpan)
@@ -213,6 +217,7 @@ namespace DataWF.Data
                     ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer;
                 }
             }
+            return value;
         }
 
         public override object ReadValue(DBColumn column, object value)

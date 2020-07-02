@@ -21,6 +21,7 @@ namespace DataWF.Data
                 {DBDataType.Clob, "nclob"},
                 {DBDataType.DateTime, "timestamp(6)"},
                 {DBDataType.ByteArray, "raw{0}"},
+                {DBDataType.ByteSerializable, "raw{0}"},
                 {DBDataType.Blob, "blob"},
                 {DBDataType.LargeObject, "number(9)"},
                 {DBDataType.BigInt, "number(18)"},
@@ -212,23 +213,26 @@ namespace DataWF.Data
         }
 
 
-        public override void WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        public override object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
-            base.WriteValue(command, parameter, value, column);
-            if (value == null)
+            value = base.WriteValue(command, parameter, value, column);
+
+            if (value == null || value == DBNull.Value)
             {
                 if (column.IsPrimaryKey)
                     parameter.Direction = ParameterDirection.InputOutput;
-                return;
+                return value;
             }
             var dbParameter = (OracleParameter)parameter;
             switch (column.DBDataType)
             {
                 case DBDataType.ByteArray:
+                case DBDataType.ByteSerializable:
                     dbParameter.Direction = ParameterDirection.Input;
                     dbParameter.OracleDbType = OracleDbType.Raw;
                     if (value != null)
                     {
+                        value =
                         dbParameter.Value = new OracleBinary((byte[])value);
                     }
                     break;
@@ -240,6 +244,7 @@ namespace DataWF.Data
                         var blob = new OracleBlob((OracleConnection)command.Connection);
                         blob.Write((byte[])value, 0, ((byte[])value).Length);
                         blob.Position = 0L;
+                        value =
                         dbParameter.Value = blob;
                     }
                     break;
@@ -251,6 +256,7 @@ namespace DataWF.Data
                         var clob = new OracleClob((OracleConnection)command.Connection, false, true);
                         clob.Write(((string)value).ToCharArray(), 0, ((string)value).Length);
                         clob.Position = 0L;
+                        value =
                         dbParameter.Value = clob;
                     }
                     break;
@@ -272,6 +278,7 @@ namespace DataWF.Data
                 case DBDataType.Bool:
                     dbParameter.DbType = DbType.Decimal;
                     dbParameter.Precision = 1;
+                    value =
                     dbParameter.Value = (bool)value ? 1 : 0;
                     break;
                     ////case DBDataType.ShortInt:
@@ -283,6 +290,7 @@ namespace DataWF.Data
                     //dbParameter.Precision = 10;
                     //break;
             }
+            return value;
         }
 
         public override object ReadValue(DBColumn column, object value)

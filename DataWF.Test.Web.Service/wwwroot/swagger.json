@@ -27836,13 +27836,6 @@
           "UserId": {
             "type": "integer",
             "format": "int32"
-          },
-          "DBUser": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/DBUser"
-              }
-            ]
           }
         },
         "x-id": "Id"
@@ -27888,6 +27881,14 @@
           },
           "TextData": {
             "type": "string"
+          },
+          "User": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "UserId"
           }
         },
         "x-type-id": 0
@@ -27905,7 +27906,8 @@
               {
                 "$ref": "#/components/schemas/UserReg"
               }
-            ]
+            ],
+            "x-id": "UserRegId"
           },
           "LogUserId": {
             "type": "integer",
@@ -27916,7 +27918,8 @@
               {
                 "$ref": "#/components/schemas/User"
               }
-            ]
+            ],
+            "x-id": "LogUserId"
           }
         }
       },
@@ -29019,7 +29022,8 @@
               {
                 "$ref": "#/components/schemas/Message"
               }
-            ]
+            ],
+            "x-id": "MessageId"
           }
         }
       },
@@ -31838,6 +31842,33 @@
           },
           "Version": {
             "type": "string"
+          },
+          "ReceiveCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ReceiveLength": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "SendCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SendLength": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "SendErrors": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SendError": {
+            "type": "string"
+          },
+          "SendingCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
