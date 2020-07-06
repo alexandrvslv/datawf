@@ -8,19 +8,19 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data.Geometry
 {
-    public class Polygon2D : IByteSerializable, IComparable<Polygon2D>, IEquatable<Polygon2D>
+    public class Polygon2DArray : IByteSerializable, IEquatable<Polygon2DArray>
     {
         private Rectangle2D bounds = new Rectangle2D();
 
-        public Polygon2D()
+        public Polygon2DArray()
         { }
 
-        public Polygon2D(IEnumerable<Point2D> points)
+        public Polygon2DArray(IEnumerable<Polygon2D> polygons)
         {
-            Points.AddRange(points);
+            Polygons.AddRange(polygons);
         }
 
-        public List<Point2D> Points { get; set; } = new List<Point2D>();
+        public List<Polygon2D> Polygons { get; set; } = new List<Polygon2D>();
 
         [XmlIgnore, JsonIgnore]
         public Rectangle2D Bounds => RefreshBounds();
@@ -31,30 +31,33 @@ namespace DataWF.Data.Geometry
                 bounds.Top =
                 bounds.Right =
                 bounds.Bottom = 0;
-            if (Points.Count > 0)
+            if (Polygons.Count > 0)
             {
-                var firstpoint = Points.First();
+                var firstpoint = Polygons.First().Points.First();
                 bounds.Reset(firstpoint);
-                foreach (var point in Points)
+                foreach (var polygon in Polygons)
                 {
-                    bounds.Append(point);
+                    foreach (var point in polygon.Points)
+                    {
+                        bounds.Append(point);
+                    }
                 }
             }
             return bounds;
         }
 
-        public int CompareTo(Polygon2D other)
+        public int CompareTo(Polygon2DArray other)
         {
             if (other == null)
                 return 1;
             return Bounds.CompareTo(other.Bounds);
         }
 
-        public bool Equals(Polygon2D other)
+        public bool Equals(Polygon2DArray other)
         {
             if (other == null)
                 return false;
-            return Points.SequenceEqual(other.Points);
+            return Polygons.SequenceEqual(other.Polygons);
         }
 
         public void Deserialize(byte[] data)
@@ -62,45 +65,35 @@ namespace DataWF.Data.Geometry
             using (var stream = new MemoryStream(data))
             using (var reader = new BinaryReader(stream))
             {
-                Deserialize(reader);
+                Polygons.Clear();
+                Polygons.Capacity = reader.ReadInt32();
+                while (Polygons.Count < Polygons.Capacity)
+                {
+                    var polygon = new Polygon2D();
+                    polygon.Deserialize(reader);
+                    Polygons.Add(polygon);
+                }
             }
         }
 
-        public void Deserialize(BinaryReader reader)
-        {
-            Points.Clear();
-            Points.Capacity = reader.ReadInt32();
-            while (Points.Count < Points.Capacity)
-            {
-                var point = new Point2D();
-                point.Deserialize(reader);
-                Points.Add(point);
-            }
-
-        }
         public byte[] Serialize()
         {
             using (var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream))
             {
-                Serialize(writer);
+                writer.Write(Polygons.Count);
+                foreach (var polygon in Polygons)
+                {
+                    polygon.Serialize(writer);
+                }
+                writer.Flush();
                 return stream.ToArray();
             }
         }
 
-        public void Serialize(BinaryWriter writer)
-        {
-            writer.Write(Points.Count);
-            foreach (var point in Points)
-            {
-                point.Serialize(writer);
-            }
-            writer.Flush();
-        }
-
         public override bool Equals(object obj)
         {
-            return Equals(obj as Polygon2D);
+            return Equals(obj as Polygon2DArray);
         }
 
         public override int GetHashCode()
@@ -110,7 +103,7 @@ namespace DataWF.Data.Geometry
 
         public override string ToString()
         {
-            return $"({string.Join(", ", Points.Select(p => p.ToString()))})";
+            return string.Join(", ", Polygons.Select(p => p.ToString()));
         }
     }
 }
