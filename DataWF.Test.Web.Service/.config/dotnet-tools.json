@@ -9,7 +9,7 @@
       ]
     },
     "swashbuckle.aspnetcore.cli": {
-      "version": "5.4.1",
+      "version": "5.5.1",
       "commands": [
         "swagger"
       ]
