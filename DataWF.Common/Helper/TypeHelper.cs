@@ -24,6 +24,7 @@ namespace DataWF.Common
         private static readonly Dictionary<string, MemberInfo> casheNames = new Dictionary<string, MemberInfo>(200, StringComparer.Ordinal);
 
         private static readonly Dictionary<string, Type> cacheTypes = new Dictionary<string, Type>(200, StringComparer.Ordinal);
+        private static readonly Dictionary<Assembly, Dictionary<string, Type>> cacheAssemblyTypes = new Dictionary<Assembly, Dictionary<string, Type>>();
         private static readonly Dictionary<MemberInfo, bool> cacheIsXmlText = new Dictionary<MemberInfo, bool>(200);
         private static readonly Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
         private static readonly Dictionary<PropertyInfo, ValueSerializer> cachePropertyValueSerializer = new Dictionary<PropertyInfo, ValueSerializer>(200);
@@ -206,20 +207,11 @@ namespace DataWF.Common
                     var code = index >= 0 ? value.Substring(0, index) : value;
                     type = Type.GetType(code);
 
-                    var byName = code.IndexOf('.') < 0;
-
                     foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                     {
                         try
                         {
-                            if (byName)
-                            {
-                                type = assembly.DefinedTypes.FirstOrDefault(p => string.Equals(p.Name, value, StringComparison.Ordinal));
-                            }
-                            else
-                            {
-                                type = assembly.GetType(code);
-                            }
+                            type = ParseType(code, assembly);
                         }
                         catch (Exception ex)
                         {
@@ -237,6 +229,29 @@ namespace DataWF.Common
             return type;
         }
 
+        public static Type ParseType(string value, Assembly assembly)
+        {
+            var byName = value.IndexOf('.') < 0;
+            if (byName)
+            {
+                if (!cacheAssemblyTypes.TryGetValue(assembly, out var cache))
+                {
+                    var definedTypes = assembly.GetExportedTypes();
+                    cacheAssemblyTypes[assembly] =
+                        cache = new Dictionary<string, Type>(definedTypes.Length, StringComparer.Ordinal);
+                    foreach (var defined in definedTypes)
+                    {
+                        cache[defined.Name] = defined;
+                    }
+                }
+
+                return cache.TryGetValue(value, out var type) ? type : null;
+            }
+            else
+            {
+                return assembly.GetType(value);
+            }
+        }
 
         public static List<Type> GetTypeHierarchi(Type type)
         {
