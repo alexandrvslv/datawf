@@ -19,11 +19,11 @@ namespace DataWF.WebService.Generator
 
             foreach (var identifier in usingName.Split('.'))
             {
-                var name = SyntaxFactory.IdentifierName(identifier);
+                var name = SF.IdentifierName(identifier);
 
                 if (qualifiedName != null)
                 {
-                    qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, name);
+                    qualifiedName = SF.QualifiedName(qualifiedName, name);
                 }
                 else
                 {
@@ -31,23 +31,41 @@ namespace DataWF.WebService.Generator
                 }
             }
 
-            return SyntaxFactory.UsingDirective(qualifiedName);
+            return SF.UsingDirective(qualifiedName);
+        }
+
+        public static void AddUsing(Type type, Dictionary<string, UsingDirectiveSyntax> usings)
+        {
+            AddUsing(type.Namespace, usings);
+            if (type.IsGenericType)
+            {
+                foreach (var genericArgument in type.GetGenericArguments())
+                    AddUsing(genericArgument, usings);
+            }
+        }
+
+        public static void AddUsing(string usingName, Dictionary<string, UsingDirectiveSyntax> usings)
+        {
+            if (!usings.TryGetValue(usingName, out var syntax))
+            {
+                usings.Add(usingName, SyntaxHelper.CreateUsingDirective(usingName));
+            }
         }
 
         public static CompilationUnitSyntax GenUnit(MemberDeclarationSyntax @class, string nameSpace, IEnumerable<UsingDirectiveSyntax> usings)
         {
-            var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(nameSpace))
+            var @namespace = SF.NamespaceDeclaration(SF.ParseName(nameSpace))
                                              .AddMembers(@class);
             return GenUnit(@namespace, usings);
         }
 
         public static CompilationUnitSyntax GenUnit(NamespaceDeclarationSyntax @namespace, IEnumerable<UsingDirectiveSyntax> usings)
         {
-            return SyntaxFactory.CompilationUnit(
-                            externs: SyntaxFactory.List<ExternAliasDirectiveSyntax>(),
-                            usings: SyntaxFactory.List(usings),
-                            attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                            members: SyntaxFactory.List<MemberDeclarationSyntax>(new[] { @namespace }))
+            return SF.CompilationUnit(
+                            externs: SF.List<ExternAliasDirectiveSyntax>(),
+                            usings: SF.List(usings),
+                            attributeLists: SF.List<AttributeListSyntax>(),
+                            members: SF.List<MemberDeclarationSyntax>(new[] { @namespace }))
                                                     .NormalizeWhitespace("    ", true);
         }
 
@@ -66,7 +84,7 @@ namespace DataWF.WebService.Generator
                 using (var reader = new StreamReader(manifestStream))
                 {
                     var text = reader.ReadToEnd().Replace("NewNameSpace", newNameSpace, StringComparison.Ordinal);
-                    var unit = SyntaxFactory.ParseCompilationUnit(text);
+                    var unit = SF.ParseCompilationUnit(text);
                     if (output != null)
                     {
                         File.WriteAllText(Path.Combine(output, name.Substring(path.Length)), text);
@@ -79,25 +97,35 @@ namespace DataWF.WebService.Generator
         public static PropertyDeclarationSyntax GenProperty(string type, string name, bool setter, string initializer = null)
         {
             var accessors = setter
-                ? new[] {SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
-                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken )),
-                        SyntaxFactory.AccessorDeclaration( SyntaxKind.SetAccessorDeclaration )
-                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken ))}
-                : new[] {SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
-                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken )) };
-            return SyntaxFactory.PropertyDeclaration(
-                                attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                                modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                                type: SyntaxFactory.ParseTypeName(type),
+                ? new[] {SF.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
+                        .WithSemicolonToken( SF.Token(SyntaxKind.SemicolonToken )),
+                        SF.AccessorDeclaration( SyntaxKind.SetAccessorDeclaration )
+                        .WithSemicolonToken( SF.Token(SyntaxKind.SemicolonToken ))}
+                : new[] {SF.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
+                        .WithSemicolonToken( SF.Token(SyntaxKind.SemicolonToken )) };
+            return SF.PropertyDeclaration(
+                                attributeLists: SF.List<AttributeListSyntax>(),
+                                modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                                type: SF.ParseTypeName(type),
                                 explicitInterfaceSpecifier: null,
-                                identifier: SyntaxFactory.Identifier(name),
-                                accessorList: SyntaxFactory.AccessorList(SyntaxFactory.List(accessors)),
+                                identifier: SF.Identifier(name),
+                                accessorList: SF.AccessorList(SF.List(accessors)),
                                 expressionBody: null,
-                                initializer: initializer == null ? null : SyntaxFactory.EqualsValueClause(SyntaxFactory.ParseExpression(initializer)),
-                                semicolonToken: initializer == null ? SyntaxFactory.Token(SyntaxKind.None) : SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+                                initializer: initializer == null ? null : SF.EqualsValueClause(SF.ParseExpression(initializer)),
+                                semicolonToken: initializer == null ? SF.Token(SyntaxKind.None) : SF.Token(SyntaxKind.SemicolonToken));
         }
 
-        public static AttributeListSyntax GenAttribute(string name)
+        public static AttributeListSyntax GenAttributeList(KeyValuePair<string, string>[] names)
+        {
+            var list = new List<AttributeSyntax>();
+            foreach (var name in names)
+            {
+                list.Add(GenAttribute(name.Key, name.Value));
+            }
+            return SF.AttributeList(SF.SeparatedList(list));
+        }
+
+        public static AttributeListSyntax GenAttributeList(string name)
         {
             return SF.AttributeList(
                 SF.SingletonSeparatedList(
@@ -105,7 +133,7 @@ namespace DataWF.WebService.Generator
                         SF.IdentifierName(name))));
         }
 
-        public static AttributeListSyntax GenAttribute(string name, string args)
+        public static AttributeListSyntax GenAttributeList(string name, string args)
         {
             return SF.AttributeList(
                 SF.SingletonSeparatedList(
@@ -116,6 +144,39 @@ namespace DataWF.WebService.Generator
                                 SF.AttributeArgument(
                                     SF.ParseExpression(args)))))));
         }
+
+        public static AttributeSyntax GenAttribute(string name, string args)
+        {
+            var attribure = SF.Attribute(SF.IdentifierName(name));
+            if (args != null)
+            {
+                attribure = attribure.WithArgumentList(
+                        SF.AttributeArgumentList(
+                            SF.SingletonSeparatedList(
+                                SF.AttributeArgument(
+                                    SF.ParseExpression(args)))));
+            }
+
+            return attribure;
+        }
+
+        public static void ConsoleWarning(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write($"Warning: ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(message);
+        }
+
+        public static void ConsoleInfo(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write($"Info: ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(message);
+        }
+
+
     }
 
 }

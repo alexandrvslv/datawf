@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,6 +36,24 @@ namespace DataWF.WebClient.Generator
             return SF.UsingDirective(qualifiedName);
         }
 
+        public static void AddUsing(Type type, Dictionary<string, UsingDirectiveSyntax> usings)
+        {
+            AddUsing(type.Namespace, usings);
+            if (type.IsGenericType)
+            {
+                foreach (var genericArgument in type.GetGenericArguments())
+                    AddUsing(genericArgument, usings);
+            }
+        }
+
+        public static void AddUsing(string usingName, Dictionary<string, UsingDirectiveSyntax> usings)
+        {
+            if (!usings.TryGetValue(usingName, out var syntax))
+            {
+                usings.Add(usingName, SyntaxHelper.CreateUsingDirective(usingName));
+            }
+        }
+
         public static CompilationUnitSyntax GenUnit(MemberDeclarationSyntax @class, string nameSpace, IEnumerable<UsingDirectiveSyntax> usings)
         {
             var @namespace = SF.NamespaceDeclaration(SF.ParseName(nameSpace))
@@ -56,7 +75,7 @@ namespace DataWF.WebClient.Generator
 
             foreach (var name in assembly.GetManifestResourceNames())
             {
-                if (!name.StartsWith(path))
+                if (!name.StartsWith(path, StringComparison.Ordinal))
                     continue;
                 using (var manifestStream = assembly.GetManifestResourceStream(name))
                 using (var reader = new StreamReader(manifestStream))
@@ -122,6 +141,24 @@ namespace DataWF.WebClient.Generator
 
             return attribure;
         }
+
+        public static void ConsoleWarning(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write($"Warning: ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(message);
+        }
+
+        public static void ConsoleInfo(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write($"Information: ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(message);
+        }
+
+
     }
 
 }

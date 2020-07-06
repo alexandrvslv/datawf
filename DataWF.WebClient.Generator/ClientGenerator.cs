@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.Loader;
 using System.Text;
 using System.Threading;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -16,7 +18,8 @@ namespace DataWF.WebClient.Generator
 {
     public class ClientGenerator
     {
-        private readonly HashSet<string> VirtualOperations = new HashSet<string> {
+        private readonly HashSet<string> VirtualOperations = new HashSet<string>
+        {
             "GetAsync",
             "PutAsync",
             "PostAsync",
@@ -32,27 +35,89 @@ namespace DataWF.WebClient.Generator
             "UndoLogAsync"
         };
         private readonly Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>(StringComparer.Ordinal);
+        private readonly Dictionary<string, Type> cacheReferences = new Dictionary<string, Type>(StringComparer.Ordinal);
         private readonly Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>(StringComparer.Ordinal);
-        private List<UsingDirectiveSyntax> usings;
+        private readonly Dictionary<string, Dictionary<string, UsingDirectiveSyntax>> cacheUsings = new Dictionary<string, Dictionary<string, UsingDirectiveSyntax>>(StringComparer.Ordinal);
+
         private readonly Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
         private OpenApiDocument document;
         private CompilationUnitSyntax provider;
 
-        public ClientGenerator(string source, string output, string nameSpace = "DataWF.Web.Client")
+        public ClientGenerator(string source, string output, string @namespace, string references)
         {
-            Namespace = nameSpace;
+            Namespace = @namespace;
             Output = string.IsNullOrEmpty(output) ? null : Path.GetFullPath(output);
             Source = source;
+            if (!string.IsNullOrEmpty(references))
+            {
+                var referenceArray = references.Split(";");
+                foreach (var reference in referenceArray)
+                {
+                    if (File.Exists(reference))
+                    {
+                        LoadAssembly(reference);
+                    }
+                    else if (Directory.Exists(reference))
+                    {
+                        var directory = reference.TrimEnd(Path.DirectorySeparatorChar);
+                        directory = directory.Substring(directory.LastIndexOf(Path.DirectorySeparatorChar) + 1);
+                        var bin = Path.Combine(reference, "bin");
+                        foreach (var dll in Directory.GetFiles(bin, "*.dll", SearchOption.AllDirectories))
+                        {
+                            var dllName = Path.GetFileName(dll);
+                            if (dllName.StartsWith(directory))
+                            {
+                                LoadAssembly(dll);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public string Output { get; }
         public string Source { get; }
         public string Namespace { get; }
+        public HashSet<Assembly> References { get; } = new HashSet<Assembly>();
         public string ProviderName { get; set; } = "ClientProvider";
+
+        private void LoadAssembly(string reference)
+        {
+            try
+            {
+                var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(reference));
+                References.Add(assembly);
+                SyntaxHelper.ConsoleInfo($"Load reference assembly {assembly} from {reference}");
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+                SyntaxHelper.ConsoleWarning($"Can't Load Assembly {reference}. {ex.GetType().Name} {ex.Message}");
+            }
+        }
 
         public void Generate()
         {
-            usings = new List<UsingDirectiveSyntax>() {
+            var url = new Uri(Source);
+            if (url.Scheme == "http" || url.Scheme == "https")
+                document = OpenApiDocument.FromUrlAsync(url.OriginalString).GetAwaiter().GetResult();
+            else if (url.Scheme == "file")
+                document = OpenApiDocument.FromFileAsync(url.LocalPath).GetAwaiter().GetResult();
+            foreach (var definition in document.Definitions)
+            {
+                definition.Value.Id = definition.Key;
+            }
+            foreach (var definition in document.Definitions)
+            {
+                GetOrGenDefinion(definition.Key, out _);
+            }
+            foreach (var operation in document.Operations)
+            {
+                AddClientOperation(operation);
+            }
+
+            provider = SyntaxHelper.GenUnit(GenProvider(), Namespace, usings: new List<UsingDirectiveSyntax>()
+            {
                 SyntaxHelper.CreateUsingDirective("DataWF.Common") ,
                 SyntaxHelper.CreateUsingDirective("DataWF.WebClient.Common") ,
                 SyntaxHelper.CreateUsingDirective("System") ,
@@ -69,26 +134,7 @@ namespace DataWF.WebClient.Generator
                 SyntaxHelper.CreateUsingDirective("System.Net.Http") ,
                 SyntaxHelper.CreateUsingDirective("System.Net.Http.Headers") ,
                 SyntaxHelper.CreateUsingDirective("System.Text.Json.Serialization")
-            };
-            var url = new Uri(Source);
-            if (url.Scheme == "http" || url.Scheme == "https")
-                document = OpenApiDocument.FromUrlAsync(url.OriginalString).GetAwaiter().GetResult();
-            else if (url.Scheme == "file")
-                document = OpenApiDocument.FromFileAsync(url.LocalPath).GetAwaiter().GetResult();
-            foreach (var definition in document.Definitions)
-            {
-                definition.Value.Id = definition.Key;
-            }
-            foreach (var definition in document.Definitions)
-            {
-                GetOrGenDefinion(definition.Key);
-            }
-            foreach (var operation in document.Operations)
-            {
-                AddClientOperation(operation);
-            }
-
-            provider = SyntaxHelper.GenUnit(GenProvider(), Namespace, usings);
+            });
         }
 
         private ClassDeclarationSyntax GenProvider()
@@ -161,6 +207,8 @@ namespace DataWF.WebClient.Generator
             Directory.CreateDirectory(modelPath);
             foreach (var entry in cacheModels)
             {
+                if (entry.Value == null)
+                    continue;
                 if (save)
                 {
                     WriteFile(Path.Combine(modelPath, entry.Key + ".cs"), entry.Value);
@@ -172,7 +220,8 @@ namespace DataWF.WebClient.Generator
             Directory.CreateDirectory(clientPath);
             foreach (var entry in cacheClients)
             {
-                var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, usings);
+                var usings = cacheUsings[entry.Key];
+                var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, usings.Values);
                 if (save)
                 {
                     WriteFile(Path.Combine(clientPath, entry.Key + "Client.cs"), unit);
@@ -247,17 +296,34 @@ namespace DataWF.WebClient.Generator
         private void AddClientOperation(OpenApiOperationDescription descriptor)
         {
             GetOperationName(descriptor, out var clientName);
+            if (!cacheUsings.TryGetValue(clientName, out var usings))
+            {
+                cacheUsings[clientName] = new Dictionary<string, UsingDirectiveSyntax>
+                {
+                    { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") } ,
+                    { "DataWF.WebClient.Common",  SyntaxHelper.CreateUsingDirective("DataWF.WebClient.Common") } ,
+                    { "System", SyntaxHelper.CreateUsingDirective("System") },
+                    { "System.Collections", SyntaxHelper.CreateUsingDirective("System.Collections")},
+                    { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") },
+                    { "System.Net.Http", SyntaxHelper.CreateUsingDirective("System.Net.Http") },
+                    { "System.Net.Http.Headers", SyntaxHelper.CreateUsingDirective("System.Net.Http.Headers") },
+                    { "System.Linq", SyntaxHelper.CreateUsingDirective("System.Linq")} ,
+                    { "System.IO", SyntaxHelper.CreateUsingDirective("System.IO") },
+                    { "System.Threading",  SyntaxHelper.CreateUsingDirective("System.Threading") },
+                    { "System.Threading.Tasks", SyntaxHelper.CreateUsingDirective("System.Threading.Tasks") },
+                };
+            }
             if (!cacheClients.TryGetValue(clientName, out var clientSyntax))
             {
-                clientSyntax = GenClient(clientName);
+                clientSyntax = GenClient(clientName, usings);
             }
 
-            cacheClients[clientName] = clientSyntax.AddMembers(GenOperation(descriptor).ToArray());
+            cacheClients[clientName] = clientSyntax.AddMembers(GenOperation(descriptor, usings).ToArray());
         }
 
-        private ClassDeclarationSyntax GenClient(string clientName)
+        private ClassDeclarationSyntax GenClient(string clientName, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            var baseType = SF.ParseTypeName(GetClientBaseType(clientName, out var idKey, out var typeKey, out var typeId));
+            var baseType = SF.ParseTypeName(GetClientBaseType(clientName, usings, out var idKey, out var typeKey, out var typeId));
 
             return SF.ClassDeclaration(
                         attributeLists: SF.List(ClientAttributeList()),
@@ -384,7 +450,7 @@ namespace DataWF.WebClient.Generator
             return cache;
         }
 
-        private string GetClientBaseType(string clientName, out JsonSchemaProperty idKey, out JsonSchemaProperty typeKey, out int typeId)
+        private string GetClientBaseType(string clientName, Dictionary<string, UsingDirectiveSyntax> usings, out JsonSchemaProperty idKey, out JsonSchemaProperty typeKey, out int typeId)
         {
             idKey = null;
             typeKey = null;
@@ -393,14 +459,14 @@ namespace DataWF.WebClient.Generator
                 .Where(p => p.Operation.Tags.Contains(clientName, StringComparer.OrdinalIgnoreCase))
                 .FirstOrDefault(p => p.Path.Contains("/GetItemLogs/", StringComparison.OrdinalIgnoreCase));
             var loggedReturnSchema = logged == null ? null : GetReturningTypeSchema(logged);
-            var loggedTypeName = loggedReturnSchema == null ? null : GetArrayElementTypeString(loggedReturnSchema);
+            var loggedTypeName = loggedReturnSchema == null ? null : GetArrayElementTypeString(loggedReturnSchema, usings);
             if (document.Definitions.TryGetValue(clientName, out var schema))
             {
                 idKey = GetPrimaryKey(schema);
                 typeKey = GetTypeKey(schema);
                 typeId = GetTypeId(schema);
 
-                return $"{(loggedTypeName != null ? "Logged" : "")}Client<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, false, "List"))}{(logged != null ? $", {loggedTypeName}" : "")}>";
+                return $"{(loggedTypeName != null ? "Logged" : "")}Client<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, false, usings, "List"))}{(logged != null ? $", {loggedTypeName}" : "")}>";
             }
             return $"ClientBase";
         }
@@ -561,19 +627,19 @@ namespace DataWF.WebClient.Generator
                 ? responce.Schema : null;
         }
 
-        private string GetReturningType(OpenApiOperationDescription descriptor)
+        private string GetReturningType(OpenApiOperationDescription descriptor, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var returnType = "string";
             if (descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce.Schema != null)
             {
-                returnType = $"{GetTypeString(responce.Schema, false, "List")}";
+                returnType = $"{GetTypeString(responce.Schema, false, usings, "List")}";
             }
             return returnType;
         }
 
-        private string GetReturningTypeCheck(OpenApiOperationDescription descriptor, string operationName)
+        private string GetReturningTypeCheck(OpenApiOperationDescription descriptor, string operationName, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            var returnType = GetReturningType(descriptor);
+            var returnType = GetReturningType(descriptor, usings);
             if (operationName == "GenerateId")
                 returnType = "object";
             //if (returnType == "AccessValue")
@@ -583,13 +649,13 @@ namespace DataWF.WebClient.Generator
             return returnType;
         }
 
-        private IEnumerable<MemberDeclarationSyntax> GenOperation(OpenApiOperationDescription descriptor)
+        private IEnumerable<MemberDeclarationSyntax> GenOperation(OpenApiOperationDescription descriptor, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var operationName = GetOperationName(descriptor, out var clientName);
             var actualName = $"{operationName}Async";
-            var baseType = GetClientBaseType(clientName, out var id, out var typeKey, out var typeId);
+            var baseType = GetClientBaseType(clientName, usings, out var id, out var typeKey, out var typeId);
             var isOverride = baseType != "ClientBase" && VirtualOperations.Contains(actualName);
-            var returnType = GetReturningTypeCheck(descriptor, operationName);
+            var returnType = GetReturningTypeCheck(descriptor, operationName, usings);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
             //if (isOverride)
             //    throw new Exception("Operation Name :" + operationName);
@@ -618,9 +684,9 @@ namespace DataWF.WebClient.Generator
                     explicitInterfaceSpecifier: null,
                     identifier: SF.Identifier(actualName),
                     typeParameterList: null,
-                    parameterList: SF.ParameterList(SF.SeparatedList(GenOperationParameter(descriptor))),
+                    parameterList: SF.ParameterList(SF.SeparatedList(GenOperationParameter(descriptor, usings))),
                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                    body: SF.Block(GenOperationBody(actualName, descriptor, isOverride)),
+                    body: SF.Block(GenOperationBody(actualName, descriptor, usings, isOverride)),
                     semicolonToken: SF.Token(SyntaxKind.None));
         }
 
@@ -637,7 +703,7 @@ namespace DataWF.WebClient.Generator
         //    return SF.ParseStatement(builder.ToString());
         //}
 
-        private IEnumerable<StatementSyntax> GenOperationBody(string actualName, OpenApiOperationDescription descriptor, bool isOverride)
+        private IEnumerable<StatementSyntax> GenOperationBody(string actualName, OpenApiOperationDescription descriptor, Dictionary<string, UsingDirectiveSyntax> usings, bool isOverride)
         {
             var method = descriptor.Method.ToString().ToUpperInvariant();
             var responceSchema = (JsonSchema)null;
@@ -662,7 +728,7 @@ namespace DataWF.WebClient.Generator
                 path.Append($"{parameter.Name}={{{parameter.Name}}}");
             }
 
-            var returnType = GetReturningType(descriptor);
+            var returnType = GetReturningType(descriptor, usings);
 
             //if (isOverride)
             //{
@@ -703,7 +769,7 @@ namespace DataWF.WebClient.Generator
             yield return SF.ParseStatement($"return {requestBuilder.ToString()}");
         }
 
-        private IEnumerable<ParameterSyntax> GenOperationParameter(OpenApiOperationDescription descriptor)
+        private IEnumerable<ParameterSyntax> GenOperationParameter(OpenApiOperationDescription descriptor, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             foreach (var parameter in descriptor.Operation.Parameters)
             {
@@ -711,13 +777,13 @@ namespace DataWF.WebClient.Generator
                     continue;
                 yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
                                                          modifiers: SF.TokenList(),
-                                                         type: GetTypeDeclaration(parameter, false, "List"),
+                                                         type: GetTypeDeclaration(parameter, false, usings, "List"),
                                                          identifier: SF.Identifier(parameter.Name),
                                                          @default: null);
             }
 
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
-            var returnType = GetReturningType(descriptor);
+            var returnType = GetReturningType(descriptor, usings);
             if (bodyParameter == null && returnType.StartsWith("List<", StringComparison.Ordinal))
             {
                 yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
@@ -738,23 +804,83 @@ namespace DataWF.WebClient.Generator
                                                         @default: null);
         }
 
-        private CompilationUnitSyntax GetOrGenDefinion(string key)
+        private CompilationUnitSyntax GetOrGenDefinion(string key, out Type type)
         {
-            if (key.Equals(nameof(DefaultItem), StringComparison.OrdinalIgnoreCase)
-                   || key.Equals(nameof(TimeSpan), StringComparison.OrdinalIgnoreCase))
-                return null;
+            type = null;
             if (!cacheModels.TryGetValue(key, out var tree))
             {
                 cacheModels[key] = null;
-                cacheModels[key] = tree = GenDefinition(document.Definitions[key]);
+                var definition = document.Definitions[key];
+                type = GetReferenceType(definition);
+                if (type == null)
+                {
+                    cacheModels[key] = tree = GenDefinition(definition);
+                }
+            }
+            else if (tree == null)
+            {
+                type = GetReferenceType(document.Definitions[key]);
             }
             return tree;
         }
 
+        private Type GetReferenceType(JsonSchema definition)
+        {
+            var definitionName = GetDefinitionName(definition);
+            if (!cacheReferences.TryGetValue(definitionName, out var type))
+            {
+                if (definitionName.Equals(nameof(DefaultItem), StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(DefaultItem);
+                }
+                else if (definitionName.Equals(nameof(TimeSpan), StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(TimeSpan);
+                }
+                else
+                {
+                    foreach (var reference in References)
+                    {
+                        try
+                        {
+                            var parsedType = TypeHelper.ParseType(definitionName, reference);
+                            if (parsedType != null && type.IsEnum)
+                            {
+                                type = parsedType;
+                                break;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Helper.OnException(ex);
+                            SyntaxHelper.ConsoleWarning($"Can't Check Type {definitionName} on {reference}. {ex.GetType().Name} {ex.Message}");
+                        }
+                    }
+                }
+                cacheReferences[definitionName] = type;
+            }
+            return type;
+        }
+
         private CompilationUnitSyntax GenDefinition(JsonSchema schema)
         {
-            var @class = schema.IsEnumeration ? GenDefinitionEnum(schema) : GenDefinitionClass(schema);
-            return SyntaxHelper.GenUnit(@class, Namespace, usings);
+            var usings = new Dictionary<string, UsingDirectiveSyntax>
+            {
+                { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") } ,
+                { "DataWF.WebClient.Common",  SyntaxHelper.CreateUsingDirective("DataWF.WebClient.Common") } ,
+                { "System", SyntaxHelper.CreateUsingDirective("System") },
+                { "System.Collections", SyntaxHelper.CreateUsingDirective("System.Collections")},
+                { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") },
+                { "System.ComponentModel", SyntaxHelper.CreateUsingDirective("System.ComponentModel") },
+                { "System.ComponentModel.DataAnnotations", SyntaxHelper.CreateUsingDirective("System.ComponentModel.DataAnnotations") },
+                { "System.Linq", SyntaxHelper.CreateUsingDirective("System.Linq")} ,
+                { "System.IO", SyntaxHelper.CreateUsingDirective("System.IO") },
+                { "System.Runtime.Serialization", SyntaxHelper.CreateUsingDirective("System.Runtime.Serialization")} ,
+                { "System.Runtime.CompilerServices", SyntaxHelper.CreateUsingDirective("System.Runtime.CompilerServices")},
+                { "System.Text.Json.Serialization", SyntaxHelper.CreateUsingDirective("System.Text.Json.Serialization")}
+            };
+            var @class = schema.IsEnumeration ? GenDefinitionEnum(schema) : GenDefinitionClass(schema, usings);
+            return SyntaxHelper.GenUnit(@class, Namespace, usings.Values);
         }
 
         private MemberDeclarationSyntax GenDefinitionEnum(JsonSchema schema)
@@ -808,7 +934,7 @@ namespace DataWF.WebClient.Generator
             }
         }
 
-        private MemberDeclarationSyntax GenDefinitionClass(JsonSchema schema)
+        private MemberDeclarationSyntax GenDefinitionClass(JsonSchema schema, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var refFields = referenceFields[schema] = new List<RefField>();
             return SF.ClassDeclaration(
@@ -816,16 +942,20 @@ namespace DataWF.WebClient.Generator
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
                     identifier: SF.Identifier(GetDefinitionName(schema)),
                     typeParameterList: null,
-                    baseList: SF.BaseList(SF.SeparatedList(GenDefinitionClassBases(schema))),
+                    baseList: SF.BaseList(SF.SeparatedList(GenDefinitionClassBases(schema, usings))),
                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SF.List(GenDefinitionClassMemebers(schema, refFields)));
+                    members: SF.List(GenDefinitionClassMemebers(schema, refFields, usings)));
         }
 
-        private IEnumerable<BaseTypeSyntax> GenDefinitionClassBases(JsonSchema schema)
+        private IEnumerable<BaseTypeSyntax> GenDefinitionClassBases(JsonSchema schema, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             if (schema.InheritedSchema != null)
             {
-                GetOrGenDefinion(schema.InheritedSchema.Id);
+                GetOrGenDefinion(schema.InheritedSchema.Id, out var type);
+                if (type != null)
+                {
+                    SyntaxHelper.AddUsing(type, usings);
+                }
                 yield return SF.SimpleBaseType(SF.ParseTypeName(GetDefinitionName(schema.InheritedSchema)));
             }
             else
@@ -844,7 +974,7 @@ namespace DataWF.WebClient.Generator
             }
         }
 
-        private IEnumerable<MemberDeclarationSyntax> GenDefinitionClassMemebers(JsonSchema schema, List<RefField> refFields)
+        private IEnumerable<MemberDeclarationSyntax> GenDefinitionClassMemebers(JsonSchema schema, List<RefField> refFields, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var idKey = GetPrimaryKey(schema);
             var typeKey = GetTypeKey(schema);
@@ -852,7 +982,7 @@ namespace DataWF.WebClient.Generator
 
             foreach (var property in schema.Properties)
             {
-                foreach (var item in GenDefinitionClassField(property.Value, idKey, refFields))
+                foreach (var item in GenDefinitionClassField(property.Value, idKey, refFields, usings))
                 {
                     yield return item;
                 }
@@ -890,12 +1020,12 @@ namespace DataWF.WebClient.Generator
 
             if (refFields.Count > 0 && idKey.ParentSchema != schema)
             {
-                yield return GenDefinitionClassProperty(idKey, idKey, typeKey, refFields, true);
+                yield return GenDefinitionClassProperty(idKey, idKey, typeKey, refFields, usings, true);
             }
 
             foreach (var property in schema.Properties)
             {
-                yield return GenDefinitionClassProperty(property.Value, idKey, typeKey, refFields);
+                yield return GenDefinitionClassProperty(property.Value, idKey, typeKey, refFields, usings);
             }
 
             if (GetPrimaryKey(schema, false) != null)
@@ -914,7 +1044,7 @@ namespace DataWF.WebClient.Generator
                             body: SF.Block(new[]{ SF.ParseStatement($"return {idKey.Name};") })),
                         SF.AccessorDeclaration(
                             kind: SyntaxKind.SetAccessorDeclaration,
-                            body: SF.Block(new[]{ SF.ParseStatement($"{idKey.Name} = ({GetTypeString(idKey, true, "List")})value;")}))
+                            body: SF.Block(new[]{ SF.ParseStatement($"{idKey.Name} = ({GetTypeString(idKey, true, usings, "List")})value;")}))
                     })),
                     expressionBody: null,
                     initializer: null,
@@ -938,7 +1068,7 @@ namespace DataWF.WebClient.Generator
             {
                 var name = GetInvokerName(property.Value);
                 var refkey = GetPropertyRefKey(property.Value);
-                var propertyType = GetTypeString(property.Value, property.Value.IsNullableRaw ?? true, refkey == null ? "SelectableList" : "ReferenceList");
+                var propertyType = GetTypeString(property.Value, property.Value.IsNullableRaw ?? true, usings, refkey == null ? "SelectableList" : "ReferenceList");
                 var propertyName = GetPropertyName(property.Value);
 
                 yield return GenDefinitionClassPropertyInvoker(name, definitionName, propertyName, propertyType);
@@ -1112,10 +1242,11 @@ namespace DataWF.WebClient.Generator
                 @default: @default);
         }
 
-        private PropertyDeclarationSyntax GenDefinitionClassProperty(JsonSchemaProperty property, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, List<RefField> refFields, bool isOverride = false)
+        private PropertyDeclarationSyntax GenDefinitionClassProperty(JsonSchemaProperty property, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, List<RefField> refFields,
+            Dictionary<string, UsingDirectiveSyntax> usings, bool isOverride = false)
         {
             var refkey = GetPropertyRefKey(property);
-            var typeDeclaration = GetTypeDeclaration(property, property.IsNullableRaw ?? true, refkey == null ? "SelectableList" : "ReferenceList");
+            var typeDeclaration = GetTypeDeclaration(property, property.IsNullableRaw ?? true, usings, refkey == null ? "SelectableList" : "ReferenceList");
 
             return SF.PropertyDeclaration(
                 attributeLists: SF.List(GenDefinitionClassPropertyAttributes(property, idKey, typeKey)),
@@ -1123,7 +1254,7 @@ namespace DataWF.WebClient.Generator
                 type: typeDeclaration,
                 explicitInterfaceSpecifier: null,
                 identifier: SF.Identifier(GetPropertyName(property)),
-                accessorList: SF.AccessorList(SF.List(GenDefinitionClassPropertyAccessors(property, idKey, refFields, isOverride))),
+                accessorList: SF.AccessorList(SF.List(GenDefinitionClassPropertyAccessors(property, idKey, refFields, usings, isOverride))),
                 expressionBody: null,
                 initializer: null,
                 semicolonToken: SF.Token(SyntaxKind.None)
@@ -1211,18 +1342,19 @@ namespace DataWF.WebClient.Generator
             }
         }
 
-        private IEnumerable<AccessorDeclarationSyntax> GenDefinitionClassPropertyAccessors(JsonSchemaProperty property, JsonSchemaProperty idKey, List<RefField> refFields, bool isOverride)
+        private IEnumerable<AccessorDeclarationSyntax> GenDefinitionClassPropertyAccessors(
+            JsonSchemaProperty property,
+            JsonSchemaProperty idKey,
+            List<RefField> refFields,
+            Dictionary<string, UsingDirectiveSyntax> usings,
+            bool isOverride)
         {
             yield return SF.AccessorDeclaration(
                 kind: SyntaxKind.GetAccessorDeclaration,
-                body: SF.Block(
-                    GenDefintionClassPropertyGet(property, isOverride)
-                ));
+                body: SF.Block(GenDefintionClassPropertyGet(property, isOverride)));
             yield return SF.AccessorDeclaration(
                 kind: SyntaxKind.SetAccessorDeclaration,
-                body: SF.Block(
-                    GenDefinitionClassPropertySet(property, idKey, refFields, isOverride)
-                ));
+                body: SF.Block(GenDefinitionClassPropertySet(property, idKey, refFields, usings, isOverride)));
         }
 
         private IEnumerable<StatementSyntax> GenDefintionClassPropertyGet(JsonSchemaProperty property, bool isOverride)
@@ -1249,11 +1381,16 @@ namespace DataWF.WebClient.Generator
             yield return SF.ParseStatement($"return {fieldName};");
         }
 
-        private IEnumerable<StatementSyntax> GenDefinitionClassPropertySet(JsonSchemaProperty property, JsonSchemaProperty idKey, List<RefField> refFields, bool isOverride)
+        private IEnumerable<StatementSyntax> GenDefinitionClassPropertySet(
+            JsonSchemaProperty property,
+            JsonSchemaProperty idKey,
+            List<RefField> refFields,
+            Dictionary<string, UsingDirectiveSyntax> usings,
+            bool isOverride)
         {
             if (!isOverride)
             {
-                var type = GetTypeString(property, true, "SelectableList");
+                var type = GetTypeString(property, true, usings, "SelectableList");
                 if (type.Equals("string", StringComparison.Ordinal))
                 {
                     yield return SF.ParseStatement($"if(string.Equals({GetFieldName(property)}, value, StringComparison.Ordinal)) return;");
@@ -1277,7 +1414,7 @@ namespace DataWF.WebClient.Generator
                     var objectFieldName = GetFieldName(objectProperty);
                     yield return SF.ParseStatement($"if({objectFieldName}?.Id != value)");
                     yield return SF.ParseStatement("{");
-                    yield return SF.ParseStatement($"{objectFieldName} = value == null ? null : {GetTypeString(objectProperty, false, "List")}Client.Instance.Select(value.Value);");
+                    yield return SF.ParseStatement($"{objectFieldName} = value == null ? null : {GetTypeString(objectProperty, false, usings, "List")}Client.Instance.Select(value.Value);");
                     yield return SF.ParseStatement($"OnPropertyChanged(nameof({GetPropertyName(objectProperty)}));");
                     yield return SF.ParseStatement("}");
                 }
@@ -1329,7 +1466,7 @@ namespace DataWF.WebClient.Generator
                 : null;
         }
 
-        private IEnumerable<FieldDeclarationSyntax> GenDefinitionClassField(JsonSchemaProperty property, JsonSchemaProperty idKey, List<RefField> refFields)
+        private IEnumerable<FieldDeclarationSyntax> GenDefinitionClassField(JsonSchemaProperty property, JsonSchemaProperty idKey, List<RefField> refFields, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var refkey = GetPropertyRefKey(property);
             if (refkey != null && property.Type == JsonObjectType.Array)
@@ -1341,7 +1478,7 @@ namespace DataWF.WebClient.Generator
                     Definition = property.ParentSchema.Id,
                     RefKey = refkey,
                     TypeSchema = property.Item.ActualTypeSchema,
-                    TypeName = GetTypeString(property.Item, false),
+                    TypeName = GetTypeString(property.Item, false, usings),
                 };
                 refFields.Add(refField);
                 //var refTypePrimary = GetPrimaryKey(refTypeSchema);
@@ -1349,7 +1486,7 @@ namespace DataWF.WebClient.Generator
                 //var refTypePrimaryType = GetTypeString(refTypePrimary, true, "SelectableList");
                 refField.KeyProperty = GetProperty(refField.TypeSchema, refkey);
                 refField.KeyName = GetPropertyName(refField.KeyProperty);
-                refField.KeyType = GetTypeString(refField.KeyProperty, true);
+                refField.KeyType = GetTypeString(refField.KeyProperty, true, usings);
 
                 refField.ValueProperty = GetReferenceProperty((JsonSchema)refField.KeyProperty.Parent, refField.KeyName);
                 refField.ValueName = GetPropertyName(refField.ValueProperty);
@@ -1374,7 +1511,7 @@ namespace DataWF.WebClient.Generator
                 //               initializer: SF.EqualsValueClause(
                 //                   SF.ParseExpression($"new {refField.ParameterType}{{ Invoker = {refField.InvokerName}}}"))))));
 
-                refField.FieldType = GetTypeString(property, property.IsNullableRaw ?? true, "ReferenceList");
+                refField.FieldType = GetTypeString(property, property.IsNullableRaw ?? true, usings, "ReferenceList");
                 refField.FieldName = GetFieldName(property);
                 yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.ProtectedKeyword)),
@@ -1388,7 +1525,7 @@ namespace DataWF.WebClient.Generator
             }
             else
             {
-                var type = GetTypeString(property, property.IsNullableRaw ?? true);
+                var type = GetTypeString(property, property.IsNullableRaw ?? true, usings);
                 yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
                     modifiers: SF.TokenList(type.EndsWith('?')
                     ? new[] { SF.Token(SyntaxKind.ProtectedKeyword) }
@@ -1400,16 +1537,16 @@ namespace DataWF.WebClient.Generator
                                identifier: SF.Identifier(GetFieldName(property)),
                                argumentList: null,
                                initializer: property.Default != null
-                               ? SF.EqualsValueClause(GenFieldDefault(property, idKey))
+                               ? SF.EqualsValueClause(GenFieldDefault(property, idKey, usings))
                                : property.Type == JsonObjectType.Array
                                ? SF.EqualsValueClause(SF.ParseExpression($"new {type}()")) : null))));
             }
         }
 
-        private ExpressionSyntax GenFieldDefault(JsonSchemaProperty property, JsonSchemaProperty idKey)
+        private ExpressionSyntax GenFieldDefault(JsonSchemaProperty property, JsonSchemaProperty idKey, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var text = property.Default.ToString();
-            var type = GetTypeString(property, false);
+            var type = GetTypeString(property, false, usings);
             if (type == "bool")
                 text = text.ToLowerInvariant();
             else if (type == "string")
@@ -1419,14 +1556,14 @@ namespace DataWF.WebClient.Generator
             return SF.ParseExpression(text);
         }
 
-        private string GetArrayElementTypeString(JsonSchema schema)
+        private string GetArrayElementTypeString(JsonSchema schema, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             return schema.Type == JsonObjectType.Array
-                ? GetTypeString(schema.Item, false, "List")
+                ? GetTypeString(schema.Item, false, usings, "List")
                 : null;
         }
 
-        private string GetTypeString(JsonSchema schema, bool nullable, string listType = "SelectableList")
+        private string GetTypeString(JsonSchema schema, bool nullable, Dictionary<string, UsingDirectiveSyntax> usings, string listType = "SelectableList")
         {
             if (!nullable && schema.IsNullableRaw == true)
             {
@@ -1474,16 +1611,16 @@ namespace DataWF.WebClient.Generator
                             return "string";
                     }
                 case JsonObjectType.Array:
-                    return $"{listType}<{GetTypeString(schema.Item, false, listType)}>";
+                    return $"{listType}<{GetTypeString(schema.Item, false, usings, listType)}>";
                 case JsonObjectType.None:
                     if (schema.ActualTypeSchema != schema)
                     {
-                        return GetTypeString(schema.ActualTypeSchema, nullable, listType);
+                        return GetTypeString(schema.ActualTypeSchema, nullable, usings, listType);
                     }
                     else if (schema is JsonSchemaProperty propertySchema)
                     {
                         return GetTypeString(schema.AllOf.FirstOrDefault()?.Reference
-                            ?? schema.AnyOf.FirstOrDefault()?.Reference, nullable, listType);
+                            ?? schema.AnyOf.FirstOrDefault()?.Reference, nullable, usings, listType);
                     }
                     else
                     {
@@ -1492,7 +1629,11 @@ namespace DataWF.WebClient.Generator
                 case JsonObjectType.Object:
                     if (schema.Id != null)
                     {
-                        GetOrGenDefinion(schema.Id);
+                        GetOrGenDefinion(schema.Id, out var type);
+                        if (type != null)
+                        {
+                            SyntaxHelper.AddUsing(type, usings);
+                        }
                         if (schema.IsEnumeration)
                         {
                             return GetDefinitionName(schema) + (nullable ? "?" : string.Empty);
@@ -1513,9 +1654,9 @@ namespace DataWF.WebClient.Generator
             return "string";
         }
 
-        private TypeSyntax GetTypeDeclaration(JsonSchema property, bool nullable, string listType)
+        private TypeSyntax GetTypeDeclaration(JsonSchema property, bool nullable, Dictionary<string, UsingDirectiveSyntax> usings, string listType)
         {
-            return SF.ParseTypeName(GetTypeString(property, nullable, listType));
+            return SF.ParseTypeName(GetTypeString(property, nullable, usings, listType));
         }
 
         private IEnumerable<AttributeListSyntax> DefinitionAttributeList()

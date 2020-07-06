@@ -28,9 +28,13 @@ namespace DataWF.WebClient.Generator
             }
             if (!map.TryGetValue("-n", out var nameSpace) && !map.TryGetValue("--namespace", out nameSpace))
             {
-                //throw new ArgumentException("Nmaespace missing, expect -n|--namespace Name.Space");
+                //throw new ArgumentException("Namespace missing, expect -n|--namespace name space definition");
             }
-            var generator = new ClientGenerator(path, output, nameSpace);
+            if (!map.TryGetValue("-r", out var references) && !map.TryGetValue("--references", out references))
+            {
+                //throw new ArgumentException("References missing, expect -r|--references paths to project or library");
+            }
+            var generator = new ClientGenerator(path, output, nameSpace ?? "DataWF.Web.Client", references);
             generator.Generate();
             generator.GetUnits(true);
 

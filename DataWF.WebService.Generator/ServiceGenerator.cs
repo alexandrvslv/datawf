@@ -93,12 +93,13 @@ namespace DataWF.WebService.Generator
                 using (var resolver = new AssemblyResolver(file))
                 {
                     assembly = resolver.Assembly;
+                    SyntaxHelper.ConsoleInfo($"Load Assembly {assembly} from {file}");
                 }
             }
             catch (Exception ex)
             {
                 Helper.OnException(ex);
-                Console.WriteLine($"Warning: Can't Load Assembly {file} {ex.Message}");
+                SyntaxHelper.ConsoleWarning($"Can't Load Assembly {file}. {ex.Message}");
             }
 
             return assembly;
@@ -119,7 +120,7 @@ namespace DataWF.WebService.Generator
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
-                    Console.WriteLine($"Warning: Can't GetExportedTypes of {assembly} {ex.Message}");
+                    SyntaxHelper.ConsoleWarning($"Can't Get ExportedTypes of {assembly}. {ex.Message}");
                     continue;
                 }
 
@@ -179,7 +180,7 @@ namespace DataWF.WebService.Generator
             }
             if (!invokers.TryGetValue(itemType.Name, out var invokerClass))
             {
-                AddUsing(itemType, usings);
+                SyntaxHelper.AddUsing(itemType, usings);
                 invokerClass = GenInvokersClass(table, itemType, usings);
 
                 invokers[itemType.Name] = invokerClass;
@@ -211,7 +212,7 @@ namespace DataWF.WebService.Generator
                     continue;
                 }
 
-                AddUsing(property.PropertyType, usings);
+                SyntaxHelper.AddUsing(property.PropertyType, usings);
                 yield return GenPropertyInvoker(property.Name + "Invoker",
                     itemType.Name,
                     property.Name,
@@ -256,7 +257,7 @@ namespace DataWF.WebService.Generator
 
         private IEnumerable<ClassDeclarationSyntax> GenPropertyInvokers(ColumnGenerator column, TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            AddUsing(column.PropertyInfo.PropertyType, usings);
+            SyntaxHelper.AddUsing(column.PropertyInfo.PropertyType, usings);
             yield return GenPropertyInvoker(column.PropertyName + "Invoker",
                 itemType.Name,
                 column.PropertyName,
@@ -265,7 +266,7 @@ namespace DataWF.WebService.Generator
             var reference = table.References.FirstOrDefault(p => p.Column == column);
             if (reference != null && TypeHelper.IsBaseType(itemType, reference.PropertyInfo.DeclaringType))
             {
-                AddUsing(reference.PropertyInfo.PropertyType, usings);
+                SyntaxHelper.AddUsing(reference.PropertyInfo.PropertyType, usings);
                 yield return GenPropertyInvoker(reference.PropertyInfo.Name + "Invoker",
                       itemType.Name,
                       reference.PropertyInfo.Name,
@@ -279,7 +280,7 @@ namespace DataWF.WebService.Generator
             if (!table.Attribute.IsLoging)
                 return null;
             var logType = TypeHelper.ParseType("LogItem") ?? TypeHelper.ParseType("DBLogItem");
-            AddUsing(logType, usings);
+            SyntaxHelper.AddUsing(logType, usings);
             var baseName = logType.Name;
 
             var baseType = itemType.BaseType;
@@ -294,7 +295,7 @@ namespace DataWF.WebService.Generator
             }
             if (!logs.TryGetValue(itemType.Name, out var logClass))
             {
-                AddUsing(itemType, usings);
+                SyntaxHelper.AddUsing(itemType, usings);
                 logClass = SF.ClassDeclaration(
                     attributeLists: SF.List(GenLogAttributeList(table, itemType)),
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
@@ -345,7 +346,7 @@ namespace DataWF.WebService.Generator
             if ((itemType.GetCustomAttribute<TableAttribute>(false) != null)
                 || !TypeHelper.IsBaseType(itemType, table.ItemType))
             {
-                AddUsing(table.ItemType, usings);
+                SyntaxHelper.AddUsing(table.ItemType, usings);
                 yield return SF.FieldDeclaration(
                attributeLists: SF.List<AttributeListSyntax>(),
                modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword), SF.Token(SyntaxKind.ReadOnlyKeyword) }),
@@ -393,7 +394,7 @@ namespace DataWF.WebService.Generator
 
         private IEnumerable<MemberDeclarationSyntax> GenLogProperty(ColumnGenerator column, TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            AddUsing(TypeHelper.CheckNullable(column.PropertyInfo.PropertyType), usings);
+            SyntaxHelper.AddUsing(TypeHelper.CheckNullable(column.PropertyInfo.PropertyType), usings);
             var typeText = TypeHelper.FormatCode(column.PropertyInfo.PropertyType);
             var nullable = typeText.IndexOf('?') >= 0 ? "Nullable" : string.Empty;
             var nullableType = nullable.Length > 0 ? typeText.Replace("?", "") : typeText;
@@ -422,7 +423,7 @@ namespace DataWF.WebService.Generator
             var reference = table.References.FirstOrDefault(p => p.Column == column);
             if (reference != null)
             {
-                AddUsing(reference.PropertyInfo.PropertyType, usings);
+                SyntaxHelper.AddUsing(reference.PropertyInfo.PropertyType, usings);
                 var refTypeText = TypeHelper.FormatCode(reference.PropertyInfo.PropertyType);
                 yield return SF.PropertyDeclaration(
                    attributeLists: SF.List(GenLogReferencePropertyAttributes(column, table, itemType)),
@@ -588,7 +589,7 @@ namespace DataWF.WebService.Generator
 
             if (!controllers.TryGetValue(itemType.Name, out var controller))
             {
-                AddUsing(itemType, usings);
+                SyntaxHelper.AddUsing(itemType, usings);
                 var controllerClassName = $"{itemType.Name}Controller";
                 controller = SF.ClassDeclaration(
                     attributeLists: SF.List(GenControllerAttributeList()),
@@ -774,8 +775,8 @@ namespace DataWF.WebService.Generator
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
         private MethodDeclarationSyntax GenControllerMethod(MethodInfo method, TableGenerator table, Dictionary<string, UsingDirectiveSyntax> usings, ControllerMethodAttribute attribute)
         {
-            AddUsing(method.DeclaringType, usings);
-            AddUsing(method.ReturnType, usings);
+            SyntaxHelper.AddUsing(method.DeclaringType, usings);
+            SyntaxHelper.AddUsing(method.ReturnType, usings);
 
             var returning = method.ReturnType == typeof(void) ? "void"
                 : attribute.ReturnHtml ? "IActionResult"
@@ -788,7 +789,7 @@ namespace DataWF.WebService.Generator
                 if (method.ReturnType.IsGenericType)
                 {
                     var returnType = method.ReturnType.GetGenericArguments().FirstOrDefault();
-                    AddUsing(returnType, usings);
+                    SyntaxHelper.AddUsing(returnType, usings);
                     if (attribute.ReturnHtml)
                         returning = $"Task<IActionResult>";
                     else
@@ -1085,7 +1086,7 @@ namespace DataWF.WebService.Generator
 
         private IEnumerable<AttributeListSyntax> GenPropertyInvokerAttribute(string definitionName, string propertyName)
         {
-            yield return SyntaxHelper.GenAttribute("Invoker", $"typeof({definitionName}), nameof({definitionName}.{propertyName})");
+            yield return SyntaxHelper.GenAttributeList("Invoker", $"typeof({definitionName}), nameof({definitionName}.{propertyName})");
         }
 
         private List<MethodParametrInfo> GetParametersInfo(MethodInfo method, TableGenerator table, Dictionary<string, UsingDirectiveSyntax> usings)
@@ -1095,7 +1096,7 @@ namespace DataWF.WebService.Generator
             {
                 var methodParameter = new MethodParametrInfo { Info = parameter };
                 parametersInfo.Add(methodParameter);
-                AddUsing(methodParameter.Info.ParameterType, usings);
+                SyntaxHelper.AddUsing(methodParameter.Info.ParameterType, usings);
                 if (methodParameter.Info.ParameterType == typeof(DBTransaction))
                 {
                     methodParameter.ValueName = prTransaction;
@@ -1160,23 +1161,7 @@ namespace DataWF.WebService.Generator
                              SF.IdentifierName("FromQuery"))));
         }
 
-        private void AddUsing(Type type, Dictionary<string, UsingDirectiveSyntax> usings)
-        {
-            AddUsing(type.Namespace, usings);
-            if (type.IsGenericType)
-            {
-                foreach (var genericArgument in type.GetGenericArguments())
-                    AddUsing(genericArgument, usings);
-            }
-        }
 
-        private void AddUsing(string usingName, Dictionary<string, UsingDirectiveSyntax> usings)
-        {
-            if (!usings.TryGetValue(usingName, out var syntax))
-            {
-                usings.Add(usingName, SyntaxHelper.CreateUsingDirective(usingName));
-            }
-        }
 
         //private void GetMethod(StringBuilder builder, MethodInfo method, TableAttributeCache table)
         //{
