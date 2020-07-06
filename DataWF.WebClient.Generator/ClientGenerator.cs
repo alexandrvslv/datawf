@@ -50,6 +50,7 @@ namespace DataWF.WebClient.Generator
             Source = source;
             if (!string.IsNullOrEmpty(references))
             {
+                AssemblyLoadContext.Default.Resolving += OnDefaultResolving;
                 var referenceArray = references.Split(";");
                 foreach (var reference in referenceArray)
                 {
@@ -94,6 +95,19 @@ namespace DataWF.WebClient.Generator
                 Helper.OnException(ex);
                 SyntaxHelper.ConsoleWarning($"Can't Load Assembly {reference}. {ex.GetType().Name} {ex.Message}");
             }
+        }
+
+        private Assembly OnDefaultResolving(AssemblyLoadContext arg1, AssemblyName arg2)
+        {
+            SyntaxHelper.ConsoleWarning($"Resolving {arg2} {arg1}");
+
+            if (arg2.Name == "SkiaSharp")
+            {
+                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), @".nuget\packages\skiasharp\1.68.3\lib\netstandard2.0\SkiaSharp.dll");
+
+                return AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
+            }
+            return null;
         }
 
         public void Generate()
@@ -829,10 +843,32 @@ namespace DataWF.WebClient.Generator
                         try
                         {
                             var parsedType = TypeHelper.ParseType(definitionName, reference);
-                            if (parsedType != null && type.IsEnum)
+                            if (parsedType != null)
                             {
-                                type = parsedType;
-                                break;
+                                if (parsedType.IsEnum
+                                    && definition.EnumerationNames != null)
+                                {
+                                    var defiEnumeration = definition.EnumerationNames;
+                                    var typeEnumeration = Enum.GetNames(parsedType);
+                                    if (defiEnumeration.SequenceEqual(typeEnumeration))
+                                    {
+                                        type = parsedType;
+                                        break;
+                                    }
+                                }
+                                else if (parsedType.IsClass
+                                     && definition.Properties != null)
+                                {
+                                    var defiProperties = definition.Properties.Keys.Select(p => p.ToLower());
+                                    var typeProperties = parsedType.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance).Select(p => p.Name.ToLower());
+                                    var percent = (float)defiProperties.Intersect(typeProperties).Count();
+                                    percent = percent / (float)defiProperties.Count();
+                                    if (percent > 0.8f)
+                                    {
+                                        type = parsedType;
+                                        break;
+                                    }
+                                }
                             }
                         }
                         catch (Exception ex)
