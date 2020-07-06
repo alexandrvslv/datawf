@@ -7,46 +7,41 @@ namespace DataWF.Test.Data
     [Table(TestORM.FigureTableName, "Geometry")]
     public class Figure : DBItem
     {
-        public static readonly DBTable<Figure> DBTable = GetTable<Figure>();
-        public static readonly DBColumn PrimaryKey = DBTable.ParseProperty(nameof(Id));
-        public static readonly DBColumn LocationKey = DBTable.ParseProperty(nameof(Location));
-        public static readonly DBColumn BoxKey = DBTable.ParseProperty(nameof(Box));
-        public static readonly DBColumn MatrixKey = DBTable.ParseProperty(nameof(Matrix));
-        public static readonly DBColumn PolygonKey = DBTable.ParseProperty(nameof(Polygon));
+        public static DBTable<Figure> DBTable => GetTable<Figure>();
 
         [Column("id", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValueNullable<int>(PrimaryKey);
-            set => SetValueNullable(value, PrimaryKey);
+            get => GetValueNullable<int>(DBTable.PrimaryKey);
+            set => SetValueNullable(value, DBTable.PrimaryKey);
         }
 
         [Column("location", 16)]
         public Point2D Location
         {
-            get => GetValue<Point2D>(LocationKey);
-            set => SetValue(value, LocationKey);
+            get => GetProperty<Point2D>();
+            set => SetProperty(value);
         }
 
         [Column("box", 32)]
         public Rectangle2D Box
         {
-            get => GetValue<Rectangle2D>(BoxKey);
-            set => SetValue(value, BoxKey);
+            get => GetProperty<Rectangle2D>();
+            set => SetProperty(value);
         }
 
         [Column("matrix", 72)]
         public Matrix2D Matrix
         {
-            get => GetValue<Matrix2D>(MatrixKey);
-            set => SetValue(value, MatrixKey);
+            get => GetProperty<Matrix2D>();
+            set => SetProperty(value);
         }
 
         [Column("polygon", 4000)]
         public Polygon2D Polygon
         {
-            get => GetValue<Polygon2D>(PolygonKey);
-            set => SetValue(value, PolygonKey);
+            get => GetProperty<Polygon2D>();
+            set => SetProperty(value);
         }
     }
 }

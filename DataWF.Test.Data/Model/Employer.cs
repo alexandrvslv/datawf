@@ -10,7 +10,7 @@ namespace DataWF.Test.Data
     {
         private Position position;
 
-        public static readonly DBTable<Employer> DBTable = GetTable<Employer>();
+        public static DBTable<Employer> DBTable => GetTable<Employer>();
 
         public Employer()
         {

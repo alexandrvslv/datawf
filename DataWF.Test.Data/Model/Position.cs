@@ -6,9 +6,8 @@ namespace DataWF.Test.Data
     [Table(TestORM.PositionTableName, "Default")]
     public class Position : DBItem
     {
-        public static readonly DBTable<Position> DBTable = GetTable<Position>();
-        public static readonly DBColumn IdKey = DBTable.ParseProperty(nameof(Id));
-        public static readonly DBColumn CodeKey = DBTable.ParseProperty(nameof(Code));
+        public static DBTable<Position> DBTable => GetTable<Position>();
+
         private Position parent;
 
         public Position()
@@ -18,16 +17,16 @@ namespace DataWF.Test.Data
         [Column("id", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValueNullable<int>(IdKey);
-            set => SetValueNullable(value, IdKey);
+            get => GetValueNullable<int>(Table.PrimaryKey);
+            set => SetValueNullable(value, Table.PrimaryKey);
         }
 
         [Column("code", 20, Keys = DBColumnKeys.Code | DBColumnKeys.Unique | DBColumnKeys.Indexing)]
         [Index("positioncode", true)]
         public string Code
         {
-            get => GetValue<string>(CodeKey);
-            set => SetValue(value, CodeKey);
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Column("parentid", Keys = DBColumnKeys.Group)]
