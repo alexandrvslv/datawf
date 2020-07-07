@@ -1,24 +1,4 @@
-﻿/*
- DocumentData.cs
- 
- Author:
-      Alexandr <alexandr_vslv@mail.ru>
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Lesser General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Lesser General Public License for more details.
-
- You should have received a copy of the GNU Lesser General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-using DataWF.Common;
+﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Module.Common;
 using System;
@@ -95,7 +75,7 @@ namespace DataWF.Module.Flow
         public static readonly DBColumn FileUrlKey = DBTable.ParseProperty(nameof(FileUrl));
         public static readonly DBColumn FileLastWriteKey = DBTable.ParseProperty(nameof(FileLastWrite));
         public static readonly DBColumn DocumentKey = DBTable.ParseProperty(nameof(DocumentId));
-        
+
         private byte[] buf;
         private User currentUser;
         private TemplateData template;
