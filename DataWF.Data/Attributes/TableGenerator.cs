@@ -108,7 +108,7 @@ namespace DataWF.Data
             }
         }
 
-        public SelectableList<CodeAttributeCache> Codes { get; private set; } = new SelectableList<CodeAttributeCache>();
+        public SelectableList<ParameterInvoker> Parameters { get; private set; } = new SelectableList<ParameterInvoker>();
 
         public virtual DBTable CreateTable()
         {
@@ -290,7 +290,7 @@ namespace DataWF.Data
                     cacheIndexes.Add(separateIndex);
                 }
                 InitializeDefault(property);
-                InitializeCodes(property);
+                InitializeParameters(property);
             }
             foreach (var property in properties)
             {
@@ -306,7 +306,7 @@ namespace DataWF.Data
             var methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
             foreach (var method in methods)
             {
-                InitializeCodes(method);
+                InitializeParameters(method);
             }
             cachedTypes.Add(type);
         }
@@ -372,14 +372,16 @@ namespace DataWF.Data
             return false;
         }
 
-        public virtual void InitializeCodes(MemberInfo member)
+        public virtual void InitializeParameters(MemberInfo member)
         {
-            var codeAttribuites = member.GetCustomAttributes<CodeAttribute>(false);
-            foreach (var code in codeAttribuites)
+            var parameters = member.GetCustomAttributes<ParameterAttribute>(false);
+            foreach (var parameter in parameters)
             {
-                if (!Codes.Any(p => p.Attribute.Code == code.Code && p.Attribute.Category == code.Category && p.Member == member))
+                if (!Parameters.Any(p => string.Equals(p.Parameter.Name, parameter.Name, StringComparison.Ordinal)
+                                      && string.Equals(p.Parameter.Category, parameter.Category, StringComparison.Ordinal)
+                                      && p.Member == member))
                 {
-                    Codes.Add(new CodeAttributeCache(code, member));
+                    Parameters.Add(new ParameterInvoker(parameter, member));
                 }
             }
         }

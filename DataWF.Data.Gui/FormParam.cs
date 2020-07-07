@@ -87,8 +87,8 @@ namespace DataWF.Data.Gui
                 using (var transaction = new DBTransaction(procedure.Schema.Connection, GuiEnvironment.User))
                     try
                     {
-                        var param = new ExecuteArgs(document);
-                        e.Result = Execute(procedure, param);
+                        var args = new ExecuteArgs(document);
+                        e.Result = Execute(procedure, args);
                         transaction.Commit();
                     }
                     catch (Exception ex)
@@ -129,10 +129,10 @@ namespace DataWF.Data.Gui
             return Execute(procedure, new ExecuteArgs(document));
         }
 
-        public static object Execute(DBProcedure procedure, ExecuteArgs param)
+        public static object Execute(DBProcedure procedure, ExecuteArgs args)
         {
-            CheckParam(procedure, param.Parameters);
-            return procedure.Execute(param);
+            CheckParam(procedure, args.Parameters);
+            return procedure.Execute(args);
         }
 
 

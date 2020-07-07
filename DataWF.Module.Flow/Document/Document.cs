@@ -171,7 +171,7 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public override string CodeCategory { get => Template?.Code ?? base.CodeCategory; set => base.CodeCategory = value; }
+        public override string ParametersCategory { get => Template?.Code ?? base.ParametersCategory; set => base.ParametersCategory = value; }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id

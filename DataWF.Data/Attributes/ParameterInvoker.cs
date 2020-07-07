@@ -19,22 +19,36 @@
 */
 
 using DataWF.Common;
-using System;
 using System.Reflection;
 
 namespace DataWF.Data
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true)]
-    public class CodeAttribute : Attribute
+    public class ParameterInvoker
     {
-        public CodeAttribute(string code, string category = "General")
+        public ParameterInvoker(ParameterAttribute parameter, MemberInfo member)
         {
-            Code = code;
-            Category = category;
+            Parameter = parameter;
+            Member = member;
+            MemberInvoker = EmitInvoker.Initialize(member, true);
         }
 
-        public string Code { get; private set; }
+        public ParameterAttribute Parameter { get; }
 
-        public string Category { get; private set; }
+        public MemberInfo Member { get; }
+
+        public IInvoker MemberInvoker { get; }
+
+        public object GetValue(object targe, DBTransaction transaction)
+        {
+            if (Member is PropertyInfo)
+            {
+                return MemberInvoker.GetValue(targe);
+            }
+            else if (Member is MethodInfo)
+            {
+                return ((IIndexInvoker)MemberInvoker).GetValue(targe, new object[] { transaction });
+            }
+            return null;
+        }
     }
 }

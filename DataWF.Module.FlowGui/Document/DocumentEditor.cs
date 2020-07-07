@@ -239,18 +239,18 @@ namespace DataWF.Module.FlowGui
         public object ExecuteDocumentProcedure(DBProcedure proc, Document document, bool callback)
         {
             document.Save();
-            var param = new ExecuteArgs(document);
+            var args = new ExecuteArgs(document);
             object result = null;
             try
             {
-                result = proc.CreateObject(param);
+                result = proc.CreateObject(args);
                 if (TypeHelper.IsBaseType(result.GetType(), typeof(Widget)))
                 {
-                    result = proc.ExecuteObject(result, param);
+                    result = proc.ExecuteObject(result, args);
                 }
                 else
                 {
-                    var task = proc.GetExecutor(result, param);
+                    var task = proc.GetExecutor(result, args);
 
                     if (GuiService.Main != null)
                     {

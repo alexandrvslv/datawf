@@ -34,14 +34,14 @@ namespace DataWF.Data
         private Dictionary<string, object> parameters;
         private DBItem document;
 
-        public ExecuteArgs(DBItem document = null, string category = "General")
+        public ExecuteArgs(DBItem document = null)
         {
             Document = document;
         }
 
         public DBItem Document
         {
-            get { return document; }
+            get => document;
             set
             {
                 if (document == value)
@@ -49,17 +49,17 @@ namespace DataWF.Data
                 document = value;
                 if (value != null)
                 {
-                    ProcedureCategory = value.CodeCategory;
+                    Category = value.ParametersCategory;
                     var type = document.GetType();
-                    Codes = new SelectableList<CodeAttributeCache>(document?.Table.Generator.Codes
+                    Invokers = new SelectableList<ParameterInvoker>(document?.Table.Generator.Parameters
                         .Where(p => p.MemberInvoker.TargetType.IsAssignableFrom(type)));
                 }
             }
         }
 
-        public SelectableList<CodeAttributeCache> Codes { get; private set; }
+        public SelectableList<ParameterInvoker> Invokers { get; private set; }
 
-        public string ProcedureCategory { get; private set; }
+        public string Category { get; private set; }
 
         public Dictionary<string, object> Parameters
         {
@@ -75,37 +75,38 @@ namespace DataWF.Data
             }
         }
 
-        public override string ToString()
-        {
-            return Document == null ? string.Empty : Document.ToString();
-        }
-
         public QResult Result { get; set; }
 
         public DBTransaction Transaction { get; set; }
 
         public bool AutoCommit { get; internal set; }
 
-        public CodeAttributeCache ParseCode(string val)
+        public ParameterInvoker GetParamterInvoker(string name)
         {
-            var result = (CodeAttributeCache)null;
-            foreach (var code in Codes.Where(p => p.Attribute.Code.Equals(val, StringComparison.Ordinal)))
+            var result = (ParameterInvoker)null;
+            foreach (var invoker in Invokers.Where(p => string.Equals(p.Parameter.Name, name, StringComparison.Ordinal)))
             {
-                if (code.Attribute.Category.Equals("General"))
+                if (string.Equals(invoker.Parameter.Category, "General", StringComparison.Ordinal))
                 {
-                    result = code;
+                    result = invoker;
                 }
-                if (code.Attribute.Category.Equals(ProcedureCategory, StringComparison.Ordinal))
+                if (string.Equals(invoker.Parameter.Category, Category, StringComparison.Ordinal))
                 {
-                    return code;
+                    return invoker;
                 }
             }
             return result;
         }
 
-        public object GetValue(CodeAttributeCache code)
+        public object GetValue(ParameterInvoker invoker)
         {
-            return code.GetValue(Document, Transaction);
+            return invoker.GetValue(Document, Transaction);
         }
+
+        public override string ToString()
+        {
+            return Document == null ? string.Empty : Document.ToString();
+        }
+
     }
 }

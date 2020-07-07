@@ -28,13 +28,16 @@ namespace DataWF.Data
     public class DefinedName
     {
         private string reference;
+
         public CellRange Range;
 
         public string Name;
+
         public string Sheet;
+
         public string Reference
         {
-            get { return reference; }
+            get => reference;
             set
             {
                 reference = value;
@@ -42,9 +45,12 @@ namespace DataWF.Data
             }
         }
 
-        public CodeAttributeCache Code;
+        public ParameterInvoker Invoker;
+
         public Table Table;
+
         public object CacheValue;
+
         internal CellRange NewRange;
 
         public override string ToString()

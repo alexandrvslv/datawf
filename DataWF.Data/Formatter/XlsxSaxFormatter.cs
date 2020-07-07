@@ -39,15 +39,14 @@ namespace DataWF.Data
     {
         private static readonly Regex excelRegex = new Regex("#.[^#]*#", RegexOptions.IgnoreCase);
 
-        public override string Fill(Stream stream, string fileName, ExecuteArgs param)
+        public override string Fill(Stream stream, string fileName, ExecuteArgs args)
         {
-            return FillDirectly(stream, fileName, param);
+            return FillDirectly(stream, fileName, args);
         }
 
-        public string FillDirectly(Stream stream, string fileName, ExecuteArgs param)
+        public string FillDirectly(Stream stream, string fileName, ExecuteArgs args)
         {
-            var cacheNames = GetCacheNames(param);
-
+            var namesCache = GetNamesCache(args);
             var sharedStrings = (StringKeyList)null;
             using (var document = SpreadsheetDocument.Open(stream, true))
             {
@@ -60,14 +59,14 @@ namespace DataWF.Data
                 //    workbookPart.DeletePart(workbookPart.CalculationChainPart);
                 //}
 
-                FillWorkbookPart(param, cacheNames, workbookPart, sheetList);
+                FillWorkbookPart(args, namesCache, workbookPart, sheetList);
 
                 foreach (var part in workbookPart.Parts)
                 {
                     if (part.OpenXmlPart is WorksheetPart worksheetPart)
                     {
                         var sheet = sheetList.FirstOrDefault(p => p.Id == part.RelationshipId);
-                        if (cacheNames.TryGetValue(sheet.Name.Value, out var sheetNames))
+                        if (namesCache.TryGetValue(sheet.Name.Value, out var sheetNames))
                         {
                             //if (sheet.State != null
                             //    && (sheet.State.Value == Excel.SheetStateValues.Hidden
@@ -78,10 +77,10 @@ namespace DataWF.Data
                             {
                                 if (sheetPart.OpenXmlPart is TableDefinitionPart tableDefinitionPart)
                                 {
-                                    FillTableDefinition(param, sheetNames, tableDefinitionPart);
+                                    FillTableDefinition(args, sheetNames, tableDefinitionPart);
                                 }
                             }
-                            FillWorksheetPart(param, sheetNames, sharedStrings, worksheetPart);
+                            FillWorksheetPart(args, sheetNames, sharedStrings, worksheetPart);
                         }
                     }
                 }
@@ -94,36 +93,36 @@ namespace DataWF.Data
             return ((FileStream)stream).Name;
         }
 
-        private static Dictionary<string, Dictionary<string, DefinedName>> GetCacheNames(ExecuteArgs param)
+        private static Dictionary<string, Dictionary<string, DefinedName>> GetNamesCache(ExecuteArgs args)
         {
-            var cacheNames = new Dictionary<string, Dictionary<string, DefinedName>>(StringComparer.OrdinalIgnoreCase);
-            foreach (var item in param.Codes.Where(p => p.Attribute.Category == "General" || p.Attribute.Category == param.ProcedureCategory))
+            var namesCache = new Dictionary<string, Dictionary<string, DefinedName>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var invoker in args.Invokers.Where(p => p.Parameter.Category == "General" || p.Parameter.Category == args.Category))
             {
-                var split = item.Attribute.Code.Split('!');
+                var split = invoker.Parameter.Name.Split('!');
                 if (split.Length == 2)
                 {
                     var sheet = split[0].Trim('\'');
-                    if (!cacheNames.TryGetValue(sheet, out var names))
+                    if (!namesCache.TryGetValue(sheet, out var names))
                     {
-                        cacheNames[sheet] = names = new Dictionary<string, DefinedName>(StringComparer.Ordinal);
+                        namesCache[sheet] = names = new Dictionary<string, DefinedName>(StringComparer.Ordinal);
                     }
                     var defName = new DefinedName
                     {
-                        Name = item.Attribute.Code,
+                        Name = invoker.Parameter.Name,
                         Sheet = sheet,
                         Reference = split[1],
-                        Code = item
+                        Invoker = invoker
                     };
                     names[defName.Range.Start.ToString()] = defName;
                 }
             }
-            return cacheNames;
+            return namesCache;
         }
 
-        public string FillReplace(Stream stream, string fileName, ExecuteArgs param)
+        public string FillReplace(Stream stream, string fileName, ExecuteArgs args)
         {
             string newFileName = GetTempFileName(fileName);
-            var cacheNames = GetCacheNames(param);
+            var namesCache = GetNamesCache(args);
             var stringTables = (StringKeyList)null;
             using (var document = SpreadsheetDocument.Open(stream, false))
             using (var newDocument = SpreadsheetDocument.Create(newFileName, document.DocumentType))
@@ -150,7 +149,7 @@ namespace DataWF.Data
 
                         var sheetList = new List<Excel.Sheet>();
                         stringTables = ReadStringTable(workbookPart.SharedStringTablePart);
-                        FillWorkbookPart(param, cacheNames, workbookPart, newWorkbookPart, sheetList);
+                        FillWorkbookPart(args, namesCache, workbookPart, newWorkbookPart, sheetList);
 
                         foreach (var part in workbookPart.Parts)
                         {
@@ -179,8 +178,8 @@ namespace DataWF.Data
                                 var sheet = sheetList.FirstOrDefault(p => p.Id == part.RelationshipId);
                                 //var newWorksheetPart = newWorkbookPart.AddNewPart<WorksheetPart>(sheet.Id);
 
-                                if (!cacheNames.TryGetValue(sheet.Name.Value, out var sheetNames))
-                                    cacheNames[sheet.Name.Value] = sheetNames = new Dictionary<string, DefinedName>(StringComparer.Ordinal);
+                                if (!namesCache.TryGetValue(sheet.Name.Value, out var sheetNames))
+                                    namesCache[sheet.Name.Value] = sheetNames = new Dictionary<string, DefinedName>(StringComparer.Ordinal);
                                 var newWorksheetPart = (WorksheetPart)newWorkbookPart.GetPartById(sheet.Id);
                                 foreach (var sheetPart in worksheetPart.Parts)
                                 {
@@ -188,7 +187,7 @@ namespace DataWF.Data
                                     {
                                         //var newTableDefinitionPart = newWorksheetPart.AddNewPart<TableDefinitionPart>(sheetPart.RelationshipId);
                                         var newTableDefinitionPart = (TableDefinitionPart)newWorksheetPart.GetPartById(sheetPart.RelationshipId);
-                                        FillTableDefinition(param, sheetNames, tableDefinitionPart, newTableDefinitionPart);
+                                        FillTableDefinition(args, sheetNames, tableDefinitionPart, newTableDefinitionPart);
                                     }
                                     else if (sheetPart.OpenXmlPart is DrawingsPart drawingsPart)
                                     {
@@ -224,7 +223,7 @@ namespace DataWF.Data
                                     }
                                     else { }
                                 }
-                                FillWorksheetPart(param, sheetNames, stringTables, worksheetPart, newWorksheetPart);
+                                FillWorksheetPart(args, sheetNames, stringTables, worksheetPart, newWorksheetPart);
                             }
                             else { }
                         }
@@ -236,26 +235,26 @@ namespace DataWF.Data
             return newFileName;
         }
 
-        private void FillWorkbookPart(ExecuteArgs param, Dictionary<string, Dictionary<string, DefinedName>> cacheNames, WorkbookPart workbookPart, List<Excel.Sheet> sheetList)
+        private void FillWorkbookPart(ExecuteArgs args, Dictionary<string, Dictionary<string, DefinedName>> namesCache, WorkbookPart workbookPart, List<Excel.Sheet> sheetList)
         {
             using (var buffer = new MemoryStream())
             {
                 using (var stream = workbookPart.GetStream())
                     stream.CopyTo(buffer);
                 buffer.Position = 0;
-                FillWorkbookPart(param, cacheNames, buffer, workbookPart, sheetList);
+                FillWorkbookPart(args, namesCache, buffer, workbookPart, sheetList);
             }
         }
 
-        private void FillWorkbookPart(ExecuteArgs param, Dictionary<string, Dictionary<string, DefinedName>> cacheNames, WorkbookPart workbookPart, WorkbookPart newWorkbookPart, List<Excel.Sheet> sheetList)
+        private void FillWorkbookPart(ExecuteArgs args, Dictionary<string, Dictionary<string, DefinedName>> namesCache, WorkbookPart workbookPart, WorkbookPart newWorkbookPart, List<Excel.Sheet> sheetList)
         {
             using (var stream = workbookPart.GetStream())
             {
-                FillWorkbookPart(param, cacheNames, stream, newWorkbookPart, sheetList);
+                FillWorkbookPart(args, namesCache, stream, newWorkbookPart, sheetList);
             }
         }
 
-        private void FillWorkbookPart(ExecuteArgs param, Dictionary<string, Dictionary<string, DefinedName>> cacheNames, Stream workbookPart, WorkbookPart newWorkbookPart, List<Excel.Sheet> sheetList)
+        private void FillWorkbookPart(ExecuteArgs args, Dictionary<string, Dictionary<string, DefinedName>> namesCache, Stream workbookPart, WorkbookPart newWorkbookPart, List<Excel.Sheet> sheetList)
         {
             using (var reader = OpenXmlReader.Create(workbookPart))
             using (var writer = XmlWriter.Create(newWorkbookPart.GetStream(),
@@ -271,32 +270,32 @@ namespace DataWF.Data
                     //}
                     if (reader.ElementType == typeof(Excel.DefinedName))
                     {
-                        var name = (Excel.DefinedName)reader.LoadCurrentElement();
-                        if (!string.IsNullOrEmpty(name.InnerText))
+                        var definedName = (Excel.DefinedName)reader.LoadCurrentElement();
+                        if (!string.IsNullOrEmpty(definedName.InnerText))
                         {
-                            var split = name.InnerText.Split('!');
+                            var split = definedName.InnerText.Split('!');
                             if (split.Length == 2)
                             {
                                 var sheet = split[0].Trim('\'');
-                                var code = param.ParseCode(name.Name);
-                                if (code != null)
+                                var paramter = args.GetParamterInvoker(definedName.Name);
+                                if (paramter != null)
                                 {
-                                    if (!cacheNames.TryGetValue(sheet, out var names))
+                                    if (!namesCache.TryGetValue(sheet, out var names))
                                     {
-                                        cacheNames[sheet] = names = new Dictionary<string, DefinedName>(StringComparer.Ordinal);
+                                        namesCache[sheet] = names = new Dictionary<string, DefinedName>(StringComparer.Ordinal);
                                     }
                                     var defName = new DefinedName
                                     {
-                                        Name = name.Name,
+                                        Name = definedName.Name,
                                         Sheet = sheet,
                                         Reference = split[1],
-                                        Code = code
+                                        Invoker = paramter
                                     };
                                     names[defName.Range.Start.ToString()] = defName;
                                 }
                             }
                         }
-                        WriteElement(writer, name);
+                        WriteElement(writer, definedName);
                     }
                     else if (reader.ElementType == typeof(Excel.Sheet))
                     {
@@ -318,7 +317,7 @@ namespace DataWF.Data
             }
         }
 
-        private void FillWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, StringKeyList sharedStrings, WorksheetPart worksheetPart)
+        private void FillWorksheetPart(ExecuteArgs args, Dictionary<string, DefinedName> namesCache, StringKeyList sharedStrings, WorksheetPart worksheetPart)
         {
             var tempName = Path.GetTempFileName();
             using (var temp = new FileStream(tempName, FileMode.Create, FileAccess.ReadWrite))
@@ -326,20 +325,20 @@ namespace DataWF.Data
                 using (var stream = worksheetPart.GetStream())
                     stream.CopyTo(temp);
                 temp.Position = 0;
-                FillWorksheetPart(param, cacheNames, sharedStrings, temp, worksheetPart);
+                FillWorksheetPart(args, namesCache, sharedStrings, temp, worksheetPart);
             }
             File.Delete(tempName);
         }
 
-        private void FillWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, StringKeyList sharedStrings, WorksheetPart worksheetPart, WorksheetPart newWorksheetPart)
+        private void FillWorksheetPart(ExecuteArgs args, Dictionary<string, DefinedName> namesCache, StringKeyList sharedStrings, WorksheetPart worksheetPart, WorksheetPart newWorksheetPart)
         {
             using (var stream = worksheetPart.GetStream())
             {
-                FillWorksheetPart(param, cacheNames, sharedStrings, stream, newWorksheetPart);
+                FillWorksheetPart(args, namesCache, sharedStrings, stream, newWorksheetPart);
             }
         }
 
-        private void FillWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, StringKeyList sharedStrings, Stream worksheetPart, WorksheetPart newWorksheetPart)
+        private void FillWorksheetPart(ExecuteArgs args, Dictionary<string, DefinedName> namesCache, StringKeyList sharedStrings, Stream worksheetPart, WorksheetPart newWorksheetPart)
         {
             var inserts = new List<CellRange>();
 
@@ -369,14 +368,14 @@ namespace DataWF.Data
                         foreach (Excel.Cell ocell in row.Descendants<Excel.Cell>())
                         {
                             object rz = null;
-                            if (cacheNames.TryGetValue(ocell.CellReference.Value, out var defName))
+                            if (namesCache.TryGetValue(ocell.CellReference.Value, out var defName))
                             {
-                                rz = defName.CacheValue ?? param.GetValue(defName.Code);
+                                rz = defName.CacheValue ?? args.GetValue(defName.Invoker);
                             }
                             else
                             {
                                 string value = ReadCell(ocell, sharedStrings);
-                                rz = ReplaceExcelString(param, value);
+                                rz = ReplaceExcelString(args, value);
                             }
 
                             if (rz != null)
@@ -480,7 +479,7 @@ namespace DataWF.Data
                         || reader.ElementType == typeof(Excel.FirstFooter))
                     {
                         var footer = reader.LoadCurrentElement() as OpenXmlLeafTextElement;
-                        var str = ReplaceExcelString(param, footer.Text) as string;
+                        var str = ReplaceExcelString(args, footer.Text) as string;
                         if (str != null)
                         {
                             footer.Text = str;
@@ -540,30 +539,28 @@ namespace DataWF.Data
                     //cell.CellValue = new Excel.CellValue(value.ToString().Replace("", string.Empty));
                 }
             }
-
-
         }
 
-        private void FillTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, TableDefinitionPart tableDefinitionPart)
+        private void FillTableDefinition(ExecuteArgs args, Dictionary<string, DefinedName> namesCache, TableDefinitionPart tableDefinitionPart)
         {
             using (var temp = new MemoryStream())
             {
                 using (var stream = tableDefinitionPart.GetStream())
                     stream.CopyTo(temp);
                 temp.Position = 0;
-                FillTableDefinition(param, cacheNames, temp, tableDefinitionPart);
+                FillTableDefinition(args, namesCache, temp, tableDefinitionPart);
             }
         }
 
-        private void FillTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, TableDefinitionPart tableDefinitionPart, TableDefinitionPart newTableDefinitionPart)
+        private void FillTableDefinition(ExecuteArgs args, Dictionary<string, DefinedName> namesCache, TableDefinitionPart tableDefinitionPart, TableDefinitionPart newTableDefinitionPart)
         {
             using (var stream = tableDefinitionPart.GetStream())
             {
-                FillTableDefinition(param, cacheNames, stream, newTableDefinitionPart);
+                FillTableDefinition(args, namesCache, stream, newTableDefinitionPart);
             }
         }
 
-        private void FillTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, Stream tableDefinitionPart, TableDefinitionPart newTableDefinitionPart)
+        private void FillTableDefinition(ExecuteArgs args, Dictionary<string, DefinedName> namesCache, Stream tableDefinitionPart, TableDefinitionPart newTableDefinitionPart)
         {
             using (var reader = OpenXmlReader.Create(tableDefinitionPart))
             using (var writer = XmlWriter.Create(newTableDefinitionPart.GetStream(),
@@ -576,16 +573,16 @@ namespace DataWF.Data
                     {
                         var table = (Excel.Table)reader.LoadCurrentElement();
 
-                        var code = param.ParseCode(table.Name);
-                        if (code != null)
+                        var parameter = args.GetParamterInvoker(table.Name);
+                        if (parameter != null)
                         {
                             var reference = CellRange.Parse(table.Reference.Value);
                             var defName = new DefinedName
                             {
                                 Name = table.Name,
                                 Range = reference,
-                                Code = code,
-                                CacheValue = param.GetValue(code)
+                                Invoker = parameter,
+                                CacheValue = args.GetValue(parameter)
                             };
                             if (defName.CacheValue is QResult result && result.Values.Count > 0)
                             {
@@ -597,7 +594,7 @@ namespace DataWF.Data
                                     //table.TotalsRowCount = (uint)newrange.Rows;
                                 }
                                 defName.Table = table;
-                                cacheNames[defName.Range.Start.ToString()] = defName;
+                                namesCache[defName.Range.Start.ToString()] = defName;
                             }
                         }
                         WriteElement(writer, table);

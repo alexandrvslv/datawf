@@ -79,7 +79,7 @@ namespace DataWF.Data
         public short BlockIndex { get => blockIndex; set => blockIndex = value; }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual string CodeCategory
+        public virtual string ParametersCategory
         {
             get => Table.CodeKey != null ? GetValue<string>(Table.CodeKey) : "General";
             set { }

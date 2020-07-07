@@ -51,17 +51,18 @@ namespace DataWF.Common
             return a.Col != b.Col || a.Row != b.Row;
         }
 
-        public int Col;
-
-        public string ColA => Helper.IntToChar(Col);
-
-        public int Row;
-
         public CellReference(int c, int r) : this()
         {
             Col = c;
             Row = r;
         }
+
+        public int Col;
+
+        public int Row;
+
+        public string ColA => Helper.IntToChar(Col);
+
 
         public override string ToString()
         {
@@ -79,49 +80,6 @@ namespace DataWF.Common
         public override int GetHashCode()
         {
             return Col ^ Row;
-        }
-    }
-
-    public struct CellRange
-    {
-        public static CellRange Parse(string reference)
-        {
-            var range = new CellRange();
-
-            string[] split1 = reference.Split(':');
-            range.Start = CellReference.Parse(split1[0]);
-
-            if (split1.Length > 1)
-                range.End = CellReference.Parse(split1[1]);
-            return range;
-        }
-
-        public CellReference Start;
-        public CellReference End;
-
-        public int Rows { get { return End.Row - Start.Row; } }
-
-        public CellRange(int c1, int r1, int c2, int r2) : this()
-        {
-            Start = new CellReference(c1, r1);
-            End = new CellReference(c2, r2);
-        }
-
-        public CellRange(CellReference sref1, CellReference sref2) : this()
-        {
-            Start = sref1;
-            End = sref2;
-        }
-
-        public override string ToString()
-        {
-            return $"{Start}:{End}";
-        }
-
-        public bool Intersect(CellRange r)
-        {
-            return !((Start.Col >= r.End.Col) || (End.Col <= r.Start.Col) ||
-                    (Start.Row >= r.End.Row) || (End.Row <= r.Start.Row));
         }
     }
 }

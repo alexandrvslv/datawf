@@ -44,7 +44,7 @@ namespace DataWF.Data
     {
         private Assembly tempAssembly;
         private byte[] cacheData;
-        DBProcedure group;
+        private DBProcedure group;
 
         public DBProcedure()
         {
@@ -68,7 +68,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBProcedure Group
         {
-            get { return group ?? (group = Store?[GroupName]); }
+            get => group ?? (group = Store?[GroupName]);
             set
             {
                 group = value;
@@ -133,7 +133,7 @@ namespace DataWF.Data
         [Browsable(false), JsonIgnore, XmlIgnore]
         public IEnumerable<DBProcedure> Childs
         {
-            get { return Store?.SelectByParent(this); }
+            get => Store?.SelectByParent(this);
         }
 
         public IEnumerable<IGroup> GetGroups()
@@ -143,18 +143,18 @@ namespace DataWF.Data
 
         public DBProcParameterList Parameters { get; set; }
 
-        public DateTime Stamp { get; set; } = DateTime.Now;
+        public DateTime Stamp { get; set; } = DateTime.UtcNow;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool IsExpanded
         {
-            get { return GroupHelper.GetAllParentExpand(this); }
+            get => GroupHelper.GetAllParentExpand(this);
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         IGroup IGroup.Group
         {
-            get { return Group; }
+            get => Group;
             set { Group = value as DBProcedure; }
         }
 
@@ -164,11 +164,11 @@ namespace DataWF.Data
         [JsonIgnore]
         public bool IsCompaund
         {
-            get { return Childs.Any(); }
+            get => Childs.Any();
         }
 
         [XmlIgnore, JsonIgnore]
-        public List<CodeAttribute> Codes { get; set; } = new List<CodeAttribute>();
+        public List<ParameterAttribute> Attributes { get; set; } = new List<ParameterAttribute>();
 
         public static Assembly Compile(string outFile, IEnumerable<DBProcedure> procedures, out CompilerResults result, bool inMemory)
         {
@@ -535,46 +535,46 @@ namespace DataWF.Data
 
         public TaskExecutor GetExecutor(DBItem document, DBTransaction transaction, bool autoCommit = false)
         {
-            var param = new ExecuteArgs(document)
+            var args = new ExecuteArgs(document)
             {
                 Transaction = transaction,
                 AutoCommit = autoCommit
             };
-            return GetExecutor(CreateObject(param), param);
+            return GetExecutor(CreateObject(args), args);
         }
 
-        public TaskExecutor GetExecutor(object obj, ExecuteArgs param)
+        public TaskExecutor GetExecutor(object obj, ExecuteArgs args)
         {
             var task = new TaskExecutor
             {
-                Name = $"{this.Name} on {param.Document} #{param.Document?.PrimaryId}",
-                Tag = param.Document,
+                Name = $"{this.Name} on {args.Document} #{args.Document?.PrimaryId}",
+                Tag = args.Document,
                 Object = this,
                 Action = () =>
                 {
                     object result = null;
                     try
                     {
-                        if (param.AutoCommit && param.Transaction == null)
+                        if (args.AutoCommit && args.Transaction == null)
                         {
-                            param.Transaction = new DBTransaction(Schema.Connection);
+                            args.Transaction = new DBTransaction(Schema.Connection);
                         }
-                        result = this.ExecuteObject(obj, param);
-                        if (param.AutoCommit)
+                        result = this.ExecuteObject(obj, args);
+                        if (args.AutoCommit)
                         {
-                            param.Transaction?.Commit();
+                            args.Transaction?.Commit();
                         }
                     }
                     catch (Exception ex)
                     {
-                        param.Transaction?.Rollback();
+                        args.Transaction?.Rollback();
                         result = ex;
                     }
                     finally
                     {
-                        if (param.AutoCommit)
+                        if (args.AutoCommit)
                         {
-                            param.Transaction?.Dispose();
+                            args.Transaction?.Dispose();
                         }
                     }
 
@@ -585,9 +585,9 @@ namespace DataWF.Data
             return task;
         }
 
-        public Dictionary<string, object> ExecuteDBProcedure(IDbCommand command, ExecuteArgs param)
+        public Dictionary<string, object> ExecuteDBProcedure(IDbCommand command, ExecuteArgs args)
         {
-            var transaction = param.Transaction ?? new DBTransaction(Schema.Connection);
+            var transaction = args.Transaction ?? new DBTransaction(Schema.Connection);
             try
             {
                 transaction.AddCommand(command);
@@ -597,10 +597,10 @@ namespace DataWF.Data
                 {
                     if (par.Direction == ParameterDirection.InputOutput || par.Direction == ParameterDirection.Output)
                     {
-                        param.Parameters[par.ParameterName] = par.Value;
+                        args.Parameters[par.ParameterName] = par.Value;
                     }
                 }
-                if (param.Transaction == null)
+                if (args.Transaction == null)
                 {
                     transaction.Commit();
                 }
@@ -612,12 +612,12 @@ namespace DataWF.Data
             }
             finally
             {
-                if (param.Transaction == null)
+                if (args.Transaction == null)
                 {
                     transaction.Dispose();
                 }
             }
-            return param.Parameters;
+            return args.Parameters;
         }
 
         public object ExecuteDBFunction(IDbCommand command)
@@ -694,8 +694,6 @@ namespace DataWF.Data
             return transaction.ExecuteListDictionary(command);
         }
 
-
-
         public void ParseAssembly(byte[] assemblyData, string fileName)
         {
             Assembly assembly = Assembly.Load(assemblyData);
@@ -734,9 +732,9 @@ namespace DataWF.Data
             }
         }
 
-        public object Execute(ExecuteArgs param)
+        public object Execute(ExecuteArgs args)
         {
-            return ExecuteObject(CreateObject(param), param);
+            return ExecuteObject(CreateObject(args), args);
         }
 
         public static Dictionary<string, object> CreateParams(DBItem document, object userid = null)

@@ -29,7 +29,7 @@ namespace DataWF.Data
     public class DBProcedureList : DBSchemaItemList<DBProcedure>
     {
 
-        private readonly Dictionary<string, Dictionary<string, DBProcedure>> codeIndex = new Dictionary<string, Dictionary<string, DBProcedure>>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Dictionary<string, DBProcedure>> attributeIndex = new Dictionary<string, Dictionary<string, DBProcedure>>(StringComparer.OrdinalIgnoreCase);
 
         public DBProcedureList(DBSchema schema) : base(schema)
         {
@@ -53,7 +53,7 @@ namespace DataWF.Data
 
         public IEnumerable<KeyValuePair<string, DBProcedure>> SelectByCategory(string category = "General")
         {
-            if (codeIndex.TryGetValue(category, out var categoryIndex))
+            if (attributeIndex.TryGetValue(category, out var categoryIndex))
             {
                 foreach (var kvp in categoryIndex)
                 {
@@ -62,10 +62,10 @@ namespace DataWF.Data
             }
         }
 
-        public DBProcedure SelectByCode(string code, string category = "General")
+        public DBProcedure SelectByAttribute(string name, string category = "General")
         {
-            if (codeIndex.TryGetValue(category, out var categoryIndex))
-                return categoryIndex.TryGetValue(code, out var procedure) ? procedure : null;
+            if (attributeIndex.TryGetValue(category, out var categoryIndex))
+                return categoryIndex.TryGetValue(name, out var procedure) ? procedure : null;
             return null;
         }
 
@@ -84,13 +84,13 @@ namespace DataWF.Data
 
         public void AddCodes(DBProcedure item)
         {
-            foreach (var code in item.Codes)
+            foreach (var attribute in item.Attributes)
             {
-                if (!codeIndex.TryGetValue(code.Category, out var categoryIndex))
+                if (!attributeIndex.TryGetValue(attribute.Category, out var categoryIndex))
                 {
-                    codeIndex[code.Category] = categoryIndex = new Dictionary<string, DBProcedure>(StringComparer.OrdinalIgnoreCase);
+                    attributeIndex[attribute.Category] = categoryIndex = new Dictionary<string, DBProcedure>(StringComparer.OrdinalIgnoreCase);
                 }
-                categoryIndex[code.Code] = item;
+                categoryIndex[attribute.Name] = item;
             }
         }
 
@@ -106,7 +106,7 @@ namespace DataWF.Data
             exist.ProcedureType = item.ProcedureType;
             exist.Group = item.Group;
             exist.Source = item.Source;
-            exist.Codes = item.Codes;
+            exist.Attributes = item.Attributes;
             exist.Parameters.Clear();
             exist.Parameters.AddRange(item.Parameters);
             AddCodes(exist);
@@ -154,8 +154,8 @@ namespace DataWF.Data
                     procedure = AddOrUpdate(procedure);
                     procedure.DisplayName = type.Name;
                     procedure.TempAssembly = assembly;
-                    procedure.Codes.Clear();
-                    procedure.Codes.AddRange(type.GetCustomAttributes<CodeAttribute>());
+                    procedure.Attributes.Clear();
+                    procedure.Attributes.AddRange(type.GetCustomAttributes<ParameterAttribute>());
                     AddCodes(procedure);
                 }
             }

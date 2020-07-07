@@ -53,24 +53,24 @@ namespace DataWF.Data
             return path;
         }
 
-        public static string Execute(DBProcedure proc, ExecuteArgs param)
+        public static string Execute(DBProcedure proc, ExecuteArgs args)
         {
-            return Execute(new MemoryStream(proc.Data), proc.DataName, param);
+            return Execute(new MemoryStream(proc.Data), proc.DataName, args);
         }
 
-        public static string Execute(Stream stream, string fileName, ExecuteArgs param)
+        public static string Execute(Stream stream, string fileName, ExecuteArgs args)
         {
             var ext = Path.GetExtension(fileName);
             if (cache.TryGetValue(ext, out var parser))
-                return parser.Fill(stream, fileName, param);
+                return parser.Fill(stream, fileName, args);
             else
                 return stream is FileStream fileStream ? fileStream.Name : null;
             //throw new NotSupportedException(ext);
         }
 
-        public abstract string Fill(Stream stream, string fileName, ExecuteArgs param);
+        public abstract string Fill(Stream stream, string fileName, ExecuteArgs args);
 
-        public object ParseString(ExecuteArgs parameters, string code)
+        public object ParseString(ExecuteArgs args, string code)
         {
             var temp = code.Split(new char[] { ':' });
             object val = null;
@@ -78,16 +78,16 @@ namespace DataWF.Data
             string param = null;
             string localize = null;
 
-            var codeAttribute = parameters.ParseCode(procedureCode);
-            if (codeAttribute != null)
+            var parameterInvoker = args.GetParamterInvoker(procedureCode);
+            if (parameterInvoker != null)
             {
-                val = parameters.GetValue(codeAttribute);
+                val = args.GetValue(parameterInvoker);
             }
             else
             {
-                var procedure = DBService.Schems.ParseProcedure(procedureCode, parameters.ProcedureCategory);
+                var procedure = DBService.Schems.ParseProcedure(procedureCode, args.Category);
                 if (procedure != null)
-                    try { val = procedure.Execute(parameters); }
+                    try { val = procedure.Execute(args); }
                     catch (Exception ex) { val = ex.Message; }
             }
 
@@ -100,7 +100,7 @@ namespace DataWF.Data
                 {
                     string[] vsplit = temp[1].Split(new char[] { ' ' });
                     string column = vsplit[0].Trim();
-                    val = parameters.Document[column];
+                    val = args.Document[column];
                     if (temp.Length > 2)
                         param = temp[2].Trim();
                     if (temp.Length > 3)
@@ -110,7 +110,7 @@ namespace DataWF.Data
                 {
                     procedureCode = temp[1].Trim();
                 }
-                else if (parameters.Parameters.TryGetValue(type, out val))
+                else if (args.Parameters.TryGetValue(type, out val))
                 {
                     if (temp.Length > 1)
                         param = temp[1].Trim();
@@ -118,7 +118,7 @@ namespace DataWF.Data
                         localize = temp[2];
                 }
                 else if (code == "list")
-                    val = parameters.Result;
+                    val = args.Result;
             }
             if (param != null && param.Length > 0)
             {

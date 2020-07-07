@@ -92,16 +92,16 @@ namespace DataWF.Data
             }
         }
 
-        public DBProcedure ParseProcedure(string code, string category = "General")
+        public DBProcedure ParseProcedure(string name, string category = "General")
         {
             var procedure = (DBProcedure)null;
             foreach (var schema in this)
             {
-                procedure = schema.Procedures[code];
+                procedure = schema.Procedures[name];
                 if (procedure == null)
-                    procedure = schema.Procedures.SelectByCode(code, category);
+                    procedure = schema.Procedures.SelectByAttribute(name, category);
                 if (procedure == null && category != "General")
-                    procedure = schema.Procedures.SelectByCode(code);
+                    procedure = schema.Procedures.SelectByAttribute(name);
                 if (procedure != null)
                     break;
             }

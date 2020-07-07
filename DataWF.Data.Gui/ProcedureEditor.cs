@@ -361,8 +361,8 @@ namespace DataWF.Data.Gui
             procedure.Save();
             if (procedure.ProcedureType == ProcedureTypes.Source || procedure.ProcedureType == ProcedureTypes.Assembly)
             {
-                var parameters = new ExecuteArgs();
-                var obj = procedure.CreateObject(parameters);
+                var args = new ExecuteArgs();
+                var obj = procedure.CreateObject(args);
 
                 if (obj is Window)
                 {
@@ -381,7 +381,7 @@ namespace DataWF.Data.Gui
                 }
                 else
                 {
-                    object result = procedure.ExecuteObject(obj, parameters);
+                    object result = procedure.ExecuteObject(obj, args);
                     MessageDialog.ShowMessage(ParentWindow, result == null ? "Succesfull!" : result.ToString(), "Execute complete!");
                 }
             }
@@ -400,9 +400,9 @@ namespace DataWF.Data.Gui
             }
             else
             {
-                var parameters = new ExecuteArgs { Parameters = ProcedureProgress.CreateParam(procedure) };
-                var obj = procedure.CreateObject(parameters);
-                object result = procedure.ExecuteObject(obj, parameters);
+                var args = new ExecuteArgs { Parameters = ProcedureProgress.CreateParam(procedure) };
+                var obj = procedure.CreateObject(args);
+                object result = procedure.ExecuteObject(obj, args);
                 MessageDialog.ShowMessage(ParentWindow, result == null ? "Succesfull!" : result.ToString(), "Execute complete!");
             }
         }
