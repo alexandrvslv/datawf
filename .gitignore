@@ -17,3 +17,4 @@ packages/
 .vscode/
 DataWF.Test.Web.Service/Controllers/
 Package/
+/DataWF.sln.licenseheader

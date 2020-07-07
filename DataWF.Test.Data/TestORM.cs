@@ -1,6 +1,6 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
-using DataWF.Data.Geometry;
+using DataWF.Geometry;
 using NUnit.Framework;
 using System;
 using System.Linq;
