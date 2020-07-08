@@ -261,8 +261,16 @@ namespace DataWF.Common
                     continue;
                 }
 
-                jwriter.WritePropertyName(property.Name);
                 var value = property.Invoker.GetValue(item);
+                if (value is ISynchronized synchedValue)
+                {
+                    if (synchedValue.SyncStatus != SynchronizedStatus.New
+                        && synchedValue.SyncStatus != SynchronizedStatus.Edit)
+                    {
+                        continue;
+                    }
+                }
+                jwriter.WritePropertyName(property.Name);
                 if (property.IsAttribute || value == null)
                 {
                     JsonSerializer.Serialize(jwriter, value, property.DataType, options);

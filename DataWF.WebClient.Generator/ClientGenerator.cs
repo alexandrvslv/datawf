@@ -1291,10 +1291,7 @@ namespace DataWF.WebClient.Generator
         private IEnumerable<AttributeListSyntax> GenDefinitionClassPropertyAttributes(JsonSchemaProperty property, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             if (property.IsReadOnly
-                || (property.ExtensionData != null && property.ExtensionData.TryGetValue("readOnly", out var isReadOnly) && (bool)isReadOnly)
-                || property.Type == JsonObjectType.Object && !property.IsEnumeration
-                || (property.Type == JsonObjectType.None && property.ActualTypeSchema.Type == JsonObjectType.Object && !property.ActualTypeSchema.IsEnumeration))
-
+                || (property.ExtensionData != null && property.ExtensionData.TryGetValue("readOnly", out var isReadOnly) && (bool)isReadOnly))
             {
                 yield return SF.AttributeList(
                              SF.SingletonSeparatedList(
@@ -1310,6 +1307,16 @@ namespace DataWF.WebClient.Generator
             {
                 SyntaxHelper.AddUsing("System.ComponentModel.DataAnnotations", usings);
                 yield return SyntaxHelper.GenAttributeList("Display", $"Order = -2");
+            }
+            if ((property.Type == JsonObjectType.Object
+                && !property.IsEnumeration
+                && property.AllInheritedSchemas.Any(p => p.Id == "DBItem"))
+                || (property.Type == JsonObjectType.None
+                && property.ActualTypeSchema.Type == JsonObjectType.Object
+                && !property.ActualTypeSchema.IsEnumeration
+                && property.ActualTypeSchema.AllInheritedSchemas.Any(p => p.Id == "DBItem")))
+            {
+
             }
             else //if (!property.IsRequired)
             {
