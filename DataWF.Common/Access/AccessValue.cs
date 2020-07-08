@@ -135,7 +135,7 @@ namespace DataWF.Common
         public byte[] Serialize()
         {
             byte[] buffer = null;
-            var stream = new MemoryStream();
+            using (var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream))
             {
                 Serialize(writer);
@@ -156,7 +156,7 @@ namespace DataWF.Common
 
         public void Deserialize(byte[] buffer)
         {
-            var stream = new MemoryStream(buffer);
+            using (var stream = new MemoryStream(buffer))
             using (var reader = new BinaryReader(stream))
             {
                 Deserialize(reader);
