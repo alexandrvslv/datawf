@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Collections.Generic;
 
 namespace DataWF.Geometry
 {
@@ -80,6 +81,19 @@ namespace DataWF.Geometry
         public override string ToString()
         {
             return $"{Point1} - {Point2}";
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Line3D);
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = 363529913;
+            hashCode = hashCode * -1521134295 + EqualityComparer<Point3D>.Default.GetHashCode(Point1);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Point3D>.Default.GetHashCode(Point2);
+            return hashCode;
         }
     }
 }
