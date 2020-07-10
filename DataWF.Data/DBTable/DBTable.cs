@@ -1562,10 +1562,10 @@ namespace DataWF.Data
                 return column.PropertyInvoker;
             }
 
-            var reference = Foreigns.GetByProperty(property);
+            var reference = Columns.GetByReferenceProperty(property);
             if (reference != null)
             {
-                return reference.Invoker;
+                return reference.ReferencePropertyInvoker;
             }
 
             var refing = Generator?.GetReferencingByProperty(property);
