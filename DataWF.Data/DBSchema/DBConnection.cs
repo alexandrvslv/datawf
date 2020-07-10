@@ -29,6 +29,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -437,7 +438,7 @@ namespace DataWF.Data
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void OnPropertyChanged([CallerMemberName]string property = null)
+        public void OnPropertyChanged([CallerMemberName] string property = null)
         {
             //Debug.WriteLine($"Connection set property {property} = {EmitInvoker.GetValue(GetType(), property, this)}");
             OnPropertyChanged(new PropertyChangedEventArgs(property));
@@ -519,6 +520,18 @@ namespace DataWF.Data
             }
         }
 
+        public async Task<object> ExecuteQueryAsync(string query, bool noTransaction = false, DBExecuteType type = DBExecuteType.Scalar)
+        {
+            if (string.IsNullOrEmpty(query))
+                return null;
+            using (var transaction = new DBTransaction(this, null, noTransaction))
+            {
+                var result = await transaction.ExecuteQueryAsync(transaction.AddCommand(query), type);
+                transaction.Commit();
+                return result;
+            }
+        }
+
         public IEnumerable<string> SplitGoQuery(string query)
         {
             var regex = new Regex(@"\s*go\s*(\n|$)", RegexOptions.IgnoreCase);
@@ -538,6 +551,16 @@ namespace DataWF.Data
             foreach (var go in SplitGoQuery(query))
             {
                 result.Add(ExecuteQuery(go, noTransaction, type));
+            }
+            return result;
+        }
+
+        public async Task<List<object>> ExecuteGoQueryAsync(string query, bool noTransaction = true, DBExecuteType type = DBExecuteType.Scalar)
+        {
+            var result = new List<object>();
+            foreach (var go in SplitGoQuery(query))
+            {
+                result.Add(await ExecuteQueryAsync(go, noTransaction, type));
             }
             return result;
         }

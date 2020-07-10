@@ -17,16 +17,16 @@ namespace DataWF.Test.Data
         }
 
         [Column("location", 16)]
-        public Point2D Location
+        public Point2D? Location
         {
-            get => GetProperty<Point2D>();
+            get => GetProperty<Point2D?>();
             set => SetProperty(value);
         }
 
         [Column("box", 32)]
-        public Rectangle2D Box
+        public Rectangle2D? Box
         {
-            get => GetProperty<Rectangle2D>();
+            get => GetProperty<Rectangle2D?>();
             set => SetProperty(value);
         }
 
