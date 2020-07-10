@@ -22,9 +22,27 @@ using System;
 using System.Collections.Generic;
 
 namespace DataWF.Geometry
-{
+{    
     public class Line2D : IByteSerializable, IComparable<Line2D>, IEquatable<Line2D>
     {
+        private Point2D point1;
+        private Point2D point2;
+
+        public static bool operator ==(Line2D a, Line2D b)
+        {
+            return a?.Equals(b) ?? b?.Equals(a) ?? true;
+        }
+
+        public static bool operator !=(Line2D a, Line2D b)
+        {
+            return !(a?.Equals(b) ?? b?.Equals(a) ?? true);
+        }
+
+        public Line2D(byte[] data)
+        {
+            Deserialize(data);
+        }
+
         public Line2D()
         {
             Point1 = new Point2D();
@@ -37,9 +55,9 @@ namespace DataWF.Geometry
             Point2 = new Point2D(x2, y2);
         }
 
-        public Point2D Point1 { get; set; }
+        public Point2D Point1 { get => point1; set => point1 = value; }
 
-        public Point2D Point2 { get; set; }
+        public Point2D Point2 { get => point2; set => point2 = value; }
 
         public int CompareTo(Line2D other)
         {
@@ -58,19 +76,19 @@ namespace DataWF.Geometry
 
         public void Deserialize(byte[] data)
         {
-            Point1.X = BitConverter.ToDouble(data, 0);
-            Point1.Y = BitConverter.ToDouble(data, 8);
-            Point2.X = BitConverter.ToDouble(data, 16);
-            Point2.Y = BitConverter.ToDouble(data, 24);
+            point1.X = BitConverter.ToDouble(data, 0);
+            point1.Y = BitConverter.ToDouble(data, 8);
+            point2.X = BitConverter.ToDouble(data, 16);
+            point2.Y = BitConverter.ToDouble(data, 24);
         }
 
         public byte[] Serialize()
         {
             var buffer = new byte[32];
-            Array.Copy(BitConverter.GetBytes(Point1.X), 0, buffer, 0, 8);
-            Array.Copy(BitConverter.GetBytes(Point1.Y), 0, buffer, 8, 8);
-            Array.Copy(BitConverter.GetBytes(Point2.X), 0, buffer, 16, 8);
-            Array.Copy(BitConverter.GetBytes(Point2.Y), 0, buffer, 24, 8);
+            Array.Copy(BitConverter.GetBytes(point1.X), 0, buffer, 0, 8);
+            Array.Copy(BitConverter.GetBytes(point1.Y), 0, buffer, 8, 8);
+            Array.Copy(BitConverter.GetBytes(point2.X), 0, buffer, 16, 8);
+            Array.Copy(BitConverter.GetBytes(point2.Y), 0, buffer, 24, 8);
             return buffer;
         }
 

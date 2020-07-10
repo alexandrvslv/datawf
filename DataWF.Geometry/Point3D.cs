@@ -19,14 +19,51 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Globalization;
 using System.IO;
+using System.Text.Json.Serialization;
 
 namespace DataWF.Geometry
 {
-    public class Point3D : IByteSerializable, IComparable<Point3D>, IEquatable<Point3D>
+    [JsonConverter(typeof(SystemJsonPoint3DConverter)), Newtonsoft.Json.JsonConverter(typeof(NewtonJsonPoint3DConverter))]
+    public struct Point3D : IByteSerializable, IComparable<Point3D>, IEquatable<Point3D>
     {
-        public Point3D()
-        { }
+        public static readonly Point3D Empty = new Point3D();
+        public static bool TryParse(string text, out Point3D point)
+        {
+            point = new Point3D();
+            text = text.Trim(Point2D.TrimArray);
+            var split = text.Split(',');
+
+            if (split.Length > 2
+                && double.TryParse(split[0], NumberStyles.Number, CultureInfo.InvariantCulture, out var x)
+                && double.TryParse(split[1], NumberStyles.Number, CultureInfo.InvariantCulture, out var y)
+                && double.TryParse(split[2], NumberStyles.Number, CultureInfo.InvariantCulture, out var z))
+            {
+                point.X = x;
+                point.Y = y;
+                point.Z = z;
+                return true;
+            }
+            return false;
+        }
+
+        public static bool operator ==(Point3D a, Point3D b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Point3D a, Point3D b)
+        {
+            return !a.Equals(b);
+        }
+
+        public Point3D(byte[] data)
+        {
+            X = BitConverter.ToDouble(data, 0);
+            Y = BitConverter.ToDouble(data, 8);
+            Z = BitConverter.ToDouble(data, 16);
+        }
 
         public Point3D(double x, double y, double z)
         {
@@ -40,6 +77,7 @@ namespace DataWF.Geometry
         public double Y { get; set; }
 
         public double Z { get; set; }
+
 
         public int CompareTo(Point3D other)
         {
@@ -55,8 +93,6 @@ namespace DataWF.Geometry
 
         public bool Equals(Point3D other)
         {
-            if (other == null)
-                return false;
             return X.Equals(other.X)
                 && Y.Equals(other.Y)
                 && Z.Equals(other.Z);
@@ -94,12 +130,14 @@ namespace DataWF.Geometry
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as Point3D);
+            if (obj == null)
+                return false;
+            return Equals((Point3D)obj);
         }
 
         public override string ToString()
         {
-            return $"({X}, {Y}, {Z})";
+            return FormattableString.Invariant($"({X}, {Y}, {Z})");
         }
 
         public override int GetHashCode()

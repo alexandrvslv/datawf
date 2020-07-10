@@ -26,7 +26,23 @@ namespace DataWF.Geometry
     //Skia concept
     public class Matrix2D : IByteSerializable, IEquatable<Matrix2D>
     {
+        public static bool operator ==(Matrix2D a, Matrix2D b)
+        {
+            return a?.Equals(b) ?? b?.Equals(a) ?? true;
+        }
+
+        public static bool operator !=(Matrix2D a, Matrix2D b)
+        {
+            return !(a?.Equals(b) ?? b?.Equals(a) ?? true);
+        }
+
         public static Matrix2D CreateIdentity() => new Matrix2D { ScaleX = 1, ScaleY = 1, Persp2 = 1 };
+
+        public Matrix2D(byte[] data)
+        {
+            Deserialize(data);
+        }
+
         public Matrix2D()
         { }
 
@@ -143,7 +159,7 @@ namespace DataWF.Geometry
 
         public override string ToString()
         {
-            return $"({ScaleX}, {SkewX}, {TransX}), ({SkewY}, {ScaleY}, {TransY}), ({Persp0}, {Persp1}, {Persp2})";
+            return FormattableString.Invariant($"({ScaleX}, {SkewX}, {TransX}), ({SkewY}, {ScaleY}, {TransY}), ({Persp0}, {Persp1}, {Persp2})");
         }
 
         public override int GetHashCode()

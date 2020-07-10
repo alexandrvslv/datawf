@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public struct AccessItem : IAccessItem, IEquatable<AccessItem>
+    public struct AccessItem : IAccessItem, IByteSerializable, IEquatable<AccessItem>
     {
         public static readonly AccessItem Empty = new AccessItem(null);
         private IAccessIdentity identity;
@@ -35,11 +35,6 @@ namespace DataWF.Common
         {
             Identity = identity;
             Access = data;
-        }
-
-        public override string ToString()
-        {
-            return $"{Identity?.Name}({Access})";
         }
 
         [XmlIgnore, JsonIgnore]
@@ -213,11 +208,34 @@ namespace DataWF.Common
                    && Access == item.Access;
         }
 
-        internal void Serialize(BinaryWriter writer)
+        public byte[] Serialize()
+        {
+            var buffer = new byte[9];
+            Array.Copy(BitConverter.GetBytes(IsUser), 0, buffer, 0, 1);
+            Array.Copy(BitConverter.GetBytes(IdentityId), 0, buffer, 1, 4);
+            Array.Copy(BitConverter.GetBytes((int)Access), 0, buffer, 5, 4);
+            return buffer;
+        }
+
+        public void Serialize(BinaryWriter writer)
         {
             writer.Write(IsUser);
             writer.Write(IdentityId);
             writer.Write((int)Access);
+        }
+
+        public void Deserialize(byte[] buffer)
+        {
+            IsUser = BitConverter.ToBoolean(buffer, 0);
+            IdentityId = BitConverter.ToInt32(buffer, 1);
+            Access = (AccessType)BitConverter.ToInt32(buffer, 5);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            IsUser = reader.ReadBoolean();
+            IdentityId = reader.ReadInt32();
+            Access = (AccessType)reader.ReadInt32();
         }
 
         public static AccessItem Deserialize(BinaryReader reader, bool user)
@@ -233,5 +251,12 @@ namespace DataWF.Common
             hashCode = hashCode * -1521134295 + Access.GetHashCode();
             return hashCode;
         }
+
+        public override string ToString()
+        {
+            return $"{Identity?.Name}({Access})";
+        }
+
+
     }
 }

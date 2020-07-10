@@ -113,7 +113,8 @@ namespace DataWF.Common
                     isRef = false;
                     lock (synchItem)
                     {
-                        if (synchItem.SyncStatus == SynchronizedStatus.Actual)
+                        if (synchItem.SyncStatus == SynchronizedStatus.Actual
+                            || synchItem.SyncStatus == SynchronizedStatus.New)
                         {
                             synchItem.SyncStatus = SynchronizedStatus.Load;
                         }
@@ -188,7 +189,7 @@ namespace DataWF.Common
                 return client.Converter.Read(jreader, null, serializer);
             else
 #endif
-                return serializer.Deserialize(jreader, type);
+            return serializer.Deserialize(jreader, type);
         }
 
 
@@ -264,7 +265,8 @@ namespace DataWF.Common
             var type = item.GetType();
             var typeInfo = SerializationInfo?.Type == type ? SerializationInfo : Serialization.Instance.GetTypeInfo(type);
             var synched = item as ISynchronized;
-
+            NewtonJsonContractResolver.WriterContexts.TryGetValue(jwriter, out var context);
+            context?.Items.Add(item);
             jwriter.WriteStartObject();
             foreach (var property in typeInfo.Properties)
             {
@@ -276,12 +278,14 @@ namespace DataWF.Common
                 {
                     continue;
                 }
-
                 var value = property.Invoker.GetValue(item);
                 if (value is ISynchronized synchedValue)
                 {
+                    if (context != null && context.Items.Contains(value))
+                        continue;
+
                     if (synchedValue.SyncStatus != SynchronizedStatus.New
-                        && synchedValue.SyncStatus != SynchronizedStatus.Edit)
+                    && synchedValue.SyncStatus != SynchronizedStatus.Edit)
                     {
                         continue;
                     }
@@ -327,9 +331,12 @@ namespace DataWF.Common
             var listInfo = Serialization.Instance.GetTypeInfo(list.GetType());
             var itemType = listInfo.ListItemType;
             var itemInfo = listInfo.ListItemTypeInfo;
+            NewtonJsonContractResolver.WriterContexts.TryGetValue(jwriter, out var context);
             foreach (var item in list)
             {
-                if (item is ISynchronized isSynch && isSynch.SyncStatus == SynchronizedStatus.Actual)
+                if (item is ISynchronized isSynch
+                    && (isSynch.SyncStatus == SynchronizedStatus.Actual
+                    || (context?.Items.Contains(item) ?? false)))
                 {
                     continue;
                 }

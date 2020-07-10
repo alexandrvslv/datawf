@@ -10,6 +10,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -363,18 +364,30 @@ namespace DataWF.Common
             else if (value != null)
             {
                 Validation(value);
-#if NETSTANDARD2_0
                 string text;
+#if NETSTANDARD2_0
+                
                 var serializer = Newtonsoft.Json.JsonSerializer.Create(Provider.JsonSettings);
                 using (var writer = new StringWriter())
                 using (var jwriter = new Newtonsoft.Json.JsonTextWriter(writer))
                 {
+                    NewtonJsonContractResolver.WriterContexts.TryAdd(jwriter, new ClientSerializationContext());
                     serializer.Serialize(jwriter, value);
                     jwriter.Flush();
                     text = writer.ToString();
+                    NewtonJsonContractResolver.WriterContexts.TryRemove(jwriter, out _);
                 }
 #else
-                var text = System.Text.Json.JsonSerializer.Serialize(value, value.GetType(), Provider.JsonSettings);
+                using (var jstream = new MemoryStream())
+                using (var jwriter = new System.Text.Json.Utf8JsonWriter(jstream,
+                    new System.Text.Json.JsonWriterOptions { Encoder = Provider.JsonSettings.Encoder, Indented = Provider.JsonSettings.WriteIndented, SkipValidation = true }))
+                {
+                    SystemJsonConverterFactory.WriterContexts.TryAdd(jwriter, new ClientSerializationContext());
+                    System.Text.Json.JsonSerializer.Serialize(jwriter, value, value.GetType(), Provider.JsonSettings);
+                    jwriter.Flush();
+                    text = Encoding.UTF8.GetString(jstream.ToArray());
+                    SystemJsonConverterFactory.WriterContexts.TryRemove(jwriter, out _);
+                }
 #endif
                 request.Content = new StringContent(text, Encoding.UTF8, "application/json");
             }

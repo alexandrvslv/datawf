@@ -19,15 +19,61 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Globalization;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Geometry
 {
-    public class Rectangle3D : IByteSerializable, IComparable<Rectangle3D>, IEquatable<Rectangle3D>
+    [JsonConverter(typeof(SystemJsonRectangle3DConverter)), Newtonsoft.Json.JsonConverter(typeof(NewtonJsonRectangle3DConverter))]
+    public struct Rectangle3D : IByteSerializable, IComparable<Rectangle3D>, IEquatable<Rectangle3D>
     {
-        public Rectangle3D()
-        { }
+        public static readonly Rectangle3D Empty = new Rectangle3D();
+
+        public static bool TryParse(string text, out Rectangle3D rect)
+        {
+            rect = new Rectangle3D();
+            text = text.Trim(Point2D.TrimArray);
+            var split = text.Split(',');
+
+            if (split.Length > 5
+                && double.TryParse(split[0].Trim(Point2D.TrimArray), NumberStyles.Number, CultureInfo.InvariantCulture, out var left)
+                && double.TryParse(split[1].Trim(Point2D.TrimArray), NumberStyles.Number, CultureInfo.InvariantCulture, out var bottom)
+                && double.TryParse(split[2].Trim(Point2D.TrimArray), NumberStyles.Number, CultureInfo.InvariantCulture, out var near)
+                && double.TryParse(split[3].Trim(Point2D.TrimArray), NumberStyles.Number, CultureInfo.InvariantCulture, out var right)
+                && double.TryParse(split[4].Trim(Point2D.TrimArray), NumberStyles.Number, CultureInfo.InvariantCulture, out var top)
+                && double.TryParse(split[5].Trim(Point2D.TrimArray), NumberStyles.Number, CultureInfo.InvariantCulture, out var far))
+            {
+                rect.Left = left;
+                rect.Bottom = bottom;
+                rect.Near = near;
+                rect.Right = right;
+                rect.Top = top;
+                rect.Far = far;
+                return true;
+            }
+            return false;
+        }
+
+        public static bool operator ==(Rectangle3D a, Rectangle3D b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Rectangle3D a, Rectangle3D b)
+        {
+            return !a.Equals(b);
+        }
+
+        public Rectangle3D(byte[] data)
+        {
+            Left = BitConverter.ToDouble(data, 0);
+            Bottom = BitConverter.ToDouble(data, 8);
+            Near = BitConverter.ToDouble(data, 16);
+            Right = BitConverter.ToDouble(data, 24);
+            Top = BitConverter.ToDouble(data, 32);
+            Far = BitConverter.ToDouble(data, 40);
+        }
 
         public Rectangle3D(double left, double bottom, double near, double right, double top, double far)
         {
@@ -80,9 +126,6 @@ namespace DataWF.Geometry
 
         public bool Equals(Rectangle3D other)
         {
-            if (other == null)
-                return false;
-
             return Bottom.Equals(other.Bottom)
                 && Left.Equals(other.Left)
                 && Near.Equals(other.Near)
@@ -155,12 +198,15 @@ namespace DataWF.Geometry
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as Rectangle3D);
+            if (obj == null)
+                return false;
+
+            return Equals((Rectangle3D)obj);
         }
 
         public override string ToString()
         {
-            return $"({Left}, {Top}, {Near}), ({Right}, {Bottom}, {Far})";
+            return FormattableString.Invariant($"({Left}, {Top}, {Near}), ({Right}, {Bottom}, {Far})");
         }
 
         public override int GetHashCode()

@@ -29,7 +29,22 @@ namespace DataWF.Geometry
 {
     public class Polygon3D : IByteSerializable, IComparable<Polygon3D>, IEquatable<Polygon3D>
     {
+        public static bool operator ==(Polygon3D a, Polygon3D b)
+        {
+            return a?.Equals(b) ?? b?.Equals(a) ?? true;
+        }
+
+        public static bool operator !=(Polygon3D a, Polygon3D b)
+        {
+            return !(a?.Equals(b) ?? b?.Equals(a) ?? true);
+        }
+
         private Rectangle3D bounds = new Rectangle3D();
+
+        public Polygon3D(byte[] data)
+        {
+            Deserialize(data);
+        }
 
         public Polygon3D()
         { }
@@ -75,6 +90,8 @@ namespace DataWF.Geometry
         {
             if (other == null)
                 return false;
+            if (ReferenceEquals(this, other))
+                return true;
             return Points.SequenceEqual(other.Points);
         }
 

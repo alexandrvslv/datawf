@@ -845,9 +845,10 @@ namespace DataWF.WebClient.Generator
                             var parsedType = TypeHelper.ParseType(definitionName, reference);
                             if (parsedType != null)
                             {
-                                if (parsedType.IsEnum
-                                    && definition.EnumerationNames != null)
+                                if (parsedType.IsEnum)
                                 {
+                                    if (definition.EnumerationNames == null)
+                                        continue;
                                     var defiEnumeration = definition.EnumerationNames;
                                     var typeEnumeration = Enum.GetNames(parsedType);
                                     if (defiEnumeration.SequenceEqual(typeEnumeration))
@@ -856,14 +857,13 @@ namespace DataWF.WebClient.Generator
                                         break;
                                     }
                                 }
-                                else if (parsedType.IsClass
-                                     && definition.Properties != null)
+                                else if (definition.Properties != null)
                                 {
                                     var defiProperties = definition.Properties.Keys.Select(p => p.ToLower());
                                     var typeProperties = parsedType.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance).Select(p => p.Name.ToLower());
                                     var percent = (float)defiProperties.Intersect(typeProperties).Count();
                                     percent = percent / (float)defiProperties.Count();
-                                    if (percent > 0.8f)
+                                    if (percent > 0.5f)
                                     {
                                         type = parsedType;
                                         break;
@@ -1308,7 +1308,7 @@ namespace DataWF.WebClient.Generator
                 SyntaxHelper.AddUsing("System.ComponentModel.DataAnnotations", usings);
                 yield return SyntaxHelper.GenAttributeList("Display", $"Order = -2");
             }
-            if ((property.Type == JsonObjectType.Object
+            else if ((property.Type == JsonObjectType.Object
                 && !property.IsEnumeration
                 && property.AllInheritedSchemas.Any(p => p.Id == "DBItem"))
                 || (property.Type == JsonObjectType.None
@@ -1316,7 +1316,7 @@ namespace DataWF.WebClient.Generator
                 && !property.ActualTypeSchema.IsEnumeration
                 && property.ActualTypeSchema.AllInheritedSchemas.Any(p => p.Id == "DBItem")))
             {
-
+                yield return SyntaxHelper.GenAttributeList("JsonSynchronized", null);
             }
             else //if (!property.IsRequired)
             {
@@ -1659,6 +1659,7 @@ namespace DataWF.WebClient.Generator
                         if (type != null)
                         {
                             SyntaxHelper.AddUsing(type, usings);
+
                         }
                         if (schema.IsEnumeration)
                         {
@@ -1666,7 +1667,7 @@ namespace DataWF.WebClient.Generator
                         }
                         else
                         {
-                            return GetDefinitionName(schema);
+                            return GetDefinitionName(schema) + (nullable && (type?.IsValueType ?? false) ? "?" : string.Empty);
                         }
                     }
                     else if (schema.Properties.ContainsKey("file"))

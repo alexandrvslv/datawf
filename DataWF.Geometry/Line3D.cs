@@ -25,6 +25,24 @@ namespace DataWF.Geometry
 {
     public class Line3D : IByteSerializable, IComparable<Line3D>, IEquatable<Line3D>
     {
+        private Point3D point2;
+        private Point3D point1;
+
+        public static bool operator ==(Line3D a, Line3D b)
+        {
+            return a?.Equals(b) ?? b == null;
+        }
+
+        public static bool operator !=(Line3D a, Line3D b)
+        {
+            return !(a?.Equals(b) ?? b == null);
+        }
+
+        public Line3D(byte[] data)
+        {
+            Deserialize(data);
+        }
+
         public Line3D()
         {
             Point1 = new Point3D();
@@ -37,9 +55,9 @@ namespace DataWF.Geometry
             Point2 = new Point3D(x2, y2, z2);
         }
 
-        public Point3D Point1 { get; set; }
+        public Point3D Point1 { get => point1; set => point1 = value; }
 
-        public Point3D Point2 { get; set; }
+        public Point3D Point2 { get => point2; set => point2 = value; }
 
         public int CompareTo(Line3D other)
         {
@@ -58,12 +76,12 @@ namespace DataWF.Geometry
 
         public void Deserialize(byte[] data)
         {
-            Point1.X = BitConverter.ToDouble(data, 0);
-            Point1.Y = BitConverter.ToDouble(data, 8);
-            Point1.Z = BitConverter.ToDouble(data, 16);
-            Point2.X = BitConverter.ToDouble(data, 24);
-            Point2.Y = BitConverter.ToDouble(data, 32);
-            Point2.Z = BitConverter.ToDouble(data, 40);
+            point1.X = BitConverter.ToDouble(data, 0);
+            point1.Y = BitConverter.ToDouble(data, 8);
+            point1.Z = BitConverter.ToDouble(data, 16);
+            point2.X = BitConverter.ToDouble(data, 24);
+            point2.Y = BitConverter.ToDouble(data, 32);
+            point2.Z = BitConverter.ToDouble(data, 40);
         }
 
         public byte[] Serialize()

@@ -29,7 +29,22 @@ namespace DataWF.Geometry
 {
     public class Polygon2DArray : IByteSerializable, IEquatable<Polygon2DArray>
     {
+        public static bool operator ==(Polygon2DArray a, Polygon2DArray b)
+        {
+            return a?.Equals(b) ?? b?.Equals(a) ?? true;
+        }
+
+        public static bool operator !=(Polygon2DArray a, Polygon2DArray b)
+        {
+            return !(a?.Equals(b) ?? b?.Equals(a) ?? true);
+        }
+
         private Rectangle2D bounds = new Rectangle2D();
+
+        public Polygon2DArray(byte[] data)
+        {
+            Deserialize(data);
+        }
 
         public Polygon2DArray()
         { }
@@ -76,6 +91,8 @@ namespace DataWF.Geometry
         {
             if (other == null)
                 return false;
+            if (ReferenceEquals(this, other))
+                return true;
             return Polygons.SequenceEqual(other.Polygons);
         }
 

@@ -20,6 +20,7 @@
 using DataWF.Common;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
@@ -29,10 +30,44 @@ using System.Xml.Serialization;
 
 namespace DataWF.Geometry
 {
-    public class Point2D : IByteSerializable, IComparable<Point2D>, IEquatable<Point2D>
+    [JsonConverter(typeof(SystemJsonPoint2DConverter)), Newtonsoft.Json.JsonConverter(typeof(NewtonJsonPoint2DConverter))]
+    public struct Point2D : IByteSerializable, IComparable<Point2D>, IEquatable<Point2D>
     {
-        public Point2D()
-        { }
+        internal static readonly char[] TrimArray = new char[] { ' ', ',', '(', ')' };
+
+        public static readonly Point2D Empty = new Point2D();
+
+        public static bool TryParse(string text, out Point2D point)
+        {
+            point = new Point2D();
+            text = text.Trim(TrimArray);
+            var split = text.Split(',');
+            if (split.Length > 1
+                && double.TryParse(split[0], NumberStyles.Number, CultureInfo.InvariantCulture, out var x)
+                && double.TryParse(split[1], NumberStyles.Number, CultureInfo.InvariantCulture, out var y))
+            {
+                point.X = x;
+                point.Y = y;
+                return true;
+            }
+            return false;
+        }
+
+        public static bool operator ==(Point2D a, Point2D b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Point2D a, Point2D b)
+        {
+            return !a.Equals(b);
+        }
+
+        public Point2D(byte[] data)
+        {
+            X = BitConverter.ToDouble(data, 0);
+            Y = BitConverter.ToDouble(data, 8);
+        }
 
         public Point2D(double x, double y)
         {
@@ -54,8 +89,6 @@ namespace DataWF.Geometry
 
         public bool Equals(Point2D other)
         {
-            if (other == null)
-                return false;
             return X.Equals(other.X) && Y.Equals(other.Y);
         }
 
@@ -87,7 +120,9 @@ namespace DataWF.Geometry
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as Point2D);
+            if (obj == null)
+                return false;
+            return Equals((Point2D)obj);
         }
 
         public override int GetHashCode()
@@ -100,7 +135,9 @@ namespace DataWF.Geometry
 
         public override string ToString()
         {
-            return $"({X}, {Y})";
+            return FormattableString.Invariant($"({X}, {Y})");
         }
+
+
     }
 }

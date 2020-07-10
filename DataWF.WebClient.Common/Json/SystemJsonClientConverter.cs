@@ -248,7 +248,8 @@ namespace DataWF.Common
             var type = item.GetType();
             var typeInfo = SerializationInfo?.Type == type ? SerializationInfo : Serialization.Instance.GetTypeInfo(type);
             var synched = item as ISynchronized;
-
+            SystemJsonConverterFactory.WriterContexts.TryGetValue(jwriter, out var context);
+            context?.Items.Add(item);
             jwriter.WriteStartObject();
             foreach (var property in typeInfo.Properties)
             {
@@ -264,6 +265,9 @@ namespace DataWF.Common
                 var value = property.Invoker.GetValue(item);
                 if (value is ISynchronized synchedValue)
                 {
+                    if (context != null && context.Items.Contains(value))
+                        continue;
+
                     if (synchedValue.SyncStatus != SynchronizedStatus.New
                         && synchedValue.SyncStatus != SynchronizedStatus.Edit)
                     {
@@ -309,9 +313,12 @@ namespace DataWF.Common
             jwriter.WriteStartArray();
             var itemType = TypeHelper.GetItemType(list);
             var itemInfo = Serialization.Instance.GetTypeInfo(itemType);
+            SystemJsonConverterFactory.WriterContexts.TryGetValue(jwriter, out var context);
             foreach (var item in list)
             {
-                if (item is ISynchronized isSynch && isSynch.SyncStatus == SynchronizedStatus.Actual)
+                if (item is ISynchronized isSynch
+                    && (isSynch.SyncStatus == SynchronizedStatus.Actual
+                    || (context?.Items.Contains(item) ?? false)))
                 {
                     continue;
                 }

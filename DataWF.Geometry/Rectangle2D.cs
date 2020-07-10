@@ -19,46 +19,92 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Globalization;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Geometry
 {
-    public class Rectangle2D : IByteSerializable, IComparable<Rectangle2D>, IEquatable<Rectangle2D>
+    /// Rectangle in User Space  - Base coordinate: bottom left corner
+    [JsonConverter(typeof(SystemJsonRectangle2DConverter)), Newtonsoft.Json.JsonConverter(typeof(NewtonJsonRectangle2DConverter))]
+    public struct Rectangle2D : IByteSerializable, IComparable<Rectangle2D>, IEquatable<Rectangle2D>
     {
-        public Rectangle2D()
-        { }
+        public static readonly Rectangle2D Empty = new Rectangle2D();
+
+        public static bool TryParse(string text, out Rectangle2D rect)
+        {
+            rect = new Rectangle2D();
+            text = text.Trim(Point2D.TrimArray);
+            var split = text.Split(',');
+
+            if (split.Length > 3
+                && double.TryParse(split[0].Trim(Point2D.TrimArray), NumberStyles.Number, CultureInfo.InvariantCulture, out var left)
+                && double.TryParse(split[1].Trim(Point2D.TrimArray), NumberStyles.Number, CultureInfo.InvariantCulture, out var bottom)
+                && double.TryParse(split[2].Trim(Point2D.TrimArray), NumberStyles.Number, CultureInfo.InvariantCulture, out var right)
+                && double.TryParse(split[3].Trim(Point2D.TrimArray), NumberStyles.Number, CultureInfo.InvariantCulture, out var top))
+            {
+                rect.left = left;
+                rect.bottom = bottom;
+                rect.right = right;
+                rect.top = top;
+                return true;
+            }
+            return false;
+        }
+
+        public static bool operator ==(Rectangle2D a, Rectangle2D b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Rectangle2D a, Rectangle2D b)
+        {
+            return !a.Equals(b);
+        }
+
+        private double left;
+        private double bottom;
+        private double right;
+        private double top;
+
+        public Rectangle2D(byte[] data)
+        {
+            left = BitConverter.ToDouble(data, 0);
+            bottom = BitConverter.ToDouble(data, 8);
+            right = BitConverter.ToDouble(data, 16);
+            top = BitConverter.ToDouble(data, 24);
+        }
 
         public Rectangle2D(double left, double bottom, double right, double top)
         {
-            Left = left;
-            Bottom = bottom;
-            Right = right;
-            Top = top;
+            this.left = left;
+            this.bottom = bottom;
+            this.right = right;
+            this.top = top;
         }
 
         public double Left
         {
-            get => BottomLeft.X;
-            set => BottomLeft.X = value;
+            get => left;
+            set => left = value;
         }
 
         public double Bottom
         {
-            get => BottomLeft.Y;
-            set => BottomLeft.Y = value;
+            get => bottom;
+            set => bottom = value;
         }
 
         public double Right
         {
-            get => TopRight.X;
-            set => TopRight.X = value;
+            get => right;
+            set => right = value;
         }
 
         public double Top
         {
-            get => TopRight.Y;
-            set => TopRight.Y = value;
+            get => top;
+            set => top = value;
         }
 
         [XmlIgnore, JsonIgnore]
@@ -68,10 +114,10 @@ namespace DataWF.Geometry
         public double Height => Top - Bottom;
 
         [XmlIgnore, JsonIgnore]
-        public Point2D BottomLeft { get; set; } = new Point2D();
+        public Point2D BottomLeft => new Point2D(left, bottom);
 
         [XmlIgnore, JsonIgnore]
-        public Point2D TopRight { get; set; } = new Point2D();
+        public Point2D TopRight => new Point2D(right, top);
 
         public int CompareTo(Rectangle2D other)
         {
@@ -89,9 +135,6 @@ namespace DataWF.Geometry
 
         public bool Equals(Rectangle2D other)
         {
-            if (other == null)
-                return false;
-
             return Bottom.Equals(other.Bottom)
                 && Left.Equals(other.Left)
                 && Top.Equals(other.Top)
@@ -147,12 +190,14 @@ namespace DataWF.Geometry
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as Rectangle2D);
+            if (obj == null)
+                return false;
+            return Equals((Rectangle2D)obj);
         }
 
         public override string ToString()
         {
-            return $"{BottomLeft}, {TopRight}";
+            return FormattableString.Invariant($"({Left}, {Bottom}), ({Right}, {Top})");
         }
 
         public override int GetHashCode()
