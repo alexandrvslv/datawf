@@ -63,7 +63,7 @@ namespace DataWF.WebClient.Generator
                         var directory = reference.TrimEnd(Path.DirectorySeparatorChar);
                         directory = directory.Substring(directory.LastIndexOf(Path.DirectorySeparatorChar) + 1);
                         var bin = Path.Combine(reference, "bin");
-                        foreach (var dll in Directory.GetFiles(bin, "*.dll", SearchOption.AllDirectories))
+                        foreach (var dll in Directory.GetFiles(reference, "*.dll", SearchOption.AllDirectories))
                         {
                             var dllName = Path.GetFileName(dll);
                             if (dllName.StartsWith(directory))
@@ -71,6 +71,10 @@ namespace DataWF.WebClient.Generator
                                 LoadAssembly(dll);
                             }
                         }
+                    }
+                    else
+                    {
+                        SyntaxHelper.ConsoleWarning($"Can't Load Reference {reference} File or Folder NotFound!");
                     }
                 }
             }
