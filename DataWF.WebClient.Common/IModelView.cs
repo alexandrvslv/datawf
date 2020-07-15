@@ -20,7 +20,11 @@ namespace DataWF.Common
         bool AllowStatus { get; }
         ModelViewStatus Status { get; }
 
-        event EventHandler SelectedItemChanged;
+        event EventHandler<ModelViewEventArgs> SelectedItemChanged;
+        event EventHandler<ModelViewEventArgs> Added;
+        event EventHandler<ModelViewEventArgs> Removed;
+
+
         event EventHandler StatusChanged;
         Task<IEnumerable> Get(HttpPageSettings pages = null);
         bool CanEdit(object item);

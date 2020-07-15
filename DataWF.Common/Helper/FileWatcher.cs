@@ -165,5 +165,14 @@ namespace DataWF.Common
             }
         }
 
+        public virtual FileStream OpenRead()
+        {
+            return new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        }
+
+        public virtual FileStream OpenWrite()
+        {
+            return new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+        }
     }
 }

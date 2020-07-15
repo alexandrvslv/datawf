@@ -52,6 +52,40 @@ namespace DataWF.Common
             }
         }
 
+        public bool RejectChanges()
+        {
+            var flag = false;
+            foreach (var entry in Changes.ToList())
+            {
+                var sflag = RejectChange(entry.Key, entry.Value);
+                if (sflag)
+                {
+                    flag = true;
+                }
+            }
+            return flag;
+        }
+
+        public bool RejectChange(string property)
+        {
+            if (Changes.TryGetValue(property, out var oldValue))
+            {
+                return RejectChange(property, oldValue);
+            }
+            return false;
+        }
+
+        public bool RejectChange(string property, object oldValue)
+        {
+            var invoker = EmitInvoker.Initialize(GetType(), property);
+            if (invoker != null)
+            {
+                invoker.SetValue(this, oldValue);
+                return true;
+            }
+            return false;
+        }
+
         protected override void OnPropertyChanged(object oldValue, object newValue, [CallerMemberName] string propertyName = null)
         {
             if (syncStatus == SynchronizedStatus.Actual)

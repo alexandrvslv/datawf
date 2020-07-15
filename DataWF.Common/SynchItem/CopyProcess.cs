@@ -12,6 +12,7 @@ namespace DataWF.Common
         Download,
         Upload,
         Buffering,
+        Save,
     }
 
     //https://www.codeproject.com/Articles/356297/Copy-a-Stream-with-Progress-Reporting
