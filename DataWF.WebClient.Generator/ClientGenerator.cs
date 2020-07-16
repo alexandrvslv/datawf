@@ -86,24 +86,44 @@ namespace DataWF.WebClient.Generator
         public HashSet<Assembly> References { get; } = new HashSet<Assembly>();
         public string ProviderName { get; set; } = "ClientProvider";
 
-        private void LoadAssembly(string reference)
+        private Assembly LoadAssembly(string reference, bool addReference = true)
         {
             try
             {
-                lastReferenceDirectory = Path.GetDirectoryName(Path.GetFullPath(reference));
                 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(reference));
-                References.Add(assembly);
+                if (addReference)
+                {
+                    References.Add(assembly);
+                }
                 SyntaxHelper.ConsoleInfo($"Load reference assembly {assembly} from {reference}");
+                lastReferenceDirectory = Path.GetDirectoryName(Path.GetFullPath(reference));
+                assembly.GetExportedTypes();
+                return assembly;
             }
             catch (Exception ex)
             {
                 SyntaxHelper.ConsoleWarning($"Can't Load Assembly {reference}. {ex.GetType().Name} {ex.Message}");
+                return null;
             }
         }
 
         private Assembly OnDefaultResolving(AssemblyLoadContext arg1, AssemblyName arg2)
         {
-            string packagePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $@".nuget\packages\{arg2.Name.ToLower()}");
+            string packagePath = null;
+            if (!string.IsNullOrEmpty(lastReferenceDirectory))
+            {
+                packagePath = Path.Combine(lastReferenceDirectory, arg2.Name + ".dll");
+                if (File.Exists(packagePath))
+                {
+                    SyntaxHelper.ConsoleWarning($"Try Resolving {arg2} from {packagePath}");
+                    var assembly = LoadAssembly(packagePath, false);
+                    if (assembly != null)
+                    {
+                        return assembly;
+                    }
+                }
+            }
+            packagePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $@".nuget\packages\{arg2.Name.ToLower()}");
             if (Directory.Exists(packagePath))
             {
                 var prevVersion = new Version(0, 0, 0, 0);
@@ -128,12 +148,7 @@ namespace DataWF.WebClient.Generator
                 && File.Exists(packagePath))
             {
                 SyntaxHelper.ConsoleWarning($"Try Resolving {arg2} from {packagePath}");
-                var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(packagePath);
-                if (assembly == null)
-                {
-                    SyntaxHelper.ConsoleWarning($"Fail Resolving {arg2} from {packagePath}");
-                }
-                return assembly;
+                return LoadAssembly(packagePath, false);
             }
 
             SyntaxHelper.ConsoleWarning($"Fail Resolving {arg2}");
@@ -860,10 +875,11 @@ namespace DataWF.WebClient.Generator
             var definitionName = GetDefinitionName(definition);
             if (!cacheReferences.TryGetValue(definitionName, out var type))
             {
-                //if (definitionName.Equals("DefaultItem", StringComparison.OrdinalIgnoreCase))
-                //{
-                //    type = typeof(DefaultItem);
-                //}                else 
+                if (definitionName.Equals("DefaultItem", StringComparison.OrdinalIgnoreCase))
+                {
+                    type = typeof(object);
+                }
+                else
                 if (definitionName.Equals(nameof(TimeSpan), StringComparison.OrdinalIgnoreCase))
                 {
                     type = typeof(TimeSpan);

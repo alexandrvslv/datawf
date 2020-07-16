@@ -8,7 +8,7 @@
     <PackageId>DataWF.WebClient.Generator</PackageId>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>wccodegen</ToolCommandName>
-    <VersionPrefix>1.6.4</VersionPrefix>
+    <VersionPrefix>1.6.9</VersionPrefix>
     <Authors>Alexandr</Authors>
     <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -20,6 +20,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.6.0" />
     <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="13.6.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
   <ItemGroup>
