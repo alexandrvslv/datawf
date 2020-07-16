@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataWF.Common
 {
@@ -11,12 +12,13 @@ namespace DataWF.Common
         [DataType(DataType.Password)]
         public string Password { get; set; }
 
+        [DefaultValue(false)]
         public bool Online { get; set; }
-        
+
         public string Platform { get; set; }
-        
+
         public string Application { get; set; }
-        
+
         public string Version { get; set; }
     }
 }

@@ -1048,35 +1048,13 @@ namespace DataWF.WebClient.Generator
                 }
             }
 
-            if (typeId != 0 || refFields.Count > 0)
-            {
-                yield return SF.ConstructorDeclaration(
-                          attributeLists: SF.List<AttributeListSyntax>(),
-                          modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
-                          identifier: SF.Identifier(GetDefinitionName(schema)),
-                          parameterList: SF.ParameterList(),
-                          initializer: null,
-                          body: SF.Block(GenDefinitionClassConstructorBody(typeKey, typeId, refFields)));
-
-                //yield return SF.PropertyDeclaration(
-                //    attributeLists: SF.List<AttributeListSyntax>(),
-                //    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
-                //    type: SF.ParseTypeName("SynchronizedStatus"),
-                //    explicitInterfaceSpecifier: null,
-                //    identifier: SF.Identifier("SyncStatus"),
-                //    accessorList: SF.AccessorList(SF.List(new[]
-                //    {
-                //        SF.AccessorDeclaration(
-                //            kind: SyntaxKind.GetAccessorDeclaration,
-                //            body: SF.Block(GenDefintionClassPropertySynckGet(typeKey, typeId, refFields))),
-                //        SF.AccessorDeclaration(
-                //            kind: SyntaxKind.SetAccessorDeclaration,
-                //            body: SF.Block(new[]{ SF.ParseStatement($"base.SyncStatus = value;")}))
-                //    })),
-                //    expressionBody: null,
-                //    initializer: null,
-                //    semicolonToken: SF.Token(SyntaxKind.None));
-            }
+            yield return SF.ConstructorDeclaration(
+                      attributeLists: SF.List<AttributeListSyntax>(),
+                      modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                      identifier: SF.Identifier(GetDefinitionName(schema)),
+                      parameterList: SF.ParameterList(),
+                      initializer: null,
+                      body: SF.Block(GenDefinitionClassConstructorBody(schema, idKey, typeKey, typeId, refFields, usings)));
 
             if (refFields.Count > 0 && idKey.ParentSchema != schema)
             {
@@ -1270,7 +1248,7 @@ namespace DataWF.WebClient.Generator
             yield return SF.ParseStatement($"edited ? SynchronizedStatus.Edit : SynchronizedStatus.Actual;");
         }
 
-        private IEnumerable<StatementSyntax> GenDefinitionClassConstructorBody(JsonSchemaProperty typeKey, int typeId, List<RefField> refFields)
+        private IEnumerable<StatementSyntax> GenDefinitionClassConstructorBody(JsonSchema schema, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId, List<RefField> refFields, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             if (typeId != 0)
             {
@@ -1278,11 +1256,18 @@ namespace DataWF.WebClient.Generator
             }
             foreach (var refField in refFields)
             {
-                //        yield return SF.ParseStatement($@"{refField.FieldName} = new {refField.FieldType}(
+                //yield return SF.ParseStatement($@"{refField.FieldName} = new {refField.FieldType}(
                 //new Query<{refField.TypeName}>(new[]{{{refField.ParameterName}}}),
                 //ClientProvider.Default.{refField.TypeName}.Items,
                 //false);");
                 yield return SF.ParseStatement($@"{refField.FieldName} = new {refField.FieldType} (this, nameof({refField.PropertyName}));");
+            }
+            foreach (var property in schema.Properties.Select(p => p.Value))
+            {
+                if (property.Default != null)
+                {
+                    yield return SF.ParseStatement($@"{GetPropertyName(property)} = {GenFieldDefault(property, idKey, usings)};");
+                }
             }
         }
 
@@ -1608,10 +1593,9 @@ namespace DataWF.WebClient.Generator
                            SF.VariableDeclarator(
                                identifier: SF.Identifier(GetFieldName(property)),
                                argumentList: null,
-                               initializer: property.Default != null
-                               ? SF.EqualsValueClause(GenFieldDefault(property, idKey, usings))
-                               : property.Type == JsonObjectType.Array
-                               ? SF.EqualsValueClause(SF.ParseExpression($"new {type}()")) : null))));
+                               initializer: property.Type == JsonObjectType.Array
+                               ? SF.EqualsValueClause(SF.ParseExpression($"new {type}()"))
+                               : null))));
             }
         }
 

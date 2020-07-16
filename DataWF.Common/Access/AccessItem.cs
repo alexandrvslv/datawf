@@ -63,6 +63,7 @@ namespace DataWF.Common
 
         public bool IsUser { get; set; }
 
+        [DefaultValue(AccessType.None)]
         public AccessType Access { get; set; }
 
         [XmlIgnore, JsonIgnore]
