@@ -1,5 +1,4 @@
-﻿using DataWF.Common;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NJsonSchema;
@@ -42,6 +41,7 @@ namespace DataWF.WebClient.Generator
         private readonly Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
         private OpenApiDocument document;
         private CompilationUnitSyntax provider;
+        private string lastReferenceDirectory;
 
         public ClientGenerator(string source, string output, string @namespace, string references)
         {
@@ -61,7 +61,7 @@ namespace DataWF.WebClient.Generator
                     else if (Directory.Exists(reference))
                     {
                         var directory = reference.TrimEnd(Path.DirectorySeparatorChar);
-                        directory = directory.Substring(directory.LastIndexOf(Path.DirectorySeparatorChar) + 1);
+                        directory = Path.GetFileName(directory);
                         var bin = Path.Combine(reference, "bin");
                         foreach (var dll in Directory.GetFiles(reference, "*.dll", SearchOption.AllDirectories))
                         {
@@ -90,27 +90,53 @@ namespace DataWF.WebClient.Generator
         {
             try
             {
+                lastReferenceDirectory = Path.GetDirectoryName(Path.GetFullPath(reference));
                 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(reference));
                 References.Add(assembly);
                 SyntaxHelper.ConsoleInfo($"Load reference assembly {assembly} from {reference}");
             }
             catch (Exception ex)
             {
-                Helper.OnException(ex);
                 SyntaxHelper.ConsoleWarning($"Can't Load Assembly {reference}. {ex.GetType().Name} {ex.Message}");
             }
         }
 
         private Assembly OnDefaultResolving(AssemblyLoadContext arg1, AssemblyName arg2)
         {
-            SyntaxHelper.ConsoleWarning($"Resolving {arg2} {arg1}");
-
-            if (arg2.Name == "SkiaSharp")
+            string packagePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $@".nuget\packages\{arg2.Name.ToLower()}");
+            if (Directory.Exists(packagePath))
             {
-                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), @".nuget\packages\skiasharp\1.68.3\lib\netstandard2.0\SkiaSharp.dll");
-
-                return AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
+                var prevVersion = new Version(0, 0, 0, 0);
+                foreach (var versionPath in Directory.GetDirectories(packagePath))
+                {
+                    var versionName = Path.GetFileName(versionPath);
+                    if (Version.TryParse(versionName, out var version)
+                        && version > prevVersion)
+                    {
+                        prevVersion = version;
+                        packagePath = versionPath;
+                        if (version == arg2.Version)
+                        {
+                            break;
+                        }
+                    }
+                }
+                packagePath = Path.Combine(packagePath, @"lib\netstandard2.0", arg2.Name + ".dll");
             }
+
+            if (!string.IsNullOrEmpty(packagePath)
+                && File.Exists(packagePath))
+            {
+                SyntaxHelper.ConsoleWarning($"Try Resolving {arg2} from {packagePath}");
+                var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(packagePath);
+                if (assembly == null)
+                {
+                    SyntaxHelper.ConsoleWarning($"Fail Resolving {arg2} from {packagePath}");
+                }
+                return assembly;
+            }
+
+            SyntaxHelper.ConsoleWarning($"Fail Resolving {arg2}");
             return null;
         }
 
@@ -574,7 +600,9 @@ namespace DataWF.WebClient.Generator
         {
             if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-type-id", out var id))
             {
-                return (int)Helper.Parse(id, typeof(int));
+                return id is int ? (int)id
+                    : id is string stringKey && int.TryParse(stringKey, out var typeid) ? typeid
+                    : Convert.ToInt32(id);
             }
 
             return 0;
@@ -746,7 +774,7 @@ namespace DataWF.WebClient.Generator
             //    yield return SF.ParseStatement($"await base.{actualName}({paramBuilder.ToString()}).ConfigureAwait(false);");
             //}
             var requestBuilder = new StringBuilder();
-            requestBuilder.Append($"await Request<{returnType}>(progressToken, HttpMethod.{Helper.ToInitcap(method)}, \"{path}\", \"{mediatype}\", settings");
+            requestBuilder.Append($"await Request<{returnType}>(progressToken, HttpMethod.{method.ToInitcap()}, \"{path}\", \"{mediatype}\", settings");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             if (bodyParameter == null)
             {
@@ -832,11 +860,11 @@ namespace DataWF.WebClient.Generator
             var definitionName = GetDefinitionName(definition);
             if (!cacheReferences.TryGetValue(definitionName, out var type))
             {
-                if (definitionName.Equals(nameof(DefaultItem), StringComparison.OrdinalIgnoreCase))
-                {
-                    type = typeof(DefaultItem);
-                }
-                else if (definitionName.Equals(nameof(TimeSpan), StringComparison.OrdinalIgnoreCase))
+                //if (definitionName.Equals("DefaultItem", StringComparison.OrdinalIgnoreCase))
+                //{
+                //    type = typeof(DefaultItem);
+                //}                else 
+                if (definitionName.Equals(nameof(TimeSpan), StringComparison.OrdinalIgnoreCase))
                 {
                     type = typeof(TimeSpan);
                 }
@@ -846,7 +874,7 @@ namespace DataWF.WebClient.Generator
                     {
                         try
                         {
-                            var parsedType = TypeHelper.ParseType(definitionName, reference);
+                            var parsedType = Helper.ParseType(definitionName, reference);
                             if (parsedType != null)
                             {
                                 if (parsedType.IsEnum)
@@ -877,7 +905,6 @@ namespace DataWF.WebClient.Generator
                         }
                         catch (Exception ex)
                         {
-                            Helper.OnException(ex);
                             SyntaxHelper.ConsoleWarning($"Can't Check Type {definitionName} on {reference}. {ex.GetType().Name} {ex.Message}");
                         }
                     }
@@ -979,15 +1006,15 @@ namespace DataWF.WebClient.Generator
             {
                 //yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IEntryNotifyPropertyChanged)));
                 if (schema.Id == "DBItem")
-                    yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(SynchronizedItem)));
+                    yield return SF.SimpleBaseType(SF.ParseTypeName("SynchronizedItem"));
                 else
-                    yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(DefaultItem)));
+                    yield return SF.SimpleBaseType(SF.ParseTypeName("DefaultItem"));
             }
             var idKey = GetPrimaryKey(schema, false);
             if (idKey != null)
             {
-                yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IPrimaryKey)));
-                yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IQueryFormatable)));
+                yield return SF.SimpleBaseType(SF.ParseTypeName("IPrimaryKey"));
+                yield return SF.SimpleBaseType(SF.ParseTypeName("IQueryFormatable"));
             }
         }
 
@@ -1054,7 +1081,7 @@ namespace DataWF.WebClient.Generator
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
                     type: SF.ParseTypeName("object"),
                     explicitInterfaceSpecifier: null,
-                    identifier: SF.Identifier(nameof(IPrimaryKey.PrimaryKey)),
+                    identifier: SF.Identifier("PrimaryKey"),
                     accessorList: SF.AccessorList(SF.List(new[]
                     {
                         SF.AccessorDeclaration(
@@ -1136,7 +1163,7 @@ namespace DataWF.WebClient.Generator
                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
                    type: SF.ParseTypeName("string"),
                    explicitInterfaceSpecifier: null,
-                   identifier: SF.Identifier(nameof(IInvoker.Name)),
+                   identifier: SF.Identifier("Name"),
                    accessorList: null,
                    expressionBody: SF.ArrowExpressionClause(SF.ParseExpression($"nameof({definitionName}.{propertyName})")),
                    initializer: null,
@@ -1148,7 +1175,7 @@ namespace DataWF.WebClient.Generator
                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
                    type: SF.ParseTypeName("bool"),
                    explicitInterfaceSpecifier: null,
-                   identifier: SF.Identifier(nameof(IInvoker.CanWrite)),
+                   identifier: SF.Identifier("CanWrite"),
                    accessorList: null,
                    expressionBody: SF.ArrowExpressionClause(SF.ParseExpression("true")),
                    initializer: null,
@@ -1160,7 +1187,7 @@ namespace DataWF.WebClient.Generator
                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
                    returnType: SF.ParseTypeName(propertyType),
                    explicitInterfaceSpecifier: null,
-                   identifier: SF.Identifier(nameof(IInvoker.GetValue)),
+                   identifier: SF.Identifier("GetValue"),
                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
                    typeParameterList: null,
                    body: null,
@@ -1179,7 +1206,7 @@ namespace DataWF.WebClient.Generator
                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
                    returnType: SF.ParseTypeName("void"),
                    explicitInterfaceSpecifier: null,
-                   identifier: SF.Identifier(nameof(IInvoker.SetValue)),
+                   identifier: SF.Identifier("SetValue"),
                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
                    typeParameterList: null,
                    body: null,
@@ -1687,6 +1714,8 @@ namespace DataWF.WebClient.Generator
             return "string";
         }
 
+
+
         private TypeSyntax GetTypeDeclaration(JsonSchema property, bool nullable, Dictionary<string, UsingDirectiveSyntax> usings, string listType)
         {
             return SF.ParseTypeName(GetTypeString(property, nullable, usings, listType));
@@ -1721,5 +1750,65 @@ namespace DataWF.WebClient.Generator
 
         }
 
+    }
+
+    public static class Helper
+    {
+        private static readonly Dictionary<Assembly, Dictionary<string, Type>> cacheAssemblyTypes = new Dictionary<Assembly, Dictionary<string, Type>>();
+        //https://stackoverflow.com/a/24768641
+        public static string ToInitcap(this string str, params char[] separator)
+        {
+            if (string.IsNullOrEmpty(str))
+                return str;
+            var charArray = new List<char>(str.Length);
+            bool newWord = true;
+            foreach (Char currentChar in str)
+            {
+                var newChar = currentChar;
+                if (Char.IsLetter(currentChar))
+                {
+                    if (newWord)
+                    {
+                        newWord = false;
+                        newChar = Char.ToUpper(currentChar);
+                    }
+                    else
+                    {
+                        newChar = Char.ToLower(currentChar);
+                    }
+                }
+                else if (separator.Contains(currentChar))
+                {
+                    newWord = true;
+                    continue;
+                }
+                charArray.Add(newChar);
+            }
+            return new string(charArray.ToArray());
+        }
+
+        public static Type ParseType(string value, Assembly assembly)
+        {
+            var byName = value.IndexOf('.') < 0;
+            if (byName)
+            {
+                if (!cacheAssemblyTypes.TryGetValue(assembly, out var cache))
+                {
+                    var definedTypes = assembly.GetExportedTypes();
+                    cacheAssemblyTypes[assembly] =
+                        cache = new Dictionary<string, Type>(definedTypes.Length, StringComparer.Ordinal);
+                    foreach (var defined in definedTypes)
+                    {
+                        cache[defined.Name] = defined;
+                    }
+                }
+
+                return cache.TryGetValue(value, out var type) ? type : null;
+            }
+            else
+            {
+                return assembly.GetType(value);
+            }
+        }
     }
 }

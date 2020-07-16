@@ -1,5 +1,4 @@
-﻿using DataWF.Common;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
@@ -62,7 +61,7 @@ namespace DataWF.WebService.Generator
         {
             MetadataReference[] references = {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(Helper).Assembly.Location),
+                //MetadataReference.CreateFromFile(typeof(Helper).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(HttpClient).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(ModelReferenceRewriter).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(JsonSerializerSettings).Assembly.Location)

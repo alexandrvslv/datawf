@@ -8,7 +8,7 @@
     <PackageId>DataWF.WebClient.Generator</PackageId>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>wccodegen</ToolCommandName>
-    <VersionPrefix>1.5.9</VersionPrefix>
+    <VersionPrefix>1.6.4</VersionPrefix>
     <Authors>Alexandr</Authors>
     <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DataWF.WebClient.Common\DataWF.WebClient.Common.csproj" />
+    <Folder Include="Package\" />
   </ItemGroup>
 
 </Project>
