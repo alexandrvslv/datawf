@@ -104,8 +104,8 @@ namespace DataWF.Data
             //}
         }
 
-        [Category("Naming"), XmlIgnore]
-        public string DisplayName
+        [Category("Naming")]
+        public virtual string DisplayName
         {
             get { return LocaleInfo?.Value ?? Name; }
             set

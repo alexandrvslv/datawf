@@ -122,6 +122,8 @@ namespace DataWF.Data
 
         public static DBTable GetTable(Type type, DBSchema schema = null, bool generate = false)
         {
+            if (type == null)
+                return null;
             if (!cacheTables.TryGetValue(type, out var table))
             {
                 var tableAttribute = GetTableAttribute(type);

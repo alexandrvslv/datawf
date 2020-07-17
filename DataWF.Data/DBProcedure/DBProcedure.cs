@@ -136,6 +136,12 @@ namespace DataWF.Data
             get => Store?.SelectByParent(this);
         }
 
+        public override string DisplayName
+        {
+            get => base.DisplayName;
+            set => base.DisplayName = value;
+        }
+
         public IEnumerable<IGroup> GetGroups()
         {
             return Childs;
@@ -721,7 +727,7 @@ namespace DataWF.Data
                             {
                                 ProcedureType = ProcedureTypes.Assembly,
                                 Name = TypeHelper.FormatBinary(type),
-                                DisplayName = Locale.Get(type),
+                                DisplayName = Locale.Get(type, type.Name.ToSepInitcap()),
                                 Group = this,
                                 DataName = fileName
                             };

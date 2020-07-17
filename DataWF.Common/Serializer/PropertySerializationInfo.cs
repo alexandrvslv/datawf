@@ -14,6 +14,8 @@ namespace DataWF.Common
         Required = 8,
         ChangeSensitive = 16,
         ReadOnly = 32,
+        XmlIgnore = 64,
+        JsonIgnore = 128
     }
 
     public class PropertySerializationInfo : INamed

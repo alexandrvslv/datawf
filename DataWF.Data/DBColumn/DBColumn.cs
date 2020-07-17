@@ -403,7 +403,7 @@ namespace DataWF.Data
             get
             {
                 if (IsReference && cacheReferenceTable == null)
-                    cacheReferenceTable = Table?.Foreigns.GetByColumn(this)?.FirstOrDefault()?.ReferenceTable;
+                    cacheReferenceTable = Table?.Foreigns.GetByColumn(this)?.FirstOrDefault()?.ReferenceTable ?? DBTable.GetTable(ReferencePropertyInvoker?.DataType);
                 return cacheReferenceTable;
             }
             set

@@ -152,7 +152,7 @@ namespace DataWF.Data
                         ProcedureType = ProcedureTypes.Assembly
                     };
                     procedure = AddOrUpdate(procedure);
-                    procedure.DisplayName = type.Name;
+                    procedure.DisplayName = type.Name.ToSepInitcap();
                     procedure.TempAssembly = assembly;
                     procedure.Attributes.Clear();
                     procedure.Attributes.AddRange(type.GetCustomAttributes<ParameterAttribute>());
