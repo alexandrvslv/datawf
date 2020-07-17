@@ -260,6 +260,21 @@ namespace DataWF.Data
                     {
                         return 1;
                     }
+                    if (a.Item is DBColumn columnA)
+                    {
+                        if (b.Item is DBColumn columnB)
+                        {
+                            return columnA.CompareTo(columnB);
+                        }
+                        else
+                        {
+                            return -1;
+                        }
+                    }
+                    else if (b.Item is DBColumn)
+                    {
+                        return 1;
+                    }
                     return a.Order.CompareTo(b.Order);
                 });
                 foreach (var item in chages)
