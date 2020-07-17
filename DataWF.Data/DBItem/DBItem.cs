@@ -979,10 +979,12 @@ namespace DataWF.Data
         }
 
         public virtual void OnAccepted(IUserIdentity user)
-        { }
+        {
+        }
 
         public virtual void OnAccepting(IUserIdentity user)
-        { }
+        {
+        }
 
         public void Reject(string column)
         {
@@ -1729,6 +1731,10 @@ namespace DataWF.Data
         {
         }
 
+        protected virtual void OnSetStream(DBColumn column, DBTransaction transaction)
+        {
+        }
+
         public Stream GetZipMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
             var memoryStream = GetMemoryStream(column, transaction, bufferSize);
@@ -1772,6 +1778,7 @@ namespace DataWF.Data
             var oid = await Table.System.SetLOB(value, transaction);
             SetValueNullable<uint>(oid, column);
             await Save(transaction);
+            OnSetStream(column, transaction);
         }
 
         public Task<Stream> GetLOB(DBTransaction transaction, int bufferSize = 81920)
