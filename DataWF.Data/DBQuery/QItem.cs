@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -28,7 +29,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class QItem : IDisposable, IEntryNotifyPropertyChanged, IComparable, IValued
+    public class QItem : IDisposable, IEntryNotifyPropertyChanged, IComparable, IValued, IInvoker
     {
         protected int order = -1;
         protected string text;
@@ -47,14 +48,11 @@ namespace DataWF.Data
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public IQItemList List
-        {
-            get { return (IQItemList)Containers.FirstOrDefault(p => p is IQItemList); }
-        }
+        public IQItemList List => (IQItemList)Containers.FirstOrDefault(p => p is IQItemList);
 
         public int Order
         {
-            get { return order; }
+            get => order;
             set
             {
                 order = value;
@@ -64,7 +62,7 @@ namespace DataWF.Data
 
         public virtual string Text
         {
-            get { return text; }
+            get => text;
             set
             {
                 if (text == value)
@@ -76,7 +74,7 @@ namespace DataWF.Data
 
         public string Alias
         {
-            get { return alias; }
+            get => alias;
             set
             {
                 if (alias != value)
@@ -88,28 +86,31 @@ namespace DataWF.Data
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual IQuery Query
-        {
-            get { return List?.Query; }
-        }
+        public virtual IQuery Query => List?.Query;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual DBTable Table
         {
-            get { return Query?.Table; }
+            get => Query?.Table;
             set { }
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual DBSchema Schema
-        {
-            get { return Table?.Schema; }
-        }
+        public virtual DBSchema Schema => Table?.Schema;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual DBSystem DBSystem
+        public virtual DBSystem DBSystem => Schema?.System ?? DBSystem.Default;
+
+        public Type DataType => typeof(DBItem);
+
+        public Type TargetType => typeof(object);
+
+        public bool CanWrite => false;
+
+        public string Name
         {
-            get { return Schema?.System ?? DBSystem.Default; }
+            get => ToString();
+            set { }
         }
 
         public virtual string Format(IDbCommand command = null)
@@ -125,6 +126,16 @@ namespace DataWF.Data
         public virtual object GetValue(DBItem row)
         {
             return text;
+        }
+
+        public void SetValue(object target, object value)
+        {
+            throw new NotSupportedException();
+        }
+
+        public object GetValue(object target)
+        {
+            return GetValue((DBItem)target);
         }
 
         public virtual void Dispose()
@@ -150,6 +161,11 @@ namespace DataWF.Data
         public override string ToString()
         {
             return Format();
+        }
+
+        public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);
         }
 
 

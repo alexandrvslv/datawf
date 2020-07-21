@@ -151,9 +151,22 @@ namespace DataWF.Common
         {
             if (args is NotifyCollectionChangedEventArgs e)
             {
-                if (e.Action == NotifyCollectionChangedAction.Add
-                    || e.Action == NotifyCollectionChangedAction.Remove
-                    || e.Action == NotifyCollectionChangedAction.Reset)
+                var flag = false;
+                if (e.Action == NotifyCollectionChangedAction.Add)
+                {
+                    foreach (QueryParameter<T> item in e.NewItems)
+                    {
+                        flag |= item.IsEnabled;
+                    }
+                }
+                else if (e.Action == NotifyCollectionChangedAction.Remove)
+                {
+                    foreach (QueryParameter<T> item in e.OldItems)
+                    {
+                        flag |= item.IsEnabled;
+                    }
+                }
+                if (e.Action == NotifyCollectionChangedAction.Reset || flag)
                 {
                     CheckUpdateFilter(sender, args);
                 }

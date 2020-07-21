@@ -85,7 +85,8 @@ namespace DataWF.Common
         As,
         Using,
         Contains,
-        Intersect
+        Intersect,
+        Distinct
     }
 
     [Flags]

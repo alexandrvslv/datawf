@@ -1103,7 +1103,7 @@ namespace DataWF.Data
         public bool CheckItem(DBItem item, QParam param)
         {
             bool result = false;
-            if (param.Parameters.Count == 0)
+            if (!param.IsCompaund)
             {
                 if (param.ValueLeft == null || param.ValueRight == null)
                 {

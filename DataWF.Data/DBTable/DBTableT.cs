@@ -952,7 +952,13 @@ namespace DataWF.Data
 
         public IEnumerable<T> Select(QParam param, IEnumerable<T> list = null)
         {
-            IEnumerable<T> buf = Select(param.Parameters, list);
+            if (param.ValueLeft is QFunc func
+                && func.Type == QFunctionType.distinct
+                && func.Items.FirstOrDefault() is QItem item)
+            {
+                return ListHelper.Distinct(list ?? items, item);
+            }
+            IEnumerable<T> buf = param.IsCompaund ? Select(param.Parameters, list) : null;
             if (buf == null)
             {
                 if (param.ValueLeft is QColumn)

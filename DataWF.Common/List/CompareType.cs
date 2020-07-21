@@ -24,6 +24,7 @@ namespace DataWF.Common
         public static readonly CompareType NotContains = new CompareType(CompareTypes.Contains, true);
         public static readonly CompareType Intersect = new CompareType(CompareTypes.Intersect, false);
         public static readonly CompareType NotIntersect = new CompareType(CompareTypes.Intersect, true);
+        public static readonly CompareType Distinct = new CompareType(CompareTypes.Distinct);
 
         public static bool operator ==(CompareType typeLeft, CompareType typeRight)
         {
@@ -75,6 +76,8 @@ namespace DataWF.Common
                     return "as";
                 case (CompareTypes.Using):
                     return "using";
+                case (CompareTypes.Distinct):
+                    return "distinct";
             }
             return "";
         }

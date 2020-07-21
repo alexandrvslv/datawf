@@ -644,6 +644,11 @@ namespace DataWF.Common
 
         public static IEnumerable<T> Select<T>(IEnumerable<T> items, QueryParameter<T> param, ListIndexes<T> indexes = null)
         {
+            if (param.Comparer.Type == CompareTypes.Distinct)
+            {
+                return Distinct(items, param.Invoker);
+            }
+
             var index = indexes?.GetIndex(param.Name);
             if (index != null)
             {
@@ -674,6 +679,10 @@ namespace DataWF.Common
 
         public static IEnumerable Select(IEnumerable items, IQueryParameter param, IListIndexes indexes = null)
         {
+            if (param.Comparer.Type == CompareTypes.Distinct)
+            {
+                return Distinct(items, param.Invoker);
+            }
             IListIndex index = indexes?.GetIndex(param.Name);
             if (index == null)
             {
@@ -682,6 +691,40 @@ namespace DataWF.Common
             else
             {
                 return Search(items, param);
+            }
+        }
+
+        public static IEnumerable<T> Distinct<T>(IEnumerable<T> items, IInvoker param)
+        {
+            var oldValue = (object)null;
+            foreach (var item in items.OrderByDescending(p => param.GetValue(p)))
+            {
+                var newValue = param.GetValue(item);
+                if (!Equal(newValue, oldValue))
+                {
+                    oldValue = newValue;
+                    if (newValue != null)
+                    {
+                        yield return item;
+                    }
+                }
+            }
+        }
+
+        public static IEnumerable Distinct(IEnumerable items, IInvoker param)
+        {
+            var oldValue = (object)null;
+            foreach (var item in items.Cast<object>().OrderByDescending(p => param.GetValue(p)))
+            {
+                var newValue = param.GetValue(item);
+                if (!Equal(newValue, oldValue))
+                {
+                    oldValue = newValue;
+                    if (newValue != null)
+                    {
+                        yield return item;
+                    }
+                }
             }
         }
 

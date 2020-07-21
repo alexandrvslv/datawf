@@ -95,8 +95,10 @@ namespace DataWF.Common
         {
             get
             {
-                return emptyFormat ? true : Comparer.Type != CompareTypes.Is
-                  && (Value == null || (Value is string strFilter && strFilter.Length == 0) || string.IsNullOrEmpty(FormatValue(Value, Comparer)));
+                return emptyFormat ? true : Comparer.Type != CompareTypes.Is 
+                    && Comparer.Type != CompareTypes.Distinct
+                  && (Value == null || (Value is string strFilter && strFilter.Length == 0)
+                  || string.IsNullOrEmpty(FormatValue(Value, Comparer)));
             }
             set { emptyFormat = value; }
         }
@@ -177,7 +179,16 @@ namespace DataWF.Common
             {
                 builder.Append($" {Logic.Format()} ");
             }
-            builder.Append($"{((Group & QueryGroup.Begin) != 0 ? "(" : "")}{FormatName ?? Name} {Comparer.Format()} {FormatValue(Value, Comparer)}{((Group & QueryGroup.End) != 0 ? ")" : "")}");
+            builder.Append((Group & QueryGroup.Begin) != 0 ? "(" : "");
+            if (Comparer.Type == CompareTypes.Distinct)
+            {
+                builder.Append($"{Comparer.Format()}({FormatName ?? Name})");
+            }
+            else
+            {
+                builder.Append($"{FormatName ?? Name} {Comparer.Format()} {FormatValue(Value, Comparer)}");
+            }
+            builder.Append((Group & QueryGroup.End) != 0 ? ")" : "");
         }
 
         private string FormatValue(object value, CompareType comparer)
