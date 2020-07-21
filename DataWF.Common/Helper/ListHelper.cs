@@ -31,6 +31,8 @@ namespace DataWF.Common
                 return enumerableObject;
             else if (obj is IEnumerable enumerable)
                 return enumerable.Cast<T>();
+            else if (obj == null)
+                return Enumerable.Empty<T>();
             else
                 return new[] { (T)obj };
         }
@@ -399,9 +401,13 @@ namespace DataWF.Common
                     {
                         result = yString.IndexOf(x?.ToString(), StringComparison.OrdinalIgnoreCase) >= 0;
                     }
+                    else if (x is IEnumerable)
+                    {
+                        result = x.ToEnumerable<T>().Intersect(y.ToEnumerable<T>()).Any();
+                    }
                     else
                     {
-                        foreach (T item in y?.ToEnumerable<T>() ?? Enumerable.Empty<T>())
+                        foreach (T item in y.ToEnumerable<T>())
                         {
                             if (EqualT(x, item))
                             {
@@ -964,6 +970,10 @@ namespace DataWF.Common
             {
                 return DateTimePartComparer.Default.Equals(xDate, yDate);
             }
+            if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
+            {
+                return xEnumerable.SequenceEqual(yEnumerable);
+            }
             return EqualityComparer<T>.Default.Equals(x, y);
         }
 
@@ -994,6 +1004,10 @@ namespace DataWF.Common
             else if (x is byte[] xByte && y is byte[] yByte)
             {
                 result = Helper.CompareByteAsSpan(xByte, yByte);
+            }
+            else if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
+            {
+                result = xEnumerable.SequenceEqual(yEnumerable);
             }
             else if (x.Equals(y))
             {
@@ -1043,6 +1057,10 @@ namespace DataWF.Common
             {
                 result = 0;
             }
+            else if (x is IEnumerable xEnumerable && y is IEnumerable yEnumerable)
+            {
+                result = xEnumerable.SequenceCompare(yEnumerable);
+            }
             else
             {
                 result = string.Compare(x.ToString(), y.ToString(), StringComparison.OrdinalIgnoreCase);
@@ -1091,6 +1109,10 @@ namespace DataWF.Common
             {
                 result = 0;
             }
+            else if (x is IEnumerable xEnumerable && y is IEnumerable yEnumerable)
+            {
+                result = xEnumerable.SequenceCompare(yEnumerable);
+            }
             else
             {
                 result = string.Compare(x.ToString(), y.ToString(), StringComparison.OrdinalIgnoreCase);
@@ -1101,6 +1123,80 @@ namespace DataWF.Common
                 result = x.GetHashCode().CompareTo(y.GetHashCode());
             return result;
         }
+
+        public static int SequenceCompare(this IEnumerable xEnumerable, IEnumerable yEnumerable)
+        {
+            int result = 0;
+            var xEnumer = xEnumerable.GetEnumerator();
+            var yEnumer = yEnumerable.GetEnumerator();
+            bool xExist = true;
+            bool yExist = true;
+            while (true)
+            {
+                xExist = xEnumer.MoveNext();
+                yExist = yEnumer.MoveNext();
+                if (xExist && !yExist)
+                {
+                    result = 1;
+                    break;
+                }
+                else if (!xExist && yExist)
+                {
+                    result = -1;
+                    break;
+                }
+                else if (xExist && yExist)
+                {
+                    result = Compare(xEnumer.Current, yEnumer.Current, null);
+                    if (result != 0)
+                        break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        public static int SequenceCompare<T>(this IEnumerable<T> xEnumerable, IEnumerable<T> yEnumerable)
+        {
+            int result = 0;
+            var xEnumer = xEnumerable.GetEnumerator();
+            var yEnumer = yEnumerable.GetEnumerator();
+            bool xExist = true;
+            bool yExist = true;
+            while (true)
+            {
+                xExist = xEnumer.MoveNext();
+                yExist = yEnumer.MoveNext();
+                if (xExist && !yExist)
+                {
+                    result = 1;
+                    break;
+                }
+                else if (!xExist && yExist)
+                {
+                    result = -1;
+                    break;
+                }
+                else if (xExist && yExist)
+                {
+                    result = CompareT(xEnumer.Current, yEnumer.Current, null);
+                    if (result != 0)
+                        break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+
 
         //http://osix.net/modules/article/?id=695
         public static void QuickSort2(IList a, int i, int j, IComparer comp)
