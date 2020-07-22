@@ -401,7 +401,7 @@ namespace DataWF.Common
                     {
                         result = yString.IndexOf(x?.ToString(), StringComparison.OrdinalIgnoreCase) >= 0;
                     }
-                    else if (x is IEnumerable)
+                    else if (x != null && TypeHelper.IsEnumerable(x.GetType()))
                     {
                         result = x.ToEnumerable<T>().Intersect(y.ToEnumerable<T>()).Any();
                     }
