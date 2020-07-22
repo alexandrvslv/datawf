@@ -318,7 +318,7 @@ namespace DataWF.Common
             switch (compare.Type)
             {
                 case CompareTypes.Equal:
-                    result = Nullable.Equals<T>(x, (T?)y);
+                    result = EqualN<T>(x, (T?)y);
                     break;
                 case CompareTypes.Is:
                     result = x == null;
@@ -338,9 +338,9 @@ namespace DataWF.Common
                     }
                     else
                     {
-                        foreach (T? item in y?.ToEnumerable<T?>() ?? Enumerable.Empty<T?>())
+                        foreach (T? item in y.ToEnumerable<T?>())
                         {
-                            if (Nullable.Equals<T>(x, item))
+                            if (EqualN<T>(x, item))
                             {
                                 result = true;
                                 break;
@@ -969,12 +969,21 @@ namespace DataWF.Common
             if (x is DateTime xDate && y is DateTime yDate)
             {
                 return DateTimePartComparer.Default.Equals(xDate, yDate);
-            }            
+            }
             //if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
             //{
             //    return xEnumerable.SequenceEqual(yEnumerable);
             //}
             return EqualityComparer<T>.Default.Equals(x, y);
+        }
+
+        public static bool EqualN<T>(T? x, T? y) where T : struct
+        {
+            if (x is DateTime xDate && y is DateTime yDate)
+            {
+                return DateTimePartComparer.Default.Equals(xDate, yDate);
+            }
+            return Nullable.Equals<T>(x, y);
         }
 
         public static bool Equal(object x, object y)
@@ -1195,8 +1204,6 @@ namespace DataWF.Common
 
             return result;
         }
-
-
 
         //http://osix.net/modules/article/?id=695
         public static void QuickSort2(IList a, int i, int j, IComparer comp)
