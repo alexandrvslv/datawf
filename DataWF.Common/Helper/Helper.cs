@@ -78,6 +78,11 @@ namespace DataWF.Common
 
         public static bool IsMainThread => Thread.CurrentThread.ManagedThreadId == MainThreadId;
 
+        public static IEqualityComparer GetEqualityComparer(Type type)
+        {
+            var invoker = EmitInvoker.Initialize(typeof(EqualityComparer<>).MakeGenericType(type), nameof(EqualityComparer<Type>.Default));
+            return (IEqualityComparer)invoker?.GetValue(null);
+        }
 
         private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs e)
         {
