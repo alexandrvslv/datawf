@@ -225,6 +225,16 @@ namespace DataWF.Data
                 {
                     OnDBSchemaChanged(column, DDLType.Create);
                 }
+
+                foreach (var constraint in table.Constraints)
+                {
+                    OnDBSchemaChanged(constraint, DDLType.Create);
+                }
+
+                foreach (var foreign in table.Foreigns)
+                {
+                    OnDBSchemaChanged(foreign, DDLType.Create);
+                }
             }
 
             DBSchemaChanged?.Invoke(item, new DBSchemaChangedArgs { Item = item, Type = type });
@@ -258,7 +268,7 @@ namespace DataWF.Data
                     {
                         if (b.Item is DBColumn columnB)
                         {
-                            return columnA.CompareTo(columnB);
+                            return a.Order.CompareTo(b.Order);
                         }
                         else
                         {
