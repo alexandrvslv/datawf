@@ -969,11 +969,11 @@ namespace DataWF.Common
             if (x is DateTime xDate && y is DateTime yDate)
             {
                 return DateTimePartComparer.Default.Equals(xDate, yDate);
-            }
-            if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
-            {
-                return xEnumerable.SequenceEqual(yEnumerable);
-            }
+            }            
+            //if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
+            //{
+            //    return xEnumerable.SequenceEqual(yEnumerable);
+            //}
             return EqualityComparer<T>.Default.Equals(x, y);
         }
 
@@ -1005,10 +1005,10 @@ namespace DataWF.Common
             {
                 result = Helper.CompareByteAsSpan(xByte, yByte);
             }
-            else if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
-            {
-                result = xEnumerable.SequenceEqual(yEnumerable);
-            }
+            //else if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
+            //{
+            //    result = xEnumerable.SequenceEqual(yEnumerable);
+            //}
             else if (x.Equals(y))
             {
                 result = true;

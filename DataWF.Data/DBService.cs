@@ -180,15 +180,9 @@ namespace DataWF.Data
             Changes.Clear();
         }
 
-        public static DBConnectionList Connections
-        {
-            get { return connections; }
-        }
+        public static DBConnectionList Connections => connections;
 
-        public static DBSchemaList Schems
-        {
-            get { return schems; }
-        }
+        public static DBSchemaList Schems => schems;
 
         public static void OnDBSchemaChanged(DBSchemaItem item, DDLType type)
         {
@@ -260,7 +254,7 @@ namespace DataWF.Data
                     {
                         return 1;
                     }
-                    if (a.Item is DBColumn columnA)
+                    else if (a.Item is DBColumn columnA)
                     {
                         if (b.Item is DBColumn columnB)
                         {
