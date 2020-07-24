@@ -249,12 +249,12 @@ namespace DataWF.Common
             return Helper.Parse(id, IdInvoker.DataType);
         }
 
-        IEnumerable<object> ICrudClient.GetChanges()
+        IEnumerable ICrudClient.GetChanges()
         {
             return Items.GetChanged();
         }
 
-        public IEnumerable<T> GetChanges()
+        public ISet<T> GetChanges()
         {
             return Items.GetChanged();
         }

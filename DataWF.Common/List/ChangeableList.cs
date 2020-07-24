@@ -45,7 +45,7 @@ namespace DataWF.Common
             return changes;
         }
 
-        public IEnumerable<T> GetChanged()
+        public ISet<T> GetChanged()
         {
             return changes;
         }

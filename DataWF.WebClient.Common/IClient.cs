@@ -49,7 +49,7 @@ namespace DataWF.Common
         void RemoveById(object id);
         object Select(object id);
         object ParseId(object id);
-        IEnumerable<object> GetChanges();
+        IEnumerable GetChanges();
         Task<object> GenerateId();
         Task<bool> DeleteAsync(object id);
         Task<IEnumerable> SearchAsync(string filter, HttpPageSettings list);
@@ -69,7 +69,7 @@ namespace DataWF.Common
         bool Remove(T item);
         Task<T> Get(T item);
         T Get(object id);
-        new IEnumerable<T> GetChanges();
+        new ISet<T> GetChanges();
         Task<bool> Delete(T item);
         LoadProgress<T> Load(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
         Task<List<T>> SearchAsync(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);

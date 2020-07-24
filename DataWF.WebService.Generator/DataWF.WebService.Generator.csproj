@@ -7,7 +7,7 @@
     <AssemblyName>dotnet-wscodegen</AssemblyName>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>wscodegen</ToolCommandName>
-    <VersionPrefix>1.5.3</VersionPrefix>
+    <VersionPrefix>1.5.4</VersionPrefix>
     <Authors>Alexandr</Authors>
     <PackageId>DataWF.WebService.Generator</PackageId>
     <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>

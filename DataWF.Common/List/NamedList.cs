@@ -31,7 +31,7 @@ namespace DataWF.Common
             AddRangeInternal(items, false);
         }
 
-        public T this[string param]
+        public virtual T this[string param]
         {
             get { return nameIndex.SelectOne(param); }
             set
