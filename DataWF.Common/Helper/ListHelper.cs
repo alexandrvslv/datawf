@@ -21,8 +21,10 @@ namespace DataWF.Common
                 return enumerableObject;
             else if (obj is IEnumerable enumerable)
                 return enumerable.Cast<object>();
+            else if (obj == null)
+                return Enumerable.Empty<object>();
             else
-                return new[] { obj };
+                return Enumerable.Repeat(obj, 1);
         }
 
         public static IEnumerable<T> ToEnumerable<T>(this object obj)
@@ -34,7 +36,7 @@ namespace DataWF.Common
             else if (obj == null)
                 return Enumerable.Empty<T>();
             else
-                return new[] { (T)obj };
+                return Enumerable.Repeat((T)obj, 1);
         }
 
         public static bool Contains(IEnumerable enumerable, object value)
@@ -349,10 +351,10 @@ namespace DataWF.Common
                     }
                     break;
                 case CompareTypes.Contains:
-                    result = x?.ToEnumerable().Contains(y) ?? false;
+                    result = x.ToEnumerable().Contains(y);
                     break;
                 case CompareTypes.Intersect:
-                    result = x?.ToEnumerable().Intersect(y?.ToEnumerable() ?? Enumerable.Empty<object>()).Any() ?? false;
+                    result = x.ToEnumerable().Intersect(y.ToEnumerable()).Any();
                     break;
                 default:
                     int i = Nullable.Compare(x, (T?)y);
@@ -418,10 +420,10 @@ namespace DataWF.Common
                     }
                     break;
                 case CompareTypes.Contains:
-                    result = x?.ToEnumerable().Contains(y) ?? false;
+                    result = x.ToEnumerable().Contains(y);
                     break;
                 case CompareTypes.Intersect:
-                    result = x?.ToEnumerable().Intersect(y?.ToEnumerable() ?? Enumerable.Empty<object>()).Any() ?? false;
+                    result = x.ToEnumerable().Intersect(y.ToEnumerable()).Any();
                     break;
                 default:
                     int i = CompareT(x, y == null ? default(T) : (T)y, comparer);
@@ -477,7 +479,7 @@ namespace DataWF.Common
                     }
                     else
                     {
-                        foreach (object item in y?.ToEnumerable() ?? Enumerable.Empty<object>())
+                        foreach (object item in y.ToEnumerable())
                         {
                             if (item is string && !(x is string))
                             {
@@ -493,10 +495,10 @@ namespace DataWF.Common
                     }
                     break;
                 case CompareTypes.Contains:
-                    result = x?.ToEnumerable().Contains(y) ?? false;
+                    result = x.ToEnumerable().Contains(y);
                     break;
                 case CompareTypes.Intersect:
-                    result = x?.ToEnumerable().Intersect(y?.ToEnumerable() ?? Enumerable.Empty<object>()).Any() ?? false;
+                    result = x.ToEnumerable().Intersect(y.ToEnumerable()).Any();
                     break;
                 default:
                     int i = Compare(x, y, comparer);
