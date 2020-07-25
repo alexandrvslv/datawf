@@ -67,10 +67,11 @@ namespace DataWF.Common
                         ? property.Invoker.GetValue(item)
                         : null;
 
-                    object value = Read(jreader, property.DataType, serializer, currentValue);
+
 
                     if (string.Equals(property.Name, Client.TypeInvoker?.Name, StringComparison.Ordinal))
                     {
+                        object value = Read(jreader, property.DataType, serializer, currentValue);
                         var typeId = value == null ? 0 : (int)value;
                         if (typeId != Client.TypeId)
                         {
@@ -85,7 +86,7 @@ namespace DataWF.Common
                     }
                     if (string.Equals(property.Name, Client.IdInvoker?.Name, StringComparison.Ordinal))
                     {
-                        id = (K?)value;
+                        id = (K?)Read(jreader, property.DataType, serializer, currentValue);
                         if (item == null && id != null)
                         {
                             item = Client.SelectNoDownloads((K)id);
@@ -111,10 +112,10 @@ namespace DataWF.Common
                     }
 
                     isRef = false;
-                    lock (synchItem)
+                    lock (item)
                     {
-                        if (synchItem.SyncStatus == SynchronizedStatus.Actual
-                            || synchItem.SyncStatus == SynchronizedStatus.New)
+                        object value = Read(jreader, property.DataType, serializer, currentValue);
+                        if (synchItem.SyncStatus == SynchronizedStatus.Actual)
                         {
                             synchItem.SyncStatus = SynchronizedStatus.Load;
                         }
@@ -130,14 +131,19 @@ namespace DataWF.Common
             if (item == null)
                 return null;
 
-            lock (synchItem)
+            if (!isRef)
             {
-                if (!isRef && synchItem.SyncStatus == SynchronizedStatus.Load)
-                    synchItem.SyncStatus = SynchronizedStatus.Actual;
-
-                if (!isRef && id != null && Client.RemoveDownloads((K)id))
+                lock (synchItem)
                 {
-                    Client.Add(item);
+                    if (synchItem.SyncStatus == SynchronizedStatus.Load)
+                    {
+                        synchItem.SyncStatus = SynchronizedStatus.Actual;
+                    }
+
+                    if (id != null && Client.RemoveDownloads((K)id))
+                    {
+                        Client.Add(item);
+                    }
                 }
             }
             return item;
@@ -189,7 +195,7 @@ namespace DataWF.Common
                 return client.Converter.Read(jreader, null, serializer);
             else
 #endif
-            return serializer.Deserialize(jreader, type);
+                return serializer.Deserialize(jreader, type);
         }
 
 
@@ -214,7 +220,7 @@ namespace DataWF.Common
                 {
                     foreach (ISynchronized item in referenceList)
                     {
-                        item.SyncStatus = SynchronizedStatus.Load;
+                        item.SyncStatus = SynchronizedStatus.Actual;
                     }
                 }
                 while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
@@ -284,8 +290,8 @@ namespace DataWF.Common
                     if (context != null && context.Items.Contains(value))
                         continue;
 
-                    if (synchedValue.SyncStatus != SynchronizedStatus.New
-                    && synchedValue.SyncStatus != SynchronizedStatus.Edit)
+                    //if (synchedValue.SyncStatus != SynchronizedStatus.New
+                    //&& synchedValue.SyncStatus != SynchronizedStatus.Edit)
                     {
                         continue;
                     }

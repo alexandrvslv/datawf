@@ -60,7 +60,7 @@ namespace DataWF.Common
                 {
                     if (property == null)
                     {
-                        Deserialize(ref jreader, null, options, null);
+                        Read(ref jreader, null, options, null);
                         continue;
                     }
                     var currentValue = item != null
@@ -69,11 +69,10 @@ namespace DataWF.Common
                         ? property.Invoker.GetValue(item)
                         : null;
 
-                    object value = Deserialize(ref jreader, property.DataType, options, currentValue);
-
-                    if (string.Equals(property.Name, Client.TypeInvoker?.Name, StringComparison.Ordinal) && value != null)
+                    if (string.Equals(property.Name, Client.TypeInvoker?.Name, StringComparison.Ordinal))
                     {
-                        var typeId = (int)value;
+                        object value = Read(ref jreader, property.DataType, options, currentValue);
+                        var typeId = value == null ? 0 : (int)value;
                         if (typeId != Client.TypeId)
                         {
                             var client = Client.Provider.GetClient(typeof(T), typeId);
@@ -87,7 +86,7 @@ namespace DataWF.Common
                     }
                     if (string.Equals(property.Name, Client.IdInvoker?.Name, StringComparison.Ordinal))
                     {
-                        id = value;
+                        id = Read(ref jreader, property.DataType, options, currentValue);
                         if (item == null && id != null)
                         {
                             item = Client.SelectNoDownloads((K)id);
@@ -108,35 +107,41 @@ namespace DataWF.Common
                     {
                         throw new Exception("Wrong Json properties sequence!");
                     }
-                    if (isRef && synchItem != null)
-                    {
-                        isRef = false;
 
+                    isRef = false;
+                    lock (item)
+                    {
+                        object value = Read(ref jreader, property.DataType, options, currentValue);
                         if (synchItem.SyncStatus == SynchronizedStatus.Actual)
                         {
                             synchItem.SyncStatus = SynchronizedStatus.Load;
                         }
+                        else if (synchItem.SyncStatus != SynchronizedStatus.Load
+                            && synchItem.Changes.ContainsKey(property.Name))
+                        {
+                            continue;
+                        }
+                        property.Invoker.SetValue(item, value);
                     }
-                    if (synchItem != null && synchItem.SyncStatus != SynchronizedStatus.Load
-                        && synchItem.Changes.ContainsKey(property.Name))
-                    {
-                        continue;
-                    }
-                    property.Invoker.SetValue(item, value);
                 }
             }
             if (item == null)
                 return null;
 
-            if (synchItem != null)
+            if (!isRef)
             {
-                if ((!isRef && synchItem.SyncStatus == SynchronizedStatus.Load))
-                    synchItem.SyncStatus = SynchronizedStatus.Actual;
-            }
+                lock (synchItem)
+                {
+                    if ((synchItem.SyncStatus == SynchronizedStatus.Load))
+                    {
+                        synchItem.SyncStatus = SynchronizedStatus.Actual;
+                    }
 
-            if (Client.RemoveDownloads((K)id))
-            {
-                Client.Add(item);
+                    if (id != null && Client.RemoveDownloads((K)id))
+                    {
+                        Client.Add(item);
+                    }
+                }
             }
             return item;
         }
@@ -157,7 +162,7 @@ namespace DataWF.Common
             return JsonSerializer.Deserialize(ref jreader, type, options);
         }
 
-        public object Deserialize(ref Utf8JsonReader jreader, Type type, JsonSerializerOptions options, object item)
+        public object Read(ref Utf8JsonReader jreader, Type type, JsonSerializerOptions options, object item)
         {
             object value = null;
             switch (jreader.TokenType)
@@ -207,7 +212,7 @@ namespace DataWF.Common
                 while (jreader.Read() && jreader.TokenType != JsonTokenType.EndArray)
                 {
 #if NETSTANDARD2_0
-                    var item = Deserialize(ref jreader, itemType, options, null);
+                    var item = Read(ref jreader, itemType, options, null);
 #else
                     var item = client.Converter.Read(ref jreader, itemType, options);
 #endif
@@ -232,7 +237,7 @@ namespace DataWF.Common
 
                 while (jreader.Read() && jreader.TokenType != JsonTokenType.EndArray)
                 {
-                    var item = Deserialize(ref jreader, itemType, options, null);
+                    var item = Read(ref jreader, itemType, options, null);
                     if (item == null)
                     {
                         continue;
