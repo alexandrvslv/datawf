@@ -30,6 +30,7 @@ namespace DataWF.Common
         bool CanEdit(object item);
         Task Save(object item);
         Task Save(object item, ProgressToken token);
+        void ChangeCanExecute();
     }
 
     public enum ModelViewStatus
