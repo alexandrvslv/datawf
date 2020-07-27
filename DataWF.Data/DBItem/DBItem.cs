@@ -324,6 +324,19 @@ namespace DataWF.Data
             column.SetOld(handler, value);
         }
 
+        protected object GetPropertyValue(DBColumn column)
+        {
+            return column.PropertyInvoker != null ? column.PropertyInvoker.GetValue(this) : GetValue(column);
+        }
+
+        protected void SetPropertyValue(object value, DBColumn column, DBSetValueMode mode = DBSetValueMode.Default)
+        {
+            if (column.PropertyInvoker != null)
+                column.PropertyInvoker.SetValue(this, value);
+            else
+                SetValue(value, column, mode);
+        }
+
         public object GetValue(DBColumn column)
         {
             return column.GetValue(this);
@@ -618,7 +631,7 @@ namespace DataWF.Data
                 return null;
             if (column.IsPrimaryKey)
                 return this;
-            object value = GetValue(column);
+            object value = GetPropertyValue(column);
             if (value == null)
                 return null;
             return column.ReferenceTable.LoadItemById(value, param);
@@ -633,7 +646,7 @@ namespace DataWF.Data
 
         public DBItem GetReference(DBColumn column, ref DBItem item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
         {
-            object value = GetValue(column);
+            object value = GetPropertyValue(column);
             if (value != null && value.Equals(item?.PrimaryId))
                 return item;
 
@@ -642,7 +655,7 @@ namespace DataWF.Data
 
         public T GetReference<T>(DBColumn column, ref T item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBItem
         {
-            object value = GetValue(column);
+            object value = GetPropertyValue(column);
             if (value != null && value.Equals(item?.PrimaryId))
                 return item;
 
@@ -651,7 +664,7 @@ namespace DataWF.Data
 
         public T GetPropertyReference<T>(ref T item, [CallerMemberName] string property = null) where T : DBItem
         {
-            var column = Table.Foreigns.GetByProperty(property)?.Column;
+            var column = Table.Columns.GetByReferenceProperty(property);
             return GetReference(column, ref item);
         }
 
@@ -683,25 +696,18 @@ namespace DataWF.Data
 
         public T SetPropertyReference<T>(T value, [CallerMemberName] string property = null) where T : DBItem
         {
-            return SetReference(value, Table.Foreigns.GetByProperty(property)?.Column);
+            return SetReference(value, Table.Columns.GetByReferenceProperty(property));
         }
 
         public DBItem SetReference(DBItem value, DBColumn column)
         {
-            SetValue(value?.PrimaryId, column, DBSetValueMode.Default);
+            SetPropertyValue(value?.PrimaryId, column);
             return value;
         }
 
         public T SetReference<T>(T value, DBColumn column) where T : DBItem
         {
-            if (column.PropertyInvoker != null)
-            {
-                column.PropertyInvoker.SetValue(this, value?.PrimaryId);
-            }
-            else
-            {
-                SetValue(value?.PrimaryId, column, DBSetValueMode.Default);
-            }
+            SetPropertyValue(value?.PrimaryId, column);
             return value;
         }
 
