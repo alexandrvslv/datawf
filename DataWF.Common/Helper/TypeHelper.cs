@@ -209,6 +209,11 @@ namespace DataWF.Common
 
                     foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                     {
+                        if (assembly.IsDynamic)
+                        {
+                            continue;
+                        }
+
                         try
                         {
                             type = ParseType(code, assembly);
