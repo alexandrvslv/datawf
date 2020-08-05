@@ -67,9 +67,9 @@ namespace DataWF.Common
 
         public override void ClearCache()
         {
-            base.ClearCache();
             Items.Clear();
             loadQueue.Clear();
+            base.ClearCache();
         }
 
         public T NewLoadItem(K p)

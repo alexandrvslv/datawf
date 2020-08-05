@@ -30,7 +30,10 @@ namespace DataWF.Common
     public interface IClient
     {
         IClientProvider Provider { get; set; }
+
         ClientStatus Status { get; set; }
+
+        event EventHandler CacheCleared;
 
         void ClearCache();
     }

@@ -55,6 +55,8 @@ namespace DataWF.Common
             set { baseUrl = value; }
         }
 
+        public event EventHandler CacheCleared;
+
         public virtual HttpClient GetHttpClient()
         {
             return Provider.CreateHttpClient();
@@ -62,7 +64,7 @@ namespace DataWF.Common
 
         public virtual void ClearCache()
         {
-
+            CacheCleared?.Invoke(this, EventArgs.Empty);
         }
 
         partial void ProcessResponse(HttpClient client, HttpResponseMessage response);
