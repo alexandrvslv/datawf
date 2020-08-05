@@ -60,6 +60,11 @@ namespace DataWF.Common
             return Provider.CreateHttpClient();
         }
 
+        public virtual void ClearCache()
+        {
+
+        }
+
         partial void ProcessResponse(HttpClient client, HttpResponseMessage response);
 
         protected virtual void Validation(object value)
@@ -366,7 +371,7 @@ namespace DataWF.Common
                 Validation(value);
                 string text;
 #if NETSTANDARD2_0
-                
+
                 var serializer = Newtonsoft.Json.JsonSerializer.Create(Provider.JsonSettings);
                 using (var writer = new StringWriter())
                 using (var jwriter = new Newtonsoft.Json.JsonTextWriter(writer))

@@ -174,9 +174,9 @@ namespace DataWF.Common
 
         public virtual void ClearCache()
         {
-            foreach (var crudClient in clients.TypeOf<ICrudClient>())
+            foreach (var client in clients)
             {
-                crudClient.Items.Clear();
+                client.ClearCache();
             }
         }
 

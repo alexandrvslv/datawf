@@ -31,6 +31,8 @@ namespace DataWF.Common
     {
         IClientProvider Provider { get; set; }
         ClientStatus Status { get; set; }
+
+        void ClearCache();
     }
 
     public interface ICrudClient : IClient
