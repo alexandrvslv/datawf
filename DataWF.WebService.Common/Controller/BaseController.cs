@@ -1,5 +1,6 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using DataWF.WebClient.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
@@ -110,40 +111,83 @@ namespace DataWF.WebService.Common
             }
         }
 
+        [HttpGet("PageSearch")]
+        public async ValueTask<ActionResult<PageContent<T>>> PageSearch([FromQuery] string filter, [FromQuery] int pageIndex = 0, [FromQuery] int pageSize = 50)
+        {
+            try
+            {
+                var searchResult = await Search(filter);
+
+                if (searchResult is ForbidResult forbid)
+                {
+                    return forbid;
+                }
+
+                var settings = new HttpPageSettings
+                {
+                    Mode = HttpPageMode.Page,
+                    PageIndex = pageIndex,
+                    PageSize = pageSize
+                };
+
+                var content = Pagination(searchResult.Value, settings, false);
+
+                return new ActionResult<PageContent<T>>(new PageContent<T>
+                {
+                    Info = settings,
+                    Items = content
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex, null);
+            }
+        }
+
         public IEnumerable<F> Pagination<F>(IEnumerable<F> result)
         {
             var pages = HttpContext.ReadPageSettings();
             if (pages != null)
             {
-                pages.ListCount = result.Count();
-
-                if (pages.Mode == WebClient.Common.HttpPageMode.Page)
-                {
-                    pages.ListFrom = pages.PageIndex * pages.PageSize;
-                    pages.ListTo = (pages.ListFrom + pages.PageSize) - 1;
-
-                    if (pages.ListTo > pages.ListCount - 1)
-                    {
-                        pages.ListTo = pages.ListCount - 1;
-                    }
-                }
-                else if (pages.Mode == WebClient.Common.HttpPageMode.List)
-                {
-                    pages.PageSize = pages.BufferLength;
-                    pages.PageIndex = pages.ListFrom / pages.PageSize;
-                }
-                pages.PageCount = pages.ListCount / pages.PageSize;
-                if ((pages.ListCount % pages.PageSize) > 0)
-                {
-                    pages.PageCount++;
-                }
-
-
-                HttpContext.WritePageSettings(pages);
-
-                result = result.Skip(pages.ListFrom).Take(pages.BufferLength);
+                result = Pagination(result, pages);
             }
 
+            return result;
+        }
+
+        private IEnumerable<F> Pagination<F>(IEnumerable<F> result, HttpPageSettings pages, bool writeHeader = true)
+        {
+            pages.ListCount = result.Count();
+
+            if (pages.Mode == HttpPageMode.Page)
+            {
+                pages.ListFrom = pages.PageIndex * pages.PageSize;
+                pages.ListTo = (pages.ListFrom + pages.PageSize) - 1;
+
+                if (pages.ListTo > pages.ListCount - 1)
+                {
+                    pages.ListTo = pages.ListCount - 1;
+                }
+            }
+            else if (pages.Mode == HttpPageMode.List)
+            {
+                pages.PageSize = pages.BufferLength;
+                pages.PageIndex = pages.ListFrom / pages.PageSize;
+            }
+
+            pages.PageCount = pages.ListCount / pages.PageSize;
+
+            if ((pages.ListCount % pages.PageSize) > 0)
+            {
+                pages.PageCount++;
+            }
+
+            if (writeHeader)
+            {
+                HttpContext.WritePageSettings(pages);
+            }
+
+            result = result.Skip(pages.ListFrom).Take(pages.BufferLength);
             return result;
         }
 
@@ -563,5 +607,12 @@ namespace DataWF.WebService.Common
             }
             return mediaType.Encoding;
         }
+    }
+
+    public class PageContent<T> where T : DBItem
+    {
+        public HttpPageSettings Info { get; set; }
+
+        public IEnumerable<T> Items { get; set; }
     }
 }
