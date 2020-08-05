@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Common
 {
@@ -127,11 +128,22 @@ namespace DataWF.Common
             return level;
         }
 
+        public static IEnumerable<T> Sort<T>(IEnumerable<T> items) where T : IGroup
+        {
+            var list = items.ToList();
+            list.Sort(Compare);
+            return list;
+        }
+
         public static int Compare(object x, object y)
         {
             return Compare(x as IGroup, y as IGroup, null);
         }
 
+        public static int Compare<T>(T x, T y) where T : IGroup
+        {
+            return Compare(x, y, null);
+        }
 
         public static int Compare(IGroup x, IGroup y)
         {
