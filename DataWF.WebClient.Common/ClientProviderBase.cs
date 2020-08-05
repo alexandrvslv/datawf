@@ -50,11 +50,11 @@ namespace DataWF.Common
 #if DEBUG
             WriteIndented = true,
 #endif
-            DefaultBufferSize = 82 * 1024,
-            AllowTrailingCommas = true,
-            // Use the default property (As Is).
-            PropertyNamingPolicy = null,
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                DefaultBufferSize = 82 * 1024,
+                AllowTrailingCommas = true,
+                // Use the default property (As Is).
+                PropertyNamingPolicy = null,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
             //JsonSettings.Converters.Add(new JsonStringEnumConverter());
             JsonSettings.Converters.Add(new TimeSpanConverter());
@@ -171,7 +171,8 @@ namespace DataWF.Common
                 }
             }
         }
-        protected virtual void ClearCache()
+
+        public virtual void ClearCache()
         {
             foreach (var crudClient in clients.TypeOf<ICrudClient>())
             {
