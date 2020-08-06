@@ -75,10 +75,11 @@ namespace DataWF.Data
             }
         }
 
-        public override void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
+        public override NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
         {
-            base.OnCollectionChanged(args);
-            OnItemsListChanged(this, args);
+            var args = base.OnCollectionChanged(type, item, index, oldIndex, oldItem);
+            OnItemsListChanged(this, args ?? (args = ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem)));
+            return args;
         }
 
         public IEnumerable<KeyValuePair<string, DBProcedure>> GetProcedures(string category = "General")

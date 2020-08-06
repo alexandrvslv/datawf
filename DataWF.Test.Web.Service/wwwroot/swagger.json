@@ -608,6 +608,54 @@
         }
       }
     },
+    "/api/Address/PageSearch": {
+      "get": {
+        "tags": [
+          "Address"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Address/GetLink/{id}": {
       "get": {
         "tags": [
@@ -1165,6 +1213,54 @@
                   "items": {
                     "$ref": "#/components/schemas/Book"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Book/PageSearch": {
+      "get": {
+        "tags": [
+          "Book"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookPageContent"
                 }
               }
             }
@@ -1736,6 +1832,54 @@
         }
       }
     },
+    "/api/City/PageSearch": {
+      "get": {
+        "tags": [
+          "City"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/City/GetLink/{id}": {
       "get": {
         "tags": [
@@ -2293,6 +2437,54 @@
                   "items": {
                     "$ref": "#/components/schemas/Company"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Company/PageSearch": {
+      "get": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyPageContent"
                 }
               }
             }
@@ -2864,6 +3056,54 @@
         }
       }
     },
+    "/api/Continent/PageSearch": {
+      "get": {
+        "tags": [
+          "Continent"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContinentPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Continent/GetLink/{id}": {
       "get": {
         "tags": [
@@ -3421,6 +3661,54 @@
                   "items": {
                     "$ref": "#/components/schemas/Country"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Country/PageSearch": {
+      "get": {
+        "tags": [
+          "Country"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountryPageContent"
                 }
               }
             }
@@ -3992,6 +4280,54 @@
         }
       }
     },
+    "/api/Currency/PageSearch": {
+      "get": {
+        "tags": [
+          "Currency"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrencyPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Currency/GetLink/{id}": {
       "get": {
         "tags": [
@@ -4549,6 +4885,54 @@
                   "items": {
                     "$ref": "#/components/schemas/Customer"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Customer/PageSearch": {
+      "get": {
+        "tags": [
+          "Customer"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerPageContent"
                 }
               }
             }
@@ -5120,6 +5504,54 @@
         }
       }
     },
+    "/api/CustomerAddress/PageSearch": {
+      "get": {
+        "tags": [
+          "CustomerAddress"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerAddressPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/CustomerAddress/GetLink/{id}": {
       "get": {
         "tags": [
@@ -5677,6 +6109,54 @@
                   "items": {
                     "$ref": "#/components/schemas/CustomerReference"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/CustomerReference/PageSearch": {
+      "get": {
+        "tags": [
+          "CustomerReference"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerReferencePageContent"
                 }
               }
             }
@@ -6309,6 +6789,54 @@
                   "items": {
                     "$ref": "#/components/schemas/Department"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Department/PageSearch": {
+      "get": {
+        "tags": [
+          "Department"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentPageContent"
                 }
               }
             }
@@ -7151,6 +7679,54 @@
         }
       }
     },
+    "/api/Document/PageSearch": {
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Document/GetLink/{id}": {
       "get": {
         "tags": [
@@ -7547,6 +8123,54 @@
                   "items": {
                     "$ref": "#/components/schemas/DocumentComment"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/DocumentComment/PageSearch": {
+      "get": {
+        "tags": [
+          "DocumentComment"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentCommentPageContent"
                 }
               }
             }
@@ -8111,6 +8735,54 @@
                   "items": {
                     "$ref": "#/components/schemas/DocumentCustomer"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/DocumentCustomer/PageSearch": {
+      "get": {
+        "tags": [
+          "DocumentCustomer"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentCustomerPageContent"
                 }
               }
             }
@@ -8907,6 +9579,54 @@
         }
       }
     },
+    "/api/DocumentData/PageSearch": {
+      "get": {
+        "tags": [
+          "DocumentData"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentDataPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentData/GetLink/{id}": {
       "get": {
         "tags": [
@@ -9471,6 +10191,54 @@
         }
       }
     },
+    "/api/DocumentReference/PageSearch": {
+      "get": {
+        "tags": [
+          "DocumentReference"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentReferencePageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentReference/GetLink/{id}": {
       "get": {
         "tags": [
@@ -10028,6 +10796,54 @@
                   "items": {
                     "$ref": "#/components/schemas/DocumentWork"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/DocumentWork/PageSearch": {
+      "get": {
+        "tags": [
+          "DocumentWork"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentWorkPageContent"
                 }
               }
             }
@@ -10664,6 +11480,54 @@
         }
       }
     },
+    "/api/GroupPermission/PageSearch": {
+      "get": {
+        "tags": [
+          "GroupPermission"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupPermissionPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/GroupPermission/GetLink/{id}": {
       "get": {
         "tags": [
@@ -11228,6 +12092,54 @@
         }
       }
     },
+    "/api/Instance/PageSearch": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstancePageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Instance/GetLink/{id}": {
       "get": {
         "tags": [
@@ -11785,6 +12697,54 @@
                   "items": {
                     "$ref": "#/components/schemas/Location"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Location/PageSearch": {
+      "get": {
+        "tags": [
+          "Location"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationPageContent"
                 }
               }
             }
@@ -12391,6 +13351,54 @@
         }
       }
     },
+    "/api/Message/PageSearch": {
+      "get": {
+        "tags": [
+          "Message"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagePageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Message/GetLink/{id}": {
       "get": {
         "tags": [
@@ -12794,6 +13802,54 @@
         }
       }
     },
+    "/api/MessageAddress/PageSearch": {
+      "get": {
+        "tags": [
+          "MessageAddress"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageAddressPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/MessageAddress/GetLink/{id}": {
       "get": {
         "tags": [
@@ -13190,6 +14246,54 @@
                   "items": {
                     "$ref": "#/components/schemas/MessageData"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/MessageData/PageSearch": {
+      "get": {
+        "tags": [
+          "MessageData"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageDataPageContent"
                 }
               }
             }
@@ -13761,6 +14865,54 @@
         }
       }
     },
+    "/api/Persone/PageSearch": {
+      "get": {
+        "tags": [
+          "Persone"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonePageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Persone/GetLink/{id}": {
       "get": {
         "tags": [
@@ -14318,6 +15470,54 @@
                   "items": {
                     "$ref": "#/components/schemas/PersoneIdentify"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/PersoneIdentify/PageSearch": {
+      "get": {
+        "tags": [
+          "PersoneIdentify"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersoneIdentifyPageContent"
                 }
               }
             }
@@ -14916,6 +16116,54 @@
                   "items": {
                     "$ref": "#/components/schemas/Position"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Position/PageSearch": {
+      "get": {
+        "tags": [
+          "Position"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionPageContent"
                 }
               }
             }
@@ -15607,6 +16855,54 @@
                   "items": {
                     "$ref": "#/components/schemas/Scheduler"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Scheduler/PageSearch": {
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulerPageContent"
                 }
               }
             }
@@ -16353,6 +17649,54 @@
         }
       }
     },
+    "/api/Stage/PageSearch": {
+      "get": {
+        "tags": [
+          "Stage"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StagePageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Stage/GetLink/{id}": {
       "get": {
         "tags": [
@@ -16910,6 +18254,54 @@
                   "items": {
                     "$ref": "#/components/schemas/StageForeign"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/StageForeign/PageSearch": {
+      "get": {
+        "tags": [
+          "StageForeign"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageForeignPageContent"
                 }
               }
             }
@@ -17481,6 +18873,54 @@
         }
       }
     },
+    "/api/StageParam/PageSearch": {
+      "get": {
+        "tags": [
+          "StageParam"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageParamPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/StageParam/GetLink/{id}": {
       "get": {
         "tags": [
@@ -18038,6 +19478,54 @@
                   "items": {
                     "$ref": "#/components/schemas/StageProcedure"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/StageProcedure/PageSearch": {
+      "get": {
+        "tags": [
+          "StageProcedure"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageProcedurePageContent"
                 }
               }
             }
@@ -18609,6 +20097,54 @@
         }
       }
     },
+    "/api/StageReference/PageSearch": {
+      "get": {
+        "tags": [
+          "StageReference"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageReferencePageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/StageReference/GetLink/{id}": {
       "get": {
         "tags": [
@@ -19173,6 +20709,54 @@
         }
       }
     },
+    "/api/StageTemplate/PageSearch": {
+      "get": {
+        "tags": [
+          "StageTemplate"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageTemplatePageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/StageTemplate/GetLink/{id}": {
       "get": {
         "tags": [
@@ -19730,6 +21314,54 @@
                   "items": {
                     "$ref": "#/components/schemas/Statistic"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Statistic/PageSearch": {
+      "get": {
+        "tags": [
+          "Statistic"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatisticPageContent"
                 }
               }
             }
@@ -20381,6 +22013,54 @@
         }
       }
     },
+    "/api/Template/PageSearch": {
+      "get": {
+        "tags": [
+          "Template"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplatePageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Template/GetLink/{id}": {
       "get": {
         "tags": [
@@ -20938,6 +22618,54 @@
                   "items": {
                     "$ref": "#/components/schemas/TemplateData"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/TemplateData/PageSearch": {
+      "get": {
+        "tags": [
+          "TemplateData"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDataPageContent"
                 }
               }
             }
@@ -21702,6 +23430,54 @@
         }
       }
     },
+    "/api/TemplateFile/PageSearch": {
+      "get": {
+        "tags": [
+          "TemplateFile"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateFilePageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/TemplateFile/GetLink/{id}": {
       "get": {
         "tags": [
@@ -22266,6 +24042,54 @@
         }
       }
     },
+    "/api/TemplateProperty/PageSearch": {
+      "get": {
+        "tags": [
+          "TemplateProperty"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplatePropertyPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/TemplateProperty/GetLink/{id}": {
       "get": {
         "tags": [
@@ -22823,6 +24647,54 @@
                   "items": {
                     "$ref": "#/components/schemas/TemplateReference"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/TemplateReference/PageSearch": {
+      "get": {
+        "tags": [
+          "TemplateReference"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateReferencePageContent"
                 }
               }
             }
@@ -23530,6 +25402,54 @@
         }
       }
     },
+    "/api/User/PageSearch": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/User/GetLink/{id}": {
       "get": {
         "tags": [
@@ -24202,6 +26122,54 @@
                   "items": {
                     "$ref": "#/components/schemas/UserApplication"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/UserApplication/PageSearch": {
+      "get": {
+        "tags": [
+          "UserApplication"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserApplicationPageContent"
                 }
               }
             }
@@ -24966,6 +26934,54 @@
         }
       }
     },
+    "/api/UserFile/PageSearch": {
+      "get": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserFilePageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/UserFile/GetLink/{id}": {
       "get": {
         "tags": [
@@ -25564,6 +27580,54 @@
         }
       }
     },
+    "/api/UserGroup/PageSearch": {
+      "get": {
+        "tags": [
+          "UserGroup"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserGroupPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/UserGroup/GetLink/{id}": {
       "get": {
         "tags": [
@@ -25960,6 +28024,54 @@
                   "items": {
                     "$ref": "#/components/schemas/UserReg"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/UserReg/PageSearch": {
+      "get": {
+        "tags": [
+          "UserReg"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRegPageContent"
                 }
               }
             }
@@ -26720,6 +28832,54 @@
         }
       }
     },
+    "/api/Work/PageSearch": {
+      "get": {
+        "tags": [
+          "Work"
+        ],
+        "operationId": "PageSearch",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkPageContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Work/GetLink/{id}": {
       "get": {
         "tags": [
@@ -27034,7 +29194,8 @@
               {
                 "$ref": "#/components/schemas/AccessType"
               }
-            ]
+            ],
+            "default": "None"
           }
         }
       },
@@ -27966,6 +30127,81 @@
         },
         "x-type-id": 0
       },
+      "HttpPageMode": {
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "List",
+          "Page"
+        ],
+        "x-enumMembers": [
+          "List",
+          "Page"
+        ]
+      },
+      "HttpPageSettings": {
+        "type": "object",
+        "properties": {
+          "ListFrom": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ListTo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "BufferLength": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "ListCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "PageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "PageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "PageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageMode"
+              }
+            ]
+          }
+        }
+      },
+      "AddressPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Address"
+            }
+          }
+        }
+      },
       "LinkModel": {
         "type": "object",
         "properties": {
@@ -28072,6 +30308,24 @@
         },
         "x-type-id": 0
       },
+      "BookPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Book"
+            }
+          }
+        }
+      },
       "LocationLog": {
         "type": "object",
         "allOf": [
@@ -28123,6 +30377,24 @@
           }
         ],
         "x-type-id": 5
+      },
+      "CityPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/City"
+            }
+          }
+        }
       },
       "CustomerLog": {
         "type": "object",
@@ -28203,6 +30475,24 @@
         ],
         "x-type-id": 1
       },
+      "CompanyPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Company"
+            }
+          }
+        }
+      },
       "ContinentLog": {
         "type": "object",
         "allOf": [
@@ -28211,6 +30501,24 @@
           }
         ],
         "x-type-id": 1
+      },
+      "ContinentPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Continent"
+            }
+          }
+        }
       },
       "CountryLog": {
         "type": "object",
@@ -28221,6 +30529,24 @@
         ],
         "x-type-id": 2
       },
+      "CountryPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Country"
+            }
+          }
+        }
+      },
       "CurrencyLog": {
         "type": "object",
         "allOf": [
@@ -28229,6 +30555,42 @@
           }
         ],
         "x-type-id": 3
+      },
+      "CurrencyPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          }
+        }
+      },
+      "CustomerPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Customer"
+            }
+          }
+        }
       },
       "CustomerAddressLog": {
         "type": "object",
@@ -28311,6 +30673,24 @@
         },
         "x-id": "Id",
         "x-type-id": 0
+      },
+      "CustomerAddressPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerAddress"
+            }
+          }
+        }
       },
       "CustomerReferenceLog": {
         "type": "object",
@@ -28416,6 +30796,24 @@
         "x-id": "Id",
         "x-type-id": 0
       },
+      "CustomerReferencePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerReference"
+            }
+          }
+        }
+      },
       "DepartmentLog": {
         "type": "object",
         "allOf": [
@@ -28467,6 +30865,24 @@
           }
         },
         "x-type-id": 0
+      },
+      "DepartmentPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Department"
+            }
+          }
+        }
       },
       "Work": {
         "required": [
@@ -29583,6 +31999,42 @@
         },
         "x-type-id": 0
       },
+      "DocumentPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Document"
+            }
+          }
+        }
+      },
+      "DocumentCommentPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentComment"
+            }
+          }
+        }
+      },
       "DocumentCustomerLog": {
         "type": "object",
         "allOf": [
@@ -29639,6 +32091,24 @@
           }
         },
         "x-type-id": 0
+      },
+      "DocumentCustomerPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentCustomer"
+            }
+          }
+        }
       },
       "MarshalByRefObject": {
         "type": "object"
@@ -29819,6 +32289,24 @@
         },
         "x-type-id": 0
       },
+      "DocumentDataPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentData"
+            }
+          }
+        }
+      },
       "DocumentReferenceLog": {
         "type": "object",
         "allOf": [
@@ -29857,6 +32345,24 @@
           }
         },
         "x-type-id": 0
+      },
+      "DocumentReferencePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentReference"
+            }
+          }
+        }
       },
       "DocumentWorkLog": {
         "type": "object",
@@ -29984,6 +32490,24 @@
         },
         "x-type-id": 0
       },
+      "DocumentWorkPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentWork"
+            }
+          }
+        }
+      },
       "PermissionType": {
         "enum": [
           0,
@@ -30105,6 +32629,24 @@
         },
         "x-type-id": 0
       },
+      "GroupPermissionPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupPermission"
+            }
+          }
+        }
+      },
       "InstanceLog": {
         "type": "object",
         "allOf": [
@@ -30159,6 +32701,78 @@
         "x-id": "Id",
         "x-type-id": 0
       },
+      "InstancePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Instance"
+            }
+          }
+        }
+      },
+      "LocationPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Location"
+            }
+          }
+        }
+      },
+      "MessagePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            }
+          }
+        }
+      },
+      "MessageAddressPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageAddress"
+            }
+          }
+        }
+      },
       "MessageData": {
         "required": [
           "Id"
@@ -30185,6 +32799,24 @@
         "x-id": "Id",
         "x-type-id": 0
       },
+      "MessageDataPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageData"
+            }
+          }
+        }
+      },
       "PersoneLog": {
         "type": "object",
         "allOf": [
@@ -30193,6 +32825,24 @@
           }
         ],
         "x-type-id": 2
+      },
+      "PersonePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Persone"
+            }
+          }
+        }
       },
       "PersoneIdentifyLog": {
         "type": "object",
@@ -30281,6 +32931,24 @@
         "x-id": "Id",
         "x-type-id": 0
       },
+      "PersoneIdentifyPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersoneIdentify"
+            }
+          }
+        }
+      },
       "PositionLog": {
         "type": "object",
         "allOf": [
@@ -30345,6 +33013,24 @@
         },
         "x-type-id": 0
       },
+      "PositionPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Position"
+            }
+          }
+        }
+      },
       "ParameterDirection": {
         "enum": [
           1,
@@ -30374,6 +33060,9 @@
         "type": "object",
         "properties": {
           "Name": {
+            "type": "string"
+          },
+          "DisplayName": {
             "type": "string"
           }
         }
@@ -30678,6 +33367,24 @@
         "x-id": "Id",
         "x-type-id": 0
       },
+      "SchedulerPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Scheduler"
+            }
+          }
+        }
+      },
       "StageParamProcudureType": {
         "enum": [
           0,
@@ -30848,6 +33555,24 @@
         },
         "x-type-id": 0
       },
+      "StagePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Stage"
+            }
+          }
+        }
+      },
       "StageParamLog": {
         "type": "object",
         "allOf": [
@@ -30890,6 +33615,42 @@
         ],
         "x-type-id": 2
       },
+      "StageForeignPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StageForeign"
+            }
+          }
+        }
+      },
+      "StageParamPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StageParam"
+            }
+          }
+        }
+      },
       "StageProcedureLog": {
         "type": "object",
         "allOf": [
@@ -30908,6 +33669,24 @@
         },
         "x-type-id": 4
       },
+      "StageProcedurePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StageProcedure"
+            }
+          }
+        }
+      },
       "StageReferenceLog": {
         "type": "object",
         "allOf": [
@@ -30922,6 +33701,24 @@
         },
         "x-type-id": 5
       },
+      "StageReferencePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StageReference"
+            }
+          }
+        }
+      },
       "StageTemplateLog": {
         "type": "object",
         "allOf": [
@@ -30930,6 +33727,24 @@
           }
         ],
         "x-type-id": 3
+      },
+      "StageTemplatePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StageTemplate"
+            }
+          }
+        }
       },
       "StatisticLog": {
         "type": "object",
@@ -30997,6 +33812,24 @@
         "x-id": "Id",
         "x-type-id": 0
       },
+      "StatisticPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Statistic"
+            }
+          }
+        }
+      },
       "TemplateLog": {
         "type": "object",
         "allOf": [
@@ -31061,6 +33894,24 @@
         },
         "x-type-id": 0
       },
+      "TemplatePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Template"
+            }
+          }
+        }
+      },
       "TemplateDataLog": {
         "type": "object",
         "allOf": [
@@ -31103,6 +33954,24 @@
         },
         "x-type-id": 0
       },
+      "TemplateDataPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateData"
+            }
+          }
+        }
+      },
       "TemplateFileLog": {
         "type": "object",
         "allOf": [
@@ -31128,6 +33997,24 @@
           }
         },
         "x-type-id": 0
+      },
+      "TemplateFilePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateFile"
+            }
+          }
+        }
       },
       "TemplatePropertyLog": {
         "type": "object",
@@ -31158,6 +34045,24 @@
           }
         },
         "x-type-id": 0
+      },
+      "TemplatePropertyPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateProperty"
+            }
+          }
+        }
       },
       "TemplateReferenceLog": {
         "type": "object",
@@ -31197,6 +34102,24 @@
           }
         },
         "x-type-id": 0
+      },
+      "TemplateReferencePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateReference"
+            }
+          }
+        }
       },
       "Class1": {
         "type": "object",
@@ -31260,7 +34183,8 @@
             "type": "string"
           },
           "Online": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": "False"
           },
           "Platform": {
             "type": "string"
@@ -31397,6 +34321,24 @@
           }
         },
         "x-type-id": 0
+      },
+      "UserPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          }
+        }
       },
       "UserApplicationType": {
         "enum": [
@@ -31579,6 +34521,24 @@
         },
         "x-type-id": 0
       },
+      "UserApplicationPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserApplication"
+            }
+          }
+        }
+      },
       "UserFileLog": {
         "type": "object",
         "allOf": [
@@ -31661,6 +34621,24 @@
         },
         "x-id": "Id",
         "x-type-id": 0
+      },
+      "UserFilePageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserFile"
+            }
+          }
+        }
       },
       "UserGroup": {
         "required": [
@@ -31764,6 +34742,42 @@
           }
         },
         "x-type-id": 0
+      },
+      "UserGroupPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserGroup"
+            }
+          }
+        }
+      },
+      "UserRegPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserReg"
+            }
+          }
+        }
       },
       "WebSocketState": {
         "enum": [
@@ -31895,6 +34909,24 @@
           }
         },
         "x-type-id": 0
+      },
+      "WorkPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Work"
+            }
+          }
+        }
       }
     },
     "securitySchemes": {

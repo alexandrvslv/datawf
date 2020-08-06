@@ -62,10 +62,11 @@ namespace DataWF.Common
             Query.OnOrdersChanged(sender, e);
         }
 
-        public override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        public override NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
         {
-            base.OnCollectionChanged(e);
-            Query.OnOrdersChanged(this, e);
+            var args = base.OnCollectionChanged(type, item, index, oldIndex, oldItem);
+            Query.OnOrdersChanged(this, args ?? ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
+            return args;
         }
 
         void ICollection<IComparer>.Add(IComparer item)

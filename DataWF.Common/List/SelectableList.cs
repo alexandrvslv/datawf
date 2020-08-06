@@ -337,25 +337,23 @@ namespace DataWF.Common
             }
         }
 
-        public virtual void OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
+        public virtual NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
         {
-            OnCollectionChanged(CollectionChanged != null ? ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem) : null);
-        }
-
-        public virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
+            var args = (NotifyCollectionChangedEventArgs)null;
             if (CollectionChanged != null)
             {
+                args = ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem);
                 if (AsyncNotification)
                 {
-                    EnqueueNotification(this, e);
+                    EnqueueNotification(this, args);
                 }
                 else
                 {
-                    CollectionChanged(this, e);
+                    CollectionChanged(this, args);
                 }
             }
             OnPropertyChanged(nameof(SyncRoot));
+            return args;
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string property = "")
@@ -654,9 +652,7 @@ namespace DataWF.Common
         public void AddRange(IEnumerable<T> items, bool checkUnique)
         {
             AddRangeInternal(items, checkUnique);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
-                items is IList iList ? iList : items.ToList(),
-                0));
+            OnCollectionChanged(NotifyCollectionChangedAction.Add, items is IList iList ? iList : items.ToList(), 0);
         }
 
         private void RemoveRangeInternal(IEnumerable<T> items)
@@ -680,9 +676,7 @@ namespace DataWF.Common
         public void RemoveRange(IEnumerable<T> items)
         {
             RemoveRangeInternal(items);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
-                items is IList iList ? iList : items.ToList(),
-                0));
+            OnCollectionChanged(NotifyCollectionChangedAction.Remove, items is IList iList ? iList : items.ToList(), 0);
         }
 
         public virtual int IndexOf(object item)

@@ -9,7 +9,7 @@ namespace DataWF.Common
     {
         IEnumerable<IFilterable> Views { get; }
         event PropertyChangedEventHandler ItemPropertyChanged;
-        void OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null);
+        NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null);
         void OnItemPropertyChanged(object sender, PropertyChangedEventArgs args);
         IEnumerable<TT> GetHandlers<TT>();
     }

@@ -96,13 +96,14 @@ namespace DataWF.Data
             }
         }
 
-        public override void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
+        public override NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
         {
-            base.OnCollectionChanged(args);
+            var args = base.OnCollectionChanged(type, item, index, oldIndex, oldItem);
             if (Schema != null && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
             {
-                schemaList.OnItemsListChanged(this, args);
+                schemaList.OnItemsListChanged(this, args ?? ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
             }
+            return args;
         }
 
         //public DateTime GetMaxStamp ()

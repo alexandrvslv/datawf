@@ -274,9 +274,11 @@ namespace DataWF.Common
             Source = baseCollection;
         }
 
-        public void OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
+        public NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
         {
-            CollectionChanged?.Invoke(this, ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
+            var args = (NotifyCollectionChangedEventArgs)null;
+            CollectionChanged?.Invoke(this, args = ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
+            return args;
         }
 
         public void OnItemPropertyChanged(object sender, PropertyChangedEventArgs args)

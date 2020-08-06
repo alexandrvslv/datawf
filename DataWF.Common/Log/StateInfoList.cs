@@ -18,10 +18,10 @@ namespace DataWF.Common
 
         public int Limit { get; set; }
 
-        public override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        public override NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
         {
-            base.OnCollectionChanged(e);
-            if (Limit > 0 && e.Action == NotifyCollectionChangedAction.Add && Count == Limit)
+            var args = base.OnCollectionChanged(type, item, index, oldIndex, oldItem);
+            if (Limit > 0 && type == NotifyCollectionChangedAction.Add && Count == Limit)
             {
                 //TODO Cross thread exception - clear when adding - index out
                 _ = Task.Run(() =>
@@ -30,6 +30,7 @@ namespace DataWF.Common
                     Clear();
                 });
             }
+            return args;
         }
 
         #region IFSerialize implementation

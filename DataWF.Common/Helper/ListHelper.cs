@@ -94,7 +94,10 @@ namespace DataWF.Common
                     break;
                 case NotifyCollectionChangedAction.Add:
                 case NotifyCollectionChangedAction.Remove:
-                    args = new NotifyCollectionChangedEventArgs(type, item, index);
+                    if (item is IList list)
+                        args = new NotifyCollectionChangedEventArgs(type, list);
+                    else
+                        args = new NotifyCollectionChangedEventArgs(type, item, index);
                     break;
                 case NotifyCollectionChangedAction.Replace:
                     args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, item, oldItem, index);

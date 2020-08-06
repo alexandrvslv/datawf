@@ -66,10 +66,11 @@ namespace DataWF.Common
             Query.OnParametersChanged(sender, e);
         }
 
-        public override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        public override NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
         {
-            base.OnCollectionChanged(e);
-            Query.OnParametersChanged(this, e);
+            var args = base.OnCollectionChanged(type, item, index, oldIndex, oldItem);
+            Query.OnParametersChanged(this, args ?? ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
+            return args;
         }
 
         public void ClearValues()

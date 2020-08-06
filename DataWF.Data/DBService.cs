@@ -321,7 +321,8 @@ namespace DataWF.Data
                         }
                     }
                     //TODO MSSql, MySql, Oracle, Sqlite
-                    if (ex.Message.IndexOf("already exist", StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (ex.Message.IndexOf("already exist", StringComparison.OrdinalIgnoreCase) >= 0
+                        || ex.Message.IndexOf("duplicate column name", StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         Console.WriteLine($"sqlinfo: skip already exist");
                         continue;

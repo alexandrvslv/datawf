@@ -98,7 +98,6 @@ namespace DataWF.WebService.Generator
             }
             catch (Exception ex)
             {
-                Helper.OnException(ex);
                 SyntaxHelper.ConsoleWarning($"Can't Load Assembly {file}. {ex.Message}");
             }
 
@@ -119,7 +118,6 @@ namespace DataWF.WebService.Generator
                 }
                 catch (Exception ex)
                 {
-                    Helper.OnException(ex);
                     SyntaxHelper.ConsoleWarning($"Can't Get ExportedTypes of {assembly}. {ex.Message}");
                     continue;
                 }
