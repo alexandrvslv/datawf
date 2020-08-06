@@ -380,9 +380,6 @@ namespace DataWF.Data
                 }
                 else if (c == '\'' || c == ' ' || c == ',' || c == '(' || c == ')' || c == '\n' || c == '\r' || c == '!' || c == '=' || c == '>' || c == '<')//word.Length > 0 && 
                 {
-                    //if (c == ' ')
-                    //    continue;
-
                     if (word.Equals("select", StringComparison.OrdinalIgnoreCase))
                     {
                         state = QParcerState.Select;
@@ -704,6 +701,9 @@ namespace DataWF.Data
 
                                 break;
                             case QParcerState.OrderBy:
+                                if (word.Length == 0)
+                                    continue;
+
                                 var cl = ParseColumn(word);
                                 if (cl != null)
                                 {
@@ -736,7 +736,7 @@ namespace DataWF.Data
                                     {
                                         var property = $"{string.Join(".", prefix)}.{word}";
                                         prefix.Clear();
-                                        var invoker = EmitInvoker.Initialize(Table.ItemType.Type, word);
+                                        var invoker = EmitInvoker.Initialize(Table.ItemType.Type, property);
                                         if (invoker != null)
                                         {
                                             order = new QOrder

@@ -34,6 +34,7 @@ namespace DataWF.Data
         protected int order = -1;
         protected string text;
         protected string alias;
+        private QItem holder;
 
         public QItem()
         {
@@ -86,7 +87,21 @@ namespace DataWF.Data
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual IQuery Query => List?.Query;
+        public QItem Holder
+        {
+            get => holder;
+            set
+            {
+                if (holder != value)
+                {
+                    holder = value;
+                    OnPropertyChanged(nameof(Holder));
+                }
+            }
+        }
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public virtual IQuery Query => Holder?.Query ?? List?.Query;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual DBTable Table

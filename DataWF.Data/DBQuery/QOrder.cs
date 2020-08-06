@@ -54,8 +54,16 @@ namespace DataWF.Data
             get => column;
             set
             {
-                column = value;
-                OnPropertyChanged(nameof(Column));
+                if (column != value)
+                {
+                    column = value;
+                    if (column != null)
+                    {
+                        column.Holder = this;
+                    }
+
+                    OnPropertyChanged(nameof(Column));
+                }
             }
         }
 
