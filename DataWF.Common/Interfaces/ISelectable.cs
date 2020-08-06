@@ -10,6 +10,9 @@ namespace DataWF.Common
         IEnumerable Select(IQueryParameter parameter);
 
         IEnumerable Select(string property, CompareType comparer, object value);
+
+        void AddRange(IEnumerable items);
+        void RemoveRange(IEnumerable items);
     }
 
     public interface ISelectable<T> : ISortable<T>, INotifyListPropertyChanged
@@ -21,5 +24,8 @@ namespace DataWF.Common
         IEnumerable<T> Select(QueryParameter<T> parameter);
 
         IEnumerable<T> Select(string property, CompareType comparer, object value);
+
+        void AddRange(IEnumerable<T> items);
+        void RemoveRange(IEnumerable<T> items);
     }
 }

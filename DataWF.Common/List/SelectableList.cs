@@ -644,6 +644,11 @@ namespace DataWF.Common
             }
         }
 
+        public void AddRange(IEnumerable items)
+        {
+            AddRange(items.ToEnumerable<T>());
+        }
+
         public void AddRange(IEnumerable<T> items)
         {
             AddRange(items, CheckUnique);
@@ -671,6 +676,11 @@ namespace DataWF.Common
                     RemoveInternal(item, index);
                 }
             }
+        }
+
+        public void RemoveRange(IEnumerable items)
+        {
+            RemoveRange(items.ToEnumerable<T>());
         }
 
         public void RemoveRange(IEnumerable<T> items)
