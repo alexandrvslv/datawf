@@ -730,7 +730,7 @@ namespace DataWF.Data
                                         order = null;
                                     }
                                 }
-                                else if (order.Column == null)
+                                else if (cl == null)
                                 {
                                     if (prefix.Count > 0)
                                     {
