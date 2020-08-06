@@ -729,10 +729,12 @@ namespace DataWF.Common
             }
         }
 
-        public static IEnumerable<T> Distinct<T>(IEnumerable<T> items, IInvoker param)
+        public static IEnumerable<T> Distinct<T>(IEnumerable<T> items, IInvoker param, IComparer comparer = null)
         {
             var oldValue = (object)null;
-            foreach (var item in items.OrderByDescending(p => param.GetValue(p)))
+            var list = items.ToList();
+            ListHelper.QuickSort(list, comparer ?? ((IInvokerExtension)param).CreateComparer<T>(ListSortDirection.Descending));
+            foreach (var item in list)
             {
                 var newValue = param.GetValue(item);
                 if (!Equal(newValue, oldValue))
@@ -746,10 +748,12 @@ namespace DataWF.Common
             }
         }
 
-        public static IEnumerable Distinct(IEnumerable items, IInvoker param)
+        public static IEnumerable Distinct(IEnumerable items, IInvoker param, IComparer comparer = null)
         {
             var oldValue = (object)null;
-            foreach (var item in items.Cast<object>().OrderByDescending(p => param.GetValue(p)))
+            var list = items.Cast<object>().ToList();
+            ListHelper.QuickSort(list, comparer ?? ((IInvokerExtension)param).CreateComparer(param.TargetType, ListSortDirection.Descending));
+            foreach (var item in list)
             {
                 var newValue = param.GetValue(item);
                 if (!Equal(newValue, oldValue))

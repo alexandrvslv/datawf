@@ -17,37 +17,68 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF.Common;
+using System;
+using System.Collections;
 using System.ComponentModel;
 namespace DataWF.Data
 {
-    public class QOrder : QColumn
+    public class QOrder : QItem
     {
-        protected ListSortDirection dir = ListSortDirection.Ascending;
+        protected ListSortDirection direction = ListSortDirection.Ascending;
+        private QItem column;
 
         public QOrder()
             : base()
         {
         }
 
-        public QOrder(string column)
-            : base(column)
-        {
-        }
-
         public QOrder(DBColumn column)
-            : base(column)
+            : base()
         {
+            Column = new QColumn(column);
         }
 
         public ListSortDirection Direction
         {
-            get { return dir; }
-            set { dir = value; }
+            get => direction;
+            set
+            {
+                direction = value;
+                OnPropertyChanged(nameof(Direction));
+            }
+        }
+
+        public QItem Column
+        {
+            get => column;
+            set
+            {
+                column = value;
+                OnPropertyChanged(nameof(Column));
+            }
+        }
+
+        public override object GetValue(DBItem row)
+        {
+            return column.GetValue(row);
         }
 
         public override string Format(System.Data.IDbCommand command = null)
         {
-            return string.Format("{0} {1}", base.Format(command), dir == ListSortDirection.Descending ? "desc" : "asc");
+            return Column is QColumn
+                ? string.Format("{0} {1}", Column.Format(command), direction == ListSortDirection.Descending ? "desc" : "asc")
+                : string.Empty;
+        }
+
+        public IComparer CreateComparer()
+        {
+            if (Column is QColumn column)
+                return column.Column.CreateComparer(Direction);
+            if (Column is QReflection reflection
+                && reflection.Invoker is IInvokerExtension invokerExtension)
+                return invokerExtension.CreateComparer(reflection.Invoker.TargetType, Direction);
+            return null;
         }
     }
 }

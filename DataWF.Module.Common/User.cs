@@ -159,7 +159,7 @@ namespace DataWF.Module.Common
             var filter = new QQuery(string.Empty, UserReg.DBTable);
             filter.BuildPropertyParam(nameof(UserReg.UserId), CompareType.Equal, User.PrimaryId);
             filter.BuildPropertyParam(nameof(UserReg.RegType), CompareType.Equal, UserRegType.Password);
-            filter.Orders.Add(new QOrder { Column = UserReg.DBTable.ParseProperty(nameof(UserReg.Id)), Direction = ListSortDirection.Descending });
+            filter.Orders.Add(new QOrder(UserReg.DBTable.PrimaryKey) { Direction = ListSortDirection.Descending });
             return UserReg.DBTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize);
         }
 

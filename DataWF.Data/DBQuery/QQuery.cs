@@ -31,15 +31,6 @@ using System.Text;
 
 namespace DataWF.Data
 {
-    public interface IQuery
-    {
-        string Format(IDbCommand command);
-        DBTable Table { get; }
-        QParamList Parameters { get; }
-        QItemList<QItem> Columns { get; }
-        QItemList<QOrder> Orders { get; }
-        QItemList<QTable> Tables { get; }
-    }
 
     public class QQuery : QItem, IQuery, IDisposable, IQItemList
     {
@@ -79,10 +70,25 @@ namespace DataWF.Data
 
         public void Sort<T>(List<T> list)
         {
+            DBComparerList comparer = GetComparer();
+            if (comparer != null)
+            {
+                ListHelper.QuickSort(list, comparer);
+            }
+        }
+
+        public DBComparerList GetComparer()
+        {
             var comparer = new DBComparerList();
             foreach (QOrder order in Orders)
-                comparer.Comparers.Add(order.Column.CreateComparer(order.Direction));
-            ListHelper.QuickSort(list, comparer);
+            {
+                var comparerEntry = order.CreateComparer();
+                if (comparerEntry != null)
+                {
+                    comparer.Comparers.Add(comparerEntry);
+                }
+            }
+            return comparer.Comparers.Count == 0 ? null : comparer;
         }
 
         public QQuery(string query, DBTable table = null, IEnumerable cols = null, QQuery bquery = null)
@@ -699,10 +705,12 @@ namespace DataWF.Data
                                 break;
                             case QParcerState.OrderBy:
                                 var cl = ParseColumn(word);
-
                                 if (cl != null)
                                 {
-                                    order = new QOrder(cl) { Prefix = prefix.FirstOrDefault() };
+                                    order = new QOrder
+                                    {
+                                        Column = new QColumn(cl) { Prefix = prefix.FirstOrDefault() }
+                                    };
                                     orders.Add(order);
                                     prefix.Clear();
                                 }
@@ -711,6 +719,7 @@ namespace DataWF.Data
                                     if (order != null)
                                     {
                                         order.Direction = ListSortDirection.Ascending;
+                                        order = null;
                                     }
                                 }
                                 else if (word.Equals("desc", StringComparison.OrdinalIgnoreCase))
@@ -718,6 +727,38 @@ namespace DataWF.Data
                                     if (order != null)
                                     {
                                         order.Direction = ListSortDirection.Descending;
+                                        order = null;
+                                    }
+                                }
+                                else if (order.Column == null)
+                                {
+                                    if (prefix.Count > 0)
+                                    {
+                                        var property = $"{string.Join(".", prefix)}.{word}";
+                                        prefix.Clear();
+                                        var invoker = EmitInvoker.Initialize(Table.ItemType.Type, word);
+                                        if (invoker != null)
+                                        {
+                                            order = new QOrder
+                                            {
+                                                Column = new QReflection(invoker)
+                                            };
+                                            orders.Add(order);
+                                            prefix.Clear();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var invoker = EmitInvoker.Initialize(Table.ItemType.Type, word);
+                                        if (invoker != null)
+                                        {
+                                            order = new QOrder
+                                            {
+                                                Column = new QReflection(invoker)
+                                            };
+                                            orders.Add(order);
+                                            prefix.Clear();
+                                        }
                                     }
                                 }
                                 break;
@@ -1283,9 +1324,13 @@ namespace DataWF.Data
 
             foreach (QOrder col in orders)
             {
-                order.Append(col.Format(command));
-                if (!orders.IsLast(col))
-                    order.Append(", ");
+                var formatOrder = col.Format(command);
+                if (!string.IsNullOrEmpty(formatOrder))
+                {
+                    order.Append(formatOrder);
+                    if (!orders.IsLast(col))
+                        order.Append(", ");
+                }
             }
 
             foreach (QTable table in tables)
