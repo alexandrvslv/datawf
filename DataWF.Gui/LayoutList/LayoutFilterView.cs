@@ -125,7 +125,7 @@ namespace DataWF.Gui
             var toremove = Filters.Select((nameof(LayoutFilter)), CompareType.Equal, column.Name).ToList();
             foreach (var item in toremove)
                 Filters.RemoveInternal(item, Filters.IndexOf(item));
-            Filters.OnListChanged(NotifyCollectionChangedAction.Reset);
+            Filters.OnCollectionChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public void ClearFilters()

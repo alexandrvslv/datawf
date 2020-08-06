@@ -11,7 +11,7 @@ namespace DataWF.Common
 
         public TreeListView(IEnumerable<T> baseCollection) : this()
         {
-            SetCollection(baseCollection);
+            Source = baseCollection;
         }
     }
 }

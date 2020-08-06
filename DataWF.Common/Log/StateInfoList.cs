@@ -18,9 +18,9 @@ namespace DataWF.Common
 
         public int Limit { get; set; }
 
-        public override void OnListChanged(NotifyCollectionChangedEventArgs e)
+        public override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            base.OnListChanged(e);
+            base.OnCollectionChanged(e);
             if (Limit > 0 && e.Action == NotifyCollectionChangedAction.Add && Count == Limit)
             {
                 //TODO Cross thread exception - clear when adding - index out

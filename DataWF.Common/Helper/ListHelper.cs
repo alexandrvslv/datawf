@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -81,6 +82,29 @@ namespace DataWF.Common
             for (int i = start; i <= stop; i++)
                 temp.Add(a[i]);
             return temp;
+        }
+
+        public static NotifyCollectionChangedEventArgs GenerateArgs(NotifyCollectionChangedAction type, object item, int index, int oldIndex, object oldItem)
+        {
+            NotifyCollectionChangedEventArgs args = null;
+            switch (type)
+            {
+                case NotifyCollectionChangedAction.Reset:
+                    args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+                    break;
+                case NotifyCollectionChangedAction.Add:
+                case NotifyCollectionChangedAction.Remove:
+                    args = new NotifyCollectionChangedEventArgs(type, item, index);
+                    break;
+                case NotifyCollectionChangedAction.Replace:
+                    args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, item, oldItem, index);
+                    break;
+                case NotifyCollectionChangedAction.Move:
+                    args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, item, index, oldIndex);
+                    break;
+            }
+
+            return args;
         }
 
         public static IList AND(IList consta, IList constb, IComparer comp)

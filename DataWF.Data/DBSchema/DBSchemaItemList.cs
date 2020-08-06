@@ -96,9 +96,9 @@ namespace DataWF.Data
             }
         }
 
-        public override void OnListChanged(NotifyCollectionChangedEventArgs args)
+        public override void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
         {
-            base.OnListChanged(args);
+            base.OnCollectionChanged(args);
             if (Schema != null && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
             {
                 schemaList.OnItemsListChanged(this, args);

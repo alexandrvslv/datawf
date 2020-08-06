@@ -27,7 +27,7 @@ namespace DataWF.Common
             }
             Interlocked.Add(ref item.count, inc);
             Interlocked.Add(ref item.length, size);
-            items.OnListChanged(NotifyCollectionChangedAction.Reset);
+            items.OnCollectionChanged(NotifyCollectionChangedAction.Reset);
         }
 
     }

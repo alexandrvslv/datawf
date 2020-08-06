@@ -66,9 +66,9 @@ namespace DataWF.Common
             Query.OnParametersChanged(sender, e);
         }
 
-        public override void OnListChanged(NotifyCollectionChangedEventArgs e)
+        public override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            base.OnListChanged(e);
+            base.OnCollectionChanged(e);
             Query.OnParametersChanged(this, e);
         }
 

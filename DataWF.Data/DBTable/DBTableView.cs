@@ -165,7 +165,11 @@ namespace DataWF.Data
             }
         }
 
-        Common.IQuery IFilterable.FilterQuery => FilterQuery;
+        Common.IQuery IFilterable.FilterQuery
+        {
+            get => FilterQuery;
+            set => FilterQuery = (Query<T>)value;
+        }
 
         public Query<T> FilterQuery
         {
@@ -207,6 +211,7 @@ namespace DataWF.Data
         }
 
         public event EventHandler DefaultFilterChanged;
+        public event EventHandler FilterChanged;
 
         public virtual QParam DefaultParam
         {
@@ -283,15 +288,20 @@ namespace DataWF.Data
             }
         }
 
-        public void OnItemChanged(DBItem item, string propertyName, DBColumn column)
+        public void OnSourceItemChanged(object sender, PropertyChangedEventArgs args)
+        {
+            OnSourceItemChanged((T)sender, args.PropertyName, Table.ParseColumnProperty(args.PropertyName));
+        }
+
+        public void OnSourceItemChanged(DBItem item, string propertyName, DBColumn column)
         {
             if (item is T titem)
             {
-                OnItemChanged(titem, propertyName, column);
+                OnSourceItemChanged(titem, propertyName, column);
             }
         }
 
-        public void OnItemChanged(T item, string propertyName, DBColumn column)
+        public void OnSourceItemChanged(T item, string propertyName, DBColumn column)
         {
             var indexes = GetIndex(item);
 
@@ -310,15 +320,37 @@ namespace DataWF.Data
             }
         }
 
-        public void OnTableChanged(DBItem item, NotifyCollectionChangedAction type)
+        public void OnSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
         {
-            if (item == null || item is T)
+            if (args.Action == NotifyCollectionChangedAction.Reset)
             {
-                OnTableChanged((T)item, type);
+                OnSourceCollectioChanged((T)null, args.Action);
+            }
+            else if (args.Action == NotifyCollectionChangedAction.Add)
+            {
+                foreach (T item in args.NewItems)
+                {
+                    OnSourceCollectioChanged(item, args.Action);
+                }
+            }
+            else if (args.Action == NotifyCollectionChangedAction.Remove)
+            {
+                foreach (T item in args.OldItems)
+                {
+                    OnSourceCollectioChanged(item, args.Action);
+                }
             }
         }
 
-        public void OnTableChanged(T item, NotifyCollectionChangedAction type)
+        public void OnSourceCollectioChanged(DBItem item, NotifyCollectionChangedAction type)
+        {
+            if (item == null || item is T)
+            {
+                OnSourceCollectionChanged((T)item, type);
+            }
+        }
+
+        public void OnSourceCollectionChanged(T item, NotifyCollectionChangedAction type)
         {
             lock (items)
             {
@@ -383,12 +415,13 @@ namespace DataWF.Data
                 AddRangeInternal(table, false);
             }
             SortInternal();
-            OnListChanged(NotifyCollectionChangedAction.Reset);
+            OnCollectionChanged(NotifyCollectionChangedAction.Reset);
         }
 
         private void CheckFilterQuery()
         {
             ClearFilter();
+            FilterChanged?.Invoke(this, EventArgs.Empty);
 
             foreach (var filter in FilterQuery.Parameters)
             {
@@ -520,13 +553,13 @@ namespace DataWF.Data
         public void Sort(params DBColumn[] columns)
         {
             items.Sort(new DBComparerList(columns));
-            OnListChanged(NotifyCollectionChangedAction.Reset);
+            OnCollectionChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public void Sort(params string[] columns)
         {
             items.Sort(new DBComparerList(table, columns));
-            OnListChanged(NotifyCollectionChangedAction.Reset);
+            OnCollectionChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public bool ClearFilter()

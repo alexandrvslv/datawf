@@ -75,9 +75,9 @@ namespace DataWF.Data
             }
         }
 
-        public override void OnListChanged(NotifyCollectionChangedEventArgs args)
+        public override void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
         {
-            base.OnListChanged(args);
+            base.OnCollectionChanged(args);
             OnItemsListChanged(this, args);
         }
 

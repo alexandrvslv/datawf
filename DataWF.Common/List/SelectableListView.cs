@@ -41,16 +41,27 @@ namespace DataWF.Common
         {
             if (handle)
             {
-                _listChangedHandler = OnSourceListChanged;
+                _listChangedHandler = OnSourceCollectionChanged;
                 _listItemChangedHandler = OnSourceItemChanged;
             }
-            SetCollection(baseCollection);
+            Source = baseCollection;
         }
 
         public IEnumerable Source
         {
             get { return source; }
-            set { SetCollection(value); }
+            set
+            {
+                if (source == value
+                    || this == value)
+                {
+                    return;
+                }
+                SuspendHandling();
+                source = value;
+                selectableSource = value as ISelectable;
+                UpdateFilter();
+            }
         }
 
         public Query<T> FilterQuery
@@ -80,22 +91,13 @@ namespace DataWF.Common
             get { return null; }
         }
 
-        IQuery IFilterable.FilterQuery => FilterQuery;
+        IQuery IFilterable.FilterQuery
+        {
+            get => FilterQuery;
+            set => FilterQuery = (Query<T>)value;
+        }
 
         public event EventHandler FilterChanged;
-
-        public void SetCollection(IEnumerable baseCollection)
-        {
-            if (source == baseCollection
-                || this == baseCollection)
-            {
-                return;
-            }
-            SuspendHandling();
-            source = baseCollection;
-            selectableSource = baseCollection as ISelectable;
-            UpdateFilter();
-        }
 
         private void ResumeHandling()
         {
@@ -263,10 +265,10 @@ namespace DataWF.Common
         {
             var indexes = selectableSource is ISelectable<T> gSelectable ? gSelectable.Indexes : null;
             UpdateInternal(source == null ? null : ListHelper.Select<T>(source.TypeOf<T>(), query, indexes));
-            OnListChanged(NotifyCollectionChangedAction.Reset);
+            OnCollectionChanged(NotifyCollectionChangedAction.Reset);
         }
 
-        public virtual void OnSourceListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        public virtual void OnSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (updatingFilter == 1 || FilterQuery.Suspending)
             {

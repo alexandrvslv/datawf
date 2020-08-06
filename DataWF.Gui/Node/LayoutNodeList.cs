@@ -42,7 +42,7 @@ namespace DataWF.Gui
                 sense = value;
                 if (sense)
                 {
-                    OnListChanged(NotifyCollectionChangedAction.Reset);
+                    OnCollectionChanged(NotifyCollectionChangedAction.Reset);
                 }
             }
         }
@@ -138,7 +138,7 @@ namespace DataWF.Gui
 
             if (e.PropertyName.Equals(nameof(Node.Expand), StringComparison.Ordinal))
             {
-                OnListChanged(NotifyCollectionChangedAction.Reset);
+                OnCollectionChanged(NotifyCollectionChangedAction.Reset);
                 //for (int i = 0; i < node.Childs.Count; i++)
                 //{
                 //    var n = node.Childs[i];
@@ -148,7 +148,7 @@ namespace DataWF.Gui
             }
             else if (e.PropertyName.Equals(nameof(Node.Visible), StringComparison.Ordinal))
             {
-                OnListChanged(NotifyCollectionChangedAction.Reset);
+                OnCollectionChanged(NotifyCollectionChangedAction.Reset);
                 //base.OnNotifyPropertyChanged(sender, e);
                 //for (int i = 0; i < node.Childs.Count; i++)
                 //{
@@ -158,7 +158,7 @@ namespace DataWF.Gui
             }
             else if (e.PropertyName.Equals(nameof(Node.Group), StringComparison.Ordinal))
             {
-                OnListChanged(NotifyCollectionChangedAction.Reset);
+                OnCollectionChanged(NotifyCollectionChangedAction.Reset);
             }
         }
 

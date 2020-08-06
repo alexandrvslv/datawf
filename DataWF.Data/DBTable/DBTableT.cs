@@ -309,7 +309,7 @@ namespace DataWF.Data
         {
             for (int i = 0; i < queryViews.Count; i++)
             {
-                queryViews[i].OnItemChanged(item, property, column);
+                queryViews[i].OnSourceItemChanged(item, property, column);
             }
         }
 
@@ -321,7 +321,7 @@ namespace DataWF.Data
             }
             for (int i = 0; i < queryViews.Count; i++)
             {
-                queryViews[i].OnTableChanged(item, type);
+                queryViews[i].OnSourceCollectioChanged(item, type);
             }
         }
 

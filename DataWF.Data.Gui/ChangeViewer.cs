@@ -201,7 +201,7 @@ namespace DataWF.Data.Gui
                 }
             }
             //wait.Set();
-            rows.OnListChanged(NotifyCollectionChangedAction.Reset);
+            rows.OnCollectionChanged(NotifyCollectionChangedAction.Reset);
         }
 
         private void ToolRefreshClick(object sender, EventArgs e)

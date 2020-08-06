@@ -62,9 +62,9 @@ namespace DataWF.Common
             Query.OnOrdersChanged(sender, e);
         }
 
-        public override void OnListChanged(NotifyCollectionChangedEventArgs e)
+        public override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            base.OnListChanged(e);
+            base.OnCollectionChanged(e);
             Query.OnOrdersChanged(this, e);
         }
 
