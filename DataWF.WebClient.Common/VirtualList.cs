@@ -252,16 +252,21 @@ namespace DataWF.Common
 
         private void OnFilterQueryChanged(object sender, EventArgs e)
         {
+            if (filterQuery.Suspending
+                || (sender is IQueryParameter parameter
+                && e is PropertyChangedEventArgs args
+                && !parameter.IsEnabled
+                && !string.Equals(args.PropertyName, nameof(IQueryParameter.IsEnabled), StringComparison.Ordinal)))
+            {
+                return;
+            }
             UpdateFilter();
         }
 
         public void UpdateFilter()
         {
-            if (!filterQuery.Suspending)
-            {
-                Clear();
-                FilterChanged?.Invoke(this, EventArgs.Empty);
-            }
+            Clear();
+            FilterChanged?.Invoke(this, EventArgs.Empty);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
