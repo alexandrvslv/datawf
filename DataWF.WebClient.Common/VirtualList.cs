@@ -17,6 +17,7 @@ namespace DataWF.Common
         private IModelView modelView;
         private int processingGet;
         private Query<T> filterQuery;
+        private string tempFilter;
 
         public VirtualList()
         {
@@ -260,7 +261,12 @@ namespace DataWF.Common
             {
                 return;
             }
-            UpdateFilter();
+            var filter = filterQuery.Format(true, true);
+            if (!string.Equals(tempFilter, filter, StringComparison.Ordinal))
+            {
+                tempFilter = filterQuery.Format(true, true);
+                UpdateFilter();
+            }
         }
 
         public void UpdateFilter()
