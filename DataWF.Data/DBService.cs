@@ -249,9 +249,9 @@ namespace DataWF.Data
                 var chages = Changes.Where(p => p.Item.Schema == schema).ToList();
                 chages.Sort((a, b) =>
                 {
-                    if (a.Item is DBTable tableA)
+                    if (a.Item is DBTable tableA && !(tableA is IDBVirtualTable))
                     {
-                        if (b.Item is DBTable tableB)
+                        if (b.Item is DBTable tableB && !(tableB is IDBVirtualTable))
                         {
                             return DBTableComparer.Instance.Compare(tableA, tableB, true);
                         }
@@ -260,7 +260,7 @@ namespace DataWF.Data
                             return -1;
                         }
                     }
-                    else if (b.Item is DBTable)
+                    else if (b.Item is DBTable table && !(table is IDBVirtualTable))
                     {
                         return 1;
                     }
