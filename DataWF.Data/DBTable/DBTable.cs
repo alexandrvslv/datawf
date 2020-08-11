@@ -1588,7 +1588,10 @@ namespace DataWF.Data
                 var itemType = genericType ?? typeof(DBLogItem);
                 LogTable = (IDBLogTable)GetTable(itemType) ?? (IDBLogTable)EmitInvoker.CreateObject(typeof(DBLogTable<>).MakeGenericType(itemType));
                 LogTable.BaseTable = this;
-                LogTable.Schema.Tables.Add((DBTable)LogTable);
+                if (!LogTable.Schema.Tables.Contains(LogTable))
+                {
+                    LogTable.Schema.Tables.Add((DBTable)LogTable);
+                }
             }
             else
             {
