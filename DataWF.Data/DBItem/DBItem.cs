@@ -793,6 +793,11 @@ namespace DataWF.Data
             return GetReferencing<T>(table, table.ParseProperty(property), param);
         }
 
+        public IEnumerable<T> GetReferencing<T>(DBColumn column, DBLoadParam param) where T : DBItem, new()
+        {
+            return GetReferencing<T>(GetTable<T>(), column, param);
+        }
+
         public IEnumerable<T> GetReferencing<T>(DBTable<T> table, DBColumn column, DBLoadParam param) where T : DBItem, new()
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)

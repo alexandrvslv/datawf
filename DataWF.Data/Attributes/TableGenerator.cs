@@ -203,7 +203,7 @@ namespace DataWF.Data
             Table.Group = TableGroup;
             Table.Type = Attribute.TableType;
             Table.BlockSize = Attribute.BlockSize;
-            Table.Sequence = Table.GenerateSequence();
+            Table.Sequence = Table.GenerateSequence(Attribute.SequenceName);
         }
 
         public void GenerateColumns()

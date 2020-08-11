@@ -100,7 +100,7 @@ namespace DataWF.Data
         void Generate(DBTableInfo tableInfo);
         void GenerateDefaultColumns();
         IDBLogTable GenerateLogTable();
-        DBSequence GenerateSequence();
+        DBSequence GenerateSequence(string sequenceName = null);
         void GetAllChildTables(List<DBTable> parents);
         void GetAllParentTables(List<DBTable> parents);
         IEnumerable<DBItem> GetChangedItems();

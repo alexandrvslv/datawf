@@ -1612,9 +1612,9 @@ namespace DataWF.Data
             //    GenerateRelation(stable, scolumn, view.PrimaryKey);
         }
 
-        public DBSequence GenerateSequence()
+        public DBSequence GenerateSequence(string sequenceName = null)
         {
-            var sname = $"seq_{Name}";
+            var sname = sequenceName ?? $"seq_{Name}";
             var sequence = Schema.Sequences[sname];
             if (sequence == null)
             {
