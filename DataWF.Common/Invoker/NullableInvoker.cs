@@ -7,13 +7,13 @@ namespace DataWF.Common
 {
     public abstract class NullableInvoker<T, V> : Invoker<T, V?> where V : struct
     {
-        public override InvokerComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
+        public override IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
         {
             type = type ?? typeof(T);
             return (InvokerComparer)Activator.CreateInstance(typeof(NullableInvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, direction);
         }
 
-        public override InvokerComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
+        public override IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
         {
             return new NullableInvokerComparer<TT, V>(this, direction);
         }

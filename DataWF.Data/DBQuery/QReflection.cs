@@ -19,11 +19,14 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 
 namespace DataWF.Data
 {
-    public class QReflection : QItem
+    public class QReflection : QItem, IInvokerExtension
     {
         [NonSerialized()]
         IInvoker invoker;
@@ -68,6 +71,31 @@ namespace DataWF.Data
         public override string Format(IDbCommand command = null)
         {
             return command != null ? string.Empty : base.Format(command);
+        }
+
+        public IListIndex CreateIndex(bool concurrent)
+        {
+            return ((IInvokerExtension)Invoker).CreateIndex(concurrent);
+        }
+
+        public IQueryParameter CreateParameter(Type type)
+        {
+            return ((IInvokerExtension)Invoker).CreateParameter(type);
+        }
+
+        public QueryParameter<TT> CreateParameter<TT>()
+        {
+            return ((IInvokerExtension)Invoker).CreateParameter<TT>();
+        }
+
+        public IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
+        {
+            return ((IInvokerExtension)Invoker).CreateComparer(type, direction);
+        }
+
+        public IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
+        {
+            return ((IInvokerExtension)Invoker).CreateComparer<TT>(direction);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace DataWF.Common
         public static void ApplyFilter<T>(IFilterable<T> filterable) where T : IGroup
         {
             filterable.FilterQuery.Parameters.Add(TreeInvoker<T>.Instance.CreateParameter<T>());
-            filterable.FilterQuery.Orders.Add(TreeInvoker<T>.Instance.CreateComparer<T>());
+            filterable.FilterQuery.Orders.Add((InvokerComparer<T>)TreeInvoker<T>.Instance.CreateComparer<T>());
         }
 
         public static bool IsExpand(IGroup item)

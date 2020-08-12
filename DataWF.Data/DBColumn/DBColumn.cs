@@ -681,20 +681,25 @@ namespace DataWF.Data
 
         public IComparer CreateComparer(ListSortDirection direction = ListSortDirection.Ascending)
         {
-            return CreateComparer<DBItem>(direction);
+            return CreateComparer(typeof(DBItem), direction);
         }
 
-        public IComparer CreateComparer<T>(ListSortDirection direction = ListSortDirection.Ascending) where T : DBItem
+        public IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
         {
             var keyType = GetDataType();
             if (IsReference)
             {
                 keyType = typeof(string);
             }
-            var type = typeof(DBComparer<,>).MakeGenericType(typeof(T), keyType);
-            return (IComparer)EmitInvoker.CreateObject(type,
+            var compareType = typeof(DBComparer<,>).MakeGenericType(type, keyType);
+            return (IComparer)EmitInvoker.CreateObject(compareType,
                 new Type[] { typeof(DBColumn), typeof(ListSortDirection) },
                 new object[] { this, direction }, true);
+        }
+
+        public IComparer<T> CreateComparer<T>(ListSortDirection direction = ListSortDirection.Ascending) where T : DBItem
+        {
+            return (IComparer<T>)CreateComparer(typeof(T), direction);
         }
 
         public void LoadFromReader(DBTransaction transaction, DBItem row, int i)

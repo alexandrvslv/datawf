@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace DataWF.Common
@@ -41,13 +43,13 @@ namespace DataWF.Common
             return parameter;
         }
 
-        public override InvokerComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
+        public override IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
         {
             type = type ?? typeof(T);
             return (InvokerComparer)Activator.CreateInstance(typeof(TreeComparer<>).MakeGenericType(type));
         }
 
-        public override InvokerComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
+        public override IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
         {
             return (InvokerComparer<TT>)CreateComparer(typeof(TT), direction);
         }

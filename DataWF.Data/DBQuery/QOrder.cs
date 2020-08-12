@@ -20,10 +20,11 @@
 using DataWF.Common;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 namespace DataWF.Data
 {
-    public class QOrder : QItem
+    public class QOrder : QItem, IInvokerExtension
     {
         protected ListSortDirection direction = ListSortDirection.Ascending;
         private QItem column;
@@ -87,6 +88,36 @@ namespace DataWF.Data
                 && reflection.Invoker is IInvokerExtension invokerExtension)
                 return invokerExtension.CreateComparer(reflection.Invoker.TargetType, Direction);
             return null;
+        }
+
+        public IListIndex CreateIndex(bool concurrent)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IQueryParameter CreateParameter(Type type)
+        {
+            throw new NotImplementedException();
+        }
+
+        public QueryParameter<TT> CreateParameter<TT>()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
+        {
+            if (Column is QColumn column)
+                return column.Column.CreateComparer(type, direction);
+            if (Column is QReflection reflection
+                && reflection.Invoker is IInvokerExtension invokerExtension)
+                return invokerExtension.CreateComparer(type, direction);
+            return null;
+        }
+
+        public IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
+        {
+            return (InvokerComparer<TT>)CreateComparer(typeof(TT), direction);
         }
     }
 }

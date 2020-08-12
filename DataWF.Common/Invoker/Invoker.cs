@@ -75,13 +75,13 @@ namespace DataWF.Common
             return new QueryParameter<TT> { Invoker = this, Comparer = compare, Value = value };
         }
 
-        public virtual InvokerComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
+        public virtual IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
         {
             type = type ?? typeof(T);
             return (InvokerComparer)Activator.CreateInstance(typeof(InvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, direction);
         }
 
-        public virtual InvokerComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
+        public virtual IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
         {
             return new InvokerComparer<TT, V>(this, direction);
         }

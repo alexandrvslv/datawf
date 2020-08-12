@@ -17,12 +17,17 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF.Common;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 
 namespace DataWF.Data
 {
-    public class QColumn : QItem
+    public class QColumn : QItem, IInvokerExtension
     {
         protected DBColumn columnn;
         private object temp;
@@ -72,7 +77,7 @@ namespace DataWF.Data
                 if (Column != value)
                 {
                     ColumnName = value?.FullName;
-                    Text = value?.Name;
+                    base.Text = value?.Name;
                     //prefix = value.Table.Code;
                     columnn = value;
                 }
@@ -138,6 +143,31 @@ namespace DataWF.Data
         public override string ToString()
         {
             return Column == null ? base.ToString() : Column.ToString();
+        }
+
+        public IListIndex CreateIndex(bool concurrent)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IQueryParameter CreateParameter(Type type)
+        {
+            throw new NotImplementedException();
+        }
+
+        public QueryParameter<TT> CreateParameter<TT>()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
+        {
+            return Column?.CreateComparer(type, direction);
+        }
+
+        public IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
+        {
+            return (IComparer<TT>)Column?.CreateComparer(typeof(TT), direction);
         }
     }
 }

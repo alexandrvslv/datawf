@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace DataWF.Common
@@ -10,7 +12,7 @@ namespace DataWF.Common
         IQueryParameter CreateParameter(Type type);
         QueryParameter<TT> CreateParameter<TT>();
 
-        InvokerComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending);
-        InvokerComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending);
+        IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending);
+        IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending);
     }
 }

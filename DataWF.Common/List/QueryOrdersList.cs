@@ -30,7 +30,7 @@ namespace DataWF.Common
             var comparer = (InvokerComparer<T>)null;
             if (invoker is IInvokerExtension invokerExtension)
             {
-                comparer = invokerExtension.CreateComparer<T>();
+                comparer = (InvokerComparer<T>)invokerExtension.CreateComparer<T>();
             }
             else
             {
