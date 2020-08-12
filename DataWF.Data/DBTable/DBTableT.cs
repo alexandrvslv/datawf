@@ -956,7 +956,7 @@ namespace DataWF.Data
                 && func.Type == QFunctionType.distinct
                 && func.Items.FirstOrDefault() is QItem item)
             {
-                return ListHelper.Distinct(list ?? items, item, param.Query?.GetComparer());
+                return ListHelper.Distinct(list ?? items, item, null);//param.Query?.GetComparer()
             }
             IEnumerable<T> buf = param.IsCompaund ? Select(param.Parameters, list) : null;
             if (buf == null)
