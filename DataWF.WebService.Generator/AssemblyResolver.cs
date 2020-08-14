@@ -19,6 +19,7 @@ namespace DataWF.WebService.Generator
         public AssemblyResolver(string path)
         {
             this.Assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
+
             this.dependencyContext = DependencyContext.Load(this.Assembly);
 
             this.assemblyResolver = new CompositeCompilationAssemblyResolver
@@ -31,6 +32,7 @@ namespace DataWF.WebService.Generator
 
             this.loadContext = AssemblyLoadContext.GetLoadContext(this.Assembly);
             this.loadContext.Resolving += OnResolving;
+
         }
 
         public Assembly Assembly { get; }
@@ -47,25 +49,96 @@ namespace DataWF.WebService.Generator
                 return string.Equals(runtime.Name, name.Name, StringComparison.OrdinalIgnoreCase);
             }
 
-            RuntimeLibrary library =
-                this.dependencyContext.RuntimeLibraries.FirstOrDefault(NamesMatch);
-            if (library != null)
+            try
             {
-                var wrapper = new CompilationLibrary(
-                    library.Type,
-                    library.Name,
-                    library.Version,
-                    library.Hash,
-                    library.RuntimeAssemblyGroups.SelectMany(g => g.AssetPaths),
-                    library.Dependencies,
-                    library.Serviceable);
-
-                var assemblies = new List<string>();
-                this.assemblyResolver.TryResolveAssemblyPaths(wrapper, assemblies);
-                if (assemblies.Count > 0)
+                RuntimeLibrary library =
+                this.dependencyContext.RuntimeLibraries.FirstOrDefault(NamesMatch);
+                if (library != null)
                 {
-                    return this.loadContext.LoadFromAssemblyPath(assemblies[0]);
+
+                    var wrapper = new CompilationLibrary(
+                        library.Type,
+                        library.Name,
+                        library.Version,
+                        library.Hash,
+                        library.RuntimeAssemblyGroups.SelectMany(g => g.AssetPaths),
+                        library.Dependencies,
+                        library.Serviceable);
+
+
+                    var assemblies = new List<string>();
+
+                    this.assemblyResolver.TryResolveAssemblyPaths(wrapper, assemblies);
+                    foreach (var assembly in assemblies)
+                    {
+
+                        SyntaxHelper.ConsoleInfo($"Try Resolving {name.Name} from {assembly}");
+                        var assemply = this.loadContext.LoadFromAssemblyPath(assembly);
+                        if (assemply != null)
+                        {
+                            return assemply;
+                        }
+                    }
+
                 }
+            }
+            catch (Exception ex)
+            {
+                SyntaxHelper.ConsoleWarning($"Fail Resolving {name.Name} from CompilationLibrary {ex.Message}");
+            }
+            string packagePath = null;
+            if (!string.IsNullOrEmpty(Assembly.Location))
+            {
+                packagePath = Path.Combine(Path.GetDirectoryName(Assembly.Location), name.Name + ".dll");
+                if (File.Exists(packagePath))
+                {
+                    SyntaxHelper.ConsoleInfo($"Try Resolving {name} from {packagePath}");
+                    var assembly = this.loadContext.LoadFromAssemblyPath(packagePath);
+                    if (assembly != null)
+                    {
+                        return assembly;
+                    }
+                }
+            }
+            packagePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $@".nuget\packages\{name.Name.ToLower()}");
+            if (Directory.Exists(packagePath))
+            {
+                var prevVersion = new Version(0, 0, 0, 0);
+                foreach (var versionPath in Directory.GetDirectories(packagePath))
+                {
+                    var versionName = Path.GetFileName(versionPath);
+                    if (Version.TryParse(versionName, out var version)
+                        && version > prevVersion)
+                    {
+                        prevVersion = version;
+                        packagePath = versionPath;
+                        if (version == name.Version)
+                        {
+                            break;
+                        }
+                    }
+                }
+                var netstandardPath = Path.Combine(packagePath, @"lib\netstandard2.1");
+                if (!Directory.Exists(netstandardPath))
+                {
+                    netstandardPath = Path.Combine(packagePath, @"lib\netstandard2.0");
+                }
+                if (!Directory.Exists(netstandardPath))
+                {
+                    netstandardPath = Path.Combine(packagePath, @"lib\netcoreapp3.1");
+                }
+                if (!Directory.Exists(netstandardPath))
+                {
+                    netstandardPath = Path.Combine(packagePath, @"lib\netcoreapp2.1");
+                }
+                packagePath = Path.Combine(netstandardPath, name.Name + ".dll");
+            }
+
+            if (!string.IsNullOrEmpty(packagePath)
+                && File.Exists(packagePath))
+            {
+                SyntaxHelper.ConsoleInfo($"Try Resolving {name} from {packagePath}");
+                return this.loadContext.LoadFromAssemblyPath(packagePath);
             }
 
             return null;

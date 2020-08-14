@@ -7,7 +7,7 @@
     <AssemblyName>dotnet-wscodegen</AssemblyName>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>wscodegen</ToolCommandName>
-    <VersionPrefix>1.5.7</VersionPrefix>
+    <VersionPrefix>1.6.7</VersionPrefix>
     <Authors>Alexandr</Authors>
     <PackageId>DataWF.WebService.Generator</PackageId>
     <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
@@ -21,6 +21,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="3.1.6" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.6.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.1.6" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.17.1" />
     <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="13.6.2" />
     <PackageReference Include="System.Text.Json" Version="4.7.2" />
   </ItemGroup>

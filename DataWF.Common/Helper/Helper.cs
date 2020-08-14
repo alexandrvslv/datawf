@@ -7,8 +7,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -528,29 +530,35 @@ namespace DataWF.Common
         }
 
         //http://www.cyberforum.ru/csharp-beginners/thread1797020.html
-        public static string Encrypt(string text, string key)
+        public static string Encrypt(string text, string key, int keySize = 2048)
         {
             if (string.IsNullOrEmpty(text))
                 return text;
-            using (var rsa = new System.Security.Cryptography.RSACryptoServiceProvider(2048))
+            using (var rsa = new System.Security.Cryptography.RSACryptoServiceProvider(keySize))
             {
                 rsa.ImportCspBlob(Convert.FromBase64String(key));
                 return Convert.ToBase64String(rsa.Encrypt(Encoding.UTF8.GetBytes(text), true));
             }
         }
 
-        public static string Decript(string text, string key)
+        public static string Decript(string text, string key, int keySize = 2048)
         {
             if (string.IsNullOrEmpty(text))
                 return text;
-            using (var rsa = new System.Security.Cryptography.RSACryptoServiceProvider(2048))
+            using (var rsa = new System.Security.Cryptography.RSACryptoServiceProvider(keySize))
             {
                 rsa.ImportCspBlob(Convert.FromBase64String(key));
                 return Encoding.UTF8.GetString(rsa.Decrypt(Convert.FromBase64String(text), true));
             }
         }
 
-
+        public static SecureString Hide(string text)
+        {
+            var securePassword = new SecureString();
+            foreach (char c in text)
+                securePassword.AppendChar(c);
+            return securePassword;
+        }
 
         public static byte GetAscii(char ichar)
         {

@@ -94,6 +94,7 @@ namespace DataWF.WebService.Generator
                 {
                     assembly = resolver.Assembly;
                     SyntaxHelper.ConsoleInfo($"Load Assembly {assembly} from {file}");
+                    _ = assembly.GetExportedTypes();
                 }
             }
             catch (Exception ex)
