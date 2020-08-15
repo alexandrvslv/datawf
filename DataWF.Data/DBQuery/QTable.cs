@@ -65,6 +65,10 @@ namespace DataWF.Data
             }
         }
 
+        public DBTable BaseTable
+        {
+            get => Table is IDBVirtualTable virtualTable ? virtualTable.BaseTable : Table;
+        }
 
         public override DBTable Table
         {

@@ -84,6 +84,11 @@ namespace DataWF.Data
             }
         }
 
+        public DBTable BaseTable
+        {
+            get => Table is IDBVirtualTable virtualTable ? virtualTable.BaseTable : Table;
+        }
+
         public override DBTable Table
         {
             get { return Column?.Table ?? base.Table; }
@@ -92,7 +97,7 @@ namespace DataWF.Data
 
         public QTable QTable
         {
-            get { return Query.Tables.FirstOrDefault(p => p.Table == Table); }
+            get { return Query.Tables.FirstOrDefault(p => p.BaseTable == BaseTable); }
         }
 
         public override void Dispose()
