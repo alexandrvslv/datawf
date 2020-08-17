@@ -857,7 +857,7 @@ namespace DataWF.Data
             {
                 var typeIndex = 0;
                 if (transaction.ReaderItemTypeKey >= 0)
-                    typeIndex = transaction.Reader.GetInt32(transaction.ReaderItemTypeKey);
+                    typeIndex = transaction.Reader.IsDBNull(transaction.ReaderItemTypeKey) ? 0 : transaction.Reader.GetInt32(transaction.ReaderItemTypeKey);
                 item = (T)NewItem(transaction.ReaderState, false, typeIndex);
             }
 
