@@ -626,7 +626,7 @@ namespace DataWF.Common
             foreach (var parameter in query.GetEnabled())
             {
                 var curParameter = parameter;
-                var temp = Select<T>(items, curParameter, indexes);
+                var temp = Select<T>(curParameter.Logic == LogicType.And ? buffer : items, curParameter, indexes);
                 if ((curParameter.Group & QueryGroup.Begin) == QueryGroup.Begin)
                 {
                     stack.Push(new SelectStackEntry<T>() { Buffer = temp, Parameter = curParameter });
