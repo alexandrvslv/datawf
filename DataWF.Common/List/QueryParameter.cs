@@ -95,7 +95,7 @@ namespace DataWF.Common
         {
             get
             {
-                return emptyFormat ? true : Comparer.Type != CompareTypes.Is 
+                return emptyFormat ? true : Comparer.Type != CompareTypes.Is
                     && Comparer.Type != CompareTypes.Distinct
                   && (Value == null || (Value is string strFilter && strFilter.Length == 0)
                   || string.IsNullOrEmpty(FormatValue(Value, Comparer)));
@@ -240,6 +240,11 @@ namespace DataWF.Common
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public override string ToString()
+        {
+            return $"{(IsEnabled ? "On" : "Off")} {Logic} {Name} {Comparer} {Value}";
         }
     }
 
