@@ -1257,7 +1257,7 @@ namespace DataWF.Common
             }
             else if (value is IEnumerable enumerable)
             {
-                result = string.Join(", ", enumerable.Cast<object>().Select(p => p.ToString()));
+                result = string.Join(", ", enumerable.Cast<object>().Select(p => p?.ToString()??"empty"));
             }
             else
             {
