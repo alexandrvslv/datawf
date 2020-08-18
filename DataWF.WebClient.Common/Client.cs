@@ -67,6 +67,7 @@ namespace DataWF.Common
 
         public override void ClearCache()
         {
+            IsSynchronized = false;
             Items.Clear();
             loadQueue.Clear();
             base.ClearCache();
