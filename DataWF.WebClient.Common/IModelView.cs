@@ -2,11 +2,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public interface IModelView : INotifyValidation
+    public interface IModelView : INotifyValidation, INotifyPropertyChanged
     {
         Type ItemType { get; }
         IClient BaseClient { get; }
@@ -21,6 +22,7 @@ namespace DataWF.Common
         ModelViewStatus Status { get; }
 
         event EventHandler<ModelViewEventArgs> SelectedItemChanged;
+        event EventHandler<ModelViewEventArgs> SelectedItemsChanged;
         event EventHandler<ModelViewEventArgs> Added;
         event EventHandler<ModelViewEventArgs> Removed;
 
