@@ -537,19 +537,27 @@ namespace DataWF.Data
             }
         }
 
-        public void RefreshSequence()
+        public void RefreshSequence(bool truncate = false)
         {
             using (var transaction = new DBTransaction(Connection))
             {
-                RefreshSequence(transaction);
+                RefreshSequence(transaction, truncate);
                 transaction.Commit();
             }
         }
 
-        public void RefreshSequence(DBTransaction transaction)
+        public void RefreshSequence(DBTransaction transaction, bool truncate = false)
         {
-            var current = transaction.ExecuteQuery($"select max({PrimaryKey.SqlName}) from {SqlName}");
-            Sequence.SetCurrent(current);
+            var maximum = DBSequence.Convert(transaction.ExecuteQuery($"select max({PrimaryKey.SqlName}) from {SqlName}"));
+            if (!truncate)
+            {
+                var current = Sequence.GetCurrent(transaction);
+                if (current >= maximum)
+                {
+                    return;
+                }
+            }
+            Sequence.SetCurrent(maximum);
             Sequence.NextInternal();
             Sequence.Save(transaction);
         }

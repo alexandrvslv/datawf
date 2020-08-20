@@ -146,8 +146,8 @@ namespace DataWF.Data
         IEnumerable<DBColumn> ParseColumns(ICollection<string> columns);
         DBColumn ParseProperty(string property);
         DBColumn ParseProperty(string property, ref DBColumn cache);
-        void RefreshSequence();
-        void RefreshSequence(DBTransaction transaction);
+        void RefreshSequence(bool truncate = false);
+        void RefreshSequence(DBTransaction transaction, bool truncate = false);
         void RejectChanges(IUserIdentity user);
         void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
         void RemoveView(IDBTableView view);

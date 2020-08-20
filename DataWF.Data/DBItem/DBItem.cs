@@ -1194,7 +1194,7 @@ namespace DataWF.Data
                 return;
             if (PrimaryId == null)
             {
-                PrimaryId = transaction != null ? Table.Sequence.Next(transaction) : Table.Sequence.Next();
+                PrimaryId = transaction != null ? Table.Sequence.GetNext(transaction) : Table.Sequence.GetNext();
             }
             else
             {

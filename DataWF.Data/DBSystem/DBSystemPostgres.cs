@@ -139,7 +139,7 @@ namespace DataWF.Data
 
         public override string SequenceCurrentValue(DBSequence sequence)
         {
-            return $"select currval('{sequence.Name}')";
+            return $"select last_value from {sequence.Name}";
         }
 
         public override string SequenceNextValue(DBSequence sequence)

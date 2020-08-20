@@ -29,9 +29,23 @@ namespace DataWF.Data
 {
     public class DBSequence : DBSchemaItem
     {
-        private string cacheQuery;
+        public static long Convert(object result)
+        {
+            return result == null || result == DBNull.Value ? 0 :
+                result is long longvalue ? longvalue :
+                result is int intValue ? (long)intValue :
+                result is short shortValue ? (short)shortValue :
+                result is decimal decimalValue ? (long)decimalValue :
+                result is double doubleValue ? (long)doubleValue :
+                result is float floatValue ? (long)floatValue :
+                long.Parse(result.ToString());
+        }
+
+
+        private string cacheNextQuery;
         private long current = 1;
         private int changed = 0;
+        private string cacheCurrentQuery;
 
         public DBSequence()
         { }
@@ -60,10 +74,10 @@ namespace DataWF.Data
         public int Scale { get; set; }
 
         [JsonIgnore, XmlIgnore]
-        public string NextQuery
-        {
-            get { return cacheQuery = cacheQuery ?? Schema.Connection.System.SequenceNextValue(this); }
-        }
+        public string NextQuery => cacheNextQuery = cacheNextQuery ?? Schema.Connection.System.SequenceNextValue(this);
+
+        [JsonIgnore, XmlIgnore]
+        public string CurrentQuery => cacheCurrentQuery = cacheCurrentQuery ?? Schema.Connection.System.SequenceCurrentValue(this);
 
         public override object Clone()
         {
@@ -94,13 +108,13 @@ namespace DataWF.Data
             return Interlocked.Add(ref current, Increment);
         }
 
-        public long Next()
+        public long GetNext()
         {
             using (var transaction = new DBTransaction(Schema.Connection))
             {
                 try
                 {
-                    var value = Next(transaction);
+                    var value = GetNext(transaction);
                     transaction.Commit();
                     return value;
                 }
@@ -113,13 +127,37 @@ namespace DataWF.Data
             }
         }
 
-        public long Next(DBTransaction transaction)
+        public long GetNext(DBTransaction transaction)
         {
             long result = 0;
-            result = ParseCurrent(transaction.ExecuteQuery(transaction.AddCommand(NextQuery)));
+            result = Convert(transaction.ExecuteQuery(transaction.AddCommand(NextQuery)));
             Interlocked.CompareExchange(ref current, result, current);
             Interlocked.CompareExchange(ref changed, 0, 1);
             return result;
+        }
+
+        public long GetCurrent()
+        {
+            using (var transaction = new DBTransaction(Schema.Connection))
+            {
+                try
+                {
+                    var value = GetCurrent(transaction);
+                    transaction.Commit();
+                    return value;
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                    throw ex;
+                }
+            }
+        }
+
+        public long GetCurrent(DBTransaction transaction)
+        {
+            return Convert(transaction.ExecuteQuery(transaction.AddCommand(CurrentQuery)));
         }
 
         private void Save()
@@ -147,21 +185,9 @@ namespace DataWF.Data
             transaction.ExecuteQuery(transaction.AddCommand(FormatSql(DDLType.Alter)));
         }
 
-        private static long ParseCurrent(object result)
-        {
-            return result == null || result == DBNull.Value ? 0 :
-                result is long longvalue ? longvalue :
-                result is int intValue ? (long)intValue :
-                result is short shortValue ? (short)shortValue :
-                result is decimal decimalValue ? (long)decimalValue :
-                result is double doubleValue ? (long)doubleValue :
-                result is float floatValue ? (long)floatValue :
-                long.Parse(result.ToString());
-        }
-
         public long SetCurrent(object result)
         {
-            long temp = ParseCurrent(result);
+            long temp = Convert(result);
             SetCurrent(temp);
             return temp;
         }
