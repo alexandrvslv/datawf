@@ -1466,6 +1466,8 @@ namespace DataWF.Data
                 item.UpdateState |= DBUpdateState.Delete;
                 foreach (DBColumn column in item.Table.Columns)
                 {
+                    if (column.ColumnType != DBColumnTypes.Default)
+                        continue;
                     if (GetValue(column) == null && item.GetValue(column) != null)
                     {
                         SetValue(item.GetValue(column), column);
