@@ -260,7 +260,7 @@ namespace DataWF.Common
             }
         }
 
-        private static async Task<string> ReadContentAsString(HttpResponseMessage response)
+        public static async Task<string> ReadContentAsString(HttpResponseMessage response)
         {
             if (response.Content == null)
                 return null;
@@ -274,7 +274,7 @@ namespace DataWF.Common
             }
         }
 
-        private static Stream GetEncodedStream(HttpResponseMessage response, Stream responseStream)
+        public static Stream GetEncodedStream(HttpResponseMessage response, Stream responseStream)
         {
             if (response.Content.Headers.TryGetValues("Content-Encoding", out var encodedBy))
             {
@@ -316,7 +316,7 @@ namespace DataWF.Common
             return headers;
         }
 
-        protected virtual HttpRequestMessage CreateRequest(ProgressToken progressToken,
+        public virtual HttpRequestMessage CreateRequest(ProgressToken progressToken,
             HttpMethod httpMethod,
             string commandUrl,
             string mediaType,
@@ -482,19 +482,13 @@ namespace DataWF.Common
 
         private void ErrorStatus(string message, HttpResponseMessage response, string responseData)
         {
-            throw new ClientException(message,
-                (int)response.StatusCode,
-                responseData,
-                GetHeaders(response), null);
+            throw new ClientException(message, (int)response.StatusCode, responseData, GetHeaders(response), null);
         }
 
         private void BadRequest(string message, HttpResponseMessage response)
         {
             message = message.Trim('\"').Replace("\\r", "\r").Replace("\\n", "\n");
-            throw new ClientException(message,
-                (int)response.StatusCode,
-                null,
-                GetHeaders(response), null);
+            throw new ClientException(message, (int)response.StatusCode, null, GetHeaders(response), null);
         }
 
         public virtual bool Add(object item)
