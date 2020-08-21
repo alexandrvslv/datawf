@@ -85,6 +85,7 @@ namespace DataWF.Data
                     nConnection.NoResetOnClose = true;
                 }
             }
+            nConnection.IncludeErrorDetails = true;
             nConnection.MaxPoolSize = 400;
             nConnection.ConnectionIdleLifetime = 200;
             nConnection.Timeout = 100;
