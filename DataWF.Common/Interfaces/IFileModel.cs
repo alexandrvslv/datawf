@@ -7,5 +7,6 @@ namespace DataWF.Common
         FileWatcher FileWatcher { get; set; }
         string FileName { get; set; }
         DateTime? FileLastWrite { get; set; }
+        uint Token { get; }
     }
 }

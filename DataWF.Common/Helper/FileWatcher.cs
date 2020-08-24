@@ -11,6 +11,7 @@ namespace DataWF.Common
         private bool isChanged;
         private FileWatcherService service;
         private bool disposed;
+        private IFileModel model;
 
         //https://stackoverflow.com/a/721743
         public FileWatcher(string filePath, IFileModel model, object modelView, bool enabled = true, FileWatcherService service = null)
@@ -22,42 +23,7 @@ namespace DataWF.Common
             Enabled = enabled;
         }
 
-        private void OnRenamed(object sender, RenamedEventArgs e)
-        {
-            Debug.WriteLine($"{e.OldFullPath} - {e.ChangeType}");
-            Service.OnRenamed(this, e);
-            //FilePath = e.FullPath;
-            //Watcher.Path = Path.GetDirectoryName(e.FullPath);
-            //Watcher.Filter = Path.GetFileName(e.FullPath);
-            OnChanged(sender, e);
-        }
-
-        private void OnDeleted(object sender, FileSystemEventArgs e)
-        {
-            Debug.WriteLine($"{e.FullPath} - {e.ChangeType}");
-            //Dispose();
-        }
-
-        private void OnChanged(object sender, FileSystemEventArgs e)
-        {
-            Debug.WriteLine($"{e.FullPath} - {e.ChangeType}");
-            IsChanged = true;
-            Service.OnChanged(this, e);
-        }
-
-        public void Dispose()
-        {
-            if (!disposed)
-            {
-                Watcher?.Dispose();
-                disposed = true;
-                Service.OnDeleted(this, EventArgs.Empty);
-            }
-        }
-
         public string FilePath { get; set; }
-
-        public DateTime GetLastWrite() => File.GetLastWriteTimeUtc(FilePath);
 
         public FileSystemWatcher Watcher { get; private set; }
 
@@ -107,7 +73,17 @@ namespace DataWF.Common
             }
         }
 
-        public IFileModel Model { get; set; }
+        public IFileModel Model
+        {
+            get => model;
+            set
+            {
+                model = value;
+                ModelToken = model?.Token ?? 0;
+            }
+        }
+
+        public uint ModelToken { get; private set; }
 
         public object ModelView { get; }
 
@@ -145,6 +121,41 @@ namespace DataWF.Common
         public FileWatcherService Service { get => service; set => service = value; }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnRenamed(object sender, RenamedEventArgs e)
+        {
+            Debug.WriteLine($"{e.OldFullPath} - {e.ChangeType}");
+            Service.OnRenamed(this, e);
+            //FilePath = e.FullPath;
+            //Watcher.Path = Path.GetDirectoryName(e.FullPath);
+            //Watcher.Filter = Path.GetFileName(e.FullPath);
+            OnChanged(sender, e);
+        }
+
+        private void OnDeleted(object sender, FileSystemEventArgs e)
+        {
+            Debug.WriteLine($"{e.FullPath} - {e.ChangeType}");
+            //Dispose();
+        }
+
+        private void OnChanged(object sender, FileSystemEventArgs e)
+        {
+            Debug.WriteLine($"{e.FullPath} - {e.ChangeType}");
+            IsChanged = true;
+            Service.OnChanged(this, e);
+        }
+
+        public void Dispose()
+        {
+            if (!disposed)
+            {
+                Watcher?.Dispose();
+                disposed = true;
+                Service.OnDeleted(this, EventArgs.Empty);
+            }
+        }
+
+        public DateTime GetLastWrite() => File.GetLastWriteTimeUtc(FilePath);
 
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

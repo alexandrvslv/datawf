@@ -112,7 +112,7 @@ namespace DataWF.Common
         string GetFilePath(IFileModel model);
         Task<Stream> DownloadFileAsync(object id, ProgressToken progressToken);
         Task<Stream> DownloadFilesAsync(IEnumerable ids, ProgressToken progressToken);
-        Task<string> UploadFileAsync(object id, Stream file, ProgressToken progressToken);
+        Task<object> UploadFileAsync(object id, Stream file, ProgressToken progressToken);
     }
 
     public interface ILoggedFileClient : IFileClient

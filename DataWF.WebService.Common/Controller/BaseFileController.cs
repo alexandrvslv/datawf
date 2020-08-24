@@ -125,7 +125,7 @@ namespace DataWF.WebService.Common
         [DisableFormValueModelBinding]
         [DisableRequestSizeLimit]
         [Obsolete("Use UploadFile(id)")]
-        public async Task<ActionResult> UploadFile([FromRoute] K id, [FromRoute] string fileName)
+        public async Task<ActionResult<T>> UploadFile([FromRoute] K id, [FromRoute] string fileName)
         {
             if (table.FileNameKey == null)
             {
@@ -161,7 +161,7 @@ namespace DataWF.WebService.Common
 
                         if (table.FileLastWriteKey != null)
                         {
-                            item.SetValue<DateTime?>(upload.ModificationDate, table.FileLastWriteKey);
+                            item.SetValueNullable<DateTime>(upload.ModificationDate, table.FileLastWriteKey);
                         }
 
                         if (table.FileLOBKey != null)
@@ -174,7 +174,7 @@ namespace DataWF.WebService.Common
                         }
                         transaction.Commit();
                     }
-                    return Ok();
+                    return item;
                 }
                 catch (Exception ex)
                 {
@@ -187,7 +187,7 @@ namespace DataWF.WebService.Common
         [HttpPost("UploadFile/{id}")]
         [DisableFormValueModelBinding]
         [DisableRequestSizeLimit]
-        public virtual async Task<ActionResult> UploadFile([FromRoute] K id)
+        public virtual async Task<ActionResult<T>> UploadFile([FromRoute] K id)
         {
             if (table.FileNameKey == null)
             {
@@ -222,7 +222,7 @@ namespace DataWF.WebService.Common
 
                         if (table.FileLastWriteKey != null)
                         {
-                            item.SetValue<DateTime?>(upload.ModificationDate, table.FileLastWriteKey);
+                            item.SetValueNullable<DateTime>(upload.ModificationDate, table.FileLastWriteKey);
                         }
 
                         if (table.FileLOBKey != null)
@@ -235,7 +235,7 @@ namespace DataWF.WebService.Common
                         }
                         transaction.Commit();
                     }
-                    return Ok();
+                    return item;
                 }
                 catch (Exception ex)
                 {
