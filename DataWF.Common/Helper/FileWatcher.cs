@@ -83,7 +83,7 @@ namespace DataWF.Common
             }
         }
 
-        public uint ModelToken { get; private set; }
+        public uint ModelToken { get; set; }
 
         public object ModelView { get; }
 
@@ -176,6 +176,15 @@ namespace DataWF.Common
             }
         }
 
+        public void Remove()
+        {
+            if (File.Exists(FilePath))
+            {
+                Enabled = false;
+                File.Delete(FilePath);
+            }
+        }
+
         public virtual FileStream OpenRead()
         {
             return new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -185,5 +194,7 @@ namespace DataWF.Common
         {
             return new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
         }
+
+
     }
 }

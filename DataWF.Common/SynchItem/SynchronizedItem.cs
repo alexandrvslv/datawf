@@ -18,7 +18,7 @@ namespace DataWF.Common
 
     public abstract class SynchronizedItem : DefaultItem, ISynchronized
     {
-        private SynchronizedStatus syncStatus = SynchronizedStatus.New;
+        protected SynchronizedStatus syncStatus = SynchronizedStatus.New;
 
         [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore, Browsable(false)]
         public IDictionary<string, object> Changes { get; } = new Dictionary<string, object>(StringComparer.Ordinal);

@@ -7,8 +7,8 @@ namespace DataWF.Common
     {
         IFileLaunch Launcher { get; }
         IFileClient FileClient { get; }
-        Task<string> SilentDownload(IFileModel item);
-        Task<string> Download(IFileModel item);
+        Task<FileWatcher> SilentDownload(IFileModel item);
+        Task<FileWatcher> Download(IFileModel item);
         Task<bool> Edit(IFileModel item);
         Task<Stream> Open(IFileModel item);
         Task<object> Save(IFileModel item);

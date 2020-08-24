@@ -132,22 +132,7 @@ namespace DataWF.Common
                                             var headers = GetHeaders(response);
                                             (string fileName, int fileSize) = GetFileInfo(headers);
                                             var filePath = GetFilePath(fileName, request.RequestUri);
-                                            var fileStream = (FileStream)null;
-                                            try
-                                            {
-                                                fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-                                            }
-                                            catch (IOException ioex)
-                                            {
-                                                if (ioex.HResult == -2147024864)
-                                                {
-                                                    throw new Exception($"File {fileName} is already open!\r\nPlease close the application that is blocking the file.\r\n And try to download again.");
-                                                }
-                                                else
-                                                {
-                                                    throw ioex;
-                                                }
-                                            }
+                                            var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                                             var process = new CopyProcess(CopyProcessCategory.Download);
                                             if (progressToken != ProgressToken.None)
                                             {
