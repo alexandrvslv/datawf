@@ -9,6 +9,7 @@ namespace DataWF.Common
         IFileClient FileClient { get; }
         Task<FileWatcher> SilentDownload(IFileModel item);
         Task<FileWatcher> Download(IFileModel item);
+        Task Launch(IFileModel item);
         Task<bool> Edit(IFileModel item);
         Task<Stream> Open(IFileModel item);
         Task<object> Save(IFileModel item);
