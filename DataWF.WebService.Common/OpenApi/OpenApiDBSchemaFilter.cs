@@ -200,7 +200,8 @@ namespace DataWF.WebService.Common
 
         private void ApplyTableProperties(OpenApiSchema schema, Type type, SchemaFilterContext context, TableGenerator table)
         {
-            foreach (var column in table.Columns.Where(p => p.PropertyInfo?.GetGetMethod()?.GetBaseDefinition()?.DeclaringType == type))
+            foreach (var column in table.Columns.Where(p => p.PropertyInfo?.GetGetMethod()?.GetBaseDefinition()?.DeclaringType == type
+                                                         && !TypeHelper.IsNonSerialize(p.PropertyInfo)))
             {
                 var propertyType = TypeHelper.CheckNullable(column.PropertyInfo.PropertyType);
                 if ((column.Attribute.Keys & DBColumnKeys.Access) != 0
@@ -223,13 +224,15 @@ namespace DataWF.WebService.Common
                 }
             }
             foreach (var column in table.Columns.Where(p => p.ReferencePropertyInfo?.GetGetMethod()?.GetBaseDefinition().DeclaringType == type
-                                                         && p.PropertyInfo?.GetGetMethod()?.GetBaseDefinition()?.DeclaringType != type))
+                                                         && p.PropertyInfo?.GetGetMethod()?.GetBaseDefinition()?.DeclaringType != type
+                                                         && !TypeHelper.IsNonSerialize(p.ReferencePropertyInfo)))
             {
                 GenerateReferenceProperty(schema, context, column);
             }
             if (table.Referencings != null)
             {
-                foreach (var refing in table.Referencings.Where(p => p.PropertyInfo.DeclaringType == type))
+                foreach (var refing in table.Referencings.Where(p => p.PropertyInfo.DeclaringType == type
+                                                                  && !TypeHelper.IsNonSerialize(p.PropertyInfo)))
                 {
                     var refingPropertyType = refing.PropertyInfo.PropertyType;
                     var itemType = TypeHelper.GetItemType(refing.PropertyInfo.PropertyType);

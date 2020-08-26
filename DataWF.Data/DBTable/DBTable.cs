@@ -499,6 +499,7 @@ namespace DataWF.Data
             return column.Property != null
                 && column.PropertyInvoker != null && column.PropertyInvoker != column
                 && column.PropertyInvoker.TargetType.IsAssignableFrom(type)
+                && !TypeHelper.IsNonSerialize(column.PropertyInfo)
                 //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
                 && (column.Keys & DBColumnKeys.Stamp) != DBColumnKeys.Stamp
                 && (column.Keys & DBColumnKeys.Password) != DBColumnKeys.Password
@@ -1527,7 +1528,8 @@ namespace DataWF.Data
                 {
                     foreach (var refing in Generator.Referencings)
                     {
-                        if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(type))
+                        if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(type)
+                            || TypeHelper.IsNonSerialize(refing.PropertyInfo))
                             continue;
                         refingInvokers.Add((IInvokerJson)refing.PropertyInvoker);
                     }

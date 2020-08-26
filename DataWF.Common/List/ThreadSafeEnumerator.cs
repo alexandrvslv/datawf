@@ -21,7 +21,7 @@ namespace DataWF.Common
     {
         private int i;
         private readonly int count;
-        private IList<T> items;
+        private readonly IList<T> items;
         private T current;
 
         public ThreadSafeEnumerator(IList<T> items)
@@ -43,7 +43,6 @@ namespace DataWF.Common
         public void Dispose()
         {
             Current = default(T);
-            items = null;
             i = -1;
         }
 
