@@ -62,6 +62,7 @@ namespace DataWF.Common
         Task<object> GetAsync(object id);
         Task<object> CopyAsync(object id);
         Task<object> PostAsync(object value);
+        Task<IList> PostPackageAsync(IList value);
         Task<object> PutAsync(object value);
         Task<object> MergeAsync(object id, List<string> ids);
         object NewItem();
@@ -82,6 +83,7 @@ namespace DataWF.Common
         Task<T> GetAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> CopyAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> PostAsync(T value, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<List<T>> PostPackageAsync(List<T> value, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> PutAsync(T value, HttpJsonSettings settings, ProgressToken progressToken);
         Task<bool> DeleteAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> MergeAsync(T value, List<string> ids, HttpJsonSettings settings, ProgressToken progressToken);

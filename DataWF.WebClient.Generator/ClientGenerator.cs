@@ -22,6 +22,7 @@ namespace DataWF.WebClient.Generator
             "GetAsync",
             "PutAsync",
             "PostAsync",
+            "PostPackageAsync",
             "SearchAsync",
             "DeleteAsync",
             "CopyAsync",

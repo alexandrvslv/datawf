@@ -418,6 +418,10 @@ namespace DataWF.Common
 
         public async Task<object> PostAsync(object value) => await PostAsync((T)value, HttpJsonSettings.Default, ProgressToken.None);
 
+        public virtual Task<List<T>> PostPackageAsync(List<T> value, HttpJsonSettings json, ProgressToken progressToken) => Task.FromResult(value);
+
+        public async Task<IList> PostPackageAsync(IList value) => await PostPackageAsync((List<T>)value, HttpJsonSettings.Default, ProgressToken.None);
+
         public virtual Task<bool> DeleteAsync(K id, HttpJsonSettings json, ProgressToken progressToken) => Task.FromResult(true);
 
         public Task<bool> DeleteAsync(object id, HttpJsonSettings json, ProgressToken progressToken) => DeleteAsync((K)id, json, progressToken);

@@ -238,7 +238,7 @@ namespace DataWF.WebService.Common
             }
         }
 
-        [HttpPost("Package")]
+        [HttpPost("PostPackage")]
         public async Task<ActionResult<IEnumerable<T>>> PostPackage([FromBody] List<T> values)
         {
             using (var transaction = new DBTransaction(table.Connection, CurrentUser))
