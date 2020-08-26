@@ -123,6 +123,19 @@ namespace DataWF.Common
                                 {
                                     synched.SyncStatus = SynchronizedStatus.Load;
                                 }
+                                if (value is IList list && value.GetType() == typeof(R))
+                                {
+                                    foreach (var synchedItem in list.OfType<ISynchronized>())
+                                    {
+                                        synchedItem.SyncStatus = SynchronizedStatus.Load;
+                                    }
+                                }
+                                if (value is IFileModel fileModel
+                                    && (fileModel.FileWatcher?.IsChanged ?? false)
+                                    && request.Content is MultipartFormDataContent)
+                                {
+                                    fileModel.FileWatcher.IsChanged = false;
+                                }
                                 using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                 {
                                     using (var encodedStream = GetEncodedStream(response, responseStream))
@@ -222,7 +235,7 @@ namespace DataWF.Common
 
         private static void ReadPageSettings(HttpResponseMessage response, HttpPageSettings pages)
         {
-            IEnumerable<string> values = null;
+            IEnumerable<string> values;
             if (response.Headers.TryGetValues(HttpPageSettings.XListCount, out values)
                 && int.TryParse(values.FirstOrDefault(), out var countValue))
             {
@@ -355,10 +368,8 @@ namespace DataWF.Common
             }
             else if (value != null)
             {
-                Validation(value);
                 string text;
 #if NETSTANDARD2_0
-
                 var serializer = Newtonsoft.Json.JsonSerializer.Create(Provider.JsonSettings);
                 using (var writer = new StringWriter())
                 using (var jwriter = new Newtonsoft.Json.JsonTextWriter(writer))
@@ -381,7 +392,28 @@ namespace DataWF.Common
                     SystemJsonConverterFactory.WriterContexts.TryRemove(jwriter, out _);
                 }
 #endif
-                request.Content = new StringContent(text, Encoding.UTF8, "application/json");
+                if (value is IFileModel fileModel
+                    && commandUrl.IndexOf("UploadFileModel", StringComparison.OrdinalIgnoreCase) > -1)
+                {
+                    var content = new MultipartFormDataContent();
+
+                    var fileStream = fileModel.FileWatcher?.IsChanged ?? false ? fileModel.FileWatcher.OpenRead() : null;
+                    if (fileStream != null)
+                    {
+                        fileModel.FileLastWrite = File.GetLastWriteTimeUtc(fileStream.Name);
+                    }
+                    content.Add(new StringContent(text, Encoding.UTF8, "application/json"), "Model");
+                    if (fileStream != null)
+                    {
+                        var fileName = Path.GetFileName(fileStream.Name);
+                        content.Add(new ProgressStreamContent(progressToken, fileStream, 81920), Path.GetFileNameWithoutExtension(fileName), fileName);
+                    }
+                    request.Content = content;
+                }
+                else
+                {
+                    request.Content = new StringContent(text, Encoding.UTF8, "application/json");
+                }
             }
             if (request.Method == HttpMethod.Get)
             {
@@ -436,9 +468,9 @@ namespace DataWF.Common
             {
                 return EnumItem.Format(value);
             }
-            else if (value is byte[])
+            else if (value is byte[] bytes)
             {
-                return Convert.ToBase64String((byte[])value);
+                return Convert.ToBase64String(bytes);
             }
             else if (TypeHelper.IsEnumerable(value.GetType()))
             {

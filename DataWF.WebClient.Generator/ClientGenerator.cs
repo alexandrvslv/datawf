@@ -110,7 +110,7 @@ namespace DataWF.WebClient.Generator
 
         private Assembly OnDefaultResolving(AssemblyLoadContext arg1, AssemblyName arg2)
         {
-            string packagePath = null;
+            string packagePath;
             if (!string.IsNullOrEmpty(lastReferenceDirectory))
             {
                 packagePath = Path.Combine(lastReferenceDirectory, arg2.Name + ".dll");
@@ -616,7 +616,7 @@ namespace DataWF.WebClient.Generator
         {
             if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-type-id", out var id))
             {
-                return id is int ? (int)id
+                return id is int intKey ? intKey
                     : id is string stringKey && int.TryParse(stringKey, out var typeid) ? typeid
                     : Convert.ToInt32(id);
             }
@@ -700,7 +700,7 @@ namespace DataWF.WebClient.Generator
         {
             var operationName = GetOperationName(descriptor, out var clientName);
             var actualName = $"{operationName}Async";
-            var baseType = GetClientBaseType(clientName, usings, out var id, out var typeKey, out var typeId);
+            var baseType = GetClientBaseType(clientName, usings, out _, out _, out _);
             var isOverride = baseType != "ClientBase" && VirtualOperations.Contains(actualName);
             var returnType = GetReturningTypeCheck(descriptor, operationName, usings);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
@@ -813,7 +813,7 @@ namespace DataWF.WebClient.Generator
             }
             requestBuilder.Append(").ConfigureAwait(false);");
 
-            yield return SF.ParseStatement($"return {requestBuilder.ToString()}");
+            yield return SF.ParseStatement($"return {requestBuilder}");
         }
 
         private IEnumerable<ParameterSyntax> GenOperationParameter(OpenApiOperationDescription descriptor, Dictionary<string, UsingDirectiveSyntax> usings)
@@ -911,7 +911,7 @@ namespace DataWF.WebClient.Generator
                                     var defiProperties = definition.Properties.Keys.Select(p => p.ToLower());
                                     var typeProperties = parsedType.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance).Select(p => p.Name.ToLower());
                                     var percent = (float)defiProperties.Intersect(typeProperties).Count();
-                                    percent = percent / (float)defiProperties.Count();
+                                    percent /= (float)defiProperties.Count();
                                     if (percent > 0.5f)
                                     {
                                         type = parsedType;
@@ -957,7 +957,7 @@ namespace DataWF.WebClient.Generator
 
         private IEnumerable<AttributeListSyntax> GenDefinitionEnumAttributes(JsonSchema schema)
         {
-            if (schema.ExtensionData?.TryGetValue("x-flags", out var flags) ?? false)
+            if (schema.ExtensionData?.TryGetValue("x-flags", out _) ?? false)
             {
                 yield return SyntaxHelper.GenAttributeList("Flags");
             }
@@ -965,12 +965,12 @@ namespace DataWF.WebClient.Generator
 
         private IEnumerable<EnumMemberDeclarationSyntax> GenDefinitionEnumMemebers(JsonSchema schema)
         {
-            object[] names = null;
-            if (schema.ExtensionData != null
-                && schema.ExtensionData.TryGetValue("x-enumNames", out var enumNames))
-            {
-                names = (object[])enumNames;
-            }
+            //object[] names = null;
+            //if (schema.ExtensionData != null
+            //    && schema.ExtensionData.TryGetValue("x-enumNames", out var enumNames))
+            //{
+            //    names = (object[])enumNames;
+            //}
             object[] members = null;
             if (schema.ExtensionData != null
                 && schema.ExtensionData.TryGetValue("x-enumMembers", out var enumMembers))
@@ -978,7 +978,7 @@ namespace DataWF.WebClient.Generator
                 members = (object[])enumMembers;
             }
             int i = 0;
-            var definitionName = GetDefinitionName(schema);
+            //var definitionName = GetDefinitionName(schema);
             foreach (var item in schema.Enumeration)
             {
                 var sitem = schema.EnumerationNames[i];
@@ -1459,8 +1459,7 @@ namespace DataWF.WebClient.Generator
                 }
                 yield return SF.ParseStatement($"var temp = {GetFieldName(property)};");
                 yield return SF.ParseStatement($"{GetFieldName(property)} = value;");
-                var refPropertyName = (object)null;
-                if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out refPropertyName))
+                if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var refPropertyName))
                 {
                     var idProperty = GetPrimaryKey(property.Reference ?? property.AllOf.FirstOrDefault()?.Reference ?? property.AnyOf.FirstOrDefault()?.Reference);
                     yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)};");
@@ -1677,8 +1676,8 @@ namespace DataWF.WebClient.Generator
                     }
                     else if (schema is JsonSchemaProperty propertySchema)
                     {
-                        return GetTypeString(schema.AllOf.FirstOrDefault()?.Reference
-                            ?? schema.AnyOf.FirstOrDefault()?.Reference, nullable, usings, listType);
+                        return GetTypeString(propertySchema.AllOf.FirstOrDefault()?.Reference
+                            ?? propertySchema.AnyOf.FirstOrDefault()?.Reference, nullable, usings, listType);
                     }
                     else
                     {
@@ -1704,8 +1703,8 @@ namespace DataWF.WebClient.Generator
                     }
                     else if (schema.Properties.ContainsKey("file"))
                     {
-                        SyntaxHelper.AddUsing("System.IO", usings);
-                        return "Stream";
+                        //SyntaxHelper.AddUsing("System.IO", usings);
+                        return "object";
                     }
                     break;
                 case JsonObjectType.File:

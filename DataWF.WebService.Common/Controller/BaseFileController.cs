@@ -121,11 +121,10 @@ namespace DataWF.WebService.Common
             return (stream, fileName);
         }
 
-        [HttpPost("UploadFile/{id}/{fileName}")]
+        [HttpPost("UploadFileModel")]
         [DisableFormValueModelBinding]
         [DisableRequestSizeLimit]
-        [Obsolete("Use UploadFile(id)")]
-        public async Task<ActionResult<T>> UploadFile([FromRoute] K id, [FromRoute] string fileName)
+        public virtual async Task<ActionResult<T>> UploadFileModel()
         {
             if (table.FileNameKey == null)
             {
@@ -139,42 +138,48 @@ namespace DataWF.WebService.Common
             {
                 try
                 {
-                    var item = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
-                    if (item == null)
-                    {
-                        return NotFound();
-                    }
-                    if (!(item.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true)
-                        && !(item.Access?.GetFlag(AccessType.Create, transaction.Caller) ?? true))
-                    {
-                        return Forbid();
-                    }
-
                     var upload = await Upload();
                     if (upload != null)
                     {
-                        if (string.IsNullOrEmpty(fileName) && !string.IsNullOrEmpty(upload.FileName))
+                        var item = upload.Model as T;
+                        if (item == null)
                         {
-                            fileName = upload.FileName;
+                            return NotFound();
                         }
-                        item.SetValue(fileName, table.FileNameKey);
+                        if (IsDenied(item, transaction.Caller))
+                        {
+                            item.Reject(transaction.Caller);
+                            return Forbid();
+                        }
 
-                        if (table.FileLastWriteKey != null)
+                        if (string.IsNullOrEmpty(item.GetValue<string>(table.FileNameKey)))
+                        {
+                            item.SetValue(upload.FileName, table.FileNameKey);
+                        }
+
+                        if (table.FileLastWriteKey != null && upload.ModificationDate != null)
                         {
                             item.SetValueNullable<DateTime>(upload.ModificationDate, table.FileLastWriteKey);
                         }
-
-                        if (table.FileLOBKey != null)
+                        if (upload.Stream != null)
                         {
-                            await item.SetLOB(upload.Stream, table.FileLOBKey, transaction);
+                            if (table.FileLOBKey != null)
+                            {
+                                await item.SetLOB(upload.Stream, table.FileLOBKey, transaction);
+                            }
+                            else if (table.FileKey != null)
+                            {
+                                await item.SetStream(upload.Stream, table.FileKey, transaction);
+                            }
                         }
-                        else if (table.FileKey != null)
+                        else
                         {
-                            await item.SetStream(upload.Stream, table.FileKey, transaction);
+                            await item.Save(transaction);
                         }
                         transaction.Commit();
+                        return item;
                     }
-                    return item;
+                    return BadRequest("Expect mutipart request name=file");
                 }
                 catch (Exception ex)
                 {
@@ -206,8 +211,7 @@ namespace DataWF.WebService.Common
                     {
                         return NotFound();
                     }
-                    if (!(item.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true)
-                        && !(item.Access?.GetFlag(AccessType.Create, transaction.Caller) ?? true))
+                    if (IsDenied(item, transaction.Caller))
                     {
                         return Forbid();
                     }
@@ -222,7 +226,7 @@ namespace DataWF.WebService.Common
 
                         if (table.FileLastWriteKey != null)
                         {
-                            item.SetValueNullable<DateTime>(upload.ModificationDate, table.FileLastWriteKey);
+                            item.SetValueNullable<DateTime>(upload.ModificationDate ?? DateTime.UtcNow, table.FileLastWriteKey);
                         }
 
                         if (table.FileLOBKey != null)

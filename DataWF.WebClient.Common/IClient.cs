@@ -115,6 +115,7 @@ namespace DataWF.Common
         Task<Stream> DownloadFileAsync(object id, ProgressToken progressToken);
         Task<Stream> DownloadFilesAsync(IEnumerable ids, ProgressToken progressToken);
         Task<object> UploadFileAsync(object id, Stream file, ProgressToken progressToken);
+        Task<object> UploadFileModelAsync(object model, ProgressToken progressToken);
     }
 
     public interface ILoggedFileClient : IFileClient

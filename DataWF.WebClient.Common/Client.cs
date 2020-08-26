@@ -18,8 +18,8 @@ namespace DataWF.Common
         where K : struct
     {
         private readonly ConcurrentDictionary<K, T> downloads;
+        private readonly ConcurrentDictionary<string, LoadProgress<T>> loadQueue = new ConcurrentDictionary<string, LoadProgress<T>>(StringComparer.OrdinalIgnoreCase);
         private ICrudClient baseClient;
-        private ConcurrentDictionary<string, LoadProgress<T>> loadQueue = new ConcurrentDictionary<string, LoadProgress<T>>(StringComparer.OrdinalIgnoreCase);
         private SemaphoreSlim getActionSemaphore;
 
         public Client(Invoker<T, K?> idInvoker, Invoker<T, int?> typeInvoker, int typeId = 0)
@@ -98,9 +98,9 @@ namespace DataWF.Common
 
         public object AddDownloads(object id, object item)
         {
-            if (item is T)
+            if (item is T typed)
             {
-                return AddDownloads((K)id, (T)item);
+                return AddDownloads((K)id, typed);
             }
             else
             {

@@ -14,6 +14,6 @@ namespace DataWF.Common
         Task<Stream> Open(IFileModel item);
         Task<object> Save(IFileModel item);
         Task<object> SaveAs(IFileModel item);
-        Task<bool> Upload(IFileModel item);
+        Task<object> Upload(IFileModel item);
     }
 }

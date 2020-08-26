@@ -13,6 +13,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,7 +24,7 @@ namespace DataWF.WebService.Common
     [LoggerAndFormatter]
     public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
     {
-        private static bool IsDenied(T value, IUserIdentity user)
+        protected static bool IsDenied(T value, IUserIdentity user)
         {
             if (value.Access.GetFlag(AccessType.Admin, user))
                 return false;
@@ -476,36 +477,34 @@ namespace DataWF.WebService.Common
         protected async Task<UploadModel> Upload()
         {
             var formOptions = new FormOptions();
-            var result = new UploadModel() { ModificationDate = DateTime.UtcNow };
-            var formAccumulator = new KeyValueAccumulator();
-            var boundary = MultipartRequestHelper.GetBoundary(
-                MediaTypeHeaderValue.Parse(Request.ContentType),
-                formOptions.MultipartBoundaryLengthLimit);
-            var reader = new MultipartReader(boundary, HttpContext.Request.Body);
+            var result = new UploadModel();
+            result.Boundary = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), formOptions.MultipartBoundaryLengthLimit);
+            var reader = new MultipartReader(result.Boundary, HttpContext.Request.Body);
             var section = (MultipartSection)null;
             while ((section = await reader.ReadNextSectionAsync()) != null)
             {
                 if (ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
                 {
-                    if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
+                    if (MultipartRequestHelper.HasFile(contentDisposition))
                     {
                         result.FileName = contentDisposition.FileName.ToString();
                         result.Stream = section.Body;
                         return result;
                     }
-                    else if (MultipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
+                    else if (MultipartRequestHelper.HasModel(contentDisposition))
                     {
-                        // Content-Disposition: form-data; name="key"
-                        // Do not limit the key name length here because the 
-                        // multipart headers length limit is already in effect.
+                        using (var factory = new DBItemConverterFactory(HttpContext))
+                        {
+                            var option = new JsonSerializerOptions();
+                            option.InitDefaults(factory);
+                            result.Model = await JsonSerializer.DeserializeAsync<T>(section.Body, option);
+                        }
+                    }
+                    else if (MultipartRequestHelper.HasFormData(contentDisposition))
+                    {
                         var key = HeaderUtilities.RemoveQuotes(contentDisposition.Name);
-                        var encoding = GetEncoding(section);
-                        using (var streamReader = new StreamReader(
-                            section.Body,
-                            encoding,
-                            detectEncodingFromByteOrderMarks: true,
-                            bufferSize: 2048,
-                            leaveOpen: true))
+                        var encoding = MultipartRequestHelper.GetEncoding(section);
+                        using (var streamReader = new StreamReader(section.Body, encoding, detectEncodingFromByteOrderMarks: true, bufferSize: 2048, leaveOpen: true))
                         {
                             // The value length limit is enforced by MultipartBodyLengthLimit
                             var value = await streamReader.ReadToEndAsync();
@@ -518,11 +517,9 @@ namespace DataWF.WebService.Common
                             {
                                 result.ModificationDate = lastWriteTime;
                             }
-                            formAccumulator.Append(key.ToString(), value);
-
-                            if (formAccumulator.ValueCount > formOptions.ValueCountLimit)
+                            else
                             {
-                                throw new InvalidDataException($"Form key count limit {formOptions.ValueCountLimit} exceeded.");
+                                result.Content[key.ToString()] = value;
                             }
                         }
                     }
@@ -533,86 +530,24 @@ namespace DataWF.WebService.Common
 
         protected async Task<UploadModel> Upload(bool inMemory)
         {
-            var formOptions = new FormOptions();
-            var formAccumulator = new KeyValueAccumulator();
-            var result = new UploadModel();
-
-            var boundary = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), formOptions.MultipartBoundaryLengthLimit);
-            var reader = new MultipartReader(boundary, HttpContext.Request.Body);
-
-            var section = (MultipartSection)null;
-            while ((section = await reader.ReadNextSectionAsync()) != null)
+            var result = await Upload();
+            var stream = result.Stream;
+            if (inMemory)
             {
-                if (ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
-                {
-                    if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
-                    {
-                        result.FileName = contentDisposition.FileName.ToString();
-                        if (inMemory)
-                        {
-                            result.Stream = new MemoryStream();
-                        }
-                        else
-                        {
-                            result.FilePath = Path.GetTempFileName();
-                            result.Stream = System.IO.File.Create(result.FilePath);
-                        }
-                        await section.Body.CopyToAsync(result.Stream);
-                        await result.Stream.FlushAsync();
-                    }
-                    else if (MultipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
-                    {
-                        // Content-Disposition: form-data; name="key"
-                        //
-                        // value
-
-                        // Do not limit the key name length here because the 
-                        // multipart headers length limit is already in effect.
-                        var key = HeaderUtilities.RemoveQuotes(contentDisposition.Name);
-                        var encoding = GetEncoding(section);
-                        using (var streamReader = new StreamReader(
-                            section.Body,
-                            encoding,
-                            detectEncodingFromByteOrderMarks: true,
-                            bufferSize: 2048,
-                            leaveOpen: true))
-                        {
-                            // The value length limit is enforced by MultipartBodyLengthLimit
-                            var value = await streamReader.ReadToEndAsync();
-                            if (String.Equals(value, "undefined", StringComparison.OrdinalIgnoreCase))
-                            {
-                                value = String.Empty;
-                            }
-                            formAccumulator.Append(key.ToString(), value);
-
-                            if (formAccumulator.ValueCount > formOptions.ValueCountLimit)
-                            {
-                                throw new InvalidDataException($"Form key count limit {formOptions.ValueCountLimit} exceeded.");
-                            }
-                        }
-                    }
-                }
+                result.Stream = new MemoryStream();
             }
+            else
+            {
+                result.FilePath = Path.GetTempFileName();
+                result.Stream = System.IO.File.Create(result.FilePath);
+            }
+
+            await stream.CopyToAsync(result.Stream);
+            await result.Stream.FlushAsync();
+
             return result;
         }
 
-        private static Encoding GetEncoding(MultipartSection section)
-        {
-            var hasMediaTypeHeader = MediaTypeHeaderValue.TryParse(section.ContentType, out MediaTypeHeaderValue mediaType);
-            // UTF-7 is insecure and should not be honored. UTF-8 will succeed in 
-            // most cases.
-            if (!hasMediaTypeHeader || Encoding.UTF7.Equals(mediaType.Encoding))
-            {
-                return Encoding.UTF8;
-            }
-            return mediaType.Encoding;
-        }
-    }
 
-    public class PageContent<T> where T : DBItem
-    {
-        public HttpPageSettings Info { get; set; }
-
-        public IEnumerable<T> Items { get; set; }
     }
 }
