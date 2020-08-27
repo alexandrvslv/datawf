@@ -157,12 +157,13 @@ namespace DataWF.WebService.Common
                             item.SetValue(upload.FileName, table.FileNameKey);
                         }
 
-                        if (table.FileLastWriteKey != null && upload.ModificationDate != null)
-                        {
-                            item.SetValueNullable<DateTime>(upload.ModificationDate, table.FileLastWriteKey);
-                        }
                         if (upload.Stream != null)
                         {
+                            if (table.FileLastWriteKey != null && !item.IsChangedKey(table.FileLastWriteKey))
+                            {
+                                item.SetValueNullable<DateTime>(upload.ModificationDate ?? DateTime.UtcNow, table.FileLastWriteKey);
+                            }
+
                             if (table.FileLOBKey != null)
                             {
                                 await item.SetLOB(upload.Stream, table.FileLOBKey, transaction);
