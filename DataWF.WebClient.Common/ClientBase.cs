@@ -368,6 +368,20 @@ namespace DataWF.Common
             }
             else if (value != null)
             {
+                IFileModel fileModel = null;
+                FileStream fileStream = null;
+                if (value is IFileModel
+                   && commandUrl.IndexOf("UploadFileModel", StringComparison.OrdinalIgnoreCase) > -1)
+                {
+                    fileModel = (IFileModel)value;
+                    var content = new MultipartFormDataContent();
+
+                    fileStream = fileModel.FileWatcher?.IsChanged ?? false ? fileModel.FileWatcher.OpenRead() : null;
+                    if (fileStream != null)
+                    {
+                        fileModel.FileLastWrite = File.GetLastWriteTimeUtc(fileStream.Name);
+                    }
+                }
                 string text;
 #if NETSTANDARD2_0
                 var serializer = Newtonsoft.Json.JsonSerializer.Create(Provider.JsonSettings);
@@ -392,16 +406,9 @@ namespace DataWF.Common
                     SystemJsonConverterFactory.WriterContexts.TryRemove(jwriter, out _);
                 }
 #endif
-                if (value is IFileModel fileModel
-                    && commandUrl.IndexOf("UploadFileModel", StringComparison.OrdinalIgnoreCase) > -1)
+                if (fileModel != null)
                 {
                     var content = new MultipartFormDataContent();
-
-                    var fileStream = fileModel.FileWatcher?.IsChanged ?? false ? fileModel.FileWatcher.OpenRead() : null;
-                    if (fileStream != null)
-                    {
-                        fileModel.FileLastWrite = File.GetLastWriteTimeUtc(fileStream.Name);
-                    }
                     content.Add(new StringContent(text, Encoding.UTF8, "application/json"), "Model");
                     if (fileStream != null)
                     {
