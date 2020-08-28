@@ -44,7 +44,7 @@ namespace DataWF.Module.FlowGui
                         FillHeight = true,
                         Widget = relations = new ListEditor
                         {
-                            DataSource = new DBTableView<StageReference>(QQuery.CreateParam(StageParam.DBTable.ParseProperty(nameof(StageParam.StageId)), null), DBViewKeys.Empty)
+                            DataSource = new DBTableView<StageReference>(new QParam(StageParam.DBTable.ParseProperty(nameof(StageParam.StageId)), null), DBViewKeys.Empty)
                         }
                     },
                     new GroupBoxItem
@@ -58,7 +58,7 @@ namespace DataWF.Module.FlowGui
                         FillHeight = true,
                         Widget = procedures = new ListEditor
                         {
-                            DataSource = new DBTableView<StageProcedure>(QQuery.CreateParam(StageParam.DBTable.ParseProperty(nameof(StageParam.StageId)), null), DBViewKeys.Empty)
+                            DataSource = new DBTableView<StageProcedure>(new QParam(StageParam.DBTable.ParseProperty(nameof(StageParam.StageId)), null), DBViewKeys.Empty)
                         }
                     }
                 )

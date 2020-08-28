@@ -1315,6 +1315,11 @@ namespace DataWF.Data
             return CheckItem((DBItem)item, typedValue, comparer, comparision);
         }
 
+        public DBColumn GetVirtualColumn(DBTable table)
+        {
+            return table.ParseColumn(name);
+        }
+
         [Invoker(typeof(DBColumn), nameof(GroupName))]
         public class GroupNameInvoker<T> : Invoker<T, string> where T : DBColumn
         {

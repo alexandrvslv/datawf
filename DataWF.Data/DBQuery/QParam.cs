@@ -86,10 +86,18 @@ namespace DataWF.Data
             SetValue(new QColumn(column));
         }
 
-        public QParam(LogicType logicType, DBColumn column, CompareType compareType, object value) : this(column)
+        public QParam(DBColumn column, object value) : this(LogicType.And, column, CompareType.Equal, value)
+        {
+        }
+
+        public QParam(DBColumn column, CompareType comparer, object value) : this(LogicType.And, column, comparer, value)
+        {
+        }
+
+        public QParam(LogicType logicType, DBColumn column, CompareType comparer, object value) : this(column)
         {
             Logic = logicType;
-            Comparer = compareType;
+            Comparer = comparer;
             SetValue(Fabric(value, column));
         }
 

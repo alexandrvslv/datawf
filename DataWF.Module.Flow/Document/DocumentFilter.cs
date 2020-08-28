@@ -49,8 +49,8 @@ namespace DataWF.Module.Flow
             QDoc = new QQuery(string.Empty, Document.DBTable);
             QWork = new QQuery(string.Empty, DocumentWork.DBTable);
             QWork.Columns.Add(new QColumn(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId))));
-            paramWork = QQuery.CreateParam(Document.DBTable.PrimaryKey, CompareType.In, QWork);
-            paramWorkId = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.CurrentWorkId)), CompareType.IsNot, null);
+            paramWork = new QParam(Document.DBTable.PrimaryKey, CompareType.In, QWork);
+            paramWorkId = new QParam(Document.DBTable.ParseProperty(nameof(Document.CurrentWorkId)), CompareType.IsNot, null);
         }
 
         public DocumentSearchDate DateType
@@ -110,7 +110,7 @@ namespace DataWF.Module.Flow
                 work = value;
                 if (paramCompleate == null)
                 {
-                    paramCompleate = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.IsComplete)), CompareType.Equal, IsWork != CheckedState.Checked);
+                    paramCompleate = new QParam(Document.DBTable.ParseProperty(nameof(Document.IsComplete)), CompareType.Equal, IsWork != CheckedState.Checked);
                     paramCompleate.IsDefault = true;
                 }
                 else
@@ -179,7 +179,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramCustomer == null)
                     {
-                        paramCustomer = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.Customer)), CompareType.Equal, value.Id);
+                        paramCustomer = new QParam(Document.DBTable.ParseProperty(nameof(Document.Customer)), CompareType.Equal, value.Id);
                         paramCustomer.IsDefault = true;
                     }
                     else
@@ -203,7 +203,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramId == null)
                     {
-                        paramId = QQuery.CreateParam(Document.DBTable.PrimaryKey, Id);
+                        paramId = new QParam(Document.DBTable.PrimaryKey, Id);
                         paramId.IsDefault = true;
                     }
                     else
@@ -227,7 +227,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramNumber == null)
                     {
-                        paramNumber = QQuery.CreateParam(Document.DBTable.CodeKey, CompareType.Like, $"%{Number}%");
+                        paramNumber = new QParam(Document.DBTable.CodeKey, CompareType.Like, $"%{Number}%");
                         paramNumber.IsDefault = true;
                     }
                     else
@@ -257,7 +257,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramTemplate == null)
                     {
-                        paramTemplate = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.TemplateId)), CompareType.In, Template.GetSubGroupFull(true));
+                        paramTemplate = new QParam(Document.DBTable.ParseProperty(nameof(Document.TemplateId)), CompareType.In, Template.GetSubGroupFull(true));
                         paramTemplate.IsDefault = true;
                     }
                     else
@@ -292,7 +292,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramStage == null)
                     {
-                        paramStage = QQuery.CreateParam(column, Stage.PrimaryId);
+                        paramStage = new QParam(column, Stage.PrimaryId);
                         paramStage.IsDefault = true;
                     }
                     else
@@ -330,7 +330,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramStaff == null)
                     {
-                        paramStaff = QQuery.CreateParam(column, Staff.PrimaryId);
+                        paramStaff = new QParam(column, Staff.PrimaryId);
                         paramStaff.IsDefault = true;
                     }
                     else

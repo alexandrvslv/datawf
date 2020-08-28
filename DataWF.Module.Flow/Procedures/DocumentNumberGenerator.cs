@@ -24,7 +24,7 @@ namespace DataWF.Module.Flow
                 DBService.Save();
             }
             //return DBService.ExecuteQuery(FlowEnvironment.Config.Schema, FlowEnvironment.Config.Schema.Sequence.Create(name, 0, 1));
-            return sequence.Next(transaction);
+            return sequence.GetNext(transaction);
         }
 
         public virtual string Generate(Document document, DBTransaction transaction)

@@ -935,18 +935,23 @@ namespace DataWF.Data
             return rez;
         }
 
-        public static QParam CreateParam(DBColumn column, object value)
+        public QParam CreateParam(DBColumn column, object value)
         {
             return CreateParam(LogicType.And, column, CompareType.Equal, value);
         }
 
-        public static QParam CreateParam(DBColumn column, CompareType comp, object value)
+        public QParam CreateParam(DBColumn column, CompareType comp, object value)
         {
             return CreateParam(LogicType.And, column, comp, value);
         }
 
-        public static QParam CreateParam(LogicType logic, DBColumn column, CompareType compare, object value)
+        public QParam CreateParam(LogicType logic, DBColumn column, CompareType compare, object value)
         {
+            if (Table is IDBVirtualTable
+                && column?.Table != Table)
+            {
+                column = column.GetVirtualColumn(Table);
+            }
             QParam param = new QParam
             {
                 Logic = logic,
@@ -962,7 +967,7 @@ namespace DataWF.Data
             var parameter = new QParam();
             foreach (var item in Table.Columns.Select(DBColumn.GroupNameInvoker<DBColumn>.Instance, CompareType.Equal, property))
             {
-                parameter.Parameters.Add(QQuery.CreateParam(LogicType.Or, item, comparer, value));
+                parameter.Parameters.Add(CreateParam(LogicType.Or, item, comparer, value));
             }
             Parameters.Add(parameter);
             return parameter;

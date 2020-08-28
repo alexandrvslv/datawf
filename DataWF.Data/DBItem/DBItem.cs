@@ -123,7 +123,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), DefaultValue(0)]
-        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]
+        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]// | DBColumnKeys.Indexing
         public virtual int? ItemType
         {
             get => Table.ItemTypeKey?.GetValueNullable<int>(this);

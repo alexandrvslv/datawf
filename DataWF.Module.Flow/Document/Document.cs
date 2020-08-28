@@ -84,8 +84,8 @@ namespace DataWF.Module.Flow
                                                   id));
 
             var param = new QParam();
-            param.Parameters.Add(QQuery.CreateParam(LogicType.And, DBTable.PrimaryKey, CompareType.In, qrefed));
-            param.Parameters.Add(QQuery.CreateParam(LogicType.Or, DBTable.PrimaryKey, CompareType.In, qrefing));
+            param.Parameters.Add(new QParam(LogicType.And, DBTable.PrimaryKey, CompareType.In, qrefed));
+            param.Parameters.Add(new QParam(LogicType.Or, DBTable.PrimaryKey, CompareType.In, qrefing));
             return param;
         }
 
