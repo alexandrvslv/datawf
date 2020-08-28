@@ -1118,8 +1118,7 @@ namespace DataWF.Data
         public QParam BuildParam(DBColumn parent, DBColumn column, object p, QQueryBuildParam buildParam)
         {
             var query = new QQuery("", column.Table);
-            query.Columns.Add(new QColumn(column.Table.PrimaryKey.Name));
-            query.Parameters.Remove(column);
+            query.BuildColumn(column.Table.PrimaryKey);
             query.BuildParam(column, p, buildParam);
             var param = CreateParam(parent, CompareType.In, query);
             Parameters.Add(param);
