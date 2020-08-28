@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -8,7 +9,8 @@ namespace DataWF.Common
     public enum DiffType
     {
         Deleted,
-        Inserted
+        Inserted,
+        Replace
     }
 
     public class DiffResult
@@ -55,7 +57,9 @@ namespace DataWF.Common
             newA = a.Count;
             newB = b.Count;
             for (int i = indexA; i < a.Count; i++)
+            {
                 for (int j = indexB; j < b.Count; j++)
+                {
                     if (a[i].Equals(b[j]))
                     {
                         if ((newA - indexA) + (newB - indexB) >= (i - indexA) + (j - indexB))
@@ -69,7 +73,8 @@ namespace DataWF.Common
                         }
                         break;
                     }
-
+                }
+            }
         }
 
         public static List<DiffResult> Diff(IList a, IList b)
@@ -93,6 +98,15 @@ namespace DataWF.Common
                 if (!a[i].Equals(b[j]))
                 {
                     DiffTypeDef(a, b, i, j, out int newa, out int newb);
+                    if (newa > i && newb > j
+                        && newa == newb)
+                    {
+                        curr = new DiffResult(a, b) { Type = DiffType.Replace, Index = i, Length = newa - i };
+                        list.Add(curr);
+                        i = newa;
+                        j = newb;
+                        continue;
+                    }
                     if (newa > i)
                     {
                         curr = new DiffResult(a, b) { Type = DiffType.Deleted, Index = i, Length = newa - i };
@@ -113,7 +127,7 @@ namespace DataWF.Common
 
     public static class DiffExtensions
     {
-        public static int TotalLength(this List<DiffResult> results)
+        public static int GetTotalChanges(this List<DiffResult> results)
         {
             return results.Sum(p => p.Length);
         }
