@@ -52,9 +52,17 @@ namespace DataWF.Data
                     return new QBetween(((DateInterval)value).Min, ((DateInterval)value).Max, column);
                 }
             }
-            else if (value is IList)
+            else if (value is IInvoker invoker)
             {
-                return new QEnum((IList)value, column);
+                return new QReflection(invoker);
+            }
+            else if (value is string)
+            {
+                return new QValue(value, column);
+            }
+            else if (value is IEnumerable enumerable)
+            {
+                return new QEnum(enumerable, column);
             }
             else
             {

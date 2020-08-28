@@ -101,7 +101,7 @@ namespace DataWF.Data
 
         public override string Format(IDbCommand command = null)
         {
-            return (command == null || Value == null) ? DBSystem.FormatText(Value) : CreateParameter(command, Value);
+            return (command == null || Value == null) ? DBSystem.FormatText(Value) : CreateParameter(command, Value, Column);
         }
 
         public override string ToString()
@@ -114,27 +114,6 @@ namespace DataWF.Data
             return Value;
         }
 
-        public string CreateParameter(IDbCommand command, object value)
-        {
-            string name = (Table?.System?.ParameterPrefix ?? "@") + (Column?.Name ?? "param");
 
-            //TODO optimise contains/duplicate
-            int i = 0;
-            string param = name + i;
-            while (command.Parameters.Contains(param))
-                param = name + ++i;
-            var parameter = Table?.System.CreateParameter(command, param, value, Column);
-
-            if (parameter == null)
-            {
-                parameter = command.CreateParameter();
-                //parameter.DbType = DbType.String;
-                parameter.Direction = ParameterDirection.Input;
-                parameter.ParameterName = param;
-                parameter.Value = value;
-                command.Parameters.Add(parameter);
-            }
-            return param;
-        }
     }
 }

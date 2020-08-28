@@ -175,7 +175,8 @@ namespace DataWF.Data
         format,
         parse,
         max,
-        min
+        min,
+        count
     }
 
     public enum DBRowBinarySeparator

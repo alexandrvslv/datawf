@@ -353,6 +353,11 @@ namespace DataWF.Data
             return new DBTableView<T>(this, query, mode, filter);
         }
 
+        public override IEnumerable<DBItem> LoadItemsCache(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
+        {
+            return LoadCache(filter, loadParam, transaction);
+        }
+
         public IEnumerable<T> LoadCache(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
         {
             if (!queryChache.TryGetValue(filter, out var query))
@@ -834,7 +839,7 @@ namespace DataWF.Data
                 {
                     var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
                     stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
-                    if (DateTime.Compare((DateTime)item.Stamp, stamp) >= 0)
+                    if (Nullable.Compare(item.Stamp, stamp) >= 0)
                     {
                         return item;
                     }
@@ -843,7 +848,7 @@ namespace DataWF.Data
                 {
                     var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
                     stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
-                    if (item != null && DateTime.Compare((DateTime)item.Stamp, stamp) >= 0)
+                    if (item != null && Nullable.Compare(item.Stamp, stamp) >= 0)
                     {
                         return item;
                     }

@@ -530,12 +530,19 @@ namespace DataWF.Data
             // Info = DBService.GetTableAttribute(type);
         }
 
-        public IEnumerable<DBTable> GetChilds()
+        public IEnumerable<DBTable> GetVirtualTables()
         {
             foreach (var item in virtualTables)
             {
                 yield return (DBTable)item;
             }
+        }
+
+        public DBTable GetVirtualTable(int itemType)
+        {
+            if (itemType == 0)
+                return this;
+            return virtualTables.FirstOrDefault(p => p.ItemTypeIndex == itemType) as DBTable;
         }
 
         public void RefreshSequence(bool truncate = false)
@@ -723,6 +730,8 @@ namespace DataWF.Data
         public abstract void Add(DBItem item);
 
         public abstract DBItem LoadItemFromReader(DBTransaction transaction);
+
+        public abstract IEnumerable<DBItem> LoadItemsCache(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null);
 
         public abstract IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
 

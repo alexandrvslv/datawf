@@ -20,6 +20,7 @@
 using DataWF.Common;
 using Npgsql;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -221,10 +222,22 @@ namespace DataWF.Data
 
         public override object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
+            var isArray = value is IList && value.GetType() != typeof(byte[]);
             value = base.WriteValue(command, parameter, value, column);
             if (column != null)
             {
-                if (column.DBDataType == DBDataType.TimeSpan)
+                if (isArray)
+                {
+                    if (column.DataType == typeof(string))
+                    {
+                        ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Varchar;
+                    }
+                    else
+                    {
+                        ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Integer;
+                    }
+                }
+                else if (column.DBDataType == DBDataType.TimeSpan)
                 {
                     ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Interval;
                 }
@@ -237,6 +250,8 @@ namespace DataWF.Data
                     ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer;
                 }
             }
+
+
             return value;
         }
 

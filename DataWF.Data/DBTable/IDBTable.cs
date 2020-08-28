@@ -105,7 +105,7 @@ namespace DataWF.Data
         void GetAllParentTables(List<DBTable> parents);
         IEnumerable<DBItem> GetChangedItems();
         IEnumerable<DBForeignKey> GetChildRelations();
-        IEnumerable<DBTable> GetChilds();
+        IEnumerable<DBTable> GetVirtualTables();
         IEnumerable<DBTable> GetChildTables();
         DBColumn GetCultureColumn(string group, CultureInfo culture);
         DBItemType GetItemType(int typeIndex);

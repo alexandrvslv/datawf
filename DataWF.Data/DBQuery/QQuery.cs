@@ -111,13 +111,13 @@ namespace DataWF.Data
             }
         }
 
-        public IQItemList Owner { get { return baseQuery ?? this; } }
+        public IQItemList Owner => baseQuery ?? this;
 
-        public override IQuery Query { get { return Owner as IQuery; } }
+        public override IQuery Query => Owner as IQuery;
 
         public Type TypeFilter
         {
-            get { return type; }
+            get => type;
             set
             {
                 if (Table.ItemTypeKey == null || TypeFilter == value)
@@ -152,7 +152,7 @@ namespace DataWF.Data
 
         public DBStatus StatusFilter
         {
-            get { return status; }
+            get => status;
             set
             {
                 if (StatusFilter != value)
@@ -1159,12 +1159,13 @@ namespace DataWF.Data
 
         public QTable QTable
         {
-            get { return tables.FirstOrDefault(); }
+            get => tables.FirstOrDefault();
+            set => tables.Add(value);
         }
 
         public override DBTable Table
         {
-            get { return QTable?.Table; }
+            get => QTable?.Table;
             set
             {
                 if (value != Table)
@@ -1176,29 +1177,17 @@ namespace DataWF.Data
                 }
             }
         }
-        public QItemList<QTable> Tables
-        {
-            get { return tables; }
-        }
+        public QItemList<QTable> Tables => tables;
 
-        public QItemList<QItem> Columns
-        {
-            get { return columns; }
-        }
+        public QItemList<QItem> Columns => columns;
 
-        public QItemList<QOrder> Orders
-        {
-            get { return orders; }
-        }
+        public QItemList<QOrder> Orders => orders;
 
-        public QParamList Parameters
-        {
-            get { return parameters; }
-        }
+        public QParamList Parameters => parameters;
 
         public SelectableList<QParam> AllParameters
         {
-            get { return allParameters; }
+            get => allParameters;
             set
             {
                 if (allParameters != value)
@@ -1471,8 +1460,8 @@ namespace DataWF.Data
 
         public bool IsRefence
         {
-            get { return refmode; }
-            set { refmode = value; }
+            get => refmode;
+            set => refmode = value;
         }
 
         public void BuildColumn(DBColumn dBColumn)

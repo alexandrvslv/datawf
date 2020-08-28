@@ -285,7 +285,7 @@ namespace DataWF.Data
 
         public override IEnumerable<F> Select<F>(object value, CompareType compare)
         {
-            IEnumerable<F> buf = null;
+            IEnumerable<F> buf = Enumerable.Empty<F>();
 
             if (compare.Type.Equals(CompareTypes.Is))
             {

@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 using System.Data;
 using System.Collections;
+using System.Linq;
 
 namespace DataWF.Data
 {
@@ -31,8 +32,9 @@ namespace DataWF.Data
             Items = new QItemList<QItem>();
         }
 
-        public QEnum(IList list, DBColumn column = null) : this()
+        public QEnum(IEnumerable list, DBColumn column = null) : this()
         {
+            Column = column;
             foreach (var item in list)
             {
                 if (item is QItem)
@@ -41,6 +43,8 @@ namespace DataWF.Data
                     items.Add(QParam.Fabric(item, column));
             }
         }
+
+        public DBColumn Column { get; set; }
 
         public QItemList<QItem> Items
         {
@@ -62,6 +66,11 @@ namespace DataWF.Data
 
         public override string Format(IDbCommand command = null)
         {
+            //if (command != null && Column != null)
+            //{
+            //    return $"({base.CreateParameter(command, Items.Select(p => p.GetValue()).ToList(), Column)})";
+            //}
+
             string rez = string.Empty;
             foreach (QItem item in Items)
             {
@@ -70,7 +79,7 @@ namespace DataWF.Data
                     rez += ", ";
             }
             if (rez.Length > 0)
-                rez = "(" + rez + ")";
+                rez = $"({rez})";
             //DBService.FormatToSqlText(value)
             return rez;
         }
