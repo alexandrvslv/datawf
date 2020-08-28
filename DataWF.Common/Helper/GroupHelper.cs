@@ -212,7 +212,27 @@ namespace DataWF.Common
             }
         }
 
+        public static IEnumerable<T> GetSubGroups<T>(T group, bool addSender = false) where T : IGroup
+        {
+            if (addSender)
+            {
+                yield return group;
+            }
 
+            foreach (T item in group.GetGroups())
+            {
+                if (Helper.Equals(item, group))
+                {
+                    continue;
+                }
+
+                yield return item;
+                foreach (var subItem in GetSubGroups<T>(item))
+                {
+                    yield return subItem;
+                }
+            }
+        }
     }
 
 }
