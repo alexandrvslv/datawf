@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace DataWF.Common
 {
@@ -106,6 +108,14 @@ namespace DataWF.Common
                 }
             }
             return list;
+        }
+    }
+
+    public static class DiffExtensions
+    {
+        public static int TotalLength(this List<DiffResult> results)
+        {
+            return results.Sum(p => p.Length);
         }
     }
 }
