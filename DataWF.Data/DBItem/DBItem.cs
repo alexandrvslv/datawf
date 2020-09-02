@@ -1744,8 +1744,9 @@ namespace DataWF.Data
         {
         }
 
-        protected virtual void OnSetStream(DBColumn column, DBTransaction transaction)
+        protected virtual Task OnSetStream(DBColumn column, DBTransaction transaction)
         {
+            return Task.CompletedTask;
         }
 
         public Stream GetZipMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
@@ -1791,7 +1792,7 @@ namespace DataWF.Data
             var oid = await Table.System.SetLOB(value, transaction);
             SetValueNullable<uint>(oid, column);
             await Save(transaction);
-            OnSetStream(column, transaction);
+            await OnSetStream(column, transaction);
         }
 
         public Task<Stream> GetLOB(DBTransaction transaction, int bufferSize = 81920)
