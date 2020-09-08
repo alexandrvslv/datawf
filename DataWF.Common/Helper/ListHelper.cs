@@ -406,6 +406,21 @@ namespace DataWF.Common
             return compare.Not ? !result : result;
         }
 
+        public static IEnumerable<object> SearchByValue(this IEnumerable itemsSource, IInvoker valueInvoker, object value)
+        {
+            if (itemsSource == null)
+            {
+                yield break;
+            }
+
+            foreach (var item in itemsSource)
+            {
+                if (Equal(valueInvoker.GetValue(item), value))
+                    yield return item;
+            }
+
+        }
+
         public static bool CheckItemT<T>(T x, object y, CompareType compare, IComparer<T> comparer)
         {
             bool result = false;

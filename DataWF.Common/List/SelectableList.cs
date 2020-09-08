@@ -16,7 +16,7 @@ namespace DataWF.Common
 {
     public class SelectableList<T> : ISelectable, ISelectable<T>, IList, IList<T>
     {
-        protected ListIndexes<T> indexes = new ListIndexes<T>();
+        protected readonly ListIndexes<T> indexes;
         protected Type type;
         protected List<T> items;
         protected IComparer<T> comparer;
@@ -33,6 +33,7 @@ namespace DataWF.Common
         public SelectableList(int capacity)
         {
             items = new List<T>(capacity);
+            indexes = new ListIndexes<T> { Source = this };
             type = typeof(T);
             if (TypeHelper.IsInterface(type, typeof(INotifyPropertyChanged)))
             {
@@ -92,7 +93,7 @@ namespace DataWF.Common
             }
         }
 
-        public int Count => items.Count;
+        public virtual int Count => items.Count;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public bool IsReadOnly => false;
@@ -396,21 +397,7 @@ namespace DataWF.Common
             }
             if (IsSorted)
             {
-                if (index < 0)
-                    index = IndexOf(item);
-                int newindex = GetIndexBySort(item);
-                if (newindex < 0)
-                    newindex = -newindex - 1;
-                if (index != newindex)
-                {
-                    if (newindex > index)
-                        newindex--;
-                    if (newindex > items.Count)
-                        newindex = items.Count;
-                    items.RemoveAt(index);
-                    items.Insert(newindex, item);
-                    OnCollectionChanged(NotifyCollectionChangedAction.Move, item, newindex, index);
-                }
+                Move(item, index);
             }
             if (ItemPropertyChanged != null)
             {
@@ -422,6 +409,25 @@ namespace DataWF.Common
                 {
                     ItemPropertyChanged(item, e);
                 }
+            }
+        }
+
+        protected virtual void Move(T item, int index)
+        {
+            if (index < 0)
+                index = IndexOf(item);
+            int newindex = GetIndexBySort(item);
+            if (newindex < 0)
+                newindex = -newindex - 1;
+            if (index != newindex)
+            {
+                if (newindex > index)
+                    newindex--;
+                if (newindex > items.Count)
+                    newindex = items.Count;
+                items.RemoveAt(index);
+                items.Insert(newindex, item);
+                OnCollectionChanged(NotifyCollectionChangedAction.Move, item, newindex, index);
             }
         }
 
@@ -694,7 +700,7 @@ namespace DataWF.Common
             return IndexOf((T)item);
         }
 
-        public int IndexOf(T item)
+        public virtual int IndexOf(T item)
         {
             if (comparer != null)
             {
@@ -710,12 +716,12 @@ namespace DataWF.Common
 
         public T this[int index]
         {
-            get => items[index];
+            get => GetItemInternal(index);
             set
             {
-                T item = items[index];
+                T item = index < Count ? items[index] : default(T);
 
-                if (item.Equals(value))
+                if (EqualityComparer<T>.Default.Equals(item, value))
                     return;
                 var valueIndex = IndexOf(value);
                 if (valueIndex >= 0)
@@ -724,11 +730,16 @@ namespace DataWF.Common
                     items.Insert(index, value);
                     OnCollectionChanged(NotifyCollectionChangedAction.Move, value, index, valueIndex, item);
                 }
-                else
+                else if (item != null)
                 {
                     RemoveInternal(item, index);
                     InsertInternal(index, value);
                     OnCollectionChanged(NotifyCollectionChangedAction.Replace, value, index, index, item);
+                }
+                else
+                {
+                    InsertInternal(index, value);
+                    OnCollectionChanged(NotifyCollectionChangedAction.Add, value, index);
                 }
             }
         }
@@ -739,9 +750,14 @@ namespace DataWF.Common
             set => this[index] = (T)value;
         }
 
-        public virtual object GetItem(int index)
+        public object GetItem(int index)
         {
-            return this[index];
+            return GetItemInternal(index);
+        }
+
+        public virtual T GetItemInternal(int index)
+        {
+            return items[index];
         }
 
         public void ApplySortInternal(params string[] property)
@@ -787,7 +803,7 @@ namespace DataWF.Common
                       : new ComparerWrapper<T>(comparer));
         }
 
-        public void ApplySort(IComparer<T> comparer)
+        public virtual void ApplySort(IComparer<T> comparer)
         {
             if (this.comparer != null && this.comparer.Equals(comparer))
                 return;
@@ -895,7 +911,7 @@ namespace DataWF.Common
             return GetEnumerator();
         }
 
-        public IEnumerator<T> GetEnumerator()
+        public virtual IEnumerator<T> GetEnumerator()
         {
             return items.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
         }

@@ -111,20 +111,7 @@ namespace DataWF.Common
                 if (this.value != value)
                 {
                     this.value = value;
-                    if (Comparer.Type == CompareTypes.In
-                        || Comparer.Type == CompareTypes.Contains
-                        || Comparer.Type == CompareTypes.Intersect)
-                    {
-                        TypedValue = this.value;
-                        if (this.value is string stringValue && Invoker?.DataType != typeof(string))
-                        {
-                            TypedValue = stringValue.Split(',');
-                        }
-                    }
-                    else
-                    {
-                        TypedValue = Invoker != null ? Helper.Parse(this.value, Invoker.DataType) : value;
-                    }
+                    TypedValue = Helper.ParseParameter(value, Comparer, Invoker?.DataType);
                     OnPropertyChanged();
                 }
             }
@@ -172,6 +159,13 @@ namespace DataWF.Common
         public object Tag { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public string Format(bool logic = true)
+        {
+            var sb = new StringBuilder();
+            Format(sb, logic);
+            return sb.ToString();
+        }
 
         public void Format(StringBuilder builder, bool logic = true)
         {

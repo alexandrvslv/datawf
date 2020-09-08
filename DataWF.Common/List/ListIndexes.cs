@@ -9,6 +9,7 @@ namespace DataWF.Common
 
         public bool Concurrent { get; set; }
         public int Count => indexes.Count;
+        public IList<T> Source { set; get; }
 
         public void Add(string name, IListIndex<T> index)
         {
@@ -20,8 +21,9 @@ namespace DataWF.Common
             if (!indexes.TryGetValue(invoker.Name, out var index)
                 && invoker is IInvokerExtension invokerExtension)
             {
-                index = (IListIndex<T>)invokerExtension.CreateIndex(Concurrent);
+                index = (IListIndex<T>)invokerExtension.CreateIndex<T>(Concurrent);
                 indexes.Add(invoker.Name, index);
+                index.Refresh(Source);
             }
             return index;
         }

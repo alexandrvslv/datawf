@@ -13,7 +13,7 @@ namespace DataWF.Common
         protected IEqualityComparer<K> Comparer;
         protected readonly K NullKey;
 
-        public ListIndex(IInvoker<T, K> invoker, K nullKey, IEqualityComparer<K> comparer = null, bool concurrent = false)
+        public ListIndex(IValuedInvoker<K> invoker, K nullKey, IEqualityComparer<K> comparer = null, bool concurrent = false)
         {
             NullKey = nullKey;
             Invoker = invoker;
@@ -23,17 +23,17 @@ namespace DataWF.Common
                 : new Dictionary<K, ThreadSafeList<T>>(Comparer);
         }
 
-        public IInvoker<T, K> Invoker { get; }
+        public IValuedInvoker<K> Invoker { get; }
 
         IInvoker IListIndex.Invoker => Invoker;
 
-        public bool CheckParameter(QueryParameter<T> param)
+        public bool CheckParameter(object value, CompareType comparer)
         {
-            return !(!(param.TypedValue is IComparable)
-                && (param.Comparer.Type == CompareTypes.Greater
-                    || param.Comparer.Type == CompareTypes.GreaterOrEqual
-                    || param.Comparer.Type == CompareTypes.Less
-                    || param.Comparer.Type == CompareTypes.LessOrEqual));
+            return !(!(value is IComparable)
+                && (comparer.Type == CompareTypes.Greater
+                    || comparer.Type == CompareTypes.GreaterOrEqual
+                    || comparer.Type == CompareTypes.Less
+                    || comparer.Type == CompareTypes.LessOrEqual));
         }
 
         public void Add(T item)
@@ -109,24 +109,39 @@ namespace DataWF.Common
             return default(T);
         }
 
-        public IEnumerable Scan(IQueryParameter param)
+        IEnumerable IListIndex.Scan(IQueryParameter param)
         {
             return Scan((QueryParameter<T>)param);
         }
 
         public IEnumerable<T> Scan(QueryParameter<T> param)
         {
-            if (!CheckParameter(param))
+            return Scan(param.Comparer, param.Value, param.TypedValue);
+        }
+
+        IEnumerable IListIndex.Scan(CompareType comparer, object value)
+        {
+            return Scan(comparer, value);
+        }
+
+        public IEnumerable<T> Scan(CompareType comparer, object value)
+        {
+            return Scan(comparer, value, Helper.ParseParameter<K>(value, comparer));
+        }
+
+        public IEnumerable<T> Scan(CompareType comparer, object paramValue, object typedValue)
+        {
+            if (!CheckParameter(typedValue, comparer))
             {
                 yield break;
             }
             var index = Dictionary;
-            switch (param.Comparer.Type)
+            switch (comparer.Type)
             {
                 case CompareTypes.Equal:
                     {
-                        var key = CheckNull(param.TypedValue);
-                        if (param.Comparer.Not)
+                        var key = CheckNull(typedValue);
+                        if (comparer.Not)
                         {
                             foreach (var entry in index)
                             {
@@ -149,7 +164,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.Greater:
                     {
-                        var key = CheckNull(param.TypedValue);
+                        var key = CheckNull(typedValue);
                         foreach (var entry in index)
 
                         {
@@ -163,7 +178,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.GreaterOrEqual:
                     {
-                        var key = CheckNull(param.TypedValue);
+                        var key = CheckNull(typedValue);
                         foreach (var entry in index)
                         {
                             if (((IComparable)entry.Key).CompareTo(key) >= 0)
@@ -176,7 +191,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.Less:
                     {
-                        var key = CheckNull(param.TypedValue);
+                        var key = CheckNull(typedValue);
                         foreach (var entry in index)
                         {
                             if (((IComparable)entry.Key).CompareTo(key) < 0)
@@ -189,7 +204,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.LessOrEqual:
                     {
-                        var key = CheckNull(param.TypedValue);
+                        var key = CheckNull(typedValue);
                         foreach (var entry in index)
                         {
                             if (((IComparable)entry.Key).CompareTo(key) <= 0)
@@ -202,7 +217,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.Like:
                     {
-                        var key = CheckNull(param.TypedValue);
+                        var key = CheckNull(typedValue);
                         var stringkey = key.ToString().Trim(new char[] { '%' });
                         foreach (var entry in index)
                         {
@@ -215,7 +230,7 @@ namespace DataWF.Common
                     }
                     break;
                 case CompareTypes.Is:
-                    if (param.Comparer.Not)
+                    if (comparer.Not)
                     {
                         foreach (var entry in index)
                         {
@@ -236,8 +251,8 @@ namespace DataWF.Common
                     }
                     break;
                 case CompareTypes.In:
-                    var list = param.Value as IEnumerable;
-                    if (param.Comparer.Not)
+                    var list = paramValue.ToEnumerable();
+                    if (comparer.Not)
                     {
                         foreach (var entry in index)
                         {
@@ -280,6 +295,20 @@ namespace DataWF.Common
                 return Comparer.Equals(typed, default(K)) ? NullKey : typed;
             }
             return (K)Helper.Parse(key, typeof(K));
+        }
+
+        public void Refresh(IList items)
+        {
+            Refresh((IList<T>)items);
+        }
+
+        public void Refresh(IList<T> items)
+        {
+            Clear();
+            foreach (var item in items)
+            {
+                Add(item);
+            }
         }
 
         public void Refresh(T item)

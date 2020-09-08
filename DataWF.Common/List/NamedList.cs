@@ -48,6 +48,11 @@ namespace DataWF.Common
             }
         }
 
+        public virtual bool Contains(string name)
+        {
+            return this[name] != null;
+        }
+
         public bool Remove(string name)
         {
             var item = this[name];

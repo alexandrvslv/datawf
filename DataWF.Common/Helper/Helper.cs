@@ -1257,7 +1257,7 @@ namespace DataWF.Common
             }
             else if (value is IEnumerable enumerable)
             {
-                result = string.Join(", ", enumerable.Cast<object>().Select(p => p?.ToString()??"empty"));
+                result = string.Join(", ", enumerable.Cast<object>().Select(p => p?.ToString() ?? "empty"));
             }
             else
             {
@@ -1386,6 +1386,31 @@ namespace DataWF.Common
                 return LenghtFormat(listValue.Count);
             else
                 return TextDisplayFormat(value, null);
+        }
+
+        public static object ParseParameter<T>(object value, CompareType comparer)
+        {
+            return ParseParameter(value, comparer, typeof(T));
+        }
+
+        public static object ParseParameter(object value, CompareType comparer, Type dataType)
+        {
+            object result = null;
+            if (comparer.Type == CompareTypes.In
+                || comparer.Type == CompareTypes.Contains
+                || comparer.Type == CompareTypes.Intersect)
+            {
+                result = value;
+                if (value is string stringValue && dataType != typeof(string))
+                {
+                    result = stringValue.Split(',');
+                }
+            }
+            else
+            {
+                result = dataType != null ? Helper.Parse(value, dataType) : value;
+            }
+            return result;
         }
 
         public static object Parse(object value, Type type)

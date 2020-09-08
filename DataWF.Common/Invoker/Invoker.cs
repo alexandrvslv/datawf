@@ -59,6 +59,11 @@ namespace DataWF.Common
             return ListIndexFabric.Create<T, V>(this, concurrent);
         }
 
+        public virtual IListIndex CreateIndex<TT>(bool concurrent)
+        {
+            return ListIndexFabric.Create<TT, V>(this, concurrent);
+        }
+
         public virtual IQueryParameter CreateParameter(Type type)
         {
             type = type ?? typeof(T);

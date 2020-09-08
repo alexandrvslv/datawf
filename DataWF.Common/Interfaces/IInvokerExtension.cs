@@ -8,7 +8,7 @@ namespace DataWF.Common
     public interface IInvokerExtension
     {
         IListIndex CreateIndex(bool concurrent);
-
+        IListIndex CreateIndex<T>(bool concurrent);
         IQueryParameter CreateParameter(Type type);
         QueryParameter<TT> CreateParameter<TT>();
 
