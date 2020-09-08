@@ -33,6 +33,7 @@ namespace DataWF.Common
         Task Save(object item);
         Task Save(object item, ProgressToken token);
         void ChangeCanExecute();
+        IEnumerable<object> SearchByValue(IInvoker valueInvoker, object value);
     }
 
     public enum ModelViewStatus

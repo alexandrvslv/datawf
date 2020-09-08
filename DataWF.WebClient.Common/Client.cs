@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -438,22 +439,16 @@ namespace DataWF.Common
             => MergeAsync(IdInvoker.GetValue(item).Value, ids, json, ProgressToken.None);
 
         public async Task<object> MergeAsync(object id, List<string> ids) => await MergeAsync((K)id, ids, HttpJsonSettings.Default, ProgressToken.None);
-    }
 
-    public class LoadProgress<T>
-    {
-        public LoadProgress(string filter, HttpPageSettings list, HttpJsonSettings json, ProgressToken progressToken)
+        public IEnumerable<object> SearchByValue(IInvoker valueInvoker, object value)
         {
-            Filter = filter;
-            ListSettings = list;
-            JsonSettings = json;
-            Token = progressToken;
+            var index = Items.Indexes.Add(valueInvoker);
+            //if (result == null)
+            //{
+            //    var parameter = new QueryParameter<T> { Invoker = valueInvoker, Value = value };
+            //    _ = LoadAsync(parameter.Format(false), null, HttpJsonSettings.Default, ProgressToken.None);
+            //}
+            return index.Scan(CompareType.Equal, value).Cast<object>();
         }
-
-        public ProgressToken Token { get; }
-        public Task<List<T>> Task { get; set; }
-        public string Filter { get; internal set; }
-        public HttpPageSettings ListSettings { get; }
-        public HttpJsonSettings JsonSettings { get; }
     }
 }

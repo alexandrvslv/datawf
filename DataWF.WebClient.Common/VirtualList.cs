@@ -10,71 +10,17 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public class VirtualList<T> : DefaultItem, IFilterable<T>, IVirtualList
+    public class VirtualList<T> : SelectableListView<T>, IVirtualList
     {
         private HttpPageSettings pages = new HttpPageSettings { Mode = HttpPageMode.List, PageSize = 20 };
         private Dictionary<int, List<T>> cache = new Dictionary<int, List<T>>();
         private IModelView modelView;
         private int processingGet;
-        private Query<T> filterQuery;
-        private string tempFilter;
 
-        public VirtualList()
+        public VirtualList(Query<T> filter, IEnumerable source = null, bool handle = false) : base(filter, source, handle)
         {
             //Pages.PageSize = Math.Max(20, ((int)Math.Ceiling(Math.Ceiling(canvasView.Height / rowHeight) / 10.0)) * 10);
         }
-
-        public T this[int index]
-        {
-            get => GetItem(index);
-            set => throw new NotSupportedException();
-        }
-
-        object IList.this[int index]
-        {
-            get => this[index];
-            set => this[index] = (T)value;
-        }
-
-        public Query<T> FilterQuery
-        {
-            get => filterQuery;
-            set
-            {
-                if (filterQuery != value)
-                {
-                    if (filterQuery != null)
-                    {
-                        filterQuery.ParametersChanged -= OnFilterQueryChanged;
-                        filterQuery.OrdersChanged -= OnFilterQueryChanged;
-                    }
-                    filterQuery = value;
-                    if (filterQuery != null)
-                    {
-                        filterQuery.ParametersChanged += OnFilterQueryChanged;
-                        filterQuery.OrdersChanged += OnFilterQueryChanged;
-                    }
-                }
-            }
-        }
-
-        IQuery IFilterable.FilterQuery
-        {
-            get => FilterQuery;
-            set => FilterQuery = (Query<T>)value;
-        }
-
-        public IEnumerable Source { get; set; }
-
-        public bool IsFixedSize => false;
-
-        public bool IsReadOnly => true;
-
-        public int Count => Pages.ListCount;
-
-        public bool IsSynchronized => true;
-
-        public object SyncRoot => cache;
 
         public IModelView ModelView
         {
@@ -84,6 +30,7 @@ namespace DataWF.Common
                 if (modelView != value)
                 {
                     modelView = value;
+                    ClearCache();
                 }
             }
         }
@@ -100,19 +47,13 @@ namespace DataWF.Common
             set
             {
                 Pages.PageSize = value;
-                Clear();
+                ClearCache();
             }
         }
 
-        public IEnumerable<IFilterable> Views => throw new NotImplementedException();
+        public override int Count => Math.Max(Pages.ListCount, items.Count);
 
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-        public event PropertyChangedEventHandler ItemPropertyChanged;
-        public event EventHandler FilterChanged;
-
-        public IEnumerable<TT> GetHandlers<TT>() => TypeHelper.GetHandlers<TT>(CollectionChanged);
-
-        public T GetItem(int index)
+        public override T GetItemInternal(int index)
         {
             var pageIndex = index / Pages.PageSize;
             var itemIndex = index % Pages.PageSize;
@@ -122,10 +63,12 @@ namespace DataWF.Common
                 {
                     _ = ProcessGet(index, pageIndex);
                 }
-
-                return default(T);
             }
-            return items != null ? items[itemIndex] : default(T);
+            if (items == null)
+            {
+                return index < this.items.Count ? this.items[index] : default(T);
+            }
+            return items[itemIndex];
         }
 
         private async ValueTask ProcessGet(int index, int pageIndex)
@@ -157,63 +100,31 @@ namespace DataWF.Common
             }
         }
 
-        public int Add(object value)
+        public override void Clear()
         {
-            Add((T)value);
-            return Count - 1;
+            ClearCache();
+            base.Clear();
         }
 
-        public void Add(T item)
+        public override bool Contains(T item)
         {
-            throw new NotSupportedException();
+            return base.Contains(item) || (IndexOf(item) >= 0);
         }
 
-        public void Clear()
+        public override IEnumerator<T> GetEnumerator()
         {
-            cache.Clear();
-            pages.ListCount = 1;
-            OnCollectionChanged(NotifyCollectionChangedAction.Reset);
-        }
-
-        public bool Contains(object value)
-        {
-            return Contains((T)value);
-        }
-
-        public bool Contains(T item)
-        {
-            return IndexOf(item) >= 0;
-        }
-
-        public void CopyTo(Array array, int index)
-        {
-            CopyTo((T[])array, index);
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            foreach (var page in cache)
+            var count = Count;
+            for (int i = 0; i < count; i++)
             {
-                if (page.Value == null)
-                    continue;
-                foreach (var item in page.Value)
+                var item = GetItemInternal(i);
+                if (item != null)
                 {
                     yield return item;
                 }
             }
         }
 
-        public int IndexOf(object value)
-        {
-            return IndexOf((T)value);
-        }
-
-        public int IndexOf(T item)
+        public override int IndexOf(T item)
         {
             foreach (var entry in cache)
             {
@@ -223,86 +134,29 @@ namespace DataWF.Common
                     return entry.Key * pages.PageSize + inPageIndex;
                 }
             }
-            return -1;
+            return base.IndexOf(item);
         }
 
-        public void Insert(int index, object value)
-        {
-            Insert(index, (T)value);
-        }
-
-        public void Insert(int index, T item)
-        {
-            throw new NotSupportedException();
-        }
-
-        public void Remove(object value)
-        {
-            Remove((T)value);
-        }
-
-        public bool Remove(T item)
-        {
-            throw new NotSupportedException();
-        }
-
-        public void RemoveAt(int index)
-        {
-            throw new NotSupportedException();
-        }
-
-        private void OnFilterQueryChanged(object sender, EventArgs e)
-        {
-            if (filterQuery.Suspending
-                || (sender is IQueryParameter parameter
-                && e is PropertyChangedEventArgs args
-                && !parameter.IsEnabled
-                && !string.Equals(args.PropertyName, nameof(IQueryParameter.IsEnabled), StringComparison.Ordinal)))
-            {
-                return;
-            }
-            var filter = filterQuery.Format(true, true);
-            if (!string.Equals(tempFilter, filter, StringComparison.Ordinal))
-            {
-                tempFilter = filterQuery.Format(true, true);
-                UpdateFilter();
-            }
-        }
-
-        public void UpdateFilter()
-        {
-            Clear();
-            FilterChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public void SetCollection(IList baseCollection)
-        {
-            Source = baseCollection;
-        }
-
-        public NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
-        {
-            var args = (NotifyCollectionChangedEventArgs)null;
-            CollectionChanged?.Invoke(this, args = ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
-            return args;
-        }
-
-        public void OnItemPropertyChanged(object sender, PropertyChangedEventArgs args)
-        {
-            ItemPropertyChanged?.Invoke(sender, args);
-        }
-
-        public void OnSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        protected override void Move(T item, int index)
         {
         }
 
-        public void OnSourceItemChanged(object sender, PropertyChangedEventArgs e)
+        public override void ApplySortInternal(IComparer<T> comparer)
         {
+            ClearCache();
+            base.ApplySortInternal(comparer);
+        }
+
+        public override void UpdateFilter()
+        {
+            ClearCache();
+            base.UpdateFilter();
+        }
+
+        private void ClearCache()
+        {
+            cache.Clear();
+            pages.ListCount = 1;
         }
     }
 }

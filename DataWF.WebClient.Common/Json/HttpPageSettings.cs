@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.WebClient.Common
 {
@@ -70,6 +72,36 @@ namespace DataWF.WebClient.Common
         public override string ToString()
         {
             return $"{XListFrom}: {ListFrom}; {XListTo}: {ListTo}";
+        }
+
+        public IEnumerable<F> Pagination<F>(IEnumerable<F> result)
+        {
+            ListCount = result.Count();
+
+            if (Mode == HttpPageMode.Page)
+            {
+                ListFrom = PageIndex * PageSize;
+                ListTo = (ListFrom + PageSize) - 1;
+
+                if (ListTo > ListCount - 1)
+                {
+                    ListTo = ListCount - 1;
+                }
+            }
+            else if (Mode == HttpPageMode.List)
+            {
+                PageSize = BufferLength;
+                PageIndex = ListFrom / PageSize;
+            }
+
+            PageCount = ListCount / PageSize;
+
+            if ((ListCount % PageSize) > 0)
+            {
+                PageCount++;
+            }
+
+            return result.Skip(ListFrom).Take(BufferLength);
         }
     }
 

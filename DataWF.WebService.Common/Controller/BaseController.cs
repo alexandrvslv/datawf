@@ -158,37 +158,13 @@ namespace DataWF.WebService.Common
 
         private IEnumerable<F> Pagination<F>(IEnumerable<F> result, HttpPageSettings pages, bool writeHeader = true)
         {
-            pages.ListCount = result.Count();
-
-            if (pages.Mode == HttpPageMode.Page)
-            {
-                pages.ListFrom = pages.PageIndex * pages.PageSize;
-                pages.ListTo = (pages.ListFrom + pages.PageSize) - 1;
-
-                if (pages.ListTo > pages.ListCount - 1)
-                {
-                    pages.ListTo = pages.ListCount - 1;
-                }
-            }
-            else if (pages.Mode == HttpPageMode.List)
-            {
-                pages.PageSize = pages.BufferLength;
-                pages.PageIndex = pages.ListFrom / pages.PageSize;
-            }
-
-            pages.PageCount = pages.ListCount / pages.PageSize;
-
-            if ((pages.ListCount % pages.PageSize) > 0)
-            {
-                pages.PageCount++;
-            }
+            result = pages.Pagination<F>(result);
 
             if (writeHeader)
             {
                 HttpContext.WritePageSettings(pages);
             }
 
-            result = result.Skip(pages.ListFrom).Take(pages.BufferLength);
             return result;
         }
 

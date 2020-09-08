@@ -66,6 +66,7 @@ namespace DataWF.Common
         Task<object> PutAsync(object value);
         Task<object> MergeAsync(object id, List<string> ids);
         object NewItem();
+        IEnumerable<object> SearchByValue(IInvoker valueInvoker, object value);
     }
 
     public interface ICrudClient<T> : ICrudClient
@@ -87,6 +88,7 @@ namespace DataWF.Common
         Task<T> PutAsync(T value, HttpJsonSettings settings, ProgressToken progressToken);
         Task<bool> DeleteAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> MergeAsync(T value, List<string> ids, HttpJsonSettings settings, ProgressToken progressToken);
+
     }
 
     public interface ILoggedClient
