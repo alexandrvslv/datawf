@@ -161,6 +161,12 @@ namespace DataWF.Data
     {
         none,
         avg,
+        concat,
+        coalesce,
+        initcap,
+        trim,
+        rtrim,
+        ltrim,
         convert,
         cast,
         sum,
@@ -177,6 +183,7 @@ namespace DataWF.Data
         max,
         min,
         count
+        
     }
 
     public enum DBRowBinarySeparator
