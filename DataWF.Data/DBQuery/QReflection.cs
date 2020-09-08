@@ -78,6 +78,11 @@ namespace DataWF.Data
             return ((IInvokerExtension)Invoker).CreateIndex(concurrent);
         }
 
+        public IListIndex CreateIndex<T>(bool concurrent)
+        {
+            return ((IInvokerExtension)Invoker).CreateIndex<T>(concurrent);
+        }
+
         public IQueryParameter CreateParameter(Type type)
         {
             return ((IInvokerExtension)Invoker).CreateParameter(type);

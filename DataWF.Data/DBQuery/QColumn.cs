@@ -155,6 +155,11 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
+        public IListIndex CreateIndex<T>(bool concurrent)
+        {
+            throw new NotImplementedException();
+        }
+
         public IQueryParameter CreateParameter(Type type)
         {
             throw new NotImplementedException();
