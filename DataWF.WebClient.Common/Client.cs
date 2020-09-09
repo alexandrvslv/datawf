@@ -74,6 +74,11 @@ namespace DataWF.Common
             base.ClearCache();
         }
 
+        public virtual bool ClearLoadCache(string filter)
+        {
+            return loadQueue.TryRemove(filter, out _);
+        }
+
         public T NewLoadItem(K p)
         {
             var newItem = new T();

@@ -67,6 +67,8 @@ namespace DataWF.Common
         Task<object> MergeAsync(object id, List<string> ids);
         object NewItem();
         IEnumerable<object> SearchByValue(IInvoker valueInvoker, object value);
+
+        bool ClearLoadCache(string filter);
     }
 
     public interface ICrudClient<T> : ICrudClient
