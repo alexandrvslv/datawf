@@ -2,6 +2,7 @@
 using DataWF.Common;
 using System;
 using Xwt;
+using System.Linq;
 
 namespace DataWF.TestGui
 {
@@ -18,6 +19,8 @@ namespace DataWF.TestGui
         private GroupBoxItem itemResult;
         private GroupBox map;
         private Table panel;
+        private DIffMode diffMode;
+
         public DiffTest()
         {
             textALabel = new Label() { Text = "Param1:", TextAlignment = Alignment.Center };
@@ -69,22 +72,40 @@ namespace DataWF.TestGui
             if (result.SelectedItem != null)
             {
                 var rez = (DiffResult)result.SelectedItem;
-                var box = rez.Type == DiffType.Deleted ? textA : textB;
+                var box = rez.Type == DiffType.Inserted ? textB : textA;
                 box.SetFocus();
-                box.SelectionStart = rez.Index;
-                box.SelectionLength = rez.Length;
+                if (diffMode == DIffMode.Char)
+                {
+                    box.SelectionStart = rez.Index;
+                    box.SelectionLength = rez.Length;
+                }
+                else
+                {
+                    var array = box.Text.Split(' ');
+
+                    box.SelectionStart = array.Take(rez.Index).Sum(p => p.Length) + rez.Index;
+                    box.SelectionLength = array.Skip(rez.Index + 1).Take(rez.Length).Sum(p => p.Length) + (rez.Length - 1);
+                }
             }
         }
 
         private void TestCharOnClick(object sender, EventArgs e)
         {
+            diffMode = DIffMode.Char;
             result.ListSource = DiffResult.Diff(textA.Text, textB.Text, false);
         }
 
         private void TestWordOnClick(object sender, EventArgs e)
         {
+            diffMode = DIffMode.Word;
             result.ListSource = DiffResult.Diff(textA.Text.Split(' '), textB.Text.Split(' '));
         }
+    }
+
+    internal enum DIffMode
+    {
+        Char,
+        Word
     }
 }
 
