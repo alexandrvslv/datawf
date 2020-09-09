@@ -1547,6 +1547,15 @@ namespace DataWF.Data
             }
         }
 
+        public ReferencingGenerator ParseReferencing(string property)
+        {
+            if (Generator != null)
+            {
+                return Generator.GetReferencingByProperty(property);
+            }
+            return null;
+        }
+
         public IEnumerable<IInvokerJson> GetInvokers<T>()
         {
             return GetInvokers(typeof(T));

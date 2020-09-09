@@ -576,15 +576,31 @@ namespace DataWF.Data
                                                                 foreach (var pcolumn in prefix)
                                                                 {
                                                                     var dbColumn = pTable.ParseColumnProperty(pcolumn);
-                                                                    if (dbColumn == null)
-                                                                        break;
-                                                                    column = new QColumn(dbColumn);
-                                                                    parameter.SetValue(column);
-                                                                    parameter.Comparer = CompareType.In;
-                                                                    pTable = dbColumn.ReferenceTable;
-                                                                    pQuery = new QQuery("", pTable, new[] { pTable.PrimaryKey }, pQuery);
-                                                                    parameter.SetValue(pQuery);
-                                                                    parameter = pQuery.Parameters.Add();
+
+                                                                    if (dbColumn != null)
+                                                                    {
+                                                                        column = new QColumn(dbColumn);
+                                                                        parameter.SetValue(column);
+                                                                        parameter.Comparer = CompareType.In;
+                                                                        pTable = dbColumn.ReferenceTable;
+                                                                        pQuery = new QQuery("", pTable, new[] { pTable.PrimaryKey }, pQuery);
+                                                                        parameter.SetValue(pQuery);
+                                                                        parameter = pQuery.Parameters.Add();
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        var referencing = pTable.ParseReferencing(pcolumn);
+                                                                        if (referencing != null)
+                                                                        {
+                                                                            column = new QColumn(pTable.PrimaryKey);
+                                                                            parameter.SetValue(column);
+                                                                            parameter.Comparer = CompareType.In;
+                                                                            pTable = referencing.ReferenceTable.Table;
+                                                                            pQuery = new QQuery("", pTable, new[] { referencing.ReferenceColumn.Column }, pQuery);
+                                                                            parameter.SetValue(pQuery);
+                                                                            parameter = pQuery.Parameters.Add();
+                                                                        }
+                                                                    }
                                                                 }
                                                                 var lastColumn = pTable.ParseColumnProperty(word);
                                                                 column = new QColumn(lastColumn);
