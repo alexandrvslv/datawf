@@ -99,7 +99,7 @@ namespace DataWF.Common
                 {
                     DiffTypeDef(a, b, i, j, out int newa, out int newb);
                     if (newa > i && newb > j
-                        && newa == newb)
+                        && newa - i == newb - j)
                     {
                         curr = new DiffResult(a, b) { Type = DiffType.Replace, Index = i, Length = newa - i };
                         list.Add(curr);
