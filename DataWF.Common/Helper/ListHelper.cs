@@ -571,7 +571,7 @@ namespace DataWF.Common
             var stack = new Stack<CheckStackEntry>(0);
             foreach (var parameter in checkers.Parameters.Where(p => p.IsEnabled))
             {
-                bool rez = parameter.Invoker.CheckItem(item, parameter.TypedValue, parameter.Comparer, parameter.Comparision);
+                bool rez = parameter.AlwaysTrue ? true : parameter.Invoker.CheckItem(item, parameter.TypedValue, parameter.Comparer, parameter.Comparision);
                 var currParameter = parameter;
                 if ((currParameter.Group & QueryGroup.Begin) == QueryGroup.Begin)
                 {
@@ -694,6 +694,11 @@ namespace DataWF.Common
 
         public static IEnumerable<T> Select<T>(IEnumerable<T> items, QueryParameter<T> param, ListIndexes<T> indexes = null)
         {
+            if (param.AlwaysTrue)
+            {
+                return items;
+            }
+
             if (param.Comparer.Type == CompareTypes.Distinct)
             {
                 return Distinct(items, param.Invoker);
@@ -729,10 +734,16 @@ namespace DataWF.Common
 
         public static IEnumerable Select(IEnumerable items, IQueryParameter param, IListIndexes indexes = null)
         {
+            if (param.AlwaysTrue)
+            {
+                return items;
+            }
+
             if (param.Comparer.Type == CompareTypes.Distinct)
             {
                 return Distinct(items, param.Invoker);
             }
+
             IListIndex index = indexes?.GetIndex(param.Name);
             if (index == null)
             {

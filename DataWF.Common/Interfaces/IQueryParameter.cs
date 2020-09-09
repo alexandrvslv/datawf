@@ -19,6 +19,7 @@ namespace DataWF.Common
         bool FormatEmpty { get; set; }
         bool FormatIgnore { get; set; }
         object Tag { get; set; }
+        bool AlwaysTrue { get; set; }
     }
 
     public interface IQueryFormatable

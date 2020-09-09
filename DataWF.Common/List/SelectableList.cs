@@ -663,7 +663,7 @@ namespace DataWF.Common
         public void AddRange(IEnumerable<T> items, bool checkUnique)
         {
             AddRangeInternal(items, checkUnique);
-            OnCollectionChanged(NotifyCollectionChangedAction.Add, items is IList iList ? iList : items.ToList(), 0);
+            OnCollectionChanged(NotifyCollectionChangedAction.Add, items.ToList(), 0);
         }
 
         private void RemoveRangeInternal(IEnumerable<T> items)

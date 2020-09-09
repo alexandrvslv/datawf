@@ -157,6 +157,7 @@ namespace DataWF.Common
 
         [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
         public object Tag { get; set; }
+        public bool AlwaysTrue { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
