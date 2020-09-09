@@ -12,7 +12,7 @@ namespace DataWF.Common
         public event EventHandler<RenamedEventArgs> Renamed;
         public event EventHandler<FileSystemEventArgs> Changed;
         public event EventHandler<EventArgs> EnabledChanged;
-        public event EventHandler<EventArgs> Deleted;
+        public event EventHandler<EventArgs> Deleting;
 
         internal void OnChanged(object sender, FileSystemEventArgs e)
         {
@@ -24,9 +24,9 @@ namespace DataWF.Common
             Renamed?.Invoke(sender, e);
         }
 
-        internal void OnDeleted(object sender, EventArgs e)
+        internal void OnDeleting(object sender, EventArgs e)
         {
-            Deleted?.Invoke(sender, e);
+            Deleting?.Invoke(sender, e);
             WatchList.Remove(sender);
         }
 

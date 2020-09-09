@@ -149,9 +149,9 @@ namespace DataWF.Common
         {
             if (!disposed)
             {
-                Watcher?.Dispose();
                 disposed = true;
-                Service.OnDeleted(this, EventArgs.Empty);
+                try { Service.OnDeleting(this, EventArgs.Empty); }
+                finally { Watcher?.Dispose(); }
             }
         }
 
