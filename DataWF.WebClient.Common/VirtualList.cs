@@ -68,7 +68,7 @@ namespace DataWF.Common
             {
                 return index < this.items.Count ? this.items[index] : default(T);
             }
-            return items[itemIndex];
+            return itemIndex < items.Count ? items[itemIndex] : default(T);
         }
 
         private async ValueTask ProcessGet(int index, int pageIndex)
