@@ -970,8 +970,7 @@ namespace DataWF.Data
 
         public virtual void Accept(IUserIdentity user)
         {
-            OnAccepting(user);
-            DBService.OnAccept(new DBItemEventArgs(this, null, user));
+            var oldState = UpdateState;
             if (IsChanged || (UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
                 if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
@@ -986,15 +985,12 @@ namespace DataWF.Data
                 }
                 RemoveOld();
             }
-            OnAccepted(user);
+            OnAccepted(user, oldState);
         }
 
-        public virtual void OnAccepted(IUserIdentity user)
+        protected virtual void OnAccepted(IUserIdentity user, DBUpdateState oldState)
         {
-        }
-
-        public virtual void OnAccepting(IUserIdentity user)
-        {
+            DBService.OnAccept(new DBItemEventArgs(this, null, user) { State = oldState });
         }
 
         public void Reject(string column)
