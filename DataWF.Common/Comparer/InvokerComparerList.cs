@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace DataWF.Common
@@ -23,7 +24,9 @@ namespace DataWF.Common
                 if (retval != 0)
                     return retval;
             }
-            return x?.GetHashCode().CompareTo(y.GetHashCode()) ?? 0;
+            if (x is IComparable compareable)
+                return compareable.CompareTo(y);
+            return x?.GetHashCode().CompareTo(y?.GetHashCode() ?? 0) ?? 0;
         }
 
         public override bool Equals(object obj)
@@ -67,7 +70,11 @@ namespace DataWF.Common
                 if (retval != 0)
                     return retval;
             }
-            return 0;
+            if (x is IComparable<T> genCompareable)
+                return genCompareable.CompareTo(y);
+            else if (x is IComparable compareable)
+                return compareable.CompareTo(y);
+            return x?.GetHashCode().CompareTo(y?.GetHashCode() ?? 0) ?? 0;
         }
 
         public int Compare(object x, object y)
