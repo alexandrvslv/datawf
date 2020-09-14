@@ -29,7 +29,25 @@ namespace DataWF.Common
 
         public static ICrudClient Get(Type type)
         {
-            return crudClients.TryGetValue(type, out var crudClient) ? crudClient : null;
+            var baseType = type;
+            while (baseType != null)
+            {
+                if (crudClients.TryGetValue(baseType, out var crudClient))
+                    return crudClient;
+                baseType = baseType.BaseType;
+            }
+            return null;
+        }
+
+        public static ICrudClient Get(Type type, int typeId)
+        {
+            var baseType = type;
+            Dictionary<int, ICrudClient> types = null;
+            while (baseType != null && !crudTypedClients.TryGetValue(baseType, out types))
+            {
+                baseType = baseType.BaseType;
+            }
+            return types != null && types.TryGetValue(typeId, out var client) ? client : null;
         }
 
         public ClientProviderBase()
@@ -154,14 +172,11 @@ namespace DataWF.Common
             {
                 if (crudClient.TypeId != 0)
                 {
-                    var baseType = crudClient.ItemType.BaseType;
-                    var baseClien = (ICrudClient)null;
-                    while (baseType != null && ((baseClien = GetClient(baseType)) == null || baseClien.TypeId != 0))
-                    {
-                        baseType = baseType.BaseType;
-                    }
+                    var baseClien = Get(crudClient.ItemType.BaseType);
                     if (baseClien != null)
                     {
+                        var baseType = baseClien.ItemType;
+
                         if (!crudTypedClients.TryGetValue(baseType, out var types))
                         {
                             crudTypedClients[baseType] = types = new Dictionary<int, ICrudClient>();
@@ -180,25 +195,11 @@ namespace DataWF.Common
             }
         }
 
-        public ICrudClient<T> GetClient<T>()
-        {
-            return (ICrudClient<T>)GetClient(typeof(T));
-        }
+        public ICrudClient<T> GetClient<T>() => Get<T>();
 
-        public ICrudClient GetClient(Type type)
-        {
-            return crudClients.TryGetValue(type, out var crudClient) ? crudClient : null;
-        }
+        public ICrudClient GetClient(Type type) => Get(type);
 
-        public ICrudClient GetClient(Type type, int typeId)
-        {
-            var baseType = type;
-            Dictionary<int, ICrudClient> types = null;
-            while (baseType != null && !crudTypedClients.TryGetValue(baseType, out types))
-            {
-                baseType = baseType.BaseType;
-            }
-            return types != null && types.TryGetValue(typeId, out var client) ? client : null;
-        }
+        public ICrudClient GetClient(Type type, int typeId) => Get(type, typeId);
+
     }
 }
