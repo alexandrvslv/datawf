@@ -178,14 +178,10 @@ namespace DataWF.Common
         {
             if (TypeId == 0 || baseClient != null)
                 return baseClient;
-            var type = typeof(T).BaseType;
-            var result = (ICrudClient)null;
-            while (type != typeof(object))
+            var result = Provider.GetClient(typeof(T).BaseType);
+            while (result != null && result.TypeId != 0 && result.ItemType.BaseType != null)
             {
-                var client = Provider.GetClient(type);
-                if (client != null)
-                    result = client;
-                type = type.BaseType;
+                result = Provider.GetClient(result.ItemType.BaseType);
             }
             return baseClient = result;
         }

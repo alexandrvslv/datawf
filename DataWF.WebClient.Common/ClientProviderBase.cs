@@ -173,6 +173,10 @@ namespace DataWF.Common
                 if (crudClient.TypeId != 0)
                 {
                     var baseClien = Get(crudClient.ItemType.BaseType);
+                    while (baseClien != null && baseClien.TypeId != 0 && baseClien.ItemType.BaseType != null)
+                    {
+                        baseClien = Get(baseClien.ItemType.BaseType);
+                    }
                     if (baseClien != null)
                     {
                         var baseType = baseClien.ItemType;
