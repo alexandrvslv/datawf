@@ -559,7 +559,7 @@ namespace DataWF.Data
                                                 else
                                                 {
                                                     var wcolumn = ParseColumn(word);
-                                                    if (wcolumn != null && (prefix.Count == 0 || tables.Any(p => string.Equals(p.Alias, prefix.FirstOrDefault()))))
+                                                    if (wcolumn != null && (prefix.Count == 0 || tables.Any(p => string.Equals(p.Alias, prefix.FirstOrDefault(), StringComparison.OrdinalIgnoreCase))))
                                                     {
                                                         column = new QColumn(wcolumn) { Prefix = prefix.FirstOrDefault() };
                                                         prefix.Clear();
@@ -721,7 +721,7 @@ namespace DataWF.Data
                                     continue;
 
                                 var cl = ParseColumn(word);
-                                if (cl != null)
+                                if (cl != null && (prefix.Count == 0 || tables.Any(p => string.Equals(p.Alias, prefix.FirstOrDefault(), StringComparison.OrdinalIgnoreCase))))
                                 {
                                     order = new QOrder
                                     {
@@ -746,7 +746,7 @@ namespace DataWF.Data
                                         order = null;
                                     }
                                 }
-                                else if (cl == null)
+                                else
                                 {
                                     if (prefix.Count > 0)
                                     {
