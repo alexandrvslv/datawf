@@ -1699,11 +1699,9 @@ namespace DataWF.Data
         public async Task SetStream(Stream stream, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
             SetValue(await Helper.GetBytesAsync(stream), column);
-            if (Attached)
-            {
-                await Save(transaction);
-                SetValue(null, column, DBSetValueMode.Loading);
-            }
+            await Save(transaction);
+            SetValue(null, column, DBSetValueMode.Loading);
+            await OnSetStream(column, transaction);
         }
 
         public virtual MemoryStream GetMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
