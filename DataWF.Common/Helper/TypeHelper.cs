@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Xml;
@@ -694,7 +695,7 @@ namespace DataWF.Common
             }
         }
 
-        public static IEnumerable<PropertyInfo> GetPropertiesByHierarchi(Type type)
+        public static IEnumerable<PropertyInfo> GetPropertiesByHierarchi(Type type, bool onlyXmlAttributes = false)
         {
             foreach (var btype in GetTypeHierarchi(type))
             {
@@ -702,6 +703,15 @@ namespace DataWF.Common
                     continue;
                 foreach (var property in btype.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
                 {
+                    if (onlyXmlAttributes
+                        && (property.GetCustomAttribute<XmlAttributeAttribute>() == null
+                        && property.GetCustomAttribute<XmlTextAttribute>() == null
+                        && property.GetCustomAttribute<XmlElementAttribute>() == null
+                        && property.GetCustomAttribute<XmlEnumAttribute>() == null))
+                    {
+                        continue;
+                    }
+
                     yield return property;
                 }
             }

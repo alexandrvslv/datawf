@@ -7,7 +7,7 @@ namespace DataWF.Common
 {
     public class TypeSerializationInfo
     {
-        public TypeSerializationInfo(Type type) : this(type, TypeHelper.GetPropertiesByHierarchi(type))
+        public TypeSerializationInfo(Type type, bool onlyXmlAttributes = false) : this(type, TypeHelper.GetPropertiesByHierarchi(type, onlyXmlAttributes))
         { }
 
         public TypeSerializationInfo(Type type, IEnumerable<string> properties) : this(type, TypeHelper.GetProperties(type, properties))

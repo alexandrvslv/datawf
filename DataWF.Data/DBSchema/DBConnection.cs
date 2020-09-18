@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -32,6 +33,21 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Name), typeof(DBConnection.NameInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.SystemName), typeof(DBConnection.SystemNameInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Host), typeof(DBConnection.HostInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Port), typeof(DBConnection.PortInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.DataBase), typeof(DBConnection.DataBaseInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Schema), typeof(DBConnection.SchemaInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.User), typeof(DBConnection.UserInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Password), typeof(DBConnection.PasswordInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Path), typeof(DBConnection.PathInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.IntegratedSecurity), typeof(DBConnection.IntegratedSecurityInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Pool), typeof(DBConnection.PoolInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Encrypt), typeof(DBConnection.EncryptInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.TimeOut), typeof(DBConnection.TimeOutInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.IsolationLevel), typeof(DBConnection.IsolationLevelInvoker))]
+[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Extend), typeof(DBConnection.ExtendInvoker))]
 namespace DataWF.Data
 {
     public class DBConnectionList : SelectableList<DBConnection>
@@ -570,7 +586,6 @@ namespace DataWF.Data
             ClearConnectionCache();
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.Name))]
         public class NameInvoker : Invoker<DBConnection, string>
         {
             public static readonly NameInvoker Instance = new NameInvoker();
@@ -583,7 +598,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, string value) => target.Name = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.SystemName))]
         public class SystemNameInvoker : Invoker<DBConnection, string>
         {
             public static readonly SystemNameInvoker Instance = new SystemNameInvoker();
@@ -596,7 +610,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, string value) => target.SystemName = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.Host))]
         public class HostInvoker : Invoker<DBConnection, string>
         {
             public static readonly HostInvoker Instance = new HostInvoker();
@@ -609,7 +622,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, string value) => target.Host = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.Port))]
         public class PortInvoker : Invoker<DBConnection, uint>
         {
             public static readonly PortInvoker Instance = new PortInvoker();
@@ -622,7 +634,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, uint value) => target.Port = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.DataBase))]
         public class DataBaseInvoker : Invoker<DBConnection, string>
         {
             public static readonly DataBaseInvoker Instance = new DataBaseInvoker();
@@ -635,7 +646,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, string value) => target.DataBase = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.Schema))]
         public class SchemaInvoker : Invoker<DBConnection, string>
         {
             public static readonly SchemaInvoker Instance = new SchemaInvoker();
@@ -648,7 +658,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, string value) => target.Schema = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.User))]
         public class UserInvoker : Invoker<DBConnection, string>
         {
             public static readonly UserInvoker Instance = new UserInvoker();
@@ -661,7 +670,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, string value) => target.User = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.Password))]
         public class PasswordInvoker : Invoker<DBConnection, string>
         {
             public static readonly PasswordInvoker Instance = new PasswordInvoker();
@@ -674,7 +682,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, string value) => target.Password = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.Path))]
         public class PathInvoker : Invoker<DBConnection, string>
         {
             public static readonly PathInvoker Instance = new PathInvoker();
@@ -687,7 +694,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, string value) => target.Path = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.IntegratedSecurity))]
         public class IntegratedSecurityInvoker : Invoker<DBConnection, bool>
         {
             public static readonly IntegratedSecurityInvoker Instance = new IntegratedSecurityInvoker();
@@ -700,7 +706,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, bool value) => target.IntegratedSecurity = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.Pool))]
         public class PoolInvoker : Invoker<DBConnection, bool?>
         {
             public static readonly PoolInvoker Instance = new PoolInvoker();
@@ -713,7 +718,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, bool? value) => target.Pool = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.Encrypt))]
         public class EncryptInvoker : Invoker<DBConnection, bool>
         {
             public static readonly EncryptInvoker Instance = new EncryptInvoker();
@@ -726,11 +730,10 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, bool value) => target.Encrypt = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.TimeOut))]
         public class TimeOutInvoker : Invoker<DBConnection, int>
         {
             public static readonly EncryptInvoker Instance = new EncryptInvoker();
-            public override string Name => nameof(DBConnection.Encrypt);
+            public override string Name => nameof(DBConnection.TimeOut);
 
             public override bool CanWrite => true;
 
@@ -739,7 +742,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, int value) => target.TimeOut = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.IsolationLevel))]
         public class IsolationLevelInvoker : Invoker<DBConnection, IsolationLevel>
         {
             public static readonly IsolationLevelInvoker Instance = new IsolationLevelInvoker();
@@ -752,7 +754,6 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, IsolationLevel value) => target.IsolationLevel = value;
         }
 
-        [Invoker(typeof(DBConnection), nameof(DBConnection.Extend))]
         public class ExtendInvoker : Invoker<DBConnection, string>
         {
             public static readonly ExtendInvoker Instance = new ExtendInvoker();

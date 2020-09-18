@@ -1,7 +1,16 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
+[assembly: Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Comparer), typeof(DictionaryComparerInvoker<,>))]
+[assembly: Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Count), typeof(DictionaryCountInvoker<,>))]
+[assembly: Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Keys), typeof(DictionaryKeysInvoker<,>))]
+[assembly: Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Values), typeof(DictionaryValuesInvoker<,>))]
+[assembly: Invoker(typeof(DictionaryItem<,>), nameof(DictionaryItem<object, object>.Key), typeof(DictionaryItem<,>.KeyInvoker))]
+[assembly: Invoker(typeof(DictionaryItem<,>), nameof(DictionaryItem<object, object>.Value), typeof(DictionaryItem<,>.ValueInvoker))]
+[assembly: Invoker(typeof(List<>), nameof(List<object>.Count), typeof(ListCountInvoker<>))]
+[assembly: Invoker(typeof(List<>), nameof(List<object>.Capacity), typeof(ListCapacityInvoker<>))]
 namespace DataWF.Common
 {
     public class DictionaryItem<K, V> : IDictionaryItem
@@ -40,7 +49,7 @@ namespace DataWF.Common
             Value = default(V);
         }
 
-        [Invoker(typeof(DictionaryItem<,>), nameof(Key))]
+
         public class KeyInvoker : Invoker<DictionaryItem<K, V>, K>
         {
             public override string Name => nameof(DictionaryItem<K, V>.Key);
@@ -52,7 +61,7 @@ namespace DataWF.Common
             public override void SetValue(DictionaryItem<K, V> target, K value) => target.Key = value;
         }
 
-        [Invoker(typeof(DictionaryItem<,>), nameof(Value))]
+
         public class ValueInvoker : Invoker<DictionaryItem<K, V>, V>
         {
             public override string Name => nameof(DictionaryItem<K, V>.Value);
@@ -65,7 +74,6 @@ namespace DataWF.Common
         }
     }
 
-    [Invoker(typeof(Dictionary<,>), nameof(Dictionary<K, V>.Comparer))]
     public class DictionaryComparerInvoker<K, V> : Invoker<Dictionary<K, V>, IEqualityComparer<K>>
     {
         public override string Name => nameof(Dictionary<K, V>.Comparer);
@@ -77,7 +85,6 @@ namespace DataWF.Common
         public override void SetValue(Dictionary<K, V> target, IEqualityComparer<K> value) { }
     }
 
-    [Invoker(typeof(Dictionary<,>), nameof(Dictionary<K, V>.Count))]
     public class DictionaryCountInvoker<K, V> : Invoker<Dictionary<K, V>, int>
     {
         public override string Name => nameof(Dictionary<K, V>.Count);
@@ -89,7 +96,6 @@ namespace DataWF.Common
         public override void SetValue(Dictionary<K, V> target, int value) { }
     }
 
-    [Invoker(typeof(Dictionary<,>), nameof(Dictionary<K, V>.Keys))]
     public class DictionaryKeysInvoker<K, V> : Invoker<Dictionary<K, V>, Dictionary<K, V>.KeyCollection>
     {
         public override string Name => nameof(Dictionary<K, V>.Keys);
@@ -101,7 +107,6 @@ namespace DataWF.Common
         public override void SetValue(Dictionary<K, V> target, Dictionary<K, V>.KeyCollection value) { }
     }
 
-    [Invoker(typeof(Dictionary<,>), nameof(Dictionary<K, V>.Values))]
     public class DictionaryValuesInvoker<K, V> : Invoker<Dictionary<K, V>, Dictionary<K, V>.ValueCollection>
     {
         public override string Name => nameof(Dictionary<K, V>.Values);
@@ -111,6 +116,28 @@ namespace DataWF.Common
         public override Dictionary<K, V>.ValueCollection GetValue(Dictionary<K, V> target) => target.Values;
 
         public override void SetValue(Dictionary<K, V> target, Dictionary<K, V>.ValueCollection value) { }
+    }
+
+    public class ListCountInvoker<T> : Invoker<List<T>, int>
+    {
+        public override string Name => nameof(List<T>.Count);
+
+        public override bool CanWrite => false;
+
+        public override int GetValue(List<T> target) => target.Count;
+
+        public override void SetValue(List<T> target, int value) { }
+    }
+
+    public class ListCapacityInvoker<T> : Invoker<List<T>, int>
+    {
+        public override string Name => nameof(List<T>.Capacity);
+
+        public override bool CanWrite => true;
+
+        public override int GetValue(List<T> target) => target.Capacity;
+
+        public override void SetValue(List<T> target, int value) => target.Capacity = value;
     }
 
 }

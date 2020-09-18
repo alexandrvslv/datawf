@@ -1,10 +1,15 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(LocaleItem), nameof(LocaleItem.Name), typeof(LocaleItem.NameInvoker))]
+[assembly: Invoker(typeof(LocaleItem), nameof(LocaleItem.Glyph), typeof(LocaleItem.GlyphInvoker))]
+[assembly: Invoker(typeof(LocaleItem), nameof(LocaleItem.ImageKey), typeof(LocaleItem.ImageKeyInvoker))]
+[assembly: Invoker(typeof(LocaleItem), nameof(LocaleItem.Value), typeof(LocaleItem.ValueInvoker))]
 namespace DataWF.Common
 {
     public class LocaleItem : SelectableList<LocaleString>, ICloneable, IEntryNotifyPropertyChanged
@@ -171,7 +176,6 @@ namespace DataWF.Common
             foreach (var item in this)
                 rez += item.Value + (!IsLast(item) ? separator : string.Empty);
             return rez;
-
         }
 
         public object Clone()
@@ -182,14 +186,10 @@ namespace DataWF.Common
             return litem;
         }
 
-        [Invoker(typeof(LocaleItem), nameof(LocaleItem.Name))]
         public class NameInvoker : Invoker<LocaleItem, string>
         {
             public static readonly NameInvoker Instance = new NameInvoker();
-            public override string Name
-            {
-                get => nameof(LocaleItem.Name);
-            }
+            public override string Name => nameof(LocaleItem.Name);
 
             public override bool CanWrite => true;
 
@@ -198,14 +198,11 @@ namespace DataWF.Common
             public override void SetValue(LocaleItem target, string value) => target.Name = value;
         }
 
-        [Invoker(typeof(LocaleItem), nameof(LocaleItem.Glyph))]
+
         public class GlyphInvoker : Invoker<LocaleItem, GlyphType>
         {
             public static readonly GlyphInvoker Instance = new GlyphInvoker();
-            public override string Name
-            {
-                get => nameof(LocaleItem.Glyph);
-            }
+            public override string Name => nameof(LocaleItem.Glyph);
 
             public override bool CanWrite => true;
 
@@ -214,14 +211,10 @@ namespace DataWF.Common
             public override void SetValue(LocaleItem target, GlyphType value) => target.Glyph = value;
         }
 
-        [Invoker(typeof(LocaleItem), nameof(LocaleItem.ImageKey))]
         public class ImageKeyInvoker : Invoker<LocaleItem, string>
         {
             public static readonly ImageKeyInvoker Instance = new ImageKeyInvoker();
-            public override string Name
-            {
-                get => nameof(LocaleItem.ImageKey);
-            }
+            public override string Name => nameof(LocaleItem.ImageKey);
 
             public override bool CanWrite => true;
 
@@ -230,14 +223,10 @@ namespace DataWF.Common
             public override void SetValue(LocaleItem target, string value) => target.ImageKey = value;
         }
 
-        [Invoker(typeof(LocaleItem), nameof(LocaleItem.Value))]
         public class ValueInvoker : Invoker<LocaleItem, string>
         {
             public static readonly ValueInvoker Instance = new ValueInvoker();
-            public override string Name
-            {
-                get => nameof(LocaleItem.Value);
-            }
+            public override string Name => nameof(LocaleItem.Value);
 
             public override bool CanWrite => true;
 

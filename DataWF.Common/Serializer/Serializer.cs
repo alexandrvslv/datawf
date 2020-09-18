@@ -51,6 +51,8 @@ namespace DataWF.Common
 
         public bool Indent { get; set; } = true;
 
+        public bool OnlyXmlAttributes { get; set; } = false;
+
         public Dictionary<Type, TypeSerializationInfo> SerializationInfo { get; set; } = new Dictionary<Type, TypeSerializationInfo>();
 
         public object Deserialize(Stream stream, object element = null)
@@ -113,7 +115,7 @@ namespace DataWF.Common
                 return null;
             if (!SerializationInfo.TryGetValue(type, out var info))
             {
-                SerializationInfo[type] = info = new TypeSerializationInfo(type);
+                SerializationInfo[type] = info = new TypeSerializationInfo(type, OnlyXmlAttributes);
             }
             return info;
         }

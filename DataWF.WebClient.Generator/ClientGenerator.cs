@@ -38,6 +38,7 @@ namespace DataWF.WebClient.Generator
         private readonly Dictionary<string, Type> cacheReferences = new Dictionary<string, Type>(StringComparer.Ordinal);
         private readonly Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>(StringComparer.Ordinal);
         private readonly Dictionary<string, Dictionary<string, UsingDirectiveSyntax>> cacheUsings = new Dictionary<string, Dictionary<string, UsingDirectiveSyntax>>(StringComparer.Ordinal);
+        private readonly Dictionary<string, List<AttributeListSyntax>> cacheAttributes = new Dictionary<string, List<AttributeListSyntax>>(StringComparer.Ordinal);
 
         private readonly Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
         private OpenApiDocument document;
@@ -181,7 +182,7 @@ namespace DataWF.WebClient.Generator
                 SyntaxHelper.CreateUsingDirective("DataWF.Common") ,
                 SyntaxHelper.CreateUsingDirective("DataWF.WebClient.Common") ,
                 SyntaxHelper.CreateUsingDirective("System")
-            });
+            }, Enumerable.Empty<AttributeListSyntax>());
         }
 
         private ClassDeclarationSyntax GenProvider()
@@ -268,7 +269,7 @@ namespace DataWF.WebClient.Generator
             foreach (var entry in cacheClients)
             {
                 var usings = cacheUsings[entry.Key];
-                var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, usings.Values.OrderBy(p => p.ToString()));
+                var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, usings.Values.OrderBy(p => p.ToString()), new List<AttributeListSyntax>());
                 if (save)
                 {
                     WriteFile(Path.Combine(clientPath, entry.Key + "Client.cs"), unit);
@@ -939,8 +940,10 @@ namespace DataWF.WebClient.Generator
                 { "DataWF.WebClient.Common",  SyntaxHelper.CreateUsingDirective("DataWF.WebClient.Common") } ,
                 { "System", SyntaxHelper.CreateUsingDirective("System") },
             };
-            var @class = schema.IsEnumeration ? GenDefinitionEnum(schema, usings) : GenDefinitionClass(schema, usings);
-            return SyntaxHelper.GenUnit(@class, Namespace, usings.Values.OrderBy(p => p.ToString()));
+            var attributes = new List<AttributeListSyntax>();
+
+            var @class = schema.IsEnumeration ? GenDefinitionEnum(schema, usings) : GenDefinitionClass(schema, usings, attributes);
+            return SyntaxHelper.GenUnit(@class, Namespace, usings.Values.OrderBy(p => p.ToString()), attributes);
         }
 
         private MemberDeclarationSyntax GenDefinitionEnum(JsonSchema schema, Dictionary<string, UsingDirectiveSyntax> usings)
@@ -995,7 +998,7 @@ namespace DataWF.WebClient.Generator
             }
         }
 
-        private MemberDeclarationSyntax GenDefinitionClass(JsonSchema schema, Dictionary<string, UsingDirectiveSyntax> usings)
+        private MemberDeclarationSyntax GenDefinitionClass(JsonSchema schema, Dictionary<string, UsingDirectiveSyntax> usings, List<AttributeListSyntax> attributes)
         {
             var refFields = referenceFields[schema] = new List<RefField>();
             return SF.ClassDeclaration(
@@ -1005,7 +1008,7 @@ namespace DataWF.WebClient.Generator
                     typeParameterList: null,
                     baseList: SF.BaseList(SF.SeparatedList(GenDefinitionClassBases(schema, usings))),
                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SF.List(GenDefinitionClassMemebers(schema, refFields, usings)));
+                    members: SF.List(GenDefinitionClassMemebers(schema, refFields, usings, attributes)));
         }
 
         private IEnumerable<BaseTypeSyntax> GenDefinitionClassBases(JsonSchema schema, Dictionary<string, UsingDirectiveSyntax> usings)
@@ -1035,7 +1038,7 @@ namespace DataWF.WebClient.Generator
             }
         }
 
-        private IEnumerable<MemberDeclarationSyntax> GenDefinitionClassMemebers(JsonSchema schema, List<RefField> refFields, Dictionary<string, UsingDirectiveSyntax> usings)
+        private IEnumerable<MemberDeclarationSyntax> GenDefinitionClassMemebers(JsonSchema schema, List<RefField> refFields, Dictionary<string, UsingDirectiveSyntax> usings, List<AttributeListSyntax> attributes)
         {
             var idKey = GetPrimaryKey(schema);
             var typeKey = GetTypeKey(schema);
@@ -1111,21 +1114,22 @@ namespace DataWF.WebClient.Generator
                 var propertyType = GetTypeString(property.Value, property.Value.IsNullableRaw ?? true, usings, refkey == null ? "SelectableList" : "ReferenceList");
                 var propertyName = GetPropertyName(property.Value);
 
-                yield return GenDefinitionClassPropertyInvoker(name, definitionName, propertyName, propertyType);
+                yield return GenDefinitionClassPropertyInvoker(name, definitionName, propertyName, propertyType, attributes);
             }
 
             if (GetPrimaryKey(schema, false) != null)
             {
-                yield return GenDefinitionClassPropertyInvoker("PrimaryKeyInvoker", definitionName, "PrimaryKey", "object");
+                yield return GenDefinitionClassPropertyInvoker("PrimaryKeyInvoker", definitionName, "PrimaryKey", "object", attributes);
             }
         }
 
-        private ClassDeclarationSyntax GenDefinitionClassPropertyInvoker(string name, string definitionName, string propertyName, string propertyType)
+        private ClassDeclarationSyntax GenDefinitionClassPropertyInvoker(string name, string definitionName, string propertyName, string propertyType, List<AttributeListSyntax> attributes)
         {
+            attributes.AddRange(GenDefinitionClassPropertyInvokerAttribute(definitionName, propertyName, $"{definitionName}.{name}<>"));
             var nullable = propertyType.IndexOf("?") > -1;
             return SF.ClassDeclaration(
-                     attributeLists: SF.List(GenDefinitionClassPropertyInvokerAttribute(definitionName, propertyName)),
-                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
+                     attributeLists: SF.List<AttributeListSyntax>(),
+                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),//, SF.Token(SyntaxKind.PartialKeyword)
                      identifier: SF.Identifier(name + "<T>"),
                      typeParameterList: null,
                      baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
@@ -1224,9 +1228,9 @@ namespace DataWF.WebClient.Generator
 
         }
 
-        private IEnumerable<AttributeListSyntax> GenDefinitionClassPropertyInvokerAttribute(string definitionName, string propertyName)
+        private IEnumerable<AttributeListSyntax> GenDefinitionClassPropertyInvokerAttribute(string definitionName, string propertyName, string invokerName)
         {
-            yield return SyntaxHelper.GenAttributeList("Invoker", $"typeof({definitionName}), nameof({definitionName}.{propertyName})");
+            yield return SyntaxHelper.GenAttributeList("assembly: Invoker", $"typeof({Namespace}.{definitionName}), nameof({Namespace}.{definitionName}.{propertyName}), typeof({Namespace}.{invokerName})");
         }
 
         private string GetInvokerName(JsonSchemaProperty property)

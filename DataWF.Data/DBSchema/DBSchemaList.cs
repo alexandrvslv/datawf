@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -25,6 +26,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBSchemaList), nameof(DBSchemaList.HandleChanges), typeof(DBSchemaList.HandleChangesInvoker<>))]
 namespace DataWF.Data
 {
     public class DBSchemaList : DBSchemaItemList<DBSchema>
@@ -247,7 +249,6 @@ namespace DataWF.Data
             }
         }
 
-        [Invoker(typeof(DBSchemaList), nameof(DBSchemaList.HandleChanges))]
         public class HandleChangesInvoker<T> : Invoker<T, bool> where T : DBSchemaList
         {
             public static readonly HandleChangesInvoker<T> Instance = new HandleChangesInvoker<T>();

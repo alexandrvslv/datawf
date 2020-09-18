@@ -1,21 +1,14 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(SynchronizedItem), nameof(SynchronizedItem.SyncStatus), typeof(SynchronizedItem.SyncStatusInvoker<>))]
 namespace DataWF.Common
 {
-    public enum SynchronizedStatus
-    {
-        New,
-        Edit,
-        Load,
-        Actual,
-        Suspend
-    }
-
     public abstract class SynchronizedItem : DefaultItem, ISynchronized
     {
         protected SynchronizedStatus syncStatus = SynchronizedStatus.New;
@@ -115,7 +108,6 @@ namespace DataWF.Common
             base.OnPropertyChanged(oldValue, newValue, propertyName);
         }
 
-        [Invoker(typeof(SynchronizedItem), nameof(SynchronizedItem.SyncStatus))]
         public class SyncStatusInvoker<T> : Invoker<T, SynchronizedStatus> where T : SynchronizedItem
         {
             public override string Name => nameof(SynchronizedItem.SyncStatus);

@@ -103,20 +103,20 @@ namespace DataWF.Common
             }
         }
 
-        public static void RegisterInvoker(Type type, InvokerAttribute invoker)
+        public static void RegisterInvoker(InvokerAttribute invoker)
         {
             var propertyInfo = TypeHelper.GetPropertyInfo(invoker.TargetType, invoker.PropertyName);
             if (propertyInfo != null)
             {
-                if (type.IsGenericType
+                if (invoker.InvokerType.IsGenericType
                     || invoker.TargetType.IsGenericTypeDefinition)
                 {
                     var token = GetToken(propertyInfo);
-                    cacheGenericInvokers[token] = type;
+                    cacheGenericInvokers[token] = invoker.InvokerType;
                 }
                 else
                 {
-                    RegisterInvoker(propertyInfo, (IInvoker)Activator.CreateInstance(type));
+                    RegisterInvoker(propertyInfo, (IInvoker)Activator.CreateInstance(invoker.InvokerType));
                 }
             }
         }
@@ -129,7 +129,7 @@ namespace DataWF.Common
         public static void RegisterInvoker(MemberInfo memberInfo, IInvoker invoker)
         {
             var token = GetToken(memberInfo);
-            cacheInvokers[token] = invoker;
+            CacheInvokers(token, invoker, memberInfo);
         }
 
         public static IInvoker Initialize<T>(string property)
@@ -202,16 +202,27 @@ namespace DataWF.Common
                     if (cacheGenericInvokers.TryGetValue(genericToken, out var genericInvokerType))
                     {
                         var type = genericInvokerType.MakeGenericType(info.DeclaringType.GetGenericArguments());
-                        return cacheInvokers[token] = (IInvoker)Activator.CreateInstance(type);
+                        return CacheInvokers(token, (IInvoker)Activator.CreateInstance(type), info);
                     }
                 }
                 else if (cacheGenericInvokers.TryGetValue(baseToken, out var genericInvokerType))
                 {
                     var type = genericInvokerType.MakeGenericType(info.DeclaringType);
-                    return cacheInvokers[token] = (IInvoker)Activator.CreateInstance(type);
+                    return CacheInvokers(token, (IInvoker)Activator.CreateInstance(type), info);
                 }
             }
-            return cacheInvokers[token] = Initialize(info, index);
+            return CacheInvokers(token, Initialize(info, index), info);
+        }
+
+        private static IInvoker CacheInvokers(MetadataToken token, IInvoker invoker, MemberInfo info)
+        {
+#if DEBUG
+            if (info != null && !string.Equals(invoker?.Name, info.Name, StringComparison.Ordinal))
+            {
+                System.Diagnostics.Debug.WriteLine($"Missmatch Invoker.Name expect: {info.DeclaringType.Name}.{info.Name} but got: {invoker?.TargetType.Name ?? "null"}.{invoker?.Name ?? "null"}");
+            }
+#endif
+            return cacheInvokers[token] = invoker;
         }
 
         public static IInvoker Initialize(MemberInfo info, object index = null)

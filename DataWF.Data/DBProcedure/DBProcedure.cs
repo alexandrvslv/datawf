@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System.Text.Json.Serialization;
 using System;
 using System.CodeDom.Compiler;
@@ -32,14 +33,14 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.Source), typeof(DBProcedure.SourceInvoker))]
+[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.Stamp), typeof(DBProcedure.StampInvoker))]
+[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.Parameters), typeof(DBProcedure.ParametersInvoker))]
+[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.GroupName), typeof(DBProcedure.GroupNameInvoker))]
+[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.DataName), typeof(DBProcedure.DataNameInvoker))]
+[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.ProcedureType), typeof(DBProcedure.ProcedureTypeInvoker))]
 namespace DataWF.Data
 {
-
-    public interface IExecutable
-    {
-        Task<object> Execute(ExecuteArgs arg);
-    }
-
     public class DBProcedure : DBSchemaItem, IData, IGroup
     {
         private Assembly tempAssembly;
@@ -840,7 +841,6 @@ namespace DataWF.Data
             return result;
         }
 
-        [Invoker(typeof(DBProcedure), nameof(DBProcedure.Source))]
         public class SourceInvoker : Invoker<DBProcedure, string>
         {
             public static readonly SourceInvoker Instance = new SourceInvoker();
@@ -853,7 +853,6 @@ namespace DataWF.Data
             public override void SetValue(DBProcedure target, string value) => target.Source = value;
         }
 
-        [Invoker(typeof(DBProcedure), nameof(DBProcedure.Stamp))]
         public class StampInvoker : Invoker<DBProcedure, DateTime>
         {
             public static readonly StampInvoker Instance = new StampInvoker();
@@ -866,7 +865,6 @@ namespace DataWF.Data
             public override void SetValue(DBProcedure target, DateTime value) => target.Stamp = value;
         }
 
-        [Invoker(typeof(DBProcedure), nameof(DBProcedure.Parameters))]
         public class ParametersInvoker : Invoker<DBProcedure, DBProcParameterList>
         {
             public static readonly ParametersInvoker Instance = new ParametersInvoker();
@@ -879,7 +877,6 @@ namespace DataWF.Data
             public override void SetValue(DBProcedure target, DBProcParameterList value) => target.Parameters = value;
         }
 
-        [Invoker(typeof(DBProcedure), nameof(DBProcedure.GroupName))]
         public class GroupNameInvoker : Invoker<DBProcedure, string>
         {
             public static readonly GroupNameInvoker Instance = new GroupNameInvoker();
@@ -892,7 +889,6 @@ namespace DataWF.Data
             public override void SetValue(DBProcedure target, string value) => target.GroupName = value;
         }
 
-        [Invoker(typeof(DBProcedure), nameof(DBProcedure.DataName))]
         public class DataNameInvoker : Invoker<DBProcedure, string>
         {
             public static readonly DataNameInvoker Instance = new DataNameInvoker();
@@ -905,7 +901,6 @@ namespace DataWF.Data
             public override void SetValue(DBProcedure target, string value) => target.DataName = value;
         }
 
-        [Invoker(typeof(DBProcedure), nameof(DBProcedure.ProcedureType))]
         public class ProcedureTypeInvoker : Invoker<DBProcedure, ProcedureTypes>
         {
             public static readonly ProcedureTypeInvoker Instance = new ProcedureTypeInvoker();

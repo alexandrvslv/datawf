@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -6,6 +7,11 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
+[assembly: Invoker(typeof(EnumItem), nameof(EnumItem.Value), typeof(EnumItem.ValueInvoker))]
+[assembly: Invoker(typeof(EnumItem), nameof(EnumItem.Name), typeof(EnumItem.NameInvoker))]
+[assembly: Invoker(typeof(EnumItem), nameof(EnumItem.Text), typeof(EnumItem.TextInvoker))]
+[assembly: Invoker(typeof(EnumItem), nameof(EnumItem.TextUI), typeof(EnumItem.TextUIInvoker))]
+[assembly: Invoker(typeof(EnumItem), nameof(EnumItem.Index), typeof(EnumItem.IndexInvoker))]
 namespace DataWF.Common
 {
     public class EnumItem : ICheck, INamed, INotifyPropertyChanged
@@ -160,7 +166,6 @@ namespace DataWF.Common
             return Text;
         }
 
-        [Invoker(typeof(EnumItem), nameof(EnumItem.Value))]
         public class ValueInvoker : Invoker<EnumItem, object>
         {
             public static readonly ValueInvoker Instance = new ValueInvoker();
@@ -174,8 +179,6 @@ namespace DataWF.Common
             public override void SetValue(EnumItem target, object value) { }
         }
 
-
-        [Invoker(typeof(EnumItem), nameof(EnumItem.Name))]
         public class NameInvoker : Invoker<EnumItem, string>
         {
             public static readonly NameInvoker Instance = new NameInvoker();
@@ -188,7 +191,6 @@ namespace DataWF.Common
             public override void SetValue(EnumItem target, string value) => target.Name = value;
         }
 
-        [Invoker(typeof(EnumItem), nameof(EnumItem.Text))]
         public class TextInvoker : Invoker<EnumItem, string>
         {
             public static readonly TextInvoker Instance = new TextInvoker();
@@ -201,7 +203,6 @@ namespace DataWF.Common
             public override void SetValue(EnumItem target, string value) => target.Text = value;
         }
 
-        [Invoker(typeof(EnumItem), nameof(EnumItem.TextUI))]
         public class TextUIInvoker : Invoker<EnumItem, string>
         {
             public static readonly TextInvoker Instance = new TextInvoker();
@@ -214,7 +215,6 @@ namespace DataWF.Common
             public override void SetValue(EnumItem target, string value) => target.TextUI = value;
         }
 
-        [Invoker(typeof(EnumItem), nameof(EnumItem.Index))]
         public class IndexInvoker : Invoker<EnumItem, int>
         {
             public static readonly IndexInvoker Instance = new IndexInvoker();

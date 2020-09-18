@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,6 +13,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.Disposed), typeof(SelectableList<>.DisposedInvoker))]
+[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.IsFixedSize), typeof(SelectableList<>.IsFixedSizeInvoker))]
+[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.IsReadOnly), typeof(SelectableList<>.IsReadOnlyInvoker))]
+[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.IsSorted), typeof(SelectableList<>.IsSortedInvoker))]
+[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.Comparer), typeof(SelectableList<>.ComparerInvoker))]
+[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.Count), typeof(SelectableList<>.CountInvoker))]
+[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.SyncRoot), typeof(SelectableList<>.SyncRootInvoker))]
 namespace DataWF.Common
 {
     public class SelectableList<T> : ISelectable, ISelectable<T>, IList, IList<T>
@@ -916,7 +924,6 @@ namespace DataWF.Common
             return items.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
         }
 
-        [Invoker(typeof(SelectableList<>), nameof(Disposed))]
         public class DisposedInvoker : Invoker<SelectableList<T>, bool>
         {
             public override string Name => nameof(SelectableList<T>.Disposed);
@@ -928,7 +935,6 @@ namespace DataWF.Common
             public override void SetValue(SelectableList<T> target, bool value) { }
         }
 
-        [Invoker(typeof(SelectableList<>), nameof(IsFixedSize))]
         public class IsFixedSizeInvoker : Invoker<SelectableList<T>, bool>
         {
             public override string Name => nameof(SelectableList<T>.IsFixedSize);
@@ -940,7 +946,6 @@ namespace DataWF.Common
             public override void SetValue(SelectableList<T> target, bool value) { }
         }
 
-        [Invoker(typeof(SelectableList<>), nameof(IsReadOnly))]
         public class IsReadOnlyInvoker : Invoker<SelectableList<T>, bool>
         {
             public override string Name => nameof(SelectableList<T>.IsReadOnly);
@@ -952,7 +957,6 @@ namespace DataWF.Common
             public override void SetValue(SelectableList<T> target, bool value) { }
         }
 
-        [Invoker(typeof(SelectableList<>), nameof(IsSorted))]
         public class IsSortedInvoker : Invoker<SelectableList<T>, bool>
         {
             public override string Name => nameof(SelectableList<T>.IsSorted);
@@ -964,7 +968,6 @@ namespace DataWF.Common
             public override void SetValue(SelectableList<T> target, bool value) { }
         }
 
-        [Invoker(typeof(SelectableList<>), nameof(Comparer))]
         public class ComparerInvoker : Invoker<SelectableList<T>, IComparer<T>>
         {
             public override string Name => nameof(SelectableList<T>.Comparer);
@@ -976,7 +979,6 @@ namespace DataWF.Common
             public override void SetValue(SelectableList<T> target, IComparer<T> value) { }
         }
 
-        [Invoker(typeof(SelectableList<>), nameof(Count))]
         public class CountInvoker : Invoker<SelectableList<T>, int>
         {
             public override string Name => nameof(SelectableList<T>.Count);
@@ -988,7 +990,6 @@ namespace DataWF.Common
             public override void SetValue(SelectableList<T> target, int value) { }
         }
 
-        [Invoker(typeof(SelectableList<>), nameof(SyncRoot))]
         public class SyncRootInvoker : Invoker<SelectableList<T>, object>
         {
             public override string Name => nameof(SelectableList<T>.SyncRoot);

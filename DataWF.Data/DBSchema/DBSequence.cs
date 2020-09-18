@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.ComponentModel;
 using System.Text;
@@ -25,6 +26,12 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.Current), typeof(DBSequence.CurrentInvoker))]
+[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.Increment), typeof(DBSequence.IncrementInvoker))]
+[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.Size), typeof(DBSequence.SizeInvoker))]
+[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.Scale), typeof(DBSequence.ScaleInvoker))]
+[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.DBDataType), typeof(DBSequence.DBDataTypeInvoker))]
+[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.NextQuery), typeof(DBSequence.NextQueryInvoker))]
 namespace DataWF.Data
 {
     public class DBSequence : DBSchemaItem
@@ -200,7 +207,6 @@ namespace DataWF.Data
             }
         }
 
-        [Invoker(typeof(DBSequence), nameof(DBSequence.Current))]
         public class CurrentInvoker : Invoker<DBSequence, long>
         {
             public override string Name => nameof(DBSequence.Current);
@@ -212,7 +218,6 @@ namespace DataWF.Data
             public override void SetValue(DBSequence target, long value) => target.Current = value;
         }
 
-        [Invoker(typeof(DBSequence), nameof(DBSequence.Increment))]
         public class IncrementInvoker : Invoker<DBSequence, int>
         {
             public override string Name => nameof(DBSequence.Increment);
@@ -224,7 +229,6 @@ namespace DataWF.Data
             public override void SetValue(DBSequence target, int value) => target.Increment = value;
         }
 
-        [Invoker(typeof(DBSequence), nameof(DBSequence.Size))]
         public class SizeInvoker : Invoker<DBSequence, int>
         {
             public override string Name => nameof(DBSequence.Size);
@@ -236,7 +240,6 @@ namespace DataWF.Data
             public override void SetValue(DBSequence target, int value) => target.Size = value;
         }
 
-        [Invoker(typeof(DBSequence), nameof(DBSequence.Scale))]
         public class ScaleInvoker : Invoker<DBSequence, int>
         {
             public override string Name => nameof(DBSequence.Scale);
@@ -248,7 +251,6 @@ namespace DataWF.Data
             public override void SetValue(DBSequence target, int value) => target.Scale = value;
         }
 
-        [Invoker(typeof(DBSequence), nameof(DBSequence.DBDataType))]
         public class DBDataTypeInvoker : Invoker<DBSequence, DBDataType>
         {
             public override string Name => nameof(DBSequence.DBDataType);
@@ -260,7 +262,6 @@ namespace DataWF.Data
             public override void SetValue(DBSequence target, DBDataType value) => target.DBDataType = value;
         }
 
-        [Invoker(typeof(DBSequence), nameof(DBSequence.NextQuery))]
         public class NextQueryInvoker : Invoker<DBSequence, string>
         {
             public override string Name => nameof(DBSequence.NextQuery);

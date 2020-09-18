@@ -32,30 +32,4 @@ namespace DataWF.Data
             //Indexes.Add(groupInvoker);
         }
     }
-
-    [Invoker(typeof(QParam), nameof(QParam.Group))]
-    public class QParamGroupInvoker : Invoker<QParam, QParam>
-    {
-        public static readonly QParamGroupInvoker Instance = new QParamGroupInvoker();
-        public override string Name => nameof(QParam.Group);
-
-        public override bool CanWrite => true;
-
-        public override QParam GetValue(QParam target) => target.Group;
-
-        public override void SetValue(QParam target, QParam value) => target.Group = value;
-    }
-
-    [Invoker(typeof(QParam), "Column.Name")]
-    public class QParamColumnNameInvoker : Invoker<QParam, string>
-    {
-        public static readonly QParamColumnNameInvoker Instance = new QParamColumnNameInvoker();
-        public override string Name => "Column.Name";
-
-        public override bool CanWrite => false;
-
-        public override string GetValue(QParam target) => target.Column?.Name;
-
-        public override void SetValue(QParam target, string value) { }
-    }
 }

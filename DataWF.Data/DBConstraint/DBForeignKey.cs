@@ -18,12 +18,17 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBForeignKey), nameof(DBForeignKey.References), typeof(DBForeignKey.ReferencesInvoker))]
+[assembly: Invoker(typeof(DBForeignKey), nameof(DBForeignKey.ReferenceName), typeof(DBForeignKey.ReferenceNameInvoker))]
+[assembly: Invoker(typeof(DBForeignKey), nameof(DBForeignKey.Property), typeof(DBForeignKey.PropertyInvoker))]
+[assembly: Invoker(typeof(DBForeignKey), nameof(DBForeignKey.ReferenceTableName), typeof(DBForeignKey.ReferenceTableNameInvoker))]
 namespace DataWF.Data
 {
     public class DBForeignKey : DBConstraint
@@ -50,7 +55,7 @@ namespace DataWF.Data
 
         public string Property
         {
-            get { return property; }
+            get => property;
             set
             {
                 if (property != value)
@@ -109,7 +114,6 @@ namespace DataWF.Data
             return string.Format("{0}-{1}({2})", Column, ReferenceTable, Reference);
         }
 
-        [Invoker(typeof(DBForeignKey), nameof(DBForeignKey.References))]
         public class ReferencesInvoker : Invoker<DBForeignKey, DBColumnReferenceList>
         {
             public static readonly ReferencesInvoker Instance = new ReferencesInvoker();
@@ -122,7 +126,6 @@ namespace DataWF.Data
             public override void SetValue(DBForeignKey target, DBColumnReferenceList value) => target.References = value;
         }
 
-        [Invoker(typeof(DBForeignKey), nameof(DBForeignKey.ReferenceName))]
         public class ReferenceNameInvoker : Invoker<DBForeignKey, string>
         {
             public static readonly ReferenceNameInvoker Instance = new ReferenceNameInvoker();
@@ -135,7 +138,6 @@ namespace DataWF.Data
             public override void SetValue(DBForeignKey target, string value) => target.ReferenceName = value;
         }
 
-        [Invoker(typeof(DBForeignKey), nameof(DBForeignKey.Property))]
         public class PropertyInvoker : Invoker<DBForeignKey, string>
         {
             public static readonly PropertyInvoker Instance = new PropertyInvoker();
@@ -149,7 +151,6 @@ namespace DataWF.Data
             public override void SetValue(DBForeignKey target, string value) => target.Property = value;
         }
 
-        [Invoker(typeof(DBForeignKey), nameof(DBForeignKey.ReferenceTableName))]
         public class ReferenceTableNameInvoker : Invoker<DBForeignKey, string>
         {
             public static readonly ReferenceTableNameInvoker Instance = new ReferenceTableNameInvoker();

@@ -18,11 +18,14 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 
+[assembly: Invoker(typeof(ColumnGenerator), nameof(ColumnGenerator.ColumnName), typeof(ColumnGenerator.ColumnNameInvoker))]
+[assembly: Invoker(typeof(ColumnGenerator), nameof(ColumnGenerator.PropertyName), typeof(ColumnGenerator.PropertyNameInvoker))]
 namespace DataWF.Data
 {
     public class ColumnGenerator
@@ -152,32 +155,32 @@ namespace DataWF.Data
                 table.Columns.Add(Column);
             }
         }
+
+        public class ColumnNameInvoker : Invoker<ColumnGenerator, string>
+        {
+            public static readonly ColumnNameInvoker Instance = new ColumnNameInvoker();
+            public override string Name => nameof(ColumnGenerator.ColumnName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(ColumnGenerator target) => target.ColumnName;
+
+            public override void SetValue(ColumnGenerator target, string value) => target.ColumnName = value;
+        }
+
+        public class PropertyNameInvoker : Invoker<ColumnGenerator, string>
+        {
+            public static readonly PropertyNameInvoker Instance = new PropertyNameInvoker();
+
+            public override string Name => nameof(ColumnGenerator.PropertyName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(ColumnGenerator target) => target.PropertyName;
+
+            public override void SetValue(ColumnGenerator target, string value) => target.PropertyName = value;
+        }
     }
 
-    [Invoker(typeof(ColumnGenerator), nameof(ColumnGenerator.ColumnName))]
-    public class ColumnGeneratorColumnNameInvoker : Invoker<ColumnGenerator, string>
-    {
-        public static readonly ColumnGeneratorColumnNameInvoker Instance = new ColumnGeneratorColumnNameInvoker();
-        public override string Name => nameof(ColumnGenerator.ColumnName);
 
-        public override bool CanWrite => true;
-
-        public override string GetValue(ColumnGenerator target) => target.ColumnName;
-
-        public override void SetValue(ColumnGenerator target, string value) => target.ColumnName = value;
-    }
-
-    [Invoker(typeof(ColumnGenerator), nameof(ColumnGenerator.PropertyName))]
-    public class ColumnGeneratorPropertyNameInvoker : Invoker<ColumnGenerator, string>
-    {
-        public static readonly ColumnGeneratorPropertyNameInvoker Instance = new ColumnGeneratorPropertyNameInvoker();
-
-        public override string Name => nameof(ColumnGenerator.PropertyName);
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(ColumnGenerator target) => target.PropertyName;
-
-        public override void SetValue(ColumnGenerator target, string value) => target.PropertyName = value;
-    }
 }

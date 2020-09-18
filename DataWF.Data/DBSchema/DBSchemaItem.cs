@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System.Text.Json.Serialization;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,10 @@ using System.ComponentModel;
 using System.Xml.Serialization;
 using System.ComponentModel.DataAnnotations;
 
+[assembly: Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.Name), typeof(DBSchemaItem.NameInvoker<>))]
+[assembly: Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.DisplayName), typeof(DBSchemaItem.DisplayNameInvoker<>))]
+[assembly: Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.OldName), typeof(DBSchemaItem.OldNameInvoker<>))]
+[assembly: Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.FullName), typeof(DBSchemaItem.FullNameInvoker<>))]
 namespace DataWF.Data
 {
     public abstract class DBSchemaItem : IEntryNotifyPropertyChanged, IComparable, ICloneable, IAccessable, IDBSchemaItem
@@ -191,7 +196,6 @@ namespace DataWF.Data
 
         #endregion
 
-        [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.Name))]
         public class NameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
         {
             public static readonly NameInvoker<T> Instance = new NameInvoker<T>();
@@ -205,7 +209,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.Name = value;
         }
 
-        [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.DisplayName))]
         public class DisplayNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
         {
             public override string Name => nameof(DBSchemaItem.DisplayName);
@@ -217,7 +220,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.DisplayName = value;
         }
 
-        [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.OldName))]
         public class OldNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
         {
             public override string Name => nameof(DBSchemaItem.OldName);
@@ -229,7 +231,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.OldName = value;
         }
 
-        [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.FullName))]
         public class FullNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
         {
             public override string Name => nameof(DBSchemaItem.FullName);

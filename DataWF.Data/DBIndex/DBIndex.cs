@@ -18,12 +18,15 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
+[assembly: Invoker(typeof(DBIndex), nameof(DBIndex.Unique), typeof(DBIndex.UniqueInvoker<>))]
+[assembly: Invoker(typeof(DBIndex), nameof(DBIndex.Columns), typeof(DBIndex.ColumnsInvoker<>))]
 namespace DataWF.Data
 {
     public class DBIndex : DBTableItem
@@ -70,7 +73,6 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
-        [Invoker(typeof(DBIndex), nameof(DBIndex.Unique))]
         public class UniqueInvoker<T> : Invoker<T, bool> where T : DBIndex
         {
             public static readonly UniqueInvoker<T> Instance = new UniqueInvoker<T>();
@@ -83,7 +85,6 @@ namespace DataWF.Data
             public override void SetValue(T target, bool value) => target.Unique = value;
         }
 
-        [Invoker(typeof(DBIndex), nameof(DBIndex.Columns))]
         public class ColumnsInvoker<T> : Invoker<T, DBColumnReferenceList> where T : DBIndex
         {
             public static readonly ColumnsInvoker<T> Instance = new ColumnsInvoker<T>();

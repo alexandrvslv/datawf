@@ -18,11 +18,15 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBLogColumn), nameof(DBLogColumn.BaseName), typeof(DBLogColumn.BaseNameInvoker<>))]
+[assembly: Invoker(typeof(DBLogColumn), nameof(DBLogColumn.BaseColumn), typeof(DBLogColumn.BaseColumnInvoker<>))]
+[assembly: Invoker(typeof(DBLogColumn), nameof(DBLogColumn.LogTable), typeof(DBLogColumn.LogTableInvoker<>))]
 namespace DataWF.Data
 {
     public class DBLogColumn : DBColumn
@@ -97,7 +101,6 @@ namespace DataWF.Data
             set { base.Access = value; }
         }
 
-        [Invoker(typeof(DBLogColumn), nameof(DBLogColumn.BaseName))]
         public class BaseNameInvoker<T> : Invoker<T, string> where T : DBLogColumn
         {
             public static readonly BaseNameInvoker<T> Instance = new BaseNameInvoker<T>();
@@ -110,7 +113,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.BaseName = value;
         }
 
-        [Invoker(typeof(DBLogColumn), nameof(DBLogColumn.BaseColumn))]
         public class BaseColumnInvoker<T> : Invoker<T, DBColumn> where T : DBLogColumn
         {
             public override string Name => nameof(DBLogColumn.BaseColumn);
@@ -122,7 +124,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBColumn value) => target.BaseColumn = value;
         }
 
-        [Invoker(typeof(DBLogColumn), nameof(LogTable))]
         public class LogTableInvoker<T> : Invoker<T, IDBLogTable> where T : DBLogColumn
         {
             public override string Name => nameof(DBLogColumn.LogTable);

@@ -28,9 +28,9 @@ namespace DataWF.WebService.Common
         public WebNotifyService()
         {
             Instance = this;
-            connections.Indexes.Add(WebNotifyConnectionUserInvoker.Instance.Name,
+            connections.Indexes.Add(WebNotifyConnection.UserInvoker.Instance.Name,
                 new ListIndex<WebNotifyConnection, IUserIdentity>(
-                    WebNotifyConnectionUserInvoker.Instance,
+                    WebNotifyConnection.UserInvoker.Instance,
                     NullUser.Value));
         }
 
@@ -41,7 +41,7 @@ namespace DataWF.WebService.Common
 
         public IEnumerable<WebNotifyConnection> GetByUser(IUserIdentity user)
         {
-            return connections.Select(WebNotifyConnectionUserInvoker.Instance, CompareType.Equal, user);
+            return connections.Select(WebNotifyConnection.UserInvoker.Instance, CompareType.Equal, user);
         }
 
         public void SetCurrentAction(ActionExecutingContext context)

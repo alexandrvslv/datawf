@@ -18,9 +18,11 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBLogSchema), nameof(DBLogSchema.BaseSchemaName), typeof(DBLogSchema.BaseSchemaNameInvoker<>))]
 namespace DataWF.Data
 {
     public class DBLogSchema : DBSchema
@@ -52,7 +54,6 @@ namespace DataWF.Data
             }
         }
 
-        [Invoker(typeof(DBLogSchema), nameof(DBLogSchema.BaseSchemaName))]
         public class BaseSchemaNameInvoker<T> : Invoker<T, string> where T : DBLogSchema
         {
             public static readonly BaseSchemaNameInvoker<T> Instance = new BaseSchemaNameInvoker<T>();

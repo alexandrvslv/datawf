@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -30,42 +31,31 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.GroupName), typeof(DBColumn.GroupNameInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Property), typeof(DBColumn.PropertyNameInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ReferenceProperty), typeof(DBColumn.ReferencePropertyNameInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ReferenceTable), typeof(DBColumn.ReferenceTableInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), "ReferenceTableName", typeof(DBColumn.ReferenceTableNameInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.IsView), typeof(DBColumn.IsViewInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.IsReference), typeof(DBColumn.IsReferenceInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Keys), typeof(DBColumn.KeysInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Order), typeof(DBColumn.OrderInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Size), typeof(DBColumn.SizeInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Scale), typeof(DBColumn.ScaleInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.CultureCode), typeof(DBColumn.CultureCodeInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Format), typeof(DBColumn.FormatInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.DBDataType), typeof(DBColumn.DBDataTypeInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.DataType), typeof(DBColumn.DataTypeInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ColumnType), typeof(DBColumn.ColumnTypeInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.DefaultValue), typeof(DBColumn.DefaultValueInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Query), typeof(DBColumn.QueryInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.SubList), typeof(DBColumn.SubListInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.BoolTrue), typeof(DBColumn.BoolTrueInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.BoolFalse), typeof(DBColumn.BoolFalseInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.SqlName), typeof(DBColumn.SqlNameInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.TargetType), typeof(DBColumn.TargetTypeInvoker<>))]
 namespace DataWF.Data
 {
-    [Flags()]
-    public enum DBColumnKeys
-    {
-        None = 0,
-        Primary = 1 << 0,
-        Increment = 1 << 1,
-        Stamp = 1 << 2,
-        Date = 1 << 3,
-        Group = 1 << 4,
-        Code = 1 << 5,
-        ItemType = 1 << 6,
-        Image = 1 << 7,
-        System = 1 << 8,
-        Unique = 1 << 9,
-        State = 1 << 10,
-        Notnull = 1 << 11,
-        Boolean = 1 << 12,
-        Indexing = 1 << 13,
-        Access = 1 << 14,
-        View = 1 << 15,
-        Culture = 1 << 16,
-        Encript = 1 << 17,
-        Password = 1 << 18,
-        Reference = 1 << 19,
-        TableReference = 1 << 20,
-        NoLog = 1 << 21,
-        ElementType = 1 << 22,
-        File = 1 << 23,
-        FileName = 1 << 24,
-        FileLOB = 1 << 25,
-        FileLastWrite = 1 << 26,
-        UtcDate = 1 << 27
-    }
-
     public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>
     {
         public static readonly DBColumn EmptyKey = new DBColumn();
@@ -1320,7 +1310,6 @@ namespace DataWF.Data
             return table.ParseColumn(name);
         }
 
-        [Invoker(typeof(DBColumn), nameof(GroupName))]
         public class GroupNameInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public static readonly GroupNameInvoker<T> Instance = new GroupNameInvoker<T>();
@@ -1334,7 +1323,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.GroupName = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(Property))]
         public class PropertyNameInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public static readonly PropertyNameInvoker<T> Instance = new PropertyNameInvoker<T>();
@@ -1348,7 +1336,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.Property = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(ReferenceProperty))]
         public class ReferencePropertyNameInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public static readonly ReferencePropertyNameInvoker<T> Instance = new ReferencePropertyNameInvoker<T>();
@@ -1362,7 +1349,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.ReferenceProperty = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(ReferenceTable))]
         public class ReferenceTableInvoker<T> : Invoker<T, DBTable> where T : DBColumn
         {
             public static readonly ReferenceTableInvoker<T> Instance = new ReferenceTableInvoker<T>();
@@ -1376,7 +1362,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBTable value) => target.ReferenceTable = value;
         }
 
-        [Invoker(typeof(DBColumn), "ReferenceTableName")]
         public class ReferenceTableNameInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public static readonly ReferenceTableNameInvoker<T> Instance = new ReferenceTableNameInvoker<T>();
@@ -1390,7 +1375,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) { }
         }
 
-        [Invoker(typeof(DBColumn), nameof(IsView))]
         public class IsViewInvoker<T> : Invoker<T, bool> where T : DBColumn
         {
             public static readonly IsViewInvoker<T> Instance = new IsViewInvoker<T>();
@@ -1404,7 +1388,6 @@ namespace DataWF.Data
             public override void SetValue(T target, bool value) { }
         }
 
-        [Invoker(typeof(DBColumn), nameof(IsReference))]
         public class IsReferenceInvoker<T> : Invoker<T, bool> where T : DBColumn
         {
             public static readonly IsReferenceInvoker<T> Instance = new IsReferenceInvoker<T>();
@@ -1418,7 +1401,6 @@ namespace DataWF.Data
             public override void SetValue(T target, bool value) { }
         }
 
-        [Invoker(typeof(DBColumn), nameof(Keys))]
         public class KeysInvoker<T> : Invoker<T, DBColumnKeys> where T : DBColumn
         {
             public static readonly KeysInvoker<T> Instance = new KeysInvoker<T>();
@@ -1431,7 +1413,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBColumnKeys value) => target.Keys = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(Order))]
         public class OrderInvoker<T> : Invoker<T, int> where T : DBColumn
         {
             public static readonly OrderInvoker<T> Instance = new OrderInvoker<T>();
@@ -1444,7 +1425,6 @@ namespace DataWF.Data
             public override void SetValue(T target, int value) => target.Order = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(Size))]
         public class SizeInvoker<T> : Invoker<T, int> where T : DBColumn
         {
             public override string Name => nameof(Size);
@@ -1456,7 +1436,6 @@ namespace DataWF.Data
             public override void SetValue(T target, int value) => target.Size = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(Scale))]
         public class ScaleInvoker<T> : Invoker<T, int> where T : DBColumn
         {
             public override string Name => nameof(Scale);
@@ -1468,7 +1447,6 @@ namespace DataWF.Data
             public override void SetValue(T target, int value) => target.Scale = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(CultureCode))]
         public class CultureCodeInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public override string Name => nameof(CultureCode);
@@ -1480,7 +1458,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.CultureCode = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(Format))]
         public class FormatInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public override string Name => nameof(Format);
@@ -1492,7 +1469,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.Format = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(DBDataType))]
         public class DBDataTypeInvoker<T> : Invoker<T, DBDataType> where T : DBColumn
         {
             public override string Name => nameof(DBDataType);
@@ -1504,7 +1480,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBDataType value) => target.DBDataType = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(DBColumn.DataType))]
         public class DataTypeInvoker<T> : Invoker<T, Type> where T : DBColumn
         {
             public override string Name => nameof(DBColumn.DataType);
@@ -1516,7 +1491,6 @@ namespace DataWF.Data
             public override void SetValue(T target, Type value) => target.DataType = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(ColumnType))]
         public class ColumnTypeInvoker<T> : Invoker<T, DBColumnTypes> where T : DBColumn
         {
             public override string Name => nameof(ColumnType);
@@ -1528,7 +1502,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBColumnTypes value) => target.ColumnType = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(DefaultValue))]
         public class DefaultValueInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public override string Name => nameof(DefaultValue);
@@ -1540,7 +1513,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.DefaultValue = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(Query))]
         public class QueryInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public override string Name => nameof(Query);
@@ -1552,7 +1524,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.Query = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(SubList))]
         public class SubListInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public override string Name => nameof(SubList);
@@ -1564,7 +1535,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.SubList = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(BoolTrue))]
         public class BoolTrueInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public override string Name => nameof(BoolTrue);
@@ -1576,7 +1546,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.BoolTrue = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(BoolFalse))]
         public class BoolFalseInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public override string Name => nameof(BoolFalse);
@@ -1588,7 +1557,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.BoolFalse = value;
         }
 
-        [Invoker(typeof(DBColumn), nameof(SqlName))]
         public class SqlNameInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public override string Name => nameof(SqlName);
@@ -1600,7 +1568,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) { }
         }
 
-        [Invoker(typeof(DBColumn), nameof(DBColumn.TargetType))]
         public class TargetTypeInvoker<T> : Invoker<T, Type> where T : DBColumn
         {
             public override string Name => nameof(DBColumn.TargetType);

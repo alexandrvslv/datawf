@@ -18,15 +18,18 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System.Text.Json.Serialization;
 using System;
 using System.Data;
 using System.Linq;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBProcParameter), nameof(DBProcParameter.ColumnName), typeof(DBProcParameter.ColumnNameInvoker))]
+[assembly: Invoker(typeof(DBProcParameter), nameof(DBProcParameter.DataTypeName), typeof(DBProcParameter.DataTypeNameInvoker))]
+[assembly: Invoker(typeof(DBProcParameter), nameof(DBProcParameter.Direction), typeof(DBProcParameter.DirectionInvoker))]
 namespace DataWF.Data
 {
-
     public class DBProcParameter : DBSchemaItem//, IComparable
     {
         [NonSerialized]
@@ -85,7 +88,6 @@ namespace DataWF.Data
             return null;
         }
 
-        [Invoker(typeof(DBProcParameter), nameof(DBProcParameter.ColumnName))]
         public class ColumnNameInvoker : Invoker<DBProcParameter, string>
         {
             public static readonly ColumnNameInvoker Instance = new ColumnNameInvoker();
@@ -98,7 +100,6 @@ namespace DataWF.Data
             public override void SetValue(DBProcParameter target, string value) => target.ColumnName = value;
         }
 
-        [Invoker(typeof(DBProcParameter), nameof(DBProcParameter.DataTypeName))]
         public class DataTypeNameInvoker : Invoker<DBProcParameter, string>
         {
             public static readonly DataTypeNameInvoker Instance = new DataTypeNameInvoker();
@@ -111,7 +112,6 @@ namespace DataWF.Data
             public override void SetValue(DBProcParameter target, string value) => target.DataTypeName = value;
         }
 
-        [Invoker(typeof(DBProcParameter), nameof(DBProcParameter.Direction))]
         public class DirectionInvoker : Invoker<DBProcParameter, ParameterDirection>
         {
             public static readonly DirectionInvoker Instance = new DirectionInvoker();

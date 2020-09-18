@@ -1,9 +1,13 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(LocaleImage), nameof(LocaleImage.Key), typeof(LocaleImage.KeyInvoker))]
+[assembly: Invoker(typeof(LocaleImage), nameof(LocaleImage.FileName), typeof(LocaleImage.FileNameInvoker))]
+[assembly: Invoker(typeof(LocaleImage), nameof(LocaleImage.Data), typeof(LocaleImage.DataInvoker))]
 namespace DataWF.Common
 {
     public class LocaleImage : IEntryNotifyPropertyChanged
@@ -98,7 +102,6 @@ namespace DataWF.Common
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
-        [Invoker(typeof(LocaleImage), nameof(LocaleImage.Key))]
         public class KeyInvoker : Invoker<LocaleImage, string>
         {
             public static readonly KeyInvoker Instance = new KeyInvoker();
@@ -114,8 +117,6 @@ namespace DataWF.Common
             public override void SetValue(LocaleImage target, string value) => target.Key = value;
         }
 
-
-        [Invoker(typeof(LocaleImage), nameof(LocaleImage.FileName))]
         public class FileNameInvoker : Invoker<LocaleImage, string>
         {
             public static readonly FileNameInvoker Instance = new FileNameInvoker();
@@ -131,7 +132,6 @@ namespace DataWF.Common
             public override void SetValue(LocaleImage target, string value) => target.FileName = value;
         }
 
-        [Invoker(typeof(LocaleImage), nameof(LocaleImage.Data))]
         public class DataInvoker : Invoker<LocaleImage, byte[]>
         {
             public static readonly DataInvoker Instance = new DataInvoker();

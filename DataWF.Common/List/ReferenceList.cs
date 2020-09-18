@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DataWF.Common;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(ReferenceList<>), nameof(ReferenceList<SynchronizedItem>.Owner), typeof(ReferenceList<>.OwnerInvoker))]
+[assembly: Invoker(typeof(ReferenceList<>), nameof(ReferenceList<SynchronizedItem>.OwnerProperty), typeof(ReferenceList<>.OwnerPropertyInvoker))]
 namespace DataWF.Common
 {
     public class ReferenceList<T> : ChangeableList<T>, IReferenceList where T : SynchronizedItem
@@ -89,7 +92,6 @@ namespace DataWF.Common
             }
         }
 
-        [Invoker(typeof(ReferenceList<>), nameof(Owner))]
         public class OwnerInvoker : Invoker<ReferenceList<T>, SynchronizedItem>
         {
             public override string Name => nameof(ReferenceList<T>.Owner);
@@ -101,7 +103,6 @@ namespace DataWF.Common
             public override void SetValue(ReferenceList<T> target, SynchronizedItem value) { target.Owner = value; }
         }
 
-        [Invoker(typeof(ReferenceList<>), nameof(OwnerProperty))]
         public class OwnerPropertyInvoker : Invoker<ReferenceList<T>, string>
         {
             public override string Name => nameof(ReferenceList<T>.OwnerProperty);

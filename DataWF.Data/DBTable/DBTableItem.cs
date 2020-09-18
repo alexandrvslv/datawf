@@ -18,10 +18,12 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBTableItem), nameof(DBTableItem.Table), typeof(DBTableItem.TableInvoker<>))]
 namespace DataWF.Data
 {
     public abstract class DBTableItem : DBSchemaItem, IDBTableContent
@@ -59,7 +61,6 @@ namespace DataWF.Data
             return Table?.FullName;
         }
 
-        [Invoker(typeof(DBTableItem), nameof(DBTableItem.Table))]
         public class TableInvoker<T> : Invoker<T, DBTable> where T : DBTableItem
         {
             public static readonly TableInvoker<T> Instance = new TableInvoker<T>();

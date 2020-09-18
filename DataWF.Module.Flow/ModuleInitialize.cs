@@ -1,8 +1,10 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using DataWF.Module.Flow;
 using System.Linq;
 using System.Threading.Tasks;
 
+[assembly: ModuleInitialize(typeof(ModuleInitialize))]
 namespace DataWF.Module.Flow
 {
     public class ModuleInitialize : IModuleInitialize

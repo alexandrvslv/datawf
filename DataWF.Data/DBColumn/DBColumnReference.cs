@@ -18,12 +18,14 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBColumnReference), nameof(DBColumnReference.ColumnName), typeof(DBColumnReference.ColumnNameInvoker))]
 namespace DataWF.Data
 {
     public class DBColumnReference : IEntryNotifyPropertyChanged
@@ -87,6 +89,18 @@ namespace DataWF.Data
         public DBColumnReference Clone()
         {
             return new DBColumnReference { ColumnName = ColumnName };
+        }
+
+        public class ColumnNameInvoker : Invoker<DBColumnReference, string>
+        {
+            public static readonly ColumnNameInvoker Instance = new ColumnNameInvoker();
+            public override string Name => nameof(DBColumnReference.ColumnName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBColumnReference target) => target.ColumnName;
+
+            public override void SetValue(DBColumnReference target, string value) => target.ColumnName = value;
         }
     }
 }

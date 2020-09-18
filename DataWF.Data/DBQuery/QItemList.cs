@@ -36,8 +36,8 @@ namespace DataWF.Data
 
         public QItemList()
         {
-            Indexes.Add(QItemTextInvoker<T>.Instance);
-            ApplySort(new InvokerComparer(QItemOrderInvoker<T>.Instance, ListSortDirection.Ascending));
+            Indexes.Add(QItem.TextInvoker<T>.Instance);
+            ApplySort(new InvokerComparer(QItem.OrderInvoker<T>.Instance, ListSortDirection.Ascending));
         }
 
         public QItemList(IEnumerable<T> items) : this()
@@ -100,32 +100,4 @@ namespace DataWF.Data
             base.Dispose();
         }
     }
-
-    [Invoker(typeof(QItem), nameof(QItem.Text))]
-    public class QItemTextInvoker<T> : Invoker<T, string> where T : QItem
-    {
-        public static readonly QItemTextInvoker<T> Instance = new QItemTextInvoker<T>();
-
-        public override string Name => nameof(QItem.Text);
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(T target) => target.Text;
-
-        public override void SetValue(T target, string value) => target.Text = value;
-    }
-
-    [Invoker(typeof(QItem), nameof(QItem.Order))]
-    public class QItemOrderInvoker<T> : Invoker<T, int> where T : QItem
-    {
-        public static readonly QItemOrderInvoker<T> Instance = new QItemOrderInvoker<T>();
-        public override string Name => nameof(QItem.Order);
-
-        public override bool CanWrite => true;
-
-        public override int GetValue(T target) => target.Order;
-
-        public override void SetValue(T target, int value) => target.Order = value;
-    }
-
 }

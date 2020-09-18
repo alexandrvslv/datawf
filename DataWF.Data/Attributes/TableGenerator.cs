@@ -225,14 +225,14 @@ namespace DataWF.Data
             if (ItemType != null)
                 return;
             cacheColumns = new SelectableList<ColumnGenerator>();
-            cacheColumns.Indexes.Add(ColumnGeneratorColumnNameInvoker.Instance);
-            cacheColumns.Indexes.Add(ColumnGeneratorPropertyNameInvoker.Instance);
+            cacheColumns.Indexes.Add(ColumnGenerator.ColumnNameInvoker.Instance);
+            cacheColumns.Indexes.Add(ColumnGenerator.PropertyNameInvoker.Instance);
             cacheReferences = new SelectableList<ReferenceGenerator>();
-            cacheReferences.Indexes.Add(ReferenceGeneratorPropertyNameInvoker.Instance);
+            cacheReferences.Indexes.Add(ReferenceGenerator.PropertyNameInvoker.Instance);
             cacheReferencings = new SelectableList<ReferencingGenerator>();
-            cacheReferencings.Indexes.Add(ReferencingGeneratorPropertyNameInvoker.Instance);
+            cacheReferencings.Indexes.Add(ReferencingGenerator.PropertyNameInvoker.Instance);
             cacheIndexes = new SelectableList<IndexGenerator>();
-            cacheIndexes.Indexes.Add(IndexGeneratorNameInvoker.Instance);
+            cacheIndexes.Indexes.Add(IndexGenerator.IndexNameInvoker.Instance);
             cacheItemTypes = new SelectableList<ItemTypeGenerator>();
 
             ItemType = type;

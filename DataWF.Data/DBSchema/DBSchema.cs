@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -30,6 +31,16 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.DataBase), typeof(DBSchema.DataBaseInvoker<>))]
+[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.ConnectionName), typeof(DBSchema.ConnectionNameInvoker<>))]
+[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.Connection), typeof(DBSchema.ConnectionInvoker<>))]
+[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.LogSchemaName), typeof(DBSchema.LogSchemaNameInvoker<>))]
+[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.LogSchema), typeof(DBSchema.LogSchemaInvoker<>))]
+[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.Tables), typeof(DBSchema.TablesInvoker<>))]
+[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.TableGroups), typeof(DBSchema.TableGroupsInvoker<>))]
+[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.Procedures), typeof(DBSchema.ProceduresInvoker<>))]
+[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.Sequences), typeof(DBSchema.SequencesInvoker<>))]
+[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.FileName), typeof(DBSchema.FileNameInvoker<>))]
 namespace DataWF.Data
 {
     public class DBSchema : DBSchemaItem, IFileSerialize
@@ -572,7 +583,7 @@ namespace DataWF.Data
             return target.ChildRelations;
         }
 
-        [Invoker(typeof(DBSchema), nameof(DBSchema.DataBase))]
+
         public class DataBaseInvoker<T> : Invoker<T, string> where T : DBSchema
         {
             public static readonly DataBaseInvoker<T> Instance = new DataBaseInvoker<T>();
@@ -585,7 +596,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.DataBase = value;
         }
 
-        [Invoker(typeof(DBSchema), nameof(DBSchema.ConnectionName))]
         public class ConnectionNameInvoker<T> : Invoker<T, string> where T : DBSchema
         {
             public static readonly ConnectionNameInvoker<T> Instance = new ConnectionNameInvoker<T>();
@@ -598,7 +608,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.ConnectionName = value;
         }
 
-        [Invoker(typeof(DBSchema), nameof(DBSchema.Connection))]
         public class ConnectionInvoker<T> : Invoker<T, DBConnection> where T : DBSchema
         {
             public static readonly ConnectionInvoker<T> Instance = new ConnectionInvoker<T>();
@@ -611,7 +620,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBConnection value) => target.Connection = value;
         }
 
-        [Invoker(typeof(DBSchema), nameof(DBSchema.LogSchemaName))]
         public class LogSchemaNameInvoker<T> : Invoker<T, string> where T : DBSchema
         {
             public static readonly LogSchemaNameInvoker<T> Instance = new LogSchemaNameInvoker<T>();
@@ -624,7 +632,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.LogSchemaName = value;
         }
 
-        [Invoker(typeof(DBSchema), nameof(DBSchema.LogSchema))]
         public class LogSchemaInvoker<T> : Invoker<T, DBLogSchema> where T : DBSchema
         {
             public static readonly LogSchemaInvoker<T> Instance = new LogSchemaInvoker<T>();
@@ -637,7 +644,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBLogSchema value) => target.LogSchema = value;
         }
 
-        [Invoker(typeof(DBSchema), nameof(DBSchema.Tables))]
         public class TablesInvoker<T> : Invoker<T, DBTableList> where T : DBSchema
         {
             public static readonly TablesInvoker<T> Instance = new TablesInvoker<T>();
@@ -650,7 +656,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBTableList value) => target.Tables = value;
         }
 
-        [Invoker(typeof(DBSchema), nameof(DBSchema.TableGroups))]
         public class TableGroupsInvoker<T> : Invoker<T, DBTableGroupList> where T : DBSchema
         {
             public static readonly TableGroupsInvoker<T> Instance = new TableGroupsInvoker<T>();
@@ -663,7 +668,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBTableGroupList value) => target.TableGroups = value;
         }
 
-        [Invoker(typeof(DBSchema), nameof(DBSchema.Procedures))]
         public class ProceduresInvoker<T> : Invoker<T, DBProcedureList> where T : DBSchema
         {
             public static readonly ProceduresInvoker<T> Instance = new ProceduresInvoker<T>();
@@ -676,7 +680,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBProcedureList value) => target.Procedures = value;
         }
 
-        [Invoker(typeof(DBSchema), nameof(DBSchema.Sequences))]
         public class SequencesInvoker<T> : Invoker<T, DBSequenceList> where T : DBSchema
         {
             public static readonly SequencesInvoker<T> Instance = new SequencesInvoker<T>();
@@ -689,7 +692,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBSequenceList value) => target.Sequences = value;
         }
 
-        [Invoker(typeof(DBSchema), nameof(DBSchema.FileName))]
         public class FileNameInvoker<T> : Invoker<T, string> where T : DBSchema
         {
             public static readonly FileNameInvoker<T> Instance = new FileNameInvoker<T>();

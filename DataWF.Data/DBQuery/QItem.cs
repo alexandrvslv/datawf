@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -27,6 +28,8 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(QItem), nameof(QItem.Text), typeof(QItem.TextInvoker<>))]
+[assembly: Invoker(typeof(QItem), nameof(QItem.Order), typeof(QItem.OrderInvoker<>))]
 namespace DataWF.Data
 {
     public class QItem : IDisposable, IEntryNotifyPropertyChanged, IComparable, IValued, IInvoker
@@ -205,6 +208,31 @@ namespace DataWF.Data
                 command.Parameters.Add(parameter);
             }
             return param;
+        }
+
+        public class TextInvoker<T> : Invoker<T, string> where T : QItem
+        {
+            public static readonly TextInvoker<T> Instance = new TextInvoker<T>();
+
+            public override string Name => nameof(QItem.Text);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.Text;
+
+            public override void SetValue(T target, string value) => target.Text = value;
+        }
+
+        public class OrderInvoker<T> : Invoker<T, int> where T : QItem
+        {
+            public static readonly OrderInvoker<T> Instance = new OrderInvoker<T>();
+            public override string Name => nameof(QItem.Order);
+
+            public override bool CanWrite => true;
+
+            public override int GetValue(T target) => target.Order;
+
+            public override void SetValue(T target, int value) => target.Order = value;
         }
 
     }

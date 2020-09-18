@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -84,7 +85,7 @@ namespace DataWF.Data
 
         public DBColumnReference Get(string column)
         {
-            return Select(DBColumnReferenceColumnNameInvoker.Instance, CompareType.Equal, column).FirstOrDefault();
+            return Select(DBColumnReference.ColumnNameInvoker.Instance, CompareType.Equal, column).FirstOrDefault();
         }
 
         protected override void OnPropertyChanged(string property)
@@ -100,16 +101,5 @@ namespace DataWF.Data
         }
     }
 
-    [Invoker(typeof(DBColumnReference), nameof(DBColumnReference.ColumnName))]
-    public class DBColumnReferenceColumnNameInvoker : Invoker<DBColumnReference, string>
-    {
-        public static readonly DBColumnReferenceColumnNameInvoker Instance = new DBColumnReferenceColumnNameInvoker();
-        public override string Name => nameof(DBColumnReference.ColumnName);
 
-        public override bool CanWrite => true;
-
-        public override string GetValue(DBColumnReference target) => target.ColumnName;
-
-        public override void SetValue(DBColumnReference target, string value) => target.ColumnName = value;
-    }
 }

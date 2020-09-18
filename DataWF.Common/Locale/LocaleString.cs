@@ -1,9 +1,13 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(LocaleString), nameof(LocaleString.CultureName), typeof(LocaleString.CultureNameInvoker))]
+[assembly: Invoker(typeof(LocaleString), nameof(LocaleString.Value), typeof(LocaleString.ValueInvoker))]
+[assembly: Invoker(typeof(LocaleString), nameof(LocaleString.Description), typeof(LocaleString.DescriptionInvoker))]
 namespace DataWF.Common
 {
     public class LocaleString : ICloneable, IEntryNotifyPropertyChanged
@@ -116,14 +120,10 @@ namespace DataWF.Common
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
-        [Invoker(typeof(LocaleString), nameof(LocaleString.CultureName))]
         public class CultureNameInvoker : Invoker<LocaleString, string>
         {
             public static readonly CultureNameInvoker Instance = new CultureNameInvoker();
-            public override string Name
-            {
-                get => nameof(LocaleString.CultureName);
-            }
+            public override string Name => nameof(LocaleString.CultureName);
 
             public override bool CanWrite => true;
 
@@ -132,14 +132,10 @@ namespace DataWF.Common
             public override void SetValue(LocaleString target, string value) => target.CultureName = value;
         }
 
-        [Invoker(typeof(LocaleString), nameof(LocaleString.Value))]
         public class ValueInvoker : Invoker<LocaleString, string>
         {
             public static readonly ValueInvoker Instance = new ValueInvoker();
-            public override string Name
-            {
-                get => nameof(LocaleString.Value);
-            }
+            public override string Name => nameof(LocaleString.Value);
 
             public override bool CanWrite => true;
 
@@ -148,14 +144,10 @@ namespace DataWF.Common
             public override void SetValue(LocaleString target, string value) => target.Value = value;
         }
 
-        [Invoker(typeof(LocaleString), nameof(LocaleString.Description))]
         public class DescriptionInvoker : Invoker<LocaleString, string>
         {
             public static readonly DescriptionInvoker Instance = new DescriptionInvoker();
-            public override string Name
-            {
-                get => nameof(LocaleString.Description);
-            }
+            public override string Name => nameof(LocaleString.Description);
 
             public override bool CanWrite => true;
 

@@ -18,11 +18,13 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBColumnGroup), nameof(DBColumnGroup.Order), typeof(DBColumnGroup.OrderInvoker<>))]
 namespace DataWF.Data
 {
     public class DBColumnGroup : DBTableItem, IComparable, IComparable<DBColumnGroup>
@@ -87,7 +89,6 @@ namespace DataWF.Data
             return null;
         }
 
-        [Invoker(typeof(DBColumnGroup), nameof(DBColumnGroup.Order))]
         public class OrderInvoker<T> : Invoker<T, int> where T : DBColumnGroup
         {
             public static readonly OrderInvoker<T> Instance = new OrderInvoker<T>();

@@ -1,10 +1,15 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(Locale), nameof(Locale.Version), typeof(Locale.VersionInvoker))]
+[assembly: Invoker(typeof(Locale), nameof(Locale.Culture), typeof(Locale.CultureInvoker))]
+[assembly: Invoker(typeof(Locale), nameof(Locale.Cultures), typeof(Locale.CulturesInvoker))]
+[assembly: Invoker(typeof(Locale), nameof(Locale.Images), typeof(Locale.ImagesInvoker))]
 namespace DataWF.Common
 {
     public class Locale : SelectableList<LocaleCategory>
@@ -175,7 +180,6 @@ namespace DataWF.Common
             return GetImage(GetImageKey(category, name));
         }
 
-        [Invoker(typeof(Locale), nameof(Locale.Version))]
         public class VersionInvoker : Invoker<Locale, string>
         {
             public override string Name => nameof(Locale.Version);
@@ -187,7 +191,6 @@ namespace DataWF.Common
             public override void SetValue(Locale target, string value) => target.Version = value;
         }
 
-        [Invoker(typeof(Locale), nameof(Locale.Culture))]
         public class CultureInvoker : Invoker<Locale, CultureInfo>
         {
             public override string Name => nameof(Locale.Culture);
@@ -199,7 +202,6 @@ namespace DataWF.Common
             public override void SetValue(Locale target, CultureInfo value) => target.Culture = value;
         }
 
-        [Invoker(typeof(Locale), nameof(Locale.Cultures))]
         public class CulturesInvoker : Invoker<Locale, List<CultureInfo>>
         {
             public override string Name => nameof(Locale.Cultures);
@@ -211,7 +213,6 @@ namespace DataWF.Common
             public override void SetValue(Locale target, List<CultureInfo> value) => target.Cultures = value;
         }
 
-        [Invoker(typeof(Locale), nameof(Locale.Images))]
         public class ImagesInvoker : Invoker<Locale, LocaleImageList>
         {
             public override string Name => nameof(Locale.Images);

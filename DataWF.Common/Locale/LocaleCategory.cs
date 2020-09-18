@@ -1,7 +1,9 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(LocaleCategory), nameof(LocaleCategory.Name), typeof(LocaleCategory.NameInvoker))]
 namespace DataWF.Common
 {
     public class LocaleCategory : SelectableList<LocaleItem>, ICloneable, IEntryNotifyPropertyChanged
@@ -57,7 +59,6 @@ namespace DataWF.Common
             return item;
         }
 
-        [Invoker(typeof(LocaleCategory), nameof(LocaleCategory.Name))]
         public class NameInvoker : Invoker<LocaleCategory, string>
         {
             public static readonly NameInvoker Instance = new NameInvoker();

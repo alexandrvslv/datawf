@@ -18,11 +18,16 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.Type), typeof(DBConstraint.TypeInvoker<>))]
+[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.Columns), typeof(DBConstraint.ColumnsInvoker<>))]
+[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.ColumnName), typeof(DBConstraint.ColumnNameInvoker<>))]
+[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.Value), typeof(DBConstraint.ValueInvoker<>))]
 namespace DataWF.Data
 {
     public class DBConstraint : DBTableItem, IDBTableContent
@@ -128,7 +133,6 @@ namespace DataWF.Data
             return constraint;
         }
 
-        [Invoker(typeof(DBConstraint), nameof(DBConstraint.Type))]
         public class TypeInvoker<T> : Invoker<T, DBConstraintType> where T : DBConstraint
         {
             public static readonly TypeInvoker<T> Instance = new TypeInvoker<T>();
@@ -141,7 +145,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBConstraintType value) => target.Type = value;
         }
 
-        [Invoker(typeof(DBConstraint), nameof(DBConstraint.Columns))]
         public class ColumnsInvoker<T> : Invoker<T, DBColumnReferenceList> where T : DBConstraint
         {
             public static readonly ColumnsInvoker<T> Instance = new ColumnsInvoker<T>();
@@ -154,7 +157,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBColumnReferenceList value) => target.Columns = value;
         }
 
-        [Invoker(typeof(DBConstraint), nameof(DBConstraint.ColumnName))]
         public class ColumnNameInvoker<T> : Invoker<T, string> where T : DBConstraint
         {
             public static readonly ColumnNameInvoker<T> Instance = new ColumnNameInvoker<T>();
@@ -167,7 +169,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) => target.ColumnName = value;
         }
 
-        [Invoker(typeof(DBConstraint), nameof(DBConstraint.Value))]
         public class ValueInvoker<T> : Invoker<T, string> where T : DBConstraint
         {
             public static readonly ValueInvoker<T> Instance = new ValueInvoker<T>();

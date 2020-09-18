@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -28,6 +29,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBVirtualTable<>), nameof(DBVirtualTable<DBItem>.BaseTableName), typeof(DBVirtualTable<>.BaseTableNameInvoker))]
 namespace DataWF.Data
 {
     public class DBVirtualTable<T> : DBTable<T>, IDBVirtualTable where T : DBItem, new()
@@ -422,7 +424,7 @@ namespace DataWF.Data
                 }
             }
         }
-        [Invoker(typeof(DBVirtualTable<>), nameof(BaseTableName))]
+
         public class BaseTableNameInvoker : Invoker<DBVirtualTable<T>, string>
         {
             public static readonly BaseTableNameInvoker Instance = new BaseTableNameInvoker();

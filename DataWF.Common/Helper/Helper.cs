@@ -18,37 +18,6 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public class ExceptionEventArgs : EventArgs
-    {
-        private readonly Exception exception;
-
-        public ExceptionEventArgs(Exception exeption)
-        {
-            this.exception = exeption;
-        }
-
-        public Exception Exception
-        {
-            get { return exception; }
-        }
-    }
-
-    [Flags]
-    public enum PasswordSpec
-    {
-        None = 0,
-        CharNumbers = 2,
-        CharUppercase = 4,
-        CharLowercase = 8,
-        CharSpecial = 16,
-        CharRepet = 32,
-        Login = 64,
-        Lenght6 = 128,
-        Lenght8 = 256,
-        Lenght10 = 512,
-        CheckOld = 1024,
-    }
-
     public static class Helper
     {
         public static string AppName = "DataWF";
@@ -88,42 +57,27 @@ namespace DataWF.Common
 
         private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs e)
         {
-            if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => string.Equals(m.Key, "module", StringComparison.Ordinal)))
-            {
-                try
-                {
-                    foreach (var item in e.LoadedAssembly.GetExportedTypes())
-                    {
-                        if (TypeHelper.IsInterface(item, typeof(IModuleInitialize)))
-                        {
-                            try
-                            {
-                                var imodule = (IModuleInitialize)EmitInvoker.CreateObject(item);
-                                ModuleInitializer.Add(imodule);
-                            }
-                            catch (Exception ex)
-                            {
-                                Helper.OnException(ex);
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Helper.OnException(ex);
-                }
-            }
             if (!e.LoadedAssembly.IsDynamic && !e.LoadedAssembly.GetName().Name.StartsWith("System", StringComparison.Ordinal))
             {
                 try
                 {
-                    foreach (var item in e.LoadedAssembly.GetExportedTypes())
+                    var moduleInitializeAttribute = e.LoadedAssembly.GetCustomAttribute<ModuleInitializeAttribute>();
+                    if (moduleInitializeAttribute != null
+                        && TypeHelper.IsInterface(moduleInitializeAttribute.InitializeType, typeof(IModuleInitialize)))
                     {
-                        var invoker = item.GetCustomAttribute<InvokerAttribute>();
-                        if (invoker != null)
-                        {
-                            EmitInvoker.RegisterInvoker(item, invoker);
-                        }
+                        var imodule = (IModuleInitialize)EmitInvoker.CreateObject(moduleInitializeAttribute.InitializeType);
+                        ModuleInitializer.Add(imodule);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                }
+                try
+                {
+                    foreach (var invokerAttribute in e.LoadedAssembly.GetCustomAttributes<InvokerAttribute>())
+                    {
+                        EmitInvoker.RegisterInvoker(invokerAttribute);
                     }
                 }
                 catch (Exception ex)
@@ -131,6 +85,7 @@ namespace DataWF.Common
                     Helper.OnException(ex);
                 }
             }
+
         }
 
         public static int TwoToOneShift(short a, short b)

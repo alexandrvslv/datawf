@@ -1428,7 +1428,7 @@ namespace DataWF.Data
 
         public bool Contains(string column)
         {
-            return parameters.Select(QParamColumnNameInvoker.Instance, CompareType.Equal, column).Any();
+            return parameters.Select(QParam.ColumnNameInvoker.Instance, CompareType.Equal, column).Any();
         }
 
         public QParam GetByColumn(DBColumn column)

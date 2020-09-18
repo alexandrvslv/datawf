@@ -18,9 +18,11 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Reflection;
 
+[assembly: Invoker(typeof(ReferenceGenerator), nameof(ReferenceGenerator.PropertyName), typeof(ReferenceGenerator.PropertyNameInvoker))]
 namespace DataWF.Data
 {
     public class ReferenceGenerator
@@ -46,20 +48,17 @@ namespace DataWF.Data
 
         public TableGenerator Table { get; internal set; }
 
-        public ColumnGenerator Column
-        {
-            get { return cacheColumn ?? (cacheColumn = Table?.GetColumnByProperty(Attribute.ColumnProperty)); }
-        }
+        public ColumnGenerator Column => cacheColumn ?? (cacheColumn = Table?.GetColumnByProperty(Attribute.ColumnProperty));
 
         public DBForeignKey ForeignKey
         {
-            get { return cacheKey ?? (cacheKey = Table?.Table?.Foreigns[Attribute.Name]); }
+            get => cacheKey ?? (cacheKey = Table?.Table?.Foreigns[Attribute.Name]);
             internal set { cacheKey = value; }
         }
 
         public PropertyInfo PropertyInfo { get; set; }
 
-        public string PropertyName { get { return PropertyInfo?.Name; } }
+        public string PropertyName => PropertyInfo?.Name;
 
 
         public void GenerateName()
@@ -116,18 +115,18 @@ namespace DataWF.Data
             }
             return ForeignKey;
         }
+
+        public class PropertyNameInvoker : Invoker<ReferenceGenerator, string>
+        {
+            public static readonly PropertyNameInvoker Instance = new PropertyNameInvoker();
+            public override string Name => nameof(ReferenceGenerator.PropertyName);
+
+            public override bool CanWrite => false;
+
+            public override string GetValue(ReferenceGenerator target) => target.PropertyName;
+
+            public override void SetValue(ReferenceGenerator target, string value) { }
+        }
     }
 
-    [Invoker(typeof(ReferenceGenerator), nameof(ReferenceGenerator.PropertyName))]
-    public class ReferenceGeneratorPropertyNameInvoker : Invoker<ReferenceGenerator, string>
-    {
-        public static readonly ReferenceGeneratorPropertyNameInvoker Instance = new ReferenceGeneratorPropertyNameInvoker();
-        public override string Name => nameof(ReferenceGenerator.PropertyName);
-
-        public override bool CanWrite => false;
-
-        public override string GetValue(ReferenceGenerator target) => target.PropertyName;
-
-        public override void SetValue(ReferenceGenerator target, string value) { }
-    }
 }

@@ -52,19 +52,19 @@ namespace DataWF.WebService.Generator
             }
         }
 
-        public static CompilationUnitSyntax GenUnit(MemberDeclarationSyntax @class, string nameSpace, IEnumerable<UsingDirectiveSyntax> usings)
+        public static CompilationUnitSyntax GenUnit(MemberDeclarationSyntax @class, string nameSpace, IEnumerable<UsingDirectiveSyntax> usings, IEnumerable<AttributeListSyntax> attributes)
         {
             var @namespace = SF.NamespaceDeclaration(SF.ParseName(nameSpace))
                                              .AddMembers(@class);
-            return GenUnit(@namespace, usings);
+            return GenUnit(@namespace, usings, attributes);
         }
 
-        public static CompilationUnitSyntax GenUnit(NamespaceDeclarationSyntax @namespace, IEnumerable<UsingDirectiveSyntax> usings)
+        public static CompilationUnitSyntax GenUnit(NamespaceDeclarationSyntax @namespace, IEnumerable<UsingDirectiveSyntax> usings, IEnumerable<AttributeListSyntax> attributes)
         {
             return SF.CompilationUnit(
                             externs: SF.List<ExternAliasDirectiveSyntax>(),
                             usings: SF.List(usings),
-                            attributeLists: SF.List<AttributeListSyntax>(),
+                            attributeLists: SF.List(attributes),
                             members: SF.List<MemberDeclarationSyntax>(new[] { @namespace }))
                                                     .NormalizeWhitespace("    ", true);
         }

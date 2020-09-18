@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System.Text.Json.Serialization;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBLogItem), nameof(DBLogItem.LogId), typeof(DBLogItem.LogIdInvoker<>))]
+[assembly: Invoker(typeof(DBLogItem), nameof(DBLogItem.LogType), typeof(DBLogItem.LogTypeInvoker<>))]
+[assembly: Invoker(typeof(DBLogItem), nameof(DBLogItem.UserRegId), typeof(DBLogItem.UserRegIdInvoker<>))]
+[assembly: Invoker(typeof(DBLogItem), nameof(DBLogItem.BaseId), typeof(DBLogItem.BaseIdInvoker<>))]
+[assembly: Invoker(typeof(DBLogItem), nameof(DBLogItem.BaseItem), typeof(DBLogItem.BaseItemInvoker<>))]
 namespace DataWF.Data
 {
     public class DBLogItem : DBItem
@@ -374,7 +380,6 @@ namespace DataWF.Data
             }
         }
 
-        [Invoker(typeof(DBLogItem), nameof(DBLogItem.LogId))]
         public class LogIdInvoker<T> : Invoker<T, long?> where T : DBLogItem
         {
             public override string Name => nameof(DBLogItem.LogId);
@@ -386,7 +391,6 @@ namespace DataWF.Data
             public override void SetValue(T target, long? value) => target.LogId = value;
         }
 
-        [Invoker(typeof(DBLogItem), nameof(DBLogItem.LogType))]
         public class LogTypeInvoker<T> : Invoker<T, DBLogType?> where T : DBLogItem
         {
             public override string Name => nameof(DBLogItem.LogType);
@@ -398,7 +402,6 @@ namespace DataWF.Data
             public override void SetValue(T target, DBLogType? value) => target.LogType = value;
         }
 
-        [Invoker(typeof(DBLogItem), nameof(DBLogItem.UserRegId))]
         public class UserRegIdInvoker<T> : Invoker<T, long?> where T : DBLogItem
         {
             public override string Name => nameof(DBLogItem.UserRegId);
@@ -410,7 +413,6 @@ namespace DataWF.Data
             public override void SetValue(T target, long? value) => target.UserRegId = value;
         }
 
-        [Invoker(typeof(DBLogItem), nameof(DBLogItem.BaseId))]
         public class BaseIdInvoker<T> : Invoker<T, string> where T : DBLogItem
         {
             public override string Name => nameof(DBLogItem.BaseId);
@@ -422,7 +424,6 @@ namespace DataWF.Data
             public override void SetValue(T target, string value) { }
         }
 
-        [Invoker(typeof(DBLogItem), nameof(DBLogItem.BaseItem))]
         public class BaseItemInvoker<T> : Invoker<T, DBItem> where T : DBLogItem
         {
             public override string Name => nameof(DBLogItem.BaseItem);

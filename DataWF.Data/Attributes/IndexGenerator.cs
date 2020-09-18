@@ -18,8 +18,12 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System.Collections.Generic;
 
+[assembly: Invoker(typeof(IndexGenerator), nameof(IndexGenerator.IndexName), typeof(IndexGenerator.IndexNameInvoker))]
+[assembly: Invoker(typeof(IndexGenerator), nameof(IndexGenerator.Index), typeof(IndexGenerator.IndexInvoker))]
+[assembly: Invoker(typeof(IndexGenerator), nameof(IndexGenerator.Attribute), typeof(IndexGenerator.AttributeInvoker))]
 namespace DataWF.Data
 {
     public class IndexGenerator
@@ -28,14 +32,14 @@ namespace DataWF.Data
 
         public IndexAttribute Attribute { get; set; }
 
-        public string IndexName { get { return Attribute?.IndexName; } }
+        public string IndexName => Attribute?.IndexName;
 
         public List<ColumnGenerator> Columns { get; } = new List<ColumnGenerator>();
 
         public DBIndex Index
         {
-            get { return cacheIndex ?? (cacheIndex = Table?.Table?.Indexes[Attribute.IndexName]); }
-            set { cacheIndex = value; }
+            get => cacheIndex ?? (cacheIndex = Table?.Table?.Indexes[Attribute.IndexName]);
+            set => cacheIndex = value;
         }
 
         public TableGenerator Table { get; set; }
@@ -57,18 +61,43 @@ namespace DataWF.Data
             Table.Table.Indexes.Add(Index);
             return Index;
         }
+
+        public class IndexNameInvoker : Invoker<IndexGenerator, string>
+        {
+            public static readonly IndexNameInvoker Instance = new IndexNameInvoker();
+            public override string Name => nameof(IndexGenerator.IndexName);
+
+            public override bool CanWrite => false;
+
+            public override string GetValue(IndexGenerator target) => target.IndexName;
+
+            public override void SetValue(IndexGenerator target, string value) { }
+        }
+
+        public class IndexInvoker : Invoker<IndexGenerator, DBIndex>
+        {
+            public static readonly IndexInvoker Instance = new IndexInvoker();
+            public override string Name => nameof(IndexGenerator.Index);
+
+            public override bool CanWrite => false;
+
+            public override DBIndex GetValue(IndexGenerator target) => target.Index;
+
+            public override void SetValue(IndexGenerator target, DBIndex value) { target.Index = value; }
+        }
+
+        public class AttributeInvoker : Invoker<IndexGenerator, IndexAttribute>
+        {
+            public static readonly AttributeInvoker Instance = new AttributeInvoker();
+            public override string Name => nameof(IndexGenerator.Attribute);
+
+            public override bool CanWrite => false;
+
+            public override IndexAttribute GetValue(IndexGenerator target) => target.Attribute;
+
+            public override void SetValue(IndexGenerator target, IndexAttribute value) { target.Attribute = value; }
+        }
     }
 
-    [Invoker(typeof(IndexGenerator), nameof(IndexGenerator.IndexName))]
-    public class IndexGeneratorNameInvoker : Invoker<IndexGenerator, string>
-    {
-        public static readonly IndexGeneratorNameInvoker Instance = new IndexGeneratorNameInvoker();
-        public override string Name => nameof(IndexGenerator.IndexName);
 
-        public override bool CanWrite => false;
-
-        public override string GetValue(IndexGenerator target) => target.IndexName;
-
-        public override void SetValue(IndexGenerator target, string value) { }
-    }
 }

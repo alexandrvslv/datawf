@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,6 +26,8 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBTableGroup), nameof(DBTableGroup.GroupName), typeof(DBTableGroup.GroupNameInvoker))]
+[assembly: Invoker(typeof(DBTableGroup), nameof(DBTableGroup.Expand), typeof(DBTableGroup.ExpandInvoker))]
 namespace DataWF.Data
 {
     public class DBTableGroup : DBSchemaItem, IComparable, IGroup
@@ -143,11 +146,10 @@ namespace DataWF.Data
         }
         #endregion
 
-        [Invoker(typeof(DBTableGroup), nameof(GroupName))]
         public class GroupNameInvoker : Invoker<DBTableGroup, string>
         {
             public static readonly GroupNameInvoker Instance = new GroupNameInvoker();
-            public override string Name => nameof(DBTableGroup.GroupName);
+            public override string Name => nameof(GroupName);
 
             public override bool CanWrite => true;
 
@@ -156,18 +158,17 @@ namespace DataWF.Data
             public override void SetValue(DBTableGroup target, string value) => target.GroupName = value;
         }
 
-        [Invoker(typeof(DBTableGroup), nameof(DBTableGroup.Expand))]
         public class ExpandInvoker : Invoker<DBTableGroup, bool>
         {
             public static readonly ExpandInvoker Instance = new ExpandInvoker();
-            public override string Name => nameof(DBTable.IsCaching);
+            public override string Name => nameof(Expand);
 
             public override bool CanWrite => true;
 
             public override bool GetValue(DBTableGroup target) => target.Expand;
 
             public override void SetValue(DBTableGroup target, bool value) => target.Expand = value;
-        }       
+        }
     }
 }
 

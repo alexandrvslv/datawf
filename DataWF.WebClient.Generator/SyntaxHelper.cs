@@ -54,14 +54,14 @@ namespace DataWF.WebClient.Generator
             }
         }
 
-        public static CompilationUnitSyntax GenUnit(MemberDeclarationSyntax @class, string nameSpace, IEnumerable<UsingDirectiveSyntax> usings)
+        public static CompilationUnitSyntax GenUnit(MemberDeclarationSyntax @class, string nameSpace, IEnumerable<UsingDirectiveSyntax> usings, IEnumerable<AttributeListSyntax> attributes)
         {
             var @namespace = SF.NamespaceDeclaration(SF.ParseName(nameSpace))
                                              .AddMembers(@class);
             return SF.CompilationUnit(
                 externs: SF.List<ExternAliasDirectiveSyntax>(),
                 usings: SF.List(usings),
-                attributeLists: SF.List<AttributeListSyntax>(),
+                attributeLists: SF.List(attributes),
                 members: SF.List<MemberDeclarationSyntax>(new[] { @namespace }))
                                         .NormalizeWhitespace("    ", true);
         }

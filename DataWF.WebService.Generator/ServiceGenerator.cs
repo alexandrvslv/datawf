@@ -28,8 +28,10 @@ namespace DataWF.WebService.Generator
         private readonly Dictionary<string, Dictionary<string, UsingDirectiveSyntax>> controllersUsings = new Dictionary<string, Dictionary<string, UsingDirectiveSyntax>>(StringComparer.Ordinal);
         private readonly Dictionary<string, ClassDeclarationSyntax> logs = new Dictionary<string, ClassDeclarationSyntax>(StringComparer.Ordinal);
         private readonly Dictionary<string, Dictionary<string, UsingDirectiveSyntax>> logsUsings = new Dictionary<string, Dictionary<string, UsingDirectiveSyntax>>(StringComparer.Ordinal);
+        private readonly Dictionary<string, List<AttributeListSyntax>> logsAttributes = new Dictionary<string, List<AttributeListSyntax>>(StringComparer.Ordinal);
         private readonly Dictionary<string, ClassDeclarationSyntax> invokers = new Dictionary<string, ClassDeclarationSyntax>(StringComparer.Ordinal);
         private readonly Dictionary<string, Dictionary<string, UsingDirectiveSyntax>> invokerUsings = new Dictionary<string, Dictionary<string, UsingDirectiveSyntax>>(StringComparer.Ordinal);
+        private readonly Dictionary<string, List<AttributeListSyntax>> invokerAttributes = new Dictionary<string, List<AttributeListSyntax>>(StringComparer.Ordinal);
         public List<Assembly> Assemblies { get; private set; }
         public string Output { get; }
         public string Namespace { get; private set; }
@@ -150,6 +152,7 @@ namespace DataWF.WebService.Generator
                                 { "System", SyntaxHelper.CreateUsingDirective("System") },
                                 { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") }
                             };
+                            var logAttributes = new List<AttributeListSyntax>();
                             var log = GetOrGenLog(table, itemType, logUsings);
                         }
                         if ((Mode & CodeGeneratorMode.Invokers) != 0)
@@ -179,17 +182,20 @@ namespace DataWF.WebService.Generator
             }
             if (!invokers.TryGetValue(itemType.Name, out var invokerClass))
             {
+                var attributes = new List<AttributeListSyntax>();
                 SyntaxHelper.AddUsing(itemType, usings);
-                invokerClass = GenInvokersClass(table, itemType, usings);
+                invokerClass = GenInvokersClass(table, itemType, usings, attributes);
 
                 invokers[itemType.Name] = invokerClass;
                 invokerUsings[itemType.Name] = usings;
+                invokerAttributes[itemType.Name] = attributes;
             }
             return invokerClass;
         }
 
-        private ClassDeclarationSyntax GenInvokersClass(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
+        private ClassDeclarationSyntax GenInvokersClass(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings, List<AttributeListSyntax> invokerAttributes)
         {
+            SyntaxHelper.AddUsing(Namespace, usings);
             return SF.ClassDeclaration(
                 attributeLists: SF.List<AttributeListSyntax>(),
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
@@ -197,11 +203,11 @@ namespace DataWF.WebService.Generator
                 typeParameterList: null,
                 baseList: null,
                 constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                members: SF.List(GenInvokers(table, itemType, usings))
+                members: SF.List(GenInvokers(table, itemType, usings, invokerAttributes))
                 );
         }
 
-        private IEnumerable<MemberDeclarationSyntax> GenInvokers(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
+        private IEnumerable<MemberDeclarationSyntax> GenInvokers(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings, List<AttributeListSyntax> invokerAttributes)
         {
             var columns = GetColumns(table, itemType);
             foreach (var property in itemType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
@@ -216,7 +222,9 @@ namespace DataWF.WebService.Generator
                     itemType.Name,
                     property.Name,
                     TypeHelper.FormatCode(property.PropertyType),
-                    property.GetSetMethod() != null);
+                    itemType.Name + "Invokers",
+                    property.GetSetMethod() != null,
+                    invokerAttributes);
             }
         }
 
@@ -254,14 +262,16 @@ namespace DataWF.WebService.Generator
             return columns;
         }
 
-        private IEnumerable<ClassDeclarationSyntax> GenPropertyInvokers(ColumnGenerator column, TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
+        private IEnumerable<ClassDeclarationSyntax> GenPropertyInvokers(ColumnGenerator column, TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings, List<AttributeListSyntax> attributes)
         {
             SyntaxHelper.AddUsing(column.PropertyInfo.PropertyType, usings);
             yield return GenPropertyInvoker(column.PropertyName + "Invoker",
                 itemType.Name,
                 column.PropertyName,
                 TypeHelper.FormatCode(column.PropertyInfo.PropertyType),
-                column.PropertyInfo.GetSetMethod() != null);
+                 itemType.Name,
+                column.PropertyInfo.GetSetMethod() != null,
+                attributes);
             var reference = table.References.FirstOrDefault(p => p.Column == column);
             if (reference != null && TypeHelper.IsBaseType(itemType, reference.PropertyInfo.DeclaringType))
             {
@@ -270,7 +280,9 @@ namespace DataWF.WebService.Generator
                       itemType.Name,
                       reference.PropertyInfo.Name,
                       TypeHelper.FormatCode(reference.PropertyInfo.PropertyType),
-                      reference.PropertyInfo.GetSetMethod() != null);
+                       itemType.Name,
+                      reference.PropertyInfo.GetSetMethod() != null,
+                      attributes);
             }
         }
 
@@ -294,6 +306,7 @@ namespace DataWF.WebService.Generator
             }
             if (!logs.TryGetValue(itemType.Name, out var logClass))
             {
+                var invokerAttributes = new List<AttributeListSyntax>();
                 SyntaxHelper.AddUsing(itemType, usings);
                 logClass = SF.ClassDeclaration(
                     attributeLists: SF.List(GenLogAttributeList(table, itemType)),
@@ -303,11 +316,12 @@ namespace DataWF.WebService.Generator
                     baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
                         SF.SimpleBaseType(SF.ParseTypeName(baseName)))),
                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SF.List(GenLogMemebers(table, itemType, baseType, usings))
+                    members: SF.List(GenLogMemebers(table, itemType, baseType, usings, invokerAttributes))
                     );
 
                 logs[itemType.Name] = logClass;
                 logsUsings[itemType.Name] = usings;
+                logsAttributes[itemType.Name] = invokerAttributes;
             }
             return logClass;
         }
@@ -340,7 +354,7 @@ namespace DataWF.WebService.Generator
             }
         }
 
-        private IEnumerable<MemberDeclarationSyntax> GenLogMemebers(TableGenerator table, Type itemType, Type baseType, Dictionary<string, UsingDirectiveSyntax> usings)
+        private IEnumerable<MemberDeclarationSyntax> GenLogMemebers(TableGenerator table, Type itemType, Type baseType, Dictionary<string, UsingDirectiveSyntax> usings, List<AttributeListSyntax> logAttributes)
         {
             if ((itemType.GetCustomAttribute<TableAttribute>(false) != null)
                 || !TypeHelper.IsBaseType(itemType, table.ItemType))
@@ -370,24 +384,32 @@ namespace DataWF.WebService.Generator
             }
             foreach (var column in columns)
             {
-                foreach (var invoker in GenLogPropertyInvokers(column, table, itemType, usings))
+                foreach (var invoker in GenLogPropertyInvokers(column, table, itemType, usings, logAttributes))
                     yield return invoker;
             }
         }
 
-        private IEnumerable<ClassDeclarationSyntax> GenLogPropertyInvokers(ColumnGenerator column, TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
+        private IEnumerable<ClassDeclarationSyntax> GenLogPropertyInvokers(ColumnGenerator column, TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings, List<AttributeListSyntax> logAttributes)
         {
+            var typeName = GetLogClassName(itemType);
+            SyntaxHelper.AddUsing(Namespace, usings);
             yield return GenPropertyInvoker(column.PropertyName + "Invoker",
-                GetLogClassName(itemType),
+                typeName,
                 GetLogPropertyName(column),
-                TypeHelper.FormatCode(column.PropertyInfo.PropertyType));
+                TypeHelper.FormatCode(column.PropertyInfo.PropertyType),
+                typeName,
+                true,
+                logAttributes);
             var reference = table.References.FirstOrDefault(p => p.Column == column);
             if (reference != null)
             {
                 yield return GenPropertyInvoker(reference.PropertyInfo.Name + "Invoker",
-                      GetLogClassName(itemType),
+                      typeName,
                       reference.PropertyInfo.Name,
-                      TypeHelper.FormatCode(reference.PropertyInfo.PropertyType));
+                      TypeHelper.FormatCode(reference.PropertyInfo.PropertyType),
+                      typeName,
+                      true,
+                      logAttributes);
             }
         }
 
@@ -649,7 +671,7 @@ namespace DataWF.WebService.Generator
 
             foreach (var entry in controllers)
             {
-                var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, controllersUsings[entry.Key].Values);
+                var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, controllersUsings[entry.Key].Values, Enumerable.Empty<AttributeListSyntax>());
                 if (save)
                 {
                     WriteFile(Path.Combine(Output, $"{entry.Key}Controller.cs"), unit);
@@ -665,7 +687,7 @@ namespace DataWF.WebService.Generator
                 }
                 foreach (var entry in logs)
                 {
-                    var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, logsUsings[entry.Key].Values);
+                    var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, logsUsings[entry.Key].Values, logsAttributes[entry.Key]);
                     if (save)
                     {
                         WriteFile(Path.Combine(logOutput, $"{entry.Key}Log.cs"), unit);
@@ -682,7 +704,7 @@ namespace DataWF.WebService.Generator
                 }
                 foreach (var entry in invokers)
                 {
-                    var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, invokerUsings[entry.Key].Values);
+                    var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, invokerUsings[entry.Key].Values, invokerAttributes[entry.Key]);
                     if (save)
                     {
                         WriteFile(Path.Combine(invokerOutput, $"{entry.Key}Invokers.cs"), unit);
@@ -980,11 +1002,12 @@ namespace DataWF.WebService.Generator
                                  SF.IdentifierName(post ? "HttpPost" : "HttpGet"))));
         }
 
-        private ClassDeclarationSyntax GenPropertyInvoker(string name, string definitionName, string propertyName, string propertyType, bool canWrite = true)
+        private ClassDeclarationSyntax GenPropertyInvoker(string name, string definitionName, string propertyName, string propertyType, string holder, bool canWrite, List<AttributeListSyntax> invokerAttributes)
         {
+            invokerAttributes.AddRange(GenPropertyInvokerAttribute(definitionName, propertyName, $"{holder}.{name}<>"));
             var nullable = propertyType.IndexOf("?") > -1;
             return SF.ClassDeclaration(
-                     attributeLists: SF.List(GenPropertyInvokerAttribute(definitionName, propertyName)),
+                     attributeLists: SF.List<AttributeListSyntax>(),
                      modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
                      identifier: SF.Identifier(name + "<T>"),
                      typeParameterList: null,
@@ -1083,9 +1106,17 @@ namespace DataWF.WebService.Generator
 
         }
 
-        private IEnumerable<AttributeListSyntax> GenPropertyInvokerAttribute(string definitionName, string propertyName)
+        private IEnumerable<AttributeListSyntax> GenPropertyInvokerAttribute(string definitionName, string propertyName, string invokerName)
         {
-            yield return SyntaxHelper.GenAttributeList("Invoker", $"typeof({definitionName}), nameof({definitionName}.{propertyName})");
+            yield return SF.AttributeList(
+                SF.SingletonSeparatedList(
+                    SF.Attribute(
+                        SF.IdentifierName("assembly: Invoker"))
+                    .WithArgumentList(
+                        SF.AttributeArgumentList(
+                            SF.SingletonSeparatedList(
+                                SF.AttributeArgument(
+                                    SF.ParseExpression($"typeof({definitionName}), nameof({definitionName}.{propertyName}), typeof({invokerName})")))))));
         }
 
         private List<MethodParametrInfo> GetParametersInfo(MethodInfo method, TableGenerator table, Dictionary<string, UsingDirectiveSyntax> usings)

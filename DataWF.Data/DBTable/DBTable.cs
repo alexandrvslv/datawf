@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -38,6 +39,31 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.GroupName), typeof(DBTable.GroupNameInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.LogTableName), typeof(DBTable.LogTableNameInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.LogTable), typeof(DBTable.LogTableInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.SequenceName), typeof(DBTable.SequenceNameInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.Sequence), typeof(DBTable.SequenceInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.BlockSize), typeof(DBTable.BlockSizeInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.Columns), typeof(DBTable.ColumnsInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.ItemType), typeof(DBTable.ItemTypeInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.ItemTypeName), typeof(DBTable.ItemTypeNameInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.ColumnGroups), typeof(DBTable.ColumnGroupsInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.Indexes), typeof(DBTable.IndexesInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.Foreigns), typeof(DBTable.ForeignsInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.Constraints), typeof(DBTable.ConstraintsInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.ItemTypes), typeof(DBTable.ItemTypesInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.Query), typeof(DBTable.QueryInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.Type), typeof(DBTable.TypeInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.IsCaching), typeof(DBTable.IsCachingInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.ComDelete), typeof(DBTable.ComDeleteInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.ComInsert), typeof(DBTable.ComInsertInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.ComUpdate), typeof(DBTable.ComUpdateInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.SqlName), typeof(DBTable.SqlNameInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.Count), typeof(DBTable.CountInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.IsReadOnly), typeof(DBTable.IsReadOnlyInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.DefaultItemsView), typeof(DBTable.DefaultItemsViewInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.ChildRelations), typeof(DBTable.ChildRelationsInvoker))]
 namespace DataWF.Data
 {
     public abstract class DBTable : DBSchemaItem, IComparable, IDBTable
@@ -1904,7 +1930,6 @@ namespace DataWF.Data
             return true;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.GroupName))]
         public class GroupNameInvoker : Invoker<DBTable, string>
         {
             public static readonly GroupNameInvoker Instance = new GroupNameInvoker();
@@ -1917,7 +1942,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, string value) => target.GroupName = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.LogTableName))]
         public class LogTableNameInvoker : Invoker<DBTable, string>
         {
             public static readonly LogTableNameInvoker Instance = new LogTableNameInvoker();
@@ -1930,7 +1954,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, string value) => target.LogTableName = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.LogTable))]
         public class LogTableInvoker : Invoker<DBTable, IDBLogTable>
         {
             public static readonly LogTableInvoker Instance = new LogTableInvoker();
@@ -1943,7 +1966,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, IDBLogTable value) => target.LogTable = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.SequenceName))]
         public class SequenceNameInvoker : Invoker<DBTable, string>
         {
             public static readonly SequenceNameInvoker Instance = new SequenceNameInvoker();
@@ -1956,7 +1978,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, string value) => target.SequenceName = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.Sequence))]
         public class SequenceInvoker : Invoker<DBTable, DBSequence>
         {
             public static readonly SequenceInvoker Instance = new SequenceInvoker();
@@ -1969,7 +1990,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, DBSequence value) => target.Sequence = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.BlockSize))]
         public class BlockSizeInvoker : Invoker<DBTable, int>
         {
             public static readonly BlockSizeInvoker Instance = new BlockSizeInvoker();
@@ -1982,7 +2002,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, int value) => target.BlockSize = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.Columns))]
         public class ColumnsInvoker : Invoker<DBTable, DBColumnList<DBColumn>>
         {
             public static readonly ColumnsInvoker Instance = new ColumnsInvoker();
@@ -1995,7 +2014,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, DBColumnList<DBColumn> value) => target.Columns = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.ItemType))]
         public class ItemTypeInvoker : Invoker<DBTable, DBItemType>
         {
             public static readonly ItemTypeInvoker Instance = new ItemTypeInvoker();
@@ -2008,7 +2026,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, DBItemType value) { }
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.ItemTypeName))]
         public class ItemTypeNameInvoker : Invoker<DBTable, string>
         {
             public static readonly ItemTypeNameInvoker Instance = new ItemTypeNameInvoker();
@@ -2021,7 +2038,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, string value) { }
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.ColumnGroups))]
         public class ColumnGroupsInvoker : Invoker<DBTable, DBColumnGroupList>
         {
             public override string Name => nameof(DBTable.ColumnGroups);
@@ -2033,7 +2049,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, DBColumnGroupList value) => target.ColumnGroups = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.Indexes))]
         public class IndexesInvoker : Invoker<DBTable, DBIndexList>
         {
             public override string Name => nameof(DBTable.Indexes);
@@ -2045,7 +2060,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, DBIndexList value) => target.Indexes = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.Foreigns))]
         public class ForeignsInvoker : Invoker<DBTable, DBForeignList>
         {
             public override string Name => nameof(DBTable.Foreigns);
@@ -2057,7 +2071,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, DBForeignList value) => target.Foreigns = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.Constraints))]
         public class ConstraintsInvoker : Invoker<DBTable, DBConstraintList<DBConstraint>>
         {
             public override string Name => nameof(DBTable.Constraints);
@@ -2069,7 +2082,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, DBConstraintList<DBConstraint> value) => target.Constraints = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.ItemTypes))]
         public class ItemTypesInvoker : Invoker<DBTable, Dictionary<int, DBItemType>>
         {
             public override string Name => nameof(DBTable.ItemTypes);
@@ -2081,7 +2093,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, Dictionary<int, DBItemType> value) => target.ItemTypes = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.Query))]
         public class QueryInvoker : Invoker<DBTable, string>
         {
             public override string Name => nameof(DBTable.Query);
@@ -2093,7 +2104,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, string value) => target.Query = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.Type))]
         public class TypeInvoker : Invoker<DBTable, DBTableType>
         {
             public override string Name => nameof(DBTable.Type);
@@ -2105,7 +2115,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, DBTableType value) => target.Type = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.IsCaching))]
         public class IsCachingInvoker : Invoker<DBTable, bool>
         {
             public override string Name => nameof(DBTable.IsCaching);
@@ -2117,7 +2126,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, bool value) => target.IsCaching = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.ComDelete))]
         public class ComDeleteInvoker : Invoker<DBTable, string>
         {
             public override string Name => nameof(DBTable.ComDelete);
@@ -2129,7 +2137,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, string value) => target.ComDelete = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.ComInsert))]
         public class ComInsertInvoker : Invoker<DBTable, string>
         {
             public override string Name => nameof(DBTable.ComInsert);
@@ -2141,7 +2148,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, string value) => target.ComInsert = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.ComUpdate))]
         public class ComUpdateInvoker : Invoker<DBTable, string>
         {
             public override string Name => nameof(DBTable.ComUpdate);
@@ -2153,7 +2159,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, string value) => target.ComUpdate = value;
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.SqlName))]
         public class SqlNameInvoker : Invoker<DBTable, string>
         {
             public override string Name => nameof(DBTable.SqlName);
@@ -2165,7 +2170,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, string value) { }
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.Count))]
         public class CountInvoker : Invoker<DBTable, int>
         {
             public override string Name => nameof(DBTable.Count);
@@ -2177,7 +2181,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, int value) { }
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.IsReadOnly))]
         public class IsReadOnlyInvoker : Invoker<DBTable, bool>
         {
             public override string Name => nameof(DBTable.IsReadOnly);
@@ -2189,7 +2192,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, bool value) { }
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.DefaultItemsView))]
         public class DefaultItemsViewInvoker : Invoker<DBTable, IDBTableView>
         {
             public override string Name => nameof(DBTable.DefaultItemsView);
@@ -2201,7 +2203,6 @@ namespace DataWF.Data
             public override void SetValue(DBTable target, IDBTableView value) { }
         }
 
-        [Invoker(typeof(DBTable), nameof(DBTable.ChildRelations))]
         public class ChildRelationsInvoker : Invoker<DBTable, List<DBForeignKey>>
         {
             public override string Name => nameof(DBTable.ChildRelations);

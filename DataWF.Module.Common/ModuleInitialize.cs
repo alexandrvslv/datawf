@@ -1,7 +1,9 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using DataWF.Module.Common;
 using System.Threading.Tasks;
 
+[assembly: ModuleInitialize(typeof(ModuleInitialize))]
 namespace DataWF.Module.Common
 {
     public class ModuleInitialize : IModuleInitialize

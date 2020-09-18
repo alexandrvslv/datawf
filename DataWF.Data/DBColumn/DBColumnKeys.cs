@@ -17,45 +17,41 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
-using DataWF.Data;
 using System;
-using Excel = DocumentFormat.OpenXml.Spreadsheet;
 
-//using DataControl;
-[assembly: Invoker(typeof(StringKey), nameof(StringKey.Key), typeof(StringKey.KeyInvoker))]
 namespace DataWF.Data
 {
-    public class StringKey
+    [Flags()]
+    public enum DBColumnKeys
     {
-        public StringKey(Excel.SharedStringItem item)
-        {
-            Value = item;
-            Key = item.InnerText;
-        }
-
-        public StringKey(string key)
-        {
-            Value = new Excel.SharedStringItem { Text = new Excel.Text(key) };
-            Key = key;
-        }
-
-        public Excel.SharedStringItem Value { get; set; }
-
-        public string Key { get; set; }
-
-        public class KeyInvoker : Invoker<StringKey, String>
-        {
-            public static readonly KeyInvoker Instance = new KeyInvoker();
-            public override string Name => nameof(StringKey.Key);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(StringKey target) => target.Key;
-
-            public override void SetValue(StringKey target, string value) => target.Key = value;
-        }
+        None = 0,
+        Primary = 1 << 0,
+        Increment = 1 << 1,
+        Stamp = 1 << 2,
+        Date = 1 << 3,
+        Group = 1 << 4,
+        Code = 1 << 5,
+        ItemType = 1 << 6,
+        Image = 1 << 7,
+        System = 1 << 8,
+        Unique = 1 << 9,
+        State = 1 << 10,
+        Notnull = 1 << 11,
+        Boolean = 1 << 12,
+        Indexing = 1 << 13,
+        Access = 1 << 14,
+        View = 1 << 15,
+        Culture = 1 << 16,
+        Encript = 1 << 17,
+        Password = 1 << 18,
+        Reference = 1 << 19,
+        TableReference = 1 << 20,
+        NoLog = 1 << 21,
+        ElementType = 1 << 22,
+        File = 1 << 23,
+        FileName = 1 << 24,
+        FileLOB = 1 << 25,
+        FileLastWrite = 1 << 26,
+        UtcDate = 1 << 27
     }
-
-
 }
