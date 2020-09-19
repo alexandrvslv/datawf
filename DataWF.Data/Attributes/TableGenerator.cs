@@ -140,19 +140,19 @@ namespace DataWF.Data
             }
             GenerateReferences();
             Generateindexes();
-            GenerateVirtualTables();
+            GenerateVirtualTables(schema);
 
             Table.IsLoging = Attribute.IsLoging;
 
             return Table;
         }
 
-        private void GenerateVirtualTables()
+        private void GenerateVirtualTables(DBSchema schema)
         {
             foreach (var itemType in cacheItemTypes)
             {
                 Table.ItemTypes[itemType.Attribute.Id] = new DBItemType { Type = itemType.Type };
-                itemType.Generate(Schema);
+                itemType.Generate(schema);
             }
         }
 
@@ -257,6 +257,7 @@ namespace DataWF.Data
 
         public virtual void InitializeType(Type type)
         {
+            var typeName = type.Name;
             if (cachedTypes.Contains(type))
                 return;
 

@@ -73,6 +73,7 @@ namespace DataWF.Data
             }
             Table.Generator = TableAttribute;
             Table.ItemTypeIndex = Attribute.Id;
+            Table.Schema = schema;
             VirtualTable.BaseTable = TableAttribute.Table;
             foreach (var columnAttribute in TableAttribute.Columns)
             {
