@@ -17,6 +17,7 @@ namespace DataWF.Common
         public FileWatcher(string filePath, IFileModel model, object modelView, bool enabled = true, FileWatcherService service = null)
         {
             Model = model;
+            ModelToken = model?.Token ?? 0;
             ModelView = modelView;
             FilePath = filePath;
             Service = service ?? FileWatcherService.Instance;
@@ -79,7 +80,6 @@ namespace DataWF.Common
             set
             {
                 model = value;
-                ModelToken = model?.Token ?? 0;
             }
         }
 
@@ -121,6 +121,11 @@ namespace DataWF.Common
         public FileWatcherService Service { get => service; set => service = value; }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnRenaming(string fileName)
+        {
+            Service?.OnRenaming(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, Path.GetDirectoryName(FilePath), fileName, Path.GetFileName(FilePath)));
+        }
 
         private void OnRenamed(object sender, RenamedEventArgs e)
         {
@@ -164,6 +169,7 @@ namespace DataWF.Common
 
         public void Rename(string fileName)
         {
+            OnRenaming(fileName);
             var newPath = Path.Combine(Path.GetDirectoryName(FilePath), fileName);
             if (File.Exists(FilePath) && !File.Exists(newPath))
             {
