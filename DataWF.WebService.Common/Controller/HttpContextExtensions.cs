@@ -12,29 +12,24 @@ namespace DataWF.WebService.Common
     {
         public static HttpJsonSettings ReadJsonSettings(this HttpContext httpContext)
         {
-            var keys = httpContext.ReadEnum<HttpJsonKeys>(HttpJsonSettings.XJsonKeys)
-                ?? httpContext.ReadEnum<HttpJsonKeys>(HttpJsonSettings.JsonKeys);
+            var keys = httpContext.ReadEnum<HttpJsonKeys>(HttpJsonSettings.XJsonKeys);
             if (keys == null)
             {
                 keys = HttpJsonKeys.None;
-                if (httpContext.ReadBool(HttpJsonSettings.XJsonKeyRefered)
-                    ?? httpContext.ReadBool(HttpJsonSettings.JsonReferenced) ?? true)
+                if (httpContext.ReadBool(HttpJsonSettings.XJsonKeyRefered) ?? true)
                 {
                     keys |= HttpJsonKeys.Refed;
                 }
-                if (httpContext.ReadBool(HttpJsonSettings.XJsonKyeRefering)
-                    ?? httpContext.ReadBool(HttpJsonSettings.JsonReferencing) ?? true)
+                if (httpContext.ReadBool(HttpJsonSettings.XJsonKyeRefering) ?? true)
                 {
                     keys |= HttpJsonKeys.Refing;
                 }
-                if (httpContext.ReadBool(HttpJsonSettings.XJsonKeyRef)
-                    ?? httpContext.ReadBool(HttpJsonSettings.JsonReference) ?? true)
+                if (httpContext.ReadBool(HttpJsonSettings.XJsonKeyRef) ?? true)
                 {
                     keys |= HttpJsonKeys.Ref;
                 }
             }
-            var maxDepth = httpContext.ReadInt(HttpJsonSettings.XJsonMaxDepth)
-                ?? httpContext.ReadInt(HttpJsonSettings.JsonMaxDepth) ?? 4;
+            var maxDepth = httpContext.ReadInt(HttpJsonSettings.XJsonMaxDepth) ?? 4;
             return new HttpJsonSettings((HttpJsonKeys)keys, maxDepth);
         }
 
