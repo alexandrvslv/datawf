@@ -143,11 +143,15 @@ namespace DataWF.Data
             }
             Upload(BaseItem);
             BaseItem.Attach();
-            await UploadReferences(transaction);
+            await UndoReferences(transaction);
             await RedoFile(transaction);
             if (BaseItem.IsChanged)
             {
                 await BaseTable.SaveItem(BaseItem, transaction);
+            }
+            if (baseItem != null && LogType == DBLogType.Delete)
+            {
+                await UndoReferencing(transaction, baseItem);
             }
 
             return baseItem;
@@ -227,18 +231,8 @@ namespace DataWF.Data
 
         public async Task<DBItem> Undo(DBTransaction transaction)
         {
-            var logtransaction = transaction.GetSubTransaction(Table.Connection);
-            var item = GetPrevius(logtransaction);
-            var baseItem = BaseItem;
-            if (item != null)
-            {
-                baseItem = await item.Redo(transaction);
+            var baseItem = await Redo(transaction);
 
-                if (baseItem != null && LogType == DBLogType.Delete)
-                {
-                    await UndoReferencing(transaction, baseItem);
-                }
-            }
             return baseItem;
         }
 
@@ -256,21 +250,20 @@ namespace DataWF.Data
                 {
                     query.BuildParam(referenceColumn.LogColumn, CompareType.Equal, BaseId);
                     query.BuildParam(referenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
-                    var logItems = referenceTable.LogTable.LoadItems(query).Cast<DBLogItem>().ToList();
+                    var logItems = referenceTable.LogTable.LoadItems(query).Cast<DBLogItem>().OrderByDescending(p => p.DateCreate);
                     foreach (var refed in logItems)
                     {
-                        if (!stack.Contains(refed.BaseId))
+                        if (!stack.Contains(refed.BaseId) && Math.Abs((DateCreate - refed.DateCreate)?.TotalMinutes ?? 10) < 5)
                         {
                             stack.Add(refed.BaseId);
                             await refed.Undo(transaction);
                         }
                     }
                 }
-
             }
         }
 
-        private async Task UploadReferences(DBTransaction transaction)
+        private async Task UndoReferences(DBTransaction transaction)
         {
             foreach (var column in BaseTable.Columns.GetIsReference())
             {
@@ -286,10 +279,14 @@ namespace DataWF.Data
                         {
                             query.BuildParam(column.ReferenceTable.LogTable.BaseKey, CompareType.Equal, value);
                             query.BuildParam(column.ReferenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
-                            var logItem = column.ReferenceTable.LogTable.LoadItems(query).Cast<DBLogItem>().FirstOrDefault();
+                            var logItem = column.ReferenceTable.LogTable.LoadItems(query).Cast<DBLogItem>().OrderByDescending(p => p.DateCreate).FirstOrDefault();
                             if (logItem != null)
                             {
                                 await logItem.Undo(transaction);
+                            }
+                            else
+                            {
+                                BaseItem.SetValue(null, column);
                             }
                         }
                     }
