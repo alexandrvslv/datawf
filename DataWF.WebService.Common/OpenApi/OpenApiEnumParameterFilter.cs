@@ -11,11 +11,10 @@ namespace DataWF.WebService.Common
             if (parameter.In != null && parameter.Schema == null)
             {
                 var type = context.ApiParameterDescription.Type;
-                if (type.IsEnum)
+                if (type.IsEnum && !context.SchemaRepository.Schemas.ContainsKey(context.ApiParameterDescription.Type.Name))
                 {
-                    parameter.Schema = context.SchemaRepository.GetOrAdd(context.ApiParameterDescription.Type,
-                        context.ApiParameterDescription.Type.Name,
-                        () => context.SchemaGenerator.GenerateSchema(context.ApiParameterDescription.Type, context.SchemaRepository));
+                    parameter.Schema = context.SchemaRepository.AddDefinition(context.ApiParameterDescription.Type.Name,
+                         context.SchemaGenerator.GenerateSchema(context.ApiParameterDescription.Type, context.SchemaRepository));
                 }
             }
         }
