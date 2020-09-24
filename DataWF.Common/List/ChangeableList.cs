@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace DataWF.Common
 {
     public class ChangeableList<T> : SelectableList<T>, IChangeableList<T>
     {
-        protected HashSet<T> changes = new HashSet<T>();
+        protected ConcurrentDictionary<T, byte> changes = new ConcurrentDictionary<T, byte>();
 
         public event EventHandler<NotifyStatusChangedEventArgs> ItemStatusChanged;
 
@@ -20,7 +21,7 @@ namespace DataWF.Common
             var syncItem = item as ISynchronized;
             if (syncItem.SyncStatus == SynchronizedStatus.Actual)
             {
-                if (changes.Remove(item))
+                if (changes.TryRemove(item, out _))
                 {
                     OnItemStatusChanged(item);
                 }
@@ -28,7 +29,7 @@ namespace DataWF.Common
             else if (syncItem.SyncStatus == SynchronizedStatus.New
                 || syncItem.SyncStatus == SynchronizedStatus.Edit)
             {
-                if (changes.Add(item))
+                if (changes.TryAdd(item, 0))
                 {
                     OnItemStatusChanged(item);
                 }
@@ -45,9 +46,9 @@ namespace DataWF.Common
             return changes;
         }
 
-        public ISet<T> GetChanged()
+        public ICollection<T> GetChanged()
         {
-            return changes;
+            return changes.Keys;
         }
 
         public override void InsertInternal(int index, T item)
@@ -59,7 +60,7 @@ namespace DataWF.Common
         public override void RemoveInternal(T item, int index)
         {
             base.RemoveInternal(item, index);
-            if (changes.Remove(item))
+            if (changes.TryRemove(item, out _))
             {
                 OnItemStatusChanged(item);
             }

@@ -251,7 +251,6 @@ namespace DataWF.Common
                 }
                 Remove(item);
             }
-
         }
 
         public object ParseId(object id)
@@ -264,7 +263,7 @@ namespace DataWF.Common
             return Items.GetChanged();
         }
 
-        public ISet<T> GetChanges()
+        public ICollection<T> GetChanges()
         {
             return Items.GetChanged();
         }

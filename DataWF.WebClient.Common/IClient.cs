@@ -78,7 +78,7 @@ namespace DataWF.Common
         bool Remove(T item);
         Task<T> Get(T item);
         T Get(object id);
-        new ISet<T> GetChanges();
+        new ICollection<T> GetChanges();
         Task<bool> Delete(T item);
         LoadProgress<T> Load(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
         Task<List<T>> SearchAsync(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);

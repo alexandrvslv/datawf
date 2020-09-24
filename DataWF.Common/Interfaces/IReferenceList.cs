@@ -20,7 +20,7 @@ namespace DataWF.Common
 
     public interface IChangeableList<T> : IChangeableList
     {
-        new ISet<T> GetChanged();
+        new ICollection<T> GetChanged();
         void CheckStatus(T item);
     }
 
