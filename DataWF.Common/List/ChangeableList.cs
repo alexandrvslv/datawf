@@ -43,7 +43,7 @@ namespace DataWF.Common
 
         IEnumerable IChangeableList.GetChanged()
         {
-            return changes;
+            return changes.Keys;
         }
 
         public ICollection<T> GetChanged()
