@@ -262,7 +262,7 @@ namespace DataWF.Common
                     result = (IInvoker)CreateObject(type, new[] { typeof(PropertyInfo), parameters[0].ParameterType }, new[] { info, index }, true);
                 }
             }
-            else if (info is MethodInfo)
+            else if (info is MethodInfo methodInfo)
             {
                 if (string.Equals(info.Name, nameof(Object.ToString), StringComparison.Ordinal))
                 {
@@ -272,8 +272,8 @@ namespace DataWF.Common
                 else
                 {
                     var type = typeof(MethodInvoker<,>).MakeGenericType(info.DeclaringType,
-                                                                            ((MethodInfo)info).ReturnType);
-                    result = (IInvoker)CreateObject(type, new[] { typeof(MethodInfo) }, new[] { info }, true);
+                                                                            methodInfo.ReturnType == typeof(void)? typeof(object): methodInfo.ReturnType);
+                    result = (IInvoker)CreateObject(type, new[] { typeof(MethodInfo) }, new[] { methodInfo }, true);
                 }
             }
             return result;
