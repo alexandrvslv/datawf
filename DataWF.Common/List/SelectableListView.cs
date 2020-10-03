@@ -317,7 +317,7 @@ namespace DataWF.Common
                         if (updatingFilter == 1)
                             return;
                         if (newItem != null
-                            && ListHelper.CheckItem(newItem, query)
+                            && (query == null || ListHelper.CheckItem(newItem, query))
                             && GetIndexBySort(newItem) < 0)
                         {
                             addList.Add(newItem);
