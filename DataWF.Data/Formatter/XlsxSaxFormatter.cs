@@ -348,6 +348,8 @@ namespace DataWF.Data
                 int ind, dif = 0;
                 writer.WriteStartDocument(true);
                 var sharedFormuls = new Dictionary<uint, Excel.Cell>();
+                var row = (Excel.Row)null;
+                var rowIndex = 0;
 
                 while (reader.Read())
                 {
@@ -359,8 +361,8 @@ namespace DataWF.Data
                     //}
                     if (reader.ElementType == typeof(Excel.Row))
                     {
-                        var row = (Excel.Row)reader.LoadCurrentElement();
-                        var rowIndex = (int)row.RowIndex.Value;
+                        row = (Excel.Row)reader.LoadCurrentElement();
+                        rowIndex = (int)row.RowIndex.Value;
                         ind = rowIndex + dif;
                         UpdateRowIndex(row, ind);
                         QResult query = null;
@@ -491,6 +493,41 @@ namespace DataWF.Data
                     }
                     else if (reader.IsEndElement)
                     {
+                        if (row != null)
+                        {
+                            var ocell = row.GetFirstChild<Excel.Cell>();
+                            if (ocell != null)
+                            {
+                                var sref = CellReference.Parse(ocell.CellReference);
+                                foreach (var defName in namesCache.Values)
+                                {
+                                    if (defName.Range.End.Col > 0
+                                        && defName.Range.Start.Row > sref.Row)
+                                    {
+                                        var query = (defName.CacheValue ?? args.GetValue(defName.Invoker)) as QResult;
+                                        if (query != null)
+                                        {
+                                            sref.Row = defName.Range.Start.Row;
+                                            Excel.Row tableRow = null;
+                                            foreach (object[] dataRow in query.Values)
+                                            {
+                                                sref.Col = defName.Range.Start.Col;
+                                                tableRow = CloneRow(tableRow ?? row, sref.Row);
+                                                foreach (object itemValue in dataRow)
+                                                {
+                                                    GetCell(tableRow, itemValue, sref.Col, sref.Row, 0, sharedStrings, sharedFormuls, true);
+                                                    sref.Col++;
+                                                }
+                                                sref.Row++;
+                                                WriteElement(writer, tableRow);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            row = null;
+                        }
+
                         writer.WriteEndElement();
                     }
                 }
@@ -501,7 +538,7 @@ namespace DataWF.Data
             }
         }
 
-        public static void WriteCell(Excel.Cell cell, object value, StringKeyList sharedStrings)
+        public static void WriteCell(Excel.Cell cell, object value, StringKeyList sharedStrings, bool clear = false)
         {
             if (value != null)
             {
@@ -537,6 +574,11 @@ namespace DataWF.Data
                     //cell.DataType = Excel.CellValues.String;
                     //cell.CellValue = new Excel.CellValue(value.ToString().Replace("", string.Empty));
                 }
+            }
+            else if (clear)
+            {
+                cell.DataType = Excel.CellValues.String;
+                cell.CellValue = null;
             }
         }
 
@@ -782,7 +824,7 @@ namespace DataWF.Data
             return cell;
         }
 
-        public Excel.Cell GetCell(OpenXmlCompositeElement row, object value, int c, int r, uint styleIndex, StringKeyList sharedStrings, Dictionary<uint, Excel.Cell> sharedFormuls)
+        public Excel.Cell GetCell(OpenXmlCompositeElement row, object value, int c, int r, uint styleIndex, StringKeyList sharedStrings, Dictionary<uint, Excel.Cell> sharedFormuls, bool clear = false)
         {
             string reference = Helper.IntToChar(c) + r.ToString();
             Excel.Cell cell = null;
@@ -834,9 +876,8 @@ namespace DataWF.Data
                         cell.CellFormula.Text = Regex.Replace(masterCell.CellFormula.Text, "[A-Z]" + masterReference.Row.ToString(), (m) => m.Value.Replace(masterReference.Row.ToString(), r.ToString()));
                     }
                 }
-
             }
-            WriteCell(cell, value, sharedStrings);
+            WriteCell(cell, value, sharedStrings, clear);
 
             return cell;
         }
