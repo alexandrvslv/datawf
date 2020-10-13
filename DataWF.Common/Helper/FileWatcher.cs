@@ -171,8 +171,12 @@ namespace DataWF.Common
         {
             OnRenaming(fileName);
             var newPath = Path.Combine(Path.GetDirectoryName(FilePath), fileName);
-            if (File.Exists(FilePath) && !File.Exists(newPath))
+            if (File.Exists(FilePath))
             {
+                if (File.Exists(newPath))
+                {
+                    File.Delete(newPath);
+                }
                 File.Move(FilePath, newPath);
             }
             FilePath = newPath;
