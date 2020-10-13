@@ -229,14 +229,13 @@ namespace DataWF.WebService.Common
                     }
                     foreach (var value in values)
                     {
-                        transaction.AddItem(value);
+                        transaction.AddItem(value, true);
                     }
                     foreach (var value in values)
                     {
                         current = value;
                         if (IsDenied(value, transaction.Caller))
                         {
-                            table.RejectChanges(values, transaction.Caller);
                             transaction.Rollback();
                             return Forbid();
                         }
@@ -246,7 +245,6 @@ namespace DataWF.WebService.Common
                 }
                 catch (Exception ex)
                 {
-                    table.RejectChanges(values, transaction.Caller);
                     transaction.Rollback();
                     return BadRequest(ex, current);
                 }
@@ -436,6 +434,12 @@ namespace DataWF.WebService.Common
             {
                 return BadRequest(ex, null);
             }
+        }
+
+        [NonAction]
+        private BadRequestObjectResult Forbid(DBItem value, DBUpdateState updateState)
+        {
+            return new BadRequestObjectResult($"Access Denied!\nCan't {updateState} {value}");
         }
 
         [NonAction]

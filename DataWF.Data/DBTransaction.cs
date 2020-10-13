@@ -490,14 +490,24 @@ namespace DataWF.Data
             Execute?.Invoke(new DBExecuteEventArg { Time = ms, Query = text, Type = type, Rezult = rez });
         }
 
-        public bool AddItem(DBItem item)
+        public bool AddItem(DBItem item, bool addReferening = false)
         {
             if (!Items.Contains(item))
             {
                 Items.Add(item);
+                if (addReferening)
+                {
+                    foreach (DBItem subItem in item.GetPropertyReferencing())
+                    {
+                        if (subItem.IsReferencingChanged)
+                        {
+                            AddItem(subItem);
+                        }
+                    }
+                }
                 return true;
             }
-            return item.IsChanged;
+            return item.IsReferencingChanged;
         }
 
         public bool RemoveItem(DBItem item)

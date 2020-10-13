@@ -1233,9 +1233,8 @@ namespace DataWF.Data
 
         public virtual async Task Save(DBTransaction transaction)
         {
-            if (transaction.AddItem(this))
+            if (transaction.AddItem(this, true))
             {
-                SnapshotReferencing(transaction);
                 if (await OnSaving(transaction))
                 {
                     await SaveReferenced(transaction);
@@ -1528,6 +1527,25 @@ namespace DataWF.Data
                         {
                             SetValue(item.PrimaryId, column);
                         }
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<DBItem> GetPropertyReferenced()
+        {
+            foreach (var column in Table.Columns.GetIsReference())
+            {
+                var invoker = column.ReferencePropertyInvoker;
+                if (column.ColumnType == DBColumnTypes.Default
+                    && invoker != null
+                    && invoker.TargetType.IsAssignableFrom(GetType()))
+                {
+                    var item = invoker.GetValue(this) as DBItem;
+
+                    if (item != null && item != this)
+                    {
+                        yield return item;
                     }
                 }
             }
