@@ -5,303 +5,6 @@
     "version": "v1"
   },
   "paths": {
-    "/api/Access/Get/{name}": {
-      "get": {
-        "tags": [
-          "Access"
-        ],
-        "operationId": "Get",
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccessValue"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Access/GetProperty/{name}/{property}": {
-      "get": {
-        "tags": [
-          "Access"
-        ],
-        "operationId": "GetProperty",
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          },
-          {
-            "name": "property",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccessValue"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Access/GetItems/{name}/{id}": {
-      "get": {
-        "tags": [
-          "Access"
-        ],
-        "operationId": "Get",
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AccessItem"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Access/SetItems/{name}/{id}": {
-      "put": {
-        "tags": [
-          "Access"
-        ],
-        "operationId": "Set",
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/AccessItem"
-                },
-                "nullable": true
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "boolean"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Access/SetItems/{name}": {
-      "put": {
-        "tags": [
-          "Access"
-        ],
-        "operationId": "Set",
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AccessUpdatePackage"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "boolean"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Access/ClearAccess/{name}/{id}": {
-      "put": {
-        "tags": [
-          "Access"
-        ],
-        "operationId": "Clear",
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AccessItem"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Access/ClearAccess/{name}": {
-      "put": {
-        "tags": [
-          "Access"
-        ],
-        "operationId": "Clear",
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "nullable": true
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AccessItem"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/Address/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -747,7 +450,7 @@
         }
       }
     },
-    "/api/Address/Package": {
+    "/api/Address/PostPackage": {
       "post": {
         "tags": [
           "Address"
@@ -1359,7 +1062,7 @@
         }
       }
     },
-    "/api/Book/Package": {
+    "/api/Book/PostPackage": {
       "post": {
         "tags": [
           "Book"
@@ -1971,7 +1674,7 @@
         }
       }
     },
-    "/api/City/Package": {
+    "/api/City/PostPackage": {
       "post": {
         "tags": [
           "City"
@@ -2583,7 +2286,7 @@
         }
       }
     },
-    "/api/Company/Package": {
+    "/api/Company/PostPackage": {
       "post": {
         "tags": [
           "Company"
@@ -3195,7 +2898,7 @@
         }
       }
     },
-    "/api/Continent/Package": {
+    "/api/Continent/PostPackage": {
       "post": {
         "tags": [
           "Continent"
@@ -3807,7 +3510,7 @@
         }
       }
     },
-    "/api/Country/Package": {
+    "/api/Country/PostPackage": {
       "post": {
         "tags": [
           "Country"
@@ -4419,7 +4122,7 @@
         }
       }
     },
-    "/api/Currency/Package": {
+    "/api/Currency/PostPackage": {
       "post": {
         "tags": [
           "Currency"
@@ -5031,7 +4734,7 @@
         }
       }
     },
-    "/api/Customer/Package": {
+    "/api/Customer/PostPackage": {
       "post": {
         "tags": [
           "Customer"
@@ -5643,7 +5346,7 @@
         }
       }
     },
-    "/api/CustomerAddress/Package": {
+    "/api/CustomerAddress/PostPackage": {
       "post": {
         "tags": [
           "CustomerAddress"
@@ -6255,7 +5958,7 @@
         }
       }
     },
-    "/api/CustomerReference/Package": {
+    "/api/CustomerReference/PostPackage": {
       "post": {
         "tags": [
           "CustomerReference"
@@ -6935,7 +6638,7 @@
         }
       }
     },
-    "/api/Department/Package": {
+    "/api/Department/PostPackage": {
       "post": {
         "tags": [
           "Department"
@@ -7098,32 +6801,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/Diagnostics/collect": {
-      "get": {
-        "tags": [
-          "Diagnostics"
-        ],
-        "operationId": "GetCollect",
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/api/Diagnostics/diagnostics": {
-      "get": {
-        "tags": [
-          "Diagnostics"
-        ],
-        "operationId": "GetDiagnostics",
-        "responses": {
-          "200": {
-            "description": "Success"
           }
         }
       }
@@ -7818,7 +7495,7 @@
         }
       }
     },
-    "/api/Document/Package": {
+    "/api/Document/PostPackage": {
       "post": {
         "tags": [
           "Document"
@@ -8269,7 +7946,7 @@
         }
       }
     },
-    "/api/DocumentComment/Package": {
+    "/api/DocumentComment/PostPackage": {
       "post": {
         "tags": [
           "DocumentComment"
@@ -8881,7 +8558,7 @@
         }
       }
     },
-    "/api/DocumentCustomer/Package": {
+    "/api/DocumentCustomer/PostPackage": {
       "post": {
         "tags": [
           "DocumentCustomer"
@@ -9147,32 +8824,12 @@
         }
       }
     },
-    "/api/DocumentData/UploadFile/{id}/{fileName}": {
+    "/api/DocumentData/UploadFileModel": {
       "post": {
         "tags": [
           "DocumentData"
         ],
-        "operationId": "UploadFile",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "fileName",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          }
-        ],
+        "operationId": "UploadFileModel",
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -9193,10 +8850,16 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentData"
+                }
+              }
+            }
           }
-        },
-        "deprecated": true
+        }
       }
     },
     "/api/DocumentData/UploadFile/{id}": {
@@ -9236,7 +8899,14 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentData"
+                }
+              }
+            }
           }
         }
       }
@@ -9718,7 +9388,7 @@
         }
       }
     },
-    "/api/DocumentData/Package": {
+    "/api/DocumentData/PostPackage": {
       "post": {
         "tags": [
           "DocumentData"
@@ -10330,7 +10000,7 @@
         }
       }
     },
-    "/api/DocumentReference/Package": {
+    "/api/DocumentReference/PostPackage": {
       "post": {
         "tags": [
           "DocumentReference"
@@ -10942,7 +10612,7 @@
         }
       }
     },
-    "/api/DocumentWork/Package": {
+    "/api/DocumentWork/PostPackage": {
       "post": {
         "tags": [
           "DocumentWork"
@@ -11619,7 +11289,7 @@
         }
       }
     },
-    "/api/GroupPermission/Package": {
+    "/api/GroupPermission/PostPackage": {
       "post": {
         "tags": [
           "GroupPermission"
@@ -12231,7 +11901,7 @@
         }
       }
     },
-    "/api/Instance/Package": {
+    "/api/Instance/PostPackage": {
       "post": {
         "tags": [
           "Instance"
@@ -12843,7 +12513,7 @@
         }
       }
     },
-    "/api/Location/Package": {
+    "/api/Location/PostPackage": {
       "post": {
         "tags": [
           "Location"
@@ -13490,7 +13160,7 @@
         }
       }
     },
-    "/api/Message/Package": {
+    "/api/Message/PostPackage": {
       "post": {
         "tags": [
           "Message"
@@ -13941,7 +13611,7 @@
         }
       }
     },
-    "/api/MessageAddress/Package": {
+    "/api/MessageAddress/PostPackage": {
       "post": {
         "tags": [
           "MessageAddress"
@@ -14392,7 +14062,7 @@
         }
       }
     },
-    "/api/MessageData/Package": {
+    "/api/MessageData/PostPackage": {
       "post": {
         "tags": [
           "MessageData"
@@ -15004,7 +14674,7 @@
         }
       }
     },
-    "/api/Persone/Package": {
+    "/api/Persone/PostPackage": {
       "post": {
         "tags": [
           "Persone"
@@ -15616,7 +15286,7 @@
         }
       }
     },
-    "/api/PersoneIdentify/Package": {
+    "/api/PersoneIdentify/PostPackage": {
       "post": {
         "tags": [
           "PersoneIdentify"
@@ -16262,7 +15932,7 @@
         }
       }
     },
-    "/api/Position/Package": {
+    "/api/Position/PostPackage": {
       "post": {
         "tags": [
           "Position"
@@ -16422,56 +16092,6 @@
                     "type": "integer",
                     "format": "int32"
                   }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Procedures": {
-      "get": {
-        "tags": [
-          "Procedures"
-        ],
-        "operationId": "Get",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DBProcedure"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Procedures"
-        ],
-        "operationId": "Put",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DBProcedure"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DBProcedure"
                 }
               }
             }
@@ -17001,7 +16621,7 @@
         }
       }
     },
-    "/api/Scheduler/Package": {
+    "/api/Scheduler/PostPackage": {
       "post": {
         "tags": [
           "Scheduler"
@@ -17788,7 +17408,7 @@
         }
       }
     },
-    "/api/Stage/Package": {
+    "/api/Stage/PostPackage": {
       "post": {
         "tags": [
           "Stage"
@@ -18400,7 +18020,7 @@
         }
       }
     },
-    "/api/StageForeign/Package": {
+    "/api/StageForeign/PostPackage": {
       "post": {
         "tags": [
           "StageForeign"
@@ -19012,7 +18632,7 @@
         }
       }
     },
-    "/api/StageParam/Package": {
+    "/api/StageParam/PostPackage": {
       "post": {
         "tags": [
           "StageParam"
@@ -19624,7 +19244,7 @@
         }
       }
     },
-    "/api/StageProcedure/Package": {
+    "/api/StageProcedure/PostPackage": {
       "post": {
         "tags": [
           "StageProcedure"
@@ -20236,7 +19856,7 @@
         }
       }
     },
-    "/api/StageReference/Package": {
+    "/api/StageReference/PostPackage": {
       "post": {
         "tags": [
           "StageReference"
@@ -20848,7 +20468,7 @@
         }
       }
     },
-    "/api/StageTemplate/Package": {
+    "/api/StageTemplate/PostPackage": {
       "post": {
         "tags": [
           "StageTemplate"
@@ -21460,7 +21080,7 @@
         }
       }
     },
-    "/api/Statistic/Package": {
+    "/api/Statistic/PostPackage": {
       "post": {
         "tags": [
           "Statistic"
@@ -22152,7 +21772,7 @@
         }
       }
     },
-    "/api/Template/Package": {
+    "/api/Template/PostPackage": {
       "post": {
         "tags": [
           "Template"
@@ -22764,7 +22384,7 @@
         }
       }
     },
-    "/api/TemplateData/Package": {
+    "/api/TemplateData/PostPackage": {
       "post": {
         "tags": [
           "TemplateData"
@@ -22998,32 +22618,12 @@
         }
       }
     },
-    "/api/TemplateFile/UploadFile/{id}/{fileName}": {
+    "/api/TemplateFile/UploadFileModel": {
       "post": {
         "tags": [
           "TemplateFile"
         ],
-        "operationId": "UploadFile",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "fileName",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          }
-        ],
+        "operationId": "UploadFileModel",
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -23044,10 +22644,16 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateFile"
+                }
+              }
+            }
           }
-        },
-        "deprecated": true
+        }
       }
     },
     "/api/TemplateFile/UploadFile/{id}": {
@@ -23087,7 +22693,14 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateFile"
+                }
+              }
+            }
           }
         }
       }
@@ -23569,7 +23182,7 @@
         }
       }
     },
-    "/api/TemplateFile/Package": {
+    "/api/TemplateFile/PostPackage": {
       "post": {
         "tags": [
           "TemplateFile"
@@ -24181,7 +23794,7 @@
         }
       }
     },
-    "/api/TemplateProperty/Package": {
+    "/api/TemplateProperty/PostPackage": {
       "post": {
         "tags": [
           "TemplateProperty"
@@ -24793,7 +24406,7 @@
         }
       }
     },
-    "/api/TemplateReference/Package": {
+    "/api/TemplateReference/PostPackage": {
       "post": {
         "tags": [
           "TemplateReference"
@@ -25541,7 +25154,7 @@
         }
       }
     },
-    "/api/User/Package": {
+    "/api/User/PostPackage": {
       "post": {
         "tags": [
           "User"
@@ -26268,7 +25881,7 @@
         }
       }
     },
-    "/api/UserApplication/Package": {
+    "/api/UserApplication/PostPackage": {
       "post": {
         "tags": [
           "UserApplication"
@@ -26502,32 +26115,12 @@
         }
       }
     },
-    "/api/UserFile/UploadFile/{id}/{fileName}": {
+    "/api/UserFile/UploadFileModel": {
       "post": {
         "tags": [
           "UserFile"
         ],
-        "operationId": "UploadFile",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "fileName",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          }
-        ],
+        "operationId": "UploadFileModel",
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -26548,10 +26141,16 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserFile"
+                }
+              }
+            }
           }
-        },
-        "deprecated": true
+        }
       }
     },
     "/api/UserFile/UploadFile/{id}": {
@@ -26591,7 +26190,14 @@
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserFile"
+                }
+              }
+            }
           }
         }
       }
@@ -27073,7 +26679,7 @@
         }
       }
     },
-    "/api/UserFile/Package": {
+    "/api/UserFile/PostPackage": {
       "post": {
         "tags": [
           "UserFile"
@@ -27719,7 +27325,7 @@
         }
       }
     },
-    "/api/UserGroup/Package": {
+    "/api/UserGroup/PostPackage": {
       "post": {
         "tags": [
           "UserGroup"
@@ -28170,7 +27776,7 @@
         }
       }
     },
-    "/api/UserReg/Package": {
+    "/api/UserReg/PostPackage": {
       "post": {
         "tags": [
           "UserReg"
@@ -28329,65 +27935,6 @@
                   "items": {
                     "type": "integer",
                     "format": "int64"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/WebNotify": {
-      "get": {
-        "tags": [
-          "WebNotify"
-        ],
-        "operationId": "Get",
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/api/WebNotify/Connections": {
-      "get": {
-        "tags": [
-          "WebNotify"
-        ],
-        "operationId": "GetConnections",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/WebNotifyConnection"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/WebNotify/Logs": {
-      "get": {
-        "tags": [
-          "WebNotify"
-        ],
-        "operationId": "GetLogs",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/StateInfo"
                   }
                 }
               }
@@ -28971,7 +28518,7 @@
         }
       }
     },
-    "/api/Work/Package": {
+    "/api/Work/PostPackage": {
       "post": {
         "tags": [
           "Work"
@@ -29141,6 +28688,59 @@
   },
   "components": {
     "schemas": {
+      "DBStatus": {
+        "enum": [
+          0,
+          1,
+          2,
+          4,
+          8,
+          16,
+          32
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Empty",
+          "Actual",
+          "New",
+          "Edit",
+          "Error",
+          "Delete",
+          "Archive"
+        ],
+        "x-enumMembers": [
+          "Empty",
+          "Actual",
+          "New",
+          "Edit",
+          "Error",
+          "Delete",
+          "Archive"
+        ]
+      },
+      "DBLogType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "None",
+          "Insert",
+          "Update",
+          "Delete"
+        ],
+        "x-enumMembers": [
+          "None",
+          "Insert",
+          "Update",
+          "Delete"
+        ]
+      },
       "AccessType": {
         "enum": [
           0,
@@ -29210,23 +28810,6 @@
           }
         }
       },
-      "AccessUpdatePackage": {
-        "type": "object",
-        "properties": {
-          "Ids": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "Items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AccessItem"
-            }
-          }
-        }
-      },
       "LocationType": {
         "enum": [
           0,
@@ -29253,37 +28836,6 @@
           "Currency",
           "Region",
           "City"
-        ]
-      },
-      "DBStatus": {
-        "enum": [
-          0,
-          1,
-          2,
-          4,
-          8,
-          16,
-          32
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Empty",
-          "Actual",
-          "New",
-          "Edit",
-          "Error",
-          "Delete",
-          "Archive"
-        ],
-        "x-enumMembers": [
-          "Empty",
-          "Actual",
-          "New",
-          "Edit",
-          "Error",
-          "Delete",
-          "Archive"
         ]
       },
       "DBItem": {
@@ -29351,15 +28903,6 @@
           }
         ],
         "x-type-id": 1
-      },
-      "Country": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Location"
-          }
-        ],
-        "x-type-id": 2
       },
       "Currency": {
         "type": "object",
@@ -29432,6 +28975,15 @@
         },
         "x-id": "Id",
         "x-type-id": 0
+      },
+      "Country": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Location"
+          }
+        ],
+        "x-type-id": 2
       },
       "Address": {
         "required": [
@@ -29900,28 +29452,6 @@
           "Execute",
           "Transaction",
           "Reject"
-        ]
-      },
-      "DBLogType": {
-        "enum": [
-          0,
-          1,
-          2,
-          3
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "None",
-          "Insert",
-          "Update",
-          "Delete"
-        ],
-        "x-enumMembers": [
-          "None",
-          "Insert",
-          "Update",
-          "Delete"
         ]
       },
       "DBLogItem": {
@@ -33031,6 +32561,135 @@
           }
         }
       },
+      "StatusType": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Information",
+          "Warning",
+          "Error"
+        ],
+        "x-enumMembers": [
+          "Information",
+          "Warning",
+          "Error"
+        ]
+      },
+      "StateInfo": {
+        "type": "object",
+        "properties": {
+          "User": {
+            "type": "string"
+          },
+          "Date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Module": {
+            "type": "string"
+          },
+          "Message": {
+            "type": "string"
+          },
+          "Description": {
+            "type": "string"
+          },
+          "Stack": {
+            "type": "string"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatusType"
+              }
+            ]
+          }
+        }
+      },
+      "SchedulerType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Interval",
+          "DayTime",
+          "WeekDay",
+          "Manual"
+        ],
+        "x-enumMembers": [
+          "Interval",
+          "DayTime",
+          "WeekDay",
+          "Manual"
+        ]
+      },
+      "SchedulerLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "Order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SchedulerType"
+              }
+            ]
+          },
+          "Interval": {
+            "type": "string"
+          },
+          "ProcedureName": {
+            "type": "string"
+          },
+          "DateExecute": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "x-type-id": 0
+      },
       "ParameterDirection": {
         "enum": [
           1,
@@ -33171,135 +32830,6 @@
             ]
           }
         }
-      },
-      "StatusType": {
-        "enum": [
-          0,
-          1,
-          2
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Information",
-          "Warning",
-          "Error"
-        ],
-        "x-enumMembers": [
-          "Information",
-          "Warning",
-          "Error"
-        ]
-      },
-      "StateInfo": {
-        "type": "object",
-        "properties": {
-          "User": {
-            "type": "string"
-          },
-          "Date": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "Module": {
-            "type": "string"
-          },
-          "Message": {
-            "type": "string"
-          },
-          "Description": {
-            "type": "string"
-          },
-          "Stack": {
-            "type": "string"
-          },
-          "Type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/StatusType"
-              }
-            ]
-          }
-        }
-      },
-      "SchedulerType": {
-        "enum": [
-          0,
-          1,
-          2,
-          3
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Interval",
-          "DayTime",
-          "WeekDay",
-          "Manual"
-        ],
-        "x-enumMembers": [
-          "Interval",
-          "DayTime",
-          "WeekDay",
-          "Manual"
-        ]
-      },
-      "SchedulerLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LogItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "CompanyId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Company": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Company"
-              }
-            ],
-            "x-id": "CompanyId"
-          },
-          "Code": {
-            "type": "string"
-          },
-          "NameRU": {
-            "type": "string"
-          },
-          "NameEN": {
-            "type": "string"
-          },
-          "Order": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/SchedulerType"
-              }
-            ]
-          },
-          "Interval": {
-            "type": "string"
-          },
-          "ProcedureName": {
-            "type": "string"
-          },
-          "DateExecute": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "x-type-id": 0
       },
       "Scheduler": {
         "required": [
@@ -34169,12 +33699,20 @@
           }
         }
       },
+      "DefaultItem": {
+        "type": "object"
+      },
       "LoginModel": {
         "required": [
           "Email",
           "Password"
         ],
         "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DefaultItem"
+          }
+        ],
         "properties": {
           "Email": {
             "type": "string"
@@ -34199,6 +33737,11 @@
       },
       "TokenModel": {
         "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DefaultItem"
+          }
+        ],
         "properties": {
           "Email": {
             "type": "string"
@@ -34539,47 +34082,6 @@
           }
         }
       },
-      "UserFileLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LogItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Data": {
-            "type": "string",
-            "format": "byte"
-          },
-          "DataName": {
-            "type": "string"
-          },
-          "DataLastWrite": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "UserId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "User": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/User"
-              }
-            ],
-            "x-id": "UserId"
-          },
-          "IsAvatar": {
-            "type": "boolean"
-          }
-        },
-        "x-type-id": 0
-      },
       "UserFile": {
         "required": [
           "Id"
@@ -34620,6 +34122,47 @@
           }
         },
         "x-id": "Id",
+        "x-type-id": 0
+      },
+      "UserFileLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Data": {
+            "type": "string",
+            "format": "byte"
+          },
+          "DataName": {
+            "type": "string"
+          },
+          "DataLastWrite": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "UserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "User": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "UserId"
+          },
+          "IsAvatar": {
+            "type": "boolean"
+          }
+        },
         "x-type-id": 0
       },
       "UserFilePageContent": {
@@ -34776,113 +34319,6 @@
             "items": {
               "$ref": "#/components/schemas/UserReg"
             }
-          }
-        }
-      },
-      "WebSocketState": {
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "None",
-          "Connecting",
-          "Open",
-          "CloseSent",
-          "CloseReceived",
-          "Closed",
-          "Aborted"
-        ],
-        "x-enumMembers": [
-          "None",
-          "Connecting",
-          "Open",
-          "CloseSent",
-          "CloseReceived",
-          "Closed",
-          "Aborted"
-        ]
-      },
-      "DefaultItem": {
-        "type": "object"
-      },
-      "WebNotifyConnection": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DefaultItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Date": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "UserEmail": {
-            "type": "string",
-            "readOnly": true
-          },
-          "State": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/WebSocketState"
-              }
-            ],
-            "readOnly": true
-          },
-          "Address": {
-            "type": "string"
-          },
-          "Action": {
-            "type": "string"
-          },
-          "Platform": {
-            "type": "string"
-          },
-          "Application": {
-            "type": "string"
-          },
-          "Version": {
-            "type": "string"
-          },
-          "ReceiveCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "ReceiveLength": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "SendCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "SendLength": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "SendErrors": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "SendError": {
-            "type": "string"
-          },
-          "SendingCount": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       },
