@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
@@ -95,6 +97,9 @@ namespace DataWF.Common
                 Deserialize(buffer);
             }
         }
+
+        [XmlIgnore, JsonIgnore]
+        public IAccessable Owner { get; set; }
 
         public IEnumerable<AccessItem> Items
         {

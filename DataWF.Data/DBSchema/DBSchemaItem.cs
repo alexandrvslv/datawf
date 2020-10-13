@@ -72,7 +72,14 @@ namespace DataWF.Data
             }
         }
 
-        IAccessValue IAccessable.Access { get => Access; set => Access = (AccessValue)value; }
+        [Browsable(false), Category("Policy"), XmlIgnore, JsonIgnore]
+        public virtual string AccessorName => DisplayName;
+
+        IAccessValue IAccessable.Access
+        {
+            get => Access;
+            set => Access = (AccessValue)value;
+        }
 
         [Browsable(false), Category("Policy"), XmlIgnore, JsonIgnore]
         public virtual AccessValue Access

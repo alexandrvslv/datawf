@@ -66,6 +66,9 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
+        public virtual string AccessorName => ToString();
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool Attached => (state & DBItemState.Attached) == DBItemState.Attached;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -955,7 +958,7 @@ namespace DataWF.Data
         private AccessValue ReadAccess()
         {
             var accessData = Table.AccessKey != null ? GetValue<byte[]>(Table.AccessKey) : null;
-            return accessData != null ? new AccessValue(accessData) : null;
+            return accessData != null ? new AccessValue(accessData) { Owner = this } : null;
         }
 
         public void Accept(string column)
