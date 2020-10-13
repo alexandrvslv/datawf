@@ -1,6 +1,10 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using DataWF.Module.Common;
 
+[assembly: Invoker(typeof(LogItem), nameof(LogItem.UserReg), typeof(LogItem.UserRegInvoker<>))]
+[assembly: Invoker(typeof(LogItem), nameof(LogItem.LogUserId), typeof(LogItem.LogUserIdInvoker<>))]
+[assembly: Invoker(typeof(LogItem), nameof(LogItem.LogUser), typeof(LogItem.LogUserInvoker<>))]
 namespace DataWF.Module.Common
 {
     public abstract class LogItem : DBLogItem
@@ -29,7 +33,6 @@ namespace DataWF.Module.Common
         }
 
 
-        [Invoker(typeof(LogItem), nameof(LogItem.UserReg))]
         public class UserRegInvoker<T> : Invoker<T, UserReg> where T : LogItem
         {
             public override string Name => nameof(LogItem.UserReg);
@@ -41,7 +44,6 @@ namespace DataWF.Module.Common
             public override void SetValue(T target, UserReg value) => target.UserReg = value;
         }
 
-        [Invoker(typeof(LogItem), nameof(LogItem.LogUserId))]
         public class LogUserIdInvoker<T> : Invoker<T, int?> where T : LogItem
         {
             public override string Name => nameof(LogItem.LogUserId);
@@ -53,7 +55,6 @@ namespace DataWF.Module.Common
             public override void SetValue(T target, int? value) { }
         }
 
-        [Invoker(typeof(LogItem), nameof(LogItem.LogUser))]
         public class LogUserInvoker<T> : Invoker<T, User> where T : LogItem
         {
             public override string Name => nameof(LogItem.LogUser);

@@ -182,7 +182,7 @@ namespace DataWF.Module.Common
         {
             var user = await StartSession(login);
             user.AccessToken = CreateAccessToken(user);
-            user.RefreshToken = login.Online ? CreateRefreshToken(user) : null;
+            user.RefreshToken = (login.Online ?? false) ? CreateRefreshToken(user) : null;
             await user.Save(user);
             return new TokenModel
             {
