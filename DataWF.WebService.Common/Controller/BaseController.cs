@@ -229,6 +229,10 @@ namespace DataWF.WebService.Common
                     }
                     foreach (var value in values)
                     {
+                        transaction.AddItem(value);
+                    }
+                    foreach (var value in values)
+                    {
                         current = value;
                         if (IsDenied(value, transaction.Caller))
                         {
