@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
@@ -122,11 +123,6 @@ namespace DataWF.Common
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void OnRenaming(string fileName)
-        {
-            Service?.OnRenaming(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, Path.GetDirectoryName(FilePath), fileName, Path.GetFileName(FilePath)));
-        }
-
         private void OnRenamed(object sender, RenamedEventArgs e)
         {
             Debug.WriteLine($"{e.OldFullPath} - {e.ChangeType}");
@@ -167,17 +163,24 @@ namespace DataWF.Common
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public void Rename(string fileName)
+        public async Task Rename(string fileName)
         {
-            OnRenaming(fileName);
             var newPath = Path.Combine(Path.GetDirectoryName(FilePath), fileName);
-            if (File.Exists(FilePath))
+
+            if (Service?.CanRename ?? false)
             {
-                if (File.Exists(newPath))
+                await Service.OnRenaming(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, Path.GetDirectoryName(FilePath), fileName, Path.GetFileName(FilePath)));
+            }
+            else
+            {
+                if (File.Exists(FilePath))
                 {
-                    File.Delete(newPath);
+                    if (File.Exists(newPath))
+                    {
+                        File.Delete(newPath);
+                    }
+                    File.Move(FilePath, newPath);
                 }
-                File.Move(FilePath, newPath);
             }
             FilePath = newPath;
             if (Watcher != null)
