@@ -94,7 +94,7 @@ namespace DataWF.Data
 
         private static Dictionary<string, Dictionary<string, DefinedName>> GetNamesCache(ExecuteArgs args)
         {
-            var namesCache = new Dictionary<string, Dictionary<string, DefinedName>>(StringComparer.OrdinalIgnoreCase);
+            var namesCache = new Dictionary<string, Dictionary<string, DefinedName>>(StringComparer.Ordinal);
             foreach (var invoker in args.Invokers.Where(p => p.Parameter.Category == "General" || p.Parameter.Category == args.Category))
             {
                 var split = invoker.Parameter.Name.Split('!');
@@ -412,8 +412,7 @@ namespace DataWF.Data
                                         int col = sref.Col;
                                         foreach (object itemValue in dataRow)
                                         {
-                                            GetCell(tableRow, itemValue, col, sref.Row, 0, sharedStrings, sharedFormuls);
-                                            col++;
+                                            GetCell(tableRow, itemValue, col++, sref.Row, 0, sharedStrings, sharedFormuls);
                                         }
                                         sref.Row++;
                                         WriteElement(writer, tableRow);
@@ -495,30 +494,35 @@ namespace DataWF.Data
                     {
                         if (row != null)
                         {
-                            var ocell = row.GetFirstChild<Excel.Cell>();
-                            if (ocell != null)
+                            var fcell = row.GetFirstChild<Excel.Cell>();
+                            var lcell = row.LastChild as Excel.Cell;
+                            if (fcell != null
+                                && lcell != null
+                                && fcell != lcell)
                             {
-                                var sref = CellReference.Parse(ocell.CellReference);
+
+                                var fcellRef = CellReference.Parse(fcell.CellReference);
+                                var lcellRef = CellReference.Parse(lcell.CellReference);
                                 foreach (var defName in namesCache.Values)
                                 {
                                     if (defName.Range.End.Col > 0
-                                        && defName.Range.Start.Row > sref.Row)
+                                        && defName.Range.End.Col <= lcellRef.Col
+                                        && defName.Range.Start.Row > fcellRef.Row)
                                     {
                                         var query = (defName.CacheValue ?? args.GetValue(defName.Invoker)) as QResult;
                                         if (query != null)
                                         {
-                                            sref.Row = defName.Range.Start.Row;
+                                            fcellRef.Row = defName.Range.Start.Row;
                                             Excel.Row tableRow = null;
                                             foreach (object[] dataRow in query.Values)
                                             {
-                                                sref.Col = defName.Range.Start.Col;
-                                                tableRow = CloneRow(tableRow ?? row, sref.Row);
+                                                fcellRef.Col = defName.Range.Start.Col;
+                                                tableRow = CloneRow(tableRow ?? row, fcellRef.Row);
                                                 foreach (object itemValue in dataRow)
                                                 {
-                                                    GetCell(tableRow, itemValue, sref.Col, sref.Row, 0, sharedStrings, sharedFormuls, true);
-                                                    sref.Col++;
+                                                    GetCell(tableRow, itemValue, fcellRef.Col++, fcellRef.Row, 0, sharedStrings, sharedFormuls, true);
                                                 }
-                                                sref.Row++;
+                                                fcellRef.Row++;
                                                 WriteElement(writer, tableRow);
                                             }
                                         }
