@@ -239,7 +239,7 @@ namespace DataWF.Common
 
         public override string ToString()
         {
-            return $"{(IsEnabled ? "On" : "Off")} {Logic} {Name} {Comparer} {Value}";
+            return $"{(IsEnabled ? "On" : "Off")} {Logic} {Name} {Comparer} {FormatValue(Value, Comparer)}";
         }
     }
 

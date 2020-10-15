@@ -132,5 +132,20 @@ namespace DataWF.Common
             return type;
         }
 
+        public static CompareType ParseFull(string value)
+        {
+            var compareSplit = value.Trim().Split(' ');
+            if (compareSplit.Length > 1)
+            {
+                var compareValue = string.Equals(compareSplit[0], "not", StringComparison.OrdinalIgnoreCase) ? compareSplit[1] : compareSplit[0];
+                return new CompareType(Parse(compareValue), true);
+            }
+            else if (compareSplit[0][0] == '!')
+            {
+                return new CompareType(Parse(compareSplit[0].Substring(1)), true);
+            }
+
+            return new CompareType(Parse(compareSplit[0]));
+        }
     }
 }
