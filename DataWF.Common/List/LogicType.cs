@@ -70,5 +70,16 @@ namespace DataWF.Common
                 type = LogicTypes.Or;
             return type;
         }
+
+        public static LogicType ParseFull(string value)
+        {
+            var logicSplit = value.Trim().Split(' ');
+            if (logicSplit.Length > 1)
+            {
+                var compareValue = string.Equals(logicSplit[0], "not", StringComparison.OrdinalIgnoreCase) ? logicSplit[1] : logicSplit[0];
+                return new LogicType(Parse(compareValue), true);
+            }
+            return new LogicType(Parse(logicSplit[0]));
+        }
     }
 }
