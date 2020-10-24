@@ -210,9 +210,12 @@ namespace DataWF.Data
             ddl.AppendLine($"alter table {column.Table.SqlName} alter column {column.SqlName} TYPE {FormatType(column)};");
             if (column.IsNotNull || column.IsPrimaryKey)
             {
-                ddl.AppendLine($"alter table {column.Table.SqlName} alter column {column.SqlName} SET not null;");
+                ddl.AppendLine($"alter table {column.Table.SqlName} alter column {column.SqlName} set not null;");
             }
-
+            else
+            {
+                ddl.AppendLine($"alter table {column.Table.SqlName} alter column {column.SqlName} drop not null;");
+            }
         }
 
         public override string FormatCreateView(string name)
