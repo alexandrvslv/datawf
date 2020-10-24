@@ -29,7 +29,7 @@ namespace DataWF.Common
         static EmitInvoker()
         {
             var methoInfo = TypeHelper.GetMemberInfo(typeof(object), nameof(ToString), out _, false);
-            cacheInvokers[GetToken(methoInfo)] = ToStringInvoker<object>.Instance;
+            cacheInvokers[MetadataToken.GetToken(methoInfo)] = ToStringInvoker<object>.Instance;
         }
         public static void DeleteCache()
         {
@@ -58,50 +58,10 @@ namespace DataWF.Common
 
         public static void DeleteCache(MemberInfo info)
         {
-            var token = GetToken(info);
+            var token = MetadataToken.GetToken(info);
             cacheInvokers.Remove(token);
         }
 
-
-        public static MetadataToken GetToken(MemberInfo info)
-        {
-            return new MetadataToken(info.Module.GetHashCode(), info.DeclaringType.GetHashCode(), info.GetHashCode());
-        }
-
-        public struct MetadataToken : IComparable<MetadataToken>
-        {
-            public readonly int Module;
-            public readonly int Type;
-            public readonly int Member;
-            public MetadataToken(int module, int type, int member)
-            {
-                Module = module;
-                Type = type;
-                Member = member;
-            }
-
-            public override int GetHashCode()
-            {
-                return Module ^ Type ^ Member;
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (obj is MetadataToken metadataToken)
-                    return Module == metadataToken.Module
-                            && Type == metadataToken.Type
-                            && Member == metadataToken.Member;
-                return false;
-            }
-
-            public int CompareTo(MetadataToken other)
-            {
-                var rezult = Module.CompareTo(other.Module);
-                rezult = rezult == 0 ? Type.CompareTo(other.Type) : rezult;
-                rezult = rezult == 0 ? Member.CompareTo(other.Member) : rezult;
-                return rezult;
-            }
-        }
 
         public static void RegisterInvoker(InvokerAttribute invoker)
         {
@@ -111,7 +71,7 @@ namespace DataWF.Common
                 if (invoker.InvokerType.IsGenericType
                     || invoker.TargetType.IsGenericTypeDefinition)
                 {
-                    var token = GetToken(propertyInfo);
+                    var token = MetadataToken.GetToken(propertyInfo);
                     cacheGenericInvokers[token] = invoker.InvokerType;
                 }
                 else
@@ -128,7 +88,7 @@ namespace DataWF.Common
 
         public static void RegisterInvoker(MemberInfo memberInfo, IInvoker invoker)
         {
-            var token = GetToken(memberInfo);
+            var token = MetadataToken.GetToken(memberInfo);
             CacheInvokers(token, invoker, memberInfo);
         }
 
@@ -170,7 +130,7 @@ namespace DataWF.Common
 
         public static EmitConstructor Initialize(ConstructorInfo info, bool cache = true)
         {
-            var token = GetToken(info);
+            var token = MetadataToken.GetToken(info);
             if (cache && cacheCtors.TryGetValue(token, out var invoker))
                 return invoker;
             return cacheCtors[token] = new EmitConstructor(info);
@@ -180,7 +140,7 @@ namespace DataWF.Common
         {
             if (info == null)
                 return null;
-            var token = GetToken(info);
+            var token = MetadataToken.GetToken(info);
             if (cache)
             {
                 if (cacheInvokers.TryGetValue(token, out var invoker))
@@ -189,7 +149,7 @@ namespace DataWF.Common
                 }
 
                 var baseInfo = info.GetMemberBaseDefinition();
-                var baseToken = GetToken(baseInfo);
+                var baseToken = MetadataToken.GetToken(baseInfo);
                 if (cacheInvokers.TryGetValue(baseToken, out invoker))
                 {
                     return invoker;
@@ -198,7 +158,7 @@ namespace DataWF.Common
                 {
                     var genericType = baseInfo.DeclaringType.GetGenericTypeDefinition();
                     var genericInfo = TypeHelper.GetMemberInfo(genericType, baseInfo.Name, out index, false);
-                    var genericToken = GetToken(genericInfo);
+                    var genericToken = MetadataToken.GetToken(genericInfo);
                     if (cacheGenericInvokers.TryGetValue(genericToken, out var genericInvokerType))
                     {
                         var type = genericInvokerType.MakeGenericType(info.DeclaringType.GetGenericArguments());
@@ -228,7 +188,7 @@ namespace DataWF.Common
         public static IInvoker Initialize(MemberInfo info, object index = null)
         {
             System.Diagnostics.Debug.WriteLine($"Invoker {info.DeclaringType} - {info.Name}");
-            var token = GetToken(info);
+            var token = MetadataToken.GetToken(info);
             IInvoker result = null;
             if (info is FieldInfo)
             {
@@ -272,7 +232,7 @@ namespace DataWF.Common
                 else
                 {
                     var type = typeof(MethodInvoker<,>).MakeGenericType(info.DeclaringType,
-                                                                            methodInfo.ReturnType == typeof(void)? typeof(object): methodInfo.ReturnType);
+                                                                            methodInfo.ReturnType == typeof(void) ? typeof(object) : methodInfo.ReturnType);
                     result = (IInvoker)CreateObject(type, new[] { typeof(MethodInfo) }, new[] { methodInfo }, true);
                 }
             }
@@ -553,7 +513,8 @@ namespace DataWF.Common
     {
         public TaskExecutor Task { get; set; }
         public object Result { get; set; }
-
     }
+
+
 
 }

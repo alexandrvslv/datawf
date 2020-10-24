@@ -26,15 +26,15 @@ namespace DataWF.Common
 
         private static readonly Dictionary<string, Type> cacheTypes = new Dictionary<string, Type>(200, StringComparer.Ordinal);
         private static readonly Dictionary<Assembly, Dictionary<string, Type>> cacheAssemblyTypes = new Dictionary<Assembly, Dictionary<string, Type>>();
-        private static readonly Dictionary<MemberInfo, bool> cacheIsXmlText = new Dictionary<MemberInfo, bool>(200);
+        private static readonly Dictionary<MetadataToken, bool> cacheIsXmlText = new Dictionary<MetadataToken, bool>(200);
         private static readonly Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
         private static readonly Dictionary<PropertyInfo, ValueSerializer> cachePropertyValueSerializer = new Dictionary<PropertyInfo, ValueSerializer>(200);
         private static readonly Dictionary<Type, ValueSerializer> cacheValueSerializer = new Dictionary<Type, ValueSerializer>(200);
         private static readonly Dictionary<Type, PropertyInfo[]> cacheTypeProperties = new Dictionary<Type, PropertyInfo[]>(200);
-        private static readonly Dictionary<MemberInfo, bool> cacheIsXmlAttribute = new Dictionary<MemberInfo, bool>(200);
+        private static readonly Dictionary<MetadataToken, bool> cacheIsXmlAttribute = new Dictionary<MetadataToken, bool>(200);
         private static readonly Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(200);
-        private static readonly Dictionary<MemberInfo, bool> cacheIsXmlSerialize = new Dictionary<MemberInfo, bool>(200);
-        private static readonly Dictionary<MemberInfo, object> cacheDefault = new Dictionary<MemberInfo, object>(200);
+        private static readonly Dictionary<MetadataToken, bool> cacheIsXmlSerialize = new Dictionary<MetadataToken, bool>(200);
+        private static readonly Dictionary<MetadataToken, object> cacheDefault = new Dictionary<MetadataToken, object>(200);
         private static readonly Dictionary<Type, object> cacheTypeDefault = new Dictionary<Type, object>(200);
         private static readonly Dictionary<Type, string> codeTypes = new Dictionary<Type, string>
         {
@@ -385,25 +385,27 @@ namespace DataWF.Common
 
         public static bool IsSerializeText(MemberInfo info)
         {
-            if (!cacheIsXmlText.TryGetValue(info, out bool flag))
+            var token = MetadataToken.GetToken(info);
+            if (!cacheIsXmlText.TryGetValue(token, out bool flag))
             {
                 var attribute = info.GetCustomAttribute<XmlTextAttribute>(false);
-                return cacheIsXmlText[info] = attribute != null;
+                return cacheIsXmlText[token] = attribute != null;
             }
             return flag;
         }
 
         public static bool IsSerializeAttribute(MemberInfo info)
         {
-            if (!cacheIsXmlAttribute.TryGetValue(info, out bool flag))
+            var token = MetadataToken.GetToken(info);
+            if (!cacheIsXmlAttribute.TryGetValue(token, out bool flag))
             {
                 var attribute = info.GetCustomAttribute<XmlAttributeAttribute>(false);
                 if (attribute != null)
-                    return cacheIsXmlAttribute[info] = true;
+                    return cacheIsXmlAttribute[token] = true;
                 if (info is PropertyInfo propertyInfo && GetValueSerializer(propertyInfo) != null)
-                    return cacheIsXmlAttribute[info] = true;
+                    return cacheIsXmlAttribute[token] = true;
 
-                return cacheIsXmlAttribute[info] = IsSerializeAttribute(GetMemberType(info));
+                return cacheIsXmlAttribute[token] = IsSerializeAttribute(GetMemberType(info));
             }
             return flag;
         }
@@ -452,7 +454,8 @@ namespace DataWF.Common
 
         public static bool IsNonSerialize(MemberInfo info)
         {
-            if (!cacheIsXmlSerialize.TryGetValue(info, out bool flag))
+            var token = MetadataToken.GetToken(info);
+            if (!cacheIsXmlSerialize.TryGetValue(token, out bool flag))
             {
                 Type itemType = GetMemberType(info);
                 if (itemType.IsSubclassOf(typeof(Delegate))
@@ -476,7 +479,7 @@ namespace DataWF.Common
                         flag = dscArray != null;
                     }
                 }
-                cacheIsXmlSerialize[info] = flag;
+                cacheIsXmlSerialize[token] = flag;
             }
             return flag;
         }
@@ -493,10 +496,11 @@ namespace DataWF.Common
 
         public static object GetDefault(MemberInfo info)
         {
-            if (!cacheDefault.TryGetValue(info, out object defaultValue))
+            var token = MetadataToken.GetToken(info);
+            if (!cacheDefault.TryGetValue(token, out var defaultValue))
             {
                 var defaultAttribute = info.GetCustomAttribute<DefaultValueAttribute>(false);
-                cacheDefault[info] = defaultValue = defaultAttribute?.Value;// ?? GetDefault(GetMemberType(info));
+                cacheDefault[token] = defaultValue = defaultAttribute?.Value;// ?? GetDefault(GetMemberType(info));
             }
             return defaultValue;
         }

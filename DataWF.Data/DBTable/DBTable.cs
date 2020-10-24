@@ -523,7 +523,8 @@ namespace DataWF.Data
         public bool IsSerializeableColumn(DBColumn column, Type type)
         {
             return column.Property != null
-                && column.PropertyInvoker != null && column.PropertyInvoker != column
+                && column.PropertyInvoker != null
+                && column.PropertyInvoker != column
                 && column.PropertyInvoker.TargetType.IsAssignableFrom(type)
                 && !TypeHelper.IsNonSerialize(column.PropertyInfo)
                 //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
