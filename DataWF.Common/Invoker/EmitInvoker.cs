@@ -515,6 +515,4 @@ namespace DataWF.Common
         public object Result { get; set; }
     }
 
-
-
 }

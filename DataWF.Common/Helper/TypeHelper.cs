@@ -28,7 +28,7 @@ namespace DataWF.Common
         private static readonly Dictionary<Assembly, Dictionary<string, Type>> cacheAssemblyTypes = new Dictionary<Assembly, Dictionary<string, Type>>();
         private static readonly Dictionary<MetadataToken, bool> cacheIsXmlText = new Dictionary<MetadataToken, bool>(200);
         private static readonly Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
-        private static readonly Dictionary<PropertyInfo, ValueSerializer> cachePropertyValueSerializer = new Dictionary<PropertyInfo, ValueSerializer>(200);
+        private static readonly Dictionary<MetadataToken, ValueSerializer> cachePropertyValueSerializer = new Dictionary<MetadataToken, ValueSerializer>(200);
         private static readonly Dictionary<Type, ValueSerializer> cacheValueSerializer = new Dictionary<Type, ValueSerializer>(200);
         private static readonly Dictionary<Type, PropertyInfo[]> cacheTypeProperties = new Dictionary<Type, PropertyInfo[]>(200);
         private static readonly Dictionary<MetadataToken, bool> cacheIsXmlAttribute = new Dictionary<MetadataToken, bool>(200);
@@ -295,7 +295,8 @@ namespace DataWF.Common
         public static ValueSerializer GetValueSerializer(PropertyInfo property)
         {
             //return ValueSerializer.GetSerializerFor(property);
-            if (!cachePropertyValueSerializer.TryGetValue(property, out var serializer))
+            var token = MetadataToken.GetToken(property, false);
+            if (!cachePropertyValueSerializer.TryGetValue(token, out var serializer))
             {
                 var attribute = property.GetCustomAttribute<ValueSerializerAttribute>(false);
                 if (attribute != null && attribute.ValueSerializerType != null)
@@ -307,7 +308,7 @@ namespace DataWF.Common
                     serializer = GetValueSerializer(property.PropertyType);
                 }
 
-                return cachePropertyValueSerializer[property] = serializer;
+                return cachePropertyValueSerializer[token] = serializer;
             }
             return serializer;
         }
@@ -385,7 +386,7 @@ namespace DataWF.Common
 
         public static bool IsSerializeText(MemberInfo info)
         {
-            var token = MetadataToken.GetToken(info);
+            var token = MetadataToken.GetToken(info, false);
             if (!cacheIsXmlText.TryGetValue(token, out bool flag))
             {
                 var attribute = info.GetCustomAttribute<XmlTextAttribute>(false);
@@ -396,7 +397,7 @@ namespace DataWF.Common
 
         public static bool IsSerializeAttribute(MemberInfo info)
         {
-            var token = MetadataToken.GetToken(info);
+            var token = MetadataToken.GetToken(info, false);
             if (!cacheIsXmlAttribute.TryGetValue(token, out bool flag))
             {
                 var attribute = info.GetCustomAttribute<XmlAttributeAttribute>(false);
@@ -454,7 +455,7 @@ namespace DataWF.Common
 
         public static bool IsNonSerialize(MemberInfo info)
         {
-            var token = MetadataToken.GetToken(info);
+            var token = MetadataToken.GetToken(info, false);
             if (!cacheIsXmlSerialize.TryGetValue(token, out bool flag))
             {
                 Type itemType = GetMemberType(info);
@@ -496,7 +497,7 @@ namespace DataWF.Common
 
         public static object GetDefault(MemberInfo info)
         {
-            var token = MetadataToken.GetToken(info);
+            var token = MetadataToken.GetToken(info, false);
             if (!cacheDefault.TryGetValue(token, out var defaultValue))
             {
                 var defaultAttribute = info.GetCustomAttribute<DefaultValueAttribute>(false);
