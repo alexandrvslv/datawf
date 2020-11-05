@@ -28,7 +28,7 @@ namespace DataWF.Data
         public LogTableAttribute(Type baseType, string name, string schema = null) : base(name, "Default", schema)
         {
             BaseType = baseType;
-            IsLoging = false;
+            Keys = DBTableKeys.NoLogs;
         }
 
         public Type BaseType { get; }

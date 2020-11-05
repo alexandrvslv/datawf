@@ -219,7 +219,7 @@ namespace DataWF.Data
                 change = new DBSchemaChange() { Item = item, Change = type, Order = Changes.Count };
                 Changes.Add(change);
             }
-            if (item is DBTable table)
+            if (item is DBTable table && type != DDLType.Drop)
             {
                 foreach (var column in table.Columns)
                 {
@@ -246,44 +246,10 @@ namespace DataWF.Data
                 return;
             foreach (var schema in schems)
             {
-                var chages = Changes.Where(p => p.Item.Schema == schema).ToList();
-                chages.Sort((a, b) =>
+                var isSqlite = schema.Connection.System == DBSystem.SQLite;
+                foreach (var item in GetChanges(schema))
                 {
-                    if (a.Item is DBTable tableA && !(tableA is IDBVirtualTable))
-                    {
-                        if (b.Item is DBTable tableB && !(tableB is IDBVirtualTable))
-                        {
-                            return DBTableComparer.Instance.Compare(tableA, tableB, true);
-                        }
-                        else
-                        {
-                            return -1;
-                        }
-                    }
-                    else if (b.Item is DBTable table && !(table is IDBVirtualTable))
-                    {
-                        return 1;
-                    }
-                    else if (a.Item is DBColumn columnA)
-                    {
-                        if (b.Item is DBColumn columnB)
-                        {
-                            return a.Order.CompareTo(b.Order);
-                        }
-                        else
-                        {
-                            return -1;
-                        }
-                    }
-                    else if (b.Item is DBColumn)
-                    {
-                        return 1;
-                    }
-                    return a.Order.CompareTo(b.Order);
-                });
-                foreach (var item in chages)
-                {
-                    string val = item.Generate();
+                    string val = item.Generate(isSqlite);
                     if (item.Check && !string.IsNullOrEmpty(val))
                     {
                         CommitChanges(schema, item, val);
@@ -296,6 +262,54 @@ namespace DataWF.Data
             Save();
         }
 
+        private static IEnumerable<DBSchemaChange> GetChanges(DBSchema schema)
+        {
+            var isSqlite = schema.Connection.System == DBSystem.SQLite;
+            var chages = Changes.Where(p => p.Item.Schema == schema).ToList();
+            chages.Sort((a, b) =>
+            {
+                if (a.Item is DBTable tableA && !(tableA is IDBVirtualTable))
+                {
+                    if (b.Item is DBTable tableB && !(tableB is IDBVirtualTable))
+                    {
+                        return DBTableComparer.Instance.Compare(tableA, tableB, true);
+                    }
+                    else
+                    {
+                        return -1;
+                    }
+                }
+                else if (b.Item is DBTable table && !(table is IDBVirtualTable))
+                {
+                    return 1;
+                }
+                else if (a.Item is DBColumn columnA)
+                {
+                    if (b.Item is DBColumn columnB)
+                    {
+                        return a.Order.CompareTo(b.Order);
+                    }
+                    else
+                    {
+                        return -1;
+                    }
+                }
+                else if (b.Item is DBColumn)
+                {
+                    return 1;
+                }
+                return a.Order.CompareTo(b.Order);
+            });
+            foreach (var item in chages)
+            {
+                if (item.Item is DBConstraint && isSqlite)
+                {
+                    continue;
+                }
+                yield return item;
+            }
+        }
+
         public static void CommitChanges(DBSchema schema, DBSchemaChange item, string commands)
         {
             foreach (var command in schema.Connection.SplitGoQuery(commands))
@@ -303,7 +317,7 @@ namespace DataWF.Data
                 try
                 {
                     Console.WriteLine($"sqlinfo: {item}");
-                    Console.Write(command);
+                    Console.WriteLine(command);
                     schema.Connection.ExecuteQuery(command);
                     Console.WriteLine($"sqlinfo: success");
                 }
@@ -336,11 +350,10 @@ namespace DataWF.Data
         public static string BuildChangesQuery(DBSchema schema)
         {
             var builder = new StringBuilder();
-            foreach (var item in Changes.ToList())
+            var isSqlite = schema.Connection.System == DBSystem.SQLite;
+            foreach (var item in GetChanges(schema))
             {
-                if (schema != null && item.Item.Schema != schema)
-                    continue;
-                string val = item.Generate();
+                string val = item.Generate(isSqlite);
                 if (item.Check && !string.IsNullOrEmpty(val))
                 {
                     builder.Append("-- ");
@@ -354,8 +367,6 @@ namespace DataWF.Data
             }
             return builder.ToString();
         }
-
-
 
         public static int GetIntValue(object value)
         {
@@ -523,9 +534,9 @@ namespace DataWF.Data
             set { change = value; }
         }
 
-        public string Generate()
+        public string Generate(bool dependency)
         {
-            return item.FormatSql(change);
+            return item.FormatSql(change, dependency);
         }
 
         public override string ToString()

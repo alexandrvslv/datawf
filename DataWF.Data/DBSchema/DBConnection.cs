@@ -346,7 +346,7 @@ namespace DataWF.Data
             return System.CreateCommand(this, query, commandType);
         }
 
-        public bool CheckConnection()
+        public bool CheckConnection(bool throwException = false)
         {
             try
             {
@@ -357,6 +357,10 @@ namespace DataWF.Data
             catch (Exception ex)
             {
                 Helper.OnException(ex);
+                if (throwException)
+                {
+                    throw;
+                }
             }
             return false;
         }

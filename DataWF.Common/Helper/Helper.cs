@@ -695,10 +695,49 @@ namespace DataWF.Common
                 return outStream;
             }
         }
+        public static async Task<ArraySegment<byte>> GetArraySegmentAsync(Stream stream, int bufferSize = 1024 * 80)
+        {
+            var memoryStream = stream as MemoryStream ?? new MemoryStream();
+            try
+            {
+                if (memoryStream != stream)
+                {
+                    await stream.CopyToAsync(memoryStream, bufferSize);
+                }
+                return memoryStream.TryGetBuffer(out var buffer) ? buffer : new ArraySegment<byte>(memoryStream.ToArray());
+            }
+            finally
+            {
+                if (memoryStream != stream)
+                {
+                    memoryStream.Dispose();
+                }
+            }
+        }
+
+        public static ArraySegment<byte> GetArraySegment(Stream stream, int bufferSize = 1024 * 80)
+        {
+            var memoryStream = stream as MemoryStream ?? new MemoryStream();
+            try
+            {
+                if (memoryStream != stream)
+                {
+                    stream.CopyTo(memoryStream, bufferSize);
+                }
+                return memoryStream.TryGetBuffer(out var buffer) ? buffer : new ArraySegment<byte>(memoryStream.ToArray());
+            }
+            finally
+            {
+                if (memoryStream != stream)
+                {
+                    memoryStream.Dispose();
+                }
+            }
+        }
 
         public static async Task<byte[]> GetBytesAsync(Stream stream)
         {
-            if (stream is MemoryStream memStream)
+            if (stream is MemoryStream memStream)//Double buffer
                 return memStream.ToArray();
             else
             {
@@ -712,7 +751,7 @@ namespace DataWF.Common
 
         public static byte[] GetBytes(Stream stream)
         {
-            if (stream is MemoryStream memStream)
+            if (stream is MemoryStream memStream)//Double buffer
                 return memStream.ToArray();
             else
             {
@@ -923,19 +962,35 @@ namespace DataWF.Common
                     }
                     break;
                 case BinaryTypeIndex.ByteArray:
-                    int c = reader.ReadInt32();
-                    value = reader.ReadBytes(c);
+                    {
+                        int length = reader.ReadInt32();
+                        value = reader.ReadBytes(length);
+                    }
                     break;
                 case BinaryTypeIndex.CharArray:
-                    int cl = reader.ReadInt32();
-                    value = reader.ReadChars(cl);
+                    {
+                        int length = reader.ReadInt32();
+                        value = reader.ReadChars(length);
+                    }
                     break;
                 case BinaryTypeIndex.Null:
                     value = DBNull.Value;
                     break;
-                default:
-                    var length = reader.ReadInt32();
-                    value = Encoding.UTF8.GetString(reader.ReadBytes(length));
+                case BinaryTypeIndex.String:
+                    {
+                        var length = reader.ReadInt32();
+                        value = Encoding.UTF8.GetString(reader.ReadBytes(length));
+                    }
+                    break;
+                case BinaryTypeIndex.Array:
+                    {
+                        var list = new List<object>();
+                        var length = reader.ReadInt32();
+                        for (int i = 0; i < length; i++)
+                        {
+                            list.Add(ReadBinary(reader));
+                        }
+                    }
                     break;
             }
 
@@ -1129,13 +1184,24 @@ namespace DataWF.Common
                 writer.Write(len);
                 writer.Write(charArray, 0, len);
             }
-            else
+            else if (value is string str)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.String);
-                var buffer = Encoding.UTF8.GetBytes(value.ToString());
+                var buffer = Encoding.UTF8.GetBytes(str);
                 writer.Write(buffer.Length);
                 writer.Write(buffer);
+            }
+            else if (value is IList array)
+            {
+                if (writetype)
+                    writer.Write((byte)BinaryTypeIndex.Array);
+
+                writer.Write(array.Count);
+                foreach (var item in array)
+                {
+                    WriteBinary(writer, item, writetype);
+                }
             }
         }
 

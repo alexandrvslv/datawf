@@ -67,7 +67,8 @@ namespace DataWF.Common
         CharArray = 15,
         DateTime = 16,
         String = 17,
-        Null = 18
+        Null = 18,
+        Array = 19,        
     }
 
     public enum CompareTypes

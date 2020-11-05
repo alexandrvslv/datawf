@@ -271,7 +271,7 @@ namespace DataWF.Gui
 
         #endregion
 
-        public bool Contains(string property)
+        public override bool Contains(string property)
         {
             return GetRecursive(property) != null;
         }

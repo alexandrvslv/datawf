@@ -55,13 +55,15 @@ using System.Xml.Serialization;
 [assembly: Invoker(typeof(DBTable), nameof(DBTable.ItemTypes), typeof(DBTable.ItemTypesInvoker))]
 [assembly: Invoker(typeof(DBTable), nameof(DBTable.Query), typeof(DBTable.QueryInvoker))]
 [assembly: Invoker(typeof(DBTable), nameof(DBTable.Type), typeof(DBTable.TypeInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.Keys), typeof(DBTable.KeysInvoker))]
 [assembly: Invoker(typeof(DBTable), nameof(DBTable.IsCaching), typeof(DBTable.IsCachingInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.IsReadOnly), typeof(DBTable.IsReadOnlyInvoker))]
+[assembly: Invoker(typeof(DBTable), nameof(DBTable.IsPrivate), typeof(DBTable.IsPrivateInvoker))]
 [assembly: Invoker(typeof(DBTable), nameof(DBTable.ComDelete), typeof(DBTable.ComDeleteInvoker))]
 [assembly: Invoker(typeof(DBTable), nameof(DBTable.ComInsert), typeof(DBTable.ComInsertInvoker))]
 [assembly: Invoker(typeof(DBTable), nameof(DBTable.ComUpdate), typeof(DBTable.ComUpdateInvoker))]
 [assembly: Invoker(typeof(DBTable), nameof(DBTable.SqlName), typeof(DBTable.SqlNameInvoker))]
 [assembly: Invoker(typeof(DBTable), nameof(DBTable.Count), typeof(DBTable.CountInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.IsReadOnly), typeof(DBTable.IsReadOnlyInvoker))]
 [assembly: Invoker(typeof(DBTable), nameof(DBTable.DefaultItemsView), typeof(DBTable.DefaultItemsViewInvoker))]
 [assembly: Invoker(typeof(DBTable), nameof(DBTable.ChildRelations), typeof(DBTable.ChildRelationsInvoker))]
 namespace DataWF.Data
@@ -69,76 +71,76 @@ namespace DataWF.Data
     public abstract class DBTable : DBSchemaItem, IComparable, IDBTable
     {
         private static readonly Dictionary<Type, DBTable> cacheTables = new Dictionary<Type, DBTable>();
-        private static readonly Dictionary<Type, TableGenerator> cacheTableAttributes = new Dictionary<Type, TableGenerator>();
-        private static readonly Dictionary<Type, ItemTypeGenerator> cacheItemTypeAttributes = new Dictionary<Type, ItemTypeGenerator>();
+        private static readonly Dictionary<Type, TableGenerator> cacheTableGenerators = new Dictionary<Type, TableGenerator>();
+        private static readonly Dictionary<Type, ItemTypeGenerator> cacheItemTypeGenerator = new Dictionary<Type, ItemTypeGenerator>();
         private static int tableIndex;
 
-        public static void ClearAttributeCache()
+        public static void ClearGeneratorCache()
         {
             cacheTables.Clear();
-            cacheTableAttributes.Clear();
-            cacheItemTypeAttributes.Clear();
+            cacheTableGenerators.Clear();
+            cacheItemTypeGenerator.Clear();
         }
 
-        public static TableGenerator GetTableAttributeInherit(Type type)
+        public static TableGenerator GetTableGeneratorInherit(Type type)
         {
-            var tableAttribute = GetTableAttribute(type);
-            while (tableAttribute == null && type != null)
+            var tableGenerator = GetTableGenerator(type);
+            while (tableGenerator == null && type != null)
             {
                 type = type.BaseType;
-                tableAttribute = type == null ? null : GetTableAttribute(type);
+                tableGenerator = type == null ? null : GetTableGenerator(type);
             }
-            return tableAttribute;
+            return tableGenerator;
         }
 
-        public static TableGenerator GetTableAttribute<T>()
+        public static TableGenerator GetTableGenerator<T>()
         {
-            return GetTableAttribute(typeof(T));
+            return GetTableGenerator(typeof(T));
         }
 
-        public static TableGenerator GetTableAttribute(Type type)
+        public static TableGenerator GetTableGenerator(Type type)
         {
-            if (!cacheTableAttributes.TryGetValue(type, out var table))
+            if (!cacheTableGenerators.TryGetValue(type, out var tableGenerator))
             {
                 var tableAttribute = type.GetCustomAttribute<TableAttribute>(false);
                 if (tableAttribute is LogTableAttribute)
                 {
-                    table = new LogTableGenerator() { Attribute = tableAttribute };
-                    table.Initialize(type);
+                    tableGenerator = new LogTableGenerator() { Attribute = tableAttribute };
+                    tableGenerator.Initialize(type);
                 }
                 else if (tableAttribute is TableAttribute)
                 {
-                    table = new TableGenerator() { Attribute = tableAttribute };
-                    table.Initialize(type);
+                    tableGenerator = new TableGenerator() { Attribute = tableAttribute };
+                    tableGenerator.Initialize(type);
                 }
-                cacheTableAttributes[type] = table;
+                cacheTableGenerators[type] = tableGenerator;
             }
-            if (table == null)
+            if (tableGenerator == null)
             {
-                var itemType = GetItemTypeAttribute(type);
-                table = itemType?.TableAttribute;
+                var itemType = GetItemTypeGenerator(type);
+                tableGenerator = itemType?.TableAttribute;
             }
-            return table;
+            return tableGenerator;
         }
 
-        public static ItemTypeGenerator GetItemTypeAttribute(Type type)
+        public static ItemTypeGenerator GetItemTypeGenerator(Type type)
         {
-            if (!cacheItemTypeAttributes.TryGetValue(type, out var itemType))
+            if (!cacheItemTypeGenerator.TryGetValue(type, out var itemTypeGenerator))
             {
                 var itemTypeAttribute = type.GetCustomAttribute<ItemTypeAttribute>(false);
                 if (itemTypeAttribute is LogItemTypeAttribute)
                 {
-                    itemType = new LogItemTypeGenerator { Attribute = itemTypeAttribute };
-                    itemType.Initialize(type);
+                    itemTypeGenerator = new LogItemTypeGenerator { Attribute = itemTypeAttribute };
+                    itemTypeGenerator.Initialize(type);
                 }
                 else if (itemTypeAttribute is ItemTypeAttribute)
                 {
-                    itemType = new ItemTypeGenerator { Attribute = itemTypeAttribute };
-                    itemType.Initialize(type);
+                    itemTypeGenerator = new ItemTypeGenerator { Attribute = itemTypeAttribute };
+                    itemTypeGenerator.Initialize(type);
                 }
-                cacheItemTypeAttributes[type] = itemType;
+                cacheItemTypeGenerator[type] = itemTypeGenerator;
             }
-            return itemType;
+            return itemTypeGenerator;
         }
 
         public static DBTable<T> GetTable<T>(DBSchema schema = null, bool generate = false) where T : DBItem, new()
@@ -152,19 +154,19 @@ namespace DataWF.Data
                 return null;
             if (!cacheTables.TryGetValue(type, out var table))
             {
-                var tableAttribute = GetTableAttribute(type);
-                if (tableAttribute != null)
+                var tableGenerator = GetTableGenerator(type);
+                if (tableGenerator != null)
                 {
-                    if (tableAttribute.Table == null && generate)
-                        tableAttribute.Generate(schema);
-                    var itemAttribute = GetItemTypeAttribute(type);
-                    if (itemAttribute != null)
+                    if (tableGenerator.Table == null && generate)
+                        tableGenerator.Generate(schema);
+                    var itemGenerator = GetItemTypeGenerator(type);
+                    if (itemGenerator != null)
                     {
-                        if (itemAttribute.Table == null && generate)
-                            itemAttribute.Generate(schema);
-                        return cacheTables[type] = itemAttribute.Table;
+                        if (itemGenerator.Table == null && generate)
+                            itemGenerator.Generate(schema);
+                        return cacheTables[type] = itemGenerator.Table;
                     }
-                    return cacheTables[type] = tableAttribute.Table;
+                    return cacheTables[type] = tableGenerator.Table;
                 }
                 else
                 {
@@ -179,12 +181,15 @@ namespace DataWF.Data
         protected DBCommand dmlDelete;
         protected IDBLogTable logTable;
         protected DBTableGroup tableGroup;
+        protected DBSequence cacheSequence;
+        protected readonly List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
+        protected readonly ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
         protected DBColumn nameKey = DBColumn.EmptyKey;
         protected DBColumn accessKey = DBColumn.EmptyKey;
         protected DBColumn primaryKey = DBColumn.EmptyKey;
         protected DBColumn fileKey = DBColumn.EmptyKey;
         protected DBColumn fileNameKey = DBColumn.EmptyKey;
-        protected DBColumn fileLOBKey = DBColumn.EmptyKey;
+        protected DBColumn fileBLOBKey = DBColumn.EmptyKey;
         protected DBColumn fileLastWriteKey = DBColumn.EmptyKey;
         protected DBColumn dateKey = DBColumn.EmptyKey;
         protected DBColumn stampKey = DBColumn.EmptyKey;
@@ -195,14 +200,13 @@ namespace DataWF.Data
         protected DBColumn imageKey = DBColumn.EmptyKey;
         protected DBColumn itemTypeKey = DBColumn.EmptyKey;
 
-        private DBSequence cacheSequence;
         public IComparer DefaultComparer;
         public int Hash = -1;
         protected internal readonly int index = ++tableIndex;
         protected internal ConcurrentQueue<int> FreeHandlers = new ConcurrentQueue<int>();
-        private ConcurrentDictionary<Type, List<IInvokerJson>> invokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
-        private ConcurrentDictionary<Type, List<IInvokerJson>> refingInvokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
-        protected readonly ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
+
+        private readonly ConcurrentDictionary<Type, List<IInvokerJson>> invokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
+        private readonly ConcurrentDictionary<Type, List<IInvokerJson>> refingInvokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
         private IInvokerJson[] refInvoker;
 
         protected string query;
@@ -211,11 +215,11 @@ namespace DataWF.Data
         protected string comDelete;
         protected string groupName;
         protected string sequenceName;
-        protected bool caching = false;
+        protected string logTableName;
+        protected DBTableKeys keys = DBTableKeys.None;
         protected DBTableType type = DBTableType.Table;
         protected int blockSize = 256;
         internal object locker = new object();
-        protected List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
         private DBItemType itemType;
         private int itemTypeIndex = 0;
 
@@ -229,7 +233,22 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public string LogTableName { get; set; }
+        public string LogTableName
+        {
+            get => logTableName;
+            set
+            {
+                if (logTableName != value)
+                {
+                    logTableName = value;
+                    if (!string.IsNullOrEmpty(logTableName))
+                    {
+                        Keys &= ~DBTableKeys.NoLogs;
+                    }
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         [XmlIgnore, JsonIgnore]
         public TableGenerator Generator { get; internal set; }
@@ -265,7 +284,14 @@ namespace DataWF.Data
         public int ItemTypeIndex
         {
             get => itemTypeIndex;
-            set => itemTypeIndex = value;
+            set
+            {
+                if (itemTypeIndex != value)
+                {
+                    itemTypeIndex = value;
+                    OnPropertyChanged();
+                }
+            }
         }
 
         public override string FullName => string.Format("{0}.{1}", Schema != null ? Schema.Name : string.Empty, name);
@@ -316,6 +342,7 @@ namespace DataWF.Data
             }
         }
 
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual string SqlName => name;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -408,7 +435,7 @@ namespace DataWF.Data
         public DBColumn PrimaryKey => primaryKey == DBColumn.EmptyKey ? (primaryKey = Columns.GetByKey(DBColumnKeys.Primary)) : primaryKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn FileLOBKey => fileLOBKey == DBColumn.EmptyKey ? (fileLOBKey = Columns.GetByKey(DBColumnKeys.FileLOB)) : fileLOBKey;
+        public DBColumn FileBLOBKey => fileBLOBKey == DBColumn.EmptyKey ? (fileBLOBKey = Columns.GetByKey(DBColumnKeys.FileLOB)) : fileBLOBKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBColumn FileKey => fileKey == DBColumn.EmptyKey ? (fileKey = Columns.GetByKey(DBColumnKeys.File)) : fileKey;
@@ -455,31 +482,99 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, JsonIgnore, Category("Database")]
-        public virtual bool IsLoging
+        [Category("Database")]
+        public DBTableKeys Keys
         {
-            get => !string.IsNullOrEmpty(LogTableName);
+            get => keys;
             set
             {
-                if (value)
+                if (keys != value)
                 {
-                    GenerateLogTable();
-                }
-                else
-                {
-                    LogTable = null;
+                    keys = value;
+                    OnPropertyChanged();
                 }
             }
         }
 
-        [Category("Database")]
+        [XmlIgnore, JsonIgnore, Category("Database")]
         public bool IsCaching
         {
-            get => caching;
+            get => (Keys & DBTableKeys.Caching) != 0;
             set
             {
-                caching = value;
-                OnPropertyChanged(nameof(IsCaching));
+                if (IsCaching != value)
+                {
+                    if (value)
+                    {
+                        Keys |= DBTableKeys.Caching;
+                    }
+                    else
+                    {
+                        Keys &= ~DBTableKeys.Caching;
+                    }
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Category("Database")]
+        public bool IsReadOnly
+        {
+            get => (Keys & DBTableKeys.ReadOnly) != 0;
+            set
+            {
+                if (IsReadOnly != value)
+                {
+                    if (value)
+                    {
+                        Keys |= DBTableKeys.ReadOnly;
+                    }
+                    else
+                    {
+                        Keys &= ~DBTableKeys.ReadOnly;
+                    }
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Category("Database")]
+        public bool IsPrivate
+        {
+            get => (Keys & DBTableKeys.Private) != 0;
+            set
+            {
+                if (IsPrivate != value)
+                {
+                    if (value)
+                    {
+                        Keys |= DBTableKeys.Private;
+                    }
+                    else
+                    {
+                        Keys &= ~DBTableKeys.Private;
+                    }
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Category("Database")]
+        public virtual bool IsLoging
+        {
+            get => (Keys & DBTableKeys.NoLogs) == 0;
+            set
+            {
+                if (value)
+                {
+                    Keys &= ~DBTableKeys.NoLogs;
+                    GenerateLogTable();
+                }
+                else
+                {
+                    Keys |= DBTableKeys.NoLogs;
+                    LogTable = null;
+                }
             }
         }
 
@@ -501,7 +596,9 @@ namespace DataWF.Data
         public abstract int Count { get; }
 
         [Browsable(false)]
-        public bool IsReadOnly => false;
+        public abstract IDBTableView DefaultItemsView { get; }
+
+        public List<DBForeignKey> ChildRelations { get; } = new List<DBForeignKey>();
 
         public abstract bool Contains(DBItem item);
 
@@ -517,14 +614,12 @@ namespace DataWF.Data
         public abstract void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
         public abstract void OnItemChanged<V>(DBItem item, string proeprty, DBColumn column, V value);
         public abstract void OnItemChanged(DBItem item, string proeprty, DBColumn column, object value);
-
         public abstract void Trunc();
 
         public bool IsSerializeableColumn(DBColumn column, Type type)
         {
             return column.Property != null
-                && column.PropertyInvoker != null
-                && column.PropertyInvoker != column
+                && column.PropertyInvoker != null && column.PropertyInvoker != column
                 && column.PropertyInvoker.TargetType.IsAssignableFrom(type)
                 && !TypeHelper.IsNonSerialize(column.PropertyInfo)
                 //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
@@ -554,6 +649,8 @@ namespace DataWF.Data
         protected internal void SetItemType(Type type)
         {
             itemType = ItemTypes[0] = new DBItemType { Type = type };
+            OnPropertyChanged(nameof(ItemType));
+            OnPropertyChanged(nameof(ItemTypeName));
             // Info = DBService.GetTableAttribute(type);
         }
 
@@ -901,6 +998,7 @@ namespace DataWF.Data
             }
             var command = transaction.AddCommand(dmlCommand.Text, dmlCommand.Type);
             dmlCommand.FillCommand(command, item);
+            //transaction.PrepareStatements(command);
 
             var result = await transaction.ExecuteQueryAsync(command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
             transaction.DbConnection.System.UploadCommand(item, command);
@@ -1033,11 +1131,6 @@ namespace DataWF.Data
         {
             return (IDBTableView)EmitInvoker.Initialize(typeof(DBTableView<>).MakeGenericType(type), new Type[] { }, true).Create();
         }
-
-        [Browsable(false)]
-        public abstract IDBTableView DefaultItemsView { get; }
-
-        public List<DBForeignKey> ChildRelations { get; } = new List<DBForeignKey>();
 
         public abstract IDBTableView CreateItemsView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
 
@@ -1430,10 +1523,10 @@ namespace DataWF.Data
             return rez;
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             var ddl = new StringBuilder();
-            Schema?.Connection?.System.Format(ddl, this, ddlType, false, false);
+            Schema?.Connection?.System.Format(ddl, this, ddlType, dependency, false);
             return ddl.ToString();
         }
 
@@ -1506,7 +1599,7 @@ namespace DataWF.Data
             table.name = Name;
             //bc.bname = this.bname;
             table.query = Query;
-            table.caching = caching;
+            table.keys = Keys;
             table.type = Type;
             table.groupName = GroupName;
             table.sequenceName = SequenceName;
@@ -1634,14 +1727,14 @@ namespace DataWF.Data
             return null;
         }
 
-
         public IDBLogTable GenerateLogTable()
         {
             if (LogTable == null)
             {
                 var genericType = TypeHelper.ParseType(ItemType.Type.Name + "Log");
                 var itemType = genericType ?? typeof(DBLogItem);
-                LogTable = (IDBLogTable)GetTable(itemType) ?? (IDBLogTable)EmitInvoker.CreateObject(typeof(DBLogTable<>).MakeGenericType(itemType));
+                LogTable = (IDBLogTable)GetTable(itemType, Schema.LogSchema ?? Schema)
+                    ?? (IDBLogTable)EmitInvoker.CreateObject(typeof(DBLogTable<>).MakeGenericType(itemType));
                 LogTable.BaseTable = this;
                 if (!LogTable.Schema.Tables.Contains(LogTable))
                 {
@@ -2186,11 +2279,22 @@ namespace DataWF.Data
         {
             public override string Name => nameof(DBTable.IsReadOnly);
 
-            public override bool CanWrite => false;
+            public override bool CanWrite => true;
 
             public override bool GetValue(DBTable target) => target.IsReadOnly;
 
-            public override void SetValue(DBTable target, bool value) { }
+            public override void SetValue(DBTable target, bool value) => target.IsReadOnly = value;
+        }
+
+        public class IsPrivateInvoker : Invoker<DBTable, bool>
+        {
+            public override string Name => nameof(DBTable.IsPrivate);
+
+            public override bool CanWrite => true;
+
+            public override bool GetValue(DBTable target) => target.IsPrivate;
+
+            public override void SetValue(DBTable target, bool value) => target.IsPrivate = value;
         }
 
         public class DefaultItemsViewInvoker : Invoker<DBTable, IDBTableView>
@@ -2213,6 +2317,17 @@ namespace DataWF.Data
             public override List<DBForeignKey> GetValue(DBTable target) => target.ChildRelations;
 
             public override void SetValue(DBTable target, List<DBForeignKey> value) { }
+        }
+
+        public class KeysInvoker : Invoker<DBTable, DBTableKeys>
+        {
+            public override string Name => nameof(DBTable.Keys);
+
+            public override bool CanWrite => true;
+
+            public override DBTableKeys GetValue(DBTable target) => target.Keys;
+
+            public override void SetValue(DBTable target, DBTableKeys value) => target.Keys = value;
         }
     }
 }

@@ -93,7 +93,7 @@ namespace DataWF.Data
                 {
                     Schema = Schema,
                     Table = this,
-                    BaseTableAttribute = value.Generator
+                    BaseTableGenerator = value.Generator
                 };
                 tableGenerator.Initialize(typeof(DBLogItem));
                 tableGenerator.GenerateColumns();
@@ -161,21 +161,21 @@ namespace DataWF.Data
         public override async Task<bool> SaveItem(DBItem item, DBTransaction transaction)
         {
             if ((item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete
-                && item is DBLogItem logItem && FileLOBKey is DBLogColumn logColumn)
+                && item is DBLogItem logItem && FileBLOBKey is DBLogColumn logColumn)
             {
                 var lob = item.GetValue<uint?>(logColumn);
                 var current = logItem.BaseItem == DBItem.EmptyItem ? null : logItem.BaseItem.GetValue<uint?>(logColumn.BaseColumn);
                 if (lob != null && lob != current)
                 {
                     var qquery = new QQuery(this);
-                    qquery.BuildParam(FileLOBKey, lob);
+                    qquery.BuildParam(FileBLOBKey, lob);
                     if (!Load(qquery).Any(p => p != item))
                     {
                         try
                         {
                             using (var transactionDeleteLOB = new DBTransaction(transaction.DbConnection, transaction.Caller))
                             {
-                                await System.DeleteLOB(lob.Value, transactionDeleteLOB);
+                                await System.DeleteBLOB(lob.Value, transactionDeleteLOB);
                                 transactionDeleteLOB.Commit();
                             }
                         }

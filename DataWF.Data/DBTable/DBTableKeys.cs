@@ -17,37 +17,19 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF.Common;
+using DataWF.Data;
 using System;
-using System.ComponentModel;
 
 namespace DataWF.Data
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    public class TableAttribute : Attribute
+    [Flags]
+    public enum DBTableKeys
     {
-        public TableAttribute(string name, string groupName, string schema = null)
-        {
-            TableName = name;
-            GroupName = groupName ?? "Default";
-            Schema = schema;
-        }
-
-        public string TableName { get; set; }
-
-        public virtual string GroupName { get; set; }
-
-        public string Schema { get; }
-
-        [DefaultValue(DBTableType.Table)]
-        public DBTableType TableType { get; set; } = DBTableType.Table;
-
-        public int BlockSize { get; set; } = 256;
-
-        public DBTableKeys Keys { get; set; }
-
-        public bool ForceLoadReference { get; set; }
-
-        public string SequenceName { get; set; }
-
+        None = 0,
+        NoLogs = 1 << 0,
+        Caching = 1 << 1,
+        ReadOnly = 1 << 2,
+        Private = 1 << 3,
     }
 }

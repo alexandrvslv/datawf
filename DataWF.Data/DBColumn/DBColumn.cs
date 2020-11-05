@@ -443,7 +443,6 @@ namespace DataWF.Data
                     {
                         case DBDataType.ByteArray:
                         case DBDataType.Blob: dataType = typeof(byte[]); break;
-                        case DBDataType.LargeObject: dataType = typeof(uint); break;
                         case DBDataType.Bool: dataType = typeof(bool); break;
                         case DBDataType.Clob: dataType = typeof(string); break;
                         case DBDataType.Date:
@@ -453,6 +452,7 @@ namespace DataWF.Data
                         case DBDataType.Float: dataType = typeof(float); break;
                         case DBDataType.TinyInt: dataType = typeof(byte); break;
                         case DBDataType.Int: dataType = typeof(int); break;
+                        case DBDataType.UInt: dataType = typeof(uint); break;
                         case DBDataType.BigInt: dataType = typeof(long); break;
                         case DBDataType.Decimal: dataType = typeof(decimal); break;
                         case DBDataType.ShortInt: dataType = typeof(short); break;
@@ -513,7 +513,7 @@ namespace DataWF.Data
                     DBDataType = DBDataType.Int;
                 else if (value == typeof(uint))
                 {
-                    if (DBDataType != DBDataType.LargeObject)
+                    if (DBDataType != DBDataType.UInt)
                         DBDataType = DBDataType.Int;
                 }
                 else if (value == typeof(short))
@@ -754,8 +754,8 @@ namespace DataWF.Data
                     serializable?.Deserialize(byteArray);
                     row.SetValue((object)serializable, this, DBSetValueMode.Loading);
                     break;
-                case DBDataType.LargeObject:
-                    var unitValue = isNull ? (uint?)null : transaction.ReadOID(i);
+                case DBDataType.UInt:
+                    var unitValue = isNull ? (uint?)null : transaction.ReadUInt(i);
                     row.SetValueNullable<uint>(unitValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Decimal:
@@ -835,8 +835,8 @@ namespace DataWF.Data
                 case DBDataType.ByteArray:
                     var arrayValue = (byte[])transaction.Reader.GetValue(i);
                     return Index.SelectOne<F, byte[]>(arrayValue);
-                case DBDataType.LargeObject:
-                    var uintValue = transaction.ReadOID(i);
+                case DBDataType.UInt:
+                    var uintValue = transaction.ReadUInt(i);
                     return Index.SelectOne<F, uint?>(uintValue);
                 case DBDataType.Decimal:
                     var decimalValue = transaction.Reader.GetDecimal(i);
@@ -969,13 +969,12 @@ namespace DataWF.Data
             return column;
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             var ddl = new StringBuilder();
-            Table?.System.Format(ddl, this, ddlType);
+            Table?.System.Format(ddl, this, ddlType, dependency);
             return ddl.ToString();
         }
-
 
         //public virtual object GetTag(int hindex)
         //{

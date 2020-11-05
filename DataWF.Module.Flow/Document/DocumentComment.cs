@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    [Table("ddocument_comment", "Document", BlockSize = 400, IsLoging = false)]
+    [Table("ddocument_comment", "Document", BlockSize = 400, Keys = DBTableKeys.NoLogs)]
     public class DocumentComment : DBItem, IDocumentDetail
     {   
         public static readonly DBTable<DocumentComment> DBTable = GetTable<DocumentComment>();

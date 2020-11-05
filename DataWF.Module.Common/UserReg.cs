@@ -27,7 +27,7 @@ namespace DataWF.Module.Common
         BySession
     }
 
-    [Table("duser_log", "User", BlockSize = 500, IsLoging = false)]
+    [Table("duser_log", "User", BlockSize = 500, Keys = DBTableKeys.NoLogs)]
     public class UserReg : DBUserReg
     {
         public static UserRegStrategy LogStrategy = UserRegStrategy.BySession;

@@ -42,9 +42,9 @@ namespace DataWF.Data
                 {DBDataType.ByteArray, "raw{0}"},
                 {DBDataType.ByteSerializable, "raw{0}"},
                 {DBDataType.Blob, "blob"},
-                {DBDataType.LargeObject, "number(9)"},
                 {DBDataType.BigInt, "number(18)"},
                 {DBDataType.Int, "number(9)"},
+                {DBDataType.UInt, "number(9)"},
                 {DBDataType.ShortInt, "number(4)"},
                 {DBDataType.TinyInt, "number(2)"},
                 {DBDataType.Float, "binary_float"},
@@ -120,13 +120,6 @@ namespace DataWF.Data
                 ddl.Append($" execute immediate 'grant create sequence to {schema.Name}';\n");
                 ddl.Append($" execute immediate 'grant create any procedure to {schema.Name}';\n");
                 ddl.Append($" execute immediate 'grant unlimited tablespace to {schema.Name}';\n");
-                if (!schema.Sequences.Contains("db_lob_seq"))
-                {
-                    var lobSequence = new DBSequence("db_lob_seq");
-                    schema.Sequences.Add(lobSequence);
-                    Format(ddl, lobSequence, DDLType.Create);
-                }
-                ddl.AppendLine($"create table db_lob(oid number(18) not null primary key, lob_data blob);");
                 ddl.Append($"end;");
             }
             else if (ddlType == DDLType.Drop)
@@ -232,9 +225,9 @@ namespace DataWF.Data
         }
 
 
-        public override object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        public override object FillParameter(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
-            value = base.WriteValue(command, parameter, value, column);
+            value = base.FillParameter(command, parameter, value, column);
 
             if (value == null || value == DBNull.Value)
             {
@@ -368,42 +361,21 @@ namespace DataWF.Data
             }
         }
 
-        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
-        {
-            var command = (OracleCommand)transaction.AddCommand($"delete from db_lob where oid = :oid");
-            command.Parameters.Add($":oid", (long)oid);
-            await transaction.ExecuteQueryAsync(command);
-        }
-
-        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
-        {
-            var command = (OracleCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = :oid");
-            command.Parameters.Add($"@oid", (long)oid);
-            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (await transaction.ReadAsync())
-            {
-                return ((OracleDataReader)transaction.Reader).GetStream(1);
-            }
-            throw new Exception("No Data Found!");
-        }
-
-        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
+        public override async Task<long> SetBLOB(Stream value, DBTransaction transaction)
         {
             using (var blob = new OracleBlob((OracleConnection)transaction.Connection))
             {
                 await value.CopyToAsync(blob);
-                var command = (OracleCommand)transaction.AddCommand(@"begin
-select db_lob_seq.nextval into :oid = next from dual;
-insert into db_lob (oid, lob_data) values (:oid, :lob_data);
-select :oid;");
-                var oidParameter = command.Parameters.Add(":oid", OracleDbType.Long);
+                var command = (OracleCommand)transaction.AddCommand($@"begin
+select {FileData.DBTable.SequenceName}.nextval into :oid = next from dual;
+insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values (:{FileData.IdKey.Name}, :{FileData.DataKey.Name});
+select :{FileData.IdKey.Name};");
+                var oidParameter = command.Parameters.Add($":{FileData.IdKey.Name}", OracleDbType.Long);
                 oidParameter.Direction = ParameterDirection.Output;
-                command.Parameters.Add(":lob_data", OracleDbType.Blob, -1).Value = blob;
+                command.Parameters.Add($":{FileData.IdKey.Name}", OracleDbType.Blob, -1).Value = blob;
                 await transaction.ExecuteQueryAsync(command, DBExecuteType.NoReader);
 
-                var oid = (long)oidParameter.Value;
-
-                return (uint)oid;
+                return (long)oidParameter.Value;
             }
         }
 
@@ -422,13 +394,17 @@ select :oid;");
             return null;
         }
 
-        public override Task<bool> ReadAsync(IDataReader reader)
+        public override Stream GetStream(IDataReader reader, int column)
         {
-            var sqlReader = (OracleDataReader)reader;
-            return sqlReader.ReadAsync();
+            return ((OracleDataReader)reader).GetStream(column);
         }
 
-        public override uint GetOID(IDataReader reader, int index)
+        public override Task<bool> ReadAsync(IDataReader reader)
+        {
+            return ((OracleDataReader)reader).ReadAsync();
+        }
+
+        public override uint GetUInt(IDataReader reader, int index)
         {
             return ((OracleDataReader)reader).GetFieldValue<uint>(index);
         }

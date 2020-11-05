@@ -127,8 +127,10 @@ namespace DataWF.WebService.Generator
 
                 foreach (var itemType in types)
                 {
-                    var table = DBTable.GetTableAttribute(itemType);
-                    if (table != null && !(table is LogTableGenerator))
+                    var table = DBTable.GetTableGenerator(itemType);
+                    if (table != null
+                        && !(table is LogTableGenerator)
+                        && (table.Attribute.Keys & DBTableKeys.Private) == 0)
                     {
                         if ((Mode & CodeGeneratorMode.Controllers) != 0)
                         {
@@ -168,7 +170,6 @@ namespace DataWF.WebService.Generator
                     }
                 }
             }
-
         }
 
         private ClassDeclarationSyntax GetOrGenInvokers(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
@@ -288,7 +289,7 @@ namespace DataWF.WebService.Generator
 
         private ClassDeclarationSyntax GetOrGenLog(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            if (!table.Attribute.IsLoging)
+            if ((table.Attribute.Keys & DBTableKeys.NoLogs) != 0)
                 return null;
             var logType = TypeHelper.ParseType("LogItem") ?? TypeHelper.ParseType("DBLogItem");
             SyntaxHelper.AddUsing(logType, usings);
@@ -341,7 +342,7 @@ namespace DataWF.WebService.Generator
                                              SF.AttributeArgument(
                                                  SF.ParseExpression($"typeof({itemType.Name}), \"{table.Attribute.TableName}_log\"")))))));
             }
-            else if (DBTable.GetItemTypeAttribute(itemType) is ItemTypeGenerator itemTypeAttr)
+            else if (DBTable.GetItemTypeGenerator(itemType) is ItemTypeGenerator itemTypeAttr)
             {
                 yield return SF.AttributeList(
                              SF.SingletonSeparatedList(
@@ -599,7 +600,7 @@ namespace DataWF.WebService.Generator
             var primaryKeyType = table.PrimaryKey?.GetDataType() ?? typeof(int);
             var baseName = $"Base{(table.FileKey != null ? "File" : "")}Controller<{itemType.Name}, {primaryKeyType.Name}>";
 
-            if (table.Attribute.IsLoging)
+            if ((table.Attribute.Keys & DBTableKeys.NoLogs) == 0)
             {
                 var logItemName = itemType.Name + "Log";
                 var logItemType = (Mode & CodeGeneratorMode.Logs) != 0 ? logItemName : TypeHelper.ParseType(logItemName)?.FullName;
@@ -1278,7 +1279,7 @@ namespace DataWF.WebService.Generator
                 if (TypeHelper.IsBaseType(Type, typeof(DBItem))
                     && (Attribute == null || Attribute.Type != ControllerParameterType.Body))
                 {
-                    Table = DBTable.GetTableAttribute(Type);
+                    Table = DBTable.GetTableGenerator(Type);
                     var primaryKey = Table?.PrimaryKey;
                     if (primaryKey != null)
                     {

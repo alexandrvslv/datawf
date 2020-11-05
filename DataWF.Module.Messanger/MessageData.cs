@@ -21,7 +21,7 @@ namespace DataWF.Module.Messanger
         { }
     }
 
-    [DataContract, Table("dmessage_data", "Message", IsLoging = false)]
+    [DataContract, Table("dmessage_data", "Message", Keys = DBTableKeys.NoLogs)]
     public class MessageData : MessageDetail
     {
         public static readonly DBTable<MessageData> DBTable = GetTable<MessageData>();

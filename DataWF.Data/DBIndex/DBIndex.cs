@@ -66,7 +66,7 @@ namespace DataWF.Data
             return index;
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             var builder = new StringBuilder();
             Schema?.System?.Format(builder, this, ddlType);

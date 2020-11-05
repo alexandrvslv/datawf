@@ -292,7 +292,7 @@ namespace DataWF.Common
             var fileName = headers.TryGetValue("Content-Disposition", out var disposition)
                 ? disposition.FirstOrDefault() : "somefile.someextension";
             fileName = System.Net.WebUtility.UrlDecode(fileName);
-            var index = fileName.IndexOf(fileNameUTFToken);
+            var index = fileName.IndexOf(fileNameUTFToken, StringComparison.Ordinal);
             if (index > 0)
                 fileName = fileName.Substring(index + fileNameUTFToken.Length).Trim(' ', '\"', '\'');
             var fileSize = 0;
@@ -305,7 +305,7 @@ namespace DataWF.Common
 
         public Dictionary<string, IEnumerable<string>> GetHeaders(HttpResponseMessage response)
         {
-            var headers = Enumerable.ToDictionary(response.Headers, h => h.Key, h => h.Value);
+            var headers = Enumerable.ToDictionary(response.Headers, h => h.Key, h => h.Value, StringComparer.Ordinal);
             if (response.Content != null && response.Content.Headers != null)
             {
                 foreach (var item in response.Content.Headers)

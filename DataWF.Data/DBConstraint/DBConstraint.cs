@@ -110,7 +110,7 @@ namespace DataWF.Data
             return string.Format("{0} {1} {2}", type, Column, value);
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             var builder = new StringBuilder();
             Table?.System.Format(builder, this, ddlType);

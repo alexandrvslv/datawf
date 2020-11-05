@@ -19,8 +19,7 @@ namespace DataWF.WebService.Common
     {
         private DBTable GetTable(string name)
         {
-            return DBService.Schems.DefaultSchema.Tables.FirstOrDefault(p =>
-                string.Equals(p.ItemTypeName, name, StringComparison.Ordinal));
+            return DBService.Schems.DefaultSchema.Tables.GetByTypeName(name);
             //TypeHelper.ParseType(name);
             //if (type == null)
             //{

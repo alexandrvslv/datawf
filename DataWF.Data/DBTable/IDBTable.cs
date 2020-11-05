@@ -35,7 +35,7 @@ namespace DataWF.Data
         DBColumn DateKey { get; }
         DBColumn ElementTypeKey { get; }
         DBColumn FileKey { get; }
-        DBColumn FileLOBKey { get; }
+        DBColumn FileBLOBKey { get; }
         DBColumn FileNameKey { get; }
         DBColumn GroupKey { get; }
         DBColumn ImageKey { get; }

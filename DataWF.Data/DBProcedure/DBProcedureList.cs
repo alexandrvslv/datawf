@@ -143,23 +143,35 @@ namespace DataWF.Data
             {
                 if (TypeHelper.IsInterface(type, typeof(IExecutable)))
                 {
-                    var name = type.FullName;
-                    var procedure = new DBProcedure
-                    {
-                        Group = gprocedure,
-                        Name = name,
-                        DataName = gprocedure.DataName,
-                        ProcedureType = ProcedureTypes.Assembly
-                    };
-                    procedure = AddOrUpdate(procedure);
-                    procedure.DisplayName = type.Name.ToSepInitcap();
-                    procedure.TempAssembly = assembly;
-                    procedure.Attributes.Clear();
-                    procedure.Attributes.AddRange(type.GetCustomAttributes<ParameterAttribute>());
-                    AddCodes(procedure);
+                    Generate(type, gprocedure);
                 }
             }
             return gprocedure;
+        }
+
+        public DBProcedure Generate(Type type)
+        {
+            return Generate(type, GenerateGroup(type.Assembly));
+        }
+
+        public DBProcedure Generate(Type type, DBProcedure group)
+        {
+            var name = type.FullName;
+            var procedure = new DBProcedure
+            {
+                Group = group,
+                Name = name,
+                DataName = group.DataName,
+                ProcedureType = ProcedureTypes.Assembly
+            };
+            procedure = AddOrUpdate(procedure);
+            procedure.DisplayName = type.Name.ToSepInitcap();
+            procedure.TempAssembly = type.Assembly;
+
+            procedure.Attributes.Clear();
+            procedure.Attributes.AddRange(type.GetCustomAttributes<ParameterAttribute>());
+            AddCodes(procedure);
+            return procedure;
         }
 
         public void CheckDeleted()

@@ -32,7 +32,7 @@ namespace DataWF.Data
         string OldName { get; set; }
         DBSchema Schema { get; set; }
 
-        string FormatSql(DDLType ddlType);
+        string FormatSql(DDLType ddlType, bool dependency = false);
         string GetLocalizeCategory();
     }
 }

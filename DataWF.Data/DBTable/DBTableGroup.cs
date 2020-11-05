@@ -47,15 +47,12 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Category("Naming")]
-        public override string FullName
-        {
-            get { return $"{Schema?.Name}.{Name}"; }
-        }
+        public override string FullName => $"{Schema?.Name}.{Name}";
 
         [Browsable(false)]
         public string GroupName
         {
-            get { return groupName; }
+            get => groupName;
             set
             {
                 if (groupName == value)
@@ -66,15 +63,12 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public bool IsExpanded
-        {
-            get { return GroupHelper.IsExpand(this); }
-        }
+        public bool IsExpanded => GroupHelper.IsExpand(this);
 
         [XmlIgnore, JsonIgnore, Category("Group")]
         public DBTableGroup Group
         {
-            get { return group ?? (group = Schema?.TableGroups[groupName]); }
+            get => group ?? (group = Schema?.TableGroups[groupName]);
             set
             {
                 if (value == null || (value.Group != this && value != this))
@@ -110,7 +104,7 @@ namespace DataWF.Data
             return string.Compare(this.name, objC.name);
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             return null;
         }
@@ -128,22 +122,19 @@ namespace DataWF.Data
         #region IGroupable implementation
         IGroup IGroup.Group
         {
-            get { return Group; }
-            set { Group = value as DBTableGroup; }
+            get => Group;
+            set => Group = value as DBTableGroup;
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool Expand
         {
-            get { return expand; }
-            set { expand = value; }
+            get => expand;
+            set => expand = value;
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public bool IsCompaund
-        {
-            get { return GetTables().Any(); }
-        }
+        public bool IsCompaund => GetTables().Any();
         #endregion
 
         public class GroupNameInvoker : Invoker<DBTableGroup, string>

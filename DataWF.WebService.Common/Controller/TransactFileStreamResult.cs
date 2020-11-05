@@ -49,6 +49,10 @@ namespace DataWF.WebService.Common
         {
             try
             {
+                if (context.HttpContext.Response.ContentLength == null)
+                {
+                    context.HttpContext.Response.ContentLength = FileStream.Length;
+                }
                 await base.ExecuteResultAsync(context);
                 base.FileStream.Close();
                 Transaction?.Commit();

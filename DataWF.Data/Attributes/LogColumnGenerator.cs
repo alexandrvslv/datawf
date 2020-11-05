@@ -46,7 +46,7 @@ namespace DataWF.Data
 
         public override int Size => BaseColumn?.Size ?? base.Size;
 
-        public ColumnGenerator BaseColumn => LogTable?.BaseTableAttribute?.GetColumn(LogAttribute?.BaseName);
+        public ColumnGenerator BaseColumn => LogTable?.BaseTableGenerator?.GetColumn(LogAttribute?.BaseName);
 
         public override DBColumn CreateColumn(string name)
         {

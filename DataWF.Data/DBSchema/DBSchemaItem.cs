@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
 
 [assembly: Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.Name), typeof(DBSchemaItem.NameInvoker<>))]
 [assembly: Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.DisplayName), typeof(DBSchemaItem.DisplayNameInvoker<>))]
@@ -62,7 +63,7 @@ namespace DataWF.Data
         [Browsable(false), XmlIgnore, JsonIgnore]
         public virtual DBSchema Schema
         {
-            get { return schema; }
+            get => schema;
             set
             {
                 if (schema == value)
@@ -84,15 +85,12 @@ namespace DataWF.Data
         [Browsable(false), Category("Policy"), XmlIgnore, JsonIgnore]
         public virtual AccessValue Access
         {
-            get { return access ?? (access = new AccessValue(AccessValue.Groups)); }
-            set { access = value; }
+            get => access ?? (access = new AccessValue(AccessValue.Groups));
+            set => access = value;
         }
 
         [Browsable(false), Category("Naming"), XmlIgnore, JsonIgnore]
-        public virtual string FullName
-        {
-            get { return Name; }
-        }
+        public virtual string FullName => Name;
 
         [Browsable(false), Category("Naming"), XmlIgnore, JsonIgnore]
         public LocaleItem LocaleInfo
@@ -119,7 +117,7 @@ namespace DataWF.Data
         [Category("Naming")]
         public virtual string DisplayName
         {
-            get { return LocaleInfo?.Value ?? Name; }
+            get => LocaleInfo?.Value ?? Name;
             set
             {
                 if (LocaleInfo != null)
@@ -130,7 +128,7 @@ namespace DataWF.Data
         [Category("Naming"), Required]
         public virtual string Name
         {
-            get { return name; }
+            get => name;
             set
             {
                 if (value == name)
@@ -151,14 +149,14 @@ namespace DataWF.Data
         [Browsable(false), XmlIgnore, JsonIgnore]
         public string OldName
         {
-            get { return oldname; }
-            set { oldname = value; }
+            get => oldname;
+            set => oldname = value;
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
         public virtual bool IsSynchronized
         {
-            get { return isSynchronized; }
+            get => isSynchronized;
             set
             {
                 if (isSynchronized == value)
@@ -172,15 +170,17 @@ namespace DataWF.Data
             return Schema?.Name ?? Name;
         }
 
-        public abstract string FormatSql(DDLType ddlType);
+        public abstract string FormatSql(DDLType ddlType, bool dependency = false);
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void OnPropertyChanged(string propertyName, DDLType type = DDLType.Default)
+        public void OnPropertyChanged([CallerMemberName] string propertyName = "", DDLType type = DDLType.Default)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             if (type != DDLType.Default)
+            {
                 DBService.OnDBSchemaChanged(this, type);
+            }
         }
 
         public override string ToString()

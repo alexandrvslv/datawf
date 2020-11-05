@@ -3,13 +3,13 @@
   "isRoot": true,
   "tools": {
     "datawf.webservice.generator": {
-      "version": "1.7.5",
+      "version": "1.7.7",
       "commands": [
         "wscodegen"
       ]
     },
     "swashbuckle.aspnetcore.cli": {
-      "version": "5.6.0",
+      "version": "5.6.2",
       "commands": [
         "swagger"
       ]

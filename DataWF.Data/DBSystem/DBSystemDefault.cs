@@ -33,11 +33,6 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public override Task DeleteLOB(uint oid, DBTransaction transaction)
-        {
-            throw new NotImplementedException();
-        }
-
         public override Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
         {
             throw new NotImplementedException();
@@ -68,11 +63,6 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public override Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
-        {
-            throw new NotImplementedException();
-        }
-
         public override Task<bool> ReadAsync(IDataReader reader)
         {
             throw new NotImplementedException();
@@ -93,7 +83,22 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public override Task<uint> SetLOB(Stream value, DBTransaction transaction)
+        public override Task<Stream> GetBLOB(long oid, DBTransaction transaction, int bufferSize = 81920)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task DeleteBLOB(long oid, DBTransaction transaction)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task<long> SetBLOB(Stream value, DBTransaction transaction)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Stream GetStream(IDataReader reader, int column)
         {
             throw new NotImplementedException();
         }

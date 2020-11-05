@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -31,7 +32,7 @@ namespace DataWF.Data
     {
         public static EventHandler Commited;
 
-        private readonly List<IDbCommand> commands = new List<IDbCommand>();
+        private readonly Dictionary<string, IDbCommand> commands = new Dictionary<string, IDbCommand>(StringComparer.Ordinal);
         private IDbCommand command;
         private IDbTransaction transaction;
         private readonly HashSet<DBItem> items = new HashSet<DBItem>();
@@ -117,8 +118,12 @@ namespace DataWF.Data
 
         public void Commit()
         {
+            CloseReader();
             if (transaction != null)
-                try { transaction.Commit(); }
+                try
+                {
+                    transaction.Commit();
+                }
                 catch (Exception te)
                 {
                     foreach (var row in items)
@@ -145,8 +150,17 @@ namespace DataWF.Data
             }
         }
 
+        private void CloseReader()
+        {
+            if (!(Reader?.IsClosed ?? true))
+            {
+                Reader.Close();
+            }
+        }
+
         public void Rollback()
         {
+            CloseReader();
             if (transaction != null && !Canceled)
             {
                 try
@@ -154,7 +168,10 @@ namespace DataWF.Data
                     transaction.Rollback();
                     Canceled = true;
                 }
-                catch (Exception te) { Helper.OnException(te); }
+                catch (Exception te)
+                {
+                    Helper.OnException(te);
+                }
             }
             foreach (var row in items)
             {
@@ -179,7 +196,7 @@ namespace DataWF.Data
             }
             try
             {
-                foreach (var item in commands)
+                foreach (var item in commands.Values)
                 {
                     //TODO CHECK item.Cancel();
                     //try
@@ -191,7 +208,7 @@ namespace DataWF.Data
                     //    }
                     //}
                     //catch (Exception ex) { Helper.OnException(ex); }
-                    item.Dispose();
+                    item?.Dispose();
                 }
                 commands.Clear();
 
@@ -221,18 +238,26 @@ namespace DataWF.Data
             //Debug.WriteLine($"Dispose DBTransaction owner:{Owner} connection:{DbConnection}");
         }
 
-        public IDbCommand AddCommand(IDbCommand ncommand)
+        public IDbCommand AddCommand(IDbCommand newCommand)
         {
             //if (cancel)
             //    throw new Exception("Transaction is Canceled!");
-            if (ncommand != command)
+            if (newCommand != command)
             {
-                if (!commands.Contains(ncommand))
-                    commands.Add(ncommand);
-                command = ncommand;
+                if (commands.TryGetValue(newCommand.CommandText, out var existCommand)
+                    && existCommand != newCommand)
+                {
+                    existCommand.Dispose();
+                }
+                commands[newCommand.CommandText] = newCommand;
+
+                command = newCommand;
                 command.Connection = Connection;
+
                 if (transaction != null)
+                {
                     command.Transaction = transaction;
+                }
             }
             return command;
         }
@@ -245,16 +270,13 @@ namespace DataWF.Data
             //if (cancel)
             //    throw new Exception("Transaction is Canceled!");
             command = null;
-            foreach (var item in commands)
-                if (item.CommandText == query)
-                {
-                    command = item;
-                    break;
-                }
-            if (command == null)
+            if (commands.TryGetValue(query, out var exist))
             {
-                command = CreateCommand(Connection, query, transaction);
-                commands.Add(command);
+                command = exist;
+            }
+            else
+            {
+                commands[query] = command = CreateCommand(Connection, query, transaction);
             }
             command.CommandType = commandType;
             return command;
@@ -275,9 +297,9 @@ namespace DataWF.Data
         {
             //if (cancel)
             //    throw new Exception("Transaction is Canceled!");
-            commands.Remove(rcommand);
+            commands.Remove(rcommand.CommandText);
             if (command == rcommand)
-                command = commands.Count > 0 ? commands[0] : null;
+                command = commands.Values.FirstOrDefault();
         }
 
         public DBTransaction GetSubTransaction()
@@ -339,6 +361,11 @@ namespace DataWF.Data
         public Task<bool> ReadAsync()
         {
             return DbConnection.System.ReadAsync(Reader);
+        }
+
+        public Stream GetStream(int column)
+        {
+            return DbConnection.System.GetStream(Reader, column);
         }
 
         public QResult ExecuteQResult()
@@ -410,12 +437,14 @@ namespace DataWF.Data
         public object ExecuteQuery(IDbCommand command, DBExecuteType type = DBExecuteType.Scalar, CommandBehavior behavior = CommandBehavior.Default)
         {
             object buf = null;
+#if DEBUG
             var watch = new Stopwatch();
+#endif
             try
             {
-                //Debug.WriteLine(command.Connection.ConnectionString);
-                //Debug.WriteLine(command.CommandText);
+#if DEBUG
                 watch.Start();
+#endif
                 switch (type)
                 {
                     case DBExecuteType.Scalar:
@@ -428,8 +457,9 @@ namespace DataWF.Data
                         buf = command.ExecuteNonQuery();
                         break;
                 }
-
+#if DEBUG
                 watch.Stop();
+#endif
             }
             catch (Exception ex)
             {
@@ -438,7 +468,11 @@ namespace DataWF.Data
             }
             finally
             {
+#if DEBUG
                 OnExecute(type, command.CommandText, watch.Elapsed, buf);
+#else
+                OnExecute(type, command.CommandText, TimeSpan.Zero, buf);
+#endif
                 if (buf is Exception)
                 {
                     throw (Exception)buf;
@@ -455,12 +489,18 @@ namespace DataWF.Data
         public async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type = DBExecuteType.Scalar, CommandBehavior behavior = CommandBehavior.Default)
         {
             object buf = null;
+#if DEBUG
             var watch = new Stopwatch();
+#endif
             try
             {
+#if DEBUG
                 watch.Start();
+#endif
                 buf = await DbConnection.System.ExecuteQueryAsync(command, type, behavior);
+#if DEBUG
                 watch.Stop();
+#endif
             }
             catch (Exception ex)
             {
@@ -469,7 +509,11 @@ namespace DataWF.Data
             }
             finally
             {
+#if DEBUG
                 OnExecute(type, command.CommandText, watch.Elapsed, buf);
+#else
+                OnExecute(type, command.CommandText, TimeSpan.Zero, buf);
+#endif
                 if (buf is Exception)
                 {
                     throw (Exception)buf;
@@ -515,14 +559,19 @@ namespace DataWF.Data
             return Items.Remove(item);
         }
 
-        public uint ReadOID(int index)
+        public uint ReadUInt(int index)
         {
-            return DbConnection.System.GetOID(Reader, index);
+            return DbConnection.System.GetUInt(Reader, index);
         }
 
-        internal TimeSpan? ReadTimeSpan(int index)
+        public TimeSpan? ReadTimeSpan(int index)
         {
             return DbConnection.System.GetTimeSpan(Reader, index);
+        }
+
+        public void PrepareStatements(IDbCommand command)
+        {
+            DbConnection.System.PrepareStatements(command);
         }
     }
 }

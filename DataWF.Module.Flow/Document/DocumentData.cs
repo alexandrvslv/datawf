@@ -154,8 +154,8 @@ namespace DataWF.Module.Flow
         [Column("file_lob", DBDataType = DBDataType.LargeObject, Keys = DBColumnKeys.FileLOB)]
         public virtual uint? FileLOB
         {
-            get => GetValue<uint?>(Table.FileLOBKey);
-            set => SetValue(value, Table.FileLOBKey);
+            get => GetValue<uint?>(Table.FileBLOBKey);
+            set => SetValue(value, Table.FileBLOBKey);
         }
 
         [Browsable(false)]
@@ -229,7 +229,7 @@ namespace DataWF.Module.Flow
         {
             if (FileLOB != null)
             {
-                var item = await GetLOBFileStream(Table.FileLOBKey, fileName, transaction);
+                var item = await GetBLOBFileStream(Table.FileBLOBKey, fileName, transaction);
                 if (item != null)
                 {
                     return item;
@@ -252,7 +252,7 @@ namespace DataWF.Module.Flow
             {
                 FileName = fileName;
             }
-            await SetLOB(stream, Table.FileLOBKey, transaction);
+            await SetBLOB(stream, Table.FileBLOBKey, transaction);
             //SetStream(stream, Table.FileKey, user);
         }
 

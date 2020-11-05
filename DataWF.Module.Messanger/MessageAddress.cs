@@ -24,7 +24,7 @@ namespace DataWF.Module.Messanger
         { }
     }
 
-    [DataContract, Table("dmessage_address", "Message", IsLoging = false)]
+    [DataContract, Table("dmessage_address", "Message", Keys = DBTableKeys.NoLogs)]
     public class MessageAddress : MessageDetail
     {
         public static readonly DBTable<MessageAddress> DBTable = GetTable<MessageAddress>();

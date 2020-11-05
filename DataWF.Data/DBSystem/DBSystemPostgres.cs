@@ -33,6 +33,9 @@ namespace DataWF.Data
 {
     public class DBSystemPostgres : DBSystem
     {
+        public static bool StoreFileAsLargeObject { get; set; }
+        public static bool LargeObjectSetBuffering { get; set; } = true;
+
         public DBSystemPostgres()
         {
             Name = "Postgres";
@@ -52,7 +55,7 @@ namespace DataWF.Data
                     {DBDataType.Decimal, "numeric{0}"},
                     {DBDataType.TimeSpan, "interval"},
                     {DBDataType.Bool, "bool"},
-                    {DBDataType.LargeObject, "oid"}
+                    {DBDataType.UInt, "oid"}
                 };
         }
 
@@ -216,6 +219,20 @@ namespace DataWF.Data
             {
                 ddl.AppendLine($"alter table {column.Table.SqlName} alter column {column.SqlName} drop not null;");
             }
+            if (column.DBDataType == DBDataType.Blob)
+            {
+                ddl.AppendLine($"alter table {column.Table.SqlName} alter column {column.SqlName} set storage external;");
+            }
+        }
+
+        public override void Format(StringBuilder ddl, DBTable table, DDLType ddlType, bool constraints = true, bool indexes = true)
+        {
+            base.Format(ddl, table, ddlType, constraints, indexes);
+            if (ddlType == DDLType.Create
+                && table.FileKey != null)
+            {
+                ddl.AppendLine($"; alter table {table.SqlName} alter column {table.FileKey.SqlName} set storage external;");
+            }
         }
 
         public override string FormatCreateView(string name)
@@ -223,10 +240,10 @@ namespace DataWF.Data
             return $"drop view if exists {name}; create view {name} as";
         }
 
-        public override object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        public override object FillParameter(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
             var isArray = value is IList && value.GetType() != typeof(byte[]);
-            value = base.WriteValue(command, parameter, value, column);
+            value = base.FillParameter(command, parameter, value, column);
             if (column != null)
             {
                 if (isArray)
@@ -244,7 +261,7 @@ namespace DataWF.Data
                 {
                     ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Interval;
                 }
-                else if (column.DBDataType == DBDataType.LargeObject)
+                else if (column.DBDataType == DBDataType.UInt)
                 {
                     ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Oid;
                 }
@@ -331,19 +348,25 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
-        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
+        public override Task<long> SetBLOB(Stream value, DBTransaction transaction)
         {
-            return await SetLOBBuffered(value, transaction);
+            if (StoreFileAsLargeObject)
+            {
+                return SetLOBBuffered(value, transaction);
+            }
+            else
+            {
+                return base.SetBLOB(value, transaction);
+            }
         }
 
-        public async Task<uint> SetLOBBuffered(Stream value, DBTransaction transaction)
+        public async Task<long> SetLOBBuffered(Stream value, DBTransaction transaction, int bufferSize = 81920)
         {
             if (value.CanSeek)
             {
                 value.Position = 0;
             }
             var count = 0;
-            var bufferSize = 81920;
             var buffer = new byte[bufferSize];
             var tempFileName = Helper.GetDocumentsFullPath(Path.GetRandomFileName(), "Temp");
             try
@@ -368,14 +391,13 @@ namespace DataWF.Data
             }
         }
 
-        public static async Task<uint> SetLOBDirect(Stream value, DBTransaction transaction)
+        public async Task<uint> SetLOBDirect(Stream value, DBTransaction transaction, int bufferSize = 81920)
         {
             if (value.CanSeek)
             {
                 value.Position = 0;
             }
             var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
-            var bufferSize = 81920;
             var buffer = new byte[bufferSize];
 
             var oid = await manager.CreateAsync(0, CancellationToken.None);
@@ -392,7 +414,19 @@ namespace DataWF.Data
             return oid;
         }
 
-        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
+        public override Task<Stream> GetBLOB(long id, DBTransaction transaction, int bufferSize = 81920)
+        {
+            if (StoreFileAsLargeObject)
+            {
+                return GetLOBDirect((uint)id, transaction);
+            }
+            else
+            {
+                return base.GetBLOB(id, transaction, bufferSize);
+            }
+        }
+
+        public async Task<Stream> GetLOBDirect(uint oid, DBTransaction transaction)
         {
             var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
             return await manager.OpenReadAsync(oid, CancellationToken.None);
@@ -416,7 +450,19 @@ namespace DataWF.Data
             return outStream;
         }
 
-        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
+        public override Task DeleteBLOB(long id, DBTransaction transaction)
+        {
+            if (StoreFileAsLargeObject)
+            {
+                return DeleteLOB((uint)id, transaction);
+            }
+            else
+            {
+                return base.DeleteBLOB(id, transaction);
+            }
+        }
+
+        public async Task DeleteLOB(uint oid, DBTransaction transaction)
         {
             var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
             await manager.UnlinkAsync(oid, CancellationToken.None);
@@ -437,13 +483,17 @@ namespace DataWF.Data
             return null;
         }
 
-        public override Task<bool> ReadAsync(IDataReader reader)
+        public override Stream GetStream(IDataReader reader, int column)
         {
-            var sqlReader = (NpgsqlDataReader)reader;
-            return sqlReader.ReadAsync();
+            return ((NpgsqlDataReader)reader).GetStream(column);
         }
 
-        public override uint GetOID(IDataReader reader, int index)
+        public override Task<bool> ReadAsync(IDataReader reader)
+        {
+            return ((NpgsqlDataReader)reader).ReadAsync();
+        }
+
+        public override uint GetUInt(IDataReader reader, int index)
         {
             return ((NpgsqlDataReader)reader).GetFieldValue<uint>(index);
         }
@@ -451,6 +501,16 @@ namespace DataWF.Data
         public override TimeSpan GetTimeSpan(IDataReader reader, int index)
         {
             return ((NpgsqlDataReader)reader).GetTimeSpan(index);
+        }
+
+        public override void PrepareStatements(IDbCommand command)
+        {
+            if (!((NpgsqlCommand)command).IsPrepared)
+            {
+                ((NpgsqlCommand)command).Prepare();
+            }
+            else
+            { }
         }
 
         //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)

@@ -473,7 +473,7 @@ namespace DataWF.Data.Gui
         {
             if (dataTree.SelectedDBItem != null)
             {
-                var query = new DataQuery { Query = dataTree.SelectedDBItem.FormatSql(DDLType.Create) };
+                var query = new DataQuery { Query = dataTree.SelectedDBItem.FormatSql(DDLType.Create, true) };
                 GuiService.Main.DockPanel.Put(query);
             }
         }

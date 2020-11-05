@@ -142,7 +142,7 @@ namespace DataWF.Data
             Generateindexes();
             GenerateVirtualTables(schema);
 
-            Table.IsLoging = Attribute.IsLoging;
+            Table.IsLoging = (Attribute.Keys & DBTableKeys.NoLogs) == 0;
 
             return Table;
         }
@@ -202,6 +202,7 @@ namespace DataWF.Data
             Table.Generator = this;
             Table.Group = TableGroup;
             Table.Type = Attribute.TableType;
+            Table.Keys = Attribute.Keys;
             Table.BlockSize = Attribute.BlockSize;
             Table.Sequence = Table.GenerateSequence(Attribute.SequenceName);
         }

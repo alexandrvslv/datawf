@@ -96,9 +96,10 @@ namespace DataWF.Data
         ShortInt,
         TinyInt,
         Bool,
-        LargeObject,
+        UInt,
         Object,
         ByteSerializable,
+        LargeObject
     }
 
     public enum DBCommandTypes

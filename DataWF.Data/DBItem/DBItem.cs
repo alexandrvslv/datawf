@@ -1698,9 +1698,9 @@ namespace DataWF.Data
 
         public async Task<Stream> GetStream(DBTransaction transaction, int bufferSize = 81920)
         {
-            if (Table.FileLOBKey != null && GetValue(table.FileLOBKey) != null)
+            if (Table.FileBLOBKey != null && GetValue(table.FileBLOBKey) != null)
             {
-                return await GetLOB(Table.FileLOBKey, transaction);
+                return await GetBLOB(Table.FileBLOBKey, transaction);
             }
             else if (Table.FileKey != null)
             {
@@ -1776,12 +1776,12 @@ namespace DataWF.Data
             if (Helper.IsGZip(fileStream))
             {
                 using (var gzip = Helper.GetGZipStrem(fileStream))
-                using (var newFileStream = File.Open(path + ".zip", FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
+                using (var newFileStream = File.Open(path + ".unzip", FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
                     gzip.CopyTo(newFileStream, bufferSize);
                 }
                 File.Delete(path);
-                File.Move(path + ".zip", path);
+                File.Move(path + ".unzip", path);
                 return File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
             }
             return fileStream;
@@ -1802,39 +1802,45 @@ namespace DataWF.Data
             return temp;
         }
 
-        public async Task SetLOB(Stream value, DBColumn column, DBTransaction transaction)
+        public Task<long> SetBLOB(Stream value, DBTransaction transaction)
         {
-            var oid = await Table.System.SetLOB(value, transaction);
-            SetValueNullable<uint>(oid, column);
+            return SetBLOB(value, Table.FileBLOBKey, transaction);
+        }
+
+        public async Task<long> SetBLOB(Stream value, DBColumn column, DBTransaction transaction)
+        {
+            var id = await Table.System.SetBLOB(value, transaction);
+            SetValueNullable<long>(id, column);
             await Save(transaction);
             await OnSetStream(column, transaction);
+            return id;
         }
 
-        public Task<Stream> GetLOB(DBTransaction transaction, int bufferSize = 81920)
+        public Task<Stream> GetBLOB(DBTransaction transaction, int bufferSize = 81920)
         {
-            return GetLOB(Table.FileLOBKey, transaction, bufferSize);
+            return GetBLOB(Table.FileBLOBKey, transaction, bufferSize);
         }
 
-        public virtual Task<Stream> GetLOB(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public virtual Task<Stream> GetBLOB(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
             OnGetStream(column, transaction);
-            var oid = GetValue<uint?>(column);
+            var oid = GetValueNullable<long>(column);
             if (oid == null)
                 return null;
-            return Table.System.GetLOB(oid.Value, transaction, bufferSize);
+            return Table.System.GetBLOB(oid.Value, transaction, bufferSize);
         }
 
-        public async Task<FileStream> GetLOBFileStream(DBColumn column, string path, int bufferSize = 81920)
+        public async Task<FileStream> GetBLOBFileStream(DBColumn column, string path, int bufferSize = 81920)
         {
             using (var transaction = new DBTransaction(Table.Connection))
             {
-                return await GetLOBFileStream(column, path, transaction, bufferSize);
+                return await GetBLOBFileStream(column, path, transaction, bufferSize);
             }
         }
 
-        public async Task<FileStream> GetLOBFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public async Task<FileStream> GetBLOBFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
         {
-            using (var lobStream = await GetLOB(column, transaction))
+            using (var lobStream = await GetBLOB(column, transaction))
             {
                 if (lobStream == null)
                 {
@@ -1851,7 +1857,6 @@ namespace DataWF.Data
                 fileStream.Position = 0;
                 return fileStream;
             }
-
         }
 
         public LinkModel GetLink()

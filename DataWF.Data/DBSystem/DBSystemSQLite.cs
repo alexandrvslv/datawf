@@ -41,10 +41,10 @@ namespace DataWF.Data
                     {DBDataType.DateTime, "datetime"},
                     {DBDataType.ByteArray, "blob"},
                     {DBDataType.ByteSerializable, "blob"},
-                    {DBDataType.LargeObject, "integer"},
                     {DBDataType.Blob, "blob"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
+                    {DBDataType.UInt, "integer"},
                     {DBDataType.ShortInt, "smallint"},
                     {DBDataType.TinyInt, "tinyint"},
                     {DBDataType.Float, "float"},
@@ -142,12 +142,10 @@ select seq from db_sequence where name = '{sequence.Name}';";
             if (ddlType == DDLType.Create)
             {
                 ddl.AppendLine($"create table db_sequence(name varchar(512) not null primary key, seq long);");
-                ddl.AppendLine($"create table db_lob(oid bigint not null primary key, lob_data blob);");
             }
             else if (ddlType == DDLType.Drop)
             {
                 ddl.AppendLine($"drop table db_sequence;");
-                ddl.AppendLine($"drop table db_lob;");
             }
         }
 
@@ -245,38 +243,22 @@ select seq from db_sequence where name = '{sequence.Name}';";
             }
         }
 
-        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
+        public override Task<long> SetBLOB(Stream value, DBTransaction transaction)
         {
-            var command = (SqliteCommand)transaction.AddCommand($"delete from db_lob where oid = $oid");
-            command.Parameters.AddWithValue($"$oid", (long)oid);
-            await transaction.ExecuteQueryAsync(command);
-        }
+            return base.SetBLOB(value, transaction);
+            //TODO Separate transactinos
+            //var result = FileData.DBTable.Sequence.GetNext(transaction);
+            //var command = (SqliteCommand)transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values (${FileData.IdKey.Name}, zeroblob($length));");
+            //command.Parameters.AddWithValue($"${FileData.IdKey.Name}", value.Length);
+            //command.Parameters.AddWithValue("$length", value.Length);
+            //await transaction.ExecuteQueryAsync(command);
 
-        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
-        {
-            var command = (SqliteCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = $oid");
-            command.Parameters.AddWithValue($"$oid", (long)oid);
-            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (await transaction.ReadAsync())
-            {
-                return ((SqliteDataReader)transaction.Reader).GetStream(1);
-            }
-            throw new Exception("No Data Found!");
-        }
-
-        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
-        {
-            var command = (SqliteCommand)transaction.AddCommand(@"insert into db_lob (lob_data) values (zeroblob($length));
-select last_insert_rowid();");
-            command.Parameters.AddWithValue("$length", value.Length);
-            var oid = (long)await transaction.ExecuteQueryAsync(command);
-
-            // Open a stream to write the data
-            using (var blobStream = new SqliteBlob((SqliteConnection)transaction.Connection, "db_lob", "lob_data", oid))
-            {
-                await value.CopyToAsync(blobStream);
-            }
-            return (uint)oid;
+            //// Open a stream to write the data
+            //using (var blobStream = new SqliteBlob((SqliteConnection)transaction.Connection, FileData.DBTable.Name, FileData.DataKey.Name, result))
+            //{
+            //    await value.CopyToAsync(blobStream);
+            //}
+            //return result;
         }
 
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
@@ -294,13 +276,17 @@ select last_insert_rowid();");
             return null;
         }
 
-        public override Task<bool> ReadAsync(IDataReader reader)
+        public override Stream GetStream(IDataReader reader, int column)
         {
-            var sqlReader = (SqliteDataReader)reader;
-            return sqlReader.ReadAsync();
+            return ((SqliteDataReader)reader).GetStream(column);
         }
 
-        public override uint GetOID(IDataReader reader, int index)
+        public override Task<bool> ReadAsync(IDataReader reader)
+        {
+            return ((SqliteDataReader)reader).ReadAsync();
+        }
+
+        public override uint GetUInt(IDataReader reader, int index)
         {
             return ((SqliteDataReader)reader).GetFieldValue<uint>(index);
         }

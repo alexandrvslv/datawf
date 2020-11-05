@@ -32,12 +32,18 @@ namespace DataWF.Data
         public DBTableList(DBSchema schema) : base(schema)
         {
             Indexes.Add(DBTable.GroupNameInvoker.Instance);
+            Indexes.Add(DBTable.ItemTypeNameInvoker.Instance);
             ApplyDefaultSort();
         }
 
         public IEnumerable<DBTable> GetByGroup(string name)
         {
             return Select(nameof(DBTable.GroupName), CompareType.Equal, name);
+        }
+
+        public DBTable GetByTypeName(string name)
+        {
+            return SelectOne(nameof(DBTable.ItemTypeName), CompareType.Equal, name);
         }
 
         public override int AddInternal(DBTable item)

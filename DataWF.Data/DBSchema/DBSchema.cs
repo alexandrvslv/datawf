@@ -45,10 +45,18 @@ namespace DataWF.Data
 {
     public class DBSchema : DBSchemaItem, IFileSerialize
     {
-        public static DBSchema Generate(Assembly assembly, string schemaName)
+        public static DBSchema Generate(string schemaName, params Assembly[] assemblies)
         {
             var schema = new DBSchema(schemaName);
-            schema.Generate(new[] { assembly });
+            schema.Generate(assemblies);
+            DBService.Schems.Add(schema);
+            return schema;
+        }
+
+        public static DBSchema Generate(string schemaName, params Type[] types)
+        {
+            var schema = new DBSchema(schemaName);
+            schema.Generate(types);
             DBService.Schems.Add(schema);
             return schema;
         }
@@ -220,8 +228,6 @@ namespace DataWF.Data
             set { fileName = value; }
         }
 
-        [JsonIgnore, XmlIgnore, Browsable(false)]
-        public List<Assembly> Assemblies { get; private set; }
         #endregion
 
         public async Task Update()
@@ -239,7 +245,7 @@ namespace DataWF.Data
             return ddl.ToString();
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             var ddl = new StringBuilder();
             System?.Format(ddl, this, ddlType);
@@ -517,21 +523,32 @@ namespace DataWF.Data
 
         public void Generate(IEnumerable<Assembly> assemblies)
         {
-            Assemblies = new List<Assembly>(assemblies);
+            var types = new List<Type>();
+            foreach (var assembly in assemblies)
+            {
+                Procedures.Generate(assembly);
+                types.AddRange(assembly.GetExportedTypes()
+                    .Where(item => item.IsClass));
+            }
+            Generate(types);
+        }
+
+        public void Generate(IEnumerable<Type> types)
+        {
             var logSchema = GenerateLogSchema();
             Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Schema"));
             var attributes = new HashSet<TableGenerator>();
-            foreach (var assembly in assemblies)
+            foreach (var type in types)
             {
-                foreach (var type in assembly.GetExportedTypes().Where(item => item.IsClass))
+                var tableGenerator = DBTable.GetTableGenerator(type);
+                if (tableGenerator != null)
                 {
-                    var tableGenerator = DBTable.GetTableAttribute(type);
-                    if (tableGenerator != null)
-                    {
-                        attributes.Add(tableGenerator);
-                    }
+                    attributes.Add(tableGenerator);
                 }
-                Procedures.Generate(assembly);
+                else if (TypeHelper.IsInterface(type, typeof(IExecutable)))
+                {
+                    Procedures.Generate(type);
+                }
             }
 
             foreach (var tableGenerator in attributes)

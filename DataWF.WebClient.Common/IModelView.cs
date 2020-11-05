@@ -35,16 +35,4 @@ namespace DataWF.Common
         void ChangeCanExecute();
         IEnumerable<object> SearchByValue(IInvoker valueInvoker, object value);
     }
-
-    public enum ModelViewStatus
-    {
-        None,
-        Compleate,
-        Loading,
-        Saving,
-        Deleting,
-        Creating,
-        Uploading,
-        Downloading
-    }
 }

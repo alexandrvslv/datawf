@@ -33,7 +33,7 @@ namespace DataWF.Module.Messanger
         { }
     }
 
-    [DataContract, Table("dmessage", "Message", IsLoging = false)]
+    [DataContract, Table("dmessage", "Message", Keys = DBTableKeys.NoLogs)]
     public class Message : DBItem, IDisposable
     {
         public static readonly DBTable<Message> DBTable = GetTable<Message>();

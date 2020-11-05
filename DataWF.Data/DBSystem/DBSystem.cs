@@ -87,7 +87,7 @@ namespace DataWF.Data
             }
             parameter.Direction = ParameterDirection.Input;
 
-            WriteValue(command, parameter, value, column);
+            FillParameter(command, parameter, value, column);
             return parameter;
         }
 
@@ -95,6 +95,10 @@ namespace DataWF.Data
         {
             return new[] { DBSystem.MSSql, DBSystem.MySql, DBSystem.Oracle, DBSystem.Postgres, DBSystem.SQLite };
         }
+
+        public abstract Task<bool> ReadAsync(IDataReader reader);
+
+        public abstract Stream GetStream(IDataReader reader, int column);
 
         public virtual IEnumerable<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName = null, string tableName = null)
         {
@@ -176,11 +180,39 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
         }
 
-        public abstract Task DeleteLOB(uint oid, DBTransaction transaction);
+        public virtual async Task DeleteBLOB(long id, DBTransaction transaction)
+        {
+            var command = transaction.AddCommand($"delete from {FileData.DBTable.Name} where {FileData.IdKey.Name} = {ParameterPrefix}{FileData.IdKey.Name}");
+            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.Name}", id, FileData.IdKey);
+            await ExecuteQueryAsync(command, DBExecuteType.Scalar, CommandBehavior.Default);
+        }
 
-        public abstract Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920);
+        public virtual async Task<Stream> GetBLOB(long id, DBTransaction transaction, int bufferSize = 81920)
+        {
+            var command = transaction.AddCommand($"select {FileData.IdKey.Name}, {FileData.DataKey.Name} from {FileData.DBTable.Name} where {FileData.IdKey.Name} = {ParameterPrefix}{FileData.IdKey.Name}");
+            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.Name}", id, FileData.IdKey);
+            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
+            if (await transaction.ReadAsync())
+            {
+                return transaction.GetStream(1);
+            }
+            throw new Exception("No Data Found!");
+        }
 
-        public abstract Task<uint> SetLOB(Stream value, DBTransaction transaction);
+        public virtual async Task<long> SetBLOB(Stream value, DBTransaction transaction)
+        {
+            var result = FileData.DBTable.Sequence.GetNext(transaction);
+            await SetBLOB(result, value, transaction);
+            return result;
+        }
+
+        public virtual async Task SetBLOB(long id, Stream value, DBTransaction transaction)
+        {
+            var command = transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values ({ParameterPrefix}{FileData.IdKey.Name}, {ParameterPrefix}{FileData.DataKey.Name});");
+            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.Name}", id, FileData.IdKey);
+            CreateParameter(command, $"{ParameterPrefix}{FileData.DataKey.Name}", await Helper.GetBytesAsync(value), FileData.DataKey);//Double buffering!!!
+            await transaction.ExecuteQueryAsync(command);
+        }
 
         public virtual void CreateDatabase(DBSchema schema, DBConnection connection)
         {
@@ -297,25 +329,38 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             ddl.AppendLine($"alter table {column.Table.SqlName} drop column {column.SqlName}");
         }
 
-        public virtual void Format(StringBuilder ddl, DBColumn column, DDLType ddlType)
+        public virtual void Format(StringBuilder ddl, DBColumn column, DDLType ddlType, bool inlineConstraints = false)
         {
-            var constraints = column.Table.Constraints.GetByColumn(column).ToList();
+            var constraints = column.Table.Constraints.GetByColumn(column)
+                .Union(column.Table.Foreigns.GetByColumn(column)).ToList();
+
             switch (ddlType)
             {
                 case DDLType.Create:
                     FormatCreate(ddl, column);
                     if (constraints.Count > 0)
                     {
-                        ddl.AppendLine("go");
-                        foreach (var item in constraints)
+                        if (inlineConstraints)
                         {
-                            Format(ddl, item, DDLType.Create);
+                            foreach (var item in constraints)
+                            {
+                                Format(ddl, item);
+                                ddl.AppendLine();
+                            }
+                        }
+                        else
+                        {
                             ddl.AppendLine("go");
+                            foreach (var item in constraints)
+                            {
+                                Format(ddl, item, DDLType.Create);
+                                ddl.AppendLine("go");
+                            }
                         }
                     }
                     break;
                 case DDLType.Alter:
-                    if (constraints.Count > 0)
+                    if (constraints.Count > 0 && !inlineConstraints)
                     {
                         foreach (var item in constraints)
                         {
@@ -324,7 +369,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                         }
                     }
                     FormatAlter(ddl, column);
-                    if (constraints.Count > 0)
+                    if (constraints.Count > 0 && !inlineConstraints)
                     {
                         ddl.AppendLine("go");
                         foreach (var item in constraints)
@@ -335,13 +380,14 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     }
                     break;
                 case DDLType.Drop:
-                    if (constraints.Count > 0)
+                    if (constraints.Count > 0 && !inlineConstraints)
                     {
-                        ddl.AppendLine("go"); foreach (var item in constraints)
+                        foreach (var item in constraints)
                         {
                             Format(ddl, item, DDLType.Drop);
                             ddl.AppendLine("go");
                         }
+                        ddl.AppendLine("go");
                     }
                     FormatDrop(ddl, column);
                     break;
@@ -416,9 +462,11 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             ddl.AppendLine();
         }
 
-        public abstract Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior);
+        public virtual void PrepareStatements(IDbCommand command)
+        {
+        }
 
-        public abstract Task<bool> ReadAsync(IDataReader reader);
+        public abstract Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior);
 
         public virtual void Format(StringBuilder ddl, DBForeignKey constraint)
         {
@@ -520,7 +568,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                             {
                                 if (constraint.Column.ColumnType == DBColumnTypes.Default)
                                 {
-                                    ddl.Append(",");
+                                    ddl.AppendLine(",");
                                     Format(ddl, constraint);
                                 }
                             }
@@ -528,7 +576,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                             {
                                 if (relation.Column.ColumnType == DBColumnTypes.Default)
                                 {
-                                    ddl.Append(",");
+                                    ddl.AppendLine(",");
                                     Format(ddl, relation);
                                 }
                             }
@@ -786,7 +834,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return builder.ToString();
         }
 
-        public virtual object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        public virtual object FillParameter(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
             if (value == null)
             {
@@ -804,7 +852,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return value;
         }
 
-        public virtual uint GetOID(IDataReader reader, int index)
+        public virtual uint GetUInt(IDataReader reader, int index)
         {
             return (uint)reader.GetValue(index);
         }
@@ -949,14 +997,18 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     {
                         throw new Exception("No Data Found!");
                     }
-                    var buffer = new byte[bufferSize];
-                    int position = 0;
-                    int readed;
-                    while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                    using (var dbStream = transaction.GetStream(1))
                     {
-                        stream.Write(buffer, 0, readed);
-                        position += readed;
+                        dbStream.CopyTo(stream, bufferSize);
                     }
+                    //var buffer = new byte[bufferSize];
+                    //int position = 0;
+                    //int readed;
+                    //while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                    //{
+                    //    stream.Write(buffer, 0, readed);
+                    //    position += readed;
+                    //}
                 }
                 transaction.Reader.Close();
             }

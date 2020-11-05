@@ -1,8 +1,10 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Geometry;
+using DocumentFormat.OpenXml.Bibliography;
 using NUnit.Framework;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,6 +17,7 @@ namespace DataWF.Test.Data
         public const string EmployerTableName = "tb_employer";
         public const string PositionTableName = "tb_position";
         public const string FigureTableName = "tb_figure";
+        public const string FileTableName = "tb_file";
         private DBSchema schema;
 
         [SetUp]
@@ -22,7 +25,7 @@ namespace DataWF.Test.Data
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             DBService.Schems.Clear();
-            DBTable.ClearAttributeCache();
+            DBTable.ClearGeneratorCache();
 
             if (DBService.Connections.Count == 0)
                 Serialization.Deserialize("connections.xml", DBService.Connections);
@@ -41,8 +44,25 @@ namespace DataWF.Test.Data
         }
 
         [Test]
-        public Task GeneratePostgres()
+        public Task GeneratePostgresWithLOB()
         {
+            DBSystemPostgres.StoreFileAsLargeObject = true;
+            DBSystemPostgres.LargeObjectSetBuffering = false;
+            return Generate(DBService.Connections["TestPostgres"]);
+        }
+
+        [Test]
+        public Task GeneratePostgresWithLOBBuffeing()
+        {
+            DBSystemPostgres.StoreFileAsLargeObject = true;
+            DBSystemPostgres.LargeObjectSetBuffering = true;
+            return Generate(DBService.Connections["TestPostgres"]);
+        }
+
+        [Test]
+        public Task GeneratePostgresWithoutLOB()
+        {
+            DBSystemPostgres.StoreFileAsLargeObject = false;
             return Generate(DBService.Connections["TestPostgres"]);
         }
 
@@ -67,14 +87,14 @@ namespace DataWF.Test.Data
         [Test]
         public void SchemaSerialization()
         {
-            var schem = DBSchema.Generate(GetType().Assembly, SchemaName);
+            var schem = DBSchema.Generate(SchemaName, GetType().Assembly);
             var file = "data.xml";
             Serialization.Serialize(DBService.Schems, file);
             DBService.Schems.Clear();
             Serialization.Deserialize(file, DBService.Schems);
             Assert.AreEqual(2, DBService.Schems.Count);
 
-            Assert.AreEqual(3, schem.Tables.Count);
+            Assert.AreEqual(4, schem.Tables.Count);
             var table = schem.Tables[EmployerTableName];
             Assert.IsNotNull(table);
             Assert.IsInstanceOf<DBTable<Employer>>(table);
@@ -85,13 +105,15 @@ namespace DataWF.Test.Data
 
         public async Task Generate(DBConnection connection)
         {
-            Assert.AreEqual(true, connection.CheckConnection(), $"Connection Fail!");
-            schema = DBSchema.Generate(GetType().Assembly, SchemaName);
+            Assert.AreEqual(true, connection.CheckConnection(true), $"Connection Fail!");
+            schema = DBSchema.Generate(SchemaName, typeof(FileData), typeof(FileStore), typeof(Employer), typeof(Position), typeof(Figure));
 
             Assert.IsNotNull(schema, "Attribute Generator Fail. On Schema");
             Assert.IsNotNull(Employer.DBTable, "Attribute Generator Fail. On Employer Table");
             Assert.IsNotNull(Position.DBTable, "Attribute Generator Fail. On Position Table");
             Assert.IsNotNull(Figure.DBTable, "Attribute Generator Fail. On Figure Table");
+            Assert.IsNotNull(FileData.DBTable, "Attribute Generator Fail. On FileData Table");
+            Assert.IsNotNull(FileStore.DBTable, "Attribute Generator Fail. On FileStore Table");
 
             var idColumn = Employer.DBTable.Columns["id"];
             Assert.IsNotNull(idColumn, "Attribute Generator Fail. On Column Employer Id");
@@ -145,6 +167,7 @@ namespace DataWF.Test.Data
             Assert.AreEqual(employer.Weight, qresult.Get(0, "weight"), "Insert sql Fail Float");
             Assert.AreEqual(employer.DWeight, qresult.Get(0, "dweight"), "Insert sql Fail Double");
             Assert.AreEqual(employer.Salary, qresult.Get(0, "salary"), "Insert sql Fail Decimal");
+
             var lodar = qresult.Get(0, "lodar").ToString();
             Assert.IsTrue(lodar == "1" || lodar == "True", "Insert sql Fail Bool");
             Assert.IsInstanceOf<byte[]>(qresult.Get(0, "group_access"), "Insert sql Fail Byte Array");
@@ -177,6 +200,18 @@ namespace DataWF.Test.Data
             Position.DBTable.Clear();
             var positions = await Position.DBTable.LoadAsync();
             Assert.AreEqual(7, positions.Count(), "Insert/Read several positions Fail");
+
+            //GetById
+            employer = Employer.DBTable.LoadById(1);
+            Assert.IsNotNull(employer, "GetById Fail");
+            position = Position.DBTable.LoadById(4);
+            Assert.IsNotNull(position, "GetById Fail");
+            //Update
+            employer.Position = position;
+            await employer.Save();
+
+            qresult = schema.Connection.ExecuteQResult($"select * from {EmployerTableName}");
+            Assert.AreEqual(4, qresult.Get(0, "positionid"), "Update sql Fail");
 
             //Insert Geometry
             var polygon = new Polygon2D(new Point2D[] { new Point2D(10D, 10D), new Point2D(10D, 20D), new Point2D(20D, 20D), new Point2D(20D, 10D) });
@@ -214,18 +249,27 @@ namespace DataWF.Test.Data
             Assert.AreEqual(new Matrix2D(1, 0, 0, 0, 1, 0, 0, 0, 1), figure.Matrix, "Read/Write Geometry Matrix Fail!");
             Assert.AreEqual(polygon125, figure.Polygon, "Read/Write Geometry Polygon Fail!");
 
-            //GetById
-            employer = Employer.DBTable.LoadById(1);
-            Assert.IsNotNull(employer, "GetById Fail");
-            position = Position.DBTable.LoadById(4);
-            Assert.IsNotNull(position, "GetById Fail");
-            //Update
-            employer.Position = position;
-            await employer.Save();
-
-            qresult = schema.Connection.ExecuteQResult($"select * from {EmployerTableName}");
-            Assert.AreEqual(4, qresult.Get(0, "positionid"), "Update sql Fail");
-
+            //Files
+            var file = new FileStore { Id = 1, FileName = "test.pdf", FileLastWrite = DateTime.UtcNow };
+            var buffer = (byte[])null;
+            using (var transaction = new DBTransaction(FileStore.DBTable.Connection))
+            {
+                using (var stream = new FileStream("test.pdf", FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    buffer = Helper.GetBytes(stream);
+                    stream.Position = 0;
+                    await file.SetBLOB(stream, transaction);
+                }
+                transaction.Commit();
+            }
+            using (var transaction = new DBTransaction(FileStore.DBTable.Connection))
+            {
+                using (var stream = await file.GetBLOB(transaction))
+                {
+                    var newBuffer = Helper.GetBytes(stream);
+                    Assert.IsTrue(Helper.CompareByteAsSpan(newBuffer, buffer), "Get/Set BLOB Fail!");
+                }
+            }
 
             connection.ExecuteQuery(@"create table test_table(
       id int primary key, 

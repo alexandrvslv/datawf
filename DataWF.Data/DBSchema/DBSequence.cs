@@ -24,6 +24,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 [assembly: Invoker(typeof(DBSequence), nameof(DBSequence.Current), typeof(DBSequence.CurrentInvoker))]
@@ -98,7 +99,7 @@ namespace DataWF.Data
             };
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             var ddl = new StringBuilder();
             Schema?.Connection?.System.Format(ddl, this, ddlType);
@@ -138,6 +139,15 @@ namespace DataWF.Data
         {
             long result = 0;
             result = Convert(transaction.ExecuteQuery(transaction.AddCommand(NextQuery)));
+            Interlocked.CompareExchange(ref current, result, current);
+            Interlocked.CompareExchange(ref changed, 0, 1);
+            return result;
+        }
+
+        public async Task<long> GetNextAsync(DBTransaction transaction)
+        {
+            long result = 0;
+            result = Convert(await transaction.ExecuteQueryAsync(NextQuery, DBExecuteType.Scalar));
             Interlocked.CompareExchange(ref current, result, current);
             Interlocked.CompareExchange(ref changed, 0, 1);
             return result;

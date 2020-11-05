@@ -17,49 +17,50 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
+
+using System.Text.Json.Serialization;
 
 namespace DataWF.Data
 {
-    public class LogTableGenerator : TableGenerator
+    [Table("file_data", "General", Keys = DBTableKeys.NoLogs | DBTableKeys.Private)]
+    public class FileData : DBItem
     {
-        private TableGenerator baseTable;
+        public static readonly DBTable<FileData> DBTable = GetTable<FileData>();
+        public static readonly DBColumn IdKey = DBTable.ParseProperty(nameof(Id));
+        public static readonly DBColumn DataKey = DBTable.ParseProperty(nameof(Data));
+        public static readonly DBColumn SizeKey = DBTable.ParseProperty(nameof(Size));
+        public static readonly DBColumn HashKey = DBTable.ParseProperty(nameof(Hash));
 
-        public LogTableAttribute LogAttribute => base.Attribute as LogTableAttribute;
+        public FileData()
+        { }
 
-        public TableGenerator BaseTableGenerator
+        [Column("unid", Keys = DBColumnKeys.Primary)]
+        public int? Id
         {
-            get => baseTable ?? (baseTable = DBTable.GetTableGenerator(LogAttribute.BaseType));
-            set => baseTable = value;
+            get => GetValueNullable<int>(IdKey);
+            set => SetValueNullable(value, IdKey);
         }
 
-        public override DBSchema Schema
+        [Column("file_data", Keys = DBColumnKeys.File)]
+        public byte[] Data
         {
-            get => base.Schema is DBLogSchema logSchema
-                ? logSchema
-                : base.Schema?.LogSchema;
-            set => base.Schema = value;
+            get => GetValue<byte[]>(DataKey);
+            set => SetValue(value, DataKey);
         }
 
-        public override DBTable CreateTable()
+        [Column("file_size")]
+        public int? Size
         {
-            Debug.WriteLine($"Generate Log Table {Attribute.TableName} - {this.ItemType.Name}");
-
-            var type = typeof(DBLogTable<>).MakeGenericType(ItemType);
-            var table = (DBTable)EmitInvoker.CreateObject(type);
-            table.Name = Attribute.TableName;
-            table.Schema = Schema;
-            return table;
+            get => GetValueNullable<int>(SizeKey);
+            set => SetValueNullable(value, SizeKey);
         }
 
-        public override DBTable Generate(DBSchema schema)
+        [Column("file_hash", size: 128)]
+        public byte[] Hash
         {
-            var table = base.Generate(schema);
-            table.SetItemType(ItemType);
-            return table;
+            get => GetValue<byte[]>(HashKey);
+            set => SetValue(value, HashKey);
         }
+
     }
 }

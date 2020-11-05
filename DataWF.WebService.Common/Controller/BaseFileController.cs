@@ -106,9 +106,9 @@ namespace DataWF.WebService.Common
                 return BadRequest("File name was not specified!");
             }
             var stream = (Stream)null;
-            if (table.FileLOBKey != null && item.GetValue(table.FileLOBKey) != null)
+            if (table.FileBLOBKey != null && item.GetValue(table.FileBLOBKey) != null)
             {
-                stream = await item.GetLOB(table.FileLOBKey, transaction);
+                stream = await item.GetBLOB(table.FileBLOBKey, transaction);
             }
             else if (table.FileKey != null)
             {
@@ -164,9 +164,9 @@ namespace DataWF.WebService.Common
                                 item.SetValueNullable<DateTime>(upload.ModificationDate ?? DateTime.UtcNow, table.FileLastWriteKey);
                             }
 
-                            if (table.FileLOBKey != null)
+                            if (table.FileBLOBKey != null)
                             {
-                                await item.SetLOB(upload.Stream, table.FileLOBKey, transaction);
+                                await item.SetBLOB(upload.Stream, table.FileBLOBKey, transaction);
                             }
                             else if (table.FileKey != null)
                             {
@@ -230,9 +230,9 @@ namespace DataWF.WebService.Common
                             item.SetValueNullable<DateTime>(upload.ModificationDate ?? DateTime.UtcNow, table.FileLastWriteKey);
                         }
 
-                        if (table.FileLOBKey != null)
+                        if (table.FileBLOBKey != null)
                         {
-                            await item.SetLOB(upload.Stream, table.FileLOBKey, transaction);
+                            await item.SetBLOB(upload.Stream, table.FileBLOBKey, transaction);
                         }
                         else if (table.FileKey != null)
                         {
@@ -286,9 +286,9 @@ namespace DataWF.WebService.Common
                 }
 
                 var stream = (Stream)null;
-                if (table.LogTable.FileLOBKey != null && logItem.GetValue(table.LogTable.FileLOBKey) != null)
+                if (table.LogTable.FileBLOBKey != null && logItem.GetValue(table.LogTable.FileBLOBKey) != null)
                 {
-                    stream = await logItem.GetLOB(table.LogTable.FileLOBKey, transaction);
+                    stream = await logItem.GetBLOB(table.LogTable.FileBLOBKey, transaction);
                 }
                 else if (table.LogTable.FileKey != null)
                 {
@@ -319,12 +319,12 @@ namespace DataWF.WebService.Common
                 return false;
             }
 
-            if (table.LogTable.FileLOBKey != null)
+            if (table.LogTable.FileBLOBKey != null)
             {
-                var lob = logItem.GetValue<uint?>(table.LogTable.FileLOBKey);
+                var lob = logItem.GetValue<uint?>(table.LogTable.FileBLOBKey);
                 if (lob != null
                     && logItem.BaseItem != DBItem.EmptyItem
-                    && lob == logItem.BaseItem?.GetValue<uint?>(table.FileLOBKey))
+                    && lob == logItem.BaseItem?.GetValue<uint?>(table.FileBLOBKey))
                 {
                     return BadRequest($"Latest log entry. Deletion Canceled!");
                 }

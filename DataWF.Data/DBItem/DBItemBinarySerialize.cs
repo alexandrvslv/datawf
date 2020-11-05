@@ -79,7 +79,7 @@ namespace DataWF.Data
             }
         }
 
-        public static void Read(BinaryReader br, DBItem row, Dictionary<int, string> map)
+        public static void Read(BinaryReader br, DBItem row, Dictionary<int, DBColumn> map)
         {
             while (true)
             {
@@ -87,42 +87,17 @@ namespace DataWF.Data
                 if (separator != DBRowBinarySeparator.RowStart &&
                     separator != DBRowBinarySeparator.None)
                     break;
-                int column = br.ReadInt32();
+                int columnIndex = br.ReadInt32();
+                DBColumn dbColumn = map[columnIndex];
                 object value = Helper.ReadBinary(br);
-                DBColumn dbColumn = row.Table.ParseColumn(map[column]);
                 row.SetValue(value, dbColumn, DBSetValueMode.Loading);
             }
             row.Accept((IUserIdentity)null);
         }
 
-        public static void ReadMap(byte[] data, DBTable table, Dictionary<string, object> row)
+        public static Dictionary<int, DBColumn> ReadColumns(BinaryReader br, DBTable table)
         {
-            if (data == null || data.Length == 0)
-                return;
-            using (var stream = new MemoryStream(data))
-            using (var reader = new BinaryReader(stream))
-            {
-                ReadMap(reader, row, ReadColumns(reader, table));
-            }
-
-        }
-        public static void ReadMap(BinaryReader br, Dictionary<string, object> row, Dictionary<int, string> map)
-        {
-            while (true)
-            {
-                DBRowBinarySeparator separator = PeekSeparator(br);
-                if (separator != DBRowBinarySeparator.RowStart &&
-                    separator != DBRowBinarySeparator.None)
-                    break;
-                int column = br.ReadInt32();
-                object value = Helper.ReadBinary(br);
-                row[map[column]] = value;
-            }
-        }
-
-        public static Dictionary<int, string> ReadColumns(BinaryReader br, DBTable table)
-        {
-            Dictionary<int, string> map = new Dictionary<int, string>(table.Columns.Count);
+            var map = new Dictionary<int, DBColumn>(table.Columns.Count);
             while (true)
             {
                 DBRowBinarySeparator separator = PeekSeparator(br);
@@ -132,7 +107,7 @@ namespace DataWF.Data
 
                 string column = br.ReadString();
                 int index = br.ReadInt32();
-                map.Add(index, column);
+                map.Add(index, table.ParseColumnProperty(column));
             }
             return map;
         }
@@ -153,7 +128,7 @@ namespace DataWF.Data
                     continue;
                 index++;
                 map.Add(column, index);
-                bw.Write(column.Name);
+                bw.Write(column.Property ?? column.Name);
                 bw.Write(index);
             }
             WriteSeparator(bw, DBRowBinarySeparator.ColumnsEnd);
@@ -173,21 +148,7 @@ namespace DataWF.Data
                 Helper.WriteBinary(writer, value, true);
             }
             WriteSeparator(writer, DBRowBinarySeparator.RowEnd);
-        }
-
-        public static void WriteMap(BinaryWriter writer, Dictionary<string, object> row, Dictionary<DBColumn, int> map)
-        {
-            WriteSeparator(writer, DBRowBinarySeparator.RowStart);
-            foreach (KeyValuePair<DBColumn, int> item in map)
-            {
-                object value = row[item.Key.Name];
-                if (value == null)
-                    continue;
-                writer.Write(item.Value);
-                Helper.WriteBinary(writer, value, true);
-            }
-            WriteSeparator(writer, DBRowBinarySeparator.RowEnd);
-        }
+        }       
 
         public static byte[] Write(DBItem row, bool old = false)
         {

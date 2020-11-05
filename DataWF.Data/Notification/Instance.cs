@@ -30,8 +30,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-
-    [Table("rinstance", "User", BlockSize = 128)]
+    [Table("rinstance", "General", BlockSize = 128)]
     public class Instance : DBItem, IInstance
     {
         public static readonly DBTable<Instance> DBTable = GetTable<Instance>();
@@ -67,8 +66,8 @@ namespace DataWF.Data
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValueNullable<int>(Table.PrimaryKey);
+            set => SetValueNullable(value, Table.PrimaryKey);
         }
 
         [Column("instance_host", Keys = DBColumnKeys.View)]
@@ -81,15 +80,15 @@ namespace DataWF.Data
         [Column("instance_port", Keys = DBColumnKeys.View)]
         public int? Port
         {
-            get => GetValue<int?>(PortKey);
-            set => SetValue(value, PortKey);
+            get => GetValueNullable<int>(PortKey);
+            set => SetValueNullable(value, PortKey);
         }
 
         [Column("instance_active")]
         public bool? Active
         {
-            get => GetValue<bool?>(ActiveKey);
-            set => SetValue(value, ActiveKey);
+            get => GetValueNullable<bool>(ActiveKey);
+            set => SetValueNullable(value, ActiveKey);
         }
 
         [JsonIgnore, XmlIgnore]

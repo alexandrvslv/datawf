@@ -42,9 +42,9 @@ namespace DataWF.Data
                     {DBDataType.ByteArray, "varbinary{0}"},
                     {DBDataType.ByteSerializable, "varbinary{0}"},
                     {DBDataType.Blob, "longblob"},
-                    {DBDataType.LargeObject, "integer"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
+                    {DBDataType.UInt, "integer"},
                     {DBDataType.ShortInt, "smallint"},
                     {DBDataType.TinyInt, "tinyint unsigned"},
                     {DBDataType.Float, "float(22,11)"},
@@ -137,35 +137,17 @@ select seq from db_sequence where name = '{sequence.Name}';";
             {
                 ddl.AppendLine($"use {schema.DataBase};");
                 ddl.AppendLine($"create table db_sequence(name varchar(512) not null primary key, seq long);");
-                ddl.AppendLine($"create table db_lob(oid bigint not null primary key AUTO_INCREMENT, lob_data longblob);");
             }
         }
 
-        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
+        public override async Task<long> SetBLOB(Stream value, DBTransaction transaction)
         {
-            var command = (MySqlCommand)transaction.AddCommand($"delete from db_lob where oid = @oid");
-            command.Parameters.AddWithValue($"@oid", (long)oid);
+            var result = FileData.DBTable.Sequence.GetNext(transaction);
+            var command = (MySqlCommand)transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values (@{FileData.IdKey.Name}, @{FileData.DataKey.Name});");
+            command.Parameters.Add($"@{FileData.IdKey.Name}", MySqlDbType.Int64).Value = result;
+            command.Parameters.Add($"@{FileData.DataKey.Name}", MySqlDbType.LongBlob).Value = await Helper.GetBytesAsync(value);//Double buffering!!!
             await transaction.ExecuteQueryAsync(command);
-        }
-
-        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
-        {
-            var command = (MySqlCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = @oid");
-            command.Parameters.AddWithValue($"@oid", (long)oid);
-            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (await transaction.ReadAsync())
-            {
-                return ((MySqlDataReader)transaction.Reader).GetStream(1);
-            }
-            throw new Exception("No Data Found!");
-        }
-
-        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
-        {
-            var command = (MySqlCommand)transaction.AddCommand(@"insert into db_lob (lob_data) values (@lob_data);");
-            command.Parameters.Add("@lob_data", MySqlDbType.LongBlob).Value = await Helper.GetBytesAsync(value);
-            await transaction.ExecuteQueryAsync(command);
-            return (uint)command.LastInsertedId;
+            return result;
         }
 
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
@@ -183,13 +165,17 @@ select seq from db_sequence where name = '{sequence.Name}';";
             return null;
         }
 
-        public override Task<bool> ReadAsync(IDataReader reader)
+        public override Stream GetStream(IDataReader reader, int column)
         {
-            var sqlReader = (MySqlDataReader)reader;
-            return sqlReader.ReadAsync();
+            return ((MySqlDataReader)reader).GetStream(column);
         }
 
-        public override uint GetOID(IDataReader reader, int index)
+        public override Task<bool> ReadAsync(IDataReader reader)
+        {
+            return ((MySqlDataReader)reader).ReadAsync();
+        }
+
+        public override uint GetUInt(IDataReader reader, int index)
         {
             return ((MySqlDataReader)reader).GetUInt32(index);
         }

@@ -41,9 +41,9 @@ namespace DataWF.Data
                     {DBDataType.ByteArray, "varbinary{0}"},
                     {DBDataType.ByteSerializable, "varbinary{0}"},
                     {DBDataType.Blob, "varbinary(max)"},
-                    {DBDataType.LargeObject, "integer"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
+                    {DBDataType.UInt, "integer"},
                     {DBDataType.ShortInt, "smallint"},
                     {DBDataType.TinyInt, "tinyint"},
                     {DBDataType.Float, "float(24)"},
@@ -129,13 +129,6 @@ namespace DataWF.Data
                 ddl.AppendLine($"filename = '{dataFile}',");
                 ddl.AppendLine("size = 10, maxsize = unlimited, filegrowth = 5MB);");
                 ddl.AppendLine($"alter database {schema.DataBase} set recovery simple;");
-                if (!schema.Sequences.Contains("db_lob_seq"))
-                {
-                    var lobSequence = new DBSequence("db_lob_seq");
-                    schema.Sequences.Add(lobSequence);
-                    Format(ddl, lobSequence, DDLType.Create);
-                }
-                ddl.AppendLine($"create table [db_lob]([oid] bigint not null primary key, [lob_data] varbinary(max));");
             }
             else if (ddlType == DDLType.Drop)
             {
@@ -164,7 +157,7 @@ namespace DataWF.Data
             command.AppendLine($"select {idparam};");
         }
 
-        public override object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        public override object FillParameter(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
             var dbParameter = (SqlParameter)parameter;
             switch (dbParameter.DbType)
@@ -189,7 +182,7 @@ namespace DataWF.Data
             {
                 parameter.Direction = ParameterDirection.Output;
             }
-            return base.WriteValue(command, parameter, value, column);
+            return base.FillParameter(command, parameter, value, column);
         }
 
         public override string FormatQColumn(DBColumn column, string tableAlias)
@@ -214,37 +207,17 @@ namespace DataWF.Data
             return $"[{table.SqlName}] {alias}";
         }
 
-        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
+        public override Stream GetStream(IDataReader reader, int column)
         {
-            var command = (SqlCommand)transaction.AddCommand($"delete from db_lob where oid = @oid");
-            command.Parameters.AddWithValue($"@oid", (long)oid);
-            await transaction.ExecuteQueryAsync(command);
+            return ((SqlDataReader)reader).GetStream(1);
         }
 
-        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
+        public override async Task SetBLOB(long id, Stream value, DBTransaction transaction)
         {
-            var command = (SqlCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = @oid");
-            command.Parameters.AddWithValue($"@oid", (long)oid);
-            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (await transaction.ReadAsync())
-            {
-                return ((SqlDataReader)transaction.Reader).GetStream(1);
-            }
-            throw new Exception("No Data Found!");
-        }
-
-        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
-        {
-            var command = (SqlCommand)transaction.AddCommand(@"select @oid = next value for db_lob_seq;
-insert into db_lob (oid, lob_data) values (@oid, @lob_data);
-select @oid;");
-            command.Parameters.Add("@lob_data", SqlDbType.Binary, -1).Value = value;
-            var oid = (long)await transaction.ExecuteQueryAsync(command, DBExecuteType.Scalar);
-
-            //command = (SqlCommand)transaction.AddCommand("select current_value from sys.sequences where name = 'db_lob_seq'");
-            //transaction.ExecuteQuery(command, DBExecuteType.Scalar);
-
-            return (uint)oid;
+            var command = (SqlCommand)transaction.AddCommand($"insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values (@{FileData.IdKey.Name}, @{FileData.DataKey.Name})");
+            command.Parameters.Add($"@{FileData.IdKey.Name}", SqlDbType.BigInt, -1).Value = id;
+            command.Parameters.Add($"@{FileData.DataKey.Name}", SqlDbType.Binary, -1).Value = value;
+            await transaction.ExecuteQueryAsync(command, DBExecuteType.Scalar);
         }
 
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
@@ -268,7 +241,7 @@ select @oid;");
             return sqlReader.ReadAsync();
         }
 
-        public override uint GetOID(IDataReader reader, int index)
+        public override uint GetUInt(IDataReader reader, int index)
         {
             return ((SqlDataReader)reader).GetFieldValue<uint>(index);
         }

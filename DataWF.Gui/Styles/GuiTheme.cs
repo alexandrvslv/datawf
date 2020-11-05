@@ -313,11 +313,6 @@ namespace DataWF.Gui
             return -1;
         }
 
-        public bool Contains(string name)
-        {
-            return this[name] != null;
-        }
-
         public override void Dispose()
         {
             foreach (var item in items)
