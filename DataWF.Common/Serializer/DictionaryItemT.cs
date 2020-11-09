@@ -49,7 +49,6 @@ namespace DataWF.Common
             Value = default(V);
         }
 
-
         public class KeyInvoker : Invoker<DictionaryItem<K, V>, K>
         {
             public override string Name => nameof(DictionaryItem<K, V>.Key);

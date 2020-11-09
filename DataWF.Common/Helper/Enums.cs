@@ -46,30 +46,7 @@ namespace DataWF.Common
         Undefined,
         And,
         Or
-    }
-
-    public enum BinaryTypeIndex : byte
-    {
-        Boolean = 1,
-        Byte = 2,
-        SByte = 3,
-        Char = 4,
-        Short = 5,
-        UShort = 6,
-        Int = 7,
-        UInt = 8,
-        Long = 9,
-        ULong = 10,
-        Float = 11,
-        Double = 12,
-        Decimal = 13,
-        ByteArray = 14,
-        CharArray = 15,
-        DateTime = 16,
-        String = 17,
-        Null = 18,
-        Array = 19,        
-    }
+    }   
 
     public enum CompareTypes
     {

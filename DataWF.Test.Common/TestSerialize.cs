@@ -18,7 +18,7 @@ namespace DataWF.Test.Common
         public void BenchmarkWrite()
         {
             var list = new List<string> { "one", "two", "three" };
-            var serializer = new Serializer(typeof(List<string>));
+            var serializer = new XMLTextSerializer(typeof(List<string>));
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             for (var i = 0; i < 100000; i++)
@@ -31,7 +31,7 @@ namespace DataWF.Test.Common
         public void BenchmarkRead()
         {
             var list = new List<string> { "one", "two", "three" };
-            var serializer = new Serializer(typeof(List<string>));
+            var serializer = new XMLTextSerializer(typeof(List<string>));
             var buffer = TestWrite(serializer, list);
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -72,11 +72,11 @@ namespace DataWF.Test.Common
         public void TestGenericList()
         {
             var list = new List<string> { "one", "two", "three" };
-            var serializer = new Serializer(typeof(List<string>));
+            var serializer = new XMLTextSerializer(typeof(List<string>));
             TestGenericList(serializer, list);
         }
 
-        public byte[] TestWrite(Serializer serializer, object list)
+        public byte[] TestWrite(XMLTextSerializer serializer, object list)
         {
             var buffer = (byte[])null;
             using (var stream = new MemoryStream())
@@ -98,7 +98,7 @@ namespace DataWF.Test.Common
             return buffer;
         }
 
-        public void TestRead(Serializer serializer, byte[] buffer)
+        public void TestRead(XMLTextSerializer serializer, byte[] buffer)
         {
             using (var stream = new MemoryStream(buffer))
             {
@@ -114,7 +114,7 @@ namespace DataWF.Test.Common
             }
         }
 
-        public void TestGenericList(Serializer serializer, object list, bool print = true)
+        public void TestGenericList(XMLTextSerializer serializer, object list, bool print = true)
         {
             var buffer = (byte[])null;
             using (var stream = new MemoryStream())

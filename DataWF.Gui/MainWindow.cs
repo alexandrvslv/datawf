@@ -598,7 +598,7 @@ namespace DataWF.Gui
 
         public virtual void XmlSerialize(string file)
         {
-            using (var serializer = new Serializer())
+            using (var serializer = new XMLTextSerializer())
             {
                 serializer.Serialize(this, file);
             }
@@ -614,7 +614,7 @@ namespace DataWF.Gui
 
         public virtual void XmlDeserialize(string file)
         {
-            using (var serializer = new Serializer())
+            using (var serializer = new XMLTextSerializer())
             {
                 serializer.Deserialize(file, this, false);
             }

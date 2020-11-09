@@ -20,6 +20,7 @@
 using DataWF.Common;
 using System;
 using System.Globalization;
+using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
@@ -139,6 +140,22 @@ namespace DataWF.Geometry
                 && Left.Equals(other.Left)
                 && Top.Equals(other.Top)
                 && Right.Equals(other.Right);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Left = reader.ReadDouble();
+            Bottom = reader.ReadDouble();
+            Right = reader.ReadDouble();
+            Top = reader.ReadDouble();
+        }
+
+        public void Serialize(BinaryWriter writer)
+        {
+            writer.Write(Left);
+            writer.Write(Bottom);
+            writer.Write(Right);
+            writer.Write(Top);
         }
 
         public void Deserialize(byte[] data)

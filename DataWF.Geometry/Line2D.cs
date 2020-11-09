@@ -20,9 +20,10 @@
 using DataWF.Common;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace DataWF.Geometry
-{    
+{
     public class Line2D : IByteSerializable, IComparable<Line2D>, IEquatable<Line2D>
     {
         private Point2D point1;
@@ -72,6 +73,22 @@ namespace DataWF.Geometry
             if (other == null)
                 return false;
             return Point1.Equals(other.Point1) && Point2.Equals(other.Point2);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            point1.X = reader.ReadDouble();
+            point1.Y = reader.ReadDouble();
+            point2.X = reader.ReadDouble();
+            point2.Y = reader.ReadDouble();
+        }
+
+        public void Serialize(BinaryWriter writer)
+        {
+            writer.Write(point1.X);
+            writer.Write(point1.Y);
+            writer.Write(point2.X);
+            writer.Write(point2.Y);
         }
 
         public void Deserialize(byte[] data)

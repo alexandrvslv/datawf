@@ -28,8 +28,8 @@ namespace DataWF.Common
         private static readonly Dictionary<Assembly, Dictionary<string, Type>> cacheAssemblyTypes = new Dictionary<Assembly, Dictionary<string, Type>>();
         private static readonly Dictionary<MetadataToken, bool> cacheIsXmlText = new Dictionary<MetadataToken, bool>(200);
         private static readonly Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
-        private static readonly Dictionary<MetadataToken, ValueSerializer> cachePropertyValueSerializer = new Dictionary<MetadataToken, ValueSerializer>(200);
-        private static readonly Dictionary<Type, ValueSerializer> cacheValueSerializer = new Dictionary<Type, ValueSerializer>(200);
+        private static readonly Dictionary<MetadataToken, ElementSerializer> cachePropertyValueSerializer = new Dictionary<MetadataToken, ElementSerializer>(200);
+        private static readonly Dictionary<Type, ElementSerializer> cacheValueSerializer = new Dictionary<Type, ElementSerializer>(200);
         private static readonly Dictionary<Type, PropertyInfo[]> cacheTypeProperties = new Dictionary<Type, PropertyInfo[]>(200);
         private static readonly Dictionary<MetadataToken, bool> cacheIsXmlAttribute = new Dictionary<MetadataToken, bool>(200);
         private static readonly Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(200);
@@ -292,20 +292,20 @@ namespace DataWF.Common
             return converter;
         }
 
-        public static ValueSerializer GetValueSerializer(PropertyInfo property)
+        public static ElementSerializer GetSerializer(PropertyInfo property)
         {
             //return ValueSerializer.GetSerializerFor(property);
             var token = MetadataToken.GetToken(property, false);
             if (!cachePropertyValueSerializer.TryGetValue(token, out var serializer))
             {
-                var attribute = property.GetCustomAttribute<ValueSerializerAttribute>(false);
-                if (attribute != null && attribute.ValueSerializerType != null)
+                var attribute = property.GetCustomAttribute<ElementSerializerAttribute>(false);
+                if (attribute != null && attribute.SerializerType != null)
                 {
-                    serializer = (ValueSerializer)CreateObject(attribute.ValueSerializerType);
+                    serializer = (ElementSerializer)CreateObject(attribute.SerializerType);
                 }
                 else
                 {
-                    serializer = GetValueSerializer(property.PropertyType);
+                    serializer = GetSerializer(property.PropertyType);
                 }
 
                 return cachePropertyValueSerializer[token] = serializer;
@@ -313,59 +313,68 @@ namespace DataWF.Common
             return serializer;
         }
 
-        public static ValueSerializer SetValueSerializer(Type type, ValueSerializer serializer)
+        public static ElementSerializer SetSerializer(Type type, ElementSerializer serializer)
         {
             return cacheValueSerializer[type] = serializer;
         }
 
-        public static ValueSerializer GetValueSerializer(Type type)
+        public static ElementSerializer GetSerializer(Type type)
         {
             if (!cacheValueSerializer.TryGetValue(type, out var serializer))
             {
-                var attribute = type.GetCustomAttribute<ValueSerializerAttribute>(false);
+                type = CheckNullable(type);
+                var attribute = type.GetCustomAttribute<ElementSerializerAttribute>(false);
                 serializer = null;
-                if (attribute != null && attribute.ValueSerializerType != null)
-                {
-                    serializer = (ValueSerializer)CreateObject(attribute.ValueSerializerType);
-                }
+                if (attribute != null && attribute.SerializerType != null)
+                    serializer = (ElementSerializer)CreateObject(attribute.SerializerType);
                 else if (type == typeof(string))
-                {
-                    serializer = StringValueSerializer.Instance;
-                }
+                    serializer = StringSerializer.Instance;
                 else if (type == typeof(int))
-                {
-                    serializer = IntValueSerializer.Instance;
-                }
+                    serializer = Int32Serializer.Instance;
+                else if (type == typeof(bool))
+                    serializer = BoolSerializer.Instance;
+                else if (type == typeof(uint))
+                    serializer = UInt32Serializer.Instance;
+                else if (type == typeof(long))
+                    serializer = Int64Serializer.Instance;
+                else if (type == typeof(ulong))
+                    serializer = UInt64Serializer.Instance;
+                else if (type == typeof(short))
+                    serializer = Int16Serializer.Instance;
+                else if (type == typeof(ushort))
+                    serializer = UInt16Serializer.Instance;
+                else if (type == typeof(sbyte))
+                    serializer = Int8Serializer.Instance;
+                else if (type == typeof(byte))
+                    serializer = UInt8Serializer.Instance;
                 else if (type == typeof(double))
-                {
-                    serializer = DoubleValueSerializer.Instance;
-                }
+                    serializer = DoubleSerializer.Instance;
+                else if (type == typeof(float))
+                    serializer = FloatSerializer.Instance;
+                else if (type == typeof(decimal))
+                    serializer = DecimalSerializer.Instance;
+                else if (type == typeof(char))
+                    serializer = CharSerializer.Instance;
                 else if (type == typeof(DateTime))
-                {
-                    serializer = DateTimeValueSerializer.Instance;
-                }
+                    serializer = DateTimeSerializer.Instance;
                 else if (type == typeof(TimeSpan))
-                {
-                    serializer = TimeSpanValueSerializer.Instance;
-                }
+                    serializer = TimeSpanSerializer.Instance;
+                else if (type == typeof(byte[]))
+                    serializer = ByteArraySerializer.Instance;
+                else if (type == typeof(char[]))
+                    serializer = CharArraySerializer.Instance;
                 else if (type == typeof(Type))
-                {
-                    serializer = TypeValueSerializer.Instance;
-                }
+                    serializer = TypeSerializer.Instance;
                 else if (type == typeof(CultureInfo))
-                {
-                    serializer = CultureInfoValueSerializer.Instance;
-                }
+                    serializer = CultureInfoSerializer.Instance;
                 else if (type.IsEnum)
-                {
-                    serializer = (ValueSerializer)EmitInvoker.CreateObject(typeof(EnumValueSerializer<>).MakeGenericType(type));
-                }
+                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
                 else
                 {
                     var converter = GetTypeConverter(type);
                     if (converter != null)
                     {
-                        serializer = new TypeConverterValueSerializer { Converter = converter };
+                        serializer = new ValueSerializers { Converter = converter };
                     }
                 }
                 return cacheValueSerializer[type] = serializer;
@@ -403,7 +412,7 @@ namespace DataWF.Common
                 var attribute = info.GetCustomAttribute<XmlAttributeAttribute>(false);
                 if (attribute != null)
                     return cacheIsXmlAttribute[token] = true;
-                if (info is PropertyInfo propertyInfo && GetValueSerializer(propertyInfo) != null)
+                if (info is PropertyInfo propertyInfo && GetSerializer(propertyInfo) != null)
                     return cacheIsXmlAttribute[token] = true;
 
                 return cacheIsXmlAttribute[token] = IsSerializeAttribute(GetMemberType(info));
@@ -442,7 +451,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    var serializer = GetValueSerializer(type);
+                    var serializer = GetSerializer(type);
                     if (serializer != null)
                     {
                         flag = true;

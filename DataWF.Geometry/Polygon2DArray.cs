@@ -101,14 +101,19 @@ namespace DataWF.Geometry
             using (var stream = new MemoryStream(data))
             using (var reader = new BinaryReader(stream))
             {
-                Polygons.Clear();
-                Polygons.Capacity = reader.ReadInt32();
-                while (Polygons.Count < Polygons.Capacity)
-                {
-                    var polygon = new Polygon2D();
-                    polygon.Deserialize(reader);
-                    Polygons.Add(polygon);
-                }
+                Deserialize(reader);
+            }
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Polygons.Clear();
+            Polygons.Capacity = reader.ReadInt32();
+            while (Polygons.Count < Polygons.Capacity)
+            {
+                var polygon = new Polygon2D();
+                polygon.Deserialize(reader);
+                Polygons.Add(polygon);
             }
         }
 
@@ -117,14 +122,19 @@ namespace DataWF.Geometry
             using (var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write(Polygons.Count);
-                foreach (var polygon in Polygons)
-                {
-                    polygon.Serialize(writer);
-                }
-                writer.Flush();
+                Serialize(writer);
                 return stream.ToArray();
             }
+        }
+
+        public void Serialize(BinaryWriter writer)
+        {
+            writer.Write(Polygons.Count);
+            foreach (var polygon in Polygons)
+            {
+                polygon.Serialize(writer);
+            }
+            writer.Flush();
         }
 
         public override bool Equals(object obj)

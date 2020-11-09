@@ -21,7 +21,7 @@ namespace DataWF.Common
             IsAttribute = TypeHelper.IsSerializeAttribute(Type);
             if (IsAttribute)
             {
-                Serialazer = TypeHelper.GetValueSerializer(type);
+                Serialazer = TypeHelper.GetSerializer(type);
                 return;
             }
             if (!Type.IsInterface && !Type.IsAbstract)
@@ -96,7 +96,7 @@ namespace DataWF.Common
 
         public NamedList<PropertySerializationInfo> Properties { get; private set; }
 
-        public ValueSerializer Serialazer { get; }
+        public ElementSerializer Serialazer { get; }
 
         public PropertySerializationInfo GetProperty(string name)
         {
@@ -106,14 +106,14 @@ namespace DataWF.Common
         public string TextFormat(object value)
         {
             return Serialazer != null
-                ? Serialazer.ConvertToString(value, null)
+                ? Serialazer.ConvertToString(value)
                 : Helper.TextBinaryFormat(value);
         }
 
         public object TextParse(string value)
         {
             return Serialazer != null
-                ? Serialazer.ConvertFromString(value, null)
+                ? Serialazer.ConvertFromString(value)
                 : Helper.TextParse(value, Type);
         }
 

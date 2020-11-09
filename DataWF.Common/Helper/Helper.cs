@@ -933,56 +933,30 @@ namespace DataWF.Common
 
         public static object ReadBinary(BinaryReader reader)
         {
-            var typev = (BinaryTypeIndex)reader.ReadByte();
+            var typev = (BinaryToken)reader.ReadByte();
             object value = null;
             switch (typev)
             {
-                case BinaryTypeIndex.Boolean: value = reader.ReadBoolean(); break;
-                case BinaryTypeIndex.Byte: value = reader.ReadByte(); break;
-                case BinaryTypeIndex.SByte: value = reader.ReadSByte(); break;
-                case BinaryTypeIndex.Char: value = reader.ReadChar(); break;
-                case BinaryTypeIndex.Short: value = reader.ReadInt16(); break;
-                case BinaryTypeIndex.UShort: value = reader.ReadUInt16(); break;
-                case BinaryTypeIndex.Int: value = reader.ReadInt32(); break;
-                case BinaryTypeIndex.UInt: value = reader.ReadUInt32(); break;
-                case BinaryTypeIndex.Long: value = reader.ReadInt64(); break;
-                case BinaryTypeIndex.ULong: value = reader.ReadUInt64(); break;
-                case BinaryTypeIndex.Float: value = reader.ReadSingle(); break;
-                case BinaryTypeIndex.Double: value = reader.ReadDouble(); break;
-                case BinaryTypeIndex.Decimal: value = reader.ReadDecimal(); break;
-                case BinaryTypeIndex.DateTime:
-                    var l = reader.ReadInt64();
-                    try
-                    {
-                        value = DateTime.FromBinary(l);
-                    }
-                    catch (Exception ex)
-                    {
-                        OnException(ex);
-                    }
-                    break;
-                case BinaryTypeIndex.ByteArray:
-                    {
-                        int length = reader.ReadInt32();
-                        value = reader.ReadBytes(length);
-                    }
-                    break;
-                case BinaryTypeIndex.CharArray:
-                    {
-                        int length = reader.ReadInt32();
-                        value = reader.ReadChars(length);
-                    }
-                    break;
-                case BinaryTypeIndex.Null:
-                    value = DBNull.Value;
-                    break;
-                case BinaryTypeIndex.String:
-                    {
-                        var length = reader.ReadInt32();
-                        value = Encoding.UTF8.GetString(reader.ReadBytes(length));
-                    }
-                    break;
-                case BinaryTypeIndex.Array:
+                case BinaryToken.Boolean: value = BoolSerializer.Instance.FromBinary(reader); break;
+                case BinaryToken.UInt8: value = UInt8Serializer.Instance.FromBinary(reader); break;
+                case BinaryToken.Int8: value = Int8Serializer.Instance.FromBinary(reader); break;
+                case BinaryToken.Char: value = CharSerializer.Instance.FromBinary(reader); break;
+                case BinaryToken.Int16: value = Int16Serializer.Instance.FromBinary(reader); break;
+                case BinaryToken.UInt16: value = UInt16Serializer.Instance.FromBinary(reader); break;
+                case BinaryToken.Int32: value = Int32Serializer.Instance.FromBinary(reader); break;
+                case BinaryToken.UInt32: value = UInt32Serializer.Instance.FromBinary(reader); break;
+                case BinaryToken.Int64: value = Int64Serializer.Instance.FromBinary(reader); break;
+                case BinaryToken.UInt64: value = UInt64Serializer.Instance.FromBinary(reader); break;
+                case BinaryToken.Float: value = FloatSerializer.Instance.FromBinary(reader); break;
+                case BinaryToken.Double: value = DoubleSerializer.Instance.FromBinary(reader); break;
+                case BinaryToken.Decimal: value = DecimalSerializer.Instance.FromBinary(reader); break;
+                case BinaryToken.DateTime: value = DateTimeSerializer.Instance.FromBinary(reader); break;
+                case BinaryToken.TimeSpan: value = TimeSpanSerializer.Instance.FromBinary(reader); break;
+                case BinaryToken.ByteArray: value = ByteArraySerializer.Instance.FromBinary(reader); break;
+                case BinaryToken.CharArray: value = CharArraySerializer.Instance.FromBinary(reader); break;
+                case BinaryToken.Null: value = null; break;
+                case BinaryToken.String: value = StringSerializer.Instance.FromBinary(reader); break;
+                case BinaryToken.ArrayBegin:
                     {
                         var list = new List<object>();
                         var length = reader.ReadInt32();
@@ -1010,52 +984,8 @@ namespace DataWF.Common
         /// </param>
         public static object ReadBinary(BinaryReader reader, Type type)
         {
-            object val;
-
-            if (type == typeof(decimal))
-                val = reader.ReadDecimal();
-            else if (type == typeof(double))
-                val = reader.ReadDouble();
-            else if (type == typeof(float))
-                val = reader.ReadSingle();
-            else if (type == typeof(short))
-                val = reader.ReadInt16();
-            else if (type == typeof(ushort))
-                val = reader.ReadUInt16();
-            else if (type == typeof(int))
-                val = reader.ReadInt32();
-            else if (type == typeof(uint))
-                val = reader.ReadUInt32();
-            else if (type == typeof(long))
-                val = reader.ReadInt64();
-            else if (type == typeof(ulong))
-                val = reader.ReadUInt64();
-            else if (type == typeof(char))
-                val = reader.ReadChar();
-            else if (type == typeof(bool))
-                val = reader.ReadBoolean();
-            else if (type == typeof(sbyte))
-                val = reader.ReadSByte();
-            else if (type == typeof(byte))
-                val = reader.ReadByte();
-            else if (type == typeof(DateTime))
-                val = DateTime.FromBinary(reader.ReadInt64());
-            else if (type == typeof(byte[]))
-            {
-                int c = reader.ReadInt32();
-                val = reader.ReadBytes(c);
-            }
-            else if (type == typeof(char[]))
-            {
-                int c = reader.ReadInt32();
-                val = reader.ReadChars(c);
-            }
-            else
-            {
-                var length = reader.ReadInt32();
-                val = Encoding.UTF8.GetString(reader.ReadBytes(length));
-            }
-            return val;
+            var serializer = TypeHelper.GetSerializer(type);
+            return serializer.ConvertFromBinary(reader);
         }
 
         /// <summary>
@@ -1072,136 +1002,19 @@ namespace DataWF.Common
             WriteBinary(writer, value, false);
         }
 
-        public static void WriteBinary(BinaryWriter writer, object value, bool writetype)
+        public static void WriteBinary(BinaryWriter writer, object value, bool writeType)
         {
-            if (value == null)
-                return;
-            if (value == DBNull.Value)
+            if (value == null
+                || value == DBNull.Value)
             {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.Null);
+                if (writeType)
+                    writer.Write((byte)BinaryToken.Null);
                 //writer.Write((byte)0);
             }
-            else if (value is bool boolValue)
+            else
             {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.Boolean);
-                writer.Write(boolValue);
-            }
-            else if (value is byte byteValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.Byte);
-                writer.Write(byteValue);
-            }
-            else if (value is sbyte sbyteValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.SByte);
-                writer.Write(sbyteValue);
-            }
-            else if (value is char charValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.Char);
-                writer.Write(charValue);
-            }
-            else if (value is short shortValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.Short);
-                writer.Write(shortValue);
-            }
-            else if (value is ushort ushortValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.UShort);
-                writer.Write(ushortValue);
-            }
-            else if (value is int intValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.Int);
-                writer.Write(intValue);
-            }
-            else if (value is uint uintValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.UInt);
-                writer.Write(uintValue);
-            }
-            else if (value is long longValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.Long);
-                writer.Write(longValue);
-            }
-            else if (value is ulong ulongValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.ULong);
-                writer.Write(ulongValue);
-            }
-            else if (value is float floatValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.Float);
-                writer.Write(floatValue);
-            }
-            else if (value is double doubleValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.Double);
-                writer.Write(doubleValue);
-            }
-            else if (value is decimal decimalValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.Decimal);
-                writer.Write(decimalValue);
-            }
-            else if (value is DateTime dateTimeValue)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.DateTime);
-                writer.Write(dateTimeValue.ToBinary());
-            }
-            else if (value is byte[] byteArray)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.ByteArray);
-
-                int len = byteArray.Length;
-                writer.Write(len);
-                writer.Write(byteArray, 0, len);
-            }
-            else if (value is char[] charArray)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.CharArray);
-
-                int len = (charArray).Length;
-                writer.Write(len);
-                writer.Write(charArray, 0, len);
-            }
-            else if (value is string str)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.String);
-                var buffer = Encoding.UTF8.GetBytes(str);
-                writer.Write(buffer.Length);
-                writer.Write(buffer);
-            }
-            else if (value is IList array)
-            {
-                if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.Array);
-
-                writer.Write(array.Count);
-                foreach (var item in array)
-                {
-                    WriteBinary(writer, item, writetype);
-                }
+                var serializer = TypeHelper.GetSerializer(value.GetType());
+                serializer.ConvertToBinary(value, writer, writeType);
             }
         }
 
@@ -1327,9 +1140,9 @@ namespace DataWF.Common
             }
             else
             {
-                var valueSerialize = TypeHelper.GetValueSerializer(value.GetType());
-                if (valueSerialize != null)
-                    result = valueSerialize.ConvertToString(value, null);
+                var serializer = TypeHelper.GetSerializer(value.GetType());
+                if (serializer != null)
+                    result = serializer.ConvertToString(value);
                 else
                 {
                     var typeConverter = TypeHelper.GetTypeConverter(value.GetType());
@@ -1528,7 +1341,7 @@ namespace DataWF.Common
                 else
                 {
                     string s = value.Replace(",", ".").Replace(" ", "").Replace(" ", "").Replace("%", "");
-                    decimal.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture.NumberFormat, out var d);
+                    decimal.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out var d);
                     result = format?.Equals("p", StringComparison.OrdinalIgnoreCase) ?? false ? d / 100 : d;
                 }
             }
@@ -1568,9 +1381,9 @@ namespace DataWF.Common
                 result = new CompareType(CompareType.Parse(value));
             else
             {
-                var valueSerialize = TypeHelper.GetValueSerializer(type);
+                var valueSerialize = TypeHelper.GetSerializer(type);
                 if (valueSerialize != null)
-                    result = valueSerialize.ConvertFromString(value, null);
+                    result = valueSerialize.ConvertFromString(value);
                 else
                 {
                     var typeConverter = TypeHelper.GetTypeConverter(type);

@@ -100,14 +100,19 @@ namespace DataWF.Geometry
             using (var stream = new MemoryStream(data))
             using (var reader = new BinaryReader(stream))
             {
-                Points.Clear();
-                Points.Capacity = reader.ReadInt32();
-                while (Points.Count < Points.Capacity)
-                {
-                    var point = new Point3D();
-                    point.Deserialize(reader);
-                    Points.Add(point);
-                }
+                Deserialize(reader);
+            }
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Points.Clear();
+            Points.Capacity = reader.ReadInt32();
+            while (Points.Count < Points.Capacity)
+            {
+                var point = new Point3D();
+                point.Deserialize(reader);
+                Points.Add(point);
             }
         }
 
@@ -116,14 +121,19 @@ namespace DataWF.Geometry
             using (var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write(Points.Count);
-                foreach (var point in Points)
-                {
-                    point.Serialize(writer);
-                }
-                writer.Flush();
+                Serialize(writer);
                 return stream.ToArray();
             }
+        }
+
+        public void Serialize(BinaryWriter writer)
+        {
+            writer.Write(Points.Count);
+            foreach (var point in Points)
+            {
+                point.Serialize(writer);
+            }
+            writer.Flush();
         }
 
         public override bool Equals(object obj)

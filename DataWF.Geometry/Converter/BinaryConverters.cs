@@ -17,55 +17,41 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF.Common;
+using Portable.Xaml.Markup;
 using System;
-using System.ComponentModel;
 
-namespace DataWF.Data
+namespace DataWF.Geometry
 {
-    [AttributeUsage(AttributeTargets.Property)]
-    public class ColumnAttribute : Attribute
+    public class Point2DSerializer : BytesSerializer<Point2D>
     {
-        public ColumnAttribute()
-        { }
-
-        public ColumnAttribute(string name, int size = 0, short scale = 0)
+        public override Point2D FromString(string value)
         {
-            ColumnName = name;
-            Size = size;
-            Scale = scale;
+            return Point2D.TryParse(value, out var point) ? point : Point2D.Empty;
         }
+    }
 
-        public int Order { get; set; } = -1;
-
-        public string ColumnName { get; set; }
-
-        public string GroupName { get; set; }
-
-        [DefaultValue(DBColumnTypes.Default)]
-        public DBColumnTypes ColumnType { get; set; }
-
-        [DefaultValue((int)0)]
-        public int Size { get; set; }
-
-        [DefaultValue((short)0)]
-        public short Scale { get; set; }
-
-        public DBColumnKeys Keys { get; set; }
-
-        public DBDataType DBDataType { get; set; }
-
-        public Type DataType { get; set; }
-
-        public ColumnAttribute Clone()
+    public class Point3DSerializer : BytesSerializer<Point3D>
+    {
+        public override Point3D FromString(string value)
         {
-            return new ColumnAttribute(ColumnName, Size, Scale)
-            {
-                GroupName = GroupName,
-                ColumnType = ColumnType,
-                DBDataType = DBDataType,
-                DataType = DataType,
-                Keys = Keys
-            };
+            return Point3D.TryParse(value, out var point) ? point : Point3D.Empty;
+        }
+    }
+
+    public class Rectangle2DSerializer : BytesSerializer<Rectangle2D>
+    {
+        public override Rectangle2D FromString(string value)
+        {
+            return Rectangle2D.TryParse(value, out var rect) ? rect : Rectangle2D.Empty;
+        }
+    }
+
+    public class Rectangle3DSerializer : BytesSerializer<Rectangle3D>
+    {
+        public override Rectangle3D FromString(string value)
+        {
+            return Rectangle3D.TryParse(value, out var rect) ? rect : Rectangle3D.Empty;
         }
     }
 }

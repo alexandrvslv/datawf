@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -110,6 +111,18 @@ namespace DataWF.Common
         public virtual void ReadValue(ref Utf8JsonReader reader, object item, JsonSerializerOptions option)
         {
             var value = JsonSerializer.Deserialize<V>(ref reader, option);
+            SetValue((T)item, value);
+        }
+
+        public virtual void WriteValue(BinaryInvokerWriter writer, object item)
+        {
+            var value = GetValue((T)item);
+            BinarySerializer.Serialize<V>(writer, value);
+        }
+
+        public virtual void ReadValue(BinaryInvokerReader reader, object item)
+        {
+            var value = BinarySerializer.Deserialize<V>(reader, default(V));
             SetValue((T)item, value);
         }
     }

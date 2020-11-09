@@ -8,7 +8,7 @@ namespace DataWF.Common
 
     public class Serialization
     {
-        public static Serializer Instance = new Serializer();
+        public static XMLTextSerializer Instance = new XMLTextSerializer();
 
         public static object Deserialize(Stream stream, object element = null)
         {
