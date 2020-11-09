@@ -277,7 +277,7 @@ namespace DataWF.Common
             return CreateObject(type, Type.EmptyTypes, null, cache);
         }
 
-        public static object CreateObject(Type type, Type[] ctypes, object[] cparams, bool cache)
+        public static object CreateObject(Type type, Type[] ctypes, object[] cparams, bool cache = true)
         {
             if (type == null)
                 return null;

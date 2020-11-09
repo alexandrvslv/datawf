@@ -6,8 +6,13 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class ValueSerializers<T> : ElementSerializer<T>
+    public class TypeConverterSerializers<T> : ElementSerializer<T>
     {
+        public TypeConverterSerializers(TypeConverter converter)
+        {
+            Converter = converter;
+        }
+
         public TypeConverter Converter { get; set; }
 
         public override object ConvertFromBinary(BinaryReader reader) => ConvertFromString(StringSerializer.Instance.FromBinary(reader));

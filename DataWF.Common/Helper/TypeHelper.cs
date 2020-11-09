@@ -374,7 +374,7 @@ namespace DataWF.Common
                     var converter = GetTypeConverter(type);
                     if (converter != null)
                     {
-                        serializer = new ValueSerializers { Converter = converter };
+                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(TypeConverterSerializers<>).MakeGenericType(type), new Type[] { typeof(TypeConverter) }, new object[] { converter }, true);
                     }
                 }
                 return cacheValueSerializer[type] = serializer;
