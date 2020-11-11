@@ -56,6 +56,7 @@ namespace DataWF.Common
         SchemaBegin = 28,
         SchemaEntry = 29,
         SchemaEnd = 30,
+        Eof = 31,
     }
 
 

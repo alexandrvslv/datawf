@@ -41,16 +41,6 @@ namespace DataWF.Common
             return null;
         }
 
-        public object ReadAttribute(string name, Type type)
-        {
-            return Helper.TextParse(Reader.GetAttribute(name), type);
-        }
-
-        public T ReadAttribute<T>(string name)
-        {
-            return (T)ReadAttribute(name, typeof(T));
-        }
-
         public void ReadAttributes(object element)
         {
             ReadAttributes(element, GetTypeInfo(element.GetType()));
@@ -58,13 +48,6 @@ namespace DataWF.Common
 
         public void ReadAttributes(object element, TypeSerializationInfo info)
         {
-            //foreach (var attribute in info.Attributes)
-            //{
-            //    if (attribute.DefaultSpecified && attribute.Default != null)
-            //    {
-            //        attribute.Invoker.Set(element, attribute.Default);
-            //    }
-            //}
             if (Reader.HasAttributes)
             {
                 while (Reader.MoveToNextAttribute())
@@ -76,17 +59,24 @@ namespace DataWF.Common
             }
         }
 
-        public void ReadCurrentAttribute(object element)
-        {
-            ReadCurrentAttribute(element, GetTypeInfo(element.GetType()));
-        }
-
         public void ReadCurrentAttribute(object element, TypeSerializationInfo info)
         {
             var member = info.GetProperty(Reader.Name);
             if (member != null && !member.IsReadOnly)
             {
-                member.Invoker.SetValue(element, member.TextParse(Reader.Value));
+                ToProperty(Reader.Value, element, member);
+            }
+        }
+
+        private void ToProperty(string value, object element, PropertySerializationInfo member)
+        {
+            if (member.Serialazer != null)
+            {
+                member.Serialazer.ToProperty(value, element, member.Invoker);
+            }
+            else
+            {
+                member.Invoker.SetValue(element, member.TextParse(value));
             }
         }
 
@@ -104,18 +94,16 @@ namespace DataWF.Common
                 object value;
                 if (member.IsText || member.IsAttribute)
                 {
-                    var text = Reader.ReadElementContentAsString();
-                    value = mtype == null || mtype == member.DataType
-                        ? member.TextParse(text) : Helper.TextParse(text, member.DataType);
+                    ToProperty(Reader.ReadElementContentAsString(), element, member);
                 }
                 else
                 {
                     var mInfo = GetTypeInfo(mtype ?? member.DataType);
                     value = Read(member.Invoker.GetValue(element), mInfo);
-                }
-                if (!member.IsReadOnly)
-                {
-                    member.Invoker.SetValue(element, value);
+                    if (!member.IsReadOnly)
+                    {
+                        member.Invoker.SetValue(element, value);
+                    }
                 }
             }
             else

@@ -25,13 +25,13 @@ namespace DataWF.Common
         public static void Serialize(object element, string file)
         {
             OnNotify(element, SerializeType.Save, file);
-            Instance.Serialize(element, file);
+            Instance.Serialize(file, element);
         }
 
         public static void Serialize(object element, Stream stream)
         {
             OnNotify(element, SerializeType.Save, stream.ToString());
-            Instance.Serialize(element, stream);
+            Instance.Serialize(stream, element);
         }
 
         public static event EventHandler<SerializationNotifyEventArgs> Notify;

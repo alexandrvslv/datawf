@@ -97,6 +97,7 @@ namespace DataWF.Common
         public NamedList<PropertySerializationInfo> Properties { get; private set; }
 
         public ElementSerializer Serialazer { get; }
+        public string ShortName { get; internal set; } = "e";
 
         public PropertySerializationInfo GetProperty(string name)
         {

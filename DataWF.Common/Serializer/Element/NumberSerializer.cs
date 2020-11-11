@@ -6,7 +6,7 @@ using System.IO;
 namespace DataWF.Common
 {
 
-    public class DoubleSerializer : ElementSerializer<double>
+    public class DoubleSerializer : StructSerializer<double>
     {
         public static readonly DoubleSerializer Instance = new DoubleSerializer();
 
@@ -35,7 +35,7 @@ namespace DataWF.Common
     }
 
 
-    public class FloatSerializer : ElementSerializer<float>
+    public class FloatSerializer : StructSerializer<float>
     {
         public static readonly FloatSerializer Instance = new FloatSerializer();
 
@@ -63,7 +63,7 @@ namespace DataWF.Common
         public override string ToString(float value) => value.ToString(CultureInfo.InvariantCulture);
     }
 
-    public class DecimalSerializer : ElementSerializer<decimal>
+    public class DecimalSerializer : StructSerializer<decimal>
     {
         public static readonly DecimalSerializer Instance = new DecimalSerializer();
 

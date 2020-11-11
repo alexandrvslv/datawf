@@ -138,10 +138,6 @@ namespace DataWF.Common
 
         public object Deserialize(Stream stream, object element = null)
         {
-            if (stream.CanSeek && stream.Position != 0)
-            {
-                stream.Position = 0;
-            }
             using (var reader = GetReader(stream))
             {
                 element = Deserialize(reader, element);

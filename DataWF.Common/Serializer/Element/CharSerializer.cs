@@ -3,7 +3,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class CharSerializer : ElementSerializer<char>
+    public class CharSerializer : StructSerializer<char>
     {
         public static readonly UInt8Serializer Instance = new UInt8Serializer();
 

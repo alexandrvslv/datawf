@@ -5,7 +5,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class TimeSpanSerializer : ElementSerializer<TimeSpan>
+    public class TimeSpanSerializer : StructSerializer<TimeSpan>
     {
         public static readonly TimeSpanSerializer Instance = new TimeSpanSerializer();
 
@@ -30,6 +30,6 @@ namespace DataWF.Common
             writer.Write(value.Ticks);
         }
 
-        public override string ToString(TimeSpan value) => value.ToString(CultureInfo.InvariantCulture);
+        public override string ToString(TimeSpan value) => value.ToString();
     }
 }

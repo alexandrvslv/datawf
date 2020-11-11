@@ -9,7 +9,7 @@ namespace DataWF.Common
 
         public override object ConvertFromString(string value) => FromString(value);
 
-        public override string ConvertToString(object value) => value.ToString();
+        public override string ConvertToString(object value) => ToString((byte[])value);
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 

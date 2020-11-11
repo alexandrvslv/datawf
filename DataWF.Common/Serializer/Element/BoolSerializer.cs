@@ -3,7 +3,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class BoolSerializer : ElementSerializer<bool>
+    public class BoolSerializer : StructSerializer<bool>
     {
         public static readonly BoolSerializer Instance = new BoolSerializer();
 

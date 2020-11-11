@@ -5,7 +5,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class Int32Serializer : ElementSerializer<int>
+    public class Int32Serializer : StructSerializer<int>
     {
         public static readonly Int32Serializer Instance = new Int32Serializer();
 
@@ -34,7 +34,7 @@ namespace DataWF.Common
     }
 
 
-    public class UInt32Serializer : ElementSerializer<uint>
+    public class UInt32Serializer : StructSerializer<uint>
     {
         public static readonly UInt32Serializer Instance = new UInt32Serializer();
 
@@ -64,7 +64,7 @@ namespace DataWF.Common
 
     }
 
-    public class Int64Serializer : ElementSerializer<long>
+    public class Int64Serializer : StructSerializer<long>
     {
         public static readonly Int64Serializer Instance = new Int64Serializer();
 
@@ -94,7 +94,7 @@ namespace DataWF.Common
 
     }
 
-    public class UInt64Serializer : ElementSerializer<ulong>
+    public class UInt64Serializer : StructSerializer<ulong>
     {
         public static readonly UInt64Serializer Instance = new UInt64Serializer();
 
@@ -124,7 +124,7 @@ namespace DataWF.Common
 
     }
 
-    public class Int16Serializer : ElementSerializer<short>
+    public class Int16Serializer : StructSerializer<short>
     {
         public static readonly Int16Serializer Instance = new Int16Serializer();
 
@@ -154,7 +154,7 @@ namespace DataWF.Common
 
     }
 
-    public class UInt16Serializer : ElementSerializer<ushort>
+    public class UInt16Serializer : StructSerializer<ushort>
     {
         public static readonly UInt16Serializer Instance = new UInt16Serializer();
 
@@ -184,7 +184,7 @@ namespace DataWF.Common
 
     }
 
-    public class Int8Serializer : ElementSerializer<sbyte>
+    public class Int8Serializer : StructSerializer<sbyte>
     {
         public static readonly Int8Serializer Instance = new Int8Serializer();
 
@@ -214,7 +214,7 @@ namespace DataWF.Common
 
     }
 
-    public class UInt8Serializer : ElementSerializer<byte>
+    public class UInt8Serializer : StructSerializer<byte>
     {
         public static readonly UInt8Serializer Instance = new UInt8Serializer();
 

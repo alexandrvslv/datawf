@@ -6,7 +6,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class DateTimeSerializer : ElementSerializer<DateTime>
+    public class DateTimeSerializer : StructSerializer<DateTime>
     {
         public static readonly DateTimeSerializer Instance = new DateTimeSerializer();
 

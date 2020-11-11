@@ -56,7 +56,7 @@ namespace DataWF.Common
         {
             Type type = element.GetType();
             var typeInfo = Serializer.GetTypeInfo(type);
-            Write(element, typeInfo, type.Name, true);
+            Write(element, typeInfo, typeInfo.ShortName, true);
         }
 
         public void Write(object element, string name, bool writeType)
@@ -92,20 +92,36 @@ namespace DataWF.Common
                 {
                     if (((IList)element).Count > 0)
                     {
-                        WriteAttribute("Count", ((IList)element).Count);
+                        Writer.WriteAttributeString("Count", Int32Serializer.Instance.ToString(((IList)element).Count));
                     }
                     if (info.ListDefaulType)
                     {
-                        WriteAttribute("DT", info.ListDefaulType);
+                        Writer.WriteAttributeString("DT", BoolSerializer.Instance.ToString(info.ListDefaulType));
                     }
                 }
 
                 foreach (var attribute in info.GetAttributes())
                 {
-                    var value = attribute.Invoker.GetValue(element);
-                    if (value == null || attribute.CheckDefault(value) || attribute.IsReadOnly || !attribute.IsWriteable)
+                    if (attribute.IsReadOnly || !attribute.IsWriteable)
+                    {
                         continue;
-                    WriteAttribute(attribute, value);
+                    }
+                    if (attribute.Default != null)
+                    {
+                        var value = attribute.Invoker.GetValue(element);
+                        if (value == null || attribute.CheckDefault(value))
+                            continue;
+
+                        Writer.WriteAttributeString(attribute.Name, attribute.Serialazer.ConvertToString(value));
+                    }
+                    else
+                    {
+                        var value = attribute.Serialazer.FromProperty(element, attribute.Invoker);
+                        if (value != null)
+                        {
+                            Writer.WriteAttributeString(attribute.Name, value);
+                        }
+                    }
                 }
 
                 foreach (var property in info.GetContents())
@@ -142,11 +158,6 @@ namespace DataWF.Common
             WriteEnd();
         }
 
-        public void WriteType(Type type)
-        {
-            WriteType(Serializer.GetTypeInfo(type));
-        }
-
         public void WriteType(TypeSerializationInfo info)
         {
             Writer.WriteComment(info.TypeName);
@@ -155,16 +166,6 @@ namespace DataWF.Common
         public void WriteBegin(string name)
         {
             Writer.WriteStartElement(name);
-        }
-
-        public void WriteAttribute(PropertySerializationInfo property, object value)
-        {
-            Writer.WriteAttributeString(property.Name, property.TextFormat(value));
-        }
-
-        public void WriteAttribute(string name, object value)
-        {
-            Writer.WriteAttributeString(name, Helper.TextBinaryFormat(value));
         }
 
         public void WriteEnd()
