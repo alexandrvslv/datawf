@@ -20,16 +20,49 @@
 using DataWF.Common;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
     public class NotifyService : UdpServer
     {
+        public static List<NotifyDBTable> Dequeu(ConcurrentQueue<NotifyDBItem> buffer)
+        {
+            var length = buffer.Count > 200 ? 200 : buffer.Count;
+            var map = new Dictionary<Type, NotifyDBTable>();
+
+            for (int i = 0; i < length; i++)
+            {
+                if (buffer.TryDequeue(out var item))
+                {
+                    var itemType = item.Value.GetType();
+                    if (!map.TryGetValue(itemType, out var typeTable))
+                    {
+                        map[itemType] = new NotifyDBTable { Type = itemType, Table = item.Value.Table };
+                    }
+                    if (!typeTable.Items.Any(p => p.Id.Equals(item.Id)))
+                    {
+                        typeTable.Items.Add(item);
+                    }
+                }
+            }
+            var list = map.Values.ToList();
+            list.Sort();
+            foreach (var table in list)
+            {
+                table.Items.Sort();
+            }
+
+            return list;
+        }
+
         public static void Intergate(Action<EndPointMessage> onLoad)
         {
             var service = new NotifyService();
@@ -42,7 +75,7 @@ namespace DataWF.Data
         private static readonly object loadLock = new object();
 
         private IInstance instance;
-        private readonly ConcurrentQueue<NotifyMessageItem> buffer = new ConcurrentQueue<NotifyMessageItem>();
+        private readonly ConcurrentQueue<NotifyDBItem> buffer = new ConcurrentQueue<NotifyDBItem>();
         private readonly ManualResetEventSlim runEvent = new ManualResetEventSlim(false);
         private const int timer = 2000;
 
@@ -74,7 +107,7 @@ namespace DataWF.Data
             byte[] temp = instance.EndPoint.GetBytes();
             Send(temp, null, SocketMessageType.Login, true);
 
-            DBService.RowAccept = OnCommit;
+            DBService.AddRowAccept(OnAccept);
             runEvent.Reset();
             new Task(SendChangesRunner, TaskCreationOptions.LongRunning).Start();
         }
@@ -84,7 +117,7 @@ namespace DataWF.Data
             if (instance == null)
                 return;
             runEvent.Set();
-            DBService.RowAccept = null;
+            DBService.RemoveRowAccept(OnAccept);
             Send(null, null, SocketMessageType.Logout);
             StopListener();
             instance.Delete();
@@ -92,7 +125,7 @@ namespace DataWF.Data
             instance = null;
         }
 
-        public void Send(NotifyMessageItem[] items, IInstance address = null)
+        public void Send(List<NotifyDBTable> items, IInstance address = null)
         {
             var buffer = (byte[])null;
 
@@ -113,6 +146,7 @@ namespace DataWF.Data
                     Send(buffer, item.EndPoint, item);
                 }
             }
+            SendChanges?.Invoke(this, new NotifyEventArgs(items));
         }
 
         public void Send(byte[] data, IInstance address = null, SocketMessageType type = SocketMessageType.Data, bool checkState = false)
@@ -171,7 +205,7 @@ namespace DataWF.Data
                 && !IPAddress.Loopback.Equals(item.EndPoint.Address);
         }
 
-        private void OnCommit(DBItemEventArgs arg)
+        private ValueTask OnAccept(DBItemEventArgs arg)
         {
             var item = arg.Item;
 
@@ -180,14 +214,15 @@ namespace DataWF.Data
                 var type = (arg.State & DBUpdateState.Delete) == DBUpdateState.Delete ? DBLogType.Delete
                     : (arg.State & DBUpdateState.Insert) == DBUpdateState.Insert ? DBLogType.Insert
                     : DBLogType.Update;
-                buffer.Enqueue(new NotifyMessageItem()
+                buffer.Enqueue(new NotifyDBItem()
                 {
-                    Table = item.Table,
-                    ItemId = item.PrimaryId,
-                    Type = type,
-                    UserId = arg.User?.Id ?? 0
+                    Value = item,
+                    Id = item.PrimaryId,
+                    Diff = type,
+                    User = arg.User?.Id ?? 0
                 });
             }
+            return default;
         }
 
         protected override void OnDataLoad(UdpServerEventArgs arg)
@@ -238,27 +273,9 @@ namespace DataWF.Data
                 {
                     if (buffer.Count == 0)
                         continue;
+                    List<NotifyDBTable> list = Dequeu(buffer);
 
-                    var list = new NotifyMessageItem[buffer.Count > 200 ? 200 : buffer.Count];
-
-                    for (int i = 0; i < list.Length; i++)
-                    {
-                        if (buffer.TryDequeue(out var item))
-                        {
-                            list[i] = item;
-                        }
-                    }
-
-                    Array.Sort(list, (x, y) =>
-                    {
-                        var res = x.Table.CompareTo(y.Table);
-                        //res = res != 0 ? res : string.Compare(x.Item.GetType().Name, y.Item.GetType().Name, StringComparison.Ordinal);
-                        res = res != 0 ? res : ListHelper.Compare(x.ItemId, y.ItemId, null);
-                        return res != 0 ? res : x.Type.CompareTo(y.Type);
-                    });
-
-
-                    OnSendChanges(list);
+                    Send(list);
                 }
                 catch (Exception e)
                 {
@@ -267,46 +284,23 @@ namespace DataWF.Data
             }
         }
 
-        protected virtual void OnSendChanges(NotifyMessageItem[] list)
-        {
-            Send(list);
-            SendChanges?.Invoke(this, new NotifyEventArgs(list));
-        }
-
-        private static byte[] Serialize(NotifyMessageItem[] list)
+        private static byte[] Serialize(List<NotifyDBTable> list)
         {
             using (var stream = new MemoryStream())
+            using (var writer = new BinaryInvokerWriter(stream))
             {
-                Serialize(list, stream);
-                return stream.ToArray();
-            }
-        }
+                writer.WriteObjectBegin();
+                writer.WriteArrayBegin();
 
-        private static void Serialize(NotifyMessageItem[] list, MemoryStream stream)
-        {
-            using (var writer = new BinaryWriter(stream))
-            {
-                DBTable table = null;
-                object id = null;
-                foreach (var log in list)
+                foreach (var item in list)
                 {
-                    if (log.Table != table)
-                    {
-                        id = null;
-                        table = log.Table;
-                        writer.Write((char)1);
-                        writer.Write(table.Name);
-                    }
-                    if (!log.ItemId.Equals(id))
-                    {
-                        id = log.ItemId;
-                        writer.Write((char)2);
-                        writer.Write((int)log.Type);
-                        writer.Write((int)log.UserId);
-                        Helper.WriteBinary(writer, id, true);
-                    }
+                    writer.WriteArrayEntry();
                 }
+
+                writer.WriteArrayEnd();
+                writer.WriteObjectEnd();
                 writer.Flush();
+                return stream.ToArray();
             }
         }
 
@@ -316,44 +310,44 @@ namespace DataWF.Data
             {
                 using (var transaction = new DBTransaction(DBService.Schems.DefaultSchema.Connection, null, true))
                 {
-                    var stream = new MemoryStream(buffer);
-                    using (var reader = new BinaryReader(stream))
+                    using (var stream = new MemoryStream(buffer))
+                    using (var reader = new BinaryInvokerReader(stream))
                     {
-                        while (reader.PeekChar() == 1)
+                        reader.ReadToken();
+                        reader.ReadToken();
+                        while (reader.ReadToken() == BinaryToken.ArrayEntry)
                         {
-                            reader.ReadChar();
-                            var tableName = reader.ReadString();
-                            DBTable table = DBService.Schems.ParseTable(tableName);
-                            if (table == null)
+                            var typeTable = new NotifyDBTable();
+                            typeTable.Deserialize(reader);
+                            if (typeTable.Type == null)
                             {
                                 continue;
                             }
-
-                            while (reader.PeekChar() == 2)
+                            foreach (var item in typeTable.Items)
                             {
-                                reader.ReadChar();
-                                var type = (DBLogType)reader.ReadInt32();
-                                var user = reader.ReadInt32();
-                                var id = Helper.ReadBinary(reader);
-                                if (type == DBLogType.Insert)
+                                switch (item.Diff)
                                 {
-                                    table.LoadItemById(id, DBLoadParam.Load, null, transaction);
-                                }
-                                else if (type == DBLogType.Update)
-                                {
-                                    var item = table.LoadItemById(id, DBLoadParam.None);
-                                    if (item != null)
-                                    {
-                                        table.ReloadItem(id, DBLoadParam.Load, transaction);
-                                    }
-                                }
-                                else if (type == DBLogType.Delete)
-                                {
-                                    var item = table.LoadItemById(id, DBLoadParam.None);
-                                    if (item != null)
-                                    {
-                                        item.Table.Remove(item);
-                                    }
+                                    case DBLogType.Insert:
+                                        typeTable.Table.LoadItemById(item.Id, DBLoadParam.Load, null, transaction);
+                                        break;
+                                    case DBLogType.Update:
+                                        {
+                                            var record = typeTable.Table.LoadItemById(item.Id, DBLoadParam.None);
+                                            if (record != null)
+                                            {
+                                                typeTable.Table.ReloadItem(item.Id, DBLoadParam.Load, transaction);
+                                            }
+                                            break;
+                                        }
+                                    case DBLogType.Delete:
+                                        {
+                                            var record = typeTable.Table.LoadItemById(item.Id, DBLoadParam.None);
+                                            if (item != null)
+                                            {
+                                                typeTable.Table.Remove(record);
+                                            }
+                                            break;
+                                        }
                                 }
                             }
                         }
@@ -363,21 +357,150 @@ namespace DataWF.Data
         }
     }
 
-    public class NotifyMessageItem
+    public class NotifyDBTable : IByteSerializable, IComparable<NotifyDBTable>
     {
-        public DBTable Table;
-        public object ItemId;
-        public DBLogType Type;
-        public int UserId;
+        private DBTable table;
+
+        [XmlIgnore, JsonIgnore]
+        public DBTable Table
+        {
+            get => table ?? (table = DBTable.GetTable(Type));
+            set => table = value;
+        }
+
+        public Type Type { get; set; }
+
+        public List<NotifyDBItem> Items { get; set; } = new List<NotifyDBItem>();
+
+        public int CompareTo(NotifyDBTable other)
+        {
+            return Table.CompareTo(other.Table);
+        }
+
+        public void Deserialize(byte[] buffer)
+        {
+            using (var stream = new MemoryStream(buffer))
+            using (var reader = new BinaryReader(stream))
+            {
+                Deserialize(reader);
+            }
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            using (var invokerReader = new BinaryInvokerReader(reader))
+            {
+                Deserialize(invokerReader);
+            }
+        }
+
+        public void Deserialize(BinaryInvokerReader invokerReader)
+        {
+            invokerReader.ReadToken();
+            invokerReader.ReadToken();
+            var name = invokerReader.ReadString();
+            Type = TypeHelper.ParseType(name);
+            invokerReader.ReadToken();
+            invokerReader.ReadToken();
+            while (invokerReader.ReadToken() == BinaryToken.ArrayEntry)
+            {
+                var item = new NotifyDBItem();
+                item.Deserialize(invokerReader.Reader);
+                Items.Add(item);
+            }
+        }
+
+        public byte[] Serialize()
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new BinaryWriter(stream))
+            {
+                Serialize(writer);
+                return stream.ToArray();
+            }
+        }
+
+        public void Serialize(BinaryWriter writer)
+        {
+            using (var invokerWriter = new BinaryInvokerWriter(writer))
+            {
+                Serialize(invokerWriter);
+            }
+        }
+
+        public void Serialize(BinaryInvokerWriter invokerWriter)
+        {
+            invokerWriter.WriteObjectBegin();
+            invokerWriter.WriteObjectEntry();
+            invokerWriter.WriteString(TypeHelper.FormatBinary(Type), false);
+            invokerWriter.WriteObjectEntry();
+            invokerWriter.WriteArrayBegin();
+            foreach (var item in Items)
+            {
+                invokerWriter.WriteArrayEntry();
+                item.Serialize(invokerWriter.Writer);
+            }
+            invokerWriter.WriteArrayEnd();
+            invokerWriter.WriteObjectEnd();
+        }
+    }
+
+    public class NotifyDBItem : IByteSerializable, IComparable<NotifyDBItem>
+    {
+        public DBLogType Diff { get; set; }
+        public int User { get; set; }
+        public object Id { get; set; }
+
+        [XmlIgnore, JsonIgnore]
+        public DBItem Value { get; set; }
+
+        public int CompareTo(NotifyDBItem other)
+        {
+            var res = ListHelper.Compare(Id, other.Id, null);
+            return res != 0 ? res : Diff.CompareTo(Diff);
+        }
+
+        public void Deserialize(byte[] buffer)
+        {
+            using (var stream = new MemoryStream(buffer))
+            using (var reader = new BinaryReader(stream))
+            {
+                Deserialize(reader);
+            }
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Diff = (DBLogType)reader.ReadByte();
+            User = reader.ReadInt32();
+            Id = Helper.ReadBinary(reader);
+        }
+
+        public byte[] Serialize()
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new BinaryWriter(stream))
+            {
+                Serialize(writer);
+                return stream.ToArray();
+            }
+        }
+
+        public void Serialize(BinaryWriter writer)
+        {
+            writer.Write((byte)Diff);
+            writer.Write((int)User);
+            Helper.WriteBinary(writer, Id, true);
+        }
     }
 
     public class NotifyEventArgs : EventArgs
     {
-        public NotifyEventArgs(NotifyMessageItem[] data)
+        public NotifyEventArgs(List<NotifyDBTable> data)
         {
             Data = data;
         }
 
-        public NotifyMessageItem[] Data { get; }
+        public List<NotifyDBTable> Data { get; }
     }
 }

@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -81,73 +82,100 @@ namespace DataWF.Data
 
         public static event EventHandler<DBSchemaChangedArgs> DBSchemaChanged;
 
-        //public static event DBItemEditEventHandler RowAdded;
+        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> rowAcceptHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
+        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> rowRejectHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
+        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> rowUpdateHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
+        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> rowLoginingHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
+        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> rowUpdatingHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
 
-        //internal static void OnAdded(DBItem e)
-        //{
-        //    RowAdded?.Invoke(new DBItemEventArgs(e) { State = DBUpdateState.Insert });
-        //}
+        public static void AddRowUpdating(Func<DBItemEventArgs, ValueTask> function)
+        {
+            rowUpdatingHandler.Add(function);
+        }
 
-        //public static event DBItemEditEventHandler RowRemoved;
-
-        //internal static void OnRemoved(DBItem e)
-        //{
-        //    RowRemoved?.Invoke(new DBItemEventArgs(e) { State = DBUpdateState.Delete });
-        //}
-
-        //public static event DBItemEditEventHandler RowEditing;
-
-        //internal static void OnEditing(DBItemEventArgs e)
-        //{
-        //    RowEditing?.Invoke(e);
-        //}
-
-        //public static event DBItemEditEventHandler RowEdited;
-
-        //internal static void OnEdited(DBItemEventArgs e)
-        //{
-        //    RowEdited?.Invoke(e);
-        //}
-
-        //public static event DBItemEditEventHandler RowStateEdited;
-        //internal static void OnStateEdited(DBItemEventArgs e)
-        //{
-        //    RowStateEdited?.Invoke(e);
-        //}
-
-        public static Action<DBItemEventArgs> RowUpdating;
+        public static void RemoveRowUpdating(Func<DBItemEventArgs, ValueTask> function)
+        {
+            rowUpdatingHandler.Remove(function);
+        }
 
         internal static void OnUpdating(DBItemEventArgs e)
         {
-            RowUpdating?.Invoke(e);
+            foreach (var function in rowUpdatingHandler)
+            {
+                _ = function(e);
+            }
         }
 
-        public static Action<DBItemEventArgs> RowLoging;
+        public static void AddRowLoging(Func<DBItemEventArgs, ValueTask> function)
+        {
+            rowLoginingHandler.Add(function);
+        }
+
+        public static void RemoveRowLoging(Func<DBItemEventArgs, ValueTask> function)
+        {
+            rowLoginingHandler.Remove(function);
+        }
 
         internal static void OnLogItem(DBItemEventArgs e)
         {
-            RowLoging?.Invoke(e);
+            foreach (var function in rowLoginingHandler)
+            {
+                _ = function(e);
+            }
         }
 
-        public static Action<DBItemEventArgs> RowUpdated;
+        public static void AddRowUpdated(Func<DBItemEventArgs, ValueTask> function)
+        {
+            rowUpdateHandler.Add(function);
+        }
+
+        public static void RemoveRowUpdated(Func<DBItemEventArgs, ValueTask> function)
+        {
+            rowUpdateHandler.Remove(function);
+        }
 
         internal static void OnUpdated(DBItemEventArgs e)
         {
-            RowUpdated?.Invoke(e);
+            foreach (var function in rowUpdateHandler)
+            {
+                _ = function(e);
+            }
         }
 
-        public static Action<DBItemEventArgs> RowAccept;
+        public static void AddRowAccept(Func<DBItemEventArgs, ValueTask> function)
+        {
+            rowAcceptHandler.Add(function);
+        }
+
+        public static void RemoveRowAccept(Func<DBItemEventArgs, ValueTask> function)
+        {
+            rowAcceptHandler.Remove(function);
+        }
 
         internal static void OnAccept(DBItemEventArgs e)
         {
-            RowAccept?.Invoke(e);
+            foreach (var function in rowAcceptHandler)
+            {
+                _ = function(e);
+            }
         }
 
-        public static Action<DBItemEventArgs> RowReject;
+        public static void AddRowReject(Func<DBItemEventArgs, ValueTask> function)
+        {
+            rowRejectHandler.Add(function);
+        }
+
+        public static void RemoveRowReject(Func<DBItemEventArgs, ValueTask> function)
+        {
+            rowRejectHandler.Remove(function);
+        }
 
         internal static void OnReject(DBItemEventArgs e)
         {
-            RowReject?.Invoke(e);
+            foreach (var function in rowRejectHandler)
+            {
+                _ = function(e);
+            }
         }
 
         public static void Save()
