@@ -11,5 +11,6 @@ namespace DataWF.WebService.Common
         Task ListenAsync(WebNotifyConnection connection);
         IEnumerable<WebNotifyConnection> GetConnections();
         void Start();
+        void Stop();
     }
 }

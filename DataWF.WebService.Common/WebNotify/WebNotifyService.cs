@@ -13,17 +13,19 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 
 namespace DataWF.WebService.Common
 {
-    public class WebNotifyService : NotifyService, IWebNotifyService
+    public class WebNotifyService : IWebNotifyService
     {
         protected readonly SelectableList<WebNotifyConnection> connections = new SelectableList<WebNotifyConnection>();
 
         public static WebNotifyService Instance { get; private set; }
 
-        public event EventHandler<WebNotifyEventArgs> ReceiveMessage;
-        public event EventHandler<WebNotifyEventArgs> RemoveConnection;
+        private readonly ConcurrentQueue<NotifyDBItem> buffer = new ConcurrentQueue<NotifyDBItem>();
+        private readonly ManualResetEventSlim runEvent = new ManualResetEventSlim(false);
+        private const int timer = 2000;
 
         public WebNotifyService()
         {
@@ -32,6 +34,61 @@ namespace DataWF.WebService.Common
                 new ListIndex<WebNotifyConnection, IUserIdentity>(
                     WebNotifyConnection.UserInvoker.Instance,
                     NullUser.Value));
+        }
+
+        public event EventHandler<WebNotifyEventArgs> ReceiveMessage;
+        public event EventHandler<WebNotifyEventArgs> RemoveConnection;
+
+        public void Start()
+        {
+            DBService.AddRowAccept(OnAccept);
+            runEvent.Reset();
+            _ = SendChangesRunner();
+        }
+
+        public void Stop()
+        {
+            DBService.RemoveRowAccept(OnAccept);
+            runEvent.Set();
+        }
+
+        protected ValueTask OnAccept(DBItemEventArgs arg)
+        {
+            var item = arg.Item;
+
+            if (!(item is DBLogItem) && item.Table.Type == DBTableType.Table && item.Table.IsLoging)
+            {
+                var type = (arg.State & DBUpdateState.Delete) == DBUpdateState.Delete ? DBLogType.Delete
+                    : (arg.State & DBUpdateState.Insert) == DBUpdateState.Insert ? DBLogType.Insert
+                    : DBLogType.Update;
+                buffer.Enqueue(new NotifyDBItem()
+                {
+                    Value = item,
+                    Id = item.PrimaryId,
+                    Diff = type,
+                    User = arg.User?.Id ?? 0
+                });
+            }
+            return default;
+        }
+
+        private async Task SendChangesRunner()
+        {
+            while (!runEvent.Wait(timer))
+            {
+                try
+                {
+                    if (buffer.Count == 0)
+                        continue;
+                    var list = NotifyService.Dequeu(buffer);
+
+                    await SendToAll(list);
+                }
+                catch (Exception e)
+                {
+                    Helper.OnException(e);
+                }
+            }
         }
 
         public WebNotifyConnection GetBySocket(WebSocket socket)
@@ -134,7 +191,7 @@ namespace DataWF.WebService.Common
         public async Task ListenAsync(WebNotifyConnection connection)
         {
             var buffer = new ArraySegment<byte>(new byte[8192]);
-            while (CheckConnection(connection))
+            while (connection.CheckConnection())
             {
                 try
                 {
@@ -175,7 +232,7 @@ namespace DataWF.WebService.Common
         {
             await Task.Delay(10).ConfigureAwait(false);
 
-            object obj = LoadMessage(connection, stream);
+            object obj = connection.LoadMessage(stream);
             if (obj is WebNotifyRegistration registration)
             {
                 connection.Platform = registration.Platform;
@@ -187,298 +244,27 @@ namespace DataWF.WebService.Common
             return obj;
         }
 
-        protected object LoadMessage(WebNotifyConnection connection, MemoryStream stream)
+        private async Task SendToAll(List<NotifyDBTable> list)
         {
-            stream.Position = 0;
-            var jsonOptions = new JsonSerializerOptions();
-            jsonOptions.InitDefaults(new DBItemConverterFactory { CurrentUser = connection.User });
-            var span = new ReadOnlySpan<byte>(stream.GetBuffer(), 0, (int)stream.Length);
-            var property = (string)null;
-            var type = (Type)null;
-            var obj = (object)null;
-            connection.ReceiveCount++;
-            connection.ReceiveLength += stream.Length;
-            var jreader = new Utf8JsonReader(span);
-            {
-                while (jreader.Read())
-                {
-                    switch (jreader.TokenType)
-                    {
-                        case JsonTokenType.PropertyName:
-                            property = jreader.GetString();
-                            break;
-                        case JsonTokenType.String:
-                            switch (property)
-                            {
-                                case ("Type"):
-                                    type = TypeHelper.ParseType(jreader.GetString());
-                                    break;
-                            }
-                            break;
-                        case JsonTokenType.StartObject:
-                            if (string.Equals(property, "Value", StringComparison.Ordinal) && type != null)
-                            {
-                                property = null;
-                                obj = JsonSerializer.Deserialize(ref jreader, type, jsonOptions);
-                            }
-                            break;
-                    }
-                }
-            }
-#if DEBUG
-            Debug.WriteLine($"Receive Message {DateTime.UtcNow} Length: {stream.Length} ");
-#endif
-            stream.Dispose();
-            return obj;
-        }
-
-        protected override async void OnSendChanges(NotifyMessageItem[] list)
-        {
-            if (list == null)
-            {
-                return;
-            }
-            try
-            {
-                base.OnSendChanges(list);
-            }
-            catch (Exception ex)
-            {
-                Helper.OnException(ex);
-            }
-            await SendToWebClients(list);
-        }
-
-        private async Task SendToWebClients(NotifyMessageItem[] list)
-        {
+            //var tasks = new List<Task>();
             foreach (var connection in connections.ToList())
             {
                 try
                 {
-                    if (!CheckConnection(connection))
+                    if (!(connection?.CheckConnection() ?? false))
                     {
                         Remove(connection);
                         continue;
                     }
-                    using (var stream = WriteData(list, connection.User))
-                    {
-                        if (stream == null)
-                            continue;
-                        await SendStream(connection, stream);
-                    }
+                    //tasks.Add(connection.SendData(list));
+                    await connection.SendData(list);
                 }
                 catch (Exception ex)
                 {
-                    connection.SendErrors++;
-                    connection.SendError = ex.Message;
                     Helper.OnException(ex);
                 }
             }
-        }
-
-        public bool CheckConnection(WebNotifyConnection connection)
-        {
-            return connection?.Socket != null
-                && (connection.State == WebSocketState.Open
-                || connection.State == WebSocketState.Connecting);
-        }
-
-        public async Task SendText(WebNotifyConnection connection, string text)
-        {
-            var buffer = System.Text.Encoding.UTF8.GetBytes(text);
-            using (var stream = new MemoryStream(buffer))
-            {
-                await SendStream(connection, stream);
-            }
-        }
-
-        public async Task SendStream(WebNotifyConnection connection, Stream stream)
-        {
-            stream.Position = 0;
-            var bufferLength = 8 * 1024;
-            var buffer = new byte[bufferLength];
-            var count = 0;
-            connection.SendingCount++;
-            using (var timeout = new CancellationTokenSource(5000))
-            {
-                while ((count = stream.Read(buffer, 0, bufferLength)) > 0)
-                {
-                    await connection.Socket.SendAsync(new ArraySegment<byte>(buffer, 0, count)
-                        , WebSocketMessageType.Binary
-                        , stream.Position == stream.Length
-                        , timeout.Token);
-                    if (timeout.IsCancellationRequested)
-                    {
-                        throw new TimeoutException($"Timeout of sending message {Helper.LenghtFormat(stream.Length)}");
-                    }
-                    timeout.CancelAfter(5000);
-                }
-            }
-            connection.SendCount++;
-            connection.SendLength += stream.Length;
-#if DEBUG
-            Debug.WriteLine($"Send Message {DateTime.UtcNow} Length: {stream.Length} ");
-#endif
-        }
-
-        public async Task SendObject(WebNotifyConnection connection, object data)
-        {
-            using (var stream = WriteData(data, connection.User))
-            {
-                await SendStream(connection, stream);
-            }
-        }
-
-        protected override async void OnMessageLoad(EndPointMessage message)
-        {
-            base.OnMessageLoad(message);
-            if (message.Type == SocketMessageType.Data)
-            {
-                var list = ParseMessage(message.Data);
-                if (list.Length > 0)
-                {
-                    await SendToWebClients(list);
-                }
-            }
-        }
-
-        private NotifyMessageItem[] ParseMessage(byte[] data)
-        {
-            var list = new List<NotifyMessageItem>();
-            var stream = new MemoryStream(data);
-            using (var reader = new BinaryReader(stream))
-            {
-                while (reader.PeekChar() == 1)
-                {
-                    reader.ReadChar();
-                    var tableName = reader.ReadString();
-                    var table = DBService.Schems.ParseTable(tableName);
-
-                    while (reader.PeekChar() == 2)
-                    {
-                        reader.ReadChar();
-                        var item = new NotifyMessageItem
-                        {
-                            Table = table,
-                            Type = (DBLogType)reader.ReadInt32(),
-                            UserId = reader.ReadInt32(),
-                            ItemId = Helper.ReadBinary(reader),
-                        };
-                        if (table != null)
-                        {
-                            list.Add(item);
-                        }
-                    }
-                }
-            }
-            return list.ToArray();
-        }
-
-        protected MemoryStream WriteData(object data, IUserIdentity user)
-        {
-            var jsonOptions = new JsonSerializerOptions();
-            jsonOptions.InitDefaults(new DBItemConverterFactory
-            {
-                CurrentUser = user,
-                HttpJsonSettings = HttpJsonSettings.None,
-            });
-            var stream = new MemoryStream();
-
-            using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
-            {
-                Encoder = jsonOptions.Encoder,
-                Indented = jsonOptions.WriteIndented
-            }))
-            {
-                writer.WriteStartObject();
-                writer.WriteString("Type", data.GetType().Name);
-                writer.WritePropertyName("Value");
-                JsonSerializer.Serialize(writer, data, data.GetType(), jsonOptions);
-                writer.WriteEndObject();
-                writer.Flush();
-            }
-            return stream;
-        }
-
-        private MemoryStream WriteData(NotifyMessageItem[] list, IUserIdentity user)
-        {
-            bool haveValue = false;
-            var jsonOptions = new JsonSerializerOptions();
-            jsonOptions.InitDefaults(new DBItemConverterFactory
-            {
-                CurrentUser = user,
-                HttpJsonSettings = HttpJsonSettings.None,
-            });
-            var stream = new MemoryStream();
-
-            //using (var streamWriter = new StreamWriter(stream, Encoding.UTF8, 80 * 1024, true))
-            using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
-            {
-                Encoder = jsonOptions.Encoder,
-                Indented = jsonOptions.WriteIndented
-            }))
-            {
-                writer.WriteStartArray();
-                Type itemType = null;
-                object id = null;
-                foreach (var item in list)
-                {
-                    if (item.Table.ItemType.Type != itemType)
-                    {
-                        if (itemType != null)
-                        {
-                            writer.WriteEndArray();
-                            writer.WriteEndObject();
-                        }
-                        itemType = item.Table.ItemType.Type;
-                        writer.WriteStartObject();
-                        writer.WriteString("Type", itemType.Name);
-                        writer.WritePropertyName("Items");
-                        writer.WriteStartArray();
-                    }
-                    if (!item.ItemId.Equals(id)
-                        && (item.UserId != user.Id || item.Type == DBLogType.Delete))
-                    {
-                        id = item.ItemId;
-                        writer.WriteStartObject();
-                        writer.WriteNumber("Diff", (int)item.Type);
-                        writer.WriteNumber("User", item.UserId);
-                        writer.WriteString("Id", item.ItemId.ToString());
-                        if (item.Type != DBLogType.Delete)
-                        {
-                            var value = item.Table.LoadItemById(item.ItemId);
-                            if (value != null
-                                && (value.Access?.GetFlag(AccessType.Read, user) ?? false)
-                                && value.PrimaryId != null)
-                            {
-                                writer.WritePropertyName("Value");
-                                JsonSerializer.Serialize(writer, value, value.GetType(), jsonOptions);
-                                haveValue = true;
-                            }
-                        }
-                        else
-                        {
-                            haveValue = true;
-                        }
-                        writer.WriteEndObject();
-                    }
-                }
-                writer.WriteEndArray();
-                writer.WriteEndObject();
-                writer.WriteEndArray();
-                writer.Flush();
-
-            }
-            if (!haveValue)
-            {
-                stream.Dispose();
-                stream = null;
-            }
-            else
-            {
-                stream.Position = 0;
-            }
-            return stream;
+            //await Task.WhenAll(tasks);
         }
     }
 }
