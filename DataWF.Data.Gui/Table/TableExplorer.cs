@@ -238,12 +238,12 @@ namespace DataWF.Data.Gui
             //GuiService.Localize(this, "TableExplorer", "Table Explorer", GlyphType.Table);
         }
 
-        public override void Serialize(ISerializeWriter writer)
+        public override void Serialize(XmlInvokerWriter writer)
         {
             writer.WriteAttribute("TableName", Table?.FullName);
         }
 
-        public override void Deserialize(ISerializeReader reader)
+        public override void Deserialize(XmlInvokerReader reader)
         {
             var tableName = reader.ReadAttribute<string>("TableName");
             if (!string.IsNullOrEmpty(tableName))

@@ -14,6 +14,8 @@ namespace DataWF.Common
         public BinarySerializer(Type type) : base(type)
         { }
 
+        public bool WriteSchema { get; set; } = true;
+
         public override ISerializeWriter GetWriter(Stream stream)
         {
             return new BinaryInvokerWriter(stream, this);

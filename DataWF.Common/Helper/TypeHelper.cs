@@ -370,30 +370,40 @@ namespace DataWF.Common
                     serializer = CultureInfoSerializer.Instance;
                 else if (type.IsEnum)
                     serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
-                else if (IsInterface(type, typeof(IByteSerializable))
-                {
+                else if (IsInterface(type, typeof(IBinarySerializable)))
                     serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(BytesSerializer<>).MakeGenericType(type));
-                }
-                else if (IsInterface(type, typeof(IDictionary))
-                {
-                    TypeHelper.Arg
-                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
-                }
-                else if (IsInterface(type, typeof(IList))
-                {
-                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
-                }
+                else if (IsInterface(type, typeof(IDictionary)) && IsGeneric(type, out var dargs))
+                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(DictionarySerializer<,,>).MakeGenericType(type, dargs[0], dargs[1]));
+                else if (IsInterface(type, typeof(IList)) && IsGeneric(type, out var largs))
+                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(ListSerializer<,>).MakeGenericType(type, largs[0]));
                 else
-                {
-                    var converter = GetTypeConverter(type);
-                    if (converter != null)
-                    {
-                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(TypeConverterSerializers<>).MakeGenericType(type), new Type[] { typeof(TypeConverter) }, new object[] { converter }, true);
-                    }
-                }
+                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(ObjectSerializer<>).MakeGenericType(type));
+                //else
+                //{
+                //    var converter = GetTypeConverter(type);
+                //    if (converter != null)
+                //    {
+                //        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(TypeConverterSerializers<>).MakeGenericType(type), new Type[] { typeof(TypeConverter) }, new object[] { converter }, true);
+                //    }
+                //}
                 return cacheValueSerializer[type] = serializer;
             }
             return serializer;
+        }
+
+        public static bool IsGeneric(Type type, out Type[] largs)
+        {
+            largs = null;
+            while (!(type?.IsGenericType ?? true))
+            {
+                type = type.BaseType;
+            }
+            if (type != null)
+            {
+                largs = type.GetGenericArguments();
+                return true;
+            }
+            return false;
         }
 
         public static int GetOrder(PropertyInfo property, int order)
@@ -778,10 +788,8 @@ namespace DataWF.Common
 
         public static bool IsPassword(MemberInfo property)
         {
-            var dataType = (DataTypeAttribute)null;
             return (property.GetCustomAttribute<PasswordPropertyTextAttribute>(false)?.Password ?? false)
-                || ((dataType = property.GetCustomAttribute<DataTypeAttribute>(false)) != null
-                    && dataType.DataType == DataType.Password);
+                || (property.GetCustomAttribute<DataTypeAttribute>(false)?.DataType == DataType.Password);
         }
 
         public static string GetDefaultFormat(MemberInfo info)
@@ -851,10 +859,10 @@ namespace DataWF.Common
 
         public static Type GetItemType(ICollection collection, bool ignoreInteface = true)
         {
-            if (collection is ISortable)
+            if (collection is ISortable sortable
+                && (!sortable.ItemType.IsInterface || ignoreInteface))
             {
-                if (!((ISortable)collection).ItemType.IsInterface || ignoreInteface)
-                    return ((ISortable)collection).ItemType;
+                return sortable.ItemType;
             }
             var typeType = GetItemType(collection.GetType());
             if (typeType == typeof(object) && collection.Count != 0)

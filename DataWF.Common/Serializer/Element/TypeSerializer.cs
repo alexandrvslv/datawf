@@ -16,13 +16,13 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((Type)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (Type)value, writeToken);
 
         public override Type FromBinary(BinaryReader reader) => FromString(StringSerializer.Instance.FromBinary(reader));
 
         public override Type FromString(string value) => TypeHelper.ParseType(value);
 
-        public override void ToBinary(Type value, BinaryWriter writer, bool writeToken) => StringSerializer.Instance.ToBinary(ToString(value), writer, writeToken);
+        public override void ToBinary(BinaryWriter writer, Type value, bool writeToken) => StringSerializer.Instance.ToBinary(writer, ToString(value), writeToken);
 
         public override string ToString(Type value) => TypeHelper.FormatBinary(value);
     }

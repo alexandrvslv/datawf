@@ -13,11 +13,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((char)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (char)value, writeToken);
 
         public override char FromBinary(BinaryReader reader) => reader.ReadChar();
 
-        public override void ToBinary(char value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, char value, bool writeToken)
         {
             if (writeToken)
             {

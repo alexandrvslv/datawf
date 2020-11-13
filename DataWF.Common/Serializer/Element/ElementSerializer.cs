@@ -23,31 +23,42 @@ namespace DataWF.Common
             return ConvertFromBinary(reader.Reader);
         }
 
-        public abstract string FromProperty(object element, IInvoker invoker);
+        public abstract string PropertyToString(object element, IInvoker invoker);
 
-        public abstract string FromProperty<E>(E element, IInvoker invoker);
+        public abstract string PropertyToString<E>(E element, IInvoker invoker);
 
-        public abstract void ToProperty(object element, IInvoker invoker, string str);
+        public abstract void PropertyFromString(object element, IInvoker invoker, string str);
 
-        public abstract void ToProperty<E>(E element, IInvoker invoker, string str);
+        public abstract void PropertyFromString<E>(E element, IInvoker invoker, string str);
 
-        public abstract void FromProperty(BinaryWriter writer, object element, IInvoker invoker);
+        public abstract void PropertyToBinary(BinaryInvokerWriter writer, object element, IInvoker invoker);
 
-        public abstract void FromProperty<E>(BinaryWriter writer, E element, IInvoker invoker);
+        public abstract void PropertyToBinary<E>(BinaryInvokerWriter writer, E element, IInvoker invoker);
 
-        public abstract void ToProperty(BinaryReader reader, object element, IInvoker invoker);
+        public abstract void PropertyFromBinary(BinaryInvokerReader reader, object element, IInvoker invoker);
 
-        public abstract void ToProperty<E>(BinaryReader reader, E element, IInvoker invoker);
+        public abstract void PropertyFromBinary<E>(BinaryInvokerReader reader, E element, IInvoker invoker);
     }
 
     public abstract class ElementSerializer<T> : ElementSerializer, IElementSerializer<T>
     {
         public abstract T FromString(string value);
+
         public abstract string ToString(T value);
 
         public abstract T FromBinary(BinaryReader reader);
 
         public abstract void ToBinary(BinaryWriter writer, T value, bool writeToken);
+
+        public override void Write(BinaryInvokerWriter writer, object value, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
+        {
+            Write(writer, (T)value, info, map);
+        }
+
+        public override object Read(BinaryInvokerReader reader, object value, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
+        {
+            return Read(reader, (T)value, info, map);
+        }
 
         public virtual void Write(BinaryInvokerWriter writer, T value, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
         {
@@ -59,7 +70,7 @@ namespace DataWF.Common
             return FromBinary(reader.Reader);
         }
 
-        public override string FromProperty(object element, IInvoker invoker)
+        public override string PropertyToString(object element, IInvoker invoker)
         {
             if (invoker is IValuedInvoker<T> valueInvoker)
             {
@@ -76,7 +87,7 @@ namespace DataWF.Common
             }
         }
 
-        public override string FromProperty<E>(E element, IInvoker invoker)
+        public override string PropertyToString<E>(E element, IInvoker invoker)
         {
             if (invoker is IInvoker<E, T> valueInvoker)
             {
@@ -85,11 +96,11 @@ namespace DataWF.Common
             }
             else
             {
-                return FromProperty((object)element, invoker);
+                return PropertyToString((object)element, invoker);
             }
         }
 
-        public override void ToProperty(object element, IInvoker invoker, string str)
+        public override void PropertyFromString(object element, IInvoker invoker, string str)
         {
             if (invoker is IValuedInvoker<T> valueInvoker)
             {
@@ -117,7 +128,7 @@ namespace DataWF.Common
             }
         }
 
-        public override void ToProperty<E>(E element, IInvoker invoker, string str)
+        public override void PropertyFromString<E>(E element, IInvoker invoker, string str)
         {
             if (invoker is IInvoker<E, T> valueInvoker)
             {
@@ -133,88 +144,88 @@ namespace DataWF.Common
             }
             else
             {
-                ToProperty((object)element, invoker, str);
+                PropertyFromString((object)element, invoker, str);
             }
         }
 
-        public override void FromProperty(BinaryWriter writer, object element, IInvoker invoker)
+        public override void PropertyToBinary(BinaryInvokerWriter writer, object element, IInvoker invoker)
         {
             if (invoker is IValuedInvoker<T> valueInvoker)
             {
                 T value = valueInvoker.GetValue(element);
-                ToBinary(writer, value, true);
+                Write(writer, value, writer.Serializer.GetTypeInfo<T>(), null);
             }
             else
             {
                 var value = invoker.GetValue(element);
                 if (value == null)
-                    writer.Write((byte)BinaryToken.Null);
+                    writer.WriteNull();
                 else
-                    ConvertToBinary(writer, value, true);
+                    Write(writer, value, writer.Serializer.GetTypeInfo<T>(), null);
             }
         }
 
-        public override void FromProperty<E>(BinaryWriter writer, E element, IInvoker invoker)
+        public override void PropertyToBinary<E>(BinaryInvokerWriter writer, E element, IInvoker invoker)
         {
             if (invoker is IInvoker<E, T> valueInvoker)
             {
                 T value = valueInvoker.GetValue(element);
-                ToBinary(writer, value, true);
+                Write(writer, value, writer.Serializer.GetTypeInfo<T>(), null);
             }
             else
             {
-                FromProperty(writer, (object)element, invoker);
+                PropertyToBinary(writer, (object)element, invoker);
             }
         }
 
-        public override void ToProperty(BinaryReader reader, object element, IInvoker invoker)
+        public override void PropertyFromBinary(BinaryInvokerReader reader, object element, IInvoker invoker)
         {
             if (invoker is IValuedInvoker<T> valueInvoker)
             {
-                var token = (BinaryToken)reader.ReadByte();
+                var token = reader.ReadToken();
                 if (token == BinaryToken.Null)
                 {
                     valueInvoker.SetValue(element, default(T));
                 }
                 else
                 {
-                    T value = FromBinary(reader);
+                    T value = Read(reader, default(T), reader.Serializer.GetTypeInfo<T>(), null);
                     valueInvoker.SetValue(element, value);
                 }
             }
             else
             {
-                var token = (BinaryToken)reader.ReadByte();
+                var token = reader.ReadToken();
                 if (token == BinaryToken.Null)
                 {
                     invoker.SetValue(element, null);
                 }
                 else
                 {
-                    var value = ConvertFromBinary(reader);
+                    var value = Read(reader, default(T), reader.Serializer.GetTypeInfo<T>(), null);
                     invoker.SetValue(element, value);
                 }
             }
         }
 
-        public override void ToProperty<E>(BinaryReader reader, E element, IInvoker invoker)
+        public override void PropertyFromBinary<E>(BinaryInvokerReader reader, E element, IInvoker invoker)
         {
             if (invoker is IInvoker<E, T> valueInvoker)
             {
-                var token = (BinaryToken)reader.ReadByte();
+                var token = reader.ReadToken();
                 if (token == BinaryToken.Null)
                 {
                     valueInvoker.SetValue(element, default(T));
                 }
                 else
                 {
-                    T value = FromBinary(reader);
+                    T value = Read(reader, default(T), reader.Serializer.GetTypeInfo<T>(), null);
                     valueInvoker.SetValue(element, value);
                 }
             }
             else
             {
-                ToProperty(reader, (object)element, invoker);
+                PropertyFromBinary(reader, (object)element, invoker);
             }
         }
     }

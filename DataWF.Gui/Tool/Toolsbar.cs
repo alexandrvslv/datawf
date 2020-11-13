@@ -271,12 +271,12 @@ namespace DataWF.Gui
         public virtual void OnItemDoubleClick(ToolItem item)
         { }
 
-        public void Serialize(ISerializeWriter writer)
+        public void Serialize(XmlInvokerWriter writer)
         {
             writer.Write(items);
         }
 
-        public void Deserialize(ISerializeReader reader)
+        public void Deserialize(XmlInvokerReader reader)
         {
             reader.Read(items);
         }

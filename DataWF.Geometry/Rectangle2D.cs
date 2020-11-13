@@ -28,7 +28,7 @@ namespace DataWF.Geometry
 {
     /// Rectangle in User Space  - Base coordinate: bottom left corner
     [JsonConverter(typeof(SystemJsonRectangle2DConverter)), Newtonsoft.Json.JsonConverter(typeof(NewtonJsonRectangle2DConverter))]
-    public struct Rectangle2D : IByteSerializable, IComparable<Rectangle2D>, IEquatable<Rectangle2D>
+    public struct Rectangle2D : IBinarySerializable, IComparable<Rectangle2D>, IEquatable<Rectangle2D>
     {
         public static readonly Rectangle2D Empty = new Rectangle2D();
 

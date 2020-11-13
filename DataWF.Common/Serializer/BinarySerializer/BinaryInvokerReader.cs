@@ -46,6 +46,11 @@ namespace DataWF.Common
             return current;
         }
 
+        public ushort ReadIndex()
+        {
+            return Reader.ReadUInt16();
+        }
+
         public BinaryToken ReadToken()
         {
             try
@@ -117,7 +122,7 @@ namespace DataWF.Common
 
         public T Read<T>(T element)
         {
-            return Read(element, Serializer.GetTypeInfo(typeof(T)));
+            return Read(element, Serializer.GetTypeInfo<T>());
         }
 
         public object Read(object element, TypeSerializationInfo typeInfo)
@@ -259,6 +264,14 @@ namespace DataWF.Common
         public object Read(object element, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
         {
             var token = ReadToken();
+            if (token == BinaryToken.Null)
+            {
+                return null;
+            }
+            else if (info.Serialazer is IElementSerializer serializer)
+            {
+                return serializer.Read(this, element, info, map);
+            }
             if (token == BinaryToken.ObjectBegin)
             {
                 return ReadObject(element, info, map);
@@ -266,56 +279,50 @@ namespace DataWF.Common
             else if (token == BinaryToken.ArrayBegin)
             {
                 return ReadCollection((ICollection)element, info, map);
-            }
-            else if (token == BinaryToken.Null)
-            {
-                return null;
             }
             else if (info == null || info.Type == typeof(object))
             {
                 return Helper.ReadBinary(Reader, token);
             }
-            else if (info.Serialazer is IElementSerializer serializer)
-            {
-                return serializer.ConvertFromBinary(Reader);
-            }
-            return element;
+            else
+                return element;
         }
 
         public T Read<T>(T element, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
         {
             var token = ReadToken();
-            if (token == BinaryToken.ObjectBegin)
+            if (token == BinaryToken.Null)
+            {
+                return default(T);
+            }
+            else if (info.Serialazer is IElementSerializer<T> serializer)
+            {
+                return serializer.Read(this, element, info, map);
+            }
+            else if (token == BinaryToken.ObjectBegin)
             {
                 return ReadObject(element, info, map);
             }
             else if (token == BinaryToken.ArrayBegin)
             {
-                return ReadCollection((ICollection)element, info, map);
-            }
-            else if (token == BinaryToken.Null)
-            {
-                return default;
+                return (T)ReadCollection((ICollection)element, info, map);
             }
             else if (info == null || info.Type == typeof(object))
             {
                 return Helper.ReadBinary<T>(Reader, token);
             }
-            else if (info.Serialazer is IElementSerializer<T> serializer)
-            {
-                return serializer.FromBinary(Reader);
-            }
-            return element;
+            else
+                return element;
         }
 
-        private void ReadProperty(object element, Dictionary<ushort, PropertySerializationInfo> map)
+        public void ReadProperty(object element, Dictionary<ushort, PropertySerializationInfo> map)
         {
             var index = Reader.ReadUInt16();
             map.TryGetValue(index, out var property);
 
             if (property?.Serialazer != null)
             {
-                property.Serialazer.ToProperty(Reader, element, property.Invoker);
+                property.Serialazer.PropertyFromBinary(this, element, property.Invoker);
             }
             else
             {
@@ -327,14 +334,14 @@ namespace DataWF.Common
             }
         }
 
-        private void ReadProperty<T>(T element, Dictionary<ushort, PropertySerializationInfo> map)
+        public void ReadProperty<T>(T element, Dictionary<ushort, PropertySerializationInfo> map)
         {
             var index = Reader.ReadUInt16();
             map.TryGetValue(index, out var property);
 
             if (property?.Serialazer != null)
             {
-                property.Serialazer.ToProperty(Reader, element, property.Invoker);
+                property.Serialazer.PropertyFromBinary(this, element, property.Invoker);
             }
             else
             {

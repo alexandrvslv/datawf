@@ -15,11 +15,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((int)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (int)value, writeToken);
 
         public override int FromBinary(BinaryReader reader) => reader.ReadInt32();
 
-        public override void ToBinary(int value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, int value, bool writeToken)
         {
             if (writeToken)
             {
@@ -44,11 +44,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((uint)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (uint)value, writeToken);
 
         public override uint FromBinary(BinaryReader reader) => reader.ReadUInt32();
 
-        public override void ToBinary(uint value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, uint value, bool writeToken)
         {
             if (writeToken)
             {
@@ -74,11 +74,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((long)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (long)value, writeToken);
 
         public override long FromBinary(BinaryReader reader) => reader.ReadInt64();
 
-        public override void ToBinary(long value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, long value, bool writeToken)
         {
             if (writeToken)
             {
@@ -104,11 +104,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((ulong)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (ulong)value, writeToken);
 
         public override ulong FromBinary(BinaryReader reader) => reader.ReadUInt64();
 
-        public override void ToBinary(ulong value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, ulong value, bool writeToken)
         {
             if (writeToken)
             {
@@ -134,11 +134,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((short)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (short)value, writeToken);
 
         public override short FromBinary(BinaryReader reader) => reader.ReadInt16();
 
-        public override void ToBinary(short value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, short value, bool writeToken)
         {
             if (writeToken)
             {
@@ -164,11 +164,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((ushort)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (ushort)value, writeToken);
 
         public override ushort FromBinary(BinaryReader reader) => reader.ReadUInt16();
 
-        public override void ToBinary(ushort value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, ushort value, bool writeToken)
         {
             if (writeToken)
             {
@@ -194,11 +194,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((sbyte)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (sbyte)value, writeToken);
 
         public override sbyte FromBinary(BinaryReader reader) => reader.ReadSByte();
 
-        public override void ToBinary(sbyte value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, sbyte value, bool writeToken)
         {
             if (writeToken)
             {
@@ -224,11 +224,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((byte)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (byte)value, writeToken);
 
         public override byte FromBinary(BinaryReader reader) => reader.ReadByte();
 
-        public override void ToBinary(byte value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, byte value, bool writeToken)
         {
             if (writeToken)
             {

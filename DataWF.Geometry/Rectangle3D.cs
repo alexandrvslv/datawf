@@ -27,7 +27,7 @@ using System.Xml.Serialization;
 namespace DataWF.Geometry
 {
     [JsonConverter(typeof(SystemJsonRectangle3DConverter)), Newtonsoft.Json.JsonConverter(typeof(NewtonJsonRectangle3DConverter))]
-    public struct Rectangle3D : IByteSerializable, IComparable<Rectangle3D>, IEquatable<Rectangle3D>
+    public struct Rectangle3D : IBinarySerializable, IComparable<Rectangle3D>, IEquatable<Rectangle3D>
     {
         public static readonly Rectangle3D Empty = new Rectangle3D();
 

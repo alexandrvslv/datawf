@@ -550,12 +550,12 @@ namespace DataWF.Test.Common
         {
             public TestSerializeClass ToSerialize { get; set; }
 
-            public void Deserialize(ISerializeReader reader)
+            public void Deserialize(XmlInvokerReader reader)
             {
                 ToSerialize = reader.Read(ToSerialize);
             }
 
-            public void Serialize(ISerializeWriter writer)
+            public void Serialize(XmlInvokerWriter writer)
             {
                 writer.Write(ToSerialize);
             }

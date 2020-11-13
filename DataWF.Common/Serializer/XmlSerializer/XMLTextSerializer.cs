@@ -12,6 +12,11 @@ namespace DataWF.Common
         public XMLTextSerializer(Type type) : base(type)
         { }
 
+        public bool CheckIFile { get; set; }
+
+        public bool Indent { get; set; } = true;
+
+
         public override ISerializeWriter GetWriter(Stream stream)
         {
             return new XmlInvokerWriter(stream, this);

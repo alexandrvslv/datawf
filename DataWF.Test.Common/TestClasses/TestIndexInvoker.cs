@@ -4,7 +4,6 @@ namespace DataWF.Test.Common
 {
     public class TestIndexInvoker : IndexInvoker<TestClass, int, int>
     {
-        private int index;
 
         public TestIndexInvoker(int index)
         {
@@ -15,9 +14,9 @@ namespace DataWF.Test.Common
 
         public override string Name => "X";
 
-        public override int GetValue(TestClass target, int index) => target[index];
+        public override int GetValue(TestClass target, int index) => target[Index];
 
-        public override void SetValue(TestClass target, int index, int value) => target[index] = value;
+        public override void SetValue(TestClass target, int index, int value) => target[Index] = value;
 
     }
 

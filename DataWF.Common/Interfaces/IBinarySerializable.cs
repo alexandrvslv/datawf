@@ -2,7 +2,7 @@
 
 namespace DataWF.Common
 {
-    public interface IByteSerializable
+    public interface IBinarySerializable
     {
         void Deserialize(byte[] buffer);
         void Deserialize(BinaryReader reader);

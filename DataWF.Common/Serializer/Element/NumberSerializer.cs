@@ -16,11 +16,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((double)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (double)value, writeToken);
 
         public override double FromBinary(BinaryReader reader) => reader.ReadDouble();
 
-        public override void ToBinary(double value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, double value, bool writeToken)
         {
             if (writeToken)
             {
@@ -45,11 +45,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((float)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (float)value, writeToken);
 
         public override float FromBinary(BinaryReader reader) => reader.ReadSingle();
 
-        public override void ToBinary(float value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, float value, bool writeToken)
         {
             if (writeToken)
             {
@@ -73,11 +73,11 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((decimal)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (decimal)value, writeToken);
 
         public override decimal FromBinary(BinaryReader reader) => reader.ReadDecimal();
 
-        public override void ToBinary(decimal value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, decimal value, bool writeToken)
         {
             if (writeToken)
             {

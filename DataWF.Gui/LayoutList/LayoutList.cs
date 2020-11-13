@@ -5051,14 +5051,14 @@ namespace DataWF.Gui
             return GuiEnvironment.GetCellEditor(cell);
         }
 
-        public override void Serialize(ISerializeWriter writer)
+        public override void Serialize(XmlInvokerWriter writer)
         {
             writer.WriteAttribute("Key", GetCacheKey());
         }
 
-        public override void Deserialize(ISerializeReader reader)
+        public override void Deserialize(XmlInvokerReader reader)
         {
-            var key = reader.ReadAttribute("Key", typeof(string));
+            var key = reader.ReadAttribute<string>("Key");
         }
 
         public void Bind<T>(T data, string property, string viewProperty)

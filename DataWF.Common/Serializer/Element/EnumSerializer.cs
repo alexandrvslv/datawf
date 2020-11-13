@@ -14,13 +14,13 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((T)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (T)value, writeToken);
 
         public override T FromBinary(BinaryReader reader) { var temp = reader.ReadInt32(); return Unsafe.As<int, T>(ref temp); }
 
         public override T FromString(string value) => Enum.TryParse<T>(value, out var result) ? result : default(T);
 
-        public override void ToBinary(T value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, T value, bool writeToken)
         {
             if (writeToken)
             {

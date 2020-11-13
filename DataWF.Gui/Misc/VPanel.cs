@@ -72,12 +72,12 @@ namespace DataWF.Gui
             FileSerialize = false;
             using (var serializer = new XMLTextSerializer())
             {
-                serializer.Serialize(this, file);
+                serializer.Serialize(file, this);
             }
             FileSerialize = temp;
         }
 
-        public virtual void Serialize(ISerializeWriter writer)
+        public virtual void Serialize(XmlInvokerWriter writer)
         {
             foreach (var child in Children)
             {
@@ -85,7 +85,7 @@ namespace DataWF.Gui
             }
         }
 
-        public virtual void Serialize(Widget widget, ISerializeWriter writer)
+        public virtual void Serialize(Widget widget, XmlInvokerWriter writer)
         {
             if (widget == null)
                 return;
@@ -118,7 +118,7 @@ namespace DataWF.Gui
             FileSerialize = temp;
         }
 
-        public virtual void Deserialize(ISerializeReader reader)
+        public virtual void Deserialize(XmlInvokerReader reader)
         {
             if (reader.IsEmpty)
                 return;

@@ -23,7 +23,7 @@ namespace DataWF.Module.Common
 
             UserReg.DBTable.DefaultComparer = new DBComparer<UserReg, long?>(UserReg.DBTable.PrimaryKey) { Hash = true };
             DBLogItem.UserLogTable = UserReg.DBTable;
-            DBService.RowLoging += UserReg.OnDBItemLoging;
+            DBService.AddRowLoging(UserReg.OnDBItemLoging);
 
             GroupPermission.DBTable.Load();
             return GroupPermission.CachePermission();

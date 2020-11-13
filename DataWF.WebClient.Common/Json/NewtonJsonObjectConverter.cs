@@ -8,7 +8,7 @@ namespace DataWF.Common
     {
         public NewtonJsonObjectConverter()
         {
-            SerializationInfo = Serialization.Instance.GetTypeInfo(typeof(T));
+            SerializationInfo = Serialization.Instance.GetTypeInfo<T>();
         }
 
         public TypeSerializationInfo SerializationInfo { get; }
@@ -175,7 +175,7 @@ namespace DataWF.Common
             jwriter.WriteStartArray();
             var listInfo = Serialization.Instance.GetTypeInfo(list.GetType());
             var itemType = listInfo.ListItemType;
-            var itemInfo = listInfo.ListItemTypeInfo;
+            var itemInfo = Serialization.Instance.GetTypeInfo(itemType);
             foreach (var item in list)
             {
                 if (item is ISynchronized isSynch && isSynch.SyncStatus == SynchronizedStatus.Actual)

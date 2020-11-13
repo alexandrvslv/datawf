@@ -17,14 +17,14 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((CultureInfo)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (CultureInfo)value, writeToken);
 
         public override CultureInfo FromBinary(BinaryReader reader) => FromString(StringSerializer.Instance.FromBinary(reader));
 
         public override CultureInfo FromString(string value) => CultureInfo.GetCultureInfo(value);
 
-        public override void ToBinary(CultureInfo value, BinaryWriter writer, bool writeToken) => StringSerializer.Instance.ToBinary(ToString(value), writer, writeToken);
+        public override void ToBinary(BinaryWriter writer, CultureInfo value, bool writeToken) => StringSerializer.Instance.ToBinary(writer, ToString(value), writeToken);
 
-        public override string ToString(CultureInfo value) => value.Name;
+        public override string ToString(CultureInfo value) => value?.Name;
     }
 }

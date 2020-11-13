@@ -530,7 +530,7 @@ namespace DataWF.Data
                     DBDataType = DBDataType.TimeSpan;
                 else if (value.IsEnum)
                     DBDataType = DBDataType.Int;
-                else if (TypeHelper.IsInterface(value, typeof(IByteSerializable)))
+                else if (TypeHelper.IsInterface(value, typeof(IBinarySerializable)))
                     DBDataType = DBDataType.ByteSerializable;
                 else
                     DBDataType = DBDataType.Object;
@@ -755,7 +755,7 @@ namespace DataWF.Data
                     break;
                 case DBDataType.ByteSerializable:
                     var byteArray = isNull ? null : (byte[])transaction.Reader.GetValue(i);
-                    var serializable = isNull ? null : (IByteSerializable)Activator.CreateInstance(DataType);
+                    var serializable = isNull ? null : (IBinarySerializable)Activator.CreateInstance(DataType);
                     serializable?.Deserialize(byteArray);
                     row.SetValue((object)serializable, this, DBSetValueMode.Loading);
                     break;

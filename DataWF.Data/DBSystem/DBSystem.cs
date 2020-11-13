@@ -844,7 +844,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             {
                 value = (int)value;
             }
-            else if (value is IByteSerializable serializable)
+            else if (value is IBinarySerializable serializable)
             {
                 value = serializable.Serialize();
             }

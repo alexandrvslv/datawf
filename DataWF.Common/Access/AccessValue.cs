@@ -9,7 +9,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public class AccessValue : IAccessValue, IByteSerializable//, IEnumerable<AccessItem>
+    public class AccessValue : IAccessValue, IBinarySerializable//, IEnumerable<AccessItem>
     {
         public static IIdCollection<IGroupIdentity> Groups = new IdCollection<IGroupIdentity>();
         public static IIdCollection<IUserIdentity> Users = new IdCollection<IUserIdentity>();
@@ -58,7 +58,7 @@ namespace DataWF.Common
             }
             foreach (var bItem in b.Items)
             {
-                if (!a.items.TryGetValue(bItem.Identity, out var aItem))
+                if (!a.items.TryGetValue(bItem.Identity, out _))
                 {
                     c.Add(bItem.Identity, bItem.Access);
                 }

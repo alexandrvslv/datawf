@@ -77,7 +77,7 @@ namespace DataWF.Gui
                     ((Window)TransientFor).Content.GotFocus += BaseGetFocus;
                 }
             }
-            Size = Bar.Items.GetBound(0,0).Size;
+            Size = Bar.Items.GetBound(0, 0).Size;
             var location = owner?.ConvertToScreenCoordinates(point) ?? point;
             var screen = TransientFor?.Screen ?? Desktop.PrimaryScreen;
             if ((ScreenBounds.Width + location.X) > screen.Bounds.Right)
@@ -124,12 +124,12 @@ namespace DataWF.Gui
             BaseGetFocus(null, null);
         }
 
-        public void Serialize(ISerializeWriter writer)
+        public void Serialize(XmlInvokerWriter writer)
         {
             writer.Write(Bar.Items);
         }
 
-        public void Deserialize(ISerializeReader reader)
+        public void Deserialize(XmlInvokerReader reader)
         {
             reader.Read(Bar.Items);
         }

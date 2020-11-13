@@ -36,11 +36,7 @@ namespace DataWF.Common
 
         public Dictionary<Type, TypeSerializationInfo> SerializationInfo { get; set; } = new Dictionary<Type, TypeSerializationInfo>();
 
-        public bool CheckIFile { get; set; }
-
         public bool ByProperty { get; set; } = true;
-
-        public bool Indent { get; set; } = true;
 
         public bool OnlyXmlAttributes { get; set; } = false;
 
@@ -51,6 +47,11 @@ namespace DataWF.Common
         public void SetTypeInfo(Type type, TypeSerializationInfo info)
         {
             SerializationInfo[type] = info;
+        }
+
+        public TypeSerializationInfo GetTypeInfo<T>()
+        {
+            return GetTypeInfo(typeof(T));
         }
 
         public TypeSerializationInfo GetTypeInfo(Type type)

@@ -26,7 +26,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class NotifyDBTable : IByteSerializable, IComparable<NotifyDBTable>
+    public class NotifyDBTable : IBinarySerializable, IComparable<NotifyDBTable>
     {
         private DBTable table;
 

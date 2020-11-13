@@ -336,7 +336,7 @@ namespace DataWF.Common
             jwriter.WriteStartArray();
             var listInfo = Serialization.Instance.GetTypeInfo(list.GetType());
             var itemType = listInfo.ListItemType;
-            var itemInfo = listInfo.ListItemTypeInfo;
+            var itemInfo = Serialization.Instance.GetTypeInfo(itemType);
             NewtonJsonContractResolver.WriterContexts.TryGetValue(jwriter, out var context);
             foreach (var item in list)
             {

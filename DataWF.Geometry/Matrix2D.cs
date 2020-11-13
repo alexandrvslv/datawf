@@ -24,7 +24,7 @@ using System.IO;
 namespace DataWF.Geometry
 {
     //Skia concept
-    public class Matrix2D : IByteSerializable, IEquatable<Matrix2D>
+    public class Matrix2D : IBinarySerializable, IEquatable<Matrix2D>
     {
         public static bool operator ==(Matrix2D a, Matrix2D b)
         {

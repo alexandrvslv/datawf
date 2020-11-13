@@ -27,7 +27,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Geometry
 {
-    public class Polygon2D : IByteSerializable, IComparable<Polygon2D>, IEquatable<Polygon2D>
+    public class Polygon2D : IBinarySerializable, IComparable<Polygon2D>, IEquatable<Polygon2D>
     {
         public static bool operator ==(Polygon2D a, Polygon2D b)
         {

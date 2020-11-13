@@ -19,7 +19,7 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((string)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (string)value, writeToken);
 
         public override string FromBinary(BinaryReader reader)
         {
@@ -31,8 +31,13 @@ namespace DataWF.Common
             return string.Empty;
         }
 
-        public override void ToBinary(string value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, string value, bool writeToken)
         {
+            if (value == null)
+            {
+                writer.Write((byte)BinaryToken.Null);
+                return;
+            }
             if (writeToken)
             {
                 writer.Write((byte)BinaryToken.String);

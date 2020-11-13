@@ -72,7 +72,7 @@ namespace DataWF.Common
         {
             if (member.Serialazer != null)
             {
-                member.Serialazer.ToProperty(element, member.Invoker, value);
+                member.Serialazer.PropertyFromString(element, member.Invoker, value);
             }
             else
             {
@@ -283,10 +283,10 @@ namespace DataWF.Common
             {
                 return ReadIFile(element, info);
             }
-            if (element is ISerializableElement)
+            if (element is ISerializableElement serializableElement)
             {
                 var name = Reader.Name;
-                ((ISerializableElement)element).Deserialize(this);
+                serializableElement.Deserialize(this);
                 while (Reader.Name != name)
                 {
                     ReadBegin();
@@ -324,6 +324,11 @@ namespace DataWF.Common
         public TypeSerializationInfo GetTypeInfo(Type type)
         {
             return Serializer.GetTypeInfo(type);
+        }
+
+        public T ReadAttribute<T>(string name)
+        {
+            return (T)Helper.TextParse(Reader.GetAttribute(name), typeof(T));
         }
     }
 }

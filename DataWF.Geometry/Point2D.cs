@@ -31,7 +31,7 @@ using System.Xml.Serialization;
 namespace DataWF.Geometry
 {
     [JsonConverter(typeof(SystemJsonPoint2DConverter)), Newtonsoft.Json.JsonConverter(typeof(NewtonJsonPoint2DConverter))]
-    public struct Point2D : IByteSerializable, IComparable<Point2D>, IEquatable<Point2D>
+    public struct Point2D : IBinarySerializable, IComparable<Point2D>, IEquatable<Point2D>
     {
         internal static readonly char[] TrimArray = new char[] { ' ', ',', '(', ')' };
 

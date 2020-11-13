@@ -67,7 +67,7 @@ namespace DataWF.Common
                 return (T)(object)null;
             }
 
-            var typeInfo = Instance.GetTypeInfo(typeof(T));
+            var typeInfo = Instance.GetTypeInfo<T>();
             var newItem = (T)typeInfo.Constructor.Create();
             foreach (var property in typeInfo.Properties)
             {

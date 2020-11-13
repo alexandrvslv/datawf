@@ -2,7 +2,7 @@
 {
     public interface ISerializableElement
     {
-        void Serialize(ISerializeWriter writer);
-        void Deserialize(ISerializeReader reader);
+        void Serialize(XmlInvokerWriter writer);
+        void Deserialize(XmlInvokerReader reader);
     }
 }

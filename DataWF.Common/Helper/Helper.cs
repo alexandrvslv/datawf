@@ -1029,7 +1029,7 @@ namespace DataWF.Common
             else
             {
                 var serializer = TypeHelper.GetSerializer(value.GetType());
-                serializer.ConvertToBinary(value, writer, writeType);
+                serializer.ConvertToBinary(writer, value, writeType);
             }
         }
 

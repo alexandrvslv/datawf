@@ -124,12 +124,12 @@ namespace DataWF.Common
 
         public void Write<T>(T element)
         {
-            var typeInfo = Serializer.GetTypeInfo(typeof(T));
+            var typeInfo = Serializer.GetTypeInfo<T>();
 
             Write(element, typeInfo);
         }
 
-        private Dictionary<ushort, PropertySerializationInfo> GetMap(TypeSerializationInfo typeInfo)
+        public Dictionary<ushort, PropertySerializationInfo> GetMap(TypeSerializationInfo typeInfo)
         {
             if (typeInfo == null || typeInfo.IsAttribute)
                 return null;
@@ -148,13 +148,13 @@ namespace DataWF.Common
 
         public void Write(object element, TypeSerializationInfo typeInfo, Dictionary<ushort, PropertySerializationInfo> map, bool forceWriteMap = false)
         {
-            if (typeInfo == null)
+            if (typeInfo == null || typeInfo.Type == typeof(object))
             {
                 typeInfo = Serializer.GetTypeInfo(element.GetType());
             }
-            if (typeInfo.Serialazer != null)
+            if (typeInfo.Serialazer is IElementSerializer serializer)
             {
-                typeInfo.Serialazer.ConvertToBinary(element, Writer, true);
+                serializer.Write(this, element, typeInfo, map);
             }
             else
             {
@@ -175,13 +175,13 @@ namespace DataWF.Common
 
         public void Write<T>(T element, TypeSerializationInfo typeInfo, Dictionary<ushort, PropertySerializationInfo> map, bool forceWriteMap = false)
         {
-            if (typeInfo == null)
+            if (typeInfo == null || typeInfo.Type == typeof(object))
             {
                 typeInfo = Serializer.GetTypeInfo(element.GetType());
             }
-            if (typeInfo.Serialazer is ElementSerializer<T> serializer)
+            if (typeInfo.Serialazer is IElementSerializer<T> serializer)
             {
-                serializer.ToBinary(element, Writer, true);
+                serializer.Write(this, element, typeInfo, map);
             }
             else
             {
@@ -216,7 +216,7 @@ namespace DataWF.Common
                         continue;
                     WriteSchemaEntry();
                     Writer.Write(i);
-                    StringSerializer.Instance.ToBinary(property.Name, Writer, false);
+                    WriteString(property.Name, false);
                     map[i++] = property;
                 }
                 cacheSchema[info] = map;
@@ -228,17 +228,17 @@ namespace DataWF.Common
         public void WriteProperty(PropertySerializationInfo property, object element, ushort index)
         {
             WriteObjectEntry();
-            Writer.Write(index);
+            WriteSchemaIndex(index);
             if (property.Serialazer != null)
             {
-                property.Serialazer.FromProperty(Writer, element, property.Invoker);
+                property.Serialazer.PropertyToBinary(this, element, property.Invoker);
             }
             else
             {
                 var value = property.Invoker.GetValue(element);
                 if (value == null)
                 {
-                    Writer.Write((byte)BinaryToken.Null);
+                    WriteNull();
                 }
                 else
                 {
@@ -253,20 +253,26 @@ namespace DataWF.Common
             Writer.Write(index);
             if (property.Serialazer != null)
             {
-                property.Serialazer.FromProperty(Writer, element, property.Invoker);
+                property.Serialazer.PropertyToBinary(this, element, property.Invoker);
             }
             else
             {
                 var value = property.Invoker.GetValue(element);
                 if (value == null)
                 {
-                    Writer.Write((byte)BinaryToken.Null);
+                    WriteNull();
                 }
                 else
                 {
                     Write(value);
                 }
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteNull()
+        {
+            Writer.Write((byte)BinaryToken.Null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -278,7 +284,7 @@ namespace DataWF.Common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteString(string str, bool writeToken)
         {
-            StringSerializer.Instance.ToBinary(str, Writer, writeToken);
+            StringSerializer.Instance.ToBinary(Writer, str, writeToken);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

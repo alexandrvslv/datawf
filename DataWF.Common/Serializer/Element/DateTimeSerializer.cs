@@ -18,7 +18,7 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((DateTime)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (DateTime)value, writeToken);
 
         public override DateTime FromBinary(BinaryReader reader) => DateTime.FromBinary(reader.ReadInt64());
 
@@ -26,7 +26,7 @@ namespace DataWF.Common
             ? DateTime.FromBinary(binary)
             : DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var result) ? result : DateTime.MinValue;
 
-        public override void ToBinary(DateTime value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, DateTime value, bool writeToken)
         {
             if (writeToken)
             {

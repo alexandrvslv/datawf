@@ -43,7 +43,7 @@ namespace DataWF.Module.Common
         private User user;
         private UserReg redo;
 
-        public static async void OnDBItemLoging(DBItemEventArgs arg)
+        public static async ValueTask OnDBItemLoging(DBItemEventArgs arg)
         {
             if (arg.Item.Table == UserReg.DBTable || arg.Item.Table is IDBLogTable)
                 return;

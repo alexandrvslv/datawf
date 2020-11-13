@@ -82,9 +82,9 @@ namespace DataWF.Common
                 fileSerialize.Save();
                 Writer.WriteElementString("FileName", fileSerialize.FileName);
             }
-            else if (element is ISerializableElement)
+            else if (element is ISerializableElement serializableElement)
             {
-                ((ISerializableElement)element).Serialize(this);
+                serializableElement.Serialize(this);
             }
             else
             {
@@ -116,7 +116,7 @@ namespace DataWF.Common
                     }
                     else
                     {
-                        var value = attribute.Serialazer.FromProperty(element, attribute.Invoker);
+                        var value = attribute.Serialazer.PropertyToString(element, attribute.Invoker);
                         if (value != null)
                         {
                             Writer.WriteAttributeString(attribute.Name, value);
@@ -181,6 +181,11 @@ namespace DataWF.Common
         public void Dispose()
         {
             Writer?.Dispose();
+        }
+
+        public void WriteAttribute<T>(string Name, T value)
+        {
+            Writer.WriteAttributeString(Name, Helper.TextBinaryFormat(value));
         }
     }
 }

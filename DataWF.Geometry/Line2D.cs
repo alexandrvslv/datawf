@@ -24,7 +24,7 @@ using System.IO;
 
 namespace DataWF.Geometry
 {
-    public class Line2D : IByteSerializable, IComparable<Line2D>, IEquatable<Line2D>
+    public class Line2D : IBinarySerializable, IComparable<Line2D>, IEquatable<Line2D>
     {
         private Point2D point1;
         private Point2D point2;

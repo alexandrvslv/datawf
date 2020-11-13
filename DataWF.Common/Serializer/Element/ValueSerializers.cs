@@ -21,7 +21,7 @@ namespace DataWF.Common
 
         public override object ConvertFromString(string value) => Converter.ConvertFromInvariantString(value);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => StringSerializer.Instance.ToBinary(ConvertToString(value), writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => StringSerializer.Instance.ToBinary(writer, ConvertToString(value), writeToken);
 
         public override string ConvertToString(object value) => Converter.ConvertToInvariantString(value);
 
@@ -29,7 +29,7 @@ namespace DataWF.Common
 
         public override T FromString(string value) => (T)ConvertFromString(value);
 
-        public override void ToBinary(T value, BinaryWriter writer, bool writeToken) => ConvertToBinary(value, writer, writeToken);
+        public override void ToBinary(BinaryWriter writer, T value, bool writeToken) => ConvertToBinary(writer, value, writeToken);
 
         public override string ToString(T value) => ConvertToString(value);
     }

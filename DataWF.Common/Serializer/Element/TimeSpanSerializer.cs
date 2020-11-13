@@ -15,13 +15,13 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((TimeSpan)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (TimeSpan)value, writeToken);
 
         public override TimeSpan FromBinary(BinaryReader reader) => TimeSpan.FromTicks(reader.ReadInt64());
 
         public override TimeSpan FromString(string value) => TimeSpan.TryParse(value, CultureInfo.InvariantCulture, out var timeSpan) ? timeSpan : TimeSpan.MinValue;
 
-        public override void ToBinary(TimeSpan value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, TimeSpan value, bool writeToken)
         {
             if (writeToken)
             {

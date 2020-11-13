@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public struct AccessItem : IAccessItem, IByteSerializable, IEquatable<AccessItem>
+    public struct AccessItem : IAccessItem, IBinarySerializable, IEquatable<AccessItem>
     {
         public static readonly AccessItem Empty = new AccessItem(null);
         private IAccessIdentity identity;
@@ -199,7 +199,7 @@ namespace DataWF.Common
 
         public override bool Equals(object obj)
         {
-            return obj is AccessItem item ? Equals(item) : false;
+            return obj is AccessItem item && Equals(item);
         }
 
         public bool Equals(AccessItem item)
@@ -241,7 +241,7 @@ namespace DataWF.Common
 
         public static AccessItem Deserialize(BinaryReader reader, bool user)
         {
-            return new AccessItem(user ? reader.ReadBoolean() : false, reader.ReadInt32(), (AccessType)reader.ReadInt32());
+            return new AccessItem(user && reader.ReadBoolean(), reader.ReadInt32(), (AccessType)reader.ReadInt32());
         }
 
         public override int GetHashCode()

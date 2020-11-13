@@ -13,17 +13,17 @@ namespace DataWF.Common
         object ConvertFromString(string value);
         string ConvertToString(object value);
 
-        void FromProperty(BinaryWriter writer, object element, IInvoker invoker);
-        void FromProperty<E>(BinaryWriter writer, E element, IInvoker invoker);
+        void PropertyToBinary(BinaryInvokerWriter writer, object element, IInvoker invoker);
+        void PropertyToBinary<E>(BinaryInvokerWriter writer, E element, IInvoker invoker);
 
-        string FromProperty(object element, IInvoker invoker);
-        string FromProperty<E>(E element, IInvoker invoker);
+        string PropertyToString(object element, IInvoker invoker);
+        string PropertyToString<E>(E element, IInvoker invoker);
 
-        void ToProperty(BinaryReader reader, object element, IInvoker invoker);
-        void ToProperty<E>(BinaryReader reader, E element, IInvoker invoker);
+        void PropertyFromBinary(BinaryInvokerReader reader, object element, IInvoker invoker);
+        void PropertyFromBinary<E>(BinaryInvokerReader reader, E element, IInvoker invoker);
 
-        void ToProperty(object element, IInvoker invoker, string str);
-        void ToProperty<E>(E element, IInvoker invoker, string str);
+        void PropertyFromString(object element, IInvoker invoker, string str);
+        void PropertyFromString<E>(E element, IInvoker invoker, string str);
 
         void Write(BinaryInvokerWriter writer, object value, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map);
         object Read(BinaryInvokerReader reader, object value, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map);

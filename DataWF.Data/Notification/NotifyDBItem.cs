@@ -70,7 +70,7 @@ namespace DataWF.Data
         }
     }
 
-    public class RelicateDBItem : IByteSerializable
+    public class RelicateDBItem : IBinarySerializable
     {
         public DBLogType Command { get; set; }
         public int User { get; set; }
@@ -131,7 +131,7 @@ namespace DataWF.Data
         }
     }
 
-    public class NotifyDBItem : IByteSerializable, IComparable<NotifyDBItem>
+    public class NotifyDBItem : IBinarySerializable, IComparable<NotifyDBItem>
     {
         public DBLogType Command { get; set; }
         public int User { get; set; }

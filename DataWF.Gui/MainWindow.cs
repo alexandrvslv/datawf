@@ -600,11 +600,11 @@ namespace DataWF.Gui
         {
             using (var serializer = new XMLTextSerializer())
             {
-                serializer.Serialize(this, file);
+                serializer.Serialize(file, this);
             }
         }
 
-        public virtual void Serialize(ISerializeWriter writer)
+        public virtual void Serialize(XmlInvokerWriter writer)
         {
             writer.WriteAttribute("Width", Width);
             writer.WriteAttribute("Height", Height);
@@ -620,7 +620,7 @@ namespace DataWF.Gui
             }
         }
 
-        public virtual void Deserialize(ISerializeReader reader)
+        public virtual void Deserialize(XmlInvokerReader reader)
         {
             Width = reader.ReadAttribute<double>("Width");
             Height = reader.ReadAttribute<double>("Height");
