@@ -6,6 +6,8 @@ namespace DataWF.Common
     {
         public static readonly CharArraySerializer Instance = new CharArraySerializer();
 
+        public override bool CanConvertString => true;
+
         public override object ConvertFromString(string value) => FromString(value);
 
         public override string ConvertToString(object value) => value.ToString();

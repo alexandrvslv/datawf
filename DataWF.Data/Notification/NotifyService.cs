@@ -218,7 +218,7 @@ namespace DataWF.Data
                 {
                     Value = item,
                     Id = item.PrimaryId,
-                    Diff = type,
+                    Command = type,
                     User = arg.User?.Id ?? 0
                 });
             }
@@ -325,7 +325,7 @@ namespace DataWF.Data
                             }
                             foreach (var item in typeTable.Items)
                             {
-                                switch (item.Diff)
+                                switch (item.Command)
                                 {
                                     case DBLogType.Insert:
                                         typeTable.Table.LoadItemById(item.Id, DBLoadParam.Load, null, transaction);
@@ -354,143 +354,6 @@ namespace DataWF.Data
                     }
                 }
             }
-        }
-    }
-
-    public class NotifyDBTable : IByteSerializable, IComparable<NotifyDBTable>
-    {
-        private DBTable table;
-
-        [XmlIgnore, JsonIgnore]
-        public DBTable Table
-        {
-            get => table ?? (table = DBTable.GetTable(Type));
-            set => table = value;
-        }
-
-        public Type Type { get; set; }
-
-        public List<NotifyDBItem> Items { get; set; } = new List<NotifyDBItem>();
-
-        public int CompareTo(NotifyDBTable other)
-        {
-            return Table.CompareTo(other.Table);
-        }
-
-        public void Deserialize(byte[] buffer)
-        {
-            using (var stream = new MemoryStream(buffer))
-            using (var reader = new BinaryReader(stream))
-            {
-                Deserialize(reader);
-            }
-        }
-
-        public void Deserialize(BinaryReader reader)
-        {
-            using (var invokerReader = new BinaryInvokerReader(reader))
-            {
-                Deserialize(invokerReader);
-            }
-        }
-
-        public void Deserialize(BinaryInvokerReader invokerReader)
-        {
-            invokerReader.ReadToken();
-            invokerReader.ReadToken();
-            var name = invokerReader.ReadString();
-            Type = TypeHelper.ParseType(name);
-            invokerReader.ReadToken();
-            invokerReader.ReadToken();
-            while (invokerReader.ReadToken() == BinaryToken.ArrayEntry)
-            {
-                var item = new NotifyDBItem();
-                item.Deserialize(invokerReader.Reader);
-                Items.Add(item);
-            }
-        }
-
-        public byte[] Serialize()
-        {
-            using (var stream = new MemoryStream())
-            using (var writer = new BinaryWriter(stream))
-            {
-                Serialize(writer);
-                return stream.ToArray();
-            }
-        }
-
-        public void Serialize(BinaryWriter writer)
-        {
-            using (var invokerWriter = new BinaryInvokerWriter(writer))
-            {
-                Serialize(invokerWriter);
-            }
-        }
-
-        public void Serialize(BinaryInvokerWriter invokerWriter)
-        {
-            invokerWriter.WriteObjectBegin();
-            invokerWriter.WriteObjectEntry();
-            invokerWriter.WriteString(TypeHelper.FormatBinary(Type), false);
-            invokerWriter.WriteObjectEntry();
-            invokerWriter.WriteArrayBegin();
-            foreach (var item in Items)
-            {
-                invokerWriter.WriteArrayEntry();
-                item.Serialize(invokerWriter.Writer);
-            }
-            invokerWriter.WriteArrayEnd();
-            invokerWriter.WriteObjectEnd();
-        }
-    }
-
-    public class NotifyDBItem : IByteSerializable, IComparable<NotifyDBItem>
-    {
-        public DBLogType Diff { get; set; }
-        public int User { get; set; }
-        public object Id { get; set; }
-
-        [XmlIgnore, JsonIgnore]
-        public DBItem Value { get; set; }
-
-        public int CompareTo(NotifyDBItem other)
-        {
-            var res = ListHelper.Compare(Id, other.Id, null);
-            return res != 0 ? res : Diff.CompareTo(Diff);
-        }
-
-        public void Deserialize(byte[] buffer)
-        {
-            using (var stream = new MemoryStream(buffer))
-            using (var reader = new BinaryReader(stream))
-            {
-                Deserialize(reader);
-            }
-        }
-
-        public void Deserialize(BinaryReader reader)
-        {
-            Diff = (DBLogType)reader.ReadByte();
-            User = reader.ReadInt32();
-            Id = Helper.ReadBinary(reader);
-        }
-
-        public byte[] Serialize()
-        {
-            using (var stream = new MemoryStream())
-            using (var writer = new BinaryWriter(stream))
-            {
-                Serialize(writer);
-                return stream.ToArray();
-            }
-        }
-
-        public void Serialize(BinaryWriter writer)
-        {
-            writer.Write((byte)Diff);
-            writer.Write((int)User);
-            Helper.WriteBinary(writer, Id, true);
         }
     }
 

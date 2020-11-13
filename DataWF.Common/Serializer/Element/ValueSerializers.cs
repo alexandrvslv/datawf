@@ -15,6 +15,8 @@ namespace DataWF.Common
 
         public TypeConverter Converter { get; set; }
 
+        public override bool CanConvertString => true;
+
         public override object ConvertFromBinary(BinaryReader reader) => ConvertFromString(StringSerializer.Instance.FromBinary(reader));
 
         public override object ConvertFromString(string value) => Converter.ConvertFromInvariantString(value);

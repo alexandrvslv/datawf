@@ -22,7 +22,7 @@ namespace DataWF.Common
             var keys = PropertySerializationInfoKeys.None;
             if (TypeHelper.IsSerializeText(property))
                 keys |= PropertySerializationInfoKeys.Text;
-            else if (TypeHelper.IsSerializeAttribute(property))
+            if (TypeHelper.IsSerializeAttribute(property))
                 keys |= PropertySerializationInfoKeys.Attribute;
             if (TypeHelper.IsSerializeWriteable(property))
                 keys |= PropertySerializationInfoKeys.Writeable;
@@ -37,10 +37,7 @@ namespace DataWF.Common
             Invoker = EmitInvoker.Initialize(property, true);
 
             Default = TypeHelper.GetDefault(property);
-            if (IsAttribute || IsText)
-            {
-                Serialazer = TypeHelper.GetSerializer(property);
-            }
+            Serialazer = TypeHelper.GetSerializer(property);
         }
 
         public IInvoker Invoker { get; }

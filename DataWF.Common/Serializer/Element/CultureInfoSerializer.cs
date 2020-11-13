@@ -9,6 +9,8 @@ namespace DataWF.Common
     {
         public static readonly CultureInfoSerializer Instance = new CultureInfoSerializer();
 
+        public override bool CanConvertString => true;
+
         public override object ConvertFromString(string value) => CultureInfo.GetCultureInfo(value);
 
         public override string ConvertToString(object value) => ((CultureInfo)value).Name;

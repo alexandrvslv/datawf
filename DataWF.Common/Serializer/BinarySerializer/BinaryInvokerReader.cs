@@ -11,26 +11,33 @@ namespace DataWF.Common
     public class BinaryInvokerReader : IDisposable, ISerializeReader
     {
         private readonly Dictionary<TypeSerializationInfo, Dictionary<ushort, PropertySerializationInfo>> cacheType = new Dictionary<TypeSerializationInfo, Dictionary<ushort, PropertySerializationInfo>>();
-        private BinarySerializer Serializer { get; set; }
-        public BinaryReader Reader { get; set; }
-        public int CurrentLevel { get; set; }
+        private readonly bool dispReader;
 
         public BinaryInvokerReader(Stream stream)
             : this(stream, BinarySerializer.Instance)
         { }
         public BinaryInvokerReader(Stream stream, BinarySerializer serializer)
-            : this(new BinaryReader(stream, Encoding.UTF8, true), serializer)
+            : this(new BinaryReader(stream, Encoding.UTF8, true), serializer, true)
         { }
 
         public BinaryInvokerReader(BinaryReader reader)
-            : this(reader, BinarySerializer.Instance)
+            : this(reader, BinarySerializer.Instance, false)
         { }
 
-        public BinaryInvokerReader(BinaryReader reader, BinarySerializer serializer)
+        public BinaryInvokerReader(BinaryReader reader, BinarySerializer serializer, bool dispReader = true)
         {
             Serializer = serializer;
+            this.dispReader = dispReader;
             Reader = reader;
         }
+
+        public BinarySerializer Serializer { get; private set; }
+
+        public BinaryReader Reader { get; private set; }
+
+        public int CurrentLevel { get; private set; }
+
+        public BinaryToken CurrentToken { get; private set; }
 
         public BinaryToken PeakToken()
         {
@@ -44,15 +51,16 @@ namespace DataWF.Common
             try
             {
                 var current = Reader.ReadByte();
-                if (current == 0 || current > 31)
+                if (current == 0 || current > 32)
                 {
                     current = 0;
                 }
-                return (BinaryToken)current;
+
+                return CurrentToken = (BinaryToken)current;
             }
             catch (EndOfStreamException)
             {
-                return BinaryToken.Eof;
+                return CurrentToken = BinaryToken.Eof;
             }
         }
 
@@ -70,74 +78,46 @@ namespace DataWF.Common
 
         public Type ReadType(out TypeSerializationInfo typeInfo, out Dictionary<ushort, PropertySerializationInfo> map)
         {
-            if (PeakToken() == BinaryToken.SchemaBegin)
+            var token = ReadToken();
+            if (token == BinaryToken.SchemaBegin)
             {
-                Reader.ReadByte();
+                token = ReadToken();
             }
-            var name = StringSerializer.Instance.FromBinary(Reader);
+            var name = nameof(Object);
+            if (token == BinaryToken.SchemaName)
+            {
+                name = StringSerializer.Instance.FromBinary(Reader);
+                token = ReadToken();
+            }
             var type = TypeHelper.ParseType(name);
             typeInfo = Serializer.GetTypeInfo(type);
             cacheType.TryGetValue(typeInfo, out map);
             if (map == null)
-                map = new Dictionary<ushort, PropertySerializationInfo>();
-            while (ReadToken() == BinaryToken.SchemaEntry)
             {
-                var index = Reader.ReadUInt16();
-                var propertyName = StringSerializer.Instance.FromBinary(Reader);
-                map[index] = typeInfo.GetProperty(propertyName);
+                map = new Dictionary<ushort, PropertySerializationInfo>();
+            }
+            if (token == BinaryToken.SchemaEntry)
+            {
+                do
+                {
+                    var index = Reader.ReadUInt16();
+                    var propertyName = StringSerializer.Instance.FromBinary(Reader);
+                    map[index] = typeInfo.GetProperty(propertyName);
+                }
+                while (ReadToken() == BinaryToken.SchemaEntry);
             }
             cacheType[typeInfo] = map;
-            if (PeakToken() == BinaryToken.SchemaEnd)
-            {
-                Reader.ReadByte();
-            }
             return type;
-        }
-
-        public object ReadCollection(IList list, TypeSerializationInfo info)
-        {
-            if (PeakToken() == BinaryToken.ArrayBegin)
-            {
-                Reader.ReadByte();
-            }
-            var itemTypeInfo = Serializer.GetTypeInfo(info.ListItemType);
-            while (ReadToken() == BinaryToken.ArrayEntry)
-            {
-                object newobj = Read(null, itemTypeInfo);
-                list.Add(newobj);
-            }
-
-            return list;
-        }
-
-        public object ReadDictionary(object element, TypeSerializationInfo info)
-        {
-            if (PeakToken() == BinaryToken.ArrayBegin)
-            {
-                Reader.ReadByte();
-            }
-            var dictionary = (IDictionary)element;
-            var item = XMLTextSerializer.CreateDictionaryItem(info.Type);
-            var itemTypeInfo = Serializer.GetTypeInfo(item.GetType());
-            while (ReadToken() == BinaryToken.ArrayEntry)
-            {
-                Read(item, itemTypeInfo);
-                dictionary[item.Key] = item.Value;
-                item.Reset();
-            }
-            return element;
         }
 
         public object Read(object element)
         {
-            element = Read(element, element != null ? Serializer.GetTypeInfo(element.GetType()) : null);
-            return element;
+            return Read(element, element != null ? Serializer.GetTypeInfo(element.GetType()) : null);
         }
 
         public T Read<T>(T element)
         {
-            element = (T)Read(element, Serializer.GetTypeInfo(typeof(T)));
-            return element;
+            return Read(element, Serializer.GetTypeInfo(typeof(T)));
         }
 
         public object Read(object element, TypeSerializationInfo typeInfo)
@@ -145,56 +125,185 @@ namespace DataWF.Common
             return Read(element, typeInfo, GetMap(typeInfo));
         }
 
-        public object Read(object element, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
+        public T Read<T>(T element, TypeSerializationInfo typeInfo)
         {
-            if (PeakToken() == BinaryToken.ObjectBegin)
-            {
-                Reader.ReadByte();
-            }
+            return Read(element, typeInfo, GetMap(typeInfo));
+        }
 
-            if (PeakToken() == BinaryToken.SchemaBegin)
+        public object ReadObject(object element, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
+        {
+            if (info.Serialazer is IElementSerializer serializer)
+            {
+                return serializer.Read(this, element, info, map);
+            }
+            else
+            {
+                var token = ReadToken();
+                if (token == BinaryToken.ObjectBegin)
+                    token = ReadToken();
+                if (token == BinaryToken.SchemaBegin)
+                {
+                    ReadType(out info, out map);
+                    token = ReadToken();
+                }
+
+                if (element == null || element.GetType() != info.Type)
+                {
+                    element = info.Constructor?.Create();
+                }
+                if (token == BinaryToken.ObjectEntry)
+                {
+                    do
+                    {
+                        ReadProperty(element, map);
+                    }
+                    while (ReadToken() == BinaryToken.ObjectEntry);
+                }
+                return element;
+            }
+        }
+
+        public T ReadObject<T>(T element, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
+        {
+            if (info.Serialazer is IElementSerializer<T> serializer)
+            {
+                return serializer.Read(this, element, info, map);
+            }
+            else
+            {
+                var token = ReadToken();
+                if (token == BinaryToken.ObjectBegin)
+                    token = ReadToken();
+                if (token == BinaryToken.SchemaBegin)
+                {
+                    ReadType(out info, out map);
+                    token = ReadToken();
+                }
+
+                if (element == null || element.GetType() != info.Type)
+                {
+                    element = (T)info.Constructor?.Create();
+                }
+                if (token == BinaryToken.ObjectEntry)
+                {
+                    do
+                    {
+                        ReadProperty(element, map);
+                    }
+                    while (ReadToken() == BinaryToken.ObjectEntry);
+                }
+                return element;
+            }
+        }
+
+        public object ReadCollection(ICollection element, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
+        {
+            var token = ReadToken();
+            if (token == BinaryToken.ArrayBegin)
+                token = ReadToken();
+
+            if (token == BinaryToken.SchemaBegin)
             {
                 ReadType(out info, out map);
+                token = ReadToken();
             }
-            if (info == null || info.Type == typeof(object))
+            int length = 1;
+            if (token == BinaryToken.ArrayLength)
             {
-                return Helper.ReadBinary(Reader);
-                //throw new ArgumentException("Element type can't be resolved!", nameof(element));
+                length = Reader.ReadInt32();
+                token = ReadToken();
             }
 
-            if (info.Serialazer != null)
-            {
-                var typeToken = ReadToken();
-                return info.Serialazer.ConvertFromBinary(Reader);
-            }
             if (element == null || element.GetType() != info.Type)
             {
-                element = info.Constructor?.Create();
+                element = (ICollection)(info.ListConstructor?.Create(length) ?? info.Constructor.Create());
+            }
+            if (token == BinaryToken.ArrayEntry)
+            {
+                if (info.ListIsArray && element is IList array)
+                {
+                    int index = 0;
+                    var itemTypeInfo = Serializer.GetTypeInfo(info.ListItemType);
+                    do
+                    {
+                        array[index++] = Read(null, itemTypeInfo);
+                    }
+                    while (ReadToken() == BinaryToken.ArrayEntry);
+                }
+                else if (element is IDictionary dictionary)
+                {
+                    var item = XMLTextSerializer.CreateDictionaryItem(info.Type);
+                    var itemTypeInfo = Serializer.GetTypeInfo(item.GetType());
+                    do
+                    {
+                        Read(item, itemTypeInfo);
+                        dictionary[item.Key] = item.Value;
+                        item.Reset();
+                    }
+                    while (ReadToken() == BinaryToken.ArrayEntry);
+                }
+                else if (element is IList list)
+                {
+                    var itemTypeInfo = Serializer.GetTypeInfo(info.ListItemType);
+                    do
+                    {
+                        object newobj = Read(null, itemTypeInfo);
+                        list.Add(newobj);
+                    }
+                    while (ReadToken() == BinaryToken.ArrayEntry);
+                }
+            }
+            return element;
+        }
 
-                if (element == null && info.IsList)
-                {
-                    element = info.ListConstructor.Create(2);
-                }
-            }
-            var token = BinaryToken.None;
-            while ((token = ReadToken()) == BinaryToken.ObjectEntry)
+        public object Read(object element, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
+        {
+            var token = ReadToken();
+            if (token == BinaryToken.ObjectBegin)
             {
-                ReadProperty(element, map);
+                return ReadObject(element, info, map);
             }
-            if (token == BinaryToken.ArrayBegin)
+            else if (token == BinaryToken.ArrayBegin)
             {
-                if (info.IsDictionary)
-                {
-                    return ReadDictionary(element, info);
-                }
-                if (info.IsList)
-                {
-                    return ReadCollection((IList)element, info);
-                }
+                return ReadCollection((ICollection)element, info, map);
             }
-            if (token != BinaryToken.ObjectEnd && PeakToken() == BinaryToken.ObjectEnd)
+            else if (token == BinaryToken.Null)
             {
-                Reader.ReadByte();
+                return null;
+            }
+            else if (info == null || info.Type == typeof(object))
+            {
+                return Helper.ReadBinary(Reader, token);
+            }
+            else if (info.Serialazer is IElementSerializer serializer)
+            {
+                return serializer.ConvertFromBinary(Reader);
+            }
+            return element;
+        }
+
+        public T Read<T>(T element, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
+        {
+            var token = ReadToken();
+            if (token == BinaryToken.ObjectBegin)
+            {
+                return ReadObject(element, info, map);
+            }
+            else if (token == BinaryToken.ArrayBegin)
+            {
+                return ReadCollection((ICollection)element, info, map);
+            }
+            else if (token == BinaryToken.Null)
+            {
+                return default;
+            }
+            else if (info == null || info.Type == typeof(object))
+            {
+                return Helper.ReadBinary<T>(Reader, token);
+            }
+            else if (info.Serialazer is IElementSerializer<T> serializer)
+            {
+                return serializer.FromBinary(Reader);
             }
             return element;
         }
@@ -210,27 +319,43 @@ namespace DataWF.Common
             }
             else
             {
-                var type = PeakToken();
-                if (type == BinaryToken.Null)
+                var value = Read(null, Serializer.GetTypeInfo(property.DataType));
+                if (!(property?.IsReadOnly ?? true))
                 {
-                    ReadToken();
+                    property?.Invoker.SetValue(element, value);
                 }
-                else
+            }
+        }
+
+        private void ReadProperty<T>(T element, Dictionary<ushort, PropertySerializationInfo> map)
+        {
+            var index = Reader.ReadUInt16();
+            map.TryGetValue(index, out var property);
+
+            if (property?.Serialazer != null)
+            {
+                property.Serialazer.ToProperty(Reader, element, property.Invoker);
+            }
+            else
+            {
+                var value = Read(null, Serializer.GetTypeInfo(property.DataType));
+                if (!(property?.IsReadOnly ?? true))
                 {
-                    var value = Read(null, Serializer.GetTypeInfo(property.DataType));
-                    if (!(property?.IsReadOnly ?? true))
-                    {
-                        property?.Invoker.SetValue(element, value);
-                    }
+                    property?.Invoker.SetValue(element, value);
                 }
             }
         }
 
         public void Dispose()
         {
-            Reader?.Dispose();
+            if (Reader != null)
+            {
+                if (dispReader)
+                {
+                    Reader?.Dispose();
+                }
+                Reader = null;
+            }
         }
-
-
     }
 }

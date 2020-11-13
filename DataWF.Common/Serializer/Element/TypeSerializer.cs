@@ -8,6 +8,8 @@ namespace DataWF.Common
     {
         public static readonly TypeSerializer Instance = new TypeSerializer();
 
+        public override bool CanConvertString => true;
+
         public override object ConvertFromString(string value) => TypeHelper.ParseType(value);
 
         public override string ConvertToString(object value) => TypeHelper.FormatBinary((Type)value);

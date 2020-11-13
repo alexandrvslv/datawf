@@ -95,6 +95,14 @@ namespace DataWF.Common
             }
         }
 
+        public virtual void Serialize<T>(Stream stream, T element)
+        {
+            using (var writer = GetWriter(stream))
+            {
+                Serialize(writer, element);
+            }
+        }
+
         public static void Serialize(ISerializeWriter writer, object element)
         {
             writer.Write(element);
@@ -137,6 +145,15 @@ namespace DataWF.Common
         }
 
         public object Deserialize(Stream stream, object element = null)
+        {
+            using (var reader = GetReader(stream))
+            {
+                element = Deserialize(reader, element);
+            }
+            return element;
+        }
+
+        public T Deserialize<T>(Stream stream, T element)
         {
             using (var reader = GetReader(stream))
             {

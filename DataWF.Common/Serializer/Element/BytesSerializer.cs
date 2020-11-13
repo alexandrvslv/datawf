@@ -14,7 +14,7 @@ namespace DataWF.Common
 
         public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
 
-        public override void ConvertToBinary(object value, BinaryWriter writer, bool writeToken) => ToBinary((T)value, writer, writeToken);
+        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (T)value, writeToken);
 
         public override T FromBinary(BinaryReader reader)
         {
@@ -23,9 +23,7 @@ namespace DataWF.Common
             return obj;
         }
 
-        public override T FromString(string value) => throw new NotImplementedException();
-
-        public override void ToBinary(T value, BinaryWriter writer, bool writeToken)
+        public override void ToBinary(BinaryWriter writer, T value, bool writeToken)
         {
             if (writeToken)
             {
@@ -34,6 +32,22 @@ namespace DataWF.Common
             value.Serialize(writer);
         }
 
-        public override string ToString(T value) => value.ToString();
+        public override T FromString(string value)
+        {
+            using (var stream = new MemoryStream(Convert.FromBase64String(value)))
+            using (var reader = new BinaryReader(stream))
+            {
+                return FromBinary(reader);
+            }
+        }
+
+        public override string ToString(T value)
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new BinaryWriter(stream))
+            {
+                return FromBinary(reader);
+            }
+        }
     }
 }

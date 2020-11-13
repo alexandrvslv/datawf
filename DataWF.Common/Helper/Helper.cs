@@ -934,42 +934,57 @@ namespace DataWF.Common
         public static object ReadBinary(BinaryReader reader)
         {
             var typev = (BinaryToken)reader.ReadByte();
-            object value = null;
-            switch (typev)
-            {
-                case BinaryToken.Boolean: value = BoolSerializer.Instance.FromBinary(reader); break;
-                case BinaryToken.UInt8: value = UInt8Serializer.Instance.FromBinary(reader); break;
-                case BinaryToken.Int8: value = Int8Serializer.Instance.FromBinary(reader); break;
-                case BinaryToken.Char: value = CharSerializer.Instance.FromBinary(reader); break;
-                case BinaryToken.Int16: value = Int16Serializer.Instance.FromBinary(reader); break;
-                case BinaryToken.UInt16: value = UInt16Serializer.Instance.FromBinary(reader); break;
-                case BinaryToken.Int32: value = Int32Serializer.Instance.FromBinary(reader); break;
-                case BinaryToken.UInt32: value = UInt32Serializer.Instance.FromBinary(reader); break;
-                case BinaryToken.Int64: value = Int64Serializer.Instance.FromBinary(reader); break;
-                case BinaryToken.UInt64: value = UInt64Serializer.Instance.FromBinary(reader); break;
-                case BinaryToken.Float: value = FloatSerializer.Instance.FromBinary(reader); break;
-                case BinaryToken.Double: value = DoubleSerializer.Instance.FromBinary(reader); break;
-                case BinaryToken.Decimal: value = DecimalSerializer.Instance.FromBinary(reader); break;
-                case BinaryToken.DateTime: value = DateTimeSerializer.Instance.FromBinary(reader); break;
-                case BinaryToken.TimeSpan: value = TimeSpanSerializer.Instance.FromBinary(reader); break;
-                case BinaryToken.ByteArray: value = ByteArraySerializer.Instance.FromBinary(reader); break;
-                case BinaryToken.CharArray: value = CharArraySerializer.Instance.FromBinary(reader); break;
-                case BinaryToken.Null: value = null; break;
-                case BinaryToken.String: value = StringSerializer.Instance.FromBinary(reader); break;
-                case BinaryToken.ArrayBegin:
-                    {
-                        var list = new List<object>();
-                        var length = reader.ReadInt32();
-                        for (int i = 0; i < length; i++)
-                        {
-                            list.Add(ReadBinary(reader));
-                        }
-                    }
-                    break;
-            }
+            return ReadBinary(reader, typev);
+        }
 
+        public static object ReadBinary(BinaryReader reader, BinaryToken typev)
+        {
+            return GetSerializer(typev)?.ConvertFromBinary(reader);
+        }
+
+        public static ElementSerializer GetSerializer(BinaryToken token)
+        {
+            ElementSerializer value = null;
+            switch (token)
+            {
+                case BinaryToken.Boolean: value = BoolSerializer.Instance; break;
+                case BinaryToken.UInt8: value = UInt8Serializer.Instance; break;
+                case BinaryToken.Int8: value = Int8Serializer.Instance; break;
+                case BinaryToken.Char: value = CharSerializer.Instance; break;
+                case BinaryToken.Int16: value = Int16Serializer.Instance; break;
+                case BinaryToken.UInt16: value = UInt16Serializer.Instance; break;
+                case BinaryToken.Int32: value = Int32Serializer.Instance; break;
+                case BinaryToken.UInt32: value = UInt32Serializer.Instance; break;
+                case BinaryToken.Int64: value = Int64Serializer.Instance; break;
+                case BinaryToken.UInt64: value = UInt64Serializer.Instance; break;
+                case BinaryToken.Float: value = FloatSerializer.Instance; break;
+                case BinaryToken.Double: value = DoubleSerializer.Instance; break;
+                case BinaryToken.Decimal: value = DecimalSerializer.Instance; break;
+                case BinaryToken.DateTime: value = DateTimeSerializer.Instance; break;
+                case BinaryToken.TimeSpan: value = TimeSpanSerializer.Instance; break;
+                case BinaryToken.ByteArray: value = ByteArraySerializer.Instance; break;
+                case BinaryToken.CharArray: value = CharArraySerializer.Instance; break;
+                case BinaryToken.Null: value = null; break;
+                case BinaryToken.String: value = StringSerializer.Instance; break;
+            }
             return value;
         }
+
+        public static T ReadBinary<T>(BinaryReader reader)
+        {
+            var typev = (BinaryToken)reader.ReadByte();
+            return ReadBinary<T>(reader, typev);
+        }
+
+        public static T ReadBinary<T>(BinaryReader reader, BinaryToken typev)
+        {
+            T value = default(T);
+
+            if (GetSerializer(typev) is ElementSerializer<T> serializer)
+                value = serializer.FromBinary(reader);
+            return value;
+        }
+
         /// <summary>
         /// Reads the binary.
         /// </summary>

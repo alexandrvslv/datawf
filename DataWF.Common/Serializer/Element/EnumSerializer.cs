@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace DataWF.Common
 {
-    public class EnumSerializer<T> : StructSerializer<T> where T : struct
+    public class EnumSerializer<T> : NullableSerializer<T> where T : struct
     {
         public override object ConvertFromString(string value) => Enum.TryParse<T>(value, out var result) ? result : default(T);
 

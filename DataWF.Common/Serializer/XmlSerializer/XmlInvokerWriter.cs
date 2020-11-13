@@ -45,11 +45,12 @@ namespace DataWF.Common
                 Write(item, itemInfo, "i", false);
             }
         }
+
         public void Write<T>(T element)
         {
             Type type = element.GetType();
             var typeInfo = Serializer.GetTypeInfo(type);
-            Write(element, typeInfo, type.Name, true);
+            Write(element, typeInfo, typeInfo.ShortName, true);
         }
 
         public void Write(object element)
@@ -74,11 +75,10 @@ namespace DataWF.Common
             WriteBegin(name);
             if (info.IsAttribute)
             {
-                Writer.WriteValue(info.TextFormat(element));
+                Writer.WriteValue(info.Serialazer.ConvertToString(element));
             }
-            else if (Serializer.CheckIFile && element is IFileSerialize)
+            else if (Serializer.CheckIFile && element is IFileSerialize fileSerialize)
             {
-                var fileSerialize = element as IFileSerialize;
                 fileSerialize.Save();
                 Writer.WriteElementString("FileName", fileSerialize.FileName);
             }
@@ -94,9 +94,9 @@ namespace DataWF.Common
                     {
                         Writer.WriteAttributeString("Count", Int32Serializer.Instance.ToString(((IList)element).Count));
                     }
-                    if (info.ListDefaulType)
+                    if (info.ListIsTyped)
                     {
-                        Writer.WriteAttributeString("DT", BoolSerializer.Instance.ToString(info.ListDefaulType));
+                        Writer.WriteAttributeString("DT", BoolSerializer.Instance.ToString(info.ListIsTyped));
                     }
                 }
 
@@ -126,8 +126,13 @@ namespace DataWF.Common
 
                 foreach (var property in info.GetContents())
                 {
+
+                    if (property.IsReadOnly || !property.IsWriteable)
+                        continue;
+
                     var value = property.Invoker.GetValue(element);
-                    if (value == null || property.IsReadOnly || !property.IsWriteable)
+
+                    if (value == null)
                         continue;
 
                     var mtype = property.DataType;
@@ -146,9 +151,9 @@ namespace DataWF.Common
                 {
                     WriteDictionary((IDictionary)element, info.Type);
                 }
-                else if (element is INamedList)
+                else if (element is INamedList namedList)
                 {
-                    WriteNamedList((INamedList)element, info);
+                    WriteNamedList(namedList, info);
                 }
                 else if (info.IsList)
                 {

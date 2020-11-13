@@ -215,6 +215,9 @@ namespace DataWF.Data
         public bool CanWrite => true;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
+        public ElementSerializer Serializer { get; private set; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public Pull Pull
         {
             get => pull;
@@ -223,6 +226,7 @@ namespace DataWF.Data
                 if (pull != value)
                 {
                     pull = value;
+
                     CheckIndex();
                 }
             }
@@ -661,6 +665,7 @@ namespace DataWF.Data
             {
                 if (DataType == null)
                     throw new InvalidOperationException($"{nameof(DataType)} not specified!");
+                Serializer = TypeHelper.GetSerializer(DataType);
                 Pull = Pull.Fabric(DataType, Table.BlockSize);
             }
             else if (Pull.BlockSize != Table.BlockSize)

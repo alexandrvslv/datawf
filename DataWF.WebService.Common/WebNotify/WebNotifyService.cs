@@ -65,7 +65,7 @@ namespace DataWF.WebService.Common
                 {
                     Value = item,
                     Id = item.PrimaryId,
-                    Diff = type,
+                    Command = type,
                     User = arg.User?.Id ?? 0
                 });
             }

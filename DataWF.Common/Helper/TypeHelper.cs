@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -369,6 +370,19 @@ namespace DataWF.Common
                     serializer = CultureInfoSerializer.Instance;
                 else if (type.IsEnum)
                     serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
+                else if (IsInterface(type, typeof(IByteSerializable))
+                {
+                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(BytesSerializer<>).MakeGenericType(type));
+                }
+                else if (IsInterface(type, typeof(IDictionary))
+                {
+                    TypeHelper.Arg
+                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
+                }
+                else if (IsInterface(type, typeof(IList))
+                {
+                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
+                }
                 else
                 {
                     var converter = GetTypeConverter(type);
@@ -452,7 +466,7 @@ namespace DataWF.Common
                 else
                 {
                     var serializer = GetSerializer(type);
-                    if (serializer != null)
+                    if (serializer != null && serializer.CanConvertString)
                     {
                         flag = true;
                     }

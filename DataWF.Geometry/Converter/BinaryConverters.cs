@@ -25,33 +25,26 @@ namespace DataWF.Geometry
 {
     public class Point2DSerializer : BytesSerializer<Point2D>
     {
-        public override Point2D FromString(string value)
-        {
-            return Point2D.TryParse(value, out var point) ? point : Point2D.Empty;
-        }
+        public override string ToString(Point2D value) => value.ToString();
+
+        public override Point2D FromString(string value) => Point2D.TryParse(value, out var point) ? point : Point2D.Empty;
     }
 
     public class Point3DSerializer : BytesSerializer<Point3D>
     {
-        public override Point3D FromString(string value)
-        {
-            return Point3D.TryParse(value, out var point) ? point : Point3D.Empty;
-        }
+        public override string ToString(Point3D value) => value.ToString();
+        public override Point3D FromString(string value) => Point3D.TryParse(value, out var point) ? point : Point3D.Empty;
     }
 
     public class Rectangle2DSerializer : BytesSerializer<Rectangle2D>
     {
-        public override Rectangle2D FromString(string value)
-        {
-            return Rectangle2D.TryParse(value, out var rect) ? rect : Rectangle2D.Empty;
-        }
+        public override string ToString(Rectangle2D value) => value.ToString();
+        public override Rectangle2D FromString(string value) => Rectangle2D.TryParse(value, out var rect) ? rect : Rectangle2D.Empty;
     }
 
     public class Rectangle3DSerializer : BytesSerializer<Rectangle3D>
     {
-        public override Rectangle3D FromString(string value)
-        {
-            return Rectangle3D.TryParse(value, out var rect) ? rect : Rectangle3D.Empty;
-        }
+        public override string ToString(Rectangle3D value) => value.ToString();
+        public override Rectangle3D FromString(string value) => Rectangle3D.TryParse(value, out var rect) ? rect : Rectangle3D.Empty;
     }
 }

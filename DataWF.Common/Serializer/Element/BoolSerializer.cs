@@ -3,10 +3,10 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class BoolSerializer : StructSerializer<bool>
+    public class BoolSerializer : NullableSerializer<bool>
     {
         public static readonly BoolSerializer Instance = new BoolSerializer();
-
+        
         public override object ConvertFromString(string value) => bool.TryParse(value, out var result) ? result : false;
 
         public override string ConvertToString(object value) => ((bool)value).ToString(CultureInfo.InvariantCulture);

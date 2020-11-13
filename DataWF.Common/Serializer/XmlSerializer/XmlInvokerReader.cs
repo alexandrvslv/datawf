@@ -72,7 +72,7 @@ namespace DataWF.Common
         {
             if (member.Serialazer != null)
             {
-                member.Serialazer.ToProperty(value, element, member.Invoker);
+                member.Serialazer.ToProperty(element, member.Invoker, value);
             }
             else
             {
@@ -117,21 +117,21 @@ namespace DataWF.Common
             return Reader.ReadInnerXml();
         }
 
-        public void ReadCollectionElement(object element, TypeSerializationInfo info, ref int listIndex)
+        public void ReadCollectionElement(object element, TypeSerializationInfo listInfo, TypeSerializationInfo defaultTypeInfo, ref int listIndex)
         {
             Type mtype = ReadType();
             if (string.Equals(Reader.Name, "i", StringComparison.Ordinal))
             {
-                var itemInfo = mtype != null ? GetTypeInfo(mtype) : info.ListItemTypeInfo;
+                var itemInfo = mtype != null ? GetTypeInfo(mtype) : defaultTypeInfo;
                 var list = (IList)element;
                 object newobj = null;
-                if (itemInfo?.IsAttribute ?? info.ListItemIsAttribute)
+                if (itemInfo?.IsAttribute ?? listInfo.ListItemIsAttribute)
                 {
                     newobj = itemInfo.TextParse(Reader.ReadElementContentAsString());
                 }
                 else
                 {
-                    if (info.IsNamedList)
+                    if (listInfo.ListIsNamed)
                     {
                         newobj = ((INamedList)list).Get(Reader.GetAttribute(nameof(INamed.Name)));
                     }
@@ -151,7 +151,7 @@ namespace DataWF.Common
                     }
                     newobj = Read(newobj, itemInfo);
                 }
-                if (info.IsNamedList)
+                if (listInfo.ListIsNamed)
                 {
                     ((INamedList)list).Set((INamed)newobj, listIndex);
                 }
@@ -167,25 +167,25 @@ namespace DataWF.Common
             }
             else// if (mtype != null)
             {
-                ReadElement(element, info, mtype);
+                ReadElement(element, listInfo, mtype);
             }
         }
 
         public object ReadCollection(IList list, TypeSerializationInfo info)
         {
-            info.ListItemTypeInfo = GetTypeInfo(info.ListItemType);
-            if (info.ListDefaulType)
+            var defaultTypeInfo = GetTypeInfo(info.ListItemType);
+            if (info.ListIsTyped)
             {
                 var type = TypeHelper.ParseType(Reader.GetAttribute("DT"));
                 if (type != null && type != info.ListItemType)
                 {
-                    info.ListItemTypeInfo = GetTypeInfo(type);
+                    defaultTypeInfo = GetTypeInfo(type);
                 }
             }
             var listIndex = 0;
             while (ReadBegin())
             {
-                ReadCollectionElement(list, info, ref listIndex);
+                ReadCollectionElement(list, info, defaultTypeInfo, ref listIndex);
             }
 
             return list;

@@ -194,13 +194,13 @@ namespace DataWF.WebService.Common
                     foreach (var item in table.Items)
                     {
                         if (!item.User.Equals(User.Id)
-                            || item.Diff == DBLogType.Delete)
+                            || item.Command == DBLogType.Delete)
                         {
                             writer.WriteStartObject();
-                            writer.WriteNumber("Diff", (int)item.Diff);
+                            writer.WriteNumber("Diff", (int)item.Command);
                             writer.WriteNumber("User", item.User);
                             writer.WriteString("Id", item.Id.ToString());
-                            if (item.Diff != DBLogType.Delete)
+                            if (item.Command != DBLogType.Delete)
                             {
                                 var value = item.Value;
                                 if (value != null
