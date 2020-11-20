@@ -82,61 +82,80 @@ namespace DataWF.Data
 
         public static event EventHandler<DBSchemaChangedArgs> DBSchemaChanged;
 
-        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> rowAcceptHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
-        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> rowRejectHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
-        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> rowUpdateHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
-        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> rowLoginingHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
-        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> rowUpdatingHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
+        private static readonly HashSet<Func<DBTransaction, ValueTask>> transactionCommitHandler = new HashSet<Func<DBTransaction, ValueTask>>();
+        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> itemAcceptHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
+        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> itemRejectHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
+        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> itemUpdatedHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
+        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> itemLoginingHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
+        private static readonly HashSet<Func<DBItemEventArgs, ValueTask>> itemUpdatingHandler = new HashSet<Func<DBItemEventArgs, ValueTask>>();
 
-        public static void AddRowUpdating(Func<DBItemEventArgs, ValueTask> function)
+        public static void AddTransactionCommit(Func<DBTransaction, ValueTask> function)
         {
-            rowUpdatingHandler.Add(function);
+            transactionCommitHandler.Add(function);
         }
 
-        public static void RemoveRowUpdating(Func<DBItemEventArgs, ValueTask> function)
+        public static void RemoveTransactionCommit(Func<DBTransaction, ValueTask> function)
         {
-            rowUpdatingHandler.Remove(function);
+            transactionCommitHandler.Remove(function);
+        }
+
+        internal static void OnTransactionCommit(DBTransaction transaction)
+        {
+            foreach (var function in transactionCommitHandler)
+            {
+                _ = function(transaction);
+            }
+        }
+
+        public static void AddItemUpdating(Func<DBItemEventArgs, ValueTask> function)
+        {
+            itemUpdatingHandler.Add(function);
+        }
+
+        public static void RemoveItemUpdating(Func<DBItemEventArgs, ValueTask> function)
+        {
+            itemUpdatingHandler.Remove(function);
         }
 
         internal static void OnUpdating(DBItemEventArgs e)
         {
-            foreach (var function in rowUpdatingHandler)
+            foreach (var function in itemUpdatingHandler)
             {
                 _ = function(e);
             }
         }
 
-        public static void AddRowLoging(Func<DBItemEventArgs, ValueTask> function)
+        public static void AddItemLoging(Func<DBItemEventArgs, ValueTask> function)
         {
-            rowLoginingHandler.Add(function);
+            itemLoginingHandler.Add(function);
         }
 
-        public static void RemoveRowLoging(Func<DBItemEventArgs, ValueTask> function)
+        public static void RemoveItemLoging(Func<DBItemEventArgs, ValueTask> function)
         {
-            rowLoginingHandler.Remove(function);
+            itemLoginingHandler.Remove(function);
         }
 
         internal static void OnLogItem(DBItemEventArgs e)
         {
-            foreach (var function in rowLoginingHandler)
+            foreach (var function in itemLoginingHandler)
             {
                 _ = function(e);
             }
         }
 
-        public static void AddRowUpdated(Func<DBItemEventArgs, ValueTask> function)
+        public static void AddItemUpdated(Func<DBItemEventArgs, ValueTask> function)
         {
-            rowUpdateHandler.Add(function);
+            itemUpdatedHandler.Add(function);
         }
 
-        public static void RemoveRowUpdated(Func<DBItemEventArgs, ValueTask> function)
+        public static void RemoveItemUpdated(Func<DBItemEventArgs, ValueTask> function)
         {
-            rowUpdateHandler.Remove(function);
+            itemUpdatedHandler.Remove(function);
         }
 
         internal static void OnUpdated(DBItemEventArgs e)
         {
-            foreach (var function in rowUpdateHandler)
+            foreach (var function in itemUpdatedHandler)
             {
                 _ = function(e);
             }
@@ -144,17 +163,17 @@ namespace DataWF.Data
 
         public static void AddRowAccept(Func<DBItemEventArgs, ValueTask> function)
         {
-            rowAcceptHandler.Add(function);
+            itemAcceptHandler.Add(function);
         }
 
         public static void RemoveRowAccept(Func<DBItemEventArgs, ValueTask> function)
         {
-            rowAcceptHandler.Remove(function);
+            itemAcceptHandler.Remove(function);
         }
 
         internal static void OnAccept(DBItemEventArgs e)
         {
-            foreach (var function in rowAcceptHandler)
+            foreach (var function in itemAcceptHandler)
             {
                 _ = function(e);
             }
@@ -162,17 +181,17 @@ namespace DataWF.Data
 
         public static void AddRowReject(Func<DBItemEventArgs, ValueTask> function)
         {
-            rowRejectHandler.Add(function);
+            itemRejectHandler.Add(function);
         }
 
         public static void RemoveRowReject(Func<DBItemEventArgs, ValueTask> function)
         {
-            rowRejectHandler.Remove(function);
+            itemRejectHandler.Remove(function);
         }
 
         internal static void OnReject(DBItemEventArgs e)
         {
-            foreach (var function in rowRejectHandler)
+            foreach (var function in itemRejectHandler)
             {
                 _ = function(e);
             }

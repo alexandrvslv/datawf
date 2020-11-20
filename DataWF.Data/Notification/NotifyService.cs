@@ -101,7 +101,7 @@ namespace DataWF.Data
         public async void Start()
         {
             StartListener();
-            endPoint = new IPEndPoint(EndPointHelper.GetInterNetworkIPs().First(), ListenerEndPoint.Port);
+            endPoint = new IPEndPoint(SocketHelper.GetInterNetworkIPs().First(), ListenerEndPoint.Port);
             instance = await Instance.GetByNetId(endPoint, true, User);
 
             byte[] temp = instance.EndPoint.GetBytes();
@@ -219,7 +219,7 @@ namespace DataWF.Data
                     Value = item,
                     Id = item.PrimaryId,
                     Command = type,
-                    User = arg.User?.Id ?? 0
+                    UserId = arg.User?.Id ?? 0
                 });
             }
             return default;
@@ -287,19 +287,9 @@ namespace DataWF.Data
         private static byte[] Serialize(List<NotifyDBTable> list)
         {
             using (var stream = new MemoryStream())
-            using (var writer = new BinaryInvokerWriter(stream))
             {
-                writer.WriteObjectBegin();
-                writer.WriteArrayBegin();
-
-                foreach (var item in list)
-                {
-                    writer.WriteArrayEntry();
-                }
-
-                writer.WriteArrayEnd();
-                writer.WriteObjectEnd();
-                writer.Flush();
+                var serializer = new BinarySerializer { TypeShortName = true };
+                serializer.Serialize(stream, list);
                 return stream.ToArray();
             }
         }
@@ -311,14 +301,11 @@ namespace DataWF.Data
                 using (var transaction = new DBTransaction(DBService.Schems.DefaultSchema.Connection, null, true))
                 {
                     using (var stream = new MemoryStream(buffer))
-                    using (var reader = new BinaryInvokerReader(stream))
                     {
-                        reader.ReadToken();
-                        reader.ReadToken();
-                        while (reader.ReadToken() == BinaryToken.ArrayEntry)
+                        var serializer = new BinarySerializer { TypeShortName = true };
+                        var list = serializer.Deserialize<List<NotifyDBTable>>(stream, null);
+                        foreach (var typeTable in list)
                         {
-                            var typeTable = new NotifyDBTable();
-                            typeTable.Deserialize(reader);
                             if (typeTable.Type == null)
                             {
                                 continue;

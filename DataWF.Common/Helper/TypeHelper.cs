@@ -372,12 +372,26 @@ namespace DataWF.Common
                     serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
                 else if (IsInterface(type, typeof(IBinarySerializable)))
                     serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(BytesSerializer<>).MakeGenericType(type));
-                else if (IsInterface(type, typeof(IDictionary)) && IsGeneric(type, out var dargs))
-                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(DictionarySerializer<,,>).MakeGenericType(type, dargs[0], dargs[1]));
-                else if (IsInterface(type, typeof(IList)) && IsGeneric(type, out var largs))
-                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(ListSerializer<,>).MakeGenericType(type, largs[0]));
-                else
+                else if (IsInterface(type, typeof(IXMLSerializable)))
+                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(XMLSerializer<>).MakeGenericType(type));
+                else if (IsInterface(type, typeof(IDictionary)))
+                {
+                    if (IsGeneric(type, out var dargs))
+                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(DictionarySerializer<,,>).MakeGenericType(type, dargs[0], dargs[1]));
+                    else
+                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(DictionarySerializer<>).MakeGenericType(type));
+                }
+                else if (IsInterface(type, typeof(IList)))
+                {
+                    if (IsGeneric(type, out var largs))
+                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(ListSerializer<,>).MakeGenericType(type, largs[0]));
+                    else
+                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(ListSerializer<>).MakeGenericType(type));
+                }
+                else if (type != typeof(object))
+                {
                     serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(ObjectSerializer<>).MakeGenericType(type));
+                }
                 //else
                 //{
                 //    var converter = GetTypeConverter(type);
@@ -394,6 +408,11 @@ namespace DataWF.Common
         public static bool IsGeneric(Type type, out Type[] largs)
         {
             largs = null;
+            if (type.IsArray)
+            {
+                largs = new[] { type.GetElementType() };
+                return largs[0] != typeof(object);
+            }
             while (!(type?.IsGenericType ?? true))
             {
                 type = type.BaseType;
@@ -436,7 +455,7 @@ namespace DataWF.Common
                 var attribute = info.GetCustomAttribute<XmlAttributeAttribute>(false);
                 if (attribute != null)
                     return cacheIsXmlAttribute[token] = true;
-                if (info is PropertyInfo propertyInfo && GetSerializer(propertyInfo) != null)
+                if (info is PropertyInfo propertyInfo && (GetSerializer(propertyInfo)?.CanConvertString ?? false))
                     return cacheIsXmlAttribute[token] = true;
 
                 return cacheIsXmlAttribute[token] = IsSerializeAttribute(GetMemberType(info));
@@ -922,29 +941,36 @@ namespace DataWF.Common
             return builder.ToString();
         }
 
-        public static string FormatBinary(Type type)
+        public static string FormatBinary(Type type, bool shortForm = false)
         {
             var builder = new StringBuilder();
             if (type.IsGenericType)
             {
-                builder.Append($"{type.Namespace}.{type.Name}[");
+                if (!shortForm)
+                    builder.Append($"{type.Namespace}.");
+                builder.Append($"{type.Name}[");
                 foreach (var parameter in type.GetGenericArguments())
                 {
-                    builder.Append($"[{FormatBinary(parameter)}], ");
+                    builder.Append($"[{FormatBinary(parameter, shortForm)}], ");
                 }
                 builder.Length -= 2;
                 builder.Append("]");
             }
             else
             {
-                builder.Append(type.FullName);
+                if (shortForm)
+                    builder.Append(type.Name);
+                else
+                    builder.Append(type.FullName);
             }
-            var assemblyName = type.Assembly.GetName().Name;
-            if (!string.Equals(assemblyName, "mscorlib", StringComparison.Ordinal)
-                && !string.Equals(assemblyName, "System.Private.CoreLib", StringComparison.Ordinal))
+            if (!shortForm)
             {
-                builder.Append(", ");
-                builder.Append(assemblyName);
+                var assemblyName = type.Assembly.GetName().Name;
+                if (!string.Equals(assemblyName, "mscorlib", StringComparison.Ordinal)
+                    && !string.Equals(assemblyName, "System.Private.CoreLib", StringComparison.Ordinal))
+                {
+                    builder.Append($", {assemblyName}");
+                }
             }
             return builder.ToString();
         }

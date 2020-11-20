@@ -66,7 +66,7 @@ namespace DataWF.WebService.Common
                     Value = item,
                     Id = item.PrimaryId,
                     Command = type,
-                    User = arg.User?.Id ?? 0
+                    UserId = arg.User?.Id ?? 0
                 });
             }
             return default;

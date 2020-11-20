@@ -1,24 +1,31 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
     public class TcpSocket : IDisposable
     {
-        protected ManualResetEvent sendEvent = new ManualResetEvent(true);
-        protected ManualResetEvent loadEvent = new ManualResetEvent(true);
-        protected ManualResetEvent connectEvent = new ManualResetEvent(true);
-        protected ManualResetEvent disconnectEvent = new ManualResetEvent(true);
-        private System.Net.Sockets.Socket socket;
+        internal static readonly Stack<Pipe> Pipes = new Stack<Pipe>();
+        private static readonly byte[] fin = Encoding.ASCII.GetBytes("<finito>");
+        protected ManualResetEventSlim sendEvent = new ManualResetEventSlim(true);
+        protected ManualResetEventSlim loadEvent = new ManualResetEventSlim(true);
+        private Socket socket;
+        private bool disposed;
 
         public TcpSocket()
         {
-            Stamp = DateTime.Now;
+            Stamp = DateTime.UtcNow;
         }
+
+        public string PointName => Point.ToString();
 
         public DateTime Stamp { get; set; }
 
@@ -30,7 +37,11 @@ namespace DataWF.Common
             set
             {
                 socket = value;
-                Point = (IPEndPoint)socket.RemoteEndPoint;
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                if (socket.RemoteEndPoint is IPEndPoint point)
+                {
+                    Point = point;
+                }
             }
         }
 
@@ -38,166 +49,239 @@ namespace DataWF.Common
 
         public IPEndPoint LocalPoint { get { return socket == null ? null : (IPEndPoint)socket.LocalEndPoint; } }
 
-        public void Send(byte[] data)
+        private Pipe GetPipe()
         {
-            Send(new MemoryStream(data));
-        }
-
-        public void Send(Stream stream)
-        {
-            Send(new TcpServerEventArgs { Stream = stream });
-        }
-
-        public void Send(TcpServerEventArgs arg)
-        {
-            arg.Client = this;
-            arg.Stream.Position = 0;
-            if (arg.Stream.Length > 0)
+            if (Pipes.Count > 0)
             {
-                sendEvent.Reset();
-                var read = arg.Stream.Read(arg.Buffer, 0, TcpServerEventArgs.BufferSize);
-                Socket.BeginSend(arg.Buffer, 0, read, SocketFlags.None, SendCallback, arg);
-                sendEvent.WaitOne();
+                var pipe = Pipes.Pop();
+                return pipe;
+            }
+            var options = new PipeOptions(
+                minimumSegmentSize: 1024,
+                pauseWriterThreshold: 16 * 1024,
+                resumeWriterThreshold: 8 * 1024,
+                useSynchronizationContext: false);
+            return new Pipe(options);
+        }
+
+        public async ValueTask SendElement<T>(T element)
+        {
+            var args = new TcpStreamEventArgs(this, TcpStreamMode.Send)
+            {
+                Pipe = GetPipe(),
+                Tag = element
+            };
+
+            _ = Task.Run(Serialize).ConfigureAwait(false);
+
+            await Send(args);
+
+            void Serialize()
+            {
+                var serializer = new BinarySerializer(typeof(T));
+                serializer.Serialize(args.WriterStream, element);
+                args.WriterStream.Dispose();
+                args.Pipe.Writer.Complete();
             }
         }
 
-        private void SendCallback(IAsyncResult result)
+        public ValueTask Send(byte[] data)
         {
-            var arg = result.AsyncState as TcpServerEventArgs;
+            using (var stream = new MemoryStream(data))
+            {
+                return Send(stream);
+            }
+        }
+
+        public ValueTask Send(Stream stream)
+        {
+            return Send(new TcpStreamEventArgs(this, TcpStreamMode.Send)
+            {
+                SourceStream = stream
+            });
+        }
+
+        public async ValueTask Send(TcpStreamEventArgs arg)
+        {
             try
             {
-                var sended = Socket.EndSend(result);
-                if (sended > 0)
+                sendEvent.Wait();
+                sendEvent.Reset();
+
+                while (true)
                 {
-                    var read = arg.Stream.Read(arg.Buffer, 0, TcpServerEventArgs.BufferSize);
+                    Debug.WriteLine($"TcpClient {Point} Start Send");
+                    var read = await arg.ReaderStream.ReadAsync(arg.Buffer, 0, TcpStreamEventArgs.BufferSize);
                     if (read > 0)
                     {
-                        Socket.BeginSend(arg.Buffer, 0, read, SocketFlags.None, SendCallback, arg);
-                        return;
+                        Debug.WriteLine($"TcpClient {Point} Start Send Packet: {read}");
+                        var sended = await Task.Factory.FromAsync<int>(Socket.BeginSend(arg.Buffer, 0, read, SocketFlags.None, null, arg), Socket.EndSend);
+                        Debug.WriteLine($"TcpClient {Point} End Send Packet: {sended}");
+                        arg.Transfered += sended;
+                        arg.PackageCount++;
+                        Stamp = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
-                sendEvent.Set();
-                Stamp = DateTime.Now;
-                Server.OnDataSend(arg);
+                arg.ReleasePipe();
+
+                Socket.NoDelay = true;
+                Socket.Send(fin, SocketFlags.None);
+                Socket.NoDelay = false;
+
+                _ = Server.OnDataSend(arg);
             }
             catch (Exception ex)
             {
-                sendEvent.Set();
+                arg.ReleasePipe();
                 Server.OnDataException(new TcpExceptionEventArgs(arg, ex));
+            }
+            finally
+            {
+                sendEvent.Set();
             }
         }
 
-        internal void Load()
+        public Task SartListen()
         {
-            ThreadPool.QueueUserWorkItem(p =>
+            return ListenerLoop();
+        }
+
+        private async Task ListenerLoop()
+        {
+            while (Socket.Connected)
+            {
+                var arg = new TcpStreamEventArgs(this, TcpStreamMode.Receive)
                 {
-                    while (Socket.Connected)
+                    Pipe = GetPipe()
+                };
+                try
+                {
+                    loadEvent.Wait();
+                    loadEvent.Reset();
+                    while (true)
                     {
-                        var arg = new TcpServerEventArgs
+                        Debug.WriteLine($"TcpClient {Point} Start Receive");
+                        int read = await Task.Factory.FromAsync(Socket.BeginReceive(arg.Buffer, 0, TcpStreamEventArgs.BufferSize, SocketFlags.None, null, arg), Socket.EndReceive);
+                        if (read > 0)
                         {
-                            Client = this,
-                            Stream = new MemoryStream()
-                        };
-                        loadEvent.Reset();
-                        Socket.BeginReceive(arg.Buffer, 0, TcpServerEventArgs.BufferSize, SocketFlags.None, LoadCallback, arg);
-                        loadEvent.WaitOne();
-                    }
-                });
-        }
+                            Debug.WriteLine($"TcpClient {Point} Receive: {read}");
+                            if (arg.Transfered == 0)
+                            {
+                                _ = Server.OnDataLoadStart(arg);
+                            }
+                            arg.Transfered += read;
+                            arg.PackageCount++;
 
-        private void LoadCallback(IAsyncResult result)
-        {
-            var arg = result.AsyncState as TcpServerEventArgs;
-            try
-            {
-                int read = Socket.EndReceive(result);
-                if (read > 0)
-                {
-                    arg.Stream.Write(arg.Buffer, 0, read);
-                    if (read == TcpServerEventArgs.BufferSize)
-                    {
-                        Socket.BeginReceive(arg.Buffer, 0, TcpServerEventArgs.BufferSize, SocketFlags.None, LoadCallback, arg);
-                        return;
+                            if (ByteArrayComparer.Default.EndWith(new ReadOnlySpan<byte>(arg.Buffer, 0, read), fin))
+                            {
+                                if (read > fin.Length)
+                                {
+                                    await arg.WriterStream.WriteAsync(arg.Buffer, 0, read - fin.Length);
+                                }
+                                break;
+                            }
+                            else
+                            {
+                                await arg.WriterStream.WriteAsync(arg.Buffer, 0, read);
+                            }
+                        }
+                        else
+                        {
+                            await Disconnect(true);
+                            return;
+                        }
                     }
+                    arg.WriterStream.Dispose();
+                    arg.Pipe.Writer.Complete();
                     loadEvent.Set();
-                    Stamp = DateTime.Now;
-                    arg.Stream.Position = 0;
-                    Server.OnDataLoad(arg);
+                    Stamp = DateTime.UtcNow;
+                    _ = Server.OnDataLoadEnd(arg);
                 }
-                else
-                    Disconnect(true);
-            }
-            catch (Exception ex)
-            {
-                loadEvent.Set();
-                Server.OnDataException(new TcpExceptionEventArgs(arg, ex));
+                catch (Exception ex)
+                {
+                    arg.ReleasePipe();
+                    Server.OnDataException(new TcpExceptionEventArgs(arg, ex));
+                }
+                finally
+                {
+                    loadEvent.Set();
+
+                }
             }
         }
 
-        public void Connect(IPEndPoint address)
+        public async ValueTask Connect(IPEndPoint address, bool attachToServer = true)
         {
-            connectEvent.WaitOne();
-            connectEvent.Reset();
+            if (Socket == null)
+            {
+                Socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                if (Point == null)
+                    throw new Exception("Point not Specified");
+                Socket.Bind(Point);
+            }
             if (!Socket.Connected)
             {
-                Socket.BeginConnect(address, ConnectCallback, new TcpSocketEventArgs { Client = this });
+                var arg = new TcpSocketEventArgs { Client = this };
+
+                try
+                {
+                    Debug.WriteLine($"TcpClient {Point} Connect to {address}");
+                    await Task.Factory.FromAsync(Socket.BeginConnect(address, null, arg), Socket.EndDisconnect);
+                    Stamp = DateTime.UtcNow;
+                    if (attachToServer)
+                    {
+                        _ = Server.OnClientConnect(arg);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Server.OnDataException(new TcpExceptionEventArgs(arg, ex));
+                }
             }
         }
 
-        private void ConnectCallback(IAsyncResult result)
+        public async ValueTask Disconnect(bool reuse)
         {
-            connectEvent.Set();
-            var arg = result.AsyncState as TcpSocketEventArgs;
-            try
-            {
-                arg.Client.Socket.EndConnect(result);
-                Stamp = DateTime.Now;
-                Server.OnClientConnect(arg);
-            }
-            catch (Exception ex)
-            {
-                Server.OnDataException(new TcpExceptionEventArgs(arg, ex));
-            }
-        }
-
-        public void Disconnect(bool reuse)
-        {
-            disconnectEvent.WaitOne();
             if (Socket.Connected)
             {
-                Debug.WriteLine("Disconnect");
-                Socket.Shutdown(SocketShutdown.Both);
-                Socket.BeginDisconnect(reuse, DisconnectCallback, new TcpSocketEventArgs { Client = this });
+                var arg = new TcpSocketEventArgs { Client = this };
+                try
+                {
+                    Debug.WriteLine($"TcpClient {Point} Disconnect Reuse:{reuse}");
+                    Socket.Shutdown(SocketShutdown.Both);
+                    await Task.Factory.FromAsync(Socket.BeginDisconnect(reuse, null, arg), Socket.EndDisconnect);
+                    loadEvent.Set();
+                    sendEvent.Set();
+                    socket.Close();
+
+                    _ = Server.OnClientDisconect(arg);
+                }
+                catch (Exception ex)
+                {
+                    Server.OnDataException(new TcpExceptionEventArgs(arg, ex));
+                }
             }
-            else
-                disconnectEvent.Set();
         }
 
-        private void DisconnectCallback(IAsyncResult result)
+        public void WaitAll()
         {
-            var arg = result.AsyncState as TcpSocketEventArgs;
-            try
-            {
-                Socket.EndDisconnect(result);
-                disconnectEvent.Set();
-                loadEvent.Set();
-                sendEvent.Set();
-                Server.OnClientDisconect(arg);
-                socket.Close();
-            }
-            catch (Exception ex)
-            {
-                Server.OnDataException(new TcpExceptionEventArgs(arg, ex));
-            }
+            loadEvent.Wait();
+            sendEvent.Wait();
         }
 
         public void Dispose()
         {
-            Disconnect(false);
-            connectEvent?.Dispose();
-            disconnectEvent?.Dispose();
-            loadEvent?.Dispose();
-            sendEvent?.Dispose();
+            if (!disposed)
+            {
+                _ = Disconnect(false);
+                loadEvent?.Dispose();
+                sendEvent?.Dispose();
+                disposed = true;
+            }
         }
     }
 }

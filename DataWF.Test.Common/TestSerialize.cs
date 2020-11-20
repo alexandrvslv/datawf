@@ -195,8 +195,8 @@ namespace DataWF.Test.Common
             PrintBuffer(buffer);
 #endif
             var newList = TestRead<List<string>>(serializer, buffer);
-            Assert.AreEqual(3, newList.Count, "Deserialization Fail");
-            Assert.AreEqual("one", newList[0], "Deserialization Fail");
+            Assert.AreEqual(list.Count, newList.Count, "Deserialization Fail");
+            Assert.AreEqual(list[0], newList[0], "Deserialization Fail");
         }
 
         [Test()]
@@ -214,8 +214,8 @@ namespace DataWF.Test.Common
             PrintBuffer(buffer);
 #endif
             var newList = TestRead<T>(serializer, buffer);
-            Assert.AreEqual(3, newList.Count, "Deserialization Fail");
-            Assert.AreEqual("one", newList[0], "Deserialization Fail");
+            Assert.AreEqual(list.Count, newList.Count, "Deserialization Fail");
+            Assert.AreEqual(list[0], newList[0], "Deserialization Fail");
         }
 
         [Test()]
@@ -262,10 +262,10 @@ namespace DataWF.Test.Common
             PrintBuffer(buffer);
 #endif
             var newList = TestRead<ArrayList>(serializer, buffer);
-            Assert.AreEqual(4, newList.Count, "Deserialization Fail");
-            Assert.AreEqual("one", newList[0], "Deserialization Fail");
+            Assert.AreEqual(list.Count, newList.Count, "Deserialization Fail");
+            Assert.AreEqual(list[0], newList[0], "Deserialization Fail");
             Assert.IsInstanceOf<TestSerializeClass>(newList[3], "Deserialization Fail");
-            Assert.AreEqual("bla", ((TestSerializeClass)newList[3]).StringValue, "Deserialization Fail");
+            Assert.AreEqual(((TestSerializeClass)list[3]).StringValue, ((TestSerializeClass)newList[3]).StringValue, "Deserialization Fail");
         }
 
         [Test()]
@@ -289,8 +289,8 @@ namespace DataWF.Test.Common
             PrintBuffer(buffer);
 #endif
             var newDict = TestRead<Dictionary<string, int>>(serializer, buffer);
-            Assert.AreEqual(3, newDict.Count, "Deserialization Fail");
-            Assert.AreEqual(1, newDict["one"], "Deserialization Fail");
+            Assert.AreEqual(dict.Count, newDict.Count, "Deserialization Fail");
+            Assert.AreEqual(dict["one"], newDict["one"], "Deserialization Fail");
         }
 
         [Test()]
@@ -313,8 +313,8 @@ namespace DataWF.Test.Common
             PrintBuffer(buffer);
 #endif
             var newDict = TestRead<Hashtable>(serialiser, buffer);
-            Assert.AreEqual(3, newDict.Count, "Deserialization Fail");
-            Assert.AreEqual(1, newDict["one"], "Deserialization Fail");
+            Assert.AreEqual(dict.Count, newDict.Count, "Deserialization Fail");
+            Assert.AreEqual(dict["one"], newDict["one"], "Deserialization Fail");
         }
 
         [Test()]
@@ -398,14 +398,14 @@ namespace DataWF.Test.Common
                 {
                     var line = reader.ReadLine();
                     if (line != null)
-                        Debug.WriteLine(line);
+                        Console.WriteLine(line);
                     else
                         break;
                 }
             }
         }
 
-        private static List<TestSerializableElement> GenerateSEList()
+        public static List<TestSerializableElement> GenerateSEList()
         {
             var item = new List<TestSerializableElement>();
             item.AddRange(new[] {
@@ -458,7 +458,7 @@ namespace DataWF.Test.Common
             return item;
         }
 
-        private static TestSerializeClass GenerateClass()
+        public static TestSerializeClass GenerateClass()
         {
             return new TestSerializeClass
             {
@@ -476,7 +476,29 @@ namespace DataWF.Test.Common
             };
         }
 
-        private static List<TestSerializeClass> GenerateList()
+        public static List<TestSerializeClass> GenerateList(int cout)
+        {
+            var items = new List<TestSerializeClass>();
+            for (int i = 0; i < cout; i++)
+            {
+                items.Add(new TestSerializeClass
+                {
+                    IntValue = i,
+                    NullableIntValue = null,
+                    DecimalValue = i / 3.3M,
+                    StringValue = "bla bla " + i,
+                    ClassValue = new TestSerializeClass
+                    {
+                        IntValue = i * 5,
+                        DecimalValue = i / 25.25M,
+                        StringValue = "bla bla bla" + i
+                    }
+                });
+            }
+            return items;
+        }
+
+        public static List<TestSerializeClass> GenerateList()
         {
             var item = new List<TestSerializeClass>();
             item.AddRange(new[] {
@@ -546,18 +568,18 @@ namespace DataWF.Test.Common
             return item;
         }
 
-        public class TestSerializableElement : ISerializableElement
+        public class TestSerializableElement : IXMLSerializable
         {
             public TestSerializeClass ToSerialize { get; set; }
 
             public void Deserialize(XmlInvokerReader reader)
             {
-                ToSerialize = reader.Read(ToSerialize);
+                reader.ReadObject(this, reader.Serializer.GetTypeInfo(typeof(TestSerializableElement)));
             }
 
             public void Serialize(XmlInvokerWriter writer)
             {
-                writer.Write(ToSerialize);
+                writer.Write(ToSerialize, nameof(ToSerialize), false);
             }
         }
     }

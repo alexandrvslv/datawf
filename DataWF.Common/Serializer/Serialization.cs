@@ -74,7 +74,7 @@ namespace DataWF.Common
                 if ((ignoreEnumerable && TypeHelper.IsList(property.DataType))
                     || property.Name.Equals(nameof(ISynchronized.SyncStatus), StringComparison.Ordinal))
                     continue;
-                property.Invoker.SetValue(newItem, property.Invoker.GetValue(obj));
+                property.PropertyInvoker.SetValue(newItem, property.PropertyInvoker.GetValue(obj));
             }
             return newItem;
         }

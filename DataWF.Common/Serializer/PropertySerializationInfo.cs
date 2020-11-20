@@ -9,20 +9,20 @@ using System.Reflection;
 [assembly: Invoker(typeof(PropertySerializationInfo), nameof(PropertySerializationInfo.Name), typeof(PropertySerializationInfo.NameInvoker))]
 namespace DataWF.Common
 {
-    public class PropertySerializationInfo : INamed
+    public class PropertySerializationInfo : INamed, IPropertySerializationInfo
     {
         public PropertySerializationInfo()
         { }
 
         public PropertySerializationInfo(PropertyInfo property, int order = -1)
         {
-            Property = property;
+            PropertyInfo = property;
             Name = property.Name;
-            DataType = Property.PropertyType;
+            DataType = PropertyInfo.PropertyType;
             var keys = PropertySerializationInfoKeys.None;
             if (TypeHelper.IsSerializeText(property))
                 keys |= PropertySerializationInfoKeys.Text;
-            if (TypeHelper.IsSerializeAttribute(property))
+            else if (TypeHelper.IsSerializeAttribute(property))
                 keys |= PropertySerializationInfoKeys.Attribute;
             if (TypeHelper.IsSerializeWriteable(property))
                 keys |= PropertySerializationInfoKeys.Writeable;
@@ -34,15 +34,15 @@ namespace DataWF.Common
                 keys |= PropertySerializationInfoKeys.ReadOnly;
             Keys = keys;
             Order = TypeHelper.GetOrder(property, order);
-            Invoker = EmitInvoker.Initialize(property, true);
+            PropertyInvoker = EmitInvoker.Initialize(property, true);
 
             Default = TypeHelper.GetDefault(property);
-            Serialazer = TypeHelper.GetSerializer(property);
+            Serializer = TypeHelper.GetSerializer(property);
         }
 
-        public IInvoker Invoker { get; }
+        public IInvoker PropertyInvoker { get; }
 
-        public PropertyInfo Property { get; }
+        public PropertyInfo PropertyInfo { get; }
 
         public string Name { get; set; }
 
@@ -66,28 +66,37 @@ namespace DataWF.Common
 
         public object Default { get; }
 
-        public ElementSerializer Serialazer { get; }
+        public ElementSerializer Serializer { get; }
 
+        public V GetValue<V>(object target)
+        {
+            if (PropertyInvoker is IValuedInvoker<V> valuedInvoker)
+            {
+                return valuedInvoker.GetValue(target);
+            }
+            else
+            {
+                return (V)PropertyInvoker.GetValue(target);
+            }
+        }
+
+        public void SetValue<V>(object target, V value)
+        {
+            if (PropertyInvoker is IValuedInvoker<V> valuedInvoker)
+            {
+                valuedInvoker.SetValue(target, value);
+            }
+            else
+            {
+                PropertyInvoker.SetValue(target, value);
+            }
+        }
 
         public bool CheckDefault(object value)
         {
             if (Default == null)
                 return value == null;
             return Default.Equals(value);
-        }
-
-        public string TextFormat(object value)
-        {
-            return Serialazer != null
-                ? Serialazer.ConvertToString(value)
-                : Helper.TextBinaryFormat(value);
-        }
-
-        public object TextParse(string value)
-        {
-            return Serialazer != null
-                ? Serialazer.ConvertFromString(value)
-                : Helper.TextParse(value, DataType);
         }
 
         public override string ToString()

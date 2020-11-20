@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
@@ -30,7 +31,6 @@ namespace DataWF.Data
         Change,
         Update
     }
-
     public class DBItemEventArgs : CancelEventArgs
     {
         public DBItemEventArgs(DBItem item, DBColumn column = null, string property = null, object value = null)

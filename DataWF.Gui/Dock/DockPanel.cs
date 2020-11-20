@@ -9,7 +9,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class DockPanel : Toolsbar, IEnumerable, IEnumerable<DockPage>, IDockContainer, ILocalizable, ISerializableElement
+    public class DockPanel : Toolsbar, IEnumerable, IEnumerable<DockPage>, IDockContainer, ILocalizable, IXMLSerializable
     {
         private DockPage currentPage;
         //private Menubar context;

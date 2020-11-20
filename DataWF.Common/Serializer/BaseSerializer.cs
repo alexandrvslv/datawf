@@ -6,6 +6,8 @@ namespace DataWF.Common
 {
     public abstract class BaseSerializer : IDisposable
     {
+        public static Dictionary<Type, TypeSerializationInfo> SerializationInfo { get; } = new Dictionary<Type, TypeSerializationInfo>();
+
         public static IDictionaryItem CreateDictionaryItem(Type type)
         {
             Type[] genericArguments = new Type[] { typeof(object), typeof(object) };
@@ -27,27 +29,17 @@ namespace DataWF.Common
 
         public BaseSerializer(Type type)
         {
-            var info = SerializationInfo[type] = new TypeSerializationInfo(type);
+            var info = GetTypeInfo(type);
             if (info.IsList)
             {
-                SerializationInfo[info.ListItemType] = new TypeSerializationInfo(info.ListItemType);
+                GetTypeInfo(info.ListItemType);
             }
         }
 
-        public Dictionary<Type, TypeSerializationInfo> SerializationInfo { get; set; } = new Dictionary<Type, TypeSerializationInfo>();
 
         public bool ByProperty { get; set; } = true;
 
         public bool OnlyXmlAttributes { get; set; } = false;
-
-        public abstract ISerializeWriter GetWriter(Stream stream);
-
-        public abstract ISerializeReader GetReader(Stream stream);
-
-        public void SetTypeInfo(Type type, TypeSerializationInfo info)
-        {
-            SerializationInfo[type] = info;
-        }
 
         public TypeSerializationInfo GetTypeInfo<T>()
         {
@@ -60,9 +52,18 @@ namespace DataWF.Common
                 return null;
             if (!SerializationInfo.TryGetValue(type, out var info))
             {
-                SerializationInfo[type] = info = new TypeSerializationInfo(type, OnlyXmlAttributes);
+                SerializationInfo[type] = info = new TypeSerializationInfo(type);
             }
             return info;
+        }
+
+        public abstract ISerializeWriter GetWriter(Stream stream);
+
+        public abstract ISerializeReader GetReader(Stream stream);
+
+        public void SetTypeInfo(Type type, TypeSerializationInfo info)
+        {
+            SerializationInfo[type] = info;
         }
 
         public void Serialize(string file, object element)
@@ -107,11 +108,13 @@ namespace DataWF.Common
         public static void Serialize(ISerializeWriter writer, object element)
         {
             writer.Write(element);
+            writer.Flush();
         }
 
         public static void Serialize<T>(ISerializeWriter writer, T element)
         {
             writer.Write<T>(element);
+            writer.Flush();
         }
 
         public object Deserialize(string file, object element = null, bool saveIfNotExist = true)
@@ -149,18 +152,16 @@ namespace DataWF.Common
         {
             using (var reader = GetReader(stream))
             {
-                element = Deserialize(reader, element);
+                return Deserialize(reader, element);
             }
-            return element;
         }
 
         public T Deserialize<T>(Stream stream, T element)
         {
             using (var reader = GetReader(stream))
             {
-                element = Deserialize(reader, element);
+                return Deserialize(reader, element);
             }
-            return element;
         }
 
         public static object Deserialize(ISerializeReader reader, object element = null)

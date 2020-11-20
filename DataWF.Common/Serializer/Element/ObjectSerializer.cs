@@ -8,15 +8,7 @@ namespace DataWF.Common
     {
         public override bool CanConvertString => false;
 
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((T)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (T)value, writeToken);
-
-        public override T Read(BinaryInvokerReader reader, T value, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
+        public override T Read(BinaryInvokerReader reader, T value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
         {
             var token = reader.ReadToken();
             if (token == BinaryToken.Null)
@@ -50,7 +42,7 @@ namespace DataWF.Common
             return value;
         }
 
-        public override void Write(BinaryInvokerWriter writer, T value, TypeSerializationInfo info, Dictionary<ushort, PropertySerializationInfo> map)
+        public override void Write(BinaryInvokerWriter writer, T value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
         {
             if (value == null)
             {
@@ -85,6 +77,76 @@ namespace DataWF.Common
             using (var invokerWriter = new BinaryInvokerWriter(writer))
             {
                 Write(invokerWriter, value, invokerWriter.Serializer.GetTypeInfo<T>(), null);
+            }
+        }
+
+        public override T Read(XmlInvokerReader reader, T value, TypeSerializationInfo typeInfo)
+        {
+            if (reader.NodeType == System.Xml.XmlNodeType.Comment)
+                typeInfo = reader.ReadType(typeInfo);
+            if (value == null || value.GetType() != typeInfo.Type)
+            {
+                value = (T)typeInfo.Constructor?.Create();
+            }
+
+            reader.ReadAttributes<T>(value, typeInfo);
+
+            if (reader.IsEmptyElement)
+            {
+                return value;
+            }
+
+            while (reader.ReadNextElement())
+            {
+                reader.ReadElement<T>(value, typeInfo, null);
+            }
+            return value;
+        }
+
+        public override void Write(XmlInvokerWriter writer, T value, TypeSerializationInfo typeInfo)
+        {
+            writer.WriteObject<T>(value, typeInfo);
+        }
+
+        public override void PropertyToString(XmlInvokerWriter writer, object element, IPropertySerializationInfo property)
+        {
+            if (property.PropertyInvoker is IValuedInvoker<T> valueInvoker)
+            {
+                T value = valueInvoker.GetValue(element);
+                if (value != null)
+                {
+                    writer.WriteStart(property);
+                    Write(writer, value, writer.Serializer.GetTypeInfo<T>());
+                    writer.WriteEnd(property);
+                }
+            }
+            else
+            {
+                var value = property.PropertyInvoker.GetValue(element);
+                if (value != null)
+                {
+                    writer.WriteStart(property);
+                    Write(writer, value, writer.Serializer.GetTypeInfo<T>());
+                    writer.WriteEnd(property);
+                }
+            }
+        }
+
+        public override void PropertyToString<E>(XmlInvokerWriter writer, E element, IPropertySerializationInfo property)
+        {
+            if (property.PropertyInvoker is IInvoker<E, T> valueInvoker)
+            {
+                T value = valueInvoker.GetValue(element);
+                if (value != null)
+                {
+                    writer.WriteStart(property);
+                    Write(writer, value, writer.Serializer.GetTypeInfo<T>());
+                    writer.WriteEnd(property);
+                }
+            }
+            else
+            {
+                PropertyToString(writer, (object)element, property);
             }
         }
 

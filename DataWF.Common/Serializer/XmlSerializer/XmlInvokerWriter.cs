@@ -7,37 +7,40 @@ namespace DataWF.Common
 {
     public class XmlInvokerWriter : IDisposable, ISerializeWriter
     {
-        private XMLTextSerializer Serializer { get; set; }
-        public XmlWriter Writer { get; set; }
-
         public XmlInvokerWriter(Stream stream, XMLTextSerializer serializer)
         {
             Writer = XmlWriter.Create(stream, new XmlWriterSettings { Indent = serializer.Indent, CloseOutput = false });
             Serializer = serializer;
         }
 
-        public void WriteNamedList(INamedList list, TypeSerializationInfo type)
-        {
-            foreach (object item in list)
-            {
-                Write(item, "i", type.ListItemType != item.GetType());
-            }
-        }
+        public XMLTextSerializer Serializer { get; }
 
-        public void WriteCollection(ICollection collection, TypeSerializationInfo type)
+        public XmlWriter Writer { get; }
+
+        public void WriteCollection(ICollection collection, TypeSerializationInfo typeInfo)
         {
+            if (collection.Count > 0)
+            {
+                Writer.WriteAttributeString("Count", Int32Serializer.Instance.ToString(collection.Count));
+            }
+            if (typeInfo.ListIsTyped)
+            {
+                Writer.WriteAttributeString("DT", BoolSerializer.Instance.ToString(typeInfo.ListIsTyped));
+            }
+            WriteObject(collection, typeInfo);
             foreach (object item in collection)
             {
                 if (item == null)
                     continue;
-                Write(item, "i", type.ListItemType != item.GetType());
+                Write(item, "i", typeInfo.ListItemType != item.GetType());
             }
         }
 
-        public void WriteDictionary(IDictionary dictionary, Type type)
+        public void WriteDictionary(IDictionary dictionary, TypeSerializationInfo typeInfo)
         {
+            WriteObject(dictionary, typeInfo);
             //var dictionary = element as IEnumerable;
-            var item = XMLTextSerializer.CreateDictionaryItem(type);
+            var item = XMLTextSerializer.CreateDictionaryItem(typeInfo.Type);
             var itemInfo = Serializer.GetTypeInfo(item.GetType());
             foreach (var entry in (IEnumerable)dictionary)
             {
@@ -48,8 +51,7 @@ namespace DataWF.Common
 
         public void Write<T>(T element)
         {
-            Type type = element.GetType();
-            var typeInfo = Serializer.GetTypeInfo(type);
+            var typeInfo = Serializer.GetTypeInfo<T>();
             Write(element, typeInfo, typeInfo.ShortName, true);
         }
 
@@ -65,102 +67,191 @@ namespace DataWF.Common
             Write(element, Serializer.GetTypeInfo(element.GetType()), name, writeType);
         }
 
-        public void Write(object element, TypeSerializationInfo info, string name, bool writeType)
+        public void Write<T>(T element, string name, bool writeType)
+        {
+            Write(element, Serializer.GetTypeInfo(element.GetType()), name, writeType);
+        }
+
+        public void Write(object element, TypeSerializationInfo typeInfo, string name, bool writeType)
         {
             //Debug.WriteLine($"Xml Write {name}");
             if (writeType)
             {
-                WriteType(info);
+                WriteType(typeInfo);
             }
-            WriteBegin(name);
-            if (info.IsAttribute)
-            {
-                Writer.WriteValue(info.Serialazer.ConvertToString(element));
-            }
-            else if (Serializer.CheckIFile && element is IFileSerialize fileSerialize)
+            WriteStartElement(name);
+            if (Serializer.CheckIFile && element is IFileSerialize fileSerialize)
             {
                 fileSerialize.Save();
                 Writer.WriteElementString("FileName", fileSerialize.FileName);
             }
-            else if (element is ISerializableElement serializableElement)
+            else if (typeInfo.Serialazer is IElementSerializer serializer)
             {
-                serializableElement.Serialize(this);
+                serializer.Write(this, element, typeInfo);
             }
             else
             {
-                if (info.IsList)
+                if (typeInfo.IsAttribute)
                 {
-                    if (((IList)element).Count > 0)
-                    {
-                        Writer.WriteAttributeString("Count", Int32Serializer.Instance.ToString(((IList)element).Count));
-                    }
-                    if (info.ListIsTyped)
-                    {
-                        Writer.WriteAttributeString("DT", BoolSerializer.Instance.ToString(info.ListIsTyped));
-                    }
+                    Writer.WriteValue(typeInfo.Serialazer.ConvertToString(element));
                 }
-
-                foreach (var attribute in info.GetAttributes())
+                else if (typeInfo.IsDictionary)
                 {
-                    if (attribute.IsReadOnly || !attribute.IsWriteable)
-                    {
-                        continue;
-                    }
-                    if (attribute.Default != null)
-                    {
-                        var value = attribute.Invoker.GetValue(element);
-                        if (value == null || attribute.CheckDefault(value))
-                            continue;
+                    WriteDictionary((IDictionary)element, typeInfo);
+                }
+                else if (typeInfo.IsList)
+                {
+                    WriteCollection((ICollection)element, typeInfo);
+                }
+                else
+                {
+                    WriteObject(element, typeInfo);
+                }
+            }
+            WriteEndElement();
+        }
 
-                        Writer.WriteAttributeString(attribute.Name, attribute.Serialazer.ConvertToString(value));
-                    }
-                    else
+        public void Write<T>(T element, TypeSerializationInfo typeInfo, string name, bool writeType)
+        {
+            //Debug.WriteLine($"Xml Write {name}");
+            if (writeType)
+            {
+                WriteType(typeInfo);
+            }
+            WriteStartElement(name);
+            if (Serializer.CheckIFile && element is IFileSerialize fileSerialize)
+            {
+                fileSerialize.Save();
+                Writer.WriteElementString("FileName", fileSerialize.FileName);
+            }
+            if (typeInfo.Serialazer is IElementSerializer<T> serializer)
+            {
+                serializer.Write(this, element, typeInfo);
+            }
+            else
+            {
+                if (typeInfo.IsAttribute)
+                {
+                    Writer.WriteValue(typeInfo.Serialazer.ConvertToString(element));
+                }
+                else if (typeInfo.IsDictionary)
+                {
+                    WriteDictionary((IDictionary)element, typeInfo);
+                }
+                else if (typeInfo.IsList)
+                {
+                    WriteCollection((ICollection)element, typeInfo);
+                }
+                else
+                {
+                    WriteObject(element, typeInfo);
+                }
+            }
+            WriteEndElement();
+        }
+
+        public void WriteObject(object element, TypeSerializationInfo info)
+        {
+            foreach (var property in info.XmlProperties)
+            {
+                if (property.IsReadOnly || !property.IsWriteable)
+                {
+                    continue;
+                }
+                if (property.Default != null)
+                {
+                    var value = property.PropertyInvoker.GetValue(element);
+                    if (value == null || property.CheckDefault(value))
+                        continue;
+                }
+                if (property.Serializer is IElementSerializer serializer)
+                {
+                    serializer.PropertyToString(this, element, property);
+                }
+                else
+                {
+                    var value = property.PropertyInvoker.GetValue(element);
+                    if (value != null)
                     {
-                        var value = attribute.Serialazer.PropertyToString(element, attribute.Invoker);
-                        if (value != null)
+                        if (property.IsAttribute)
                         {
-                            Writer.WriteAttributeString(attribute.Name, value);
+                            Writer.WriteAttributeString(property.Name, Helper.TextBinaryFormat(value));
+                        }
+                        if (property.IsText)
+                        {
+                            Writer.WriteElementString(property.Name, Helper.TextBinaryFormat(value));
+                        }
+                        else
+                        {
+                            Write(value, property.Name, value.GetType() != property.DataType);
                         }
                     }
                 }
+            }
+        }
 
-                foreach (var property in info.GetContents())
+        public void WriteObject<T>(T element, TypeSerializationInfo typeInfo)
+        {
+            foreach (var property in typeInfo.XmlProperties)
+            {
+                if (property.IsReadOnly || !property.IsWriteable)
                 {
-
-                    if (property.IsReadOnly || !property.IsWriteable)
+                    continue;
+                }
+                if (property.Default != null)
+                {
+                    var value = property.PropertyInvoker.GetValue(element);
+                    if (value == null || property.CheckDefault(value))
                         continue;
-
-                    var value = property.Invoker.GetValue(element);
-
-                    if (value == null)
-                        continue;
-
-                    var mtype = property.DataType;
-
-                    if (property.IsText)
+                }
+                if (property.Serializer is IElementSerializer serializer)
+                {
+                    serializer.PropertyToString<T>(this, element, property);
+                }
+                else
+                {
+                    var value = property.PropertyInvoker.GetValue(element);
+                    if (value != null)
                     {
-                        Writer.WriteElementString(property.Name, property.TextFormat(value));
+                        if (property.IsAttribute)
+                        {
+                            Writer.WriteAttributeString(property.Name, Helper.TextBinaryFormat(value));
+                        }
+                        if (property.IsText)
+                        {
+                            Writer.WriteElementString(property.Name, Helper.TextBinaryFormat(value));
+                        }
+                        else
+                        {
+                            Write(value, property.Name, value.GetType() != property.DataType);
+                        }
                     }
-                    else
-                    {
-                        Write(value, property.Name, value.GetType() != mtype && mtype != typeof(Type));
-                    }
-                }
-
-                if (info.IsDictionary)
-                {
-                    WriteDictionary((IDictionary)element, info.Type);
-                }
-                else if (element is INamedList namedList)
-                {
-                    WriteNamedList(namedList, info);
-                }
-                else if (info.IsList)
-                {
-                    WriteCollection((ICollection)element, info);
                 }
             }
-            WriteEnd();
+        }
+
+        public void WriteStart(IPropertySerializationInfo property)
+        {
+            if (property.IsAttribute)
+            {
+                WriteStartAttribute(property.Name);
+            }
+            else
+            {
+                WriteStartElement(property.Name);
+            }
+        }
+
+        public void WriteEnd(IPropertySerializationInfo property)
+        {
+            if (property.IsAttribute)
+            {
+                WriteEndAttribute();
+            }
+            else
+            {
+                WriteEndElement();
+            }
         }
 
         public void WriteType(TypeSerializationInfo info)
@@ -168,14 +259,29 @@ namespace DataWF.Common
             Writer.WriteComment(info.TypeName);
         }
 
-        public void WriteBegin(string name)
+        public void WriteStartElement(string name)
         {
             Writer.WriteStartElement(name);
         }
 
-        public void WriteEnd()
+        public void WriteEndElement()
         {
             Writer.WriteEndElement();
+        }
+
+        public void WriteStartAttribute(string name)
+        {
+            Writer.WriteStartAttribute(name);
+        }
+
+        public void WriteEndAttribute()
+        {
+            Writer.WriteEndAttribute();
+        }
+
+        public void Flush()
+        {
+            Writer.Flush();
         }
 
         public void Dispose()
@@ -183,9 +289,17 @@ namespace DataWF.Common
             Writer?.Dispose();
         }
 
-        public void WriteAttribute<T>(string Name, T value)
+        public void WriteAttribute<T>(string name, T value)
         {
-            Writer.WriteAttributeString(Name, Helper.TextBinaryFormat(value));
+            var typeInfo = Serializer.GetTypeInfo<T>();
+            if (typeInfo.Serialazer is IElementSerializer<T> serializer)
+            {
+                Writer.WriteAttributeString(name, serializer.ToString(value));
+            }
+            else
+            {
+                throw new Exception($"Serializer for Type:{typeof(T)} not found!");
+            }
         }
     }
 }

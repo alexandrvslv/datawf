@@ -18,123 +18,23 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(NotifyDBItem), nameof(NotifyDBItem.Command), typeof(NotifyDBItem.CommandInvoker))]
+[assembly: Invoker(typeof(NotifyDBItem), nameof(NotifyDBItem.UserId), typeof(NotifyDBItem.UserIdInvoker))]
+[assembly: Invoker(typeof(NotifyDBItem), nameof(NotifyDBItem.Id), typeof(NotifyDBItem.IdInvoker))]
+[assembly: Invoker(typeof(NotifyDBItem), nameof(NotifyDBItem.Value), typeof(NotifyDBItem.ValueInvoker))]
 namespace DataWF.Data
 {
-    public class DBItemBinarySerializer<T> where T : DBItem
-    {
-        public Dictionary<ushort, DBColumn> Map { get; set; }
-
-        public object ConvertFromBinary(BinaryInvokerReader reader) => FromBinary(reader);
-
-        public void ConvertToBinary(object value, BinaryInvokerWriter writer, bool writeToken) => ToBinary((T)value, writer, writeToken);
-
-        public T FromBinary(BinaryInvokerReader reader)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ToBinary(T value, BinaryInvokerWriter writer, bool writeToken)
-        {
-            writer.WriteObjectBegin();
-            if (Map == null)
-            {
-                var table = value.Table;
-                Map = WriteMap(writer, table);
-            }
-
-            writer.WriteObjectEnd();
-        }
-
-        public static Dictionary<ushort, DBColumn> WriteMap(BinaryInvokerWriter writer, DBTable table)
-        {
-            var map = new Dictionary<ushort, DBColumn>();
-            writer.WriteSchemaBegin();
-            writer.WriteString(table.Name, false);
-            ushort index = 0;
-            foreach (var column in table.Columns)
-            {
-                if (column.ColumnType != DBColumnTypes.Default)
-                    continue;
-                writer.Writer.Write(index);
-                writer.WriteString(column.Name, false);
-                map[index++] = column;
-            }
-            writer.WriteSchemaEnd();
-            return map;
-        }
-    }
-
-    public class RelicateDBItem : IBinarySerializable
+    public class NotifyDBItem : IComparable<NotifyDBItem>
     {
         public DBLogType Command { get; set; }
-        public int User { get; set; }
-        public DBItem Value { get; set; }
-
-        [XmlIgnore, JsonIgnore]
-        public List<DBColumn> UpdateColumns { get; set; }
-
-        public void Deserialize(byte[] buffer)
-        {
-            using (var stream = new MemoryStream(buffer))
-            using (var reader = new BinaryReader(stream))
-            {
-                Deserialize(reader);
-            }
-        }
-
-        public void Deserialize(BinaryReader reader)
-        {
-            using (var invokerReader = new BinaryInvokerReader(reader))
-            {
-                Deserialize(invokerReader);
-            }
-        }
-
-        public void Deserialize(BinaryInvokerReader reader)
-        {
-            reader.ReadToken();
-            Command = (DBLogType)reader.Reader.ReadByte();
-            User = reader.Reader.ReadInt32();
-            reader.ReadToken();
-        }
-
-        public byte[] Serialize()
-        {
-            using (var stream = new MemoryStream())
-            using (var writer = new BinaryWriter(stream))
-            {
-                Serialize(writer);
-                return stream.ToArray();
-            }
-        }
-
-        public void Serialize(BinaryWriter writer)
-        {
-            using (var invokerWriter = new BinaryInvokerWriter(writer))
-            {
-                Serialize(invokerWriter);
-            }
-        }
-
-        public void Serialize(BinaryInvokerWriter invokerWriter)
-        {
-            invokerWriter.WriteObjectBegin();
-            invokerWriter.Writer.Write((byte)Command);
-            invokerWriter.Writer.Write((int)User);
-            invokerWriter.WriteObjectEnd();
-        }
-    }
-
-    public class NotifyDBItem : IBinarySerializable, IComparable<NotifyDBItem>
-    {
-        public DBLogType Command { get; set; }
-        public int User { get; set; }
+        public int UserId { get; set; }
         public object Id { get; set; }
 
         [XmlIgnore, JsonIgnore]
@@ -146,57 +46,48 @@ namespace DataWF.Data
             return res != 0 ? res : Command.CompareTo(Command);
         }
 
-        public void Deserialize(byte[] buffer)
+        public class CommandInvoker : Invoker<NotifyDBItem, DBLogType>
         {
-            using (var stream = new MemoryStream(buffer))
-            using (var reader = new BinaryReader(stream))
-            {
-                Deserialize(reader);
-            }
+            public override string Name => nameof(Command);
+
+            public override bool CanWrite => true;
+
+            public override DBLogType GetValue(NotifyDBItem target) => target.Command;
+
+            public override void SetValue(NotifyDBItem target, DBLogType value) => target.Command = value;
         }
 
-        public void Deserialize(BinaryReader reader)
+        public class UserIdInvoker : Invoker<NotifyDBItem, int>
         {
-            using (var invokerReader = new BinaryInvokerReader(reader))
-            {
-                Deserialize(invokerReader);
-            }
+            public override string Name => nameof(UserId);
+
+            public override bool CanWrite => true;
+
+            public override int GetValue(NotifyDBItem target) => target.UserId;
+
+            public override void SetValue(NotifyDBItem target, int value) => target.UserId = value;
         }
 
-        public void Deserialize(BinaryInvokerReader reader)
+        public class IdInvoker : Invoker<NotifyDBItem, object>
         {
-            reader.ReadToken();
-            Command = (DBLogType)reader.Reader.ReadByte();
-            User = reader.Reader.ReadInt32();
-            Id = Helper.ReadBinary(reader.Reader);
-            reader.ReadToken();
+            public override string Name => nameof(Id);
+
+            public override bool CanWrite => true;
+
+            public override object GetValue(NotifyDBItem target) => target.Id;
+
+            public override void SetValue(NotifyDBItem target, object value) => target.Id = value;
         }
 
-        public byte[] Serialize()
+        public class ValueInvoker : Invoker<NotifyDBItem, DBItem>
         {
-            using (var stream = new MemoryStream())
-            using (var writer = new BinaryWriter(stream))
-            {
-                Serialize(writer);
-                return stream.ToArray();
-            }
-        }
+            public override string Name => nameof(Value);
 
-        public void Serialize(BinaryWriter writer)
-        {
-            using (var invokerWriter = new BinaryInvokerWriter(writer))
-            {
-                Serialize(invokerWriter);
-            }
-        }
+            public override bool CanWrite => true;
 
-        public void Serialize(BinaryInvokerWriter invokerWriter)
-        {
-            invokerWriter.WriteObjectBegin();
-            invokerWriter.Writer.Write((byte)Command);
-            invokerWriter.Writer.Write((int)User);
-            Helper.WriteBinary(invokerWriter.Writer, Id, true);
-            invokerWriter.WriteObjectEnd();
+            public override DBItem GetValue(NotifyDBItem target) => target.Value;
+
+            public override void SetValue(NotifyDBItem target, DBItem value) => target.Value = value;
         }
     }
 }

@@ -30,13 +30,11 @@ namespace DataWF.Data
 {
     public class DBTransaction : IDbTransaction
     {
-        public static EventHandler Commited;
-
         private readonly Dictionary<string, IDbCommand> commands = new Dictionary<string, IDbCommand>(StringComparer.Ordinal);
-        private IDbCommand command;
-        private IDbTransaction transaction;
         private readonly HashSet<DBItem> items = new HashSet<DBItem>();
         private Dictionary<DBConnection, DBTransaction> subTransactions;
+        private IDbCommand command;
+        private IDbTransaction transaction;
 
         public DBTransaction()
             : this((IUserIdentity)null)
@@ -68,7 +66,7 @@ namespace DataWF.Data
 
         public IUserIdentity Caller { get; private set; }
 
-        public bool Canceled { get; private set; }
+        public DBTransactionState State { get; private set; }
 
         public IDbCommand Command
         {
@@ -119,7 +117,8 @@ namespace DataWF.Data
         public void Commit()
         {
             CloseReader();
-            if (transaction != null)
+            if (transaction != null && State != DBTransactionState.Commit)
+            {
                 try
                 {
                     transaction.Commit();
@@ -134,8 +133,8 @@ namespace DataWF.Data
                     Helper.OnException(te);
                     return;
                 }
-
-            Commited?.Invoke(this, EventArgs.Empty);
+            }
+            State = DBTransactionState.Commit;
             foreach (var row in items)
             {
                 row.Accept(Caller);
@@ -148,6 +147,8 @@ namespace DataWF.Data
                     transaction.Commit();
                 }
             }
+
+            DBService.OnTransactionCommit(this);
         }
 
         private void CloseReader()
@@ -161,23 +162,24 @@ namespace DataWF.Data
         public void Rollback()
         {
             CloseReader();
-            if (transaction != null && !Canceled)
+            if (transaction != null && State != DBTransactionState.Rollback)
             {
                 try
                 {
                     transaction.Rollback();
-                    Canceled = true;
                 }
                 catch (Exception te)
                 {
                     Helper.OnException(te);
                 }
             }
+            State = DBTransactionState.Rollback;
             foreach (var row in items)
             {
                 row.Reject(Caller);
             }
             items.Clear();
+
 
             if (subTransactions != null)
             {
@@ -186,6 +188,7 @@ namespace DataWF.Data
                     transaction.Rollback();
                 }
             }
+            DBService.OnTransactionCommit(this);
         }
 
         public void Dispose()
@@ -346,14 +349,8 @@ namespace DataWF.Data
 
         public void Cancel()
         {
-            if (!Canceled)
+            if (State == DBTransactionState.Default)
             {
-                Canceled = true;
-                if (subTransactions != null)
-                {
-                    foreach (var subTransaction in subTransactions.Values)
-                        subTransaction.Cancel();
-                }
                 Rollback();
             }
         }
@@ -573,6 +570,13 @@ namespace DataWF.Data
         {
             DbConnection.System.PrepareStatements(command);
         }
+    }
+
+    public enum DBTransactionState
+    {
+        Default,
+        Commit,
+        Rollback
     }
 }
 

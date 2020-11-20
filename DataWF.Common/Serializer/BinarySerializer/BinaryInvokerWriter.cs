@@ -10,7 +10,7 @@ namespace DataWF.Common
 {
     public class BinaryInvokerWriter : IDisposable, ISerializeWriter
     {
-        private readonly Dictionary<TypeSerializationInfo, Dictionary<ushort, PropertySerializationInfo>> cacheSchema = new Dictionary<TypeSerializationInfo, Dictionary<ushort, PropertySerializationInfo>>();
+        private readonly Dictionary<Type, Dictionary<ushort, IPropertySerializationInfo>> cacheSchema = new Dictionary<Type, Dictionary<ushort, IPropertySerializationInfo>>();
         private readonly bool dispWriter;
 
         public BinaryInvokerWriter(Stream stream)
@@ -34,9 +34,8 @@ namespace DataWF.Common
 
         public BinarySerializer Serializer { get; set; }
         public BinaryWriter Writer { get; set; }
-        public bool FullSchemaName { get; set; } = true;
 
-        private void WriteObject(object element, TypeSerializationInfo typeInfo, Dictionary<ushort, PropertySerializationInfo> map, bool forceWriteMap)
+        private void WriteObject(object element, TypeSerializationInfo typeInfo, Dictionary<ushort, IPropertySerializationInfo> map, bool forceWriteMap)
         {
             WriteObjectBegin();
             if (map == null || forceWriteMap)
@@ -51,7 +50,7 @@ namespace DataWF.Common
             WriteObjectEnd();
         }
 
-        private void WriteObject<T>(T element, TypeSerializationInfo typeInfo, Dictionary<ushort, PropertySerializationInfo> map, bool forceWriteMap)
+        private void WriteObject<T>(T element, TypeSerializationInfo typeInfo, Dictionary<ushort, IPropertySerializationInfo> map, bool forceWriteMap)
         {
             WriteObjectBegin();
             if (map == null || forceWriteMap)
@@ -72,7 +71,7 @@ namespace DataWF.Common
             WriteType(Serializer.GetTypeInfo(type));
         }
 
-        public void WriteCollection(ICollection collection, TypeSerializationInfo typeInfo, Dictionary<ushort, PropertySerializationInfo> map, bool forceWriteMap)
+        public void WriteCollection(ICollection collection, TypeSerializationInfo typeInfo, Dictionary<ushort, IPropertySerializationInfo> map, bool forceWriteMap)
         {
             WriteArrayBegin();
             if (map == null || forceWriteMap)
@@ -95,7 +94,7 @@ namespace DataWF.Common
             WriteArrayEnd();
         }
 
-        public void WriteDictionary(IDictionary dictionary, TypeSerializationInfo typeInfo, Dictionary<ushort, PropertySerializationInfo> map, bool forceWriteMap)
+        public void WriteDictionary(IDictionary dictionary, TypeSerializationInfo typeInfo, Dictionary<ushort, IPropertySerializationInfo> map, bool forceWriteMap)
         {
             WriteArrayBegin();
             if (map == null || forceWriteMap)
@@ -129,11 +128,16 @@ namespace DataWF.Common
             Write(element, typeInfo);
         }
 
-        public Dictionary<ushort, PropertySerializationInfo> GetMap(TypeSerializationInfo typeInfo)
+        public Dictionary<ushort, IPropertySerializationInfo> GetMap(TypeSerializationInfo typeInfo)
         {
             if (typeInfo == null || typeInfo.IsAttribute)
                 return null;
-            return cacheSchema.TryGetValue(typeInfo, out var map) ? map : null;
+            return cacheSchema.TryGetValue(typeInfo.Type, out var map) ? map : null;
+        }
+
+        public void SetMap(Type type, Dictionary<ushort, IPropertySerializationInfo> map)
+        {
+            cacheSchema[type] = map;
         }
 
         public void Write(object element, TypeSerializationInfo typeInfo)
@@ -146,7 +150,7 @@ namespace DataWF.Common
             Write(element, typeInfo, GetMap(typeInfo));
         }
 
-        public void Write(object element, TypeSerializationInfo typeInfo, Dictionary<ushort, PropertySerializationInfo> map, bool forceWriteMap = false)
+        public void Write(object element, TypeSerializationInfo typeInfo, Dictionary<ushort, IPropertySerializationInfo> map, bool forceWriteMap = false)
         {
             if (typeInfo == null || typeInfo.Type == typeof(object))
             {
@@ -156,24 +160,21 @@ namespace DataWF.Common
             {
                 serializer.Write(this, element, typeInfo, map);
             }
+            else if (typeInfo.IsDictionary)
+            {
+                WriteDictionary((IDictionary)element, typeInfo, map, forceWriteMap);
+            }
+            else if (typeInfo.IsList)
+            {
+                WriteCollection((ICollection)element, typeInfo, map, forceWriteMap);
+            }
             else
             {
-                if (typeInfo.IsDictionary)
-                {
-                    WriteDictionary((IDictionary)element, typeInfo, map, forceWriteMap);
-                }
-                else if (typeInfo.IsList)
-                {
-                    WriteCollection((ICollection)element, typeInfo, map, forceWriteMap);
-                }
-                else
-                {
-                    WriteObject(element, typeInfo, map, forceWriteMap);
-                }
+                WriteObject(element, typeInfo, map, forceWriteMap);
             }
         }
 
-        public void Write<T>(T element, TypeSerializationInfo typeInfo, Dictionary<ushort, PropertySerializationInfo> map, bool forceWriteMap = false)
+        public void Write<T>(T element, TypeSerializationInfo typeInfo, Dictionary<ushort, IPropertySerializationInfo> map, bool forceWriteMap = false)
         {
             if (typeInfo == null || typeInfo.Type == typeof(object))
             {
@@ -183,59 +184,55 @@ namespace DataWF.Common
             {
                 serializer.Write(this, element, typeInfo, map);
             }
+            else if (typeInfo.IsDictionary)
+            {
+                WriteDictionary((IDictionary)element, typeInfo, map, forceWriteMap);
+            }
+            else if (typeInfo.IsList)
+            {
+                WriteCollection((ICollection)element, typeInfo, map, forceWriteMap);
+            }
             else
             {
-                if (typeInfo.IsDictionary)
-                {
-                    WriteDictionary((IDictionary)element, typeInfo, map, forceWriteMap);
-                }
-                else if (typeInfo.IsList)
-                {
-                    WriteCollection((ICollection)element, typeInfo, map, forceWriteMap);
-                }
-                else
-                {
-                    WriteObject(element, typeInfo, map, forceWriteMap);
-                }
+                WriteObject(element, typeInfo, map, forceWriteMap);
             }
         }
 
-        public Dictionary<ushort, PropertySerializationInfo> WriteType(TypeSerializationInfo info, bool forceShortName = false)
+        public Dictionary<ushort, IPropertySerializationInfo> WriteType(TypeSerializationInfo info, bool forceShortName = false)
         {
             WriteSchemaBegin();
-            WriteSchemaName(FullSchemaName && !forceShortName ? info.TypeName : info.Type.Name);
+            WriteSchemaName(Serializer.TypeShortName || forceShortName ? info.Type.Name : info.TypeName);
 
-            if (!cacheSchema.TryGetValue(info, out var map))
+            if (!cacheSchema.TryGetValue(info.Type, out var map))
             {
-                map = new Dictionary<ushort, PropertySerializationInfo>();
+                map = new Dictionary<ushort, IPropertySerializationInfo>();
                 ushort i = 0;
                 foreach (var property in info.Properties)
                 {
                     if (!property.IsWriteable
-                        || (property.IsReadOnly && !property.Property.CanWrite))
+                        || (property.IsReadOnly && !property.PropertyInfo.CanWrite))
                         continue;
-                    WriteSchemaEntry();
-                    Writer.Write(i);
+                    WriteSchemaEntry(i);
                     WriteString(property.Name, false);
                     map[i++] = property;
                 }
-                cacheSchema[info] = map;
+                cacheSchema[info.Type] = map;
             }
             WriteSchemaEnd();
             return map;
         }
 
-        public void WriteProperty(PropertySerializationInfo property, object element, ushort index)
+        public void WriteProperty(IPropertySerializationInfo property, object element, ushort index)
         {
             WriteObjectEntry();
             WriteSchemaIndex(index);
-            if (property.Serialazer != null)
+            if (property.Serializer != null)
             {
-                property.Serialazer.PropertyToBinary(this, element, property.Invoker);
+                property.Serializer.PropertyToBinary(this, element, property.PropertyInvoker);
             }
             else
             {
-                var value = property.Invoker.GetValue(element);
+                var value = property.PropertyInvoker.GetValue(element);
                 if (value == null)
                 {
                     WriteNull();
@@ -247,17 +244,17 @@ namespace DataWF.Common
             }
         }
 
-        public void WriteProperty<T>(PropertySerializationInfo property, T element, ushort index)
+        public void WriteProperty<T>(IPropertySerializationInfo property, T element, ushort index)
         {
             WriteObjectEntry();
-            Writer.Write(index);
-            if (property.Serialazer != null)
+            WriteSchemaIndex(index);
+            if (property.Serializer != null)
             {
-                property.Serialazer.PropertyToBinary(this, element, property.Invoker);
+                property.Serializer.PropertyToBinary(this, element, property.PropertyInvoker);
             }
             else
             {
-                var value = property.Invoker.GetValue(element);
+                var value = property.PropertyInvoker.GetValue(element);
                 if (value == null)
                 {
                     WriteNull();
@@ -294,7 +291,7 @@ namespace DataWF.Common
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void WriteSchemaName(string name)
+        public void WriteSchemaName(string name)
         {
             Writer.Write((byte)BinaryToken.SchemaName);
             WriteString(name, false);
@@ -304,6 +301,13 @@ namespace DataWF.Common
         public void WriteSchemaEntry()
         {
             Writer.Write((byte)BinaryToken.SchemaEntry);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteSchemaEntry(ushort index)
+        {
+            Writer.Write((byte)BinaryToken.SchemaEntry);
+            Writer.Write(index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

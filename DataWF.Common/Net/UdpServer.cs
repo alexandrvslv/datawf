@@ -11,28 +11,6 @@ namespace DataWF.Common
 
     public class UdpServer : IDisposable
     {
-        public static int GetUdpPort()
-        {
-            var prop = IPGlobalProperties.GetIPGlobalProperties();
-            var active = prop.GetActiveUdpListeners();
-            int myport = 49152;
-            for (; myport < 65535; myport++)
-            {
-                bool alreadyinuse = false;
-                foreach (var p in active)
-                    if (p.Port == myport)
-                    {
-                        alreadyinuse = true;
-                        break;
-                    }
-                if (!alreadyinuse)
-                {
-                    break;
-                }
-            }
-            return myport;
-        }
-
         protected bool online;
         protected UdpClient listener;
         protected UdpClient sender;
@@ -122,12 +100,12 @@ namespace DataWF.Common
 
         public void Send(byte[] data, string address)
         {
-            Send(data, TcpServer.ParseEndPoint(address));
+            Send(data, SocketHelper.ParseEndPoint(address));
         }
 
         public void Send(string data, string address)
         {
-            Send(Encoding.UTF8.GetBytes(data), TcpServer.ParseEndPoint(address));
+            Send(Encoding.UTF8.GetBytes(data), SocketHelper.ParseEndPoint(address));
         }
 
         public void Send(byte[] data, IPEndPoint address, object tag = null)

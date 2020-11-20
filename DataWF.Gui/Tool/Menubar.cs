@@ -5,7 +5,7 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class Menubar : PopupWindow, ILocalizable, ISerializableElement
+    public class Menubar : PopupWindow, ILocalizable, IXMLSerializable
     {
         public Menubar() : base(PopupType.Menu)
         {

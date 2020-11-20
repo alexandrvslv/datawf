@@ -103,12 +103,12 @@ namespace DataWF.WebService.Common
         private static void ApplyObjectProperties(OpenApiSchema schema, Type type, SchemaFilterContext context)
         {
             var info = Serialization.Instance.GetTypeInfo(context.Type);
-            foreach (var property in info.Properties.Where(p => p.Property?.GetGetMethod()?.GetBaseDefinition()?.DeclaringType == context.Type))
+            foreach (var property in info.Properties.Where(p => p.PropertyInfo?.GetGetMethod()?.GetBaseDefinition()?.DeclaringType == context.Type))
             {
                 var propertyType = TypeHelper.CheckNullable(property.DataType);
-                var columnAttribute = property.Property.GetCustomAttribute<ColumnAttribute>()
-                    ?? property.Property.GetCustomAttribute<LogColumnAttribute>();
-                var referenceAttribute = property.Property.GetCustomAttribute<ReferenceAttribute>();
+                var columnAttribute = property.PropertyInfo.GetCustomAttribute<ColumnAttribute>()
+                    ?? property.PropertyInfo.GetCustomAttribute<LogColumnAttribute>();
+                var referenceAttribute = property.PropertyInfo.GetCustomAttribute<ReferenceAttribute>();
                 if (columnAttribute != null
                     && (columnAttribute.Keys & DBColumnKeys.Access) != 0
                     && propertyType == typeof(AccessValue))
@@ -125,7 +125,7 @@ namespace DataWF.WebService.Common
                 }
                 if (columnAttribute != null)
                 {
-                    ApplyColumnAttribute(schema, propertySchema, columnAttribute, property.Property);
+                    ApplyColumnAttribute(schema, propertySchema, columnAttribute, property.PropertyInfo);
                 }
                 else
                 {

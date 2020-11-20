@@ -6,7 +6,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class VPanel : VBox, IText, IGlyph, ILocalizable, ISerializableElement, INotifyPropertyChanged
+    public class VPanel : VBox, IText, IGlyph, ILocalizable, IXmlSerializable, INotifyPropertyChanged
     {
         private string text;
 
@@ -89,7 +89,7 @@ namespace DataWF.Gui
         {
             if (widget == null)
                 return;
-            if (widget is ISerializableElement && !string.IsNullOrEmpty(widget.Name))
+            if (widget is IXmlSerializable && !string.IsNullOrEmpty(widget.Name))
             {
                 writer.Write(widget, widget.Name, true);
             }
@@ -120,15 +120,15 @@ namespace DataWF.Gui
 
         public virtual void Deserialize(XmlInvokerReader reader)
         {
-            if (reader.IsEmpty)
+            if (reader.IsEmptyElement)
                 return;
-            while (reader.ReadBegin())
+            while (reader.ReadNextElement())
             {
-                var type = reader.ReadType();
+                var type = reader.ReadType(null);
                 var widget = FindWidget(this, reader.CurrentName, type);
                 if (widget != null)
                 {
-                    reader.Read(widget, reader.GetTypeInfo(type));
+                    reader.Read(widget, type);
                     //((ISerializableElement)widget).Deserialize(reader);
                 }
                 else
@@ -138,15 +138,15 @@ namespace DataWF.Gui
             }
         }
 
-        public static Widget FindWidget(Widget widget, string name, Type type)
+        public static Widget FindWidget(Widget widget, string name, TypeSerializationInfo type)
         {
             if (widget == null)
                 return null;
-            if (widget.Name == name && widget.GetType() == type)
+            if (widget.Name == name && widget.GetType() == type.Type)
                 return widget;
-            else if (widget is Box)
+            else if (widget is Box box)
             {
-                foreach (var swidget in ((Box)widget).Children)
+                foreach (var swidget in box.Children)
                 {
                     var result = FindWidget(swidget, name, type);
                     if (result != null)

@@ -76,6 +76,9 @@ namespace DataWF.Common
                 Properties.Add(new PropertySerializationInfo(property, ++order));
             }
             Properties.ApplySortInternal(PropertySerializationInfo.OrderInvoker.Instance.CreateComparer<PropertySerializationInfo>());
+
+            XmlProperties = new SelectableListView<PropertySerializationInfo>(Properties);
+            XmlProperties.ApplySortInternal(XmlPropertiesComparer.Instance);
         }
 
         public Type Type { get; }
@@ -98,11 +101,9 @@ namespace DataWF.Common
 
         public EmitConstructor ListConstructor { get; }
 
-        public IEnumerable<PropertySerializationInfo> GetAttributes() => Properties.Select(PropertySerializationInfo.IsAttributeInvoker.Instance, CompareType.Equal, true);
-
-        public IEnumerable<PropertySerializationInfo> GetContents() => Properties.Select(PropertySerializationInfo.IsAttributeInvoker.Instance, CompareType.Equal, false);
-
         public NamedList<PropertySerializationInfo> Properties { get; private set; }
+
+        public SelectableListView<PropertySerializationInfo> XmlProperties { get; }
 
         public ElementSerializer Serialazer { get; }
         public string ShortName { get; internal set; } = "e";
@@ -126,7 +127,17 @@ namespace DataWF.Common
                 : Helper.TextParse(value, Type);
         }
 
+    }
 
+    public class XmlPropertiesComparer : IComparer<PropertySerializationInfo>
+    {
+        public static readonly XmlPropertiesComparer Instance = new XmlPropertiesComparer();
+        public int Compare(PropertySerializationInfo x, PropertySerializationInfo y)
+        {
+            var result = y.IsAttribute.CompareTo(x.IsAttribute);
+            result = result == 0 ? x.Order.CompareTo(y.Order) : result;
+            return result;
+        }
     }
 
     [Flags]

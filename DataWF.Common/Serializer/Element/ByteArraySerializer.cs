@@ -6,17 +6,10 @@ namespace DataWF.Common
 {
     public class ByteArraySerializer : ElementSerializer<byte[]>
     {
-        public override bool CanConvertString => true;
-
         public static readonly ByteArraySerializer Instance = new ByteArraySerializer();
 
-        public override object ConvertFromString(string value) => FromString(value);
+        public override bool CanConvertString => true;
 
-        public override string ConvertToString(object value) => ToString((byte[])value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (byte[])value, writeToken);
 
         public override byte[] FromBinary(BinaryReader reader)
         {

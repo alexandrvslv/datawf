@@ -9,14 +9,6 @@ namespace DataWF.Common
     {
         public static readonly Int32Serializer Instance = new Int32Serializer();
 
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((int)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (int)value, writeToken);
-
         public override int FromBinary(BinaryReader reader) => reader.ReadInt32();
 
         public override void ToBinary(BinaryWriter writer, int value, bool writeToken)
@@ -37,14 +29,6 @@ namespace DataWF.Common
     public class UInt32Serializer : NullableSerializer<uint>
     {
         public static readonly UInt32Serializer Instance = new UInt32Serializer();
-
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((uint)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (uint)value, writeToken);
 
         public override uint FromBinary(BinaryReader reader) => reader.ReadUInt32();
 
@@ -68,14 +52,6 @@ namespace DataWF.Common
     {
         public static readonly Int64Serializer Instance = new Int64Serializer();
 
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((long)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (long)value, writeToken);
-
         public override long FromBinary(BinaryReader reader) => reader.ReadInt64();
 
         public override void ToBinary(BinaryWriter writer, long value, bool writeToken)
@@ -91,20 +67,11 @@ namespace DataWF.Common
 
         public override string ToString(long value) => value.ToString(CultureInfo.InvariantCulture);
 
-
     }
 
     public class UInt64Serializer : NullableSerializer<ulong>
     {
         public static readonly UInt64Serializer Instance = new UInt64Serializer();
-
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((ulong)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (ulong)value, writeToken);
 
         public override ulong FromBinary(BinaryReader reader) => reader.ReadUInt64();
 
@@ -121,20 +88,11 @@ namespace DataWF.Common
 
         public override string ToString(ulong value) => value.ToString(CultureInfo.InvariantCulture);
 
-
     }
 
     public class Int16Serializer : NullableSerializer<short>
     {
         public static readonly Int16Serializer Instance = new Int16Serializer();
-
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((short)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (short)value, writeToken);
 
         public override short FromBinary(BinaryReader reader) => reader.ReadInt16();
 
@@ -158,14 +116,6 @@ namespace DataWF.Common
     {
         public static readonly UInt16Serializer Instance = new UInt16Serializer();
 
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((ushort)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (ushort)value, writeToken);
-
         public override ushort FromBinary(BinaryReader reader) => reader.ReadUInt16();
 
         public override void ToBinary(BinaryWriter writer, ushort value, bool writeToken)
@@ -181,20 +131,11 @@ namespace DataWF.Common
 
         public override string ToString(ushort value) => value.ToString(CultureInfo.InvariantCulture);
 
-
     }
 
     public class Int8Serializer : NullableSerializer<sbyte>
     {
         public static readonly Int8Serializer Instance = new Int8Serializer();
-
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((sbyte)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (sbyte)value, writeToken);
 
         public override sbyte FromBinary(BinaryReader reader) => reader.ReadSByte();
 
@@ -217,14 +158,6 @@ namespace DataWF.Common
     public class UInt8Serializer : NullableSerializer<byte>
     {
         public static readonly UInt8Serializer Instance = new UInt8Serializer();
-
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((byte)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (byte)value, writeToken);
 
         public override byte FromBinary(BinaryReader reader) => reader.ReadByte();
 

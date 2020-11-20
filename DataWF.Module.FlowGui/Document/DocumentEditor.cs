@@ -24,7 +24,7 @@ namespace DataWF.Module.FlowGui
         None
     }
 
-    public class DocumentEditor : VPanel, IDocked, IDockContent, ISerializableElement
+    public class DocumentEditor : VPanel, IDocked, IDockContent, IXMLSerializable
     {
         public static async Task<string> Execute(DocumentData Current)
         {

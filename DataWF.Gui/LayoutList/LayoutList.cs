@@ -16,7 +16,7 @@ using Xwt.Drawing;
 namespace DataWF.Gui
 {
     [ToolboxItem(true)]
-    public partial class LayoutList : VPanel, ILocalizable, ILayoutList, ISerializableElement
+    public partial class LayoutList : VPanel, ILocalizable, ILayoutList, IXMLSerializable
     {
         public static LayoutListMenu DefaultMenu { get; set; }
 

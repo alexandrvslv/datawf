@@ -10,7 +10,7 @@ using Xwt.Drawing;
 namespace DataWF.Gui
 {
 
-    public class MainWindow : Window, IDockMain, ISerializableElement
+    public class MainWindow : Window, IDockMain, IXMLSerializable
     {
         public Action SaveAction;
         private StatusIcon icon;

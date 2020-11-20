@@ -10,14 +10,6 @@ namespace DataWF.Common
     {
         public static readonly DoubleSerializer Instance = new DoubleSerializer();
 
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((double)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (double)value, writeToken);
-
         public override double FromBinary(BinaryReader reader) => reader.ReadDouble();
 
         public override void ToBinary(BinaryWriter writer, double value, bool writeToken)
@@ -39,14 +31,6 @@ namespace DataWF.Common
     {
         public static readonly FloatSerializer Instance = new FloatSerializer();
 
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((float)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (float)value, writeToken);
-
         public override float FromBinary(BinaryReader reader) => reader.ReadSingle();
 
         public override void ToBinary(BinaryWriter writer, float value, bool writeToken)
@@ -66,14 +50,6 @@ namespace DataWF.Common
     public class DecimalSerializer : NullableSerializer<decimal>
     {
         public static readonly DecimalSerializer Instance = new DecimalSerializer();
-
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((decimal)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (decimal)value, writeToken);
 
         public override decimal FromBinary(BinaryReader reader) => reader.ReadDecimal();
 

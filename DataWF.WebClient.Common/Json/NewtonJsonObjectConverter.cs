@@ -40,12 +40,12 @@ namespace DataWF.Common
                     var currentValue = item != null
                         && propertyType != typeof(string)
                         && !propertyType.IsValueType
-                        ? property.Invoker.GetValue(item)
+                        ? property.PropertyInvoker.GetValue(item)
                         : null;
 
                     object value = Read(jreader, property.DataType, serializer, currentValue);
 
-                    property.Invoker.SetValue(item, value);
+                    property.PropertyInvoker.SetValue(item, value);
                 }
             }
             if (item == null)
@@ -136,7 +136,7 @@ namespace DataWF.Common
                 }
 
                 jwriter.WritePropertyName(property.Name);
-                var value = property.Invoker.GetValue(item);
+                var value = property.PropertyInvoker.GetValue(item);
                 if (property.IsAttribute || value == null)
                 {
                     serializer.Serialize(jwriter, value, property.DataType);

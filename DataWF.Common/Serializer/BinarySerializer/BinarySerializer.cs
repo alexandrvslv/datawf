@@ -15,6 +15,7 @@ namespace DataWF.Common
         { }
 
         public bool WriteSchema { get; set; } = true;
+        public bool TypeShortName { get; set; }
 
         public override ISerializeWriter GetWriter(Stream stream)
         {

@@ -18,15 +18,18 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+[assembly: Invoker(typeof(NotifyDBTable), nameof(NotifyDBTable.Type), typeof(NotifyDBTable.TypeInvoker))]
+[assembly: Invoker(typeof(NotifyDBTable), nameof(NotifyDBTable.Items), typeof(NotifyDBTable.ItemsInvoker))]
 namespace DataWF.Data
 {
-    public class NotifyDBTable : IBinarySerializable, IComparable<NotifyDBTable>
+    public class NotifyDBTable : IComparable<NotifyDBTable>
     {
         private DBTable table;
 
@@ -37,6 +40,7 @@ namespace DataWF.Data
             set => table = value;
         }
 
+        [ElementSerializer(typeof(TypeShortSerializer))]
         public Type Type { get; set; }
 
         public List<NotifyDBItem> Items { get; set; } = new List<NotifyDBItem>();
@@ -46,72 +50,26 @@ namespace DataWF.Data
             return Table.CompareTo(other.Table);
         }
 
-        public void Deserialize(byte[] buffer)
+        public class TypeInvoker : Invoker<NotifyDBTable, Type>
         {
-            using (var stream = new MemoryStream(buffer))
-            using (var reader = new BinaryReader(stream))
-            {
-                Deserialize(reader);
-            }
+            public override string Name => nameof(Type);
+
+            public override bool CanWrite => true;
+
+            public override Type GetValue(NotifyDBTable target) => target.Type;
+
+            public override void SetValue(NotifyDBTable target, Type value) => target.Type = value;
         }
 
-        public void Deserialize(BinaryReader reader)
+        public class ItemsInvoker : Invoker<NotifyDBTable, List<NotifyDBItem>>
         {
-            using (var invokerReader = new BinaryInvokerReader(reader))
-            {
-                Deserialize(invokerReader);
-            }
-        }
+            public override string Name => nameof(Items);
 
-        public void Deserialize(BinaryInvokerReader invokerReader)
-        {
-            invokerReader.ReadToken();
-            invokerReader.ReadToken();
-            var name = invokerReader.ReadString();
-            Type = TypeHelper.ParseType(name);
-            invokerReader.ReadToken();
-            invokerReader.ReadToken();
-            while (invokerReader.ReadToken() == BinaryToken.ArrayEntry)
-            {
-                var item = new NotifyDBItem();
-                item.Deserialize(invokerReader);
-                Items.Add(item);
-            }
-            invokerReader.ReadToken();
-        }
+            public override bool CanWrite => true;
 
-        public byte[] Serialize()
-        {
-            using (var stream = new MemoryStream())
-            using (var writer = new BinaryWriter(stream))
-            {
-                Serialize(writer);
-                return stream.ToArray();
-            }
-        }
+            public override List<NotifyDBItem> GetValue(NotifyDBTable target) => target.Items;
 
-        public void Serialize(BinaryWriter writer)
-        {
-            using (var invokerWriter = new BinaryInvokerWriter(writer))
-            {
-                Serialize(invokerWriter);
-            }
-        }
-
-        public void Serialize(BinaryInvokerWriter invokerWriter)
-        {
-            invokerWriter.WriteObjectBegin();
-            invokerWriter.WriteObjectEntry();
-            invokerWriter.WriteString(TypeHelper.FormatBinary(Type), false);
-            invokerWriter.WriteObjectEntry();
-            invokerWriter.WriteArrayBegin();
-            foreach (var item in Items)
-            {
-                invokerWriter.WriteArrayEntry();
-                item.Serialize(invokerWriter);
-            }
-            invokerWriter.WriteArrayEnd();
-            invokerWriter.WriteObjectEnd();
+            public override void SetValue(NotifyDBTable target, List<NotifyDBItem> value) => target.Items = value;
         }
     }
 }

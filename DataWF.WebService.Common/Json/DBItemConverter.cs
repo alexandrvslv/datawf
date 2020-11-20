@@ -11,13 +11,10 @@ using System.Text.Json.Serialization;
 
 namespace DataWF.WebService.Common
 {
-
     public class DBItemConverter<T> : JsonConverter<T> where T : DBItem, new()
     {
-
         public DBItemConverter()
-        {
-        }
+        { }
 
         public DBItemConverter(DBItemConverterFactory factory)
         {

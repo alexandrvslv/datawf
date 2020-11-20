@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Test.Data
 {
+
     [TestFixture]
     public partial class TestORM
     {
@@ -135,9 +136,9 @@ namespace DataWF.Test.Data
             var employer = new Employer()
             {
                 Identifier = $"{1:8}",
-                Lodar = true,
+                IsActive = true,
                 Age = 40,
-                Height = 180,
+                Days = 180,
                 LongId = 120321312321L,
                 Weight = 123.12333F,
                 DWeight = 123.1233433424434D,
@@ -162,7 +163,7 @@ namespace DataWF.Test.Data
             Assert.AreEqual(employer.Identifier, qresult.Get(0, "identifier"), "Insert sql Fail String");
             Assert.AreEqual((int?)employer.Type, qresult.Get(0, "typeid"), "Insert sql Fail Enum");
             Assert.AreEqual(employer.Age, qresult.Get(0, "age"), "Insert sql Fail Byte");
-            Assert.AreEqual(employer.Height, qresult.Get(0, "height"), "Insert sql Fail Short");
+            Assert.AreEqual(employer.Days, qresult.Get(0, "height"), "Insert sql Fail Short");
             Assert.AreEqual(employer.LongId, qresult.Get(0, "longid"), "Insert sql Fail Long");
             Assert.AreEqual(employer.Weight, qresult.Get(0, "weight"), "Insert sql Fail Float");
             Assert.AreEqual(employer.DWeight, qresult.Get(0, "dweight"), "Insert sql Fail Double");

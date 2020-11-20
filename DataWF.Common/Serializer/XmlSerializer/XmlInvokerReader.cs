@@ -8,42 +8,54 @@ namespace DataWF.Common
 {
     public class XmlInvokerReader : IDisposable, ISerializeReader
     {
-        private XMLTextSerializer Serializer { get; set; }
-        public XmlReader Reader { get; set; }
-
         public XmlInvokerReader(Stream stream, XMLTextSerializer serializer)
         {
             Serializer = serializer;
             Reader = XmlReader.Create(stream, new XmlReaderSettings { CloseInput = false });
         }
 
+        public XMLTextSerializer Serializer { get; }
+
+        public XmlReader Reader { get; }
+
         public string CurrentName { get => Reader.Name; }
 
-        public bool IsEmpty { get => Reader.IsEmptyElement; }
+        public bool IsEmptyElement { get => Reader.IsEmptyElement; }
 
-        public Type ReadType()
+        public XmlNodeType NodeType { get => Reader.NodeType; }
+
+        public void Read()
+        {
+            Reader.Read();
+        }
+
+        public TypeSerializationInfo ReadType(TypeSerializationInfo typeInfo)
         {
             if (Reader.NodeType == XmlNodeType.Comment)
             {
                 var type = TypeHelper.ParseType(Reader.Value);
                 //throw new Exception(string.Format("Type: {0} Not Found!", Reader.Value));
-                while (type == null && ReadBegin() && Reader.NodeType == XmlNodeType.Comment)
+                while (type == null && ReadNextElement() && Reader.NodeType == XmlNodeType.Comment)
                 {
                     type = TypeHelper.ParseType(Reader.Value);
                 }
 
                 if (Reader.NodeType == XmlNodeType.Comment)
                 {
-                    ReadBegin();
+                    ReadNextElement();
                 }
-                return type;
+                return type == null ? typeInfo : Serializer.GetTypeInfo(type);
             }
-            return null;
+            return typeInfo;
         }
 
-        public void ReadAttributes(object element)
+        public T ReadAttribute<T>(string name)
         {
-            ReadAttributes(element, GetTypeInfo(element.GetType()));
+            string value;
+            if ((value = Reader.GetAttribute(name)) != null
+                && Serializer.GetTypeInfo<T>() is IElementSerializer<T> serializer)
+                return serializer.FromString(value);
+            return default(T);
         }
 
         public void ReadAttributes(object element, TypeSerializationInfo info)
@@ -52,59 +64,97 @@ namespace DataWF.Common
             {
                 while (Reader.MoveToNextAttribute())
                 {
-                    ReadCurrentAttribute(element, info);
+                    var member = info.GetProperty(Reader.Name);
+                    if (member != null && !member.IsReadOnly)
+                    {
+                        ToProperty(element, member, null);
+                    }
                 }
 
                 Reader.MoveToElement();
             }
         }
 
-        public void ReadCurrentAttribute(object element, TypeSerializationInfo info)
+        public void ReadAttributes<T>(T element, TypeSerializationInfo info)
         {
-            var member = info.GetProperty(Reader.Name);
-            if (member != null && !member.IsReadOnly)
+            if (Reader.HasAttributes)
             {
-                ToProperty(Reader.Value, element, member);
+                while (Reader.MoveToNextAttribute())
+                {
+                    var member = info.GetProperty(Reader.Name);
+                    if (member != null && !member.IsReadOnly)
+                    {
+                        ToProperty<T>(element, member, null);
+                    }
+                }
+
+                Reader.MoveToElement();
             }
         }
 
-        private void ToProperty(string value, object element, PropertySerializationInfo member)
+        private void ToProperty(object element, IPropertySerializationInfo property, TypeSerializationInfo itemInfo)
         {
-            if (member.Serialazer != null)
+            if (property.Serializer is IElementSerializer serializer)
             {
-                member.Serialazer.PropertyFromString(element, member.Invoker, value);
+                serializer.PropertyFromString(this, element, property, itemInfo);
+            }
+            else if (Reader.NodeType == XmlNodeType.Attribute)
+            {
+                property.PropertyInvoker.SetValue(element, Helper.TextParse(Reader.Value, property.DataType));
             }
             else
             {
-                member.Invoker.SetValue(element, member.TextParse(value));
+                var mInfo = itemInfo ?? Serializer.GetTypeInfo(property.DataType);
+                var value = Read(property.PropertyInvoker.GetValue(element), mInfo);
+                if (!property.IsReadOnly)
+                {
+                    property.PropertyInvoker.SetValue(element, value);
+                }
             }
         }
 
-        public void ReadElement(object element, TypeSerializationInfo info)
+        private void ToProperty<T>(T element, IPropertySerializationInfo property, TypeSerializationInfo itemInfo)
         {
-            Type mtype = ReadType();
-            ReadElement(element, info, mtype);
+            if (property.Serializer is IElementSerializer serializer)
+            {
+                serializer.PropertyFromString<T>(this, element, property, itemInfo);
+            }
+            else if (Reader.NodeType == XmlNodeType.Attribute)
+            {
+                property.PropertyInvoker.SetValue(element, Helper.TextParse(Reader.Value, property.DataType));
+            }
+            else
+            {
+                var mInfo = itemInfo ?? Serializer.GetTypeInfo(property.DataType);
+                var value = Read(property.PropertyInvoker.GetValue(element), mInfo);
+                if (!property.IsReadOnly)
+                {
+                    property.PropertyInvoker.SetValue(element, value);
+                }
+            }
         }
 
-        public void ReadElement(object element, TypeSerializationInfo info, Type mtype)
+        public void ReadElement(object element, TypeSerializationInfo info, TypeSerializationInfo itemInfo)
         {
-            var member = info.GetProperty(Reader.Name);
-            if (member != null)
+            itemInfo = ReadType(itemInfo);
+            var property = info.GetProperty(Reader.Name);
+            if (property != null)
             {
-                object value;
-                if (member.IsText || member.IsAttribute)
-                {
-                    ToProperty(Reader.ReadElementContentAsString(), element, member);
-                }
-                else
-                {
-                    var mInfo = GetTypeInfo(mtype ?? member.DataType);
-                    value = Read(member.Invoker.GetValue(element), mInfo);
-                    if (!member.IsReadOnly)
-                    {
-                        member.Invoker.SetValue(element, value);
-                    }
-                }
+                ToProperty(element, property, itemInfo);
+            }
+            else
+            {
+                Reader.ReadInnerXml();
+            }
+        }
+
+        public void ReadElement<T>(T element, TypeSerializationInfo info, TypeSerializationInfo itemInfo)
+        {
+            itemInfo = ReadType(itemInfo);
+            var property = info.GetProperty(Reader.Name);
+            if (property != null)
+            {
+                ToProperty<T>(element, property, itemInfo);
             }
             else
             {
@@ -119,10 +169,9 @@ namespace DataWF.Common
 
         public void ReadCollectionElement(object element, TypeSerializationInfo listInfo, TypeSerializationInfo defaultTypeInfo, ref int listIndex)
         {
-            Type mtype = ReadType();
+            var itemInfo = ReadType(defaultTypeInfo);
             if (string.Equals(Reader.Name, "i", StringComparison.Ordinal))
             {
-                var itemInfo = mtype != null ? GetTypeInfo(mtype) : defaultTypeInfo;
                 var list = (IList)element;
                 object newobj = null;
                 if (itemInfo?.IsAttribute ?? listInfo.ListItemIsAttribute)
@@ -167,46 +216,61 @@ namespace DataWF.Common
             }
             else// if (mtype != null)
             {
-                ReadElement(element, listInfo, mtype);
+                ReadElement(element, listInfo, itemInfo);
             }
         }
 
-        public object ReadCollection(IList list, TypeSerializationInfo info)
+        public object ReadCollection(IList list, TypeSerializationInfo typeInfo)
         {
-            var defaultTypeInfo = GetTypeInfo(info.ListItemType);
-            if (info.ListIsTyped)
+            if (list == null || list.GetType() != typeInfo.Type)
+            {
+                var length = int.TryParse(Reader.GetAttribute(nameof(ICollection.Count)), out int count) ? count : 2;
+                list = (IList)typeInfo.ListConstructor.Create(count);
+            }
+            var defaultTypeInfo = GetTypeInfo(typeInfo.ListItemType);
+            if (typeInfo.ListIsTyped)
             {
                 var type = TypeHelper.ParseType(Reader.GetAttribute("DT"));
-                if (type != null && type != info.ListItemType)
+                if (type != null && type != typeInfo.ListItemType)
                 {
                     defaultTypeInfo = GetTypeInfo(type);
                 }
             }
+
+            ReadAttributes(list, typeInfo);
+
             var listIndex = 0;
-            while (ReadBegin())
+            while (ReadNextElement())
             {
-                ReadCollectionElement(list, info, defaultTypeInfo, ref listIndex);
+                ReadCollectionElement(list, typeInfo, defaultTypeInfo, ref listIndex);
             }
 
             return list;
         }
 
-        public object ReadDictionary(object element, TypeSerializationInfo info)
+        public object ReadDictionary(IDictionary dictionary, TypeSerializationInfo typeInfo)
         {
-            var dictionary = (IDictionary)element;
-            var item = XMLTextSerializer.CreateDictionaryItem(info.Type);
+            if (dictionary == null || dictionary.GetType() != typeInfo.Type)
+            {
+                dictionary = (IDictionary)typeInfo.Constructor?.Create();
+            }
+            var item = XMLTextSerializer.CreateDictionaryItem(typeInfo.Type);
             var itemInfo = GetTypeInfo(item.GetType());
-            while (ReadBegin())
+            while (ReadNextElement())
             {
                 Read(item, itemInfo);
                 dictionary[item.Key] = item.Value;
                 item.Reset();
             }
-            return element;
+            return dictionary;
         }
 
-        public object ReadIFile(object element, TypeSerializationInfo info)
+        public object ReadIFile(object element, TypeSerializationInfo typeInfo)
         {
+            if (element == null || element.GetType() != typeInfo.Type)
+            {
+                element = typeInfo.Constructor?.Create();
+            }
             string fileName = Reader.ReadElementContentAsString();
             if (fileName != null)
             {
@@ -220,11 +284,12 @@ namespace DataWF.Common
             return element;
         }
 
-        public bool ReadBegin()
+        public bool ReadNextElement()
         {
             while (Reader.Read() && Reader.NodeType != XmlNodeType.EndElement)
             {
-                if (Reader.NodeType == XmlNodeType.Element || Reader.NodeType == XmlNodeType.Comment)
+                if (Reader.NodeType == XmlNodeType.Element
+                    || Reader.NodeType == XmlNodeType.Comment)
                 {
                     return true;
                 }
@@ -234,7 +299,7 @@ namespace DataWF.Common
 
         public object Read(object element)
         {
-            if (ReadBegin())
+            if (ReadNextElement())
             {
                 element = Read(element, element != null ? GetTypeInfo(element.GetType()) : null);
             }
@@ -243,75 +308,105 @@ namespace DataWF.Common
 
         public T Read<T>(T element)
         {
-            if (ReadBegin())
+            if (ReadNextElement())
             {
-                element = (T)Read(element, GetTypeInfo(typeof(T)));
+                element = Read(element, Serializer.GetTypeInfo<T>());
             }
             return element;
         }
 
-        public object Read(object element, TypeSerializationInfo info)
+        public object Read(object element, TypeSerializationInfo typeInfo)
         {
-            var type = ReadType();
-            if (type != null)
-            {
-                info = GetTypeInfo(type);
-            }
-            if (info == null)
+            typeInfo = ReadType(typeInfo);
+            if (typeInfo == null)
             {
                 throw new ArgumentException("Element type can't be resolved!", nameof(element));
             }
             //Debug.WriteLine($"Read {Reader.Name}");
-            if (info.IsAttribute)
+            if (Serializer.CheckIFile && TypeHelper.IsInterface(typeInfo.Type, typeof(IFileSerialize)))
             {
-                return info.TextParse(Reader.ReadElementContentAsString());
+                return ReadIFile(element, typeInfo);
             }
-            if (element == null || element.GetType() != info.Type)
+            else if (typeInfo.Serialazer is IElementSerializer serializer)
             {
-                element = info.Constructor?.Create();
+                return serializer.Read(this, element, typeInfo);
+            }
+            else if (typeInfo.IsDictionary)
+            {
+                return ReadDictionary((IDictionary)element, typeInfo);
+            }
+            else if (typeInfo.IsList)
+            {
+                return ReadCollection((IList)element, typeInfo);
+            }
+            return ReadObject(element, typeInfo);
+        }
 
-                if (element == null && info.IsList)
-                {
-                    if (int.TryParse(Reader.GetAttribute(nameof(ICollection.Count)), out int count))
-                    {
-                        element = info.ListConstructor.Create(count);
-                    }
-                }
+        public T Read<T>(T element, TypeSerializationInfo typeInfo)
+        {
+            typeInfo = ReadType(typeInfo);
+            if (typeInfo == null)
+            {
+                throw new ArgumentException("Element type can't be resolved!", nameof(element));
+            }
+            //Debug.WriteLine($"Read {Reader.Name}");
+            if (Serializer.CheckIFile && TypeHelper.IsInterface(typeInfo.Type, typeof(IFileSerialize)))
+            {
+                return (T)ReadIFile(element, typeInfo);
+            }
+            else if (typeInfo.Serialazer is IElementSerializer<T> serializer)
+            {
+                return serializer.Read(this, element, typeInfo);
+            }
+            else if (typeInfo.IsDictionary)
+            {
+                return (T)ReadDictionary((IDictionary)element, typeInfo);
+            }
+            else if (typeInfo.IsList)
+            {
+                return (T)ReadCollection((IList)element, typeInfo);
+            }
+            return ReadObject<T>(element, typeInfo);
+        }
+
+        public object ReadObject(object element, TypeSerializationInfo typeInfo)
+        {
+            if (element == null || element.GetType() != typeInfo.Type)
+            {
+                element = typeInfo.Constructor?.Create();
             }
 
-            if (Serializer.CheckIFile && element is IFileSerialize && Reader.Depth > 0)
+            ReadAttributes(element, typeInfo);
+
+            if (IsEmptyElement)
             {
-                return ReadIFile(element, info);
-            }
-            if (element is ISerializableElement serializableElement)
-            {
-                var name = Reader.Name;
-                serializableElement.Deserialize(this);
-                while (Reader.Name != name)
-                {
-                    ReadBegin();
-                }
                 return element;
             }
 
-            ReadAttributes(element, info);
+            while (ReadNextElement())
+            {
+                ReadElement(element, typeInfo, null);
+            }
+            return element;
+        }
 
-            if (Reader.IsEmptyElement)
+        public T ReadObject<T>(T element, TypeSerializationInfo typeInfo)
+        {
+            if (element == null || element.GetType() != typeInfo.Type)
+            {
+                element = (T)typeInfo.Constructor?.Create();
+            }
+
+            ReadAttributes<T>(element, typeInfo);
+
+            if (IsEmptyElement)
             {
                 return element;
             }
-            if (info.IsDictionary)
-            {
-                return ReadDictionary(element, info);
-            }
-            if (info.IsList)
-            {
-                return ReadCollection((IList)element, info);
-            }
 
-            while (ReadBegin())
+            while (ReadNextElement())
             {
-                ReadElement(element, info);
+                ReadElement<T>(element, typeInfo, null);
             }
             return element;
         }
@@ -326,9 +421,6 @@ namespace DataWF.Common
             return Serializer.GetTypeInfo(type);
         }
 
-        public T ReadAttribute<T>(string name)
-        {
-            return (T)Helper.TextParse(Reader.GetAttribute(name), typeof(T));
-        }
+
     }
 }

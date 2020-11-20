@@ -58,7 +58,7 @@ namespace DataWF.Test.Data
         }
 
         [Column("height")]
-        public short? Height
+        public short? Days
         {
             get => GetProperty<short?>();
             set => SetProperty(value);
@@ -92,8 +92,8 @@ namespace DataWF.Test.Data
             set => SetProperty(value);
         }
 
-        [Column("lodar")]
-        public bool? Lodar
+        [Column("is_active")]
+        public bool? IsActive
         {
             get => GetProperty<bool?>();
             set => SetProperty(value);

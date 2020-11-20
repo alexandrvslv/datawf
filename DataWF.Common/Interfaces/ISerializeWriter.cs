@@ -6,5 +6,6 @@ namespace DataWF.Common
     {
         void Write(object element);
         void Write<T>(T element);
+        void Flush();
     }
 }

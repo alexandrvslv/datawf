@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -7,297 +8,291 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
+
     public class TcpServer : IDisposable
     {
-        //http://stackoverflow.com/questions/5879605/udp-port-open-check-c-sharp
-        public static int GetTcpPort()
-        {
-            var prop = IPGlobalProperties.GetIPGlobalProperties();
-            var active = prop.GetActiveTcpListeners();
-
-            int myport = 49152;
-            for (; myport < 65535; myport++)
-            {
-                bool alreadyinuse = false;
-                foreach (var p in active)
-                {
-                    if (p.Port == myport)
-                    {
-                        alreadyinuse = true;
-                        break;
-                    }
-                }
-                if (!alreadyinuse)
-                {
-                    var connections = prop.GetActiveTcpConnections();
-                    foreach (var p in connections)
-                        if (p.LocalEndPoint.Port == myport)
-                        {
-                            alreadyinuse = true;
-                            break;
-                        }
-
-                    if (!alreadyinuse)
-                        break;
-                }
-            }
-            return myport;
-        }
-
-        public static IPHostEntry GetHostEntry()
-        {
-            return Dns.GetHostEntry(Dns.GetHostName());
-        }
-
-        public static IPAddress GetAddress()
-        {
-            var entry = GetHostEntry();
-            foreach (var address in entry.AddressList)
-                if (address.AddressFamily == AddressFamily.InterNetwork)
-                    return address;
-            return null;
-        }
-
-        public static IPEndPoint ParseEndPoint(string address)
-        {
-            var split = address.Split(':');
-            if (split.Length < 2)
-                return null;
-            var ipaddress = IPAddress.Parse(split[0]);
-            if (int.TryParse(split[1], out int port))
-            {
-                return new IPEndPoint(ipaddress, port);
-            }
-            return null;
-        }
-
-
         static readonly int TimeoutTick = 5000;
 
         protected bool online = true;
         protected readonly SelectableList<TcpSocket> clients = new SelectableList<TcpSocket>();
-        protected TcpListener listener;
-        protected IPEndPoint localPoint;
-        protected readonly ManualResetEventSlim acceptEvent = new ManualResetEventSlim(true);
         protected readonly ManualResetEventSlim timeoutEvent = new ManualResetEventSlim(true);
-        public event EventHandler<TcpServerEventArgs> DataLoad;
-        public event EventHandler<TcpServerEventArgs> DataSend;
+        protected Socket socket;
+        protected IPEndPoint point;
+        private bool logEvents;
+
+        public TcpServer()
+        {
+            clients.Indexes.Add(new ActionInvoker<TcpSocket, string>(nameof(TcpSocket.PointName),
+                                                                     (item) => item.PointName));
+            TimeOut = TimeSpan.MinValue;
+        }
+
+        public bool LogEvents
+        {
+            get => logEvents;
+            set => logEvents = value;
+        }
+
+        public SelectableList<TcpSocket> Clients => clients;
+
+        [Browsable(false)]
+        public TimeSpan TimeOut { get; set; }
+
+        [Browsable(false)]
+        public IPEndPoint Point
+        {
+            get => point;
+            set => point = value;
+        }
+
+        [Browsable(false)]
+        public Socket Socket => socket;
+
+        [Browsable(false)]
+        public bool OnLine => online && (socket?.IsBound ?? false);
+
+        public bool Compression { get; set; } = true;
+
+        public event EventHandler<TcpStreamEventArgs> DataLoad;
+        public event EventHandler<TcpStreamEventArgs> DataSend;
         public event EventHandler<TcpSocketEventArgs> ClientTimeout;
         public event EventHandler<TcpSocketEventArgs> ClientConnect;
         public event EventHandler<TcpSocketEventArgs> ClientDisconnect;
         public event EventHandler<TcpExceptionEventArgs> DataException;
         public event EventHandler Started;
         public event EventHandler Stopped;
-        private bool logEvents;
-
-        public TcpServer()
-        {
-            clients.Indexes.Add(new ActionInvoker<TcpSocket, string>($"{nameof(TcpSocket.Point)}.{nameof(object.ToString)}",
-                                                                     (item) => item.Point.ToString()));
-            TimeOut = TimeSpan.MinValue;
-        }
-
-        public bool LogEvents
-        {
-            get { return logEvents; }
-            set { logEvents = value; }
-        }
-
-        [Browsable(false)]
-        public TimeSpan TimeOut { get; set; }
-
-        [Browsable(false)]
-        public IPEndPoint LocalPoint
-        {
-            get { return localPoint; }
-            set { localPoint = value; }
-        }
-
-        [Browsable(false)]
-        public TcpListener Listener
-        {
-            get { return listener; }
-        }
-
-        [Browsable(false)]
-        public bool OnLine
-        {
-            get { return online && listener != null && listener.Server.IsBound; }
-        }
-
-        public void StartListener()
-        {
-            online = true;
-            listener = new TcpListener(localPoint);
-            listener.Start();
-
-            ThreadPool.QueueUserWorkItem(p =>
-                {
-                    OnStart();
-                    while (online)
-                    {
-                        acceptEvent.Reset();
-                        listener.BeginAcceptSocket(AcceptCallback, new TcpSocketEventArgs());
-                        acceptEvent.Wait();
-                    }
-                });
-
-            if (TimeOut != TimeSpan.MinValue)
-                ThreadPool.QueueUserWorkItem(p =>
-                {
-                    while (online)
-                    {
-                        timeoutEvent.Reset();
-                        for (int i = 0; i < clients.Count; i++)
-                        {
-                            var client = clients[i];
-                            if ((DateTime.Now - client.Stamp) > TimeOut)
-                            {
-                                OnClientTimeOut(client);
-                                i--;
-                            }
-                        }
-                        timeoutEvent.Wait(TimeoutTick);
-                    }
-                });
-        }
 
         public void StopListener()
         {
-            listener.Stop();
+            socket.Close();
             online = false;
-            acceptEvent.Set();
+
             foreach (var client in clients.ToArray())
                 client.Dispose();
             clients.Clear();
+
             OnStop();
         }
 
-        private void AcceptCallback(IAsyncResult result)
+        public void StartListener(int backlog)
         {
-            acceptEvent.Set();
-            var arg = result.AsyncState as TcpSocketEventArgs;
-            try
+            if (Point == null)
             {
-                arg.Client = new TcpSocket { Server = this };
-                arg.Client.Socket = listener.EndAcceptSocket(result);
-                OnClientConnect(arg);
+                throw new Exception("LocalPoint not specified!");
             }
-            catch (Exception ex)
+            socket = new Socket(Point.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            socket.Bind(Point);
+            socket.Listen(backlog);
+            online = true;
+
+            if (TimeOut != TimeSpan.MinValue)
+                _ = Task.Run(TimeoutLoop).ConfigureAwait(false);
+
+            _ = MainLoop().ConfigureAwait(false);
+
+            OnStart();
+        }
+
+        private void TimeoutLoop()
+        {
+            while (online)
             {
-                if (listener.Server.IsBound)
-                    OnDataException(new TcpExceptionEventArgs(arg, ex));
+                timeoutEvent.Reset();
+                for (int i = 0; i < clients.Count; i++)
+                {
+                    var client = clients[i];
+                    if ((DateTime.UtcNow - client.Stamp) > TimeOut)
+                    {
+                        OnClientTimeOut(client);
+                        i--;
+                    }
+                }
+                timeoutEvent.Wait(TimeoutTick);
             }
         }
 
-        public TcpSocket NewClient(IPEndPoint address)
+        private async Task MainLoop()
         {
-            return NewClient(localPoint, address);
+            while (OnLine)
+            {
+                try
+                {
+                    Debug.WriteLine($"TcpServer {Point} Start Accept");
+                    var socket = await Task.Factory.FromAsync<Socket>(Socket.BeginAccept, Socket.EndAccept, null);
+                    socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    Debug.WriteLine($"TcpServer {Point} Accept: {socket.RemoteEndPoint}");
+                    var arg = new TcpSocketEventArgs
+                    {
+                        Client = new TcpSocket
+                        {
+                            Server = this,
+                            Socket = socket
+                        }
+                    };
+                    _ = OnClientConnect(arg);
+                }
+                catch (Exception ex)
+                {
+                    if (Socket.IsBound)
+                        OnDataException(new TcpExceptionEventArgs(TcpSocketEventArgs.Empty, ex));
+                }
+            }
         }
 
-        public TcpSocket NewClient(IPEndPoint local, IPEndPoint address)
+        public ValueTask<TcpSocket> CreateClient(IPEndPoint address)
         {
-            var client = new TcpSocket { Server = this };
-            client.Socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            if (local != null)
-                client.Socket.Bind(local);
-            client.Connect(address);
+            return CreateClient(point, address);
+        }
+
+        public async ValueTask<TcpSocket> CreateClient(IPEndPoint local, IPEndPoint address)
+        {
+            var client = new TcpSocket { Server = this, Point = address };
+            await client.Connect(local);
             return client;
         }
 
-        public void Send(IPEndPoint address, string data)
+        public ValueTask Send(IPEndPoint address, string data)
         {
-            Send(address, Encoding.UTF8.GetBytes(data));
+            return Send(address, Encoding.UTF8.GetBytes(data));
         }
 
-        public void Send(IPEndPoint address, byte[] data)
+        public async ValueTask Send(IPEndPoint address, byte[] data)
         {
-            var client = clients.SelectOne("Point.ToString", CompareType.Equal, address.ToString());
+            var client = clients.SelectOne(nameof(TcpSocket.PointName), CompareType.Equal, address.ToString());
             if (client == null)
-                client = NewClient(localPoint, address);
-            client.Send(data);
+            {
+                client = await CreateClient(point, address);
+            }
+
+            await client.Send(data);
         }
 
         protected virtual void OnStart()
         {
             Started?.Invoke(this, EventArgs.Empty);
 
-            Helper.Logs.Add(new StateInfo("NetService", "Start", localPoint.ToString()));
+            Helper.Logs.Add(new StateInfo(nameof(TcpServer), "Start", point.ToString()));
         }
 
         protected virtual void OnStop()
         {
             Stopped?.Invoke(this, EventArgs.Empty);
 
-            Helper.Logs.Add(new StateInfo("NetService", "Stop", localPoint.ToString()));
+            Helper.Logs.Add(new StateInfo(nameof(TcpServer), "Stop", point.ToString()));
         }
 
-        protected internal void OnDataSend(TcpServerEventArgs arg)
+        protected virtual internal async ValueTask OnDataSend(TcpStreamEventArgs arg)
         {
-            NetStat.Set("Server Send", 1, arg.Length);
+            await Task.Delay(1);
+            NetStat.Set("Server Send", 1, arg.Transfered);
 
             if (logEvents)
-                Helper.Logs.Add(new StateInfo("NetService", "DataSend", string.Format("{0} {1} {2}",
+            {
+                Helper.Logs.Add(new StateInfo(nameof(TcpServer), "DataSend", string.Format("{0} {1} {2}",
                     arg.Client.Socket.LocalEndPoint,
                     arg.Client.Socket.RemoteEndPoint,
-                    Helper.TextDisplayFormat(arg.Length, "size"))));
+                    Helper.TextDisplayFormat(arg.Transfered, "size"))));
+            }
 
             DataSend?.Invoke(this, arg);
-
-            if (arg.Stream is MemoryStream)
-                arg.Stream.Dispose();
         }
 
-        protected internal void OnDataLoad(TcpServerEventArgs arg)
+        protected virtual internal async ValueTask OnDataLoadStart(TcpStreamEventArgs arg)
         {
-            NetStat.Set("Server Receive", 1, arg.Length);
+            await Task.Delay(1);
 
             if (logEvents)
-                Helper.Logs.Add(new StateInfo("NetService", "DataLoad", string.Format("{0} {1} {2}",
+            {
+                Helper.Logs.Add(new StateInfo(nameof(TcpServer), "DataLoad", string.Format("{0} {1} {2}",
                     arg.Client.Socket.LocalEndPoint,
                     arg.Client.Socket.RemoteEndPoint,
-                    Helper.TextDisplayFormat(arg.Length, "size"))));
+                    Helper.TextDisplayFormat(arg.Transfered, "size"))));
+            }
 
-            DataLoad?.Invoke(this, arg);
+            if (DataLoad != null)
+            {
+                DataLoad.Invoke(this, arg);
+            }
+            else
+            {
+                using (var stream = arg.ReaderStream)
+                {
+                    //TODO
+                }
+            }
+            arg.ReleasePipe();
 
-            arg.Stream.Dispose();
         }
 
-        protected internal void OnDataException(TcpExceptionEventArgs arg)
+        protected virtual internal async ValueTask OnDataLoadEnd(TcpStreamEventArgs arg)
+        {
+            await Task.Delay(1);
+            NetStat.Set("Server Receive", 1, arg.Transfered);
+
+            if (logEvents)
+            {
+                Helper.Logs.Add(new StateInfo(nameof(TcpServer), "DataLoad", string.Format("{0} {1} {2}",
+                    arg.Client.Socket.LocalEndPoint,
+                    arg.Client.Socket.RemoteEndPoint,
+                    Helper.TextDisplayFormat(arg.Transfered, "size"))));
+            }
+        }
+
+        protected virtual internal void OnDataException(TcpExceptionEventArgs arg)
         {
             DataException?.Invoke(this, arg);
 
             Helper.OnException(arg.Exception);
 
-            if (arg.Arguments is TcpServerEventArgs tcpArgs && tcpArgs.Stream is MemoryStream)
+            if (arg.Arguments is TcpStreamEventArgs tcpArgs && tcpArgs.ReaderStream is MemoryStream)
             {
-                tcpArgs.Stream.Dispose();
+                tcpArgs.ReaderStream.Dispose();
             }
         }
 
-        protected internal void OnClientConnect(TcpSocketEventArgs arg)
+        public void WaitAll()
         {
-            clients.Add(arg.Client);
-            arg.Client.Load();
-
-            ClientConnect?.Invoke(this, arg);
+            foreach (var client in clients)
+            {
+                client.WaitAll();
+            }
         }
 
-        protected internal void OnClientDisconect(TcpSocketEventArgs arg)
+        protected internal async ValueTask OnClientConnect(TcpSocketEventArgs arg)
         {
+            _ = arg.Client.SartListen().ConfigureAwait(false);
+
+            clients.Add(arg.Client);
+            ClientConnect?.Invoke(this, arg);
+
+            await Task.Delay(1);
+        }
+
+        protected internal async ValueTask OnClientDisconect(TcpSocketEventArgs arg)
+        {
+            clients.Remove(arg.Client);
             ClientDisconnect?.Invoke(this, arg);
 
-            clients.Remove(arg.Client);
+            await Task.Delay(1);
         }
 
         protected void OnClientTimeOut(TcpSocket client)
         {
-            ClientTimeout?.Invoke(this, new TcpSocketEventArgs { Client = client });
+            if (client.Socket.Poll(5000, SelectMode.SelectRead) && (client.Socket.Available == 0))
+            {
+                ClientTimeout?.Invoke(this, new TcpSocketEventArgs { Client = client });
 
-            client.Dispose();
+                client.Dispose();
+            }
+            else
+            {
+                client.Stamp = DateTime.UtcNow;
+            }
         }
 
         public void Remove(TcpSocket client)
@@ -309,7 +304,6 @@ namespace DataWF.Common
         {
             if (online)
                 StopListener();
-            acceptEvent?.Dispose();
             timeoutEvent?.Dispose();
         }
 

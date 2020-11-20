@@ -64,7 +64,7 @@ namespace DataWF.Common
                     var currentValue = item != null
                         && propertyType != typeof(string)
                         && !propertyType.IsValueType
-                        ? property.Invoker.GetValue(item)
+                        ? property.PropertyInvoker.GetValue(item)
                         : null;
 
 
@@ -124,7 +124,7 @@ namespace DataWF.Common
                         {
                             continue;
                         }
-                        property.Invoker.SetValue(item, value);
+                        property.PropertyInvoker.SetValue(item, value);
                     }
                 }
             }
@@ -284,7 +284,7 @@ namespace DataWF.Common
                 {
                     continue;
                 }
-                var value = property.Invoker.GetValue(item);
+                var value = property.PropertyInvoker.GetValue(item);
                 if (value is ISynchronized synchedValue)
                 {
                     if (context != null && context.Items.Contains(value))

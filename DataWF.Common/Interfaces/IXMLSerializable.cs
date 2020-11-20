@@ -1,6 +1,6 @@
 ﻿namespace DataWF.Common
 {
-    public interface ISerializableElement
+    public interface IXMLSerializable
     {
         void Serialize(XmlInvokerWriter writer);
         void Deserialize(XmlInvokerReader reader);

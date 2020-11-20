@@ -20,10 +20,91 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using DataWF.Common;
 
 namespace DataWF.Data
 {
+    public class DBItemServiceConverter<T> : JsonConverter<T> where T : DBItem, new()
+    {
+        public DBItemServiceConverter()
+        { }
+
+        //public override bool CanConvert(Type objectType)
+        //{
+        //    return TypeHelper.IsBaseType(objectType, typeof(T));
+        //}
+
+        public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
+        {
+            var valueType = value.GetType();
+            writer.WriteStartObject();
+            foreach (var column in value.Table.Columns)
+            {
+                var propertyType = column.DataType;
+                writer.WritePropertyName(column.Name);
+                column.Serializer.Write(writer, column.GetValue(value), options);
+            }
+            writer.WriteEndObject();
+        }
+
+        public override T Read(ref Utf8JsonReader reader, Type objectType, JsonSerializerOptions options)
+        {
+            var item = (T)null;
+
+            var table = DBTable.GetTable<T>();
+            if (table == null)
+            {
+                throw new JsonException($"Can't find table of {objectType?.Name ?? "null"}");
+            }
+            var dictionary = new Dictionary<DBColumn, object>();
+            var column = (DBColumn)null;
+            var propertyName = (string)null;
+            while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
+            {
+                if (reader.TokenType == JsonTokenType.PropertyName)
+                {
+                    propertyName = reader.GetString();
+                    column = table.ParseColumnProperty(propertyName);
+                    if (column == null)
+                    {
+                        throw new InvalidOperationException($"Property {propertyName} not found!");
+                    }
+                }
+                else
+                {
+                    dictionary[column] = JsonSerializer.Deserialize(ref reader, column.DataType, options);
+                }
+            }
+
+            if (table.PrimaryKey != null && dictionary.TryGetValue(table.PrimaryKey, out var value) && value != null)
+            {
+                item = table.LoadById(value, DBLoadParam.Load | DBLoadParam.Referencing);
+            }
+
+            if (item == null)
+            {
+                if (table.ItemTypeKey != null && dictionary.TryGetValue(table.ItemTypeKey, out var itemType) && itemType != null)
+                {
+                    item = (T)table.NewItem(DBUpdateState.Insert, true, (int)itemType);
+                }
+                else
+                {
+                    item = (T)table.NewItem(DBUpdateState.Insert, true);
+                }
+            }
+
+            foreach (var entry in dictionary)
+            {
+                entry.Key.SetValue(item, entry.Value);
+            }
+            return item;
+        }
+
+
+    }
     public static class DBItemBinarySerialize
     {
         public static void WriteSeparator(BinaryWriter writer, DBRowBinarySeparator sep)
@@ -148,7 +229,7 @@ namespace DataWF.Data
                 Helper.WriteBinary(writer, value, true);
             }
             WriteSeparator(writer, DBRowBinarySeparator.RowEnd);
-        }       
+        }
 
         public static byte[] Write(DBItem row, bool old = false)
         {

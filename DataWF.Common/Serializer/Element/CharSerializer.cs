@@ -7,14 +7,6 @@ namespace DataWF.Common
     {
         public static readonly UInt8Serializer Instance = new UInt8Serializer();
 
-        public override object ConvertFromString(string value) => FromString(value);
-
-        public override string ConvertToString(object value) => ToString((char)value);
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (char)value, writeToken);
-
         public override char FromBinary(BinaryReader reader) => reader.ReadChar();
 
         public override void ToBinary(BinaryWriter writer, char value, bool writeToken)

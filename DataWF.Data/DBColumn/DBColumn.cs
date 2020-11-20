@@ -56,7 +56,7 @@ using System.Xml.Serialization;
 [assembly: Invoker(typeof(DBColumn), nameof(DBColumn.TargetType), typeof(DBColumn.TargetTypeInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>
+    public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>, IPropertySerializationInfo
     {
         public static readonly DBColumn EmptyKey = new DBColumn();
 
@@ -215,7 +215,7 @@ namespace DataWF.Data
         public bool CanWrite => true;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public ElementSerializer Serializer { get; private set; }
+        public ElementSerializer Serializer { get; set; }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public Pull Pull
@@ -645,16 +645,47 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public bool IsFileLOB => (Keys & DBColumnKeys.FileLOB) == DBColumnKeys.FileLOB;
 
-
         [JsonIgnore, XmlIgnore]
         public DBLogColumn LogColumn => logColumn ?? (logColumn = Table?.LogTable?.GetLogColumn(this));
 
+        [JsonIgnore, XmlIgnore]
+        public object Default => null;
+
+        [JsonIgnore, XmlIgnore]
+        public bool IsAttribute => true;
+
+        [JsonIgnore, XmlIgnore]
+        public bool IsChangeSensitive => true;
+
+        [JsonIgnore, XmlIgnore]
+        public bool IsReadOnly => false;
+
+        [JsonIgnore, XmlIgnore]
+        public bool IsRequired => IsNotNull;
+
+        public bool IsText => false;
+
+        public bool IsWriteable => true;
+
         internal protected virtual void CheckPull()
         {
-            if (!Containers.Any()
-                || ColumnType == DBColumnTypes.Expression
-                || ColumnType == DBColumnTypes.Code)
+            if (!Containers.Any())
                 return;
+
+            if (DataType == null)
+            {
+                return;
+                //throw new InvalidOperationException($"{nameof(DataType)} not specified!");
+            }
+
+            Serializer = TypeHelper.GetSerializer(DataType);
+
+            if (ColumnType == DBColumnTypes.Expression
+                || ColumnType == DBColumnTypes.Code)
+            {
+                return;
+            }
+
             if (Pull != null &&
                 (Pull.ItemType != DataType))
             {
@@ -663,9 +694,6 @@ namespace DataWF.Data
             }
             if (Pull == null && Table != null)
             {
-                if (DataType == null)
-                    throw new InvalidOperationException($"{nameof(DataType)} not specified!");
-                Serializer = TypeHelper.GetSerializer(DataType);
                 Pull = Pull.Fabric(DataType, Table.BlockSize);
             }
             else if (Pull.BlockSize != Table.BlockSize)
@@ -1312,6 +1340,11 @@ namespace DataWF.Data
         public DBColumn GetVirtualColumn(DBTable table)
         {
             return table.ParseColumn(name);
+        }
+
+        public bool CheckDefault(object value)
+        {
+            throw new NotImplementedException();
         }
 
         public class GroupNameInvoker<T> : Invoker<T, string> where T : DBColumn

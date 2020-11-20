@@ -11,14 +11,6 @@ namespace DataWF.Common
 
         public override bool CanConvertString => true;
 
-        public override object ConvertFromString(string value) => CultureInfo.GetCultureInfo(value);
-
-        public override string ConvertToString(object value) => ((CultureInfo)value).Name;
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (CultureInfo)value, writeToken);
-
         public override CultureInfo FromBinary(BinaryReader reader) => FromString(StringSerializer.Instance.FromBinary(reader));
 
         public override CultureInfo FromString(string value) => CultureInfo.GetCultureInfo(value);

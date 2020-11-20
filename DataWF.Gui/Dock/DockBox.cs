@@ -17,7 +17,7 @@ namespace DataWF.Gui
         Move = 8
     }
 
-    public class DockBox : Canvas, IDockContainer, ISerializableElement
+    public class DockBox : Canvas, IDockContainer, IXMLSerializable
     {
         private DockItem items;
         private DockPage page = null;

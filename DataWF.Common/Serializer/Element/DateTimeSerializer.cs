@@ -10,16 +10,6 @@ namespace DataWF.Common
     {
         public static readonly DateTimeSerializer Instance = new DateTimeSerializer();
 
-        public override object ConvertFromString(string value) => long.TryParse(value, out var binary)
-            ? DateTime.FromBinary(binary)
-            : DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var result) ? result : DateTime.MinValue;
-
-        public override string ConvertToString(object value) => ((DateTime)value).ToString("o");
-
-        public override object ConvertFromBinary(BinaryReader reader) => FromBinary(reader);
-
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => ToBinary(writer, (DateTime)value, writeToken);
-
         public override DateTime FromBinary(BinaryReader reader) => DateTime.FromBinary(reader.ReadInt64());
 
         public override DateTime FromString(string value) => long.TryParse(value, out var binary)
