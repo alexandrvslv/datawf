@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.IO.Pipelines;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
@@ -10,8 +11,8 @@ namespace DataWF.Common
     {
         public static readonly int BufferSize = 2048;
         private Pipe pipe;
-        private Stream readerStream;
-        private Stream writerStream;
+        private Stream pipeReaderStream;
+        private Stream pipeWriterStream;
         private Stream sourceStream;
 
         public TcpStreamEventArgs(TcpSocket client, TcpStreamMode mode)
@@ -32,35 +33,25 @@ namespace DataWF.Common
                 pipe = value;
                 if (pipe != null)
                 {
-                    ReaderStream = pipe.Reader.AsStream(true);
-                    WriterStream = pipe.Writer.AsStream(true);
+                    pipeReaderStream = pipe.Reader.AsStream(true);
+                    pipeWriterStream = pipe.Writer.AsStream(true);
 
                     if (Mode == TcpStreamMode.Receive && Client.Server.Compression)
-                        ReaderStream = new Brotli.BrotliStream(ReaderStream, CompressionMode.Decompress, true);
+                        ReaderStream = new Brotli.BrotliStream(pipeReaderStream, CompressionMode.Decompress, true);
+                    else
+                        ReaderStream = pipeReaderStream;
 
                     if (Mode == TcpStreamMode.Send && Client.Server.Compression)
-                        WriterStream = new Brotli.BrotliStream(WriterStream, CompressionMode.Compress, true);
+                        WriterStream = new Brotli.BrotliStream(pipeWriterStream, CompressionMode.Compress, true);
+                    else
+                        WriterStream = pipeWriterStream;
                 }
             }
         }
 
-        public Stream WriterStream
-        {
-            get => writerStream;
-            internal set
-            {
-                writerStream = value;
-            }
-        }
+        public Stream WriterStream { get; set; }
 
-        public Stream ReaderStream
-        {
-            get => readerStream;
-            internal set
-            {
-                readerStream = value;
-            }
-        }
+        public Stream ReaderStream { get; set; }
 
         public object Tag { get; set; }
 
@@ -74,6 +65,7 @@ namespace DataWF.Common
             internal set
             {
                 sourceStream = value;
+
                 if (Mode == TcpStreamMode.Receive)
                 {
                     if (Client.Server.Compression)
@@ -91,35 +83,75 @@ namespace DataWF.Common
             }
         }
 
-        public bool IsPipeComplete { get; private set; }
+        public bool IsReaderComplete { get; private set; }
 
-        public void CompleteWrite(Exception exception = null)
+        public bool IsWriteComplete { get; private set; }
+
+        public void CompleteRead(Exception exception = null)
         {
-            if (Pipe != null)
+            try
             {
-                WriterStream.Flush();
-                if (WriterStream is Brotli.BrotliStream brotlyStream)
+                if (ReaderStream is Brotli.BrotliStream brotliReader)
                 {
-                    brotlyStream.Dispose();
+                    brotliReader.Dispose();
+                    ReaderStream = null;
                 }
-
-                Pipe.Writer.Complete(exception);
-                IsPipeComplete = true;
+                if (Pipe != null)
+                {
+                    Pipe.Reader.Complete(exception);
+                }
+            }
+            finally
+            {
+                IsReaderComplete = true;
             }
         }
 
-        public void ReleasePipe()
+        public void CompleteWrite(Exception exception = null)
         {
+            try
+            {
+                WriterStream.Flush();
+                if (WriterStream is Brotli.BrotliStream brotliWriter)
+                {
+                    brotliWriter.Dispose();
+                    WriterStream = null;
+                }
+                if (Pipe != null)
+                {
+                    Pipe.Writer.Complete(exception);
+                }
+            }
+            finally
+            {
+                IsWriteComplete = true;
+            }
+
+        }
+
+        public async ValueTask ReleasePipe(Exception exception = null)
+        {
+            while (!IsWriteComplete)
+            {
+                await Task.Delay(5);
+            }
+
+            if (WriterStream is Brotli.BrotliStream brotliWriter)
+            {
+                brotliWriter.Dispose();
+                WriterStream = null;
+            }
+            if (ReaderStream is Brotli.BrotliStream brotliReader)
+            {
+                brotliReader.Dispose();
+            }
+            pipeWriterStream?.Dispose();
+            pipeReaderStream?.Dispose();
+
             if (Pipe != null)
             {
-                WriterStream?.Dispose();
-                ReaderStream?.Dispose();
-
-                Pipe.Writer.Complete();
-                Pipe.Reader.Complete();
-
                 Pipe.Reset();
-                TcpSocket.Pipes.Push(Pipe);
+                TcpSocket.Pipes.Enqueue(Pipe);
             }
         }
     }

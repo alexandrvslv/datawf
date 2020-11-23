@@ -57,6 +57,7 @@ namespace DataWF.Common
 
         public bool Compression { get; set; } = true;
 
+        public Func<Stream, ValueTask> ParseDataLoad;
         public event EventHandler<TcpStreamEventArgs> DataLoad;
         public event EventHandler<TcpStreamEventArgs> DataSend;
         public event EventHandler<TcpSocketEventArgs> ClientTimeout;
@@ -65,18 +66,6 @@ namespace DataWF.Common
         public event EventHandler<TcpExceptionEventArgs> DataException;
         public event EventHandler Started;
         public event EventHandler Stopped;
-
-        public void StopListener()
-        {
-            socket.Close();
-            online = false;
-
-            foreach (var client in clients.ToArray())
-                client.Dispose();
-            clients.Clear();
-
-            OnStop();
-        }
 
         public void StartListener(int backlog)
         {
@@ -96,6 +85,21 @@ namespace DataWF.Common
             _ = MainLoop().ConfigureAwait(false);
 
             OnStart();
+        }
+
+        public void StopListener()
+        {
+            foreach (var client in clients.ToArray())
+                client.Dispose();
+            clients.Clear();
+
+            socket.Close();
+            socket.Dispose();
+            socket = null;
+
+            online = false;
+
+            OnStop();
         }
 
         private void TimeoutLoop()
@@ -120,12 +124,13 @@ namespace DataWF.Common
         {
             while (OnLine)
             {
+                var socket = new Socket(Point.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
                 try
                 {
                     var arg = new TcpSocketEventArgs();
                     Debug.WriteLine($"TcpServer {Point} Start Accept");
-                    var socket = new Socket(Point.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     socket = await Task.Factory.FromAsync<Socket>(Socket.BeginAccept(socket, 0, null, arg), Socket.EndAccept);
 
                     Debug.WriteLine($"TcpServer {Point} Accept: {socket.RemoteEndPoint}");
@@ -138,7 +143,8 @@ namespace DataWF.Common
                 }
                 catch (Exception ex)
                 {
-                    if (Socket.IsBound)
+                    socket?.Dispose();
+                    if (OnLine)
                         OnDataException(new TcpExceptionEventArgs(TcpSocketEventArgs.Empty, ex));
                 }
             }
@@ -216,7 +222,6 @@ namespace DataWF.Common
         protected virtual internal async ValueTask OnDataLoadStart(TcpStreamEventArgs arg)
         {
             await Task.Delay(1);
-
             if (logEvents)
             {
                 Helper.Logs.Add(new StateInfo(nameof(TcpServer), "DataLoad", string.Format("{0} {1} {2}",
@@ -224,19 +229,20 @@ namespace DataWF.Common
                     arg.Client.Socket.RemoteEndPoint,
                     Helper.TextDisplayFormat(arg.Transfered, "size"))));
             }
-
-            if (DataLoad != null)
+            if (ParseDataLoad != null)
+            {
+                await ParseDataLoad(arg.ReaderStream);
+            }
+            else if (DataLoad != null)
             {
                 DataLoad(this, arg);
             }
             else
             {
-                using (var stream = arg.ReaderStream)
-                {
-                    //TODO
-                }
+                throw new Exception("No data load parsers specified!");
             }
-            arg.ReleasePipe();
+            arg.CompleteRead();
+            await arg.ReleasePipe();
         }
 
         protected virtual internal async ValueTask OnDataLoadEnd(TcpStreamEventArgs arg)
@@ -285,9 +291,11 @@ namespace DataWF.Common
 
         protected internal async ValueTask OnClientDisconect(TcpSocketEventArgs arg)
         {
-            clients.Remove(arg.Client);
-            ClientDisconnect?.Invoke(this, arg);
-
+            if (clients.Remove(arg.Client))
+            {
+                ClientDisconnect?.Invoke(this, arg);
+                arg.Client.Dispose();
+            }
             await Task.Delay(1);
         }
 

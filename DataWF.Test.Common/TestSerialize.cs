@@ -232,14 +232,14 @@ namespace DataWF.Test.Common
 
         public void TestStringArray(BaseSerializer serializer)
         {
-            var list = new string[] { "one", "two", "three" };
+            var list = new string[] { "one", "two", "three", "four", "five" };
             var buffer = TestWrite(serializer, list);
 #if DEBUG
             PrintBuffer(buffer);
 #endif
             var newList = TestRead<string[]>(serializer, buffer);
-            Assert.AreEqual(3, newList.Length, "Deserialization Fail");
-            Assert.AreEqual("one", newList[0], "Deserialization Fail");
+            Assert.AreEqual(list.Length, newList.Length, "Deserialization Fail");
+            Assert.AreEqual(list[0], newList[0], "Deserialization Fail");
         }
 
         [Test()]
@@ -282,7 +282,7 @@ namespace DataWF.Test.Common
 
         public void TestDictionary(BaseSerializer serializer)
         {
-            var dict = new Dictionary<string, int> { { "one", 1 }, { "two", 2 }, { "three", 3 } };
+            var dict = new Dictionary<string, int> { { "one", 1 }, { "two", 2 }, { "three", 3 }, { "four", 4 }, { "five", 5 } };
 
             var buffer = TestWrite(serializer, dict);
 #if DEBUG
@@ -307,7 +307,7 @@ namespace DataWF.Test.Common
 
         public void TestHashtable(BaseSerializer serialiser)
         {
-            var dict = new Hashtable { { "one", 1 }, { "two", 2 }, { "three", 3 } };
+            var dict = new Hashtable { { "one", 1 }, { "two", 2 }, { "three", 3 }, { "four", 4 }, { "five", 5 } };
             var buffer = TestWrite(serialiser, dict);
 #if DEBUG
             PrintBuffer(buffer);
@@ -364,13 +364,14 @@ namespace DataWF.Test.Common
 #if DEBUG
             PrintBuffer(buffer);
 #endif
-            var newItem = TestRead<List<TestSerializeClass>>(serializer, buffer);
-            Assert.AreEqual(items.Count, newItem.Count, "Deserialization Fail");
-            Assert.AreEqual(items[1].GuidValue, newItem[1].GuidValue, "Deserialization Fail");
-            Assert.AreEqual(items[1].IntValue, newItem[1].IntValue, "Deserialization Fail");
-            Assert.AreEqual(items[1].DecimalValue, newItem[1].DecimalValue, "Deserialization Fail");
-            Assert.AreEqual(items[1].StringValue, newItem[1].StringValue, "Deserialization Fail");
-            Assert.AreEqual(items[1].ClassValue.StringValue, newItem[1].ClassValue.StringValue, "Deserialization Fail");
+            var newItems = TestRead<List<TestSerializeClass>>(serializer, buffer);
+            Assert.AreEqual(items.Count, newItems.Count, "Deserialization Fail");
+            Assert.AreEqual(items[1].GuidValue, newItems[1].GuidValue, "Deserialization Fail");
+            Assert.AreEqual(items[1].IntValue, newItems[1].IntValue, "Deserialization Fail");
+            Assert.AreEqual(items[1].NullableIntValue, newItems[1].NullableIntValue, "Deserialization Nullable Int Value Fail");
+            Assert.AreEqual(items[1].DecimalValue, newItems[1].DecimalValue, "Deserialization Fail");
+            Assert.AreEqual(items[1].StringValue, newItems[1].StringValue, "Deserialization Fail");
+            Assert.AreEqual(items[1].ClassValue.StringValue, newItems[1].ClassValue.StringValue, "Deserialization Fail");
         }
 
         [Test()]

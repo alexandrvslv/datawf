@@ -19,11 +19,11 @@ namespace DataWF.Test.Common
             var newLists = new List<List<TestSerializeClass>>();
             var sendEvent = new ManualResetEventSlim(false);
 
-            var tcpServer = new TcpServer { Point = SocketHelper.ParseEndPoint("localhost:52000") };
+            var tcpServer = new TcpServer { Point = SocketHelper.ParseEndPoint($"localhost:{SocketHelper.GetTcpPort()}") };
             tcpServer.StartListener(50);
             tcpServer.DataLoad += OnDataLoad;
 
-            var tcpClient = new TcpSocket { Server = tcpServer, Point = SocketHelper.ParseEndPoint("localhost:52001") };
+            var tcpClient = new TcpSocket { Server = tcpServer, Point = SocketHelper.ParseEndPoint($"localhost:{SocketHelper.GetTcpPort()}") };
             await tcpClient.Connect(tcpServer.Point, false);
             while (tcpServer.Clients.Count == 0)
             {
@@ -64,7 +64,7 @@ namespace DataWF.Test.Common
                 }
                 catch (Exception ex)
                 {
-
+                    e.CompleteRead(ex);
                 }
                 finally
                 {
