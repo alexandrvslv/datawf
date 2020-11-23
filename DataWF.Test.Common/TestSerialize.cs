@@ -366,6 +366,7 @@ namespace DataWF.Test.Common
 #endif
             var newItem = TestRead<List<TestSerializeClass>>(serializer, buffer);
             Assert.AreEqual(items.Count, newItem.Count, "Deserialization Fail");
+            Assert.AreEqual(items[1].GuidValue, newItem[1].GuidValue, "Deserialization Fail");
             Assert.AreEqual(items[1].IntValue, newItem[1].IntValue, "Deserialization Fail");
             Assert.AreEqual(items[1].DecimalValue, newItem[1].DecimalValue, "Deserialization Fail");
             Assert.AreEqual(items[1].StringValue, newItem[1].StringValue, "Deserialization Fail");
@@ -463,6 +464,7 @@ namespace DataWF.Test.Common
             return new TestSerializeClass
             {
                 IntValue = 5,
+                GuidValue = Guid.NewGuid(),
                 NullableIntValue = null,
                 DecimalValue = 5.5M,
                 NullableDecimalValue = 1.1M,
@@ -476,7 +478,7 @@ namespace DataWF.Test.Common
             };
         }
 
-        public static List<TestSerializeClass> GenerateList(int cout)
+        public static List<TestSerializeClass> GenerateList(int cout = 5)
         {
             var items = new List<TestSerializeClass>();
             for (int i = 0; i < cout; i++)
@@ -484,6 +486,7 @@ namespace DataWF.Test.Common
                 items.Add(new TestSerializeClass
                 {
                     IntValue = i,
+                    GuidValue = Guid.NewGuid(),
                     NullableIntValue = null,
                     DecimalValue = i / 3.3M,
                     StringValue = "bla bla " + i,
@@ -496,76 +499,6 @@ namespace DataWF.Test.Common
                 });
             }
             return items;
-        }
-
-        public static List<TestSerializeClass> GenerateList()
-        {
-            var item = new List<TestSerializeClass>();
-            item.AddRange(new[] {
-                new TestSerializeClass
-                {
-                    IntValue = 5,
-                    NullableIntValue = null,
-                    DecimalValue = 5.5M,
-                    StringValue = "bla bla",
-                    ClassValue = new TestSerializeClass
-                    {
-                        IntValue = 25,
-                        DecimalValue = 25.25M,
-                        StringValue = "bla bla bla"
-                    }
-                },
-                new TestSerializeClass
-                {
-                    IntValue = 10,
-                    NullableIntValue = 1,
-                    DecimalValue = 10.5M,
-                    StringValue = "bla bla",
-                    ClassValue = new TestSerializeClass
-                    {
-                        IntValue = 35,
-                        DecimalValue = 35.25M,
-                        StringValue = "bla bla bla"
-                    }
-                },
-                new TestSerializeClass
-                {
-                    IntValue = 15,
-                    DecimalValue = 15.5M,
-                    StringValue = "bla bla",
-                    ClassValue = new TestSerializeClass
-                    {
-                        IntValue = 45,
-                        DecimalValue = 45.25M,
-                        StringValue = "bla bla bla"
-                    }
-                },
-                new TestSerializeClass
-                {
-                    IntValue = 20,
-                    DecimalValue = 20.5M,
-                    StringValue = "bla bla",
-                    ClassValue = new TestSerializeClass
-                    {
-                        IntValue = 55,
-                        DecimalValue = 45.25M,
-                        StringValue = "bla bla bla"
-                    }
-                },
-                new TestSerializeClass
-                {
-                    IntValue = 25,
-                    DecimalValue = 25.5M,
-                    StringValue = "bla bla",
-                    ClassValue = new TestSerializeClass
-                    {
-                        IntValue = 65,
-                        DecimalValue = 45.25M,
-                        StringValue = "bla bla bla"
-                    }
-                }
-            });
-            return item;
         }
 
         public class TestSerializableElement : IXMLSerializable

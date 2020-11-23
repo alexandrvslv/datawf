@@ -15,6 +15,7 @@ namespace DataWF.Common
         protected UdpClient listener;
         protected UdpClient sender;
         private IPEndPoint listenerEndPoint;
+        private BinarySerializer serializer;
         private readonly ManualResetEventSlim receiveEvent = new ManualResetEventSlim(false);
 
         public event EventHandler<UdpServerEventArgs> DataException;
@@ -23,22 +24,23 @@ namespace DataWF.Common
 
         public UdpServer()
         {
+            serializer = new BinarySerializer();
         }
 
         public bool OnLine
         {
-            get { return online; }
+            get => online;
         }
 
         public IPEndPoint ListenerEndPoint
         {
-            get { return listenerEndPoint; }
-            set { listenerEndPoint = value; }
+            get => listenerEndPoint;
+            set => listenerEndPoint = value;
         }
 
         public UdpClient Client
         {
-            get { return listener; }
+            get => listener;
         }
 
         public void StartListener()
@@ -73,83 +75,83 @@ namespace DataWF.Common
                     receiveEvent.Wait();
                 }
             }, TaskCreationOptions.LongRunning).Start();
-        }
 
-        private void ReceiveCallback(IAsyncResult result)
-        {
-            if (!online)
-                return;
-            var arg = result.AsyncState as UdpServerEventArgs;
-            try
+            void ReceiveCallback(IAsyncResult result)
             {
-                receiveEvent.Set();
-                var point = new IPEndPoint(IPAddress.Any, listenerEndPoint.Port);
-
-                arg.Data = listener.EndReceive(result, ref point);
-                arg.Length = arg.Data.Length;
-                arg.Point = point;
-                OnDataLoad(arg);
+                if (!online)
+                    return;
+                var arg = result.AsyncState as UdpServerEventArgs;
+                try
+                {
+                    receiveEvent.Set();
+                    var point = new IPEndPoint(IPAddress.Any, listenerEndPoint.Port);
+                    var buffer = listener.EndReceive(result, ref point);
+                    //TODO Compression\Decompression
+                    arg.Data = new ArraySegment<byte>(buffer);
+                    arg.Length = arg.Data.Count;
+                    arg.Point = point;
+                    _ = OnDataLoad(arg);
+                }
+                catch (Exception ex)
+                {
+                    arg.Exception = ex;
+                    //if (ex is SocketException && ((SocketException)ex).ErrorCode == 10060)
+                    OnDataException(arg);
+                }
             }
-            catch (Exception ex)
-            {
-                arg.Exception = ex;
-                //if (ex is SocketException && ((SocketException)ex).ErrorCode == 10060)
-                OnDataException(arg);
-            }
         }
 
-        public void Send(byte[] data, string address)
+        public ValueTask Send(byte[] data, string address)
         {
-            Send(data, SocketHelper.ParseEndPoint(address));
+            return Send(new ArraySegment<byte>(data), SocketHelper.ParseEndPoint(address));
         }
 
-        public void Send(string data, string address)
+        public ValueTask Send(string data, string address)
         {
-            Send(Encoding.UTF8.GetBytes(data), SocketHelper.ParseEndPoint(address));
+            return Send(new ArraySegment<byte>(Encoding.UTF8.GetBytes(data)), SocketHelper.ParseEndPoint(address));
         }
 
-        public void Send(byte[] data, IPEndPoint address, object tag = null)
+        public ValueTask SendElement<T>(T element, IPEndPoint address, object tag = null)
+        {
+            return Send(serializer.Serialize<T>(element), address, tag);
+        }
+
+        public async ValueTask Send(ArraySegment<byte> data, IPEndPoint address, object tag = null)
         {
             if (address != null && data != null)
             {
-                var param = new UdpServerEventArgs { Data = data, Point = address, Tag = tag };
-                sender.BeginSend(data, data.Length, address, SendCallback, param);
+                var arg = new UdpServerEventArgs { Data = data, Point = address, Tag = tag };
+                try
+                {
+                    //TODO Compression\Decompression
+                    arg.Length = await Task.Factory.FromAsync<int>(sender.BeginSend(arg.Data.Array, arg.Data.Count, address, null, arg), sender.EndSend);
+                    await OnDataSend(arg);
+                }
+                catch (Exception ex)
+                {
+                    arg.Exception = ex;
+                    OnDataException(arg);
+                }
             }
         }
 
-        private void SendCallback(IAsyncResult result)
-        {
-            var arg = result.AsyncState as UdpServerEventArgs;
-            try
-            {
-                if (sender == null)
-                    return;
-                arg.Length = sender.EndSend(result);
-                OnDataSend(arg);
-            }
-            catch (Exception ex)
-            {
-                arg.Exception = ex;
-                OnDataException(arg);
-            }
-        }
-
-        protected virtual void OnDataSend(UdpServerEventArgs arg)
+        protected virtual ValueTask OnDataSend(UdpServerEventArgs arg)
         {
             NetStat.Set("Data Send", 1, arg.Length);
             DataSend?.Invoke(this, arg);
-
+            return default;
         }
 
-        protected virtual void OnDataLoad(UdpServerEventArgs arg)
+        protected virtual ValueTask OnDataLoad(UdpServerEventArgs arg)
         {
             NetStat.Set("Data Receive", 1, arg.Length);
             DataLoad?.Invoke(this, arg);
+            return default;
         }
 
         protected virtual void OnDataException(UdpServerEventArgs arg)
         {
-            NetStat.Set("Errors", 1, arg.Data?.Length ?? 0);
+            NetStat.Set("Errors", 1, arg.Data.Count);
             DataException?.Invoke(this, arg);
 
             Helper.OnException(arg.Exception);

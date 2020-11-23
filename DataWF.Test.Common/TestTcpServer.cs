@@ -19,16 +19,16 @@ namespace DataWF.Test.Common
             var newLists = new List<List<TestSerializeClass>>();
             var sendEvent = new ManualResetEventSlim(false);
 
-            var tcpServer = new TcpServer { Point = SocketHelper.ParseEndPoint("localhost:51000") };
+            var tcpServer = new TcpServer { Point = SocketHelper.ParseEndPoint("localhost:52000") };
             tcpServer.StartListener(50);
             tcpServer.DataLoad += OnDataLoad;
 
-            var tcpClient = new TcpSocket { Server = tcpServer, Point = SocketHelper.ParseEndPoint("localhost:51001") };
+            var tcpClient = new TcpSocket { Server = tcpServer, Point = SocketHelper.ParseEndPoint("localhost:52001") };
             await tcpClient.Connect(tcpServer.Point, false);
             while (tcpServer.Clients.Count == 0)
             {
                 Debug.WriteLine("Wait connection...");
-                await Task.Delay(10);
+                await Task.Delay(20);
             }
 
             for (int i = 0; i < packageCount; i++)

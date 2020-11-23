@@ -115,17 +115,12 @@ namespace DataWF.Common
 
         public void Write(object element)
         {
-            Type type = element.GetType();
-            var typeInfo = Serializer.GetTypeInfo(type);
-
-            Write(element, typeInfo);
+            Write(element, Serializer.GetTypeInfo(element.GetType()));
         }
 
         public void Write<T>(T element)
         {
-            var typeInfo = Serializer.GetTypeInfo<T>();
-
-            Write(element, typeInfo);
+            Write(element, Serializer.GetTypeInfo(element.GetType()));
         }
 
         public Dictionary<ushort, IPropertySerializationInfo> GetMap(TypeSerializationInfo typeInfo)

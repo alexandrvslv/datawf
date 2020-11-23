@@ -122,17 +122,17 @@ namespace DataWF.Common
             {
                 try
                 {
+                    var arg = new TcpSocketEventArgs();
                     Debug.WriteLine($"TcpServer {Point} Start Accept");
-                    var socket = await Task.Factory.FromAsync<Socket>(Socket.BeginAccept, Socket.EndAccept, null);
+                    var socket = new Socket(Point.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                     socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    socket = await Task.Factory.FromAsync<Socket>(Socket.BeginAccept(socket, 0, null, arg), Socket.EndAccept);
+
                     Debug.WriteLine($"TcpServer {Point} Accept: {socket.RemoteEndPoint}");
-                    var arg = new TcpSocketEventArgs
+                    arg.Client = new TcpSocket
                     {
-                        Client = new TcpSocket
-                        {
-                            Server = this,
-                            Socket = socket
-                        }
+                        Server = this,
+                        Socket = socket
                     };
                     _ = OnClientConnect(arg);
                 }
@@ -170,6 +170,17 @@ namespace DataWF.Common
             }
 
             await client.Send(data);
+        }
+
+        public async ValueTask SendElement<T>(IPEndPoint address, T element)
+        {
+            var client = clients.SelectOne(nameof(TcpSocket.PointName), CompareType.Equal, address.ToString());
+            if (client == null)
+            {
+                client = await CreateClient(point, address);
+            }
+
+            await client.SendElement(element);
         }
 
         protected virtual void OnStart()
@@ -216,7 +227,7 @@ namespace DataWF.Common
 
             if (DataLoad != null)
             {
-                DataLoad.Invoke(this, arg);
+                DataLoad(this, arg);
             }
             else
             {
@@ -226,7 +237,6 @@ namespace DataWF.Common
                 }
             }
             arg.ReleasePipe();
-
         }
 
         protected virtual internal async ValueTask OnDataLoadEnd(TcpStreamEventArgs arg)

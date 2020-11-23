@@ -36,7 +36,6 @@ namespace DataWF.Common
             }
         }
 
-
         public bool ByProperty { get; set; } = true;
 
         public bool OnlyXmlAttributes { get; set; } = false;
@@ -86,6 +85,24 @@ namespace DataWF.Common
             else
             {
                 File.Move(temp, file);
+            }
+        }
+
+        public virtual ArraySegment<byte> Serialize(object element)
+        {
+            using (var stream = new MemoryStream())
+            {
+                Serialize(stream, element);
+                return stream.TryGetBuffer(out var buffer) ? buffer : new ArraySegment<byte>(stream.ToArray());
+            }
+        }
+
+        public virtual ArraySegment<byte> Serialize<T>(T element)
+        {
+            using (var stream = new MemoryStream())
+            {
+                Serialize(stream, element);
+                return stream.TryGetBuffer(out var buffer) ? buffer : new ArraySegment<byte>(stream.ToArray());
             }
         }
 
@@ -146,6 +163,22 @@ namespace DataWF.Common
             }
 
             return element;
+        }
+
+        public object Deserialize(ArraySegment<byte> data, object element = null)
+        {
+            using (var stream = new MemoryStream(data.Array, data.Offset, data.Count))
+            {
+                return Deserialize(stream, element);
+            }
+        }
+
+        public  T Deserialize<T>(ArraySegment<byte> data, T element)
+        {
+            using (var stream = new MemoryStream(data.Array, data.Offset, data.Count))
+            {
+                return Deserialize(stream, element);
+            }
         }
 
         public object Deserialize(Stream stream, object element = null)

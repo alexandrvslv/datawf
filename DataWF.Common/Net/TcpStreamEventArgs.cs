@@ -6,7 +6,7 @@ using System.Net;
 
 namespace DataWF.Common
 {
-    public class TcpStreamEventArgs : EventArgs
+    public class TcpStreamEventArgs : TcpSocketEventArgs
     {
         public static readonly int BufferSize = 2048;
         private Pipe pipe;
@@ -20,12 +20,9 @@ namespace DataWF.Common
             Client = client;
             Mode = mode;
         }
-
         public TcpStreamMode Mode { get; }
 
         public byte[] Buffer { get; set; }
-
-        public TcpSocket Client { get; }
 
         public Pipe Pipe
         {
@@ -91,6 +88,23 @@ namespace DataWF.Common
                     else
                         ReaderStream = sourceStream;
                 }
+            }
+        }
+
+        public bool IsPipeComplete { get; private set; }
+
+        public void CompleteWrite(Exception exception = null)
+        {
+            if (Pipe != null)
+            {
+                WriterStream.Flush();
+                if (WriterStream is Brotli.BrotliStream brotlyStream)
+                {
+                    brotlyStream.Dispose();
+                }
+
+                Pipe.Writer.Complete(exception);
+                IsPipeComplete = true;
             }
         }
 

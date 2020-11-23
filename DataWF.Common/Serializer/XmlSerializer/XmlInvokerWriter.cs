@@ -51,7 +51,7 @@ namespace DataWF.Common
 
         public void Write<T>(T element)
         {
-            var typeInfo = Serializer.GetTypeInfo<T>();
+            var typeInfo = Serializer.GetTypeInfo(element.GetType());
             Write(element, typeInfo, typeInfo.ShortName, true);
         }
 

@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -650,33 +651,25 @@ namespace DataWF.Common
             return IsGZip(buffer);
         }
 
-        public static byte[] ReadGZipWin(byte[] data)
+        public static ArraySegment<byte> ReadGZipWin(ArraySegment<byte> bytes)
         {
-            using (var stream = new MemoryStream(data))
+            using (var stream = new MemoryStream(bytes.Array, bytes.Offset, bytes.Count))
+            using (var zipStream = new System.IO.Compression.GZipStream(stream, CompressionMode.Decompress))
+            using (var outStream = new MemoryStream())
             {
-                using (var zipStream = new System.IO.Compression.GZipStream(stream, System.IO.Compression.CompressionMode.Decompress))
-                {
-                    using (var outStream = new MemoryStream())
-                    {
-                        zipStream.CopyTo(outStream);
-                        return outStream.ToArray();
-                    }
-                }
+                zipStream.CopyTo(outStream);
+                return outStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(outStream.ToArray());
             }
         }
 
-        public static byte[] WriteGZipWin(byte[] data)
+        public static ArraySegment<byte> WriteGZipWin(ArraySegment<byte> bytes)
         {
-            if (data == null)
-                return null;
-            using (var stream = new MemoryStream())
+            using (var outStream = new MemoryStream())
+            using (var zipStream = new System.IO.Compression.GZipStream(outStream, CompressionMode.Compress))
             {
-                using (var zipStream = new System.IO.Compression.GZipStream(stream, System.IO.Compression.CompressionMode.Compress))
-                {
-                    zipStream.Write(data, 0, data.Length);
-                    zipStream.Flush();
-                    return stream.ToArray();
-                }
+                zipStream.Write(bytes.Array, bytes.Offset, bytes.Count);
+                zipStream.Flush();
+                return outStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(outStream.ToArray());
             }
         }
 
@@ -695,106 +688,57 @@ namespace DataWF.Common
                 return outStream;
             }
         }
-        public static async Task<ArraySegment<byte>> GetArraySegmentAsync(Stream stream, int bufferSize = 1024 * 80)
+
+        public static async ValueTask<ArraySegment<byte>> GetBytesAsync(Stream stream, int bufferSize = 1024 * 80)
         {
-            var memoryStream = stream as MemoryStream ?? new MemoryStream();
-            try
+            if (stream is MemoryStream memStream)//Double buffer
+                return memStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(memStream.ToArray());
+            else
             {
-                if (memoryStream != stream)
+                using (var outStream = new MemoryStream())
                 {
-                    await stream.CopyToAsync(memoryStream, bufferSize);
-                }
-                return memoryStream.TryGetBuffer(out var buffer) ? buffer : new ArraySegment<byte>(memoryStream.ToArray());
-            }
-            finally
-            {
-                if (memoryStream != stream)
-                {
-                    memoryStream.Dispose();
+                    await stream.CopyToAsync(outStream, bufferSize);
+                    return outStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(outStream.ToArray());
                 }
             }
         }
 
-        public static ArraySegment<byte> GetArraySegment(Stream stream, int bufferSize = 1024 * 80)
+        public static ArraySegment<byte> GetBytes(Stream stream, int bufferSize = 1024 * 80)
         {
-            var memoryStream = stream as MemoryStream ?? new MemoryStream();
-            try
+            if (stream is MemoryStream memStream)//Double buffer
+                return memStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(memStream.ToArray());
+            else
             {
-                if (memoryStream != stream)
+                using (var memoryStream = new MemoryStream())
                 {
                     stream.CopyTo(memoryStream, bufferSize);
-                }
-                return memoryStream.TryGetBuffer(out var buffer) ? buffer : new ArraySegment<byte>(memoryStream.ToArray());
-            }
-            finally
-            {
-                if (memoryStream != stream)
-                {
-                    memoryStream.Dispose();
+                    return memoryStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(memoryStream.ToArray());
                 }
             }
         }
 
-        public static async Task<byte[]> GetBytesAsync(Stream stream)
+        public static ArraySegment<byte> ReadGZip(ArraySegment<byte> bytes)
         {
-            if (stream is MemoryStream memStream)//Double buffer
-                return memStream.ToArray();
-            else
+            using (var stream = new MemoryStream(bytes.Array, bytes.Offset, bytes.Count))
+            using (var outstream = GetUnGZipStrem(stream))
             {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await stream.CopyToAsync(memoryStream);
-                    return memoryStream.ToArray();
-                }
+                return outstream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(outstream.ToArray());
             }
         }
 
-        public static byte[] GetBytes(Stream stream)
+        public static ArraySegment<byte> WriteGZip(ArraySegment<byte> bytes)
         {
-            if (stream is MemoryStream memStream)//Double buffer
-                return memStream.ToArray();
-            else
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    stream.CopyTo(memoryStream);
-                    return memoryStream.ToArray();
-                }
-            }
-        }
-
-        public static byte[] ReadGZip(byte[] data)
-        {
-            if (data == null)
-                return null;
-            using (var stream = new MemoryStream(data))
-            {
-                using (var outstream = GetUnGZipStrem(stream))
-                {
-                    return outstream.ToArray();
-                }
-            }
-        }
-
-        public static byte[] WriteGZip(byte[] data)
-        {
-            if (data == null)
-                return null;
             using (var stream = new MemoryStream())
+            using (var zipStream = new GZipOutputStream(stream))
             {
-                using (var zipStream = new GZipOutputStream(stream))
-                {
-                    zipStream.Write(data, 0, data.Length);
-                    zipStream.Finish();
-                    return stream.ToArray();
-                }
+                zipStream.Write(bytes.Array, bytes.Offset, bytes.Count);
+                zipStream.Finish();
+                return stream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(stream.ToArray());
             }
         }
 
-        public static byte[] WriteGZip(Stream data, int bufferSize = 81920)
+        public static ArraySegment<byte> WriteGZip(Stream data, int bufferSize = 1024 * 80)
         {
-            if (data == null)
-                return null;
             if (data.CanSeek)
             {
                 data.Position = 0;
@@ -803,35 +747,38 @@ namespace DataWF.Common
                     using (var outStream = new MemoryStream())
                     {
                         data.CopyTo(outStream, bufferSize);
-                        return outStream.ToArray();
+                        return outStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(outStream.ToArray());
                     }
                 }
             }
             using (var outStream = new MemoryStream())
+            using (var zipStream = new GZipOutputStream(outStream))
             {
-                using (var zipStream = new GZipOutputStream(outStream))
-                {
-                    data.CopyTo(zipStream, bufferSize);
-                    zipStream.Finish();
-                    return outStream.ToArray();
-                }
+                data.CopyTo(zipStream, bufferSize);
+                zipStream.Finish();
+                return outStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(outStream.ToArray());
             }
         }
 
-        public static byte[] ReadZip(byte[] data)
+        public static ArraySegment<byte> ReadZip(ArraySegment<byte> bytes)
         {
-            if (data == null)
-                return null;
-            using (var stream = new MemoryStream(data))
+            using (var stream = new MemoryStream(bytes.Array, bytes.Offset, bytes.Count))
+            using (var zipStream = new ZipInputStream(stream))
+            using (var outStream = new MemoryStream())
             {
-                using (var zipStream = new ZipInputStream(stream))
-                {
-                    using (var outStream = new MemoryStream())
-                    {
-                        zipStream.CopyTo(outStream);
-                        return outStream.ToArray();
-                    }
-                }
+                zipStream.CopyTo(outStream);
+                return outStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(outStream.ToArray());
+            }
+        }
+
+        public static ArraySegment<byte>? WriteZip(ArraySegment<byte> bytes)
+        {
+            using (var outStream = new MemoryStream())
+            using (var zipStream = new ZipOutputStream(outStream))
+            {
+                zipStream.Write(bytes.Array, bytes.Offset, bytes.Count);
+                zipStream.Finish();
+                return outStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(outStream.ToArray());
             }
         }
 
@@ -886,21 +833,6 @@ namespace DataWF.Common
                     zipStream.PutNextEntry(entry);
                     using (var fileStream = File.OpenRead(file))
                         StreamUtils.Copy(fileStream, zipStream, buffer);
-                }
-            }
-        }
-
-        public static byte[] WriteZip(byte[] data)
-        {
-            if (data == null)
-                return null;
-            using (var stream = new MemoryStream())
-            {
-                using (var zipStream = new ZipOutputStream(stream))
-                {
-                    zipStream.Write(data, 0, data.Length);
-                    zipStream.Finish();
-                    return stream.ToArray();
                 }
             }
         }
@@ -964,6 +896,7 @@ namespace DataWF.Common
                 case BinaryToken.TimeSpan: value = TimeSpanSerializer.Instance; break;
                 case BinaryToken.ByteArray: value = ByteArraySerializer.Instance; break;
                 case BinaryToken.CharArray: value = CharArraySerializer.Instance; break;
+                case BinaryToken.Guid: value = GuidSerializer.Instance; break;
                 case BinaryToken.Null: value = null; break;
                 case BinaryToken.String: value = StringSerializer.Instance; break;
             }

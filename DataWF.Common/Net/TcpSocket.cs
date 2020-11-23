@@ -15,10 +15,12 @@ namespace DataWF.Common
     {
         internal static readonly Stack<Pipe> Pipes = new Stack<Pipe>();
         private static readonly byte[] fin = Encoding.ASCII.GetBytes("<finito>");
+        protected readonly BinarySerializer serializer = new BinarySerializer();
         protected ManualResetEventSlim sendEvent = new ManualResetEventSlim(true);
         protected ManualResetEventSlim loadEvent = new ManualResetEventSlim(true);
         private Socket socket;
         private bool disposed;
+        private bool disconnected;
 
         public TcpSocket()
         {
@@ -49,7 +51,7 @@ namespace DataWF.Common
 
         public IPEndPoint LocalPoint { get { return socket == null ? null : (IPEndPoint)socket.LocalEndPoint; } }
 
-        private Pipe GetPipe()
+        public Pipe GetPipe()
         {
             if (Pipes.Count > 0)
             {
@@ -58,8 +60,8 @@ namespace DataWF.Common
             }
             var options = new PipeOptions(
                 minimumSegmentSize: 1024,
-                pauseWriterThreshold: 16 * 1024,
-                resumeWriterThreshold: 8 * 1024,
+                pauseWriterThreshold: 32 * 1024,
+                resumeWriterThreshold: 16 * 1024,
                 useSynchronizationContext: false);
             return new Pipe(options);
         }
@@ -78,10 +80,8 @@ namespace DataWF.Common
 
             void Serialize()
             {
-                var serializer = new BinarySerializer(typeof(T));
                 serializer.Serialize(args.WriterStream, element);
-                args.WriterStream.Dispose();
-                args.Pipe.Writer.Complete();
+                args.CompleteWrite();
             }
         }
 
@@ -108,10 +108,11 @@ namespace DataWF.Common
                 sendEvent.Wait();
                 sendEvent.Reset();
 
+                Debug.WriteLine($"TcpClient {Point} Start Send");
                 while (true)
                 {
-                    Debug.WriteLine($"TcpClient {Point} Start Send");
                     var read = await arg.ReaderStream.ReadAsync(arg.Buffer, 0, TcpStreamEventArgs.BufferSize);
+                    Debug.WriteLine($"TcpClient {Point} Send Reader: {read}");
                     if (read > 0)
                     {
                         Debug.WriteLine($"TcpClient {Point} Start Send Packet: {read}");
@@ -121,16 +122,20 @@ namespace DataWF.Common
                         arg.PackageCount++;
                         Stamp = DateTime.UtcNow;
                     }
-                    else
+                    else if (arg.Pipe == null || arg.IsPipeComplete)
                     {
                         break;
                     }
+                    else
+                    { }
                 }
-                arg.ReleasePipe();
+                Socket.Send(fin, SocketFlags.None);
 
                 Socket.NoDelay = true;
-                Socket.Send(fin, SocketFlags.None);
                 Socket.NoDelay = false;
+
+                arg.ReleasePipe();
+                Debug.WriteLine($"TcpClient {Point} End Send");
 
                 _ = Server.OnDataSend(arg);
             }
@@ -162,25 +167,28 @@ namespace DataWF.Common
                 {
                     loadEvent.Wait();
                     loadEvent.Reset();
+                    Debug.WriteLine($"TcpClient {Point} Start Receive");
                     while (true)
                     {
-                        Debug.WriteLine($"TcpClient {Point} Start Receive");
                         int read = await Task.Factory.FromAsync(Socket.BeginReceive(arg.Buffer, 0, TcpStreamEventArgs.BufferSize, SocketFlags.None, null, arg), Socket.EndReceive);
+                        Debug.WriteLine($"TcpClient {Point} Receive: {read}");
                         if (read > 0)
                         {
-                            Debug.WriteLine($"TcpClient {Point} Receive: {read}");
                             if (arg.Transfered == 0)
                             {
                                 _ = Server.OnDataLoadStart(arg);
                             }
                             arg.Transfered += read;
                             arg.PackageCount++;
-
-                            if (ByteArrayComparer.Default.EndWith(new ReadOnlySpan<byte>(arg.Buffer, 0, read), fin))
+                            var index = ByteArrayComparer.Default.IndexOf(new ReadOnlySpan<byte>(arg.Buffer, 0, read), fin);
+                            if (index > -1)
                             {
-                                if (read > fin.Length)
+                                if (index > 0)
                                 {
-                                    await arg.WriterStream.WriteAsync(arg.Buffer, 0, read - fin.Length);
+                                    await arg.WriterStream.WriteAsync(arg.Buffer, 0, index);
+                                }
+                                if ((index + fin.Length) < read)
+                                {
                                 }
                                 break;
                             }
@@ -191,13 +199,12 @@ namespace DataWF.Common
                         }
                         else
                         {
-                            await Disconnect(true);
+                            await Disconnect();
                             return;
                         }
                     }
-                    arg.WriterStream.Dispose();
-                    arg.Pipe.Writer.Complete();
-                    loadEvent.Set();
+                    Debug.WriteLine($"TcpClient {Point} End Receive");
+                    arg.CompleteWrite();
                     Stamp = DateTime.UtcNow;
                     _ = Server.OnDataLoadEnd(arg);
                 }
@@ -209,7 +216,6 @@ namespace DataWF.Common
                 finally
                 {
                     loadEvent.Set();
-
                 }
             }
         }
@@ -226,12 +232,12 @@ namespace DataWF.Common
             if (!Socket.Connected)
             {
                 var arg = new TcpSocketEventArgs { Client = this };
-
                 try
                 {
                     Debug.WriteLine($"TcpClient {Point} Connect to {address}");
                     await Task.Factory.FromAsync(Socket.BeginConnect(address, null, arg), Socket.EndDisconnect);
                     Stamp = DateTime.UtcNow;
+                    disconnected = false;
                     if (attachToServer)
                     {
                         _ = Server.OnClientConnect(arg);
@@ -240,24 +246,25 @@ namespace DataWF.Common
                 catch (Exception ex)
                 {
                     Server.OnDataException(new TcpExceptionEventArgs(arg, ex));
+                    throw;
                 }
             }
         }
 
-        public async ValueTask Disconnect(bool reuse)
+        public async ValueTask Disconnect()
         {
             if (Socket.Connected)
             {
                 var arg = new TcpSocketEventArgs { Client = this };
                 try
                 {
-                    Debug.WriteLine($"TcpClient {Point} Disconnect Reuse:{reuse}");
+                    Debug.WriteLine($"TcpClient {Point} Disconnect");
                     Socket.Shutdown(SocketShutdown.Both);
-                    await Task.Factory.FromAsync(Socket.BeginDisconnect(reuse, null, arg), Socket.EndDisconnect);
+                    await Task.Factory.FromAsync(Socket.BeginDisconnect(true, null, arg), Socket.EndDisconnect);
                     loadEvent.Set();
                     sendEvent.Set();
                     socket.Close();
-
+                    disconnected = true;
                     _ = Server.OnClientDisconect(arg);
                 }
                 catch (Exception ex)
@@ -277,7 +284,19 @@ namespace DataWF.Common
         {
             if (!disposed)
             {
-                _ = Disconnect(false);
+                Debug.WriteLine($"TcpClient {Point} Dispose");
+                if (!disconnected)
+                {
+                    Debug.WriteLine($"TcpClient {Point} Dispose Disconnect");
+                    Socket.Shutdown(SocketShutdown.Both);
+                    Socket.Disconnect(true);
+                    loadEvent.Set();
+                    sendEvent.Set();
+                    socket.Close();
+                    disconnected = true;
+                    _ = Server.OnClientDisconect(new TcpSocketEventArgs { Client = this });
+                }
+
                 loadEvent?.Dispose();
                 sendEvent?.Dispose();
                 disposed = true;

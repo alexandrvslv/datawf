@@ -7,6 +7,8 @@ namespace DataWF.Test.Common
     {
         public int IntValue { get; set; }
 
+        public Guid GuidValue { get; set; }
+
         public int? NullableIntValue { get; set; }
 
         [DefaultValue(1)]

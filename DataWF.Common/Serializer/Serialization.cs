@@ -5,7 +5,6 @@ using System.Xml;
 
 namespace DataWF.Common
 {
-
     public class Serialization
     {
         public static XMLTextSerializer Instance = new XMLTextSerializer();
