@@ -30,10 +30,6 @@ namespace DataWF.Common
         public BaseSerializer(Type type)
         {
             var info = GetTypeInfo(type);
-            if (info.IsList)
-            {
-                GetTypeInfo(info.ListItemType);
-            }
         }
 
         public bool ByProperty { get; set; } = true;
@@ -52,6 +48,10 @@ namespace DataWF.Common
             if (!SerializationInfo.TryGetValue(type, out var info))
             {
                 SerializationInfo[type] = info = new TypeSerializationInfo(type);
+                if (info.IsList)
+                {
+                    GetTypeInfo(info.ListItemType);
+                }
             }
             return info;
         }
@@ -106,6 +106,24 @@ namespace DataWF.Common
             }
         }
 
+        public virtual void Serialize(Stream stream, object element, int bufferSize)
+        {
+            using (var bufferedStream = new BufferedStream(stream, bufferSize))
+            using (var writer = GetWriter(bufferedStream))
+            {
+                Serialize(writer, element);
+            }
+        }
+
+        public virtual void Serialize<T>(Stream stream, T element, int bufferSize)
+        {
+            using (var bufferedStream = new BufferedStream(stream, bufferSize))
+            using (var writer = GetWriter(bufferedStream))
+            {
+                Serialize<T>(writer, element);
+            }
+        }
+
         public virtual void Serialize(Stream stream, object element)
         {
             using (var writer = GetWriter(stream))
@@ -118,7 +136,7 @@ namespace DataWF.Common
         {
             using (var writer = GetWriter(stream))
             {
-                Serialize(writer, element);
+                Serialize<T>(writer, element);
             }
         }
 
@@ -173,11 +191,29 @@ namespace DataWF.Common
             }
         }
 
-        public  T Deserialize<T>(ArraySegment<byte> data, T element)
+        public T Deserialize<T>(ArraySegment<byte> data, T element)
         {
             using (var stream = new MemoryStream(data.Array, data.Offset, data.Count))
             {
                 return Deserialize(stream, element);
+            }
+        }
+
+        public object Deserialize(Stream stream, int bufferSize, object element = null)
+        {
+            using (var befferedStream = new BufferedStream(stream, bufferSize))
+            using (var reader = GetReader(befferedStream))
+            {
+                return Deserialize(reader, element);
+            }
+        }
+
+        public T Deserialize<T>(Stream stream, int bufferSize, T element)
+        {
+            using (var befferedStream = new BufferedStream(stream, bufferSize))
+            using (var reader = GetReader(befferedStream))
+            {
+                return Deserialize<T>(reader, element);
             }
         }
 
@@ -193,7 +229,7 @@ namespace DataWF.Common
         {
             using (var reader = GetReader(stream))
             {
-                return Deserialize(reader, element);
+                return Deserialize<T>(reader, element);
             }
         }
 

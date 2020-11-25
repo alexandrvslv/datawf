@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Pipelines;
@@ -9,7 +10,7 @@ namespace DataWF.Common
 {
     public class TcpStreamEventArgs : TcpSocketEventArgs
     {
-        public static readonly int BufferSize = 2048;
+        public static readonly int BufferSize = 8 * 1024;
         private Pipe pipe;
         private Stream pipeReaderStream;
         private Stream pipeWriterStream;
@@ -17,13 +18,14 @@ namespace DataWF.Common
 
         public TcpStreamEventArgs(TcpSocket client, TcpStreamMode mode)
         {
-            Buffer = new byte[BufferSize];
+            Buffer = new ArraySegment<byte>(new byte[BufferSize]);
             Client = client;
             Mode = mode;
         }
+
         public TcpStreamMode Mode { get; }
 
-        public byte[] Buffer { get; set; }
+        public ArraySegment<byte> Buffer { get; private set; }
 
         public Pipe Pipe
         {
@@ -36,28 +38,59 @@ namespace DataWF.Common
                     pipeReaderStream = pipe.Reader.AsStream(true);
                     pipeWriterStream = pipe.Writer.AsStream(true);
 
-                    if (Mode == TcpStreamMode.Receive && Client.Server.Compression)
-                        ReaderStream = new Brotli.BrotliStream(pipeReaderStream, CompressionMode.Decompress, true);
-                    else
-                        ReaderStream = pipeReaderStream;
-
-                    if (Mode == TcpStreamMode.Send && Client.Server.Compression)
-                        WriterStream = new Brotli.BrotliStream(pipeWriterStream, CompressionMode.Compress, true);
-                    else
+                    if (Mode == TcpStreamMode.Receive)
+                    {
                         WriterStream = pipeWriterStream;
+                        switch (Client.Server.Compression)
+                        {
+                            case TcpServerCompressionMode.Brotli:
+#if NETSTANDARD2_0
+                                ReaderStream = new Brotli.BrotliStream(pipeReaderStream, CompressionMode.Decompress, true);
+#else
+                                ReaderStream = new BrotliStream(pipeReaderStream, CompressionMode.Decompress, true);
+#endif
+                                break;
+                            case TcpServerCompressionMode.GZip:
+                                ReaderStream = new GZipStream(pipeReaderStream, CompressionMode.Decompress, true);
+                                break;
+                            default:
+                                ReaderStream = pipeReaderStream;
+                                break;
+                        }
+                    }
+                    if (Mode == TcpStreamMode.Send)
+                    {
+                        ReaderStream = pipeReaderStream;
+                        switch (Client.Server.Compression)
+                        {
+                            case TcpServerCompressionMode.Brotli:
+#if NETSTANDARD2_0
+                                WriterStream = new Brotli.BrotliStream(pipeWriterStream, CompressionMode.Compress, true);
+#else
+                                WriterStream = new BrotliStream(pipeWriterStream, CompressionLevel.Fastest, true);
+#endif
+                                break;
+                            case TcpServerCompressionMode.GZip:
+                                WriterStream = new GZipStream(pipeWriterStream, CompressionLevel.Fastest, true);
+                                break;
+                            default:
+                                WriterStream = pipeWriterStream;
+                                break;
+                        }
+                    }
                 }
             }
         }
 
-        public Stream WriterStream { get; set; }
+        public Stream WriterStream { get; private set; }
 
-        public Stream ReaderStream { get; set; }
+        public Stream ReaderStream { get; private set; }
 
         public object Tag { get; set; }
 
         public int Transfered { get; internal set; }
 
-        public int PackageCount { get; internal set; }
+        public int PartsCount { get; internal set; }
 
         public Stream SourceStream
         {
@@ -68,17 +101,17 @@ namespace DataWF.Common
 
                 if (Mode == TcpStreamMode.Receive)
                 {
-                    if (Client.Server.Compression)
-                        WriterStream = new Brotli.BrotliStream(sourceStream, CompressionMode.Compress);
-                    else
-                        WriterStream = sourceStream;
+                    //if (Client.Server.Compression)
+                    //    WriterStream = new Brotli.BrotliStream(sourceStream, CompressionMode.Compress);
+                    //else
+                    WriterStream = sourceStream;
                 }
                 else
                 {
-                    if (Client.Server.Compression)
-                        ReaderStream = new Brotli.BrotliStream(sourceStream, CompressionMode.Compress);
-                    else
-                        ReaderStream = sourceStream;
+                    //if (Client.Server.Compression)
+                    //    ReaderStream = new Brotli.BrotliStream(sourceStream, CompressionMode.Compress);
+                    //else
+                    ReaderStream = sourceStream;
                 }
             }
         }
@@ -87,14 +120,54 @@ namespace DataWF.Common
 
         public bool IsWriteComplete { get; private set; }
 
+        internal Task<int> ReadStream()
+        {
+            return ReaderStream.ReadAsync(Buffer.Array, 0, Buffer.Count);
+        }
+
+        //Buffered Pipe reader
+        internal async ValueTask<int> ReadPipe()
+        {
+            int read = 0;
+            do
+            {
+                var result = await Pipe.Reader.ReadAsync();
+                var buffer = result.Buffer;
+                var bufferLength = buffer.Length;
+                var consumed = buffer.Start;
+                if (bufferLength != 0)
+                {
+                    var canRead = Buffer.Count - read;
+                    var toRead = (int)Math.Min(canRead, bufferLength);
+
+                    var slize = toRead == bufferLength ? buffer : buffer.Slice(0, toRead);
+                    slize.CopyTo(Buffer.AsSpan(read, toRead));
+                    read += toRead;
+                    consumed = slize.End;                    
+                }
+                Pipe.Reader.AdvanceTo(consumed);
+                if (result.IsCompleted)
+                {
+                    break;
+                }
+            }
+            while (read < Buffer.Count);
+
+            return read;
+        }
+
         public void CompleteRead(Exception exception = null)
         {
             try
             {
-                if (ReaderStream is Brotli.BrotliStream brotliReader)
+                if (ReaderStream != pipeReaderStream)
                 {
-                    brotliReader.Dispose();
+                    ReaderStream?.Dispose();
                     ReaderStream = null;
+                }
+                else
+                {
+                    pipeReaderStream?.Flush();
                 }
                 if (Pipe != null)
                 {
@@ -111,11 +184,14 @@ namespace DataWF.Common
         {
             try
             {
-                WriterStream.Flush();
-                if (WriterStream is Brotli.BrotliStream brotliWriter)
+                if (WriterStream != pipeWriterStream)
                 {
-                    brotliWriter.Dispose();
+                    WriterStream?.Dispose();
                     WriterStream = null;
+                }
+                else
+                {
+                    pipeWriterStream?.Flush();
                 }
                 if (Pipe != null)
                 {
@@ -136,14 +212,15 @@ namespace DataWF.Common
                 await Task.Delay(5);
             }
 
-            if (WriterStream is Brotli.BrotliStream brotliWriter)
+            if (WriterStream != pipeWriterStream)
             {
-                brotliWriter.Dispose();
+                WriterStream?.Dispose();
                 WriterStream = null;
             }
-            if (ReaderStream is Brotli.BrotliStream brotliReader)
+            if (ReaderStream != pipeReaderStream)
             {
-                brotliReader.Dispose();
+                ReaderStream?.Dispose();
+                ReaderStream = null;
             }
             pipeWriterStream?.Dispose();
             pipeReaderStream?.Dispose();

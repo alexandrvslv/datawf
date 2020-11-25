@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,8 +14,9 @@ namespace DataWF.Common
 {
     public class TcpSocket : IDisposable
     {
-        internal static readonly Queue<Pipe> Pipes = new Queue<Pipe>();
+        internal static readonly ConcurrentQueue<Pipe> Pipes = new ConcurrentQueue<Pipe>();
         private static readonly byte[] fin = Encoding.ASCII.GetBytes("<finito>");
+        private static readonly int finLength = fin.Length;
         protected readonly BinarySerializer serializer = new BinarySerializer();
         protected ManualResetEventSlim sendEvent = new ManualResetEventSlim(true);
         protected ManualResetEventSlim loadEvent = new ManualResetEventSlim(true);
@@ -55,28 +57,29 @@ namespace DataWF.Common
 
         public Pipe GetPipe()
         {
-            if (Pipes.Count > 0)
+            if (Pipes.TryDequeue(out var pipe))
             {
-                var pipe = Pipes.Dequeue();
                 return pipe;
             }
-            var options = new PipeOptions(
-                minimumSegmentSize: 1024,
-                pauseWriterThreshold: 32 * 1024,
-                resumeWriterThreshold: 16 * 1024,
-                useSynchronizationContext: false);
-            return new Pipe(options);
+            //var options = new PipeOptions(
+            //    minimumSegmentSize: 1024,
+            //    pauseWriterThreshold: 32 * 1024,
+            //    resumeWriterThreshold: 16 * 1024,
+            //    useSynchronizationContext: false);
+            return new Pipe();//options
         }
 
-        public async ValueTask SendElement<T>(T element)
+        public async Task SendElement<T>(T element)
         {
             var args = new TcpStreamEventArgs(this, TcpStreamMode.Send)
             {
                 Pipe = GetPipe(),
                 Tag = element
             };
+            //Cache type information
+            serializer.GetTypeInfo(element.GetType());
 
-            _ = Task.Run(Serialize).ConfigureAwait(false);
+            _ = Task.Run(Serialize);
 
             await Send(args);
 
@@ -84,7 +87,7 @@ namespace DataWF.Common
             {
                 try
                 {
-                    serializer.Serialize(args.WriterStream, element);
+                    serializer.Serialize(args.WriterStream, element, args.Buffer.Count);
                     args.CompleteWrite();
                 }
                 catch (Exception ex)
@@ -94,7 +97,7 @@ namespace DataWF.Common
             }
         }
 
-        public ValueTask Send(byte[] data)
+        public Task Send(byte[] data)
         {
             using (var stream = new MemoryStream(data))
             {
@@ -102,7 +105,7 @@ namespace DataWF.Common
             }
         }
 
-        public ValueTask Send(Stream stream)
+        public Task Send(Stream stream)
         {
             return Send(new TcpStreamEventArgs(this, TcpStreamMode.Send)
             {
@@ -110,7 +113,7 @@ namespace DataWF.Common
             });
         }
 
-        public async ValueTask Send(TcpStreamEventArgs arg)
+        public async Task Send(TcpStreamEventArgs arg)
         {
             if (!(Socket?.Connected ?? false))
             {
@@ -121,16 +124,15 @@ namespace DataWF.Common
                 sendEvent.Wait();
                 sendEvent.Reset();
 
-                Debug.WriteLine($"TcpClient {Point} Start Send");
                 while (true)
                 {
-                    var read = await arg.ReaderStream.ReadAsync(arg.Buffer, 0, TcpStreamEventArgs.BufferSize);
+                    var read = await arg.ReadStream();
                     if (read > 0)
                     {
-                        var sended = await Task.Factory.FromAsync<int>(Socket.BeginSend(arg.Buffer, 0, read, SocketFlags.None, null, arg), Socket.EndSend);
-                        Debug.WriteLine($"TcpClient {Point} Send Packet: {sended}");
+                        var sended = await Task.Factory.FromAsync<int>(Socket.BeginSend(arg.Buffer.Array, 0, read, SocketFlags.None, null, arg), Socket.EndSend);
+                        //Debug.WriteLine($"TcpClient {Point} Send {sended}");
                         arg.Transfered += sended;
-                        arg.PackageCount++;
+                        arg.PartsCount++;
                         Stamp = DateTime.UtcNow;
                     }
                     else if (arg.Pipe == null || arg.IsWriteComplete)
@@ -140,11 +142,12 @@ namespace DataWF.Common
                     else
                     { }
                 }
+                //Latency hack
+                Socket.NoDelay = true;
                 Socket.Send(fin, SocketFlags.None);
-                Debug.WriteLine($"TcpClient {Point} End Send");
+                Socket.NoDelay = false;
+                arg.Transfered += finLength;
 
-                //Socket.NoDelay = true;
-                //Socket.NoDelay = false;
                 arg.CompleteRead();
                 await arg.ReleasePipe();
 
@@ -162,72 +165,100 @@ namespace DataWF.Common
             }
         }
 
-        public Task SartListen()
-        {
-            return ListenerLoop();
-        }
-
-        private async Task ListenerLoop()
+        public async Task ListenerLoop()
         {
             while (Socket?.Connected ?? false)
             {
+                loadEvent.Wait();
+                loadEvent.Reset();
+
                 var arg = new TcpStreamEventArgs(this, TcpStreamMode.Receive)
                 {
                     Pipe = GetPipe()
                 };
+
                 await Load(arg);
             }
         }
 
-        private async ValueTask Load(ArraySegment<byte> startBlock)
+        private bool CheckFinBuffer(ref Memory<byte> buffer, out bool setLoad)
+        {
+            setLoad = true;
+            var index = buffer.Span.IndexOf(fin);
+            if (index < 0)
+            {
+                setLoad = false;
+                return false;
+            }
+
+            var endIndex = index + finLength;
+            if (endIndex < buffer.Length)
+            {
+                setLoad = false;
+                var slice = buffer.Slice(endIndex);
+                _ = Task.Run(async () => await Load(slice));
+            }
+            buffer = index > 0 ? buffer.Slice(0, index) : Memory<byte>.Empty;
+
+            return true;
+        }
+
+        private async ValueTask Load(Memory<byte> buffer)
         {
             var arg = new TcpStreamEventArgs(this, TcpStreamMode.Receive)
             {
-                Pipe = GetPipe()
+                Pipe = GetPipe(),
             };
-            _ = Server.OnDataLoadStart(arg);
-            arg.Transfered = startBlock.Count;
-            await arg.WriterStream.WriteAsync(startBlock.Array, startBlock.Offset, startBlock.Count);
-            await Load(arg);
+            _ = Task.Run(async () => await Server.OnDataLoadStart(arg));
+
+            bool isBreak = CheckFinBuffer(ref buffer, out var setLoad);
+            if (!buffer.IsEmpty)
+            {
+                arg.PartsCount++;
+                arg.Transfered += buffer.Length;
+#if NETSTANDARD2_0
+                await arg.WriterStream.WriteAsync(buffer.ToArray(), 0, buffer.Length);
+#else
+                await arg.WriterStream.WriteAsync(buffer);
+#endif
+            }
+
+            if (isBreak)
+            {
+                EndLoad(arg, setLoad);
+            }
+            else
+            {
+                _ = Load(arg);
+            }
         }
 
-        private async ValueTask Load(TcpStreamEventArgs arg)
+#if NETSTANDARD2_0
+        private async Task Load(TcpStreamEventArgs arg)
         {
             try
             {
-                loadEvent.Wait();
-                loadEvent.Reset();
-                Debug.WriteLine($"TcpClient {Point} Start Receive");
+                var setLoad = true;
                 while (true)
                 {
-                    int read = await Task.Factory.FromAsync(Socket.BeginReceive(arg.Buffer, 0, TcpStreamEventArgs.BufferSize, SocketFlags.None, null, arg), Socket.EndReceive);
-                    Debug.WriteLine($"TcpClient {Point} Receive: {read}");
+                    var read = await Task.Factory.FromAsync(Socket.BeginReceive(arg.Buffer.Array, 0, TcpStreamEventArgs.BufferSize, SocketFlags.None, null, arg), Socket.EndReceive);
                     if (read > 0)
                     {
-                        if (arg.Transfered == 0)
+                        var memory = new Memory<byte>(arg.Buffer.Array, 0, read);
+                        var isBreak = CheckFinBuffer(ref memory, out setLoad);
+                        if (!memory.IsEmpty)
                         {
-                            _ = Server.OnDataLoadStart(arg);
+                            if (arg.Transfered == 0)
+                            {
+                                _ = Task.Run(async () => await Server.OnDataLoadStart(arg));
+                            }
+
+                            arg.PartsCount++;
+                            arg.Transfered += memory.Length;
+                            await arg.WriterStream.WriteAsync(memory.ToArray(), 0, memory.Length);
                         }
-                        arg.Transfered += read;
-                        arg.PackageCount++;
-                        var index = ByteArrayComparer.Default.IndexOf(new ReadOnlySpan<byte>(arg.Buffer, 0, read), fin);
-                        if (index > -1)
-                        {
-                            if (index > 0)
-                            {
-                                await arg.WriterStream.WriteAsync(arg.Buffer, 0, index);
-                            }
-                            var endIndex = index + fin.Length;
-                            if (endIndex < read)
-                            {
-                                _ = Load(new ArraySegment<byte>(arg.Buffer, endIndex, read - endIndex));
-                            }
+                        if (isBreak)
                             break;
-                        }
-                        else
-                        {
-                            await arg.WriterStream.WriteAsync(arg.Buffer, 0, read);
-                        }
                     }
                     else
                     {
@@ -235,10 +266,7 @@ namespace DataWF.Common
                         return;
                     }
                 }
-                Debug.WriteLine($"TcpClient {Point} End Receive");
-                arg.CompleteWrite();
-                Stamp = DateTime.UtcNow;
-                _ = Server.OnDataLoadEnd(arg);
+                EndLoad(arg, setLoad);
             }
             catch (Exception ex)
             {
@@ -246,7 +274,62 @@ namespace DataWF.Common
                 await arg.ReleasePipe(ex);
                 Server.OnDataException(new TcpExceptionEventArgs(arg, ex));
             }
-            finally
+        }
+#else
+        private async Task Load(TcpStreamEventArgs arg)
+        {
+            try
+            {
+                var setLoad = true;
+                while (true)
+                {
+                    Memory<byte> memory = arg.Pipe.Writer.GetMemory(arg.Buffer.Count);
+                    var read = await Socket.ReceiveAsync(memory, SocketFlags.None);
+                    if (read > 0)
+                    {
+                        var slice = memory.Length == read ? memory : memory.Slice(0, read);
+                        var isBreak = CheckFinBuffer(ref slice, out setLoad);
+                        if (!slice.IsEmpty)
+                        {
+                            if (arg.Transfered == 0)
+                            {
+                                _ = Task.Run(async () => await Server.OnDataLoadStart(arg));
+                            }
+
+                            arg.PartsCount++;
+                            arg.Transfered += slice.Length;
+                            arg.Pipe.Writer.Advance(slice.Length);
+                            var result = await arg.Pipe.Writer.FlushAsync();
+                            if (result.IsCompleted)
+                            {
+                                break;
+                            }
+                        }
+                        if (isBreak)
+                            break;
+                    }
+                    else
+                    {
+                        await Disconnect();
+                        return;
+                    }
+                }
+                EndLoad(arg, setLoad);
+            }
+            catch (Exception ex)
+            {
+                arg.CompleteWrite(ex);
+                await arg.ReleasePipe(ex);
+                Server.OnDataException(new TcpExceptionEventArgs(arg, ex));
+            }
+        }
+#endif
+        private void EndLoad(TcpStreamEventArgs arg, bool setLoad)
+        {
+            arg.CompleteWrite();
+            Stamp = DateTime.UtcNow;
+            _ = Server.OnDataLoadEnd(arg);
+            if (setLoad)
             {
                 loadEvent.Set();
             }

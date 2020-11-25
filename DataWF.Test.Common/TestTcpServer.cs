@@ -11,17 +11,32 @@ namespace DataWF.Test.Common
     [TestFixture()]
     public class TestTcpServer
     {
-        [Test, Combinatorial]
-        public async Task TestPipeStream([Values(1, 10, 100)] int packageCount, [Values(1, 10, 100)] int itemsCount = 20)
+        [SetUp]
+        public void Setup()
         {
+            //Helper.MainThreadId = Thread.CurrentThread.ManagedThreadId;
+        }
+
+        [Test, Combinatorial]
+        public async Task TestPipeStream(
+            [Values(1, 100, 1000)] int packageCount,
+            [Values(1, 100, 10000)] int itemsCount,
+            [Values(TcpServerCompressionMode.None, TcpServerCompressionMode.Brotli, TcpServerCompressionMode.GZip)] TcpServerCompressionMode compressionMode)
+        {
+            var serializer = new BinarySerializer();
             var testList = TestSerialize.GenerateList(itemsCount);
             var newList = (List<TestSerializeClass>)null;
-            var newLists = new List<List<TestSerializeClass>>();
+            var receiveCount = 0;
             var sendEvent = new ManualResetEventSlim(false);
-
-            var tcpServer = new TcpServer { Point = SocketHelper.ParseEndPoint($"localhost:{SocketHelper.GetTcpPort()}") };
+            var packageSize = 0;
+            var packagePartsCount = 0;
+            var tcpServer = new TcpServer
+            {
+                Point = SocketHelper.ParseEndPoint($"localhost:{SocketHelper.GetTcpPort()}"),
+                Compression = compressionMode,
+                ParseDataLoad = OnDataLoad,
+            };
             tcpServer.StartListener(50);
-            tcpServer.DataLoad += OnDataLoad;
 
             var tcpClient = new TcpSocket { Server = tcpServer, Point = SocketHelper.ParseEndPoint($"localhost:{SocketHelper.GetTcpPort()}") };
             await tcpClient.Connect(tcpServer.Point, false);
@@ -33,11 +48,11 @@ namespace DataWF.Test.Common
 
             for (int i = 0; i < packageCount; i++)
             {
-                await Task.Delay(5);
                 await tcpClient.SendElement(testList);
             }
             sendEvent.Wait(10000);
 
+            Console.WriteLine($"Packet Size: {packageSize} by {packagePartsCount} parts");
             tcpClient.Dispose();
             tcpServer.Dispose();
 
@@ -49,18 +64,19 @@ namespace DataWF.Test.Common
             Assert.AreEqual(testList[0].StringValue, newList[0].StringValue, "Deserialization Fail");
             Assert.AreEqual(testList[0].ClassValue.StringValue, newList[0].ClassValue.StringValue, "Deserialization Fail");
 
-            Assert.AreEqual(packageCount, newLists.Count, "Deserialization Packets Fail");
+            Assert.AreEqual(packageCount, receiveCount, "Deserialization Packets Fail");
 
-            void OnDataLoad(object sender, TcpStreamEventArgs e)
+            async Task OnDataLoad(TcpStreamEventArgs e)
             {
                 try
                 {
                     using (var stream = e.ReaderStream)
                     {
-                        var serializer = new BinarySerializer();
-                        newList = serializer.Deserialize<List<TestSerializeClass>>(stream, null);
-                        newLists.Add(newList);
+                        newList = serializer.Deserialize<List<TestSerializeClass>>(stream, e.Buffer.Count, null);
+                        receiveCount++;
                     }
+                    packagePartsCount = e.PartsCount;
+                    packageSize = e.Transfered;
                 }
                 catch (Exception ex)
                 {
@@ -68,7 +84,7 @@ namespace DataWF.Test.Common
                 }
                 finally
                 {
-                    if (newLists.Count == packageCount)
+                    if (receiveCount == packageCount)
                     {
                         sendEvent.Set();
                     }

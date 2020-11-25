@@ -101,22 +101,22 @@ namespace DataWF.Common
             }
         }
 
-        public ValueTask Send(byte[] data, string address)
+        public Task Send(byte[] data, string address)
         {
             return Send(new ArraySegment<byte>(data), SocketHelper.ParseEndPoint(address));
         }
 
-        public ValueTask Send(string data, string address)
+        public Task Send(string data, string address)
         {
             return Send(new ArraySegment<byte>(Encoding.UTF8.GetBytes(data)), SocketHelper.ParseEndPoint(address));
         }
 
-        public ValueTask SendElement<T>(T element, IPEndPoint address, object tag = null)
+        public Task SendElement<T>(T element, IPEndPoint address, object tag = null)
         {
             return Send(serializer.Serialize<T>(element), address, tag);
         }
 
-        public async ValueTask Send(ArraySegment<byte> data, IPEndPoint address, object tag = null)
+        public async Task Send(ArraySegment<byte> data, IPEndPoint address, object tag = null)
         {
             if (address != null && data != null)
             {

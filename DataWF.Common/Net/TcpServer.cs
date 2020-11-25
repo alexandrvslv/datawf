@@ -55,9 +55,9 @@ namespace DataWF.Common
         [Browsable(false)]
         public bool OnLine => online && (socket?.IsBound ?? false);
 
-        public bool Compression { get; set; } = true;
+        public TcpServerCompressionMode Compression { get; set; } = TcpServerCompressionMode.Brotli;
 
-        public Func<Stream, ValueTask> ParseDataLoad;
+        public Func<TcpStreamEventArgs, Task> ParseDataLoad;
         public event EventHandler<TcpStreamEventArgs> DataLoad;
         public event EventHandler<TcpStreamEventArgs> DataSend;
         public event EventHandler<TcpSocketEventArgs> ClientTimeout;
@@ -80,17 +80,24 @@ namespace DataWF.Common
             online = true;
 
             if (TimeOut != TimeSpan.MinValue)
-                _ = Task.Run(TimeoutLoop).ConfigureAwait(false);
+                _ = Task.Run(TimeoutLoop);
 
-            _ = MainLoop().ConfigureAwait(false);
+            _ = MainLoop();
 
             OnStart();
         }
 
         public void StopListener()
         {
-            foreach (var client in clients.ToArray())
-                client.Dispose();
+            foreach (var client in clients.ToList())
+                try
+                {
+                    client.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                }
             clients.Clear();
 
             socket.Close();
@@ -145,7 +152,9 @@ namespace DataWF.Common
                 {
                     socket?.Dispose();
                     if (OnLine)
+                    {
                         OnDataException(new TcpExceptionEventArgs(TcpSocketEventArgs.Empty, ex));
+                    }
                 }
             }
         }
@@ -162,12 +171,12 @@ namespace DataWF.Common
             return client;
         }
 
-        public ValueTask Send(IPEndPoint address, string data)
+        public Task Send(IPEndPoint address, string data)
         {
             return Send(address, Encoding.UTF8.GetBytes(data));
         }
 
-        public async ValueTask Send(IPEndPoint address, byte[] data)
+        public async Task Send(IPEndPoint address, byte[] data)
         {
             var client = clients.SelectOne(nameof(TcpSocket.PointName), CompareType.Equal, address.ToString());
             if (client == null)
@@ -203,9 +212,8 @@ namespace DataWF.Common
             Helper.Logs.Add(new StateInfo(nameof(TcpServer), "Stop", point.ToString()));
         }
 
-        protected virtual internal async ValueTask OnDataSend(TcpStreamEventArgs arg)
+        protected virtual internal ValueTask OnDataSend(TcpStreamEventArgs arg)
         {
-            await Task.Delay(1);
             NetStat.Set("Server Send", 1, arg.Transfered);
 
             if (logEvents)
@@ -217,11 +225,11 @@ namespace DataWF.Common
             }
 
             DataSend?.Invoke(this, arg);
+            return default;
         }
 
-        protected virtual internal async ValueTask OnDataLoadStart(TcpStreamEventArgs arg)
+        protected virtual internal async Task OnDataLoadStart(TcpStreamEventArgs arg)
         {
-            await Task.Delay(1);
             if (logEvents)
             {
                 Helper.Logs.Add(new StateInfo(nameof(TcpServer), "DataLoad", string.Format("{0} {1} {2}",
@@ -231,23 +239,23 @@ namespace DataWF.Common
             }
             if (ParseDataLoad != null)
             {
-                await ParseDataLoad(arg.ReaderStream);
+                await ParseDataLoad(arg);
             }
             else if (DataLoad != null)
             {
-                DataLoad(this, arg);
+                await Task.Run(() => DataLoad(this, arg));
             }
             else
             {
-                throw new Exception("No data load parsers specified!");
+                await Task.Delay(1);
+                throw new Exception("No data load listener specified!");
             }
             arg.CompleteRead();
             await arg.ReleasePipe();
         }
 
-        protected virtual internal async ValueTask OnDataLoadEnd(TcpStreamEventArgs arg)
+        protected virtual internal Task OnDataLoadEnd(TcpStreamEventArgs arg)
         {
-            await Task.Delay(1);
             NetStat.Set("Server Receive", 1, arg.Transfered);
 
             if (logEvents)
@@ -257,6 +265,7 @@ namespace DataWF.Common
                     arg.Client.Socket.RemoteEndPoint,
                     Helper.TextDisplayFormat(arg.Transfered, "size"))));
             }
+            return Task.CompletedTask;
         }
 
         protected virtual internal void OnDataException(TcpExceptionEventArgs arg)
@@ -279,24 +288,24 @@ namespace DataWF.Common
             }
         }
 
-        protected internal async ValueTask OnClientConnect(TcpSocketEventArgs arg)
+        protected internal ValueTask OnClientConnect(TcpSocketEventArgs arg)
         {
-            _ = arg.Client.SartListen().ConfigureAwait(false);
+            _ = Task.Run(async () => await arg.Client.ListenerLoop());
 
             clients.Add(arg.Client);
             ClientConnect?.Invoke(this, arg);
 
-            await Task.Delay(1);
+            return default;
         }
 
-        protected internal async ValueTask OnClientDisconect(TcpSocketEventArgs arg)
+        protected internal ValueTask OnClientDisconect(TcpSocketEventArgs arg)
         {
             if (clients.Remove(arg.Client))
             {
                 ClientDisconnect?.Invoke(this, arg);
                 arg.Client.Dispose();
             }
-            await Task.Delay(1);
+            return default;
         }
 
         protected void OnClientTimeOut(TcpSocket client)

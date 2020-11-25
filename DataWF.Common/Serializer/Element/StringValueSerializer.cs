@@ -34,10 +34,16 @@ namespace DataWF.Common
             {
                 writer.Write((byte)BinaryToken.String);
             }
-            writer.Write(value.Length);
+
             if (value.Length > 0)
             {
-                writer.Write(Encoding.UTF8.GetBytes(value));
+                var bytes = Encoding.UTF8.GetBytes(value);
+                writer.Write(bytes.Length);
+                writer.Write(bytes);
+            }
+            else
+            {
+                writer.Write(0);
             }
         }
 

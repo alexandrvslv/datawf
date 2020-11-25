@@ -29,6 +29,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Net\PipeWriterStream.cs" />
     <Compile Remove="Serializer\DictionaryItem.cs" />
   </ItemGroup>
   <ItemGroup>
