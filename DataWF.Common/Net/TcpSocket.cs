@@ -219,6 +219,8 @@ namespace DataWF.Common
 #if NETSTANDARD2_0
                 await arg.WriterStream.WriteAsync(buffer.ToArray(), 0, buffer.Length);
 #else
+                var memory = arg.Pipe.Writer.GetMemory(buffer.Length);
+                buffer.CopyTo(memory);
                 arg.Pipe.Writer.Advance(buffer.Length);
                 var result = await arg.Pipe.Writer.FlushAsync();
 #endif
