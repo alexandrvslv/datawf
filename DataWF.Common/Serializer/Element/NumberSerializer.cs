@@ -10,9 +10,11 @@ namespace DataWF.Common
     {
         public static readonly DoubleSerializer Instance = new DoubleSerializer();
 
-        public override double FromBinary(BinaryReader reader) => reader.ReadDouble();
+        public override BinaryToken BinaryToken => BinaryToken.Double;
 
-        public override void ToBinary(BinaryWriter writer, double value, bool writeToken)
+        public override double Read(BinaryReader reader) => reader.ReadDouble();
+
+        public override void Write(BinaryWriter writer, double value, bool writeToken)
         {
             if (writeToken)
             {
@@ -31,9 +33,11 @@ namespace DataWF.Common
     {
         public static readonly FloatSerializer Instance = new FloatSerializer();
 
-        public override float FromBinary(BinaryReader reader) => reader.ReadSingle();
+        public override BinaryToken BinaryToken => BinaryToken.Float;
 
-        public override void ToBinary(BinaryWriter writer, float value, bool writeToken)
+        public override float Read(BinaryReader reader) => reader.ReadSingle();
+
+        public override void Write(BinaryWriter writer, float value, bool writeToken)
         {
             if (writeToken)
             {
@@ -51,9 +55,11 @@ namespace DataWF.Common
     {
         public static readonly DecimalSerializer Instance = new DecimalSerializer();
 
-        public override decimal FromBinary(BinaryReader reader) => reader.ReadDecimal();
+        public override BinaryToken BinaryToken => BinaryToken.Decimal;
 
-        public override void ToBinary(BinaryWriter writer, decimal value, bool writeToken)
+        public override decimal Read(BinaryReader reader) => reader.ReadDecimal();
+
+        public override void Write(BinaryWriter writer, decimal value, bool writeToken)
         {
             if (writeToken)
             {

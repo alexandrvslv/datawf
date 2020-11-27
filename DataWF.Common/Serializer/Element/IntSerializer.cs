@@ -9,9 +9,11 @@ namespace DataWF.Common
     {
         public static readonly Int32Serializer Instance = new Int32Serializer();
 
-        public override int FromBinary(BinaryReader reader) => reader.ReadInt32();
+        public override BinaryToken BinaryToken => BinaryToken.Int32;
 
-        public override void ToBinary(BinaryWriter writer, int value, bool writeToken)
+        public override int Read(BinaryReader reader) => reader.ReadInt32();
+
+        public override void Write(BinaryWriter writer, int value, bool writeToken)
         {
             if (writeToken)
             {
@@ -30,9 +32,11 @@ namespace DataWF.Common
     {
         public static readonly UInt32Serializer Instance = new UInt32Serializer();
 
-        public override uint FromBinary(BinaryReader reader) => reader.ReadUInt32();
+        public override BinaryToken BinaryToken => BinaryToken.UInt32;
 
-        public override void ToBinary(BinaryWriter writer, uint value, bool writeToken)
+        public override uint Read(BinaryReader reader) => reader.ReadUInt32();
+
+        public override void Write(BinaryWriter writer, uint value, bool writeToken)
         {
             if (writeToken)
             {
@@ -52,9 +56,11 @@ namespace DataWF.Common
     {
         public static readonly Int64Serializer Instance = new Int64Serializer();
 
-        public override long FromBinary(BinaryReader reader) => reader.ReadInt64();
+        public override BinaryToken BinaryToken => BinaryToken.Int64;
 
-        public override void ToBinary(BinaryWriter writer, long value, bool writeToken)
+        public override long Read(BinaryReader reader) => reader.ReadInt64();
+
+        public override void Write(BinaryWriter writer, long value, bool writeToken)
         {
             if (writeToken)
             {
@@ -73,9 +79,11 @@ namespace DataWF.Common
     {
         public static readonly UInt64Serializer Instance = new UInt64Serializer();
 
-        public override ulong FromBinary(BinaryReader reader) => reader.ReadUInt64();
+        public override BinaryToken BinaryToken => BinaryToken.UInt64;
 
-        public override void ToBinary(BinaryWriter writer, ulong value, bool writeToken)
+        public override ulong Read(BinaryReader reader) => reader.ReadUInt64();
+
+        public override void Write(BinaryWriter writer, ulong value, bool writeToken)
         {
             if (writeToken)
             {
@@ -94,9 +102,11 @@ namespace DataWF.Common
     {
         public static readonly Int16Serializer Instance = new Int16Serializer();
 
-        public override short FromBinary(BinaryReader reader) => reader.ReadInt16();
+        public override BinaryToken BinaryToken => BinaryToken.Int16;
 
-        public override void ToBinary(BinaryWriter writer, short value, bool writeToken)
+        public override short Read(BinaryReader reader) => reader.ReadInt16();
+
+        public override void Write(BinaryWriter writer, short value, bool writeToken)
         {
             if (writeToken)
             {
@@ -116,9 +126,11 @@ namespace DataWF.Common
     {
         public static readonly UInt16Serializer Instance = new UInt16Serializer();
 
-        public override ushort FromBinary(BinaryReader reader) => reader.ReadUInt16();
+        public override BinaryToken BinaryToken => BinaryToken.UInt16;
 
-        public override void ToBinary(BinaryWriter writer, ushort value, bool writeToken)
+        public override ushort Read(BinaryReader reader) => reader.ReadUInt16();
+
+        public override void Write(BinaryWriter writer, ushort value, bool writeToken)
         {
             if (writeToken)
             {
@@ -137,9 +149,11 @@ namespace DataWF.Common
     {
         public static readonly Int8Serializer Instance = new Int8Serializer();
 
-        public override sbyte FromBinary(BinaryReader reader) => reader.ReadSByte();
+        public override BinaryToken BinaryToken => BinaryToken.Int8;
 
-        public override void ToBinary(BinaryWriter writer, sbyte value, bool writeToken)
+        public override sbyte Read(BinaryReader reader) => reader.ReadSByte();
+
+        public override void Write(BinaryWriter writer, sbyte value, bool writeToken)
         {
             if (writeToken)
             {
@@ -159,9 +173,11 @@ namespace DataWF.Common
     {
         public static readonly UInt8Serializer Instance = new UInt8Serializer();
 
-        public override byte FromBinary(BinaryReader reader) => reader.ReadByte();
+        public override BinaryToken BinaryToken => BinaryToken.UInt8;
 
-        public override void ToBinary(BinaryWriter writer, byte value, bool writeToken)
+        public override byte Read(BinaryReader reader) => reader.ReadByte();
+
+        public override void Write(BinaryWriter writer, byte value, bool writeToken)
         {
             if (writeToken)
             {

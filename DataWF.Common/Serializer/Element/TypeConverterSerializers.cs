@@ -17,20 +17,22 @@ namespace DataWF.Common
 
         public override bool CanConvertString => true;
 
-        public override object ConvertFromBinary(BinaryReader reader) => ConvertFromString(StringSerializer.Instance.FromBinary(reader));
+        public override object ReadObject(BinaryReader reader) => FromString(StringSerializer.Instance.Read(reader));
 
-        public override object ConvertFromString(string value) => Converter.ConvertFromInvariantString(value);
+        public override void WriteObject(BinaryWriter writer, object value, bool writeToken) => StringSerializer.Instance.Write(writer, ObjectToString(value), writeToken);
 
-        public override void ConvertToBinary(BinaryWriter writer, object value, bool writeToken) => StringSerializer.Instance.ToBinary(writer, ConvertToString(value), writeToken);
+        public override T Read(BinaryReader reader) => (T)Read(reader);
 
-        public override string ConvertToString(object value) => Converter.ConvertToInvariantString(value);
+        public override void Write(BinaryWriter writer, T value, bool writeToken) => WriteObject(writer, (object)value, writeToken);
 
-        public override T FromBinary(BinaryReader reader) => (T)ConvertFromBinary(reader);
+        public override string ObjectToString(object value) => Converter.ConvertToInvariantString(value);
 
-        public override T FromString(string value) => (T)ConvertFromString(value);
+        public override object ObjectFromString(string value) => Converter.ConvertFromInvariantString(value);
 
-        public override void ToBinary(BinaryWriter writer, T value, bool writeToken) => ConvertToBinary(writer, value, writeToken);
+        public override T FromString(string value) => (T)ObjectFromString(value);
 
-        public override string ToString(T value) => ConvertToString(value);
+        public override string ToString(T value) => ObjectToString((object)value);
+
+
     }
 }

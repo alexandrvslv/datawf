@@ -194,7 +194,7 @@ namespace DataWF.Test.Data
             Position.DBTable.Add(new Position() { Code = "t1", Name = "Null Index" });
             Position.DBTable.Add(new Position() { Code = "t2", Name = "Null Index" });
             Position.DBTable.Add(new Position() { Code = "t3", Name = "Null Index" });
-            var nullIds = Position.DBTable.Select(Position.DBTable.PrimaryKey, CompareType.Is, null).ToList();
+            var nullIds = Position.DBTable.Select(Position.DBTable.PrimaryKey, CompareType.Is, (object)null).ToList();
             Assert.AreEqual(6, nullIds.Count, "Select by null Fail");
 
             await Position.DBTable.Save();

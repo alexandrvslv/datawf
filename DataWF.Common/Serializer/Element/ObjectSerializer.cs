@@ -8,7 +8,7 @@ namespace DataWF.Common
     {
         public override bool CanConvertString => false;
 
-        public override T Read(BinaryInvokerReader reader, T value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
+        public override T Read(BinaryInvokerReader reader, T value, TypeSerializeInfo typeInfo, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             var token = reader.ReadToken();
             if (token == BinaryToken.Null)
@@ -22,14 +22,17 @@ namespace DataWF.Common
             }
             if (token == BinaryToken.SchemaBegin)
             {
-                reader.ReadType(out info, out map);
+                reader.ReadType(out typeInfo, out map);
                 token = reader.ReadToken();
             }
-            map = map ?? reader.GetMap(info);
 
-            if (value == null || value.GetType() != info.Type)
+            typeInfo = typeInfo ?? reader.Serializer.GetTypeInfo<T>();
+
+            map = map ?? reader.GetMap(typeInfo);
+
+            if (value == null || value.GetType() != typeInfo.Type)
             {
-                value = (T)info.Constructor?.Create();
+                value = (T)typeInfo.Constructor?.Create();
             }
             if (token == BinaryToken.ObjectEntry)
             {
@@ -42,7 +45,7 @@ namespace DataWF.Common
             return value;
         }
 
-        public override void Write(BinaryInvokerWriter writer, T value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
+        public override void Write(BinaryInvokerWriter writer, T value, TypeSerializeInfo typeInfo, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             if (value == null)
             {
@@ -50,10 +53,13 @@ namespace DataWF.Common
                 return;
             }
             writer.WriteObjectBegin();
-            map = map ?? writer.GetMap(info);
+
+            typeInfo = typeInfo ?? writer.Serializer.GetTypeInfo(value.GetType());
+
+            map = map ?? writer.GetMap(typeInfo);
             if (map == null)
             {
-                map = writer.WriteType(info);
+                map = writer.WriteType(typeInfo);
             }
             foreach (var entry in map)
             {
@@ -64,7 +70,7 @@ namespace DataWF.Common
             writer.WriteObjectEnd();
         }
 
-        public override T FromBinary(BinaryReader reader)
+        public override T Read(BinaryReader reader)
         {
             using (var invokerReader = new BinaryInvokerReader(reader))
             {
@@ -72,7 +78,7 @@ namespace DataWF.Common
             }
         }
 
-        public override void ToBinary(BinaryWriter writer, T value, bool writeToken)
+        public override void Write(BinaryWriter writer, T value, bool writeToken)
         {
             using (var invokerWriter = new BinaryInvokerWriter(writer))
             {
@@ -80,10 +86,13 @@ namespace DataWF.Common
             }
         }
 
-        public override T Read(XmlInvokerReader reader, T value, TypeSerializationInfo typeInfo)
+        public override T Read(XmlInvokerReader reader, T value, TypeSerializeInfo typeInfo)
         {
             if (reader.NodeType == System.Xml.XmlNodeType.Comment)
                 typeInfo = reader.ReadType(typeInfo);
+
+            typeInfo = typeInfo ?? reader.Serializer.GetTypeInfo<T>();
+
             if (value == null || value.GetType() != typeInfo.Type)
             {
                 value = (T)typeInfo.Constructor?.Create();
@@ -103,51 +112,10 @@ namespace DataWF.Common
             return value;
         }
 
-        public override void Write(XmlInvokerWriter writer, T value, TypeSerializationInfo typeInfo)
+        public override void Write(XmlInvokerWriter writer, T value, TypeSerializeInfo typeInfo)
         {
+            typeInfo = typeInfo ?? writer.Serializer.GetTypeInfo(value?.GetType() ?? typeof(T));
             writer.WriteObject<T>(value, typeInfo);
-        }
-
-        public override void PropertyToString(XmlInvokerWriter writer, object element, IPropertySerializationInfo property)
-        {
-            if (property.PropertyInvoker is IValuedInvoker<T> valueInvoker)
-            {
-                T value = valueInvoker.GetValue(element);
-                if (value != null)
-                {
-                    writer.WriteStart(property);
-                    Write(writer, value, writer.Serializer.GetTypeInfo<T>());
-                    writer.WriteEnd(property);
-                }
-            }
-            else
-            {
-                var value = property.PropertyInvoker.GetValue(element);
-                if (value != null)
-                {
-                    writer.WriteStart(property);
-                    Write(writer, value, writer.Serializer.GetTypeInfo<T>());
-                    writer.WriteEnd(property);
-                }
-            }
-        }
-
-        public override void PropertyToString<E>(XmlInvokerWriter writer, E element, IPropertySerializationInfo property)
-        {
-            if (property.PropertyInvoker is IInvoker<E, T> valueInvoker)
-            {
-                T value = valueInvoker.GetValue(element);
-                if (value != null)
-                {
-                    writer.WriteStart(property);
-                    Write(writer, value, writer.Serializer.GetTypeInfo<T>());
-                    writer.WriteEnd(property);
-                }
-            }
-            else
-            {
-                PropertyToString(writer, (object)element, property);
-            }
         }
 
         public override T FromString(string value) => throw new NotSupportedException();

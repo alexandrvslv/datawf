@@ -10,14 +10,14 @@ namespace DataWF.Common
     {
         public override bool CanConvertString => false;
 
-        public override T FromBinary(BinaryReader reader)
+        public override T Read(BinaryReader reader)
         {
             var obj = (T)FormatterServices.GetUninitializedObject(typeof(T));
             obj.Deserialize(reader);
             return obj;
         }
 
-        public override void ToBinary(BinaryWriter writer, T value, bool writeToken)
+        public override void Write(BinaryWriter writer, T value, bool writeToken)
         {
             if (writeToken)
             {

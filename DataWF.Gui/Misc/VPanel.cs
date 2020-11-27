@@ -138,7 +138,7 @@ namespace DataWF.Gui
             }
         }
 
-        public static Widget FindWidget(Widget widget, string name, TypeSerializationInfo type)
+        public static Widget FindWidget(Widget widget, string name, TypeSerializeInfo type)
         {
             if (widget == null)
                 return null;

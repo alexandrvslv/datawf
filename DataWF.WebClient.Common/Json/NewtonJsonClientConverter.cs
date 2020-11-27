@@ -24,7 +24,7 @@ namespace DataWF.Common
 
         public Client<T, K> Client { get; set; }
 
-        public TypeSerializationInfo SerializationInfo { get; }
+        public TypeSerializeInfo SerializationInfo { get; }
 
         public object Read(JsonReader jreader, object item, JsonSerializer serializer)
         {
@@ -42,7 +42,7 @@ namespace DataWF.Common
 
         public T Read(JsonReader jreader, T item, JsonSerializer serializer)
         {
-            var property = (PropertySerializationInfo)null;
+            var property = (PropertySerializeInfo)null;
             var propertyType = (Type)null;
             var id = (K?)null;
             var isRef = true;
@@ -314,7 +314,7 @@ namespace DataWF.Common
             jwriter.WriteEndObject();
         }
 
-        public void Write(JsonWriter jwriter, object item, JsonSerializer serializer, TypeSerializationInfo info = null)
+        public void Write(JsonWriter jwriter, object item, JsonSerializer serializer, TypeSerializeInfo info = null)
         {
             var type = item?.GetType();
             if (type == null || (info?.IsAttribute ?? TypeHelper.IsSerializeAttribute(type)))

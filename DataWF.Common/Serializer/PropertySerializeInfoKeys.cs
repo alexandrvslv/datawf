@@ -3,7 +3,7 @@
 namespace DataWF.Common
 {
     [Flags]
-    public enum PropertySerializationInfoKeys
+    public enum PropertySerializeInfoKeys
     {
         None,
         Attribute = 1,

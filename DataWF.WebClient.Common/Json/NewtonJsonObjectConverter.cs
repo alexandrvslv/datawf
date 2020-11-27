@@ -11,7 +11,7 @@ namespace DataWF.Common
             SerializationInfo = Serialization.Instance.GetTypeInfo<T>();
         }
 
-        public TypeSerializationInfo SerializationInfo { get; }
+        public TypeSerializeInfo SerializationInfo { get; }
 
         public override T ReadJson(JsonReader jreader, Type objectType, T item, bool hasExistingValue, JsonSerializer serializer)
         {
@@ -19,7 +19,7 @@ namespace DataWF.Common
             {
                 return default(T);
             }
-            var property = (PropertySerializationInfo)null;
+            var property = (PropertySerializeInfo)null;
             var propertyType = (Type)null;
             if (item == null)
                 item = new T();
@@ -153,7 +153,7 @@ namespace DataWF.Common
             jwriter.WriteEndObject();
         }
 
-        public void Write(JsonWriter jwriter, object item, JsonSerializer serializer, TypeSerializationInfo info = null)
+        public void Write(JsonWriter jwriter, object item, JsonSerializer serializer, TypeSerializeInfo info = null)
         {
             var type = item?.GetType();
             if (type == null || (info?.IsAttribute ?? TypeHelper.IsSerializeAttribute(type)))

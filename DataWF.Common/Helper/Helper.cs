@@ -871,7 +871,7 @@ namespace DataWF.Common
 
         public static object ReadBinary(BinaryReader reader, BinaryToken typev)
         {
-            return GetSerializer(typev)?.ConvertFromBinary(reader);
+            return GetSerializer(typev)?.ReadObject(reader);
         }
 
         public static ElementSerializer GetSerializer(BinaryToken token)
@@ -914,7 +914,7 @@ namespace DataWF.Common
             T value = default(T);
 
             if (GetSerializer(typev) is ElementSerializer<T> serializer)
-                value = serializer.FromBinary(reader);
+                value = serializer.Read(reader);
             return value;
         }
 
@@ -933,7 +933,7 @@ namespace DataWF.Common
         public static object ReadBinary(BinaryReader reader, Type type)
         {
             var serializer = TypeHelper.GetSerializer(type);
-            return serializer.ConvertFromBinary(reader);
+            return serializer.ReadObject(reader);
         }
 
         /// <summary>
@@ -962,7 +962,7 @@ namespace DataWF.Common
             else
             {
                 var serializer = TypeHelper.GetSerializer(value.GetType());
-                serializer.ConvertToBinary(writer, value, writeType);
+                serializer.WriteObject(writer, value, writeType);
             }
         }
 
@@ -1090,7 +1090,7 @@ namespace DataWF.Common
             {
                 var serializer = TypeHelper.GetSerializer(value.GetType());
                 if (serializer != null)
-                    result = serializer.ConvertToString(value);
+                    result = serializer.ObjectToString(value);
                 else
                 {
                     var typeConverter = TypeHelper.GetTypeConverter(value.GetType());
@@ -1331,7 +1331,7 @@ namespace DataWF.Common
             {
                 var valueSerialize = TypeHelper.GetSerializer(type);
                 if (valueSerialize != null)
-                    result = valueSerialize.ConvertFromString(value);
+                    result = valueSerialize.ObjectFromString(value);
                 else
                 {
                     var typeConverter = TypeHelper.GetTypeConverter(type);

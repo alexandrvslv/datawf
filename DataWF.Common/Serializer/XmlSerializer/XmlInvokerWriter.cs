@@ -17,7 +17,7 @@ namespace DataWF.Common
 
         public XmlWriter Writer { get; }
 
-        public void WriteCollection(ICollection collection, TypeSerializationInfo typeInfo)
+        public void WriteCollection(ICollection collection, TypeSerializeInfo typeInfo)
         {
             if (collection.Count > 0)
             {
@@ -36,7 +36,7 @@ namespace DataWF.Common
             }
         }
 
-        public void WriteDictionary(IDictionary dictionary, TypeSerializationInfo typeInfo)
+        public void WriteDictionary(IDictionary dictionary, TypeSerializeInfo typeInfo)
         {
             WriteObject(dictionary, typeInfo);
             //var dictionary = element as IEnumerable;
@@ -72,7 +72,7 @@ namespace DataWF.Common
             Write(element, Serializer.GetTypeInfo(element.GetType()), name, writeType);
         }
 
-        public void Write(object element, TypeSerializationInfo typeInfo, string name, bool writeType)
+        public void Write(object element, TypeSerializeInfo typeInfo, string name, bool writeType)
         {
             //Debug.WriteLine($"Xml Write {name}");
             if (writeType)
@@ -87,13 +87,13 @@ namespace DataWF.Common
             }
             else if (typeInfo.Serialazer is IElementSerializer serializer)
             {
-                serializer.Write(this, element, typeInfo);
+                serializer.WriteObject(this, element, typeInfo);
             }
             else
             {
                 if (typeInfo.IsAttribute)
                 {
-                    Writer.WriteValue(typeInfo.Serialazer.ConvertToString(element));
+                    Writer.WriteValue(typeInfo.Serialazer.ObjectToString(element));
                 }
                 else if (typeInfo.IsDictionary)
                 {
@@ -111,7 +111,7 @@ namespace DataWF.Common
             WriteEndElement();
         }
 
-        public void Write<T>(T element, TypeSerializationInfo typeInfo, string name, bool writeType)
+        public void Write<T>(T element, TypeSerializeInfo typeInfo, string name, bool writeType)
         {
             //Debug.WriteLine($"Xml Write {name}");
             if (writeType)
@@ -132,7 +132,7 @@ namespace DataWF.Common
             {
                 if (typeInfo.IsAttribute)
                 {
-                    Writer.WriteValue(typeInfo.Serialazer.ConvertToString(element));
+                    Writer.WriteValue(typeInfo.Serialazer.ObjectToString(element));
                 }
                 else if (typeInfo.IsDictionary)
                 {
@@ -150,7 +150,7 @@ namespace DataWF.Common
             WriteEndElement();
         }
 
-        public void WriteObject(object element, TypeSerializationInfo info)
+        public void WriteObject(object element, TypeSerializeInfo info)
         {
             foreach (var property in info.XmlProperties)
             {
@@ -166,7 +166,7 @@ namespace DataWF.Common
                 }
                 if (property.Serializer is IElementSerializer serializer)
                 {
-                    serializer.PropertyToString(this, element, property);
+                    property.PropertyToString(this, element);
                 }
                 else
                 {
@@ -190,7 +190,7 @@ namespace DataWF.Common
             }
         }
 
-        public void WriteObject<T>(T element, TypeSerializationInfo typeInfo)
+        public void WriteObject<T>(T element, TypeSerializeInfo typeInfo)
         {
             foreach (var property in typeInfo.XmlProperties)
             {
@@ -206,7 +206,7 @@ namespace DataWF.Common
                 }
                 if (property.Serializer is IElementSerializer serializer)
                 {
-                    serializer.PropertyToString<T>(this, element, property);
+                    property.PropertyToString<T>(this, element);
                 }
                 else
                 {
@@ -230,7 +230,7 @@ namespace DataWF.Common
             }
         }
 
-        public void WriteStart(IPropertySerializationInfo property)
+        public void WriteStart(IPropertySerializeInfo property)
         {
             if (property.IsAttribute)
             {
@@ -242,7 +242,7 @@ namespace DataWF.Common
             }
         }
 
-        public void WriteEnd(IPropertySerializationInfo property)
+        public void WriteEnd(IPropertySerializeInfo property)
         {
             if (property.IsAttribute)
             {
@@ -254,7 +254,7 @@ namespace DataWF.Common
             }
         }
 
-        public void WriteType(TypeSerializationInfo info)
+        public void WriteType(TypeSerializeInfo info)
         {
             Writer.WriteComment(info.TypeName);
         }

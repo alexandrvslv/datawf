@@ -290,7 +290,7 @@ namespace DataWF.Common
 
         protected internal ValueTask OnClientConnect(TcpSocketEventArgs arg)
         {
-            _ = Task.Run(async () => await arg.Client.ListenerLoop());
+            _ = Task.Run(() => _ = arg.Client.ListenerLoop());
 
             clients.Add(arg.Client);
             ClientConnect?.Invoke(this, arg);

@@ -1,93 +1,68 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
+
     public abstract class NullableSerializer<T> : ElementSerializer<T>, IElementSerializer<T?> where T : struct
     {
+        protected int size;
+
+        public NullableSerializer() : this(true)
+        { }
+
+        public NullableSerializer(bool getSize)
+        {
+            if (getSize)
+            {
+                size = Marshal.SizeOf<T>();
+            }
+        }
+
+        public abstract BinaryToken BinaryToken { get; }
+
         public override bool CanConvertString => true;
+
         #region Binary
-        public override void PropertyToBinary(BinaryInvokerWriter writer, object element, IInvoker invoker)
+        public override T Read(SpanReader reader) => reader.Read<T>();
+
+        public override void Write(SpanWriter writer, T value, bool writeToken)
         {
-            if (invoker is IValuedInvoker<T?> valueInvoker)
+            if (writeToken)
             {
-                T? value = valueInvoker.GetValue(element);
-                if (value == null)
-                    writer.WriteNull();
-                else
-                    Write(writer, (T)value, writer.Serializer.GetTypeInfo<T>(), null);
+                writer.Write<byte>((byte)BinaryToken);
             }
-            else
-            {
-                base.PropertyToBinary(writer, element, invoker);
-            }
+            writer.Write<T>(value);
         }
 
-        public override void PropertyToBinary<E>(BinaryInvokerWriter writer, E element, IInvoker invoker)
+        T? IElementSerializer<T?>.Read(SpanReader reader)
         {
-            if (invoker is IInvoker<E, T?> valueInvoker)
-            {
-                T? value = valueInvoker.GetValue(element);
-                if (value == null)
-                    writer.WriteNull();
-                else
-                    Write(writer, (T)value, writer.Serializer.GetTypeInfo<T>(), null);
-            }
-            else
-            {
-                base.PropertyToBinary(writer, element, invoker);
-            }
+            return Read(reader);
         }
 
-        public override void PropertyFromBinary(BinaryInvokerReader reader, object element, IInvoker invoker)
-        {
-            if (invoker is IValuedInvoker<T?> valueInvoker)
-            {
-                var token = reader.ReadToken();
-                if (token == BinaryToken.Null)
-                {
-                    valueInvoker.SetValue(element, null);
-                }
-                else
-                {
-                    T? value = Read(reader, default(T), reader.Serializer.GetTypeInfo<T>(), null);
-                    valueInvoker.SetValue(element, value);
-                }
-            }
-            else
-            {
-                base.PropertyFromBinary(reader, element, invoker);
-            }
-        }
-
-        public override void PropertyFromBinary<E>(BinaryInvokerReader reader, E element, IInvoker invoker)
-        {
-            if (invoker is IInvoker<E, T?> valueInvoker)
-            {
-                var token = reader.ReadToken();
-                if (token == BinaryToken.Null)
-                {
-                    valueInvoker.SetValue(element, null);
-                }
-                else
-                {
-                    T? value = Read(reader, default(T), reader.Serializer.GetTypeInfo<T>(), null);
-                    valueInvoker.SetValue(element, value);
-                }
-            }
-            else
-            {
-                base.PropertyFromBinary(reader, element, invoker);
-            }
-        }
-
-        T? IElementSerializer<T?>.FromBinary(BinaryReader reader) => FromBinary(reader);
-
-        void IElementSerializer<T?>.ToBinary(BinaryWriter writer, T? value, bool writeToken)
+        void IElementSerializer<T?>.Write(SpanWriter writer, T? value, bool writeToken)
         {
             if (value != null)
             {
-                ToBinary(writer, (T)value, writeToken);
+                Write(writer, (T)value, writeToken);
+            }
+            else
+            {
+                writer.Write<byte>((byte)BinaryToken.Null);
+            }
+        }
+
+        T? IElementSerializer<T?>.Read(BinaryReader reader) => Read(reader);
+
+        void IElementSerializer<T?>.Write(BinaryWriter writer, T? value, bool writeToken)
+        {
+            if (value != null)
+            {
+                Write(writer, (T)value, writeToken);
             }
             else
             {
@@ -95,12 +70,12 @@ namespace DataWF.Common
             }
         }
 
-        T? IElementSerializer<T?>.Read(BinaryInvokerReader reader, T? value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
+        T? IElementSerializer<T?>.Read(BinaryInvokerReader reader, T? value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             return Read(reader, value == null ? default(T) : (T)value, info, map);
         }
 
-        void IElementSerializer<T?>.Write(BinaryInvokerWriter writer, T? value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
+        void IElementSerializer<T?>.Write(BinaryInvokerWriter writer, T? value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             if (value != null)
             {
@@ -114,78 +89,16 @@ namespace DataWF.Common
         #endregion
 
         #region Xml
-        public override void PropertyToString(XmlInvokerWriter writer, object element, IPropertySerializationInfo property)
-        {
-            if (property.PropertyInvoker is IValuedInvoker<T?> valueInvoker)
-            {
-                T? value = valueInvoker.GetValue(element);
-                if (value != null)
-                {
-                    writer.WriteStart(property);
-                    Write(writer, (T)value, writer.Serializer.GetTypeInfo<T>());
-                    writer.WriteEnd(property);
-                }
-            }
-            else
-            {
-                base.PropertyToString(writer, element, property);
-            }
-        }
-
-        public override void PropertyToString<E>(XmlInvokerWriter writer, E element, IPropertySerializationInfo property)
-        {
-            if (property.PropertyInvoker is IInvoker<E, T?> valueInvoker)
-            {
-                T? value = valueInvoker.GetValue(element);
-                if (value != null)
-                {
-                    writer.WriteStart(property);
-                    Write(writer, (T)value, writer.Serializer.GetTypeInfo<T>());
-                    writer.WriteEnd(property);
-                }
-            }
-            else
-            {
-                base.PropertyToString(writer, element, property);
-            }
-        }
-
-        public override void PropertyFromString(XmlInvokerReader reader, object element, IPropertySerializationInfo property, TypeSerializationInfo itemInfo)
-        {
-            if (property.PropertyInvoker is IValuedInvoker<T?> valueInvoker)
-            {
-                T value = Read(reader, default(T), itemInfo ?? reader.Serializer.GetTypeInfo<T>());
-                valueInvoker.SetValue(element, value);
-            }
-            else
-            {
-                base.PropertyFromString(reader, element, property, itemInfo);
-            }
-        }
-
-        public override void PropertyFromString<E>(XmlInvokerReader reader, E element, IPropertySerializationInfo property, TypeSerializationInfo itemInfo)
-        {
-            if (property.PropertyInvoker is IInvoker<E, T?> valueInvoker)
-            {
-                T value = Read(reader, default(T), itemInfo ?? reader.Serializer.GetTypeInfo<T>());
-                valueInvoker.SetValue(element, value);
-            }
-            else
-            {
-                base.PropertyFromString(reader, element, property, itemInfo);
-            }
-        }
-
         T? IElementSerializer<T?>.FromString(string value) => value == null ? (T?)null : FromString(value);
 
         string IElementSerializer<T?>.ToString(T? value) => value == null ? null : ToString((T)value);
 
-        T? IElementSerializer<T?>.Read(XmlInvokerReader reader, T? value, TypeSerializationInfo info)
+        T? IElementSerializer<T?>.Read(XmlInvokerReader reader, T? value, TypeSerializeInfo info)
         {
             return Read(reader, value == null ? default(T) : (T)value, info);
         }
 
-        void IElementSerializer<T?>.Write(XmlInvokerWriter writer, T? value, TypeSerializationInfo info)
+        void IElementSerializer<T?>.Write(XmlInvokerWriter writer, T? value, TypeSerializeInfo info)
         {
             if (value != null)
             {
@@ -193,7 +106,7 @@ namespace DataWF.Common
             }
         }
 
-        public override object Read(XmlInvokerReader reader, object value, TypeSerializationInfo info)
+        public override object ReadObject(XmlInvokerReader reader, object value, TypeSerializeInfo info)
         {
             return base.Read(reader, default(T), info);
         }

@@ -12,11 +12,11 @@ namespace DataWF.Common
 
         public override bool CanConvertString => true;
 
-        public override CultureInfo FromBinary(BinaryReader reader) => FromString(StringSerializer.Instance.FromBinary(reader));
+        public override CultureInfo Read(BinaryReader reader) => FromString(StringSerializer.Instance.Read(reader));
 
         public override CultureInfo FromString(string value) => CultureInfo.GetCultureInfo(value);
 
-        public override void ToBinary(BinaryWriter writer, CultureInfo value, bool writeToken) => StringSerializer.Instance.ToBinary(writer, ToString(value), writeToken);
+        public override void Write(BinaryWriter writer, CultureInfo value, bool writeToken) => StringSerializer.Instance.Write(writer, ToString(value), writeToken);
 
         public override string ToString(CultureInfo value) => value?.Name;
     }

@@ -11,28 +11,38 @@ using System.Threading.Tasks;
 
 namespace DataWF.Test.Common
 {
+    public enum Serializer
+    {
+        Xml,
+        Binary,
+        SystemXml,
+        SystemJson
+    }
+
+    public enum SerializeDirection
+    {
+        Write,
+        Read
+    }
+
     [TestFixture()]
     public partial class TestSerialize
     {
-        public byte[] TestWrite<T>(BaseSerializer serializer, T list)
+        public ArraySegment<byte> TestWrite<T>(BaseSerializer serializer, T list)
+        {
+            return serializer.Serialize(list);
+        }
+
+        public ArraySegment<byte> TestWrite<T>(XmlSerializer serializer, T list)
         {
             using (var stream = new MemoryStream())
             {
                 serializer.Serialize(stream, list);
-                return stream.ToArray();
+                return stream.TryGetBuffer(out var buffer) ? buffer : new ArraySegment<byte>(stream.ToArray());
             }
         }
 
-        public byte[] TestWrite<T>(XmlSerializer serializer, T list)
-        {
-            using (var stream = new MemoryStream())
-            {
-                serializer.Serialize(stream, list);
-                return stream.ToArray();
-            }
-        }
-
-        public byte[] TestJsonWrite<T>(T list)
+        public ArraySegment<byte> TestJsonWrite<T>(T list)
         {
             using (var stream = new MemoryStream())
             using (var jsonWriter = new Utf8JsonWriter(stream))
@@ -42,146 +52,112 @@ namespace DataWF.Test.Common
             }
         }
 
-        public T TestRead<T>(BaseSerializer serializer, byte[] buffer)
+        public T TestRead<T>(BaseSerializer serializer, ArraySegment<byte> buffer)
         {
-            using (var stream = new MemoryStream(buffer))
-            {
-                return serializer.Deserialize(stream, default(T));
-            }
+            return serializer.Deserialize(buffer, default(T));
         }
 
-        public T TestRead<T>(XmlSerializer serializer, byte[] buffer)
+        public T TestRead<T>(XmlSerializer serializer, ArraySegment<byte> buffer)
         {
-            using (var stream = new MemoryStream(buffer))
+            using (var stream = new MemoryStream(buffer.Array, buffer.Offset, buffer.Count))
             {
                 return (T)serializer.Deserialize(stream);
             }
         }
 
-        public async Task<T> TestJsonRead<T>(byte[] buffer)
+        public T TestJsonRead<T>(ArraySegment<byte> buffer)
         {
-            using (var stream = new MemoryStream(buffer))
+            var reader = new System.Text.Json.Utf8JsonReader(buffer);
+            return JsonSerializer.Deserialize<T>(ref reader);
+        }
+
+        [Test, Combinatorial]
+        public void Benchmark([Values(10)] int listLength,
+            [Values(100, 10000)] int iteration,
+            [Values(SerializeDirection.Write, SerializeDirection.Read)] SerializeDirection direction,
+            [Values(Serializer.SystemXml, Serializer.SystemJson, Serializer.Xml, Serializer.Binary)] Serializer serializerType)
+        {
+            switch (serializerType)
             {
-                return await JsonSerializer.DeserializeAsync<T>(stream);
+                case Serializer.Xml:
+                    {
+                        var list = GenerateList(listLength);
+                        var serializer = new XMLTextSerializer(typeof(List<TestSerializeClass>));
+                        if (direction == SerializeDirection.Write)
+                        {
+                            for (var i = 0; i < iteration; i++)
+                                TestWrite(serializer, list);
+                        }
+                        else
+                        {
+                            var buffer = TestWrite(serializer, list);
+                            for (var i = 0; i < iteration; i++)
+                                TestRead<List<TestSerializeClass>>(serializer, buffer);
+                        }
+                    }
+                    break;
+                case Serializer.Binary:
+                    {
+                        var list = GenerateList(listLength);
+                        var serializer = new BinarySerializer(typeof(List<TestSerializeClass>));
+                        if (direction == SerializeDirection.Write)
+                        {
+                            for (var i = 0; i < iteration; i++)
+                                TestWrite(serializer, list);
+                        }
+                        else
+                        {
+                            var buffer = TestWrite(serializer, list);
+                            for (var i = 0; i < iteration; i++)
+                                TestRead<List<TestSerializeClass>>(serializer, buffer);
+                        }
+                    }
+                    break;
+                case Serializer.SystemXml:
+                    {
+                        var list = GenerateList(listLength);
+                        var serializer = new XmlSerializer(typeof(List<TestSerializeClass>));
+
+                        if (direction == SerializeDirection.Write)
+                        {
+                            for (var i = 0; i < iteration; i++)
+                                TestWrite(serializer, list);
+                        }
+                        else
+                        {
+                            var buffer = TestWrite(serializer, list);
+                            for (var i = 0; i < iteration; i++)
+                                TestRead<List<TestSerializeClass>>(serializer, buffer);
+                        }
+                    }
+                    break;
+                case Serializer.SystemJson:
+                    {
+                        var list = GenerateList(listLength);
+                        if (direction == SerializeDirection.Write)
+                        {
+                            for (var i = 0; i < iteration; i++)
+                                TestJsonWrite(list);
+                        }
+                        else
+                        {
+                            var buffer = TestJsonWrite(list);
+                            for (var i = 0; i < iteration; i++)
+                                TestJsonRead<List<TestSerializeClass>>(buffer);
+                        }
+                    }
+                    break;
             }
+
         }
 
-        [Test()]
-        public void BenchmarkBinaryWrite()
-        {
-            var list = GenerateList();
-            var serializer = new BinarySerializer(typeof(List<TestSerializeClass>));
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            for (var i = 0; i < 100000; i++)
-                TestWrite(serializer, list);
-            stopwatch.Stop();
-            Console.WriteLine($"Benchmark Binary in:{stopwatch.ElapsedMilliseconds}");
-        }
-
-        [Test()]
-        public void BenchmarkBinaryRead()
-        {
-            var list = GenerateList();
-            var serializer = new BinarySerializer(typeof(List<TestSerializeClass>));
-            var buffer = TestWrite(serializer, list);
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            for (var i = 0; i < 100000; i++)
-                TestRead<List<TestSerializeClass>>(serializer, buffer);
-            stopwatch.Stop();
-            Console.WriteLine($"Benchmark Binary size:{buffer.Length} in:{stopwatch.ElapsedMilliseconds}");
-        }
-
-        [Test()]
-        public void BenchmarkXMLTextWrite()
-        {
-            var list = GenerateList();
-            var serializer = new XMLTextSerializer(typeof(List<TestSerializeClass>));
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            for (var i = 0; i < 100000; i++)
-                TestWrite(serializer, list);
-            stopwatch.Stop();
-            Console.WriteLine($"Benchmark XML in:{stopwatch.ElapsedMilliseconds}");
-        }
-
-        [Test()]
-        public void BenchmarkXMLTextRead()
-        {
-            var list = GenerateList();
-            var serializer = new XMLTextSerializer(typeof(List<TestSerializeClass>));
-            var buffer = TestWrite(serializer, list);
-#if DEBUG
-            PrintBuffer(buffer);
-#endif
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            for (var i = 0; i < 100000; i++)
-                TestRead<List<TestSerializeClass>>(serializer, buffer);
-            stopwatch.Stop();
-            Console.WriteLine($"Benchmark XML size:{buffer.Length} in:{stopwatch.ElapsedMilliseconds}");
-        }
-
-        [Test()]
-        public void BenchmarkXMLSystemWrite()
-        {
-            var list = GenerateList();
-            var serializer = new XmlSerializer(typeof(List<TestSerializeClass>));
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            for (var i = 0; i < 100000; i++)
-                TestWrite(serializer, list);
-            stopwatch.Stop();
-            Console.WriteLine($"Benchmark XML Native in:{stopwatch.ElapsedMilliseconds}");
-        }
-
-        [Test()]
-        public void BenchmarkXMLSystemRead()
-        {
-            var list = GenerateList();
-            var serializer = new XmlSerializer(typeof(List<TestSerializeClass>));
-            var buffer = TestWrite(serializer, list);
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            for (var i = 0; i < 100000; i++)
-                TestRead<List<TestSerializeClass>>(serializer, buffer);
-            stopwatch.Stop();
-            Console.WriteLine($"Benchmark XML Native size:{buffer.Length} in:{stopwatch.ElapsedMilliseconds}");
-        }
-
-        [Test()]
-        public void BenchmarkJsonSystemWrite()
-        {
-            var list = GenerateList();
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            for (var i = 0; i < 100000; i++)
-                TestJsonWrite(list);
-            stopwatch.Stop();
-            Console.WriteLine($"Benchmark JSON Native in:{stopwatch.ElapsedMilliseconds}");
-        }
-
-        [Test()]
-        public async Task BenchmarkJsonSystemRead()
-        {
-            var list = GenerateList();
-            var buffer = TestJsonWrite(list);
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            for (var i = 0; i < 100000; i++)
-                await TestJsonRead<List<TestSerializeClass>>(buffer);
-            stopwatch.Stop();
-            Console.WriteLine($"Benchmark JSON Native size:{buffer.Length} in:{stopwatch.ElapsedMilliseconds}");
-        }
-
-        [Test()]
+        [Test]
         public void TestXMLGenericList()
         {
             TestGenericList(new XMLTextSerializer(typeof(List<string>)));
         }
 
-        [Test()]
+        [Test]
         public void TestBinaryGenericList()
         {
             TestGenericList(new BinarySerializer(typeof(List<string>)));
@@ -199,7 +175,7 @@ namespace DataWF.Test.Common
             Assert.AreEqual(list[0], newList[0], "Deserialization Fail");
         }
 
-        [Test()]
+        [Test]
         public void TestXMLNativeGenericList()
         {
             var list = new List<string> { "one", "two", "three" };
@@ -218,13 +194,13 @@ namespace DataWF.Test.Common
             Assert.AreEqual(list[0], newList[0], "Deserialization Fail");
         }
 
-        [Test()]
+        [Test]
         public void TestXMLStringArray()
         {
             TestStringArray(new XMLTextSerializer(typeof(string[])));
         }
 
-        [Test()]
+        [Test]
         public void TestBinaryStringArray()
         {
             TestStringArray(new BinarySerializer(typeof(string[])));
@@ -242,13 +218,13 @@ namespace DataWF.Test.Common
             Assert.AreEqual(list[0], newList[0], "Deserialization Fail");
         }
 
-        [Test()]
+        [Test]
         public void TestXMLArrayList()
         {
             TestArrayList(new XMLTextSerializer());
         }
 
-        [Test()]
+        [Test]
         public void TestBinaryArrayList()
         {
             TestArrayList(new BinarySerializer());
@@ -268,13 +244,13 @@ namespace DataWF.Test.Common
             Assert.AreEqual(((TestSerializeClass)list[3]).StringValue, ((TestSerializeClass)newList[3]).StringValue, "Deserialization Fail");
         }
 
-        [Test()]
+        [Test]
         public void TestXMLDictionary()
         {
             TestDictionary(new XMLTextSerializer());
         }
 
-        [Test()]
+        [Test]
         public void TestBinaryDictionary()
         {
             TestDictionary(new BinarySerializer());
@@ -293,13 +269,13 @@ namespace DataWF.Test.Common
             Assert.AreEqual(dict["one"], newDict["one"], "Deserialization Fail");
         }
 
-        [Test()]
+        [Test]
         public void TestXMLHashtable()
         {
             TestHashtable(new XMLTextSerializer());
         }
 
-        [Test()]
+        [Test]
         public void TestBinaryHashtable()
         {
             TestHashtable(new BinarySerializer());
@@ -317,13 +293,13 @@ namespace DataWF.Test.Common
             Assert.AreEqual(dict["one"], newDict["one"], "Deserialization Fail");
         }
 
-        [Test()]
+        [Test]
         public void TestXMLClass()
         {
             TestClass(new XMLTextSerializer());
         }
 
-        [Test()]
+        [Test]
         public void TestBinaryClass()
         {
             TestClass(new BinarySerializer());
@@ -345,13 +321,13 @@ namespace DataWF.Test.Common
             Assert.AreEqual(item.ClassValue.StringValue, newItem.ClassValue.StringValue, "Deserialization Class Value Fail");
         }
 
-        [Test()]
+        [Test]
         public void TestXMLClassList()
         {
             TestClassList(new XMLTextSerializer());
         }
 
-        [Test()]
+        [Test]
         public void TestBinaryClassList()
         {
             TestClassList(new BinarySerializer());
@@ -374,7 +350,7 @@ namespace DataWF.Test.Common
             Assert.AreEqual(items[1].ClassValue.StringValue, newItems[1].ClassValue.StringValue, "Deserialization Fail");
         }
 
-        [Test()]
+        [Test]
         public void TestXMLSerializeableElementList()
         {
             List<TestSerializableElement> items = GenerateSEList();
@@ -391,7 +367,7 @@ namespace DataWF.Test.Common
             Assert.AreEqual(items[1].ToSerialize.ClassValue.StringValue, newItems[1].ToSerialize.ClassValue.StringValue, "Deserialization Fail");
         }
 
-        private void PrintBuffer(byte[] buffer)
+        private void PrintBuffer(ArraySegment<byte> buffer)
         {
             var text = System.Text.Encoding.UTF8.GetString(buffer);
             using (var reader = new StringReader(text))

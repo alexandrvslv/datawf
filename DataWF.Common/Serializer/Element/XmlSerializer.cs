@@ -7,12 +7,12 @@ namespace DataWF.Common
     {
         public override bool CanConvertString => false;
 
-        public override void Write(XmlInvokerWriter writer, T value, TypeSerializationInfo info)
+        public override void Write(XmlInvokerWriter writer, T value, TypeSerializeInfo info)
         {
             value.Serialize(writer);
         }
 
-        public override T Read(XmlInvokerReader reader, T value, TypeSerializationInfo typeInfo)
+        public override T Read(XmlInvokerReader reader, T value, TypeSerializeInfo typeInfo)
         {
             if (reader.Reader.NodeType == System.Xml.XmlNodeType.Comment)
                 typeInfo = reader.ReadType(typeInfo);

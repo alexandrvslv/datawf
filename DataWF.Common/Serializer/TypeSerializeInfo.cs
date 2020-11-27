@@ -5,15 +5,15 @@ using System.Reflection;
 
 namespace DataWF.Common
 {
-    public class TypeSerializationInfo
+    public class TypeSerializeInfo
     {
-        public TypeSerializationInfo(Type type, bool onlyXmlAttributes = false) : this(type, TypeHelper.GetPropertiesByHierarchi(type, onlyXmlAttributes))
+        public TypeSerializeInfo(Type type, bool onlyXmlAttributes = false) : this(type, TypeHelper.GetPropertiesByHierarchi(type, onlyXmlAttributes))
         { }
 
-        public TypeSerializationInfo(Type type, IEnumerable<string> properties) : this(type, TypeHelper.GetProperties(type, properties))
+        public TypeSerializeInfo(Type type, IEnumerable<string> properties) : this(type, TypeHelper.GetProperties(type, properties))
         { }
 
-        public TypeSerializationInfo(Type type, IEnumerable<PropertyInfo> properties)
+        public TypeSerializeInfo(Type type, IEnumerable<PropertyInfo> properties)
         {
             Type = type;
             TypeName = TypeHelper.FormatBinary(Type);
@@ -57,8 +57,8 @@ namespace DataWF.Common
                 keys |= TypeSerializationInfoKeys.IsDictionary;
             Keys = keys;
 
-            Properties = new NamedList<PropertySerializationInfo>(6, (ListIndex<PropertySerializationInfo, string>)PropertySerializationInfo.NameInvoker.Instance.CreateIndex(false));
-            Properties.Indexes.Add(PropertySerializationInfo.IsAttributeInvoker.Instance);
+            Properties = new NamedList<IPropertySerializeInfo>(6, (ListIndex<IPropertySerializeInfo, string>)PropertySerializeInfo.NameInvoker.Instance.CreateIndex(false));
+            Properties.Indexes.Add(PropertySerializeInfo.IsAttributeInvoker.Instance);
             int order = 0;
             foreach (var property in properties)
             {
@@ -71,14 +71,31 @@ namespace DataWF.Common
                 }
                 //var method = property.GetGetMethod() ?? property.GetSetMethod();
                 if (exist != null)// && method.Equals(method.GetBaseDefinition())
+                {
                     Properties.Remove(exist);
-
-                Properties.Add(new PropertySerializationInfo(property, ++order));
+                }
+                Properties.Add(CreateProperty(property, ++order));
             }
-            Properties.ApplySortInternal(PropertySerializationInfo.OrderInvoker.Instance.CreateComparer<PropertySerializationInfo>());
+            Properties.ApplySortInternal(PropertySerializeInfo.OrderInvoker.Instance.CreateComparer<IPropertySerializeInfo>());
 
-            XmlProperties = new SelectableListView<PropertySerializationInfo>(Properties);
+            XmlProperties = new SelectableListView<IPropertySerializeInfo>(Properties);
             XmlProperties.ApplySortInternal(XmlPropertiesComparer.Instance);
+        }
+
+        private IPropertySerializeInfo CreateProperty(PropertyInfo property, int order)
+        {
+            if (TypeHelper.IsNullable(property.PropertyType))
+            {
+                return (IPropertySerializeInfo)EmitInvoker.CreateObject(typeof(NullablePropertySerializeInfo<>).MakeGenericType(TypeHelper.CheckNullable(property.PropertyType)),
+                new Type[] { typeof(PropertyInfo), typeof(int) }, new object[] { property, order });
+            }
+            if (property.PropertyType.IsClass)
+            {
+                return (IPropertySerializeInfo)EmitInvoker.CreateObject(typeof(ReferencePropertySerializeInfo<>).MakeGenericType(property.PropertyType),
+                new Type[] { typeof(PropertyInfo), typeof(int) }, new object[] { property, order });
+            }
+            return (IPropertySerializeInfo)EmitInvoker.CreateObject(typeof(PropertySerializeInfo<>).MakeGenericType(property.PropertyType),
+                new Type[] { typeof(PropertyInfo), typeof(int) }, new object[] { property, order });
         }
 
         public Type Type { get; }
@@ -101,14 +118,15 @@ namespace DataWF.Common
 
         public EmitConstructor ListConstructor { get; }
 
-        public NamedList<PropertySerializationInfo> Properties { get; private set; }
+        public NamedList<IPropertySerializeInfo> Properties { get; private set; }
 
-        public SelectableListView<PropertySerializationInfo> XmlProperties { get; }
+        public SelectableListView<IPropertySerializeInfo> XmlProperties { get; }
 
         public ElementSerializer Serialazer { get; }
+
         public string ShortName { get; internal set; } = "e";
 
-        public PropertySerializationInfo GetProperty(string name)
+        public IPropertySerializeInfo GetProperty(string name)
         {
             return Properties[name];
         }
@@ -116,23 +134,23 @@ namespace DataWF.Common
         public string TextFormat(object value)
         {
             return Serialazer != null
-                ? Serialazer.ConvertToString(value)
+                ? Serialazer.ObjectToString(value)
                 : Helper.TextBinaryFormat(value);
         }
 
         public object TextParse(string value)
         {
             return Serialazer != null
-                ? Serialazer.ConvertFromString(value)
+                ? Serialazer.ObjectFromString(value)
                 : Helper.TextParse(value, Type);
         }
 
     }
 
-    public class XmlPropertiesComparer : IComparer<PropertySerializationInfo>
+    public class XmlPropertiesComparer : IComparer<IPropertySerializeInfo>
     {
         public static readonly XmlPropertiesComparer Instance = new XmlPropertiesComparer();
-        public int Compare(PropertySerializationInfo x, PropertySerializationInfo y)
+        public int Compare(IPropertySerializeInfo x, IPropertySerializeInfo y)
         {
             var result = y.IsAttribute.CompareTo(x.IsAttribute);
             result = result == 0 ? x.Order.CompareTo(y.Order) : result;

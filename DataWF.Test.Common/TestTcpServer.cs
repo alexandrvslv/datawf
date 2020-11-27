@@ -66,7 +66,7 @@ namespace DataWF.Test.Common
 
             Assert.AreEqual(packageCount, receiveCount, "Deserialization Packets Fail");
 
-            async Task OnDataLoad(TcpStreamEventArgs e)
+            Task OnDataLoad(TcpStreamEventArgs e)
             {
                 try
                 {
@@ -89,6 +89,7 @@ namespace DataWF.Test.Common
                         sendEvent.Set();
                     }
                 }
+                return Task.CompletedTask;
             }
         }
 

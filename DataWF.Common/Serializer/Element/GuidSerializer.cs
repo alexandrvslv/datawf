@@ -7,19 +7,26 @@ namespace DataWF.Common
     {
         public static readonly GuidSerializer Instance = new GuidSerializer();
 
+        public GuidSerializer() : base(false)
+        {
+            size = 16;
+        }
+
+        public override BinaryToken BinaryToken => BinaryToken.Guid;
+
         public override bool CanConvertString => true;
 
         public override Guid FromString(string value) => Guid.TryParse(value, out var guid) ? guid : Guid.Empty;
 
         public override string ToString(Guid value) => value.ToString();
 
-        public override Guid FromBinary(BinaryReader reader)
+        public override Guid Read(BinaryReader reader)
         {
             var bytes = reader.ReadBytes(16);
             return new Guid(bytes);
         }
 
-        public override void ToBinary(BinaryWriter writer, Guid value, bool writeToken)
+        public override void Write(BinaryWriter writer, Guid value, bool writeToken)
         {
             if (writeToken)
             {

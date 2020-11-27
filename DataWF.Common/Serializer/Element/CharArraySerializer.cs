@@ -8,13 +8,13 @@ namespace DataWF.Common
 
         public override bool CanConvertString => true;
 
-        public override char[] FromBinary(BinaryReader reader)
+        public override char[] Read(BinaryReader reader)
         {
             var length = reader.ReadInt32();
             return reader.ReadChars(length);
         }
 
-        public override void ToBinary(BinaryWriter writer, char[] value, bool writeToken)
+        public override void Write(BinaryWriter writer, char[] value, bool writeToken)
         {
             if (value == null)
             {

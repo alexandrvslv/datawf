@@ -25,7 +25,7 @@ namespace DataWF.Common
 
         public Client<T, K> Client { get; set; }
 
-        public TypeSerializationInfo SerializationInfo { get; }
+        public TypeSerializeInfo SerializationInfo { get; }
 
         public override bool CanConvert(Type typeToConvert)
         {
@@ -44,7 +44,7 @@ namespace DataWF.Common
 
         public T Read(ref Utf8JsonReader jreader, T item, JsonSerializerOptions options)
         {
-            var property = (PropertySerializationInfo)null;
+            var property = (PropertySerializeInfo)null;
             var propertyType = (Type)null;
             var id = (object)null;
             var isRef = true;
@@ -296,7 +296,7 @@ namespace DataWF.Common
             jwriter.WriteEndObject();
         }
 
-        public void Serialize(Utf8JsonWriter jwriter, object item, JsonSerializerOptions options, TypeSerializationInfo info = null)
+        public void Serialize(Utf8JsonWriter jwriter, object item, JsonSerializerOptions options, TypeSerializeInfo info = null)
         {
             var type = item?.GetType();
             if (type == null || (info?.IsAttribute ?? TypeHelper.IsSerializeAttribute(type)))

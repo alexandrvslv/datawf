@@ -9,18 +9,32 @@ namespace DataWF.Common
 {
     public class EnumSerializer<T> : NullableSerializer<T> where T : struct
     {
-        private int size;
-
-        public EnumSerializer()
+        public static readonly EnumSerializer<T> Instance = new EnumSerializer<T>();
+        private readonly BinaryToken binaryToken;
+        public EnumSerializer() : base()
         {
-            size = Marshal.SizeOf<T>();
+            switch (size)
+            {
+                case 1:
+                    binaryToken = BinaryToken.UInt8; break;
+                case 2:
+                    binaryToken = BinaryToken.UInt16; break;
+                case 4:
+                    binaryToken = BinaryToken.UInt32; break;
+                case 8:
+                    binaryToken = BinaryToken.UInt64; break;
+                default:
+                    throw new NotSupportedException($"Unsupported Enum Size {size}");
+            }
         }
+
+        public override BinaryToken BinaryToken => binaryToken;
 
         public override T FromString(string value) => Enum.TryParse<T>(value, out var result) ? result : default(T);
 
         public override string ToString(T value) => value.ToString();
 
-        public override T FromBinary(BinaryReader reader)
+        public override T Read(BinaryReader reader)
         {
             switch (size)
             {
@@ -41,21 +55,21 @@ namespace DataWF.Common
             }
         }
 
-        public override void ToBinary(BinaryWriter writer, T value, bool writeToken)
+        public override void Write(BinaryWriter writer, T value, bool writeToken)
         {
             switch (size)
             {
                 case 1:
-                    Int8Serializer.Instance.ToBinary(writer, Unsafe.As<T, sbyte>(ref value), writeToken);
+                    Int8Serializer.Instance.Write(writer, Unsafe.As<T, sbyte>(ref value), writeToken);
                     break;
                 case 2:
-                    Int16Serializer.Instance.ToBinary(writer, Unsafe.As<T, short>(ref value), writeToken);
+                    Int16Serializer.Instance.Write(writer, Unsafe.As<T, short>(ref value), writeToken);
                     break;
                 case 4:
-                    Int32Serializer.Instance.ToBinary(writer, Unsafe.As<T, int>(ref value), writeToken);
+                    Int32Serializer.Instance.Write(writer, Unsafe.As<T, int>(ref value), writeToken);
                     break;
                 case 8:
-                    Int64Serializer.Instance.ToBinary(writer, Unsafe.As<T, long>(ref value), writeToken);
+                    Int64Serializer.Instance.Write(writer, Unsafe.As<T, long>(ref value), writeToken);
                     break;
                 default:
                     throw new NotSupportedException($"Unsupported Enum Size {size}");

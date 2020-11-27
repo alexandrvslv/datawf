@@ -22,6 +22,7 @@ namespace DataWF.Common
         protected ManualResetEventSlim loadEvent = new ManualResetEventSlim(true);
         private Socket socket;
         private bool disposed;
+        private int receiveCount;
 
         public TcpSocket()
         {
@@ -129,7 +130,11 @@ namespace DataWF.Common
                     var read = await arg.ReadStream();
                     if (read > 0)
                     {
+#if NETSTANDARD2_0
                         var sended = await Task.Factory.FromAsync<int>(Socket.BeginSend(arg.Buffer.Array, 0, read, SocketFlags.None, null, arg), Socket.EndSend);
+#else
+                        var sended = await Socket.SendAsync(arg.Buffer.Slice(0, read), SocketFlags.None);
+#endif
                         //Debug.WriteLine($"TcpClient {Point} Send {sended}");
                         arg.Transfered += sended;
                         arg.PartsCount++;
@@ -144,7 +149,11 @@ namespace DataWF.Common
                 }
                 //Latency hack
                 Socket.NoDelay = true;
-                Socket.Send(fin, SocketFlags.None);
+#if NETSTANDARD2_0
+                await Task.Factory.FromAsync<int>(Socket.BeginSend(fin, 0, finLength, SocketFlags.None, null, arg), Socket.EndSend);
+#else
+                await Socket.SendAsync(fin, SocketFlags.None);
+#endif
                 Socket.NoDelay = false;
                 arg.Transfered += finLength;
 
@@ -195,8 +204,8 @@ namespace DataWF.Common
             if (endIndex < buffer.Length)
             {
                 setLoad = false;
-                var slice = buffer.Slice(endIndex);
-                _ = Task.Run(async () => await Load(slice));
+                var slice = buffer.Slice(endIndex).ToArray();
+                _ = Task.Run(() => _ = Load(slice));
             }
             buffer = index > 0 ? buffer.Slice(0, index) : Memory<byte>.Empty;
 
@@ -209,7 +218,7 @@ namespace DataWF.Common
             {
                 Pipe = GetPipe(),
             };
-            _ = Task.Run(async () => await Server.OnDataLoadStart(arg));
+            _ = Task.Run(() => _ = Server.OnDataLoadStart(arg));
 
             bool isBreak = CheckFinBuffer(ref buffer, out var setLoad);
             if (!buffer.IsEmpty)
@@ -219,10 +228,7 @@ namespace DataWF.Common
 #if NETSTANDARD2_0
                 await arg.WriterStream.WriteAsync(buffer.ToArray(), 0, buffer.Length);
 #else
-                var memory = arg.Pipe.Writer.GetMemory(buffer.Length);
-                buffer.CopyTo(memory);
-                arg.Pipe.Writer.Advance(buffer.Length);
-                var result = await arg.Pipe.Writer.FlushAsync();
+                await arg.WriterStream.WriteAsync(buffer);
 #endif
             }
 
@@ -253,7 +259,7 @@ namespace DataWF.Common
                         {
                             if (arg.Transfered == 0)
                             {
-                                _ = Task.Run(async () => await Server.OnDataLoadStart(arg));
+                                _ = Task.Run(() => _ = Server.OnDataLoadStart(arg));
                             }
 
                             arg.PartsCount++;
@@ -296,7 +302,7 @@ namespace DataWF.Common
                         {
                             if (arg.Transfered == 0)
                             {
-                                _ = Task.Run(async () => await Server.OnDataLoadStart(arg));
+                                _ = Task.Run(() => _ = Server.OnDataLoadStart(arg));
                             }
 
                             arg.PartsCount++;
@@ -329,6 +335,7 @@ namespace DataWF.Common
 #endif
         private void EndLoad(TcpStreamEventArgs arg, bool setLoad)
         {
+            Debug.WriteLine($"Receive # {++receiveCount,4} Size {arg.Transfered} ({arg.PartsCount})");
             arg.CompleteWrite();
             Stamp = DateTime.UtcNow;
             _ = Server.OnDataLoadEnd(arg);

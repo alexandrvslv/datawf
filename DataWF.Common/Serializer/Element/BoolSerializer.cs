@@ -7,9 +7,11 @@ namespace DataWF.Common
     {
         public static readonly BoolSerializer Instance = new BoolSerializer();
 
-        public override bool FromBinary(BinaryReader reader) => reader.ReadBoolean();
+        public override BinaryToken BinaryToken => BinaryToken.Boolean;
 
-        public override void ToBinary(BinaryWriter writer, bool value, bool writeToken)
+        public override bool Read(BinaryReader reader) => reader.ReadBoolean();
+
+        public override void Write(BinaryWriter writer, bool value, bool writeToken)
         {
             if (writeToken)
             {

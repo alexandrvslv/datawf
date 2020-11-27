@@ -6,7 +6,7 @@ namespace DataWF.Common
 {
     public abstract class BaseSerializer : IDisposable
     {
-        public static Dictionary<Type, TypeSerializationInfo> SerializationInfo { get; } = new Dictionary<Type, TypeSerializationInfo>();
+        public static Dictionary<Type, TypeSerializeInfo> SerializationInfo { get; } = new Dictionary<Type, TypeSerializeInfo>();
 
         public static IDictionaryItem CreateDictionaryItem(Type type)
         {
@@ -36,18 +36,18 @@ namespace DataWF.Common
 
         public bool OnlyXmlAttributes { get; set; } = false;
 
-        public TypeSerializationInfo GetTypeInfo<T>()
+        public TypeSerializeInfo GetTypeInfo<T>()
         {
             return GetTypeInfo(typeof(T));
         }
 
-        public TypeSerializationInfo GetTypeInfo(Type type)
+        public TypeSerializeInfo GetTypeInfo(Type type)
         {
             if (type == null)
                 return null;
             if (!SerializationInfo.TryGetValue(type, out var info))
             {
-                SerializationInfo[type] = info = new TypeSerializationInfo(type);
+                SerializationInfo[type] = info = new TypeSerializeInfo(type);
                 if (info.IsList)
                 {
                     GetTypeInfo(info.ListItemType);
@@ -60,7 +60,7 @@ namespace DataWF.Common
 
         public abstract ISerializeReader GetReader(Stream stream);
 
-        public void SetTypeInfo(Type type, TypeSerializationInfo info)
+        public void SetTypeInfo(Type type, TypeSerializeInfo info)
         {
             SerializationInfo[type] = info;
         }

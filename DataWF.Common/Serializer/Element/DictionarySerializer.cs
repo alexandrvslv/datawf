@@ -9,7 +9,7 @@ namespace DataWF.Common
     {
         public override bool CanConvertString => false;
 
-        public override T Read(BinaryInvokerReader reader, T value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
+        public override T Read(BinaryInvokerReader reader, T value, TypeSerializeInfo typeInfo, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             var token = reader.ReadToken();
             if (token == BinaryToken.Null)
@@ -24,9 +24,11 @@ namespace DataWF.Common
 
             if (token == BinaryToken.SchemaBegin)
             {
-                reader.ReadType(out info, out _);
+                reader.ReadType(out typeInfo, out _);
                 token = reader.ReadToken();
             }
+            typeInfo = typeInfo ?? reader.Serializer.GetTypeInfo<T>();
+
             int length = 1;
             if (token == BinaryToken.ArrayLength)
             {
@@ -38,7 +40,7 @@ namespace DataWF.Common
 
             if (value == null)
             {
-                value = (T)(info.ListConstructor?.Create(length) ?? info.Constructor.Create());
+                value = (T)(typeInfo.ListConstructor?.Create(length) ?? typeInfo.Constructor.Create());
             }
             if (token == BinaryToken.ArrayEntry)
             {
@@ -64,7 +66,7 @@ namespace DataWF.Common
             return value;
         }
 
-        public override void Write(BinaryInvokerWriter writer, T value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
+        public override void Write(BinaryInvokerWriter writer, T value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             if (value == null)
             {
@@ -74,7 +76,7 @@ namespace DataWF.Common
             writer.WriteArrayBegin();
             if (writer.Serializer.WriteSchema)
             {
-                writer.WriteType(typeof(T));
+                writer.WriteType(value.GetType());
             }
             var keyTypeInfo = writer.Serializer.GetTypeInfo<K>();
             var valueTypeInfo = writer.Serializer.GetTypeInfo<V>();
@@ -99,7 +101,7 @@ namespace DataWF.Common
             writer.WriteArrayEnd();
         }
 
-        public override T FromBinary(BinaryReader reader)
+        public override T Read(BinaryReader reader)
         {
             using (var invokerReader = new BinaryInvokerReader(reader))
             {
@@ -107,7 +109,7 @@ namespace DataWF.Common
             }
         }
 
-        public override void ToBinary(BinaryWriter writer, T value, bool writeToken)
+        public override void Write(BinaryWriter writer, T value, bool writeToken)
         {
             using (var invokerWriter = new BinaryInvokerWriter(writer))
             {
@@ -115,10 +117,13 @@ namespace DataWF.Common
             }
         }
 
-        public override T Read(XmlInvokerReader reader, T value, TypeSerializationInfo typeInfo)
+        public override T Read(XmlInvokerReader reader, T value, TypeSerializeInfo typeInfo)
         {
             if (reader.Reader.NodeType == System.Xml.XmlNodeType.Comment)
                 typeInfo = reader.ReadType(typeInfo);
+
+            typeInfo = typeInfo ?? reader.Serializer.GetTypeInfo(value?.GetType() ?? typeof(T));
+
             if (value == null || value.GetType() != typeInfo.Type)
             {
                 value = (T)typeInfo.Constructor?.Create();
@@ -142,8 +147,10 @@ namespace DataWF.Common
             return value;
         }
 
-        public override void Write(XmlInvokerWriter writer, T value, TypeSerializationInfo typeInfo)
+        public override void Write(XmlInvokerWriter writer, T value, TypeSerializeInfo typeInfo)
         {
+            typeInfo = typeInfo ?? writer.Serializer.GetTypeInfo(value.GetType());
+
             writer.WriteObject<T>(value, typeInfo);
             var entry = new DictionaryItem<K, V>();
             var itemTypeInfo = writer.Serializer.GetTypeInfo(entry.GetType());
@@ -164,7 +171,7 @@ namespace DataWF.Common
     {
         public override bool CanConvertString => false;
 
-        public override T Read(BinaryInvokerReader reader, T value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
+        public override T Read(BinaryInvokerReader reader, T value, TypeSerializeInfo typeInfo, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             var token = reader.ReadToken();
             if (token == BinaryToken.Null)
@@ -179,9 +186,11 @@ namespace DataWF.Common
 
             if (token == BinaryToken.SchemaBegin)
             {
-                reader.ReadType(out info, out _);
+                reader.ReadType(out typeInfo, out _);
                 token = reader.ReadToken();
             }
+            typeInfo = typeInfo ?? reader.Serializer.GetTypeInfo(value?.GetType() ?? typeof(T));
+
             int length = 1;
             if (token == BinaryToken.ArrayLength)
             {
@@ -189,9 +198,9 @@ namespace DataWF.Common
                 token = reader.ReadToken();
             }
 
-            if (value == null)
+            if (value == null || value.GetType() != typeInfo.Type)
             {
-                value = (T)(info.ListConstructor?.Create(length) ?? info.Constructor.Create());
+                value = (T)(typeInfo.ListConstructor?.Create(length) ?? typeInfo.Constructor.Create());
             }
             if (token == BinaryToken.ArrayEntry)
             {
@@ -217,7 +226,7 @@ namespace DataWF.Common
             return value;
         }
 
-        public override void Write(BinaryInvokerWriter writer, T value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
+        public override void Write(BinaryInvokerWriter writer, T value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             if (value == null)
             {
@@ -227,7 +236,7 @@ namespace DataWF.Common
             writer.WriteArrayBegin();
             if (writer.Serializer.WriteSchema)
             {
-                writer.WriteType(typeof(T));
+                writer.WriteType(value.GetType());
             }
 
             writer.WriteArrayLength(value.Count);
@@ -250,7 +259,7 @@ namespace DataWF.Common
             writer.WriteArrayEnd();
         }
 
-        public override T FromBinary(BinaryReader reader)
+        public override T Read(BinaryReader reader)
         {
             using (var invokerReader = new BinaryInvokerReader(reader))
             {
@@ -258,7 +267,7 @@ namespace DataWF.Common
             }
         }
 
-        public override void ToBinary(BinaryWriter writer, T value, bool writeToken)
+        public override void Write(BinaryWriter writer, T value, bool writeToken)
         {
             using (var invokerWriter = new BinaryInvokerWriter(writer))
             {
@@ -266,10 +275,12 @@ namespace DataWF.Common
             }
         }
 
-        public override T Read(XmlInvokerReader reader, T value, TypeSerializationInfo typeInfo)
+        public override T Read(XmlInvokerReader reader, T value, TypeSerializeInfo typeInfo)
         {
             if (reader.Reader.NodeType == System.Xml.XmlNodeType.Comment)
                 typeInfo = reader.ReadType(typeInfo);
+            typeInfo = typeInfo ?? reader.Serializer.GetTypeInfo(value?.GetType() ?? typeof(T));
+
             if (value == null || value.GetType() != typeInfo.Type)
             {
                 value = (T)typeInfo.Constructor?.Create();
@@ -293,8 +304,9 @@ namespace DataWF.Common
             return value;
         }
 
-        public override void Write(XmlInvokerWriter writer, T value, TypeSerializationInfo typeInfo)
+        public override void Write(XmlInvokerWriter writer, T value, TypeSerializeInfo typeInfo)
         {
+            typeInfo = typeInfo ?? writer.Serializer.GetTypeInfo(value?.GetType() ?? typeof(T));
             writer.WriteObject<T>(value, typeInfo);
             var entry = new DictionaryItem<object, object>();
             var itemTypeInfo = writer.Serializer.GetTypeInfo(entry.GetType());

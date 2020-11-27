@@ -29,7 +29,7 @@ namespace DataWF.Common
             Reader.Read();
         }
 
-        public TypeSerializationInfo ReadType(TypeSerializationInfo typeInfo)
+        public TypeSerializeInfo ReadType(TypeSerializeInfo typeInfo)
         {
             if (Reader.NodeType == XmlNodeType.Comment)
             {
@@ -58,7 +58,7 @@ namespace DataWF.Common
             return default(T);
         }
 
-        public void ReadAttributes(object element, TypeSerializationInfo info)
+        public void ReadAttributes(object element, TypeSerializeInfo info)
         {
             if (Reader.HasAttributes)
             {
@@ -75,7 +75,7 @@ namespace DataWF.Common
             }
         }
 
-        public void ReadAttributes<T>(T element, TypeSerializationInfo info)
+        public void ReadAttributes<T>(T element, TypeSerializeInfo info)
         {
             if (Reader.HasAttributes)
             {
@@ -92,11 +92,11 @@ namespace DataWF.Common
             }
         }
 
-        private void ToProperty(object element, IPropertySerializationInfo property, TypeSerializationInfo itemInfo)
+        private void ToProperty(object element, IPropertySerializeInfo property, TypeSerializeInfo itemInfo)
         {
             if (property.Serializer is IElementSerializer serializer)
             {
-                serializer.PropertyFromString(this, element, property, itemInfo);
+                property.PropertyFromString(this, element, itemInfo);
             }
             else if (Reader.NodeType == XmlNodeType.Attribute)
             {
@@ -113,11 +113,11 @@ namespace DataWF.Common
             }
         }
 
-        private void ToProperty<T>(T element, IPropertySerializationInfo property, TypeSerializationInfo itemInfo)
+        private void ToProperty<T>(T element, IPropertySerializeInfo property, TypeSerializeInfo itemInfo)
         {
             if (property.Serializer is IElementSerializer serializer)
             {
-                serializer.PropertyFromString<T>(this, element, property, itemInfo);
+                property.PropertyFromString<T>(this, element, itemInfo);
             }
             else if (Reader.NodeType == XmlNodeType.Attribute)
             {
@@ -134,7 +134,7 @@ namespace DataWF.Common
             }
         }
 
-        public void ReadElement(object element, TypeSerializationInfo info, TypeSerializationInfo itemInfo)
+        public void ReadElement(object element, TypeSerializeInfo info, TypeSerializeInfo itemInfo)
         {
             itemInfo = ReadType(itemInfo);
             var property = info.GetProperty(Reader.Name);
@@ -148,7 +148,7 @@ namespace DataWF.Common
             }
         }
 
-        public void ReadElement<T>(T element, TypeSerializationInfo info, TypeSerializationInfo itemInfo)
+        public void ReadElement<T>(T element, TypeSerializeInfo info, TypeSerializeInfo itemInfo)
         {
             itemInfo = ReadType(itemInfo);
             var property = info.GetProperty(Reader.Name);
@@ -167,7 +167,7 @@ namespace DataWF.Common
             return Reader.ReadInnerXml();
         }
 
-        public void ReadCollectionElement(object element, TypeSerializationInfo listInfo, TypeSerializationInfo defaultTypeInfo, ref int listIndex)
+        public void ReadCollectionElement(object element, TypeSerializeInfo listInfo, TypeSerializeInfo defaultTypeInfo, ref int listIndex)
         {
             var itemInfo = ReadType(defaultTypeInfo);
             if (string.Equals(Reader.Name, "i", StringComparison.Ordinal))
@@ -220,7 +220,7 @@ namespace DataWF.Common
             }
         }
 
-        public object ReadCollection(IList list, TypeSerializationInfo typeInfo)
+        public object ReadCollection(IList list, TypeSerializeInfo typeInfo)
         {
             if (list == null || list.GetType() != typeInfo.Type)
             {
@@ -248,7 +248,7 @@ namespace DataWF.Common
             return list;
         }
 
-        public object ReadDictionary(IDictionary dictionary, TypeSerializationInfo typeInfo)
+        public object ReadDictionary(IDictionary dictionary, TypeSerializeInfo typeInfo)
         {
             if (dictionary == null || dictionary.GetType() != typeInfo.Type)
             {
@@ -265,7 +265,7 @@ namespace DataWF.Common
             return dictionary;
         }
 
-        public object ReadIFile(object element, TypeSerializationInfo typeInfo)
+        public object ReadIFile(object element, TypeSerializeInfo typeInfo)
         {
             if (element == null || element.GetType() != typeInfo.Type)
             {
@@ -315,7 +315,7 @@ namespace DataWF.Common
             return element;
         }
 
-        public object Read(object element, TypeSerializationInfo typeInfo)
+        public object Read(object element, TypeSerializeInfo typeInfo)
         {
             typeInfo = ReadType(typeInfo);
             if (typeInfo == null)
@@ -329,7 +329,7 @@ namespace DataWF.Common
             }
             else if (typeInfo.Serialazer is IElementSerializer serializer)
             {
-                return serializer.Read(this, element, typeInfo);
+                return serializer.ReadObject(this, element, typeInfo);
             }
             else if (typeInfo.IsDictionary)
             {
@@ -342,7 +342,7 @@ namespace DataWF.Common
             return ReadObject(element, typeInfo);
         }
 
-        public T Read<T>(T element, TypeSerializationInfo typeInfo)
+        public T Read<T>(T element, TypeSerializeInfo typeInfo)
         {
             typeInfo = ReadType(typeInfo);
             if (typeInfo == null)
@@ -369,7 +369,7 @@ namespace DataWF.Common
             return ReadObject<T>(element, typeInfo);
         }
 
-        public object ReadObject(object element, TypeSerializationInfo typeInfo)
+        public object ReadObject(object element, TypeSerializeInfo typeInfo)
         {
             if (element == null || element.GetType() != typeInfo.Type)
             {
@@ -390,7 +390,7 @@ namespace DataWF.Common
             return element;
         }
 
-        public T ReadObject<T>(T element, TypeSerializationInfo typeInfo)
+        public T ReadObject<T>(T element, TypeSerializeInfo typeInfo)
         {
             if (element == null || element.GetType() != typeInfo.Type)
             {
@@ -416,7 +416,7 @@ namespace DataWF.Common
             Reader?.Dispose();
         }
 
-        public TypeSerializationInfo GetTypeInfo(Type type)
+        public TypeSerializeInfo GetTypeInfo(Type type)
         {
             return Serializer.GetTypeInfo(type);
         }

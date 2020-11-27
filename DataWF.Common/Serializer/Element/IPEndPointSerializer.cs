@@ -14,17 +14,24 @@ namespace DataWF.Common
 
         public override string ToString(IPEndPoint value) => value.ToString();
 
-        public override IPEndPoint FromBinary(BinaryReader reader)
+        public override IPEndPoint Read(BinaryReader reader)
         {
-            var address = ByteArraySerializer.Instance.FromBinary(reader);
-            var port = Int32Serializer.Instance.FromBinary(reader);
+            var address = ByteArraySerializer.Instance.Read(reader);
+            var port = Int32Serializer.Instance.Read(reader);
             return new IPEndPoint(new IPAddress(address), port);
         }
 
-        public override void ToBinary(BinaryWriter writer, IPEndPoint value, bool writeToken)
+        public override void Write(BinaryWriter writer, IPEndPoint value, bool writeToken)
         {
-            ByteArraySerializer.Instance.ToBinary(writer, value.Address.GetAddressBytes(), writeToken);
-            Int32Serializer.Instance.ToBinary(writer, value.Port, false);
+            if (value == null)
+            {
+                writer.Write((byte)BinaryToken.Null);
+            }
+            else
+            {
+                ByteArraySerializer.Instance.Write(writer, value.Address.GetAddressBytes(), writeToken);
+                Int32Serializer.Instance.Write(writer, value.Port, false);
+            }
         }
 
     }

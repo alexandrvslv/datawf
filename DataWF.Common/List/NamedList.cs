@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace DataWF.Common
 {
-    public class NamedList<T> : SelectableList<T>, INamedList where T : INamed, new()
+    public class NamedList<T> : SelectableList<T>, INamedList where T : INamed
     {
         private ListIndex<T, string> nameIndex;
 

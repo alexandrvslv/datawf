@@ -9,62 +9,52 @@ namespace DataWF.Common
     {
         public abstract bool CanConvertString { get; }
         #region Binary
-        public abstract object ConvertFromBinary(BinaryReader reader);
+        public abstract object ReadObject(BinaryReader reader);
 
-        public abstract void ConvertToBinary(BinaryWriter writer, object value, bool writeToken);
+        public abstract void WriteObject(BinaryWriter writer, object value, bool writeToken);
 
-        public virtual void Write(BinaryInvokerWriter writer, object value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
+        public abstract object ReadObject(SpanReader reader);
+
+        public abstract void WriteObject(SpanWriter writer, object value, bool writeToken);
+
+        public virtual void WriteObject(BinaryInvokerWriter writer, object value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
-            ConvertToBinary(writer.Writer, value, true);
+            WriteObject(writer.Writer, value, true);
         }
 
-        public virtual object Read(BinaryInvokerReader reader, object value, TypeSerializationInfo info, Dictionary<ushort, IPropertySerializationInfo> map)
+        public virtual object ReadObject(BinaryInvokerReader reader, object value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
-            return ConvertFromBinary(reader.Reader);
+            return ReadObject(reader.Reader);
         }
 
-        public abstract void PropertyToBinary(BinaryInvokerWriter writer, object element, IInvoker invoker);
-
-        public abstract void PropertyToBinary<E>(BinaryInvokerWriter writer, E element, IInvoker invoker);
-
-        public abstract void PropertyFromBinary(BinaryInvokerReader reader, object element, IInvoker invoker);
-
-        public abstract void PropertyFromBinary<E>(BinaryInvokerReader reader, E element, IInvoker invoker);
         #endregion
 
         #region Xml
-        public abstract object ConvertFromString(string value);
+        public abstract object ObjectFromString(string value);
 
-        public abstract string ConvertToString(object value);
+        public abstract string ObjectToString(object value);
 
-        public virtual void Write(XmlInvokerWriter writer, object value, TypeSerializationInfo info)
+        public virtual void WriteObject(XmlInvokerWriter writer, object value, TypeSerializeInfo info)
         {
-            writer.Writer.WriteValue(ConvertToString(value));
+            writer.Writer.WriteValue(ObjectToString(value));
         }
 
-        public virtual object Read(XmlInvokerReader reader, object value, TypeSerializationInfo info)
+        public virtual object ReadObject(XmlInvokerReader reader, object value, TypeSerializeInfo info)
         {
-            return ConvertFromString(reader.Reader.Value);
+            return ObjectFromString(reader.Reader.Value);
         }
 
-        public abstract void PropertyToString(XmlInvokerWriter writer, object element, IPropertySerializationInfo property);
-
-        public abstract void PropertyToString<E>(XmlInvokerWriter writer, E element, IPropertySerializationInfo property);
-
-        public abstract void PropertyFromString(XmlInvokerReader writer, object element, IPropertySerializationInfo property, TypeSerializationInfo itemType);
-
-        public abstract void PropertyFromString<E>(XmlInvokerReader writer, E element, IPropertySerializationInfo property, TypeSerializationInfo itemType);
         #endregion
 
         #region Json
-        public virtual void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+        public virtual void WriteObject(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
             JsonSerializer.Serialize(writer, value, value.GetType(), options);
         }
 
-        public virtual object Read(ref Utf8JsonReader reader, object value, JsonSerializerOptions info)
+        public virtual object ReadObject(ref Utf8JsonReader reader, object value, JsonSerializerOptions info)
         {
-            return ConvertFromString(reader.GetString());
+            return ObjectFromString(reader.GetString());
         }
         #endregion
     }
