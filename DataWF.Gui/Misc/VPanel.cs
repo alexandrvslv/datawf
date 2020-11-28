@@ -6,7 +6,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class VPanel : VBox, IText, IGlyph, ILocalizable, IXmlSerializable, INotifyPropertyChanged
+    public class VPanel : VBox, IText, IGlyph, ILocalizable, IXMLSerializable, INotifyPropertyChanged
     {
         private string text;
 
@@ -89,7 +89,7 @@ namespace DataWF.Gui
         {
             if (widget == null)
                 return;
-            if (widget is IXmlSerializable && !string.IsNullOrEmpty(widget.Name))
+            if (widget is IXMLSerializable && !string.IsNullOrEmpty(widget.Name))
             {
                 writer.Write(widget, widget.Name, true);
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,14 +16,15 @@ namespace DataWF.Common
     public class TcpSocket : IDisposable
     {
         internal static readonly ConcurrentQueue<Pipe> Pipes = new ConcurrentQueue<Pipe>();
-        private static readonly byte[] fin = Encoding.ASCII.GetBytes("<finito>");
+        private static readonly byte[] fin = new byte[] { 1, 60, 2, 102, 105, 110, 3, 62, 4 };
         private static readonly int finLength = fin.Length;
+        private static readonly int finCacheHalf = fin.Length - 1;
+        private static readonly int finCacheLength = finCacheHalf * 2;
         protected readonly BinarySerializer serializer = new BinarySerializer();
         protected ManualResetEventSlim sendEvent = new ManualResetEventSlim(true);
         protected ManualResetEventSlim loadEvent = new ManualResetEventSlim(true);
         private Socket socket;
         private bool disposed;
-        private int receiveCount;
 
         public TcpSocket()
         {
@@ -127,7 +129,8 @@ namespace DataWF.Common
 
                 while (true)
                 {
-                    var read = await arg.ReadStream();
+                    //buffering Compresison results
+                    var read = await arg.ReadPipe();
                     if (read > 0)
                     {
 #if NETSTANDARD2_0
@@ -140,7 +143,7 @@ namespace DataWF.Common
                         arg.PartsCount++;
                         Stamp = DateTime.UtcNow;
                     }
-                    else if (arg.Pipe == null || arg.IsWriteComplete)
+                    else if (arg.Pipe == null || arg.WriterState == TcpStreamState.Complete)
                     {
                         break;
                     }
@@ -183,21 +186,39 @@ namespace DataWF.Common
 
                 var arg = new TcpStreamEventArgs(this, TcpStreamMode.Receive)
                 {
-                    Pipe = GetPipe()
+                    Pipe = GetPipe(),
+                    FinCache = new Memory<byte>(new byte[finCacheLength])
                 };
 
                 await Load(arg);
             }
         }
 
-        private bool CheckFinBuffer(ref Memory<byte> buffer, out bool setLoad)
+        private bool CheckFinBuffer(ref Memory<byte> buffer, TcpStreamEventArgs arg, out bool setLoad)
         {
             setLoad = true;
             var index = buffer.Span.IndexOf(fin);
             if (index < 0)
             {
-                setLoad = false;
-                return false;
+                buffer.Slice(0, Math.Min(finCacheHalf, buffer.Length)).Span.CopyTo(arg.FinCache.Slice(finCacheHalf).Span);
+
+                index = arg.FinCache.Span.IndexOf(fin);
+                if (index < 0)
+                {
+                    if (buffer.Length < finCacheHalf)
+                    { }
+
+                    var maxFinCache = Math.Min(finCacheHalf, buffer.Length);
+                    var finCacheSlice = arg.FinCache.Slice(finCacheHalf - maxFinCache);
+                    buffer.Span.Slice(buffer.Length - maxFinCache).CopyTo(finCacheSlice.Span);
+
+                    setLoad = false;
+                    return false;
+                }
+                else
+                {
+                    index -= finCacheHalf;
+                }
             }
 
             var endIndex = index + finLength;
@@ -212,15 +233,24 @@ namespace DataWF.Common
             return true;
         }
 
+        public static Span<byte> Concat(ReadOnlySpan<byte> s1, ReadOnlySpan<byte> s2)
+        {
+            var array = new byte[s1.Length + s2.Length];
+            s1.CopyTo(array);
+            s2.CopyTo(array.AsSpan(s1.Length));
+            return array;
+        }
+
         private async ValueTask Load(Memory<byte> buffer)
         {
             var arg = new TcpStreamEventArgs(this, TcpStreamMode.Receive)
             {
                 Pipe = GetPipe(),
+                FinCache = new Memory<byte>(new byte[finCacheLength])
             };
-            _ = Task.Run(() => _ = Server.OnDataLoadStart(arg));
+            arg.StartRead();
 
-            bool isBreak = CheckFinBuffer(ref buffer, out var setLoad);
+            bool isBreak = CheckFinBuffer(ref buffer, arg, out var setLoad);
             if (!buffer.IsEmpty)
             {
                 arg.PartsCount++;
@@ -253,18 +283,17 @@ namespace DataWF.Common
                     var read = await Task.Factory.FromAsync(Socket.BeginReceive(arg.Buffer.Array, 0, TcpStreamEventArgs.BufferSize, SocketFlags.None, null, arg), Socket.EndReceive);
                     if (read > 0)
                     {
-                        var memory = new Memory<byte>(arg.Buffer.Array, 0, read);
-                        var isBreak = CheckFinBuffer(ref memory, out setLoad);
-                        if (!memory.IsEmpty)
+                        var slice = new Memory<byte>(arg.Buffer.Array, 0, read);
+                        if (arg.ReaderState == TcpStreamState.None)
                         {
-                            if (arg.Transfered == 0)
-                            {
-                                _ = Task.Run(() => _ = Server.OnDataLoadStart(arg));
-                            }
-
+                            arg.StartRead();
+                        }
+                        var isBreak = CheckFinBuffer(ref slice, arg, out setLoad);
+                        if (!slice.IsEmpty)
+                        {
                             arg.PartsCount++;
-                            arg.Transfered += memory.Length;
-                            await arg.WriterStream.WriteAsync(memory.ToArray(), 0, memory.Length);
+                            arg.Transfered += slice.Length;
+                            await arg.WriterStream.WriteAsync(slice.ToArray(), 0, slice.Length);
                         }
                         if (isBreak)
                             break;
@@ -292,27 +321,23 @@ namespace DataWF.Common
                 var setLoad = true;
                 while (true)
                 {
-                    Memory<byte> memory = arg.Pipe.Writer.GetMemory(arg.Buffer.Count);
+                    var memory = arg.Pipe.Writer.GetMemory(arg.Buffer.Count + finLength);
                     var read = await Socket.ReceiveAsync(memory, SocketFlags.None);
                     if (read > 0)
                     {
                         var slice = memory.Length == read ? memory : memory.Slice(0, read);
-                        var isBreak = CheckFinBuffer(ref slice, out setLoad);
+
+                        if (arg.ReaderState == TcpStreamState.None)
+                        {
+                            arg.StartRead();
+                        }
+                        var isBreak = CheckFinBuffer(ref slice, arg, out setLoad);
                         if (!slice.IsEmpty)
                         {
-                            if (arg.Transfered == 0)
-                            {
-                                _ = Task.Run(() => _ = Server.OnDataLoadStart(arg));
-                            }
-
                             arg.PartsCount++;
                             arg.Transfered += slice.Length;
                             arg.Pipe.Writer.Advance(slice.Length);
                             var result = await arg.Pipe.Writer.FlushAsync();
-                            if (result.IsCompleted)
-                            {
-                                break;
-                            }
                         }
                         if (isBreak)
                             break;
@@ -335,7 +360,6 @@ namespace DataWF.Common
 #endif
         private void EndLoad(TcpStreamEventArgs arg, bool setLoad)
         {
-            Debug.WriteLine($"Receive # {++receiveCount,4} Size {arg.Transfered} ({arg.PartsCount})");
             arg.CompleteWrite();
             Stamp = DateTime.UtcNow;
             _ = Server.OnDataLoadEnd(arg);

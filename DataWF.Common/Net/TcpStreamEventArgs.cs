@@ -18,9 +18,9 @@ namespace DataWF.Common
 
         public TcpStreamEventArgs(TcpSocket client, TcpStreamMode mode)
         {
-            Buffer = new ArraySegment<byte>(new byte[BufferSize]);
-            Client = client;
             Mode = mode;
+            Client = client;
+            Buffer = new ArraySegment<byte>(new byte[BufferSize]);
         }
 
         public TcpStreamMode Mode { get; }
@@ -116,9 +116,11 @@ namespace DataWF.Common
             }
         }
 
-        public bool IsReaderComplete { get; private set; }
+        public TcpStreamState ReaderState { get; private set; }
 
-        public bool IsWriteComplete { get; private set; }
+        public TcpStreamState WriterState { get; private set; }
+
+        public Memory<byte> FinCache { get; internal set; }
 
         internal Task<int> ReadStream()
         {
@@ -143,7 +145,7 @@ namespace DataWF.Common
                     var slize = toRead == bufferLength ? buffer : buffer.Slice(0, toRead);
                     slize.CopyTo(Buffer.AsSpan(read, toRead));
                     read += toRead;
-                    consumed = slize.End;                    
+                    consumed = slize.End;
                 }
                 Pipe.Reader.AdvanceTo(consumed);
                 if (result.IsCompleted)
@@ -176,7 +178,7 @@ namespace DataWF.Common
             }
             finally
             {
-                IsReaderComplete = true;
+                ReaderState = TcpStreamState.Complete;
             }
         }
 
@@ -200,14 +202,19 @@ namespace DataWF.Common
             }
             finally
             {
-                IsWriteComplete = true;
+                WriterState = TcpStreamState.Complete;
             }
 
         }
 
         public async ValueTask ReleasePipe(Exception exception = null)
         {
-            while (!IsWriteComplete)
+            while (WriterState != TcpStreamState.Complete)
+            {
+                await Task.Delay(5);
+            }
+
+            while (ReaderState != TcpStreamState.Complete)
             {
                 await Task.Delay(5);
             }
@@ -231,11 +238,29 @@ namespace DataWF.Common
                 TcpSocket.Pipes.Enqueue(Pipe);
             }
         }
+
+        public void StartRead()
+        {
+            if (ReaderState != TcpStreamState.None)
+                throw new Exception("Reader Wrong State");
+            if (Mode == TcpStreamMode.Receive)
+            {
+                Task.Factory.StartNew(p => Client.Server.OnDataLoadStart((TcpStreamEventArgs)p), this, TaskCreationOptions.PreferFairness);
+                ReaderState = TcpStreamState.Started;
+            }
+        }
     }
 
     public enum TcpStreamMode
     {
         Send,
         Receive
+    }
+
+    public enum TcpStreamState
+    {
+        None = 0,
+        Started,
+        Complete
     }
 }
