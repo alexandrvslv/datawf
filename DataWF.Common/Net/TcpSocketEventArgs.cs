@@ -9,6 +9,6 @@ namespace DataWF.Common
     {
         public static readonly TcpSocketEventArgs Default = new TcpSocketEventArgs();
 
-        public TcpSocket Client { get; set; }
+        public TcpSocket TcpSocket { get; set; }
     }
 }

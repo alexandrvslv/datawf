@@ -141,7 +141,7 @@ namespace DataWF.Common
                     socket = await Task.Factory.FromAsync<Socket>(Socket.BeginAccept(socket, 0, null, arg), Socket.EndAccept);
 
                     Debug.WriteLine($"TcpServer {Point} Accept: {socket.RemoteEndPoint}");
-                    arg.Client = new TcpSocket
+                    arg.TcpSocket = new TcpSocket
                     {
                         Server = this,
                         Socket = socket
@@ -171,12 +171,12 @@ namespace DataWF.Common
             return client;
         }
 
-        public Task Send(IPEndPoint address, string data)
+        public Task<bool> Send(IPEndPoint address, string data)
         {
             return Send(address, Encoding.UTF8.GetBytes(data));
         }
 
-        public async Task Send(IPEndPoint address, byte[] data)
+        public async Task<bool> Send(IPEndPoint address, byte[] data)
         {
             var client = clients.SelectOne(nameof(TcpSocket.PointName), CompareType.Equal, address.ToString());
             if (client == null)
@@ -184,10 +184,10 @@ namespace DataWF.Common
                 client = await CreateClient(point, address);
             }
 
-            await client.Send(data);
+            return await client.Send(data);
         }
 
-        public async ValueTask SendElement<T>(IPEndPoint address, T element)
+        public async Task<bool> SendElement<T>(IPEndPoint address, T element)
         {
             var client = clients.SelectOne(nameof(TcpSocket.PointName), CompareType.Equal, address.ToString());
             if (client == null)
@@ -195,7 +195,7 @@ namespace DataWF.Common
                 client = await CreateClient(point, address);
             }
 
-            await client.SendElement(element);
+            return await client.SendElement(element);
         }
 
         protected virtual void OnStart()
@@ -219,8 +219,8 @@ namespace DataWF.Common
             if (logEvents)
             {
                 Helper.Logs.Add(new StateInfo(nameof(TcpServer), "DataSend", string.Format("{0} {1} {2}",
-                    arg.Client.Socket.LocalEndPoint,
-                    arg.Client.Socket.RemoteEndPoint,
+                    arg.TcpSocket.Socket.LocalEndPoint,
+                    arg.TcpSocket.Socket.RemoteEndPoint,
                     Helper.TextDisplayFormat(arg.Transfered, "size"))));
             }
 
@@ -233,8 +233,8 @@ namespace DataWF.Common
             if (logEvents)
             {
                 Helper.Logs.Add(new StateInfo(nameof(TcpServer), "DataLoad", string.Format("{0} {1} {2}",
-                    arg.Client.Socket.LocalEndPoint,
-                    arg.Client.Socket.RemoteEndPoint,
+                    arg.TcpSocket.Socket.LocalEndPoint,
+                    arg.TcpSocket.Socket.RemoteEndPoint,
                     Helper.TextDisplayFormat(arg.Transfered, "size"))));
             }
             if (ParseDataLoad != null)
@@ -261,8 +261,8 @@ namespace DataWF.Common
             if (logEvents)
             {
                 Helper.Logs.Add(new StateInfo(nameof(TcpServer), "DataLoad", string.Format("{0} {1} {2}",
-                    arg.Client.Socket.LocalEndPoint,
-                    arg.Client.Socket.RemoteEndPoint,
+                    arg.TcpSocket.Socket.LocalEndPoint,
+                    arg.TcpSocket.Socket.RemoteEndPoint,
                     Helper.TextDisplayFormat(arg.Transfered, "size"))));
             }
             return Task.CompletedTask;
@@ -290,9 +290,9 @@ namespace DataWF.Common
 
         protected internal ValueTask OnClientConnect(TcpSocketEventArgs arg)
         {
-            _ = Task.Run(() => _ = arg.Client.ListenerLoop());
+            _ = Task.Run(() => _ = arg.TcpSocket.ListenerLoop());
 
-            clients.Add(arg.Client);
+            clients.Add(arg.TcpSocket);
             ClientConnect?.Invoke(this, arg);
 
             return default;
@@ -300,10 +300,10 @@ namespace DataWF.Common
 
         protected internal ValueTask OnClientDisconect(TcpSocketEventArgs arg)
         {
-            if (clients.Remove(arg.Client))
+            if (clients.Remove(arg.TcpSocket))
             {
                 ClientDisconnect?.Invoke(this, arg);
-                arg.Client.Dispose();
+                arg.TcpSocket.Dispose();
             }
             return default;
         }
@@ -312,7 +312,7 @@ namespace DataWF.Common
         {
             if (client.Socket.Poll(5000, SelectMode.SelectRead) && (client.Socket.Available == 0))
             {
-                ClientTimeout?.Invoke(this, new TcpSocketEventArgs { Client = client });
+                ClientTimeout?.Invoke(this, new TcpSocketEventArgs { TcpSocket = client });
 
                 client.Dispose();
             }

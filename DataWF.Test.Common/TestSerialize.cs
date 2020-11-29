@@ -367,6 +367,31 @@ namespace DataWF.Test.Common
             Assert.AreEqual(items[1].ToSerialize.ClassValue.StringValue, newItems[1].ToSerialize.ClassValue.StringValue, "Deserialization Fail");
         }
 
+        [Test]
+        public void BinaryStreamHolder()
+        {
+            var streamData = new byte[] { 1, 0, 1, 0, 1, 0, 1, 0 };
+            var streamHolder = new StreamHolder
+            {
+                FileName = "some_name.ext",
+                Stream = new MemoryStream(streamData)
+            };
+
+            var serializer = new BinarySerializer();
+
+            var buffer = serializer.Serialize(streamHolder);
+
+            var newStreamHolder = serializer.Deserialize<StreamHolder>(buffer, null);
+
+            Assert.AreEqual(streamHolder.FileName, newStreamHolder.FileName, "Deserialization Fail");
+
+            var newStreamData = Helper.GetBytes(newStreamHolder.Stream, 8);
+
+            Assert.IsTrue(streamData.AsSpan().SequenceEqual(newStreamData), "Deserialization Fail");
+        }
+
+
+
         private void PrintBuffer(ArraySegment<byte> buffer)
         {
             var text = System.Text.Encoding.UTF8.GetString(buffer);

@@ -28,7 +28,7 @@ namespace DataWF.Common
 
             typeInfo = typeInfo ?? reader.Serializer.GetTypeInfo<T>();
 
-            map = map ?? reader.GetMap(typeInfo);
+            map = map ?? reader.GetMap(typeInfo.Type);
 
             if (value == null || value.GetType() != typeInfo.Type)
             {
@@ -56,7 +56,7 @@ namespace DataWF.Common
 
             typeInfo = typeInfo ?? writer.Serializer.GetTypeInfo(value.GetType());
 
-            map = map ?? writer.GetMap(typeInfo);
+            map = map ?? writer.GetMap(typeInfo.Type);
             if (map == null)
             {
                 map = writer.WriteType(typeInfo);

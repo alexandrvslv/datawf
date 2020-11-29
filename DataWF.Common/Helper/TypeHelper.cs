@@ -368,8 +368,12 @@ namespace DataWF.Common
                     serializer = TypeSerializer.Instance;
                 else if (type == typeof(CultureInfo))
                     serializer = CultureInfoSerializer.Instance;
+                else if (type == typeof(Version))
+                    serializer = VersionSerializer.Instance;
                 else if (type == typeof(Guid))
                     serializer = GuidSerializer.Instance;
+                else if (IsBaseType(type, typeof(System.IO.Stream)))
+                    serializer = TempFileStreamSerializer.Instance;
                 else if (type.IsEnum)
                     serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
                 else if (IsInterface(type, typeof(IBinarySerializable)))

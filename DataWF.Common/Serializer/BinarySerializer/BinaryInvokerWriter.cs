@@ -123,11 +123,11 @@ namespace DataWF.Common
             Write(element, Serializer.GetTypeInfo(element.GetType()));
         }
 
-        public Dictionary<ushort, IPropertySerializeInfo> GetMap(TypeSerializeInfo typeInfo)
+        public Dictionary<ushort, IPropertySerializeInfo> GetMap(Type type)
         {
-            if (typeInfo == null || typeInfo.IsAttribute)
+            if (type == null)
                 return null;
-            return cacheSchema.TryGetValue(typeInfo.Type, out var map) ? map : null;
+            return cacheSchema.TryGetValue(type, out var map) ? map : null;
         }
 
         public void SetMap(Type type, Dictionary<ushort, IPropertySerializeInfo> map)
@@ -137,12 +137,12 @@ namespace DataWF.Common
 
         public void Write(object element, TypeSerializeInfo typeInfo)
         {
-            Write(element, typeInfo, GetMap(typeInfo));
+            Write(element, typeInfo, GetMap(typeInfo?.Type));
         }
 
         public void Write<T>(T element, TypeSerializeInfo typeInfo)
         {
-            Write(element, typeInfo, GetMap(typeInfo));
+            Write(element, typeInfo, GetMap(typeInfo?.Type));
         }
 
         public void Write(object element, TypeSerializeInfo typeInfo, Dictionary<ushort, IPropertySerializeInfo> map, bool forceWriteMap = false)
@@ -197,7 +197,6 @@ namespace DataWF.Common
         {
             WriteSchemaBegin();
             WriteSchemaName(Serializer.TypeShortName || forceShortName ? info.Type.Name : info.TypeName);
-
             if (!cacheSchema.TryGetValue(info.Type, out var map))
             {
                 map = new Dictionary<ushort, IPropertySerializeInfo>();

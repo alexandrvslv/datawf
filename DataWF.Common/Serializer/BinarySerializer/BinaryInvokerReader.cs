@@ -10,7 +10,7 @@ namespace DataWF.Common
 {
     public class BinaryInvokerReader : IDisposable, ISerializeReader
     {
-        private readonly Dictionary<TypeSerializeInfo, Dictionary<ushort, IPropertySerializeInfo>> cacheType = new Dictionary<TypeSerializeInfo, Dictionary<ushort, IPropertySerializeInfo>>();
+        private readonly Dictionary<Type, Dictionary<ushort, IPropertySerializeInfo>> cacheType = new Dictionary<Type, Dictionary<ushort, IPropertySerializeInfo>>();
         private readonly bool dispReader;
 
         public BinaryInvokerReader(Stream stream)
@@ -46,7 +46,7 @@ namespace DataWF.Common
             return current;
         }
 
-        public ushort ReadIndex()
+        public ushort ReadSchemaIndex()
         {
             return Reader.ReadUInt16();
         }
@@ -74,11 +74,11 @@ namespace DataWF.Common
             return StringSerializer.Instance.Read(Reader);
         }
 
-        public Dictionary<ushort, IPropertySerializeInfo> GetMap(TypeSerializeInfo typeInfo)
+        public Dictionary<ushort, IPropertySerializeInfo> GetMap(Type type)
         {
-            if (typeInfo == null)
+            if (type == null)
                 return null;
-            return cacheType.TryGetValue(typeInfo, out var map) ? map : null;
+            return cacheType.TryGetValue(type, out var map) ? map : null;
         }
 
         public Type ReadType(out TypeSerializeInfo typeInfo, out Dictionary<ushort, IPropertySerializeInfo> map)
@@ -97,7 +97,7 @@ namespace DataWF.Common
             }
             var type = TypeHelper.ParseType(name);
             typeInfo = Serializer.GetTypeInfo(type);
-            cacheType.TryGetValue(typeInfo, out map);
+            cacheType.TryGetValue(type, out map);
             if (map == null)
             {
                 map = new Dictionary<ushort, IPropertySerializeInfo>();
@@ -112,7 +112,7 @@ namespace DataWF.Common
                 }
                 while (ReadToken() == BinaryToken.SchemaEntry);
             }
-            cacheType[typeInfo] = map;
+            cacheType[type] = map;
             return type;
         }
 
@@ -128,12 +128,12 @@ namespace DataWF.Common
 
         public object Read(object element, TypeSerializeInfo typeInfo)
         {
-            return Read(element, typeInfo, GetMap(typeInfo));
+            return Read(element, typeInfo, GetMap(typeInfo?.Type));
         }
 
         public T Read<T>(T element, TypeSerializeInfo typeInfo)
         {
-            return Read(element, typeInfo, GetMap(typeInfo));
+            return Read(element, typeInfo, GetMap(typeInfo?.Type));
         }
 
         public object ReadObject(object element, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
@@ -318,7 +318,7 @@ namespace DataWF.Common
 
         public void ReadProperty(object element, Dictionary<ushort, IPropertySerializeInfo> map)
         {
-            var index = ReadIndex();
+            var index = ReadSchemaIndex();
             map.TryGetValue(index, out var property);
 
             if (property != null)
@@ -333,7 +333,7 @@ namespace DataWF.Common
 
         public void ReadProperty<T>(T element, Dictionary<ushort, IPropertySerializeInfo> map)
         {
-            var index = ReadIndex();
+            var index = ReadSchemaIndex();
             map.TryGetValue(index, out var property);
 
             if (property != null)

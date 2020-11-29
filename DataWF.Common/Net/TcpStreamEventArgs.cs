@@ -19,7 +19,7 @@ namespace DataWF.Common
         public TcpStreamEventArgs(TcpSocket client, TcpStreamMode mode)
         {
             Mode = mode;
-            Client = client;
+            TcpSocket = client;
             Buffer = new ArraySegment<byte>(new byte[BufferSize]);
         }
 
@@ -41,7 +41,7 @@ namespace DataWF.Common
                     if (Mode == TcpStreamMode.Receive)
                     {
                         WriterStream = pipeWriterStream;
-                        switch (Client.Server.Compression)
+                        switch (TcpSocket.Server.Compression)
                         {
                             case TcpServerCompressionMode.Brotli:
 #if NETSTANDARD2_0
@@ -61,7 +61,7 @@ namespace DataWF.Common
                     if (Mode == TcpStreamMode.Send)
                     {
                         ReaderStream = pipeReaderStream;
-                        switch (Client.Server.Compression)
+                        switch (TcpSocket.Server.Compression)
                         {
                             case TcpServerCompressionMode.Brotli:
 #if NETSTANDARD2_0
@@ -245,7 +245,7 @@ namespace DataWF.Common
                 throw new Exception("Reader Wrong State");
             if (Mode == TcpStreamMode.Receive)
             {
-                Task.Factory.StartNew(p => Client.Server.OnDataLoadStart((TcpStreamEventArgs)p), this, TaskCreationOptions.PreferFairness);
+                Task.Factory.StartNew(p => TcpSocket.Server.OnDataLoadStart((TcpStreamEventArgs)p), this, TaskCreationOptions.PreferFairness);
                 ReaderState = TcpStreamState.Started;
             }
         }

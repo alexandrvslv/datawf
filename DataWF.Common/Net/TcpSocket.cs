@@ -72,7 +72,7 @@ namespace DataWF.Common
             return new Pipe();//options
         }
 
-        public async Task SendElement<T>(T element)
+        public async Task<bool> SendElement<T>(T element)
         {
             var args = new TcpStreamEventArgs(this, TcpStreamMode.Send)
             {
@@ -84,7 +84,7 @@ namespace DataWF.Common
 
             _ = Task.Run(Serialize);
 
-            await Send(args);
+            return await Send(args);
 
             void Serialize()
             {
@@ -100,7 +100,7 @@ namespace DataWF.Common
             }
         }
 
-        public Task Send(byte[] data)
+        public Task<bool> Send(byte[] data)
         {
             using (var stream = new MemoryStream(data))
             {
@@ -108,7 +108,7 @@ namespace DataWF.Common
             }
         }
 
-        public Task Send(Stream stream)
+        public Task<bool> Send(Stream stream)
         {
             return Send(new TcpStreamEventArgs(this, TcpStreamMode.Send)
             {
@@ -116,7 +116,7 @@ namespace DataWF.Common
             });
         }
 
-        public async Task Send(TcpStreamEventArgs arg)
+        public async Task<bool> Send(TcpStreamEventArgs arg)
         {
             if (!(Socket?.Connected ?? false))
             {
@@ -164,12 +164,14 @@ namespace DataWF.Common
                 await arg.ReleasePipe();
 
                 _ = Server.OnDataSend(arg);
+                return true;
             }
             catch (Exception ex)
             {
                 arg.CompleteRead(ex);
                 await arg.ReleasePipe(ex);
                 Server.OnDataException(new TcpExceptionEventArgs(arg, ex));
+                return false;
             }
             finally
             {
@@ -380,7 +382,7 @@ namespace DataWF.Common
             }
             if (!Socket.Connected)
             {
-                var arg = new TcpSocketEventArgs { Client = this };
+                var arg = new TcpSocketEventArgs { TcpSocket = this };
                 try
                 {
                     Debug.WriteLine($"TcpClient {Point} Connect to {address}");
@@ -403,7 +405,7 @@ namespace DataWF.Common
         {
             if (Socket?.Connected ?? false)
             {
-                var arg = new TcpSocketEventArgs { Client = this };
+                var arg = new TcpSocketEventArgs { TcpSocket = this };
                 try
                 {
                     Debug.WriteLine($"TcpClient {Point} Disconnect");
@@ -444,7 +446,7 @@ namespace DataWF.Common
                     Socket = null;
                     loadEvent.Set();
                     sendEvent.Set();
-                    _ = Server.OnClientDisconect(new TcpSocketEventArgs { Client = this });
+                    _ = Server.OnClientDisconect(new TcpSocketEventArgs { TcpSocket = this });
                 }
 
                 loadEvent?.Dispose();

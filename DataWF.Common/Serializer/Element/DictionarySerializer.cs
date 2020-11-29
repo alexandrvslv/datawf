@@ -48,12 +48,12 @@ namespace DataWF.Common
                 {
                     reader.ReadToken();//ObjectBegin
                     reader.ReadToken();//ObjectEntry Key
-                    reader.ReadIndex();//ObjectEntryIndex 0
+                    reader.ReadSchemaIndex();//ObjectEntryIndex 0
 
                     var entryKey = reader.Read<K>(default(K), keyTypeInfo);
 
                     reader.ReadToken();//ObjectEntry Value
-                    reader.ReadIndex();//ObjectEntryIndex 1
+                    reader.ReadSchemaIndex();//ObjectEntryIndex 1
 
                     var entryValue = reader.Read<V>(default(V), valueTypeInfo);
 
@@ -208,12 +208,12 @@ namespace DataWF.Common
                 {
                     reader.ReadToken();//ObjectBegin
                     reader.ReadToken();//ObjectEntry Key
-                    reader.ReadIndex();//ObjectEntryIndex 0
+                    reader.ReadSchemaIndex();//ObjectEntryIndex 0
 
                     var entryKey = reader.Read(null);
 
                     reader.ReadToken();//ObjectEntry Value
-                    reader.ReadIndex();//ObjectEntryIndex 1
+                    reader.ReadSchemaIndex();//ObjectEntryIndex 1
 
                     var entryValue = reader.Read(null);
 
