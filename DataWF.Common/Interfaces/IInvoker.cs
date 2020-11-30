@@ -15,7 +15,7 @@ namespace DataWF.Common
         bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision);
     }
 
-    public interface IInvoker<T, V> : IInvoker
+    public interface IInvoker<in T, V> : IInvoker
     {
         V GetValue(T target);
         void SetValue(T target, V value);

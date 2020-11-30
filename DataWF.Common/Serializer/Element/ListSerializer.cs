@@ -24,7 +24,7 @@ namespace DataWF.Common
 
             if (token == BinaryToken.SchemaBegin)
             {
-                reader.ReadType(out typeInfo, out _);
+                map = reader.ReadType(out typeInfo);
                 token = reader.ReadToken();
             }
             typeInfo = typeInfo ?? reader.Serializer.GetTypeInfo<T>();
@@ -221,7 +221,7 @@ namespace DataWF.Common
 
             if (token == BinaryToken.SchemaBegin)
             {
-                reader.ReadType(out typeInfo, out _);
+                map = reader.ReadType(out typeInfo);
                 token = reader.ReadToken();
             }
             typeInfo = typeInfo ?? reader.Serializer.GetTypeInfo<T>();

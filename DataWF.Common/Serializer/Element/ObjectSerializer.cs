@@ -22,7 +22,7 @@ namespace DataWF.Common
             }
             if (token == BinaryToken.SchemaBegin)
             {
-                reader.ReadType(out typeInfo, out map);
+                map = reader.ReadType(out typeInfo);
                 token = reader.ReadToken();
             }
 

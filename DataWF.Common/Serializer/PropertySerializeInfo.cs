@@ -218,7 +218,7 @@ namespace DataWF.Common
             }
             else
             {
-                throw new Exception("Wrong Property Invoker");
+                PropertyToBinary(writer, (object)element);
             }
         }
 
@@ -260,7 +260,7 @@ namespace DataWF.Common
             }
             else
             {
-                throw new Exception("Wrong Property Invoker");
+                PropertyFromBinary(reader, (object)element, itemInfo);
             }
         }
 
@@ -290,7 +290,7 @@ namespace DataWF.Common
             }
             else
             {
-                throw new Exception("Wrong Property Invoker");
+                PropertyToString(writer, (object)element);
             }
         }
 
@@ -298,7 +298,8 @@ namespace DataWF.Common
         {
             if (PropertyInvoker is IValuedInvoker<T> valueInvoker)
             {
-                T value = TypedSerialazer.Read(reader, default(T), itemInfo);
+                T value = valueInvoker.GetValue(element);
+                value = TypedSerialazer.Read(reader, value, itemInfo);
                 valueInvoker.SetValue(element, value);
             }
             else
@@ -311,12 +312,13 @@ namespace DataWF.Common
         {
             if (PropertyInvoker is IInvoker<E, T> valueInvoker)
             {
-                T value = TypedSerialazer.Read(reader, default(T), itemInfo);
+                T value = valueInvoker.GetValue(element);
+                value = TypedSerialazer.Read(reader, value, itemInfo);
                 valueInvoker.SetValue(element, value);
             }
             else
             {
-                throw new Exception("Wrong Property Invoker");
+                PropertyFromString(reader, (object)element, itemInfo);
             }
         }
     }
@@ -360,7 +362,7 @@ namespace DataWF.Common
             }
             else
             {
-                throw new Exception("Wrong Property Invoker");
+                PropertyToString(writer, (object)element);
             }
         }
     }
@@ -401,7 +403,7 @@ namespace DataWF.Common
             }
             else
             {
-                throw new Exception("Wrong Property Invoker");
+                PropertyToBinary(writer, (object)element);
             }
         }
 
@@ -443,7 +445,7 @@ namespace DataWF.Common
             }
             else
             {
-                throw new Exception("Wrong Property Invoker");
+                PropertyFromBinary(reader, (object)element, itemInfo);
             }
         }
 
@@ -479,7 +481,7 @@ namespace DataWF.Common
             }
             else
             {
-                throw new Exception("Wrong Property Invoker");
+                PropertyToString(writer, (object)element);
             }
         }
 
@@ -505,7 +507,7 @@ namespace DataWF.Common
             }
             else
             {
-                throw new Exception("Wrong Property Invoker");
+                PropertyFromString(reader, (object)element, itemInfo);
             }
         }
 

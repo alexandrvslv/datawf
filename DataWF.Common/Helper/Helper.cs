@@ -689,9 +689,37 @@ namespace DataWF.Common
             }
         }
 
-        public static async ValueTask<ArraySegment<byte>> GetBytesAsync(Stream stream, int bufferSize = 1024 * 80)
+        public static async ValueTask<byte[]> GetBufferedBytesAsync(Stream stream, int bufferSize = 1024 * 8)
         {
-            if (stream is MemoryStream memStream)//Double buffer
+            if (stream is MemoryStream memStream)
+                return memStream.ToArray();
+            else
+            {
+                using (var outStream = new MemoryStream())
+                {
+                    await stream.CopyToAsync(outStream, bufferSize);
+                    return outStream.ToArray();//Double buffer
+                }
+            }
+        }
+
+        public static byte[] GetBufferedBytes(Stream stream, int bufferSize = 1024 * 8)
+        {
+            if (stream is MemoryStream memStream)
+                return memStream.ToArray();
+            else
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    stream.CopyTo(memoryStream, bufferSize);
+                    return memoryStream.ToArray();//Double buffer
+                }
+            }
+        }
+
+        public static async ValueTask<ArraySegment<byte>> GetBytesAsync(Stream stream, int bufferSize = 1024 * 8)
+        {
+            if (stream is MemoryStream memStream)
                 return memStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(memStream.ToArray());
             else
             {
@@ -703,9 +731,9 @@ namespace DataWF.Common
             }
         }
 
-        public static ArraySegment<byte> GetBytes(Stream stream, int bufferSize = 1024 * 80)
+        public static ArraySegment<byte> GetBytes(Stream stream, int bufferSize = 1024 * 8)
         {
-            if (stream is MemoryStream memStream)//Double buffer
+            if (stream is MemoryStream memStream)
                 return memStream.TryGetBuffer(out var result) ? result : new ArraySegment<byte>(memStream.ToArray());
             else
             {

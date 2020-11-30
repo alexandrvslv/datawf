@@ -11,8 +11,9 @@ namespace DataWF.Common
     {
         public static readonly EnumSerializer<T> Instance = new EnumSerializer<T>();
         private readonly BinaryToken binaryToken;
-        public EnumSerializer() : base()
+        public EnumSerializer() : base(false)
         {
+            size = size = Marshal.SizeOf(Enum.GetUnderlyingType(typeof(T)));
             switch (size)
             {
                 case 1:

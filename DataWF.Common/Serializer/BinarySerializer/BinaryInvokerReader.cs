@@ -81,7 +81,14 @@ namespace DataWF.Common
             return cacheType.TryGetValue(type, out var map) ? map : null;
         }
 
-        public Type ReadType(out TypeSerializeInfo typeInfo, out Dictionary<ushort, IPropertySerializeInfo> map)
+        public void SetMap(Type type, Dictionary<ushort, IPropertySerializeInfo> map)
+        {
+            if (type == null)
+                return;
+            cacheType[type] = map;
+        }
+
+        public Dictionary<ushort, IPropertySerializeInfo> ReadType(out TypeSerializeInfo typeInfo)
         {
             var token = ReadToken();
             if (token == BinaryToken.SchemaBegin)
@@ -97,7 +104,7 @@ namespace DataWF.Common
             }
             var type = TypeHelper.ParseType(name);
             typeInfo = Serializer.GetTypeInfo(type);
-            cacheType.TryGetValue(type, out map);
+            var map = GetMap(type);
             if (map == null)
             {
                 map = new Dictionary<ushort, IPropertySerializeInfo>();
@@ -111,9 +118,9 @@ namespace DataWF.Common
                     map[index] = typeInfo.GetProperty(propertyName);
                 }
                 while (ReadToken() == BinaryToken.SchemaEntry);
+                SetMap(type, map);
             }
-            cacheType[type] = map;
-            return type;
+            return map;
         }
 
         public object Read(object element)
@@ -149,7 +156,7 @@ namespace DataWF.Common
                     token = ReadToken();
                 if (token == BinaryToken.SchemaBegin)
                 {
-                    ReadType(out info, out map);
+                    map = ReadType(out info);
                     token = ReadToken();
                 }
 
@@ -182,7 +189,7 @@ namespace DataWF.Common
                     token = ReadToken();
                 if (token == BinaryToken.SchemaBegin)
                 {
-                    ReadType(out info, out map);
+                    map = ReadType(out info);
                     token = ReadToken();
                 }
 
@@ -210,7 +217,7 @@ namespace DataWF.Common
 
             if (token == BinaryToken.SchemaBegin)
             {
-                ReadType(out info, out map);
+                map = ReadType(out info);
                 token = ReadToken();
             }
             int length = 1;

@@ -4,6 +4,9 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Xml.Serialization;
 
 [assembly: Invoker(typeof(SMBase), nameof(SMBase.Type), typeof(SMBase.TypeInvoker<>))]
 [assembly: Invoker(typeof(SMBase), nameof(SMBase.Id), typeof(SMBase.IdInvoker<>))]
@@ -31,16 +34,24 @@ namespace DataWF.Common
     public enum SMResponceType : byte
     {
         Confirm,
+        Decline,
         Data
     }
 
     public abstract class SMBase
     {
+        private static long idSequence;
+
+        public static long NewId()
+        {
+            return Interlocked.Increment(ref idSequence);
+        }
+
         [Display(Order = -3)]
         public SMType Type { get; set; }
 
         [Display(Order = -2)]
-        public Guid Id { get; set; }
+        public long Id { get; set; }
 
         [Display(Order = -1)]
         [ElementSerializer(typeof(IPEndPointSerializer))]
@@ -65,15 +76,15 @@ namespace DataWF.Common
             public override void SetValue(T target, SMType value) => target.Type = value;
         }
 
-        public class IdInvoker<T> : Invoker<T, Guid> where T : SMBase
+        public class IdInvoker<T> : Invoker<T, long> where T : SMBase
         {
             public override string Name => nameof(Id);
 
             public override bool CanWrite => true;
 
-            public override Guid GetValue(T target) => target.Id;
+            public override long GetValue(T target) => target.Id;
 
-            public override void SetValue(T target, Guid value) => target.Id = value;
+            public override void SetValue(T target, long value) => target.Id = value;
         }
 
         public class EndPointInvoker<T> : Invoker<T, IPEndPoint> where T : SMBase
@@ -114,6 +125,9 @@ namespace DataWF.Common
             Type = SMType.Request;
         }
 
+        [XmlIgnore, JsonIgnore]
+        public SMResponce Responce { get; set; }
+
         [Display(Order = 1)]
         public SMRequestType RequestType { get; set; }
 
@@ -140,7 +154,7 @@ namespace DataWF.Common
         public SMResponceType ResponceType { get; set; }
 
         [Display(Order = 2)]
-        public Guid? RequestId { get; set; }
+        public long? RequestId { get; set; }
 
         public class ResponceTypeInvoker<T> : Invoker<T, SMResponceType> where T : SMResponce
         {
@@ -153,15 +167,15 @@ namespace DataWF.Common
             public override void SetValue(T target, SMResponceType value) => target.ResponceType = value;
         }
 
-        public class RequestIdInvoker<T> : Invoker<T, Guid?> where T : SMResponce
+        public class RequestIdInvoker<T> : Invoker<T, long?> where T : SMResponce
         {
             public override string Name => nameof(RequestId);
 
             public override bool CanWrite => true;
 
-            public override Guid? GetValue(T target) => target.RequestId;
+            public override long? GetValue(T target) => target.RequestId;
 
-            public override void SetValue(T target, Guid? value) => target.RequestId = value;
+            public override void SetValue(T target, long? value) => target.RequestId = value;
         }
     }
 }
