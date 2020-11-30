@@ -23,27 +23,22 @@ using System;
 
 namespace DataWF.Data
 {
-    public class DBColumnString : DBColumn<string>
+    public class DBColumnTimeSpan : DBColumn<TimeSpan>
     {
-        public override bool Equal(string oldValue, string newValue)
-        {
-            return string.Equals(oldValue, newValue, StringComparison.Ordinal);
-        }
-
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
             if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
             {
                 return;
             }
-            var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
+            var value = transaction.Reader.IsDBNull(i) ? default(TimeSpan) : transaction.GetTimeSpan(i);
             row.SetValue(value, this, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
-            var value = transaction.Reader.GetString(i);
+            var value = transaction.GetTimeSpan(i);
             return Table.GetPullIndex(this)?.SelectOne<F>(value);
         }
-    }    
+    }
 }

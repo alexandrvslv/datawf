@@ -21,7 +21,7 @@ namespace DataWF.Common
         public Locale()
         {
             Indexes.Add(LocaleCategory.NameInvoker.Instance.Name,
-                new ListIndex<LocaleCategory, string>(LocaleCategory.NameInvoker.Instance, ListIndexFabric.GetNullKey<string>(), StringComparer.Ordinal));
+                new ListIndex<LocaleCategory, string>(LocaleCategory.NameInvoker.Instance, ListIndexFactory.GetNullKey<string>(), StringComparer.Ordinal));
             Cultures.Add(CultureInfo.GetCultureInfo("ru-RU"));
             Cultures.Add(CultureInfo.GetCultureInfo("en-US"));
             //try { Cultures.Add(CultureInfo.GetCultureInfo("kk-KZ")); }

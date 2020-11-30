@@ -832,7 +832,7 @@ namespace DataWF.Data
 
             if (transaction.ReaderPrimaryKey >= 0)
             {
-                item = PrimaryKey.SelectOneFromReader<T>(transaction, transaction.ReaderPrimaryKey);
+                item = PrimaryKey.ReadAndSelect<T>(transaction, transaction.ReaderPrimaryKey);
             }
             if (transaction.ReaderStampKey >= 0 && !transaction.Reader.IsDBNull(transaction.ReaderStampKey))
             {
@@ -870,7 +870,7 @@ namespace DataWF.Data
             for (int i = 0; i < transaction.ReaderColumns.Count; i++)
             {
                 var column = transaction.ReaderColumns[i];
-                column.LoadFromReader(transaction, item, i);
+                column.Read(transaction, item, i);
             }
             return item;
         }

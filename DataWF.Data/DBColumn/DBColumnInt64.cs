@@ -24,7 +24,7 @@ namespace DataWF.Data
 {
     public class DBColumnInt64 : DBColumn<long>
     {
-        public override void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DBTransaction transaction, DBItem row, int i)
         {
             if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
             {
@@ -34,7 +34,7 @@ namespace DataWF.Data
             row.SetValue(value, this, DBSetValueMode.Loading);
         }
 
-        public override F SelectOneFromReader<F>(DBTransaction transaction, int i)
+        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.Reader.GetInt64(i);
             return Table.GetPullIndex(this)?.SelectOne<F>(value);

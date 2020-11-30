@@ -65,7 +65,7 @@ namespace DataWF.Common
 
         public IListIndex CreateIndex(bool concurrent)
         {
-            return ListIndexFabric.Create<object[], object>(this, concurrent);
+            return ListIndexFactory.Create<object[], object>(this, concurrent);
         }
 
         public IQueryParameter CreateParameter()

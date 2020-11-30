@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Common
 {
-    public static class ListIndexFabric
+    public static class ListIndexFactory
     {
         private static readonly Dictionary<Type, object> nullKeys = new Dictionary<Type, object>
         {
@@ -21,7 +21,9 @@ namespace DataWF.Common
             { typeof(byte), byte.MaxValue },
             { typeof(decimal), decimal.MaxValue },
             { typeof(double), double.MaxValue },
-            { typeof(float), float.MaxValue }
+            { typeof(float), float.MaxValue },
+            { typeof(DateTime), DateTime.MaxValue },
+            { typeof(TimeSpan), TimeSpan.MaxValue }
         };
 
         public static N? GetNullableKey<N>() where N : struct

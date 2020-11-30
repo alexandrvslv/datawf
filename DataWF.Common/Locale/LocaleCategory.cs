@@ -13,7 +13,7 @@ namespace DataWF.Common
         public LocaleCategory()
         {
             Indexes.Add(LocaleItem.NameInvoker.Instance.Name,
-                new ListIndex<LocaleItem, string>(LocaleItem.NameInvoker.Instance, ListIndexFabric.GetNullKey<string>(), StringComparer.Ordinal));
+                new ListIndex<LocaleItem, string>(LocaleItem.NameInvoker.Instance, ListIndexFactory.GetNullKey<string>(), StringComparer.Ordinal));
         }
 
         [DefaultValue("")]

@@ -19,31 +19,32 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using DataWF.Data;
-using System;
 
 namespace DataWF.Data
 {
-    public class DBColumnString : DBColumn<string>
+    public class DBColumnBool : DBColumn<bool>
     {
-        public override bool Equal(string oldValue, string newValue)
-        {
-            return string.Equals(oldValue, newValue, StringComparison.Ordinal);
-        }
-
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
             if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
             {
                 return;
             }
-            var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
-            row.SetValue(value, this, DBSetValueMode.Loading);
+            if (!transaction.Reader.IsDBNull(i))
+            {
+                var value = transaction.Reader.GetBoolean(i);
+                row.SetValue(value, this, DBSetValueMode.Loading);
+            }
+            else if (row.Attached)
+            {
+                row.SetValue(default(bool), this, DBSetValueMode.Loading);
+            }
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
-            var value = transaction.Reader.GetString(i);
+            var value = transaction.Reader.GetBoolean(i);
             return Table.GetPullIndex(this)?.SelectOne<F>(value);
         }
-    }    
+    }
 }

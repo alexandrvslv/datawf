@@ -554,7 +554,7 @@ namespace DataWF.Data
             return DbConnection.System.GetUInt(Reader, index);
         }
 
-        public TimeSpan? ReadTimeSpan(int index)
+        public TimeSpan GetTimeSpan(int index)
         {
             return DbConnection.System.GetTimeSpan(Reader, index);
         }

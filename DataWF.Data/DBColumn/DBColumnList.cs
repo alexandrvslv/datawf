@@ -71,8 +71,10 @@ namespace DataWF.Data
             {
                 return;
             }
-            if (Contains(item.Name))
+            var exist = this[item.Name];
+            if (exist!=null)
             {
+                if()
                 throw new InvalidOperationException($"Columns name duplication {item.Name}");
             }
             if (item.IsPrimaryKey && index > 1)
@@ -129,7 +131,7 @@ namespace DataWF.Data
         {
             if (Contains(name))
                 return this[name];
-            var column = DBColumnFabric.Create(t, name, size: size, table: Table);
+            var column = DBColumnFactory.Create(t, name, size: size, table: Table);
             Add((T)column);
             return column;
         }

@@ -121,36 +121,29 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public string PrimaryCode
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
         [Browsable(false), DefaultValue(0)]
         [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]// | DBColumnKeys.Indexing
-        public virtual int? ItemType
+        public virtual int ItemType
         {
-            get => GetValue<int?>(Table.ItemTypeKey);
+            get => GetValue<int>(Table.ItemTypeKey);
             set => SetValue(value, Table.ItemTypeKey);
         }
 
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        DBStatus IStatusable.Status
-        {
-            get => (DBStatus)Status;
-            set => Status = value;
-        }
-
         [DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.Indexing, Order = 1000)]
-        public DBStatus? Status
+        public DBStatus Status
         {
-            get => GetValue<DBStatus?>(Table.StatusKey);
+            get => GetValue(Table.StatusKey);
             set => SetValue(value, Table.StatusKey);
         }
 
         [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 1001)]
         public virtual DateTime? DateCreate
         {
-            get => GetValue<DateTime?>(Table.DateKey);
+            get => GetValue(Table.DateKey);
             set => SetValue(value, Table.DateKey);
         }
 
@@ -158,7 +151,7 @@ namespace DataWF.Data
         [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 1002)]
         public DateTime? Stamp
         {
-            get => GetValue<DateTime?>(Table.StampKey);
+            get => GetValue(Table.StampKey);
             set => SetValue(value, Table.StampKey);
         }
 
@@ -166,7 +159,7 @@ namespace DataWF.Data
         [Column("date_replicate", GroupName = "system", Keys = DBColumnKeys.ReplicateStamp | DBColumnKeys.NoLog | DBColumnKeys.NoReplicate | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 1003)]
         public DateTime? ReplicateStamp
         {
-            get => GetValue<DateTime?>(Table.ReplicateStampKey);
+            get => GetValue(Table.ReplicateStampKey);
             set => SetValue(value, Table.ReplicateStampKey);
         }
 
@@ -371,6 +364,11 @@ namespace DataWF.Data
                 return default(T);
         }
 
+        public T GetValue<T>(DBColumn<T> column)
+        {
+            return column.GetValue(this);
+        }
+
         public T GetProperty<T>([CallerMemberName] string property = null)
         {
             return GetValue<T>(Table.Columns.GetByProperty(property));
@@ -424,10 +422,15 @@ namespace DataWF.Data
         }
         public void SetProperty<T>(T value, [CallerMemberName] string property = null)
         {
-            SetValue<T>(value, Table.Columns.GetByProperty(property));
+            SetValue<T>(value, (DBColumn<T>)Table.Columns.GetByProperty(property));
         }
 
         public void SetValue<T>(T value, DBColumn column)
+        {
+            SetValue<T>(value, column, DBSetValueMode.Default);
+        }
+
+        public void SetValue<T>(T value, DBColumn<T> column)
         {
             SetValue<T>(value, column, DBSetValueMode.Default);
         }
@@ -441,36 +444,41 @@ namespace DataWF.Data
         {
             if (column is DBColumn<T> typedColumn)
             {
-                if (mode == DBSetValueMode.Loading && !Attached)
-                {
-                    typedColumn.SetValue(this, value);
-                    return;
-                }
-
-                var check = mode == DBSetValueMode.Default && typedColumn.ColumnType == DBColumnTypes.Default;
-                var oldValue = typedColumn.GetValue(this);
-
-                if (typedColumn.Equal(oldValue, value))
-                {
-                    return;
-                }
-                if (check)
-                {
-                    RefreshOld(typedColumn, value, oldValue);
-                }
-
-                OnPropertyChanging<T>(typedColumn.Property ?? typedColumn.Name, typedColumn, oldValue);
-
-                typedColumn.SetValue(this, value);
-
-                OnPropertyChanged<T>(typedColumn.Property ?? typedColumn.Name, typedColumn, value);
-
-                if (check)
-                {
-                    CheckState(null);
-                }
+                SetValue(value, typedColumn, mode);
             }
             else throw new Exception($"Wrong Type {typeof(T)} for column {column}");
+        }
+
+        public void SetValue<T>(T value, DBColumn<T> column, DBSetValueMode mode)
+        {
+            if (mode == DBSetValueMode.Loading && !Attached)
+            {
+                column.SetValue(this, value);
+                return;
+            }
+
+            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
+            var oldValue = column.GetValue(this);
+
+            if (column.Equal(oldValue, value))
+            {
+                return;
+            }
+            if (check)
+            {
+                RefreshOld(column, value, oldValue);
+            }
+
+            OnPropertyChanging<T>(column.Property ?? column.Name, column, oldValue);
+
+            column.SetValue(this, value);
+
+            OnPropertyChanged<T>(column.Property ?? column.Name, column, value);
+
+            if (check)
+            {
+                CheckState(null);
+            }
         }
 
         public void SetValue(object value, DBColumn column, DBSetValueMode mode)
@@ -995,7 +1003,7 @@ namespace DataWF.Data
 
         public virtual object Clone()
         {
-            var item = Table.NewItem(DBUpdateState.Insert, false, ItemType ?? 0);
+            var item = Table.NewItem(DBUpdateState.Insert, false, ItemType);
             CopyTo(item);
             if (Table.PrimaryKey != null)
             {
@@ -1766,10 +1774,10 @@ namespace DataWF.Data
             return SetBLOB(value, Table.FileBLOBKey, transaction);
         }
 
-        public async Task<long> SetBLOB(Stream value, DBColumn column, DBTransaction transaction)
+        public async Task<long> SetBLOB(Stream value, DBColumn<long?> column, DBTransaction transaction)
         {
             var id = await Table.System.SetBLOB(value, transaction);
-            SetValueNullable<long>(id, column);
+            SetValue<long?>(id, column);
             await Save(transaction);
             await OnSetStream(column, transaction);
             return id;
@@ -1780,10 +1788,10 @@ namespace DataWF.Data
             return GetBLOB(Table.FileBLOBKey, transaction, bufferSize);
         }
 
-        public virtual Task<Stream> GetBLOB(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public virtual Task<Stream> GetBLOB(DBColumn<long?> column, DBTransaction transaction, int bufferSize = 81920)
         {
             OnGetStream(column, transaction);
-            var oid = GetValueNullable<long>(column);
+            var oid = GetValue<long?>(column);
             if (oid == null)
                 return null;
             return Table.System.GetBLOB(oid.Value, transaction, bufferSize);

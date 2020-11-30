@@ -16,7 +16,7 @@ namespace DataWF.Common
 
         public NamedList(int capacity) : this(capacity, new ListIndex<T, string>(
                 NamedNameInvoker<T>.Instance,
-                ListIndexFabric.GetNullKey<string>(),
+                ListIndexFactory.GetNullKey<string>(),
                 StringComparer.Ordinal,
                 false))
         {

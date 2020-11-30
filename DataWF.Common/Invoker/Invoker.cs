@@ -57,12 +57,12 @@ namespace DataWF.Common
 
         public virtual IListIndex CreateIndex(bool concurrent)
         {
-            return ListIndexFabric.Create<T, V>(this, concurrent);
+            return ListIndexFactory.Create<T, V>(this, concurrent);
         }
 
         public virtual IListIndex CreateIndex<TT>(bool concurrent)
         {
-            return ListIndexFabric.Create<TT, V>(this, concurrent);
+            return ListIndexFactory.Create<TT, V>(this, concurrent);
         }
 
         public virtual IQueryParameter CreateParameter(Type type)

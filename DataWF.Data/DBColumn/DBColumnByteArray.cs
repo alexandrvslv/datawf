@@ -29,7 +29,7 @@ namespace DataWF.Data
             return ByteArrayComparer.Default.Equals(oldValue, newValue);
         }
 
-        public override void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DBTransaction transaction, DBItem row, int i)
         {
             if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
             {

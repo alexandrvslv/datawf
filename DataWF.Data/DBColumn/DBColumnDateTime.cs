@@ -23,27 +23,31 @@ using System;
 
 namespace DataWF.Data
 {
-    public class DBColumnString : DBColumn<string>
+    public class DBColumnDateTime : DBColumn<DateTime>
     {
-        public override bool Equal(string oldValue, string newValue)
-        {
-            return string.Equals(oldValue, newValue, StringComparison.Ordinal);
-        }
-
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
             if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
             {
                 return;
             }
-            var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
+            var isNull = transaction.Reader.IsDBNull(i);
+            var value = isNull ? default(DateTime) : transaction.Reader.GetDateTime(i);
+            if (!isNull && (Keys & DBColumnKeys.UtcDate) != 0)
+            {
+                value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
+            }
             row.SetValue(value, this, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
-            var value = transaction.Reader.GetString(i);
+            var value = transaction.Reader.GetDateTime(i);
+            if ((Keys & DBColumnKeys.UtcDate) != 0)
+            {
+                value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
+            }
             return Table.GetPullIndex(this)?.SelectOne<F>(value);
         }
-    }    
+    }
 }

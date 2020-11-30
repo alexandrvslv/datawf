@@ -19,22 +19,23 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using DataWF.Data;
+using System.Runtime.CompilerServices;
 
 namespace DataWF.Data
 {
     public class DBColumnInt32 : DBColumn<int>
     {
-        public override void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DBTransaction transaction, DBItem row, int i)
         {
             if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
             {
                 return;
             }
-            var value = transaction.Reader.IsDBNull(i) ? 0 : transaction.Reader.GetInt32(i);
+            var value = transaction.Reader.IsDBNull(i) ? default(int) : transaction.Reader.GetInt32(i);
             row.SetValue(value, this, DBSetValueMode.Loading);
         }
 
-        public override F SelectOneFromReader<F>(DBTransaction transaction, int i)
+        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.Reader.GetInt32(i);
             return Table.GetPullIndex(this)?.SelectOne<F>(value);

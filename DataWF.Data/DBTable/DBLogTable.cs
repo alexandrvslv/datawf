@@ -106,7 +106,7 @@ namespace DataWF.Data
                         var logColumn = GetLogColumn(column);
                         if (logColumn == null)
                         {
-                            logColumn = DBColumnFabric.Create(column);
+                            logColumn = DBColumnFactory.Create(column);
                             Columns.Add(logColumn);
                         }
                         else

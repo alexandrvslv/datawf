@@ -24,17 +24,24 @@ namespace DataWF.Data
 {
     public class DBColumnDouble : DBColumn<double>
     {
-        public override void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DBTransaction transaction, DBItem row, int i)
         {
             if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
             {
                 return;
             }
-            var value = transaction.Reader.IsDBNull(i) ? 0D : transaction.Reader.GetDouble(i);
-            row.SetValue(value, this, DBSetValueMode.Loading);
+            if (!transaction.Reader.IsDBNull(i))
+            {
+                var value = transaction.Reader.GetDouble(i);
+                row.SetValue(value, this, DBSetValueMode.Loading);
+            }
+            else if (row.Attached)
+            {
+                row.SetValue(default(double), this, DBSetValueMode.Loading);
+            }
         }
 
-        public override F SelectOneFromReader<F>(DBTransaction transaction, int i)
+        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.Reader.GetDouble(i);
             return Table.GetPullIndex(this)?.SelectOne<F>(value);

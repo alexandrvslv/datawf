@@ -61,7 +61,6 @@ namespace DataWF.Data
     public abstract class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker, IPropertySerializeInfo
     {
         public static readonly DBColumn EmptyKey = new DBColumn<object>();
-
         public static string GetLogName(DBColumn column)
         {
             return column.Name + "_log";
@@ -366,7 +365,7 @@ namespace DataWF.Data
 
                     OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.Default);
                 }
-                CheckIndex();
+                Table.CheckPullIndex(this);
             }
         }
 
@@ -475,6 +474,7 @@ namespace DataWF.Data
                     return;
                 type = value;
                 if (dataType == null)
+                {
                     switch (type)
                     {
                         case DBDataType.ByteArray:
@@ -496,6 +496,7 @@ namespace DataWF.Data
                         case DBDataType.ShortInt: dataType = typeof(short?); break;
                         default: dataType = typeof(object); break;
                     }
+                }
                 CheckPull();
                 OnPropertyChanged(nameof(DBDataType), DDLType.Alter);
             }
@@ -516,7 +517,9 @@ namespace DataWF.Data
                 if (value == null)
                 {
                     DBDataType = DBDataType.String;
+                    return;
                 }
+                value = TypeHelper.CheckNullable(value);
                 if (value == typeof(byte[]))
                 {
                     if (size <= 0 || size > 4000)
@@ -524,7 +527,8 @@ namespace DataWF.Data
                     else
                         DBDataType = DBDataType.ByteArray;
                 }
-                else if (value == typeof(byte))
+                else if (value == typeof(byte)
+                    || value == typeof(sbyte))
                     DBDataType = DBDataType.TinyInt;
                 else if (value == typeof(bool))
                     DBDataType = DBDataType.Bool;
@@ -535,15 +539,14 @@ namespace DataWF.Data
                     else
                         DBDataType = DBDataType.String;
                 }
-                else if (value == typeof(DateTime))
-                    DBDataType = DBDataType.DateTime;
                 else if (value == typeof(decimal))
                     DBDataType = DBDataType.Decimal;
                 else if (value == typeof(double))
                     DBDataType = DBDataType.Double;
                 else if (value == typeof(float))
                     DBDataType = DBDataType.Float;
-                else if (value == typeof(long))
+                else if (value == typeof(long)
+                    || value == typeof(ulong))
                     DBDataType = DBDataType.BigInt;
                 else if (value == typeof(int))
                     DBDataType = DBDataType.Int;
@@ -552,16 +555,31 @@ namespace DataWF.Data
                     if (DBDataType != DBDataType.UInt)
                         DBDataType = DBDataType.Int;
                 }
-                else if (value == typeof(short))
+                else if (value == typeof(short)
+                    || value == typeof(ushort))
                     DBDataType = DBDataType.ShortInt;
-                else if (value == typeof(sbyte))
-                    DBDataType = DBDataType.TinyInt;
                 else if (value == typeof(string))
                     DBDataType = DBDataType.String;
+                else if (value == typeof(DateTime))
+                    DBDataType = DBDataType.DateTime;
                 else if (value == typeof(TimeSpan))
                     DBDataType = DBDataType.TimeSpan;
                 else if (value.IsEnum)
-                    DBDataType = DBDataType.Int;
+                {
+                    var underlineType = Enum.GetUnderlyingType(value);
+                    if (underlineType == typeof(int)
+                        || underlineType == typeof(uint))
+                        DBDataType = DBDataType.Int;
+                    else if (underlineType == typeof(byte)
+                        || underlineType == typeof(sbyte))
+                        DBDataType = DBDataType.TinyInt;
+                    else if (underlineType == typeof(short)
+                        || underlineType == typeof(ushort))
+                        DBDataType = DBDataType.ShortInt;
+                    else if (underlineType == typeof(long)
+                        || underlineType == typeof(ulong))
+                        DBDataType = DBDataType.BigInt;
+                }
                 else if (TypeHelper.IsInterface(value, typeof(IBinarySerializable)))
                     DBDataType = DBDataType.ByteSerializable;
                 else
@@ -721,180 +739,9 @@ namespace DataWF.Data
             return (IComparer<T>)CreateComparer(typeof(T), direction);
         }
 
-        public abstract void LoadFromReader(DBTransaction transaction, DBItem row, int i)
-        {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
-            var isNull = transaction.Reader.IsDBNull(i);
-            switch (DBDataType)
-            {
-                case DBDataType.String:
-                case DBDataType.Clob:
-                    var stringValue = isNull ? null : transaction.Reader.GetString(i);
-                    row.SetValueClass<string>(stringValue, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.Int:
-                    var intValue = isNull ? (int?)null : transaction.Reader.GetInt32(i);
-                    if (DataType == typeof(int))
-                    {
-                        row.SetValueNullable<int>(intValue, this, DBSetValueMode.Loading);
-                    }
-                    else if (DataType == typeof(uint))
-                    {
-                        row.SetValueNullable<uint>(isNull ? (uint?)null : (uint?)intValue, this, DBSetValueMode.Loading);
-                    }
-                    else
-                    {
-                        row.SetValue((object)intValue, this, DBSetValueMode.Loading);
-                    }
-                    break;
-                case DBDataType.BigInt:
-                    var longValue = isNull ? (long?)null : transaction.Reader.GetInt64(i);
-                    row.SetValue<long>(longValue, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.ShortInt:
-                    var shortValue = isNull ? (short?)null : transaction.Reader.GetInt16(i);
-                    row.SetValue<short>(shortValue, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.Date:
-                case DBDataType.DateTime:
-                case DBDataType.TimeStamp:
-                    var dateValue = isNull ? (DateTime?)null : (DateTime?)transaction.Reader.GetDateTime(i);
-                    if (!isNull && (Keys & (DBColumnKeys.UtcDate)) != 0)
-                    {
-                        dateValue = DateTime.SpecifyKind(dateValue.Value, DateTimeKind.Utc);
-                    }
-                    row.SetValue<DateTime>(dateValue, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.Bool:
-                    var boolValue = isNull ? (bool?)null : transaction.Reader.GetBoolean(i);
-                    row.SetValueNullable<bool>(boolValue, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.Blob:
-                case DBDataType.ByteArray:
-                    var arrayValue = isNull ? null : (byte[])transaction.Reader.GetValue(i);
-                    row.SetValue<byte[]>(arrayValue, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.ByteSerializable:
-                    var byteArray = isNull ? null : (byte[])transaction.Reader.GetValue(i);
-                    var serializable = isNull ? null : (IBinarySerializable)Activator.CreateInstance(DataType);
-                    serializable?.Deserialize(byteArray);
-                    row.SetValue((object)serializable, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.UInt:
-                    var unitValue = isNull ? (uint?)null : transaction.ReadUInt(i);
-                    row.SetValueNullable<uint>(unitValue, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.Decimal:
-                    var decimalValue = isNull ? (decimal?)null : transaction.Reader.GetDecimal(i);
-                    row.SetValueNullable<decimal>(decimalValue, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.Double:
-                    var doubleValue = isNull ? (double?)null : transaction.Reader.GetDouble(i);
-                    row.SetValueNullable<double>(doubleValue, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.Float:
-                    var floatValue = isNull ? (float?)null : transaction.Reader.GetFloat(i);
-                    row.SetValueNullable<float>(floatValue, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.TimeSpan:
-                    var spanValue = isNull ? (TimeSpan?)null : transaction.ReadTimeSpan(i);
-                    row.SetValueNullable<TimeSpan>(spanValue, this, DBSetValueMode.Loading);
-                    break;
-                case DBDataType.TinyInt:
-                    var byteValue = isNull ? (byte?)null : transaction.Reader.GetByte(i);
-                    if (DataType == typeof(sbyte))
-                    {
-                        row.SetValueNullable<sbyte>(isNull ? (sbyte?)null : (sbyte?)byteValue, this, DBSetValueMode.Loading);
-                    }
-                    else
-                    {
-                        row.SetValueNullable<byte>(byteValue, this, DBSetValueMode.Loading);
-                    }
-                    break;
-                default:
-                    var value = isNull ? null : transaction.Reader.GetValue(i);
-                    row.SetValue(value, this, DBSetValueMode.Loading);
-                    break;
-            }
-            //var value = transaction.DbConnection.System.ReadValue(this, transaction.Reader.GetValue(i));
-            //row.SetValue(value, this, false);
-        }
+        public abstract void Read(DBTransaction transaction, DBItem row, int i);
 
-        public abstract F SelectOneFromReader<F>(DBTransaction transaction, int i) where F : DBItem
-        {
-            switch (DBDataType)
-            {
-                case DBDataType.String:
-                case DBDataType.Clob:
-                    var stringValue = transaction.Reader.GetString(i);
-                    return Index.SelectOne<F, string>(stringValue);
-                case DBDataType.Int:
-                    var intValue = transaction.Reader.GetInt32(i);
-                    if (DataType == typeof(int))
-                    {
-                        return Index.SelectOne<F, int?>(intValue);
-                    }
-                    else if (DataType == typeof(uint))
-                    {
-                        return Index.SelectOne<F, uint?>((uint)intValue);
-                    }
-                    break;
-                case DBDataType.BigInt:
-                    var longValue = transaction.Reader.GetInt64(i);
-                    return Index.SelectOne<F, long?>(longValue);
-                case DBDataType.ShortInt:
-                    var shortValue = transaction.Reader.GetInt16(i);
-                    return Index.SelectOne<F, short?>(shortValue);
-                case DBDataType.Date:
-                case DBDataType.DateTime:
-                case DBDataType.TimeStamp:
-                    var dateValue = transaction.Reader.GetDateTime(i);
-                    if ((Keys & (DBColumnKeys.UtcDate)) != 0)
-                    {
-                        dateValue = DateTime.SpecifyKind(dateValue, DateTimeKind.Utc);
-                    }
-                    return Index.SelectOne<F, DateTime?>(dateValue);
-                case DBDataType.Bool:
-                    var boolValue = transaction.Reader.GetBoolean(i);
-                    return Index.SelectOne<F, bool?>(boolValue);
-                case DBDataType.Blob:
-                case DBDataType.ByteArray:
-                    var arrayValue = (byte[])transaction.Reader.GetValue(i);
-                    return Index.SelectOne<F, byte[]>(arrayValue);
-                case DBDataType.UInt:
-                    var uintValue = transaction.ReadUInt(i);
-                    return Index.SelectOne<F, uint?>(uintValue);
-                case DBDataType.Decimal:
-                    var decimalValue = transaction.Reader.GetDecimal(i);
-                    return Index.SelectOne<F, decimal?>(decimalValue);
-                case DBDataType.Double:
-                    var doubleValue = transaction.Reader.GetDouble(i);
-                    return Index.SelectOne<F, double?>(doubleValue);
-                case DBDataType.Float:
-                    var floatValue = transaction.Reader.GetFloat(i);
-                    return Index.SelectOne<F, float?>(floatValue);
-                case DBDataType.TimeSpan:
-                    var spanValue = transaction.ReadTimeSpan(i);
-                    return Index.SelectOne<F, TimeSpan?>(spanValue);
-                case DBDataType.TinyInt:
-                    var byteValue = transaction.Reader.GetByte(i);
-                    if (DataType == typeof(sbyte))
-                    {
-                        return Index.SelectOne<F, sbyte?>((sbyte)byteValue);
-                    }
-                    else
-                    {
-                        return Index.SelectOne<F, byte?>((byte)byteValue);
-                    }
-                default:
-                    var value = transaction.Reader.GetValue(i);
-                    return Index.SelectOne<F>(value);
-            }
-            return default(F);
-        }
+        public abstract F ReadAndSelect<F>(DBTransaction transaction, int i) where F : DBItem;
 
         public QExpression GetExpression()
         {
@@ -951,7 +798,7 @@ namespace DataWF.Data
 
         public override object Clone()
         {
-            var column = DBColumnFabric.Create(DataType);
+            var column = DBColumnFactory.Create(DataType);
             column.subList = subList;
             column.name = name;
             column.size = size;
@@ -1553,112 +1400,12 @@ namespace DataWF.Data
         }
     }
 
-    public static class DBColumnFabric
-    {
-        public static DBColumn Create(Type dataType)
-        {
-            var column = (DBColumn)null;
-            if (dataType == typeof(string))
-                column = new DBColumnString();
-            else if (dataType == typeof(byte[]))
-                column = new DBColumnByteArray();
-            else if (TypeHelper.IsNullable(dataType))
-            {
-                var undelineType = TypeHelper.CheckNullable(dataType);
-
-                if (undelineType == typeof(short))
-                    column = new DBColumnNInt16();
-                else if (undelineType == typeof(int))
-                    column = new DBColumnNInt32();
-                else if (undelineType == typeof(long))
-                    column = new DBColumnNInt64();
-                else if (undelineType == typeof(float))
-                    column = new DBColumnNFloat();
-                else if (undelineType == typeof(double))
-                    column = new DBColumnNDouble();
-                else if (undelineType == typeof(decimal))
-                    column = new DBColumnNDecimal();
-                else
-                    column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnNullable<>).MakeGenericType(undelineType));
-            }
-            else if (dataType == typeof(short))
-                column = new DBColumnInt16();
-            else if (dataType == typeof(int))
-                column = new DBColumnInt32();
-            else if (dataType == typeof(long))
-                column = new DBColumnInt64();
-            else if (dataType == typeof(float))
-                column = new DBColumnFloat();
-            else if (dataType == typeof(double))
-                column = new DBColumnDouble();
-            else if (dataType == typeof(decimal))
-                column = new DBColumnDecimal();
-            else
-                column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumn<>).MakeGenericType(dataType));
-            return column;
-        }
-
-        public static DBColumn Create(Type dataType, string name, DBColumnKeys keys = DBColumnKeys.None, int size = -1, DBTable table = null)
-        {
-            var column = Create(dataType);
-            column.Name = name;
-            column.Keys = keys;
-            column.Size = size;
-            column.Table = table;
-            return column;
-        }
-
-        public static DBColumn Create(DBColumn baseColumn)
-        {
-            var column = (DBColumn)EmitInvoker.CreateObject(baseColumn.GetType());
-            column.BaseColumn = baseColumn;
-            return column;
-        }
-    }
-
-    public class DBColumnNullable<T> : DBColumn<T?> where T : struct
-    {
-        public override bool Equal(object oldValue, object newValue)
-        {
-            return base.Equal(oldValue == null ? null : oldValue is T? ? (T?)oldValue : (T?)(T)oldValue,
-                newValue == null ? null : newValue is T? ? (T?)newValue : (T?)(T)newValue);
-        }
-
-        public override bool Equal(T? oldValue, T? newValue)
-        {
-            return Nullable.Equals<T>(oldValue, newValue);
-        }
-
-        public override void SetValue(object item, object value)
-        {
-            base.SetValue((DBItem)item, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
-        }
-    }
-
-    public class DBColumnFloat : DBColumn<float>
-    {
-        public override void LoadFromReader(DBTransaction transaction, DBItem row, int i)
-        {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
-            var value = transaction.Reader.IsDBNull(i) ? 0F : transaction.Reader.GetFloat(i);
-            row.SetValue(value, this, DBSetValueMode.Loading);
-        }
-
-        public override F SelectOneFromReader<F>(DBTransaction transaction, int i)
-        {
-            var value = transaction.Reader.GetFloat(i);
-            return Table.GetPullIndex(this)?.SelectOne<F>(value);
-        }
-    }
-
     public class DBColumn<T> : DBColumn//, IValuedInvoker<T>
     {
+        public new static readonly DBColumn<T> EmptyKey = new DBColumn<T>();
+
         protected GenericPull<T> pull;
         protected ConcurrentDictionary<int, T> olds;
-
         public DBColumn() : base()
         {
             DataType = typeof(T);
@@ -1810,7 +1557,7 @@ namespace DataWF.Data
             olds?.Clear();
         }
 
-        public override void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DBTransaction transaction, DBItem row, int i)
         {
             if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
             {
@@ -1820,7 +1567,7 @@ namespace DataWF.Data
             row.SetValue<T>(value, this, DBSetValueMode.Loading);
         }
 
-        public override F SelectOneFromReader<F>(DBTransaction transaction, int i)
+        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.Reader.GetFieldValue<T>(i);
             return Table.GetPullIndex<T>(this)?.SelectOne<F>(value);

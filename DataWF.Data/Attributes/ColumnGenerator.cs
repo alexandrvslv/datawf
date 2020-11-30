@@ -92,14 +92,14 @@ namespace DataWF.Data
 
         public virtual int Size => Attribute?.Size ?? 0;
 
-        public Type GetDataType()
+        public Type DataType
         {
-            return TypeHelper.CheckNullable(Attribute.DataType);
+            get => Attribute.DataType;
         }
 
         public virtual DBColumn CreateColumn(string name)
         {
-            return new DBColumn(name) { Table = Table.Table };
+            return DBColumnFactory.Create(DataType, name, table: Table.Table);
         }
 
         public DBColumn Generate()
@@ -119,7 +119,7 @@ namespace DataWF.Data
                 table.ColumnGroups.Add(cgroup);
             }
             Column = table.Columns[ColumnName];
-            if (Column == null)
+            if (Column == null || Column.DataType != DataType)
             {
                 Column = CreateColumn(ColumnName);
             }
@@ -134,7 +134,6 @@ namespace DataWF.Data
             {
                 Column.DBDataType = Attribute.DBDataType;
             }
-            Column.DataType = GetDataType();
             Column.Size = Attribute.Size;
             Column.Scale = Attribute.Scale;
             Column.ColumnType = Attribute.ColumnType;

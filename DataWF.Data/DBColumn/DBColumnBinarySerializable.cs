@@ -18,32 +18,37 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
-using DataWF.Data;
-using System;
+using System.Runtime.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBColumnString : DBColumn<string>
+    public class DBColumnBinarySerializable<T> : DBColumn<T> where T : class, IBinarySerializable
     {
-        public override bool Equal(string oldValue, string newValue)
-        {
-            return string.Equals(oldValue, newValue, StringComparison.Ordinal);
-        }
-
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
             if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
             {
                 return;
             }
-            var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
-            row.SetValue(value, this, DBSetValueMode.Loading);
+            if (!transaction.Reader.IsDBNull(i))
+            {
+                var byteArray = (byte[])transaction.Reader.GetValue(i);
+                var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
+                serializable.Deserialize(byteArray);
+                row.SetValue(serializable, this, DBSetValueMode.Loading);
+            }
+            else
+            {
+                row.SetValue(null, this, DBSetValueMode.Loading);
+            }
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
-            var value = transaction.Reader.GetString(i);
-            return Table.GetPullIndex(this)?.SelectOne<F>(value);
+            var byteArray = (byte[])transaction.Reader.GetValue(i);
+            var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
+            serializable.Deserialize(byteArray);
+            return Table.GetPullIndex(this)?.SelectOne<F>(serializable);
         }
-    }    
+    }
 }

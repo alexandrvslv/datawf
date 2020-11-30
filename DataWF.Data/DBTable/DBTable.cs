@@ -184,22 +184,22 @@ namespace DataWF.Data
         protected DBSequence cacheSequence;
         protected readonly List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
         protected readonly ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
-        protected DBColumn nameKey = DBColumn.EmptyKey;
-        protected DBColumn accessKey = DBColumn.EmptyKey;
+        protected DBColumn<string> nameKey = DBColumn<string>.EmptyKey;
+        protected DBColumn<byte[]> accessKey = DBColumn<byte[]>.EmptyKey;
         protected DBColumn primaryKey = DBColumn.EmptyKey;
-        protected DBColumn fileKey = DBColumn.EmptyKey;
-        protected DBColumn fileNameKey = DBColumn.EmptyKey;
-        protected DBColumn fileBLOBKey = DBColumn.EmptyKey;
-        protected DBColumn fileLastWriteKey = DBColumn.EmptyKey;
-        protected DBColumn dateKey = DBColumn.EmptyKey;
-        protected DBColumn stampKey = DBColumn.EmptyKey;
-        protected DBColumn srStampKey = DBColumn.EmptyKey;
-        protected DBColumn codeKey = DBColumn.EmptyKey;
+        protected DBColumn<byte[]> fileKey = DBColumn<byte[]>.EmptyKey;
+        protected DBColumn<string> fileNameKey = DBColumn<string>.EmptyKey;
+        protected DBColumn<long?> fileBLOBKey = DBColumn<long?>.EmptyKey;
+        protected DBColumn<DateTime?> fileLastWriteKey = DBColumn<DateTime?>.EmptyKey;
+        protected DBColumn<DateTime?> dateKey = DBColumn<DateTime?>.EmptyKey;
+        protected DBColumn<DateTime?> stampKey = DBColumn<DateTime?>.EmptyKey;
+        protected DBColumn<DateTime?> replicateStampKey = DBColumn<DateTime?>.EmptyKey;
+        protected DBColumn<string> codeKey = DBColumn<string>.EmptyKey;
         protected DBColumn typeKey = DBColumn.EmptyKey;
         protected DBColumn groupKey = DBColumn.EmptyKey;
-        protected DBColumn stateKey = DBColumn.EmptyKey;
-        protected DBColumn imageKey = DBColumn.EmptyKey;
-        protected DBColumn itemTypeKey = DBColumn.EmptyKey;
+        protected DBColumn<DBStatus> stateKey = DBColumn<DBStatus>.EmptyKey;
+        protected DBColumn<byte[]> imageKey = DBColumn<byte[]>.EmptyKey;
+        protected DBColumn<int> itemTypeKey = DBColumn<int>.EmptyKey;
 
         public IComparer DefaultComparer;
         public int Hash = -1;
@@ -431,31 +431,31 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn AccessKey => accessKey == DBColumn.EmptyKey ? (accessKey = Columns.GetByKey(DBColumnKeys.Access)) : accessKey;
+        public DBColumn<byte[]> AccessKey => accessKey == DBColumn.EmptyKey ? (accessKey = (DBColumn<byte[]>)Columns.GetByKey(DBColumnKeys.Access)) : accessKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBColumn PrimaryKey => primaryKey == DBColumn.EmptyKey ? (primaryKey = Columns.GetByKey(DBColumnKeys.Primary)) : primaryKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn FileBLOBKey => fileBLOBKey == DBColumn.EmptyKey ? (fileBLOBKey = Columns.GetByKey(DBColumnKeys.FileLOB)) : fileBLOBKey;
+        public DBColumn<long?> FileBLOBKey => fileBLOBKey == DBColumn<long?>.EmptyKey ? (fileBLOBKey = (DBColumn<long?>)Columns.GetByKey(DBColumnKeys.FileLOB)) : fileBLOBKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn FileKey => fileKey == DBColumn.EmptyKey ? (fileKey = Columns.GetByKey(DBColumnKeys.File)) : fileKey;
+        public DBColumn<byte[]> FileKey => fileKey == DBColumn.EmptyKey ? (fileKey = (DBColumn<byte[]>)Columns.GetByKey(DBColumnKeys.File)) : fileKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn FileNameKey => fileNameKey == DBColumn.EmptyKey ? (fileNameKey = Columns.GetByKey(DBColumnKeys.FileName)) : fileNameKey;
+        public DBColumn<string> FileNameKey => fileNameKey == DBColumn<string>.EmptyKey ? (fileNameKey = (DBColumn<string>)Columns.GetByKey(DBColumnKeys.FileName)) : fileNameKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn FileLastWriteKey => fileLastWriteKey == DBColumn.EmptyKey ? (fileLastWriteKey = Columns.GetByKey(DBColumnKeys.FileLastWrite)) : fileLastWriteKey;
+        public DBColumn<DateTime?> FileLastWriteKey => fileLastWriteKey == DBColumn<DateTime?>.EmptyKey ? (fileLastWriteKey = (DBColumn<DateTime?>)Columns.GetByKey(DBColumnKeys.FileLastWrite)) : fileLastWriteKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn ReplicateStampKey => srStampKey == DBColumn.EmptyKey ? (srStampKey = Columns.GetByKey(DBColumnKeys.ReplicateStamp)) : srStampKey;
+        public DBColumn<DateTime?> ReplicateStampKey => replicateStampKey == DBColumn<DateTime?>.EmptyKey ? (replicateStampKey = (DBColumn<DateTime?>)Columns.GetByKey(DBColumnKeys.ReplicateStamp)) : replicateStampKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn StampKey => stampKey == DBColumn.EmptyKey ? (stampKey = Columns.GetByKey(DBColumnKeys.Stamp)) : stampKey;
+        public DBColumn<DateTime?> StampKey => stampKey == DBColumn<DateTime?>.EmptyKey ? (stampKey = (DBColumn<DateTime?>)Columns.GetByKey(DBColumnKeys.Stamp)) : stampKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn DateKey => dateKey == DBColumn.EmptyKey ? (dateKey = Columns.GetByKey(DBColumnKeys.Date)) : dateKey;
+        public DBColumn<DateTime?> DateKey => dateKey == DBColumn<DateTime?>.EmptyKey ? (dateKey = (DBColumn<DateTime?>)Columns.GetByKey(DBColumnKeys.Date)) : dateKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBColumn GroupKey => groupKey == DBColumn.EmptyKey ? (groupKey = Columns.GetByKey(DBColumnKeys.Group)) : groupKey;
@@ -464,16 +464,16 @@ namespace DataWF.Data
         public DBColumn ElementTypeKey => typeKey == DBColumn.EmptyKey ? (typeKey = Columns.GetByKey(DBColumnKeys.ElementType)) : typeKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn StatusKey => stateKey == DBColumn.EmptyKey ? (stateKey = Columns.GetByKey(DBColumnKeys.State)) : stateKey;
+        public DBColumn<DBStatus> StatusKey => stateKey == DBColumn<DBStatus>.EmptyKey ? (stateKey = (DBColumn<DBStatus>)Columns.GetByKey(DBColumnKeys.State)) : stateKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn ItemTypeKey => itemTypeKey == DBColumn.EmptyKey ? (itemTypeKey = Columns.GetByKey(DBColumnKeys.ItemType)) : itemTypeKey;
+        public DBColumn<int> ItemTypeKey => itemTypeKey == DBColumn<int>.EmptyKey ? (itemTypeKey = (DBColumn<int>)Columns.GetByKey(DBColumnKeys.ItemType)) : itemTypeKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn CodeKey => codeKey == DBColumn.EmptyKey ? (codeKey = Columns.GetByKey(DBColumnKeys.Code)) : codeKey;
+        public DBColumn<string> CodeKey => codeKey == DBColumn<string>.EmptyKey ? (codeKey = (DBColumn<string>)Columns.GetByKey(DBColumnKeys.Code)) : codeKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn ImageKey => imageKey == DBColumn.EmptyKey ? (imageKey = Columns.GetByKey(DBColumnKeys.Image)) : imageKey;
+        public DBColumn<byte[]> ImageKey => imageKey == DBColumn<byte[]>.EmptyKey ? (imageKey = (DBColumn<byte[]>)Columns.GetByKey(DBColumnKeys.Image)) : imageKey;
 
         public DBTableType Type
         {
@@ -807,11 +807,11 @@ namespace DataWF.Data
             return where;
         }
 
-        public DBColumn GetNameKey(string group)
+        public DBColumn<string> GetNameKey(string group)
         {
             if (group.Equals("Name", StringComparison.OrdinalIgnoreCase))
             {
-                if (nameKey == DBColumn.EmptyKey)
+                if (nameKey == DBColumn<string>.EmptyKey)
                 {
                     return nameKey = GetCultureColumn(group, Locale.Instance.Culture);
                 }
@@ -820,9 +820,9 @@ namespace DataWF.Data
             return GetCultureColumn(group, Locale.Instance.Culture);
         }
 
-        public DBColumn GetCultureColumn(string group, CultureInfo culture)
+        public DBColumn<string> GetCultureColumn(string group, CultureInfo culture)
         {
-            return Columns.GetByGroup(@group)
+            return (DBColumn<string>)Columns.GetByGroup(@group)
                      .FirstOrDefault(column => column.Culture != null
                      && column.Culture.ThreeLetterISOLanguageName == culture.ThreeLetterISOLanguageName);
         }
@@ -883,7 +883,7 @@ namespace DataWF.Data
             var column = Columns[name];
             if (column == null)
             {
-                column = DBColumnFabric.Create(typeof(Nullable<>).MakeGenericType(type), name: name, size: -1, table: this);
+                column = DBColumnFactory.Create(typeof(Nullable<>).MakeGenericType(type), name: name, size: -1, table: this);
                 Columns.Add(column);
                 newCol = true;
             }
@@ -1058,7 +1058,7 @@ namespace DataWF.Data
                 && !transaction.NoLogs
                 && LogTable != null)
             {
-                args.LogItem = (DBLogItem)LogTable.NewItem(DBUpdateState.Insert, false, item.ItemType ?? 0);
+                args.LogItem = (DBLogItem)LogTable.NewItem(DBUpdateState.Insert, false, item.ItemType);
                 args.LogItem.BaseItem = item;
                 DBService.OnLogItem(args);
                 await args.LogItem.Save(transaction.GetSubTransaction(LogTable.Connection));
@@ -1680,15 +1680,19 @@ namespace DataWF.Data
             dmlInsert = null;
             dmlInsertSequence = null;
             dmlDelete = null;
-            accessKey = DBColumn.EmptyKey;
+            accessKey = DBColumn<byte[]>.EmptyKey;
             primaryKey = DBColumn.EmptyKey;
-            dateKey = DBColumn.EmptyKey;
-            stampKey = DBColumn.EmptyKey;
-            codeKey = DBColumn.EmptyKey;
+            dateKey = DBColumn<DateTime?>.EmptyKey;
+            stampKey = DBColumn<DateTime?>.EmptyKey;
+            replicateStampKey = DBColumn<DateTime?>.EmptyKey;
+            fileLastWriteKey = DBColumn<DateTime?>.EmptyKey;
+            fileBLOBKey = DBColumn<long?>.EmptyKey;
+            fileNameKey = DBColumn<string>.EmptyKey;
+            codeKey = DBColumn<string>.EmptyKey;
             typeKey = DBColumn.EmptyKey;
             groupKey = DBColumn.EmptyKey;
-            stateKey = DBColumn.EmptyKey;
-            imageKey = DBColumn.EmptyKey;
+            stateKey = DBColumn<DBStatus>.EmptyKey;
+            imageKey = DBColumn<byte[]>.EmptyKey;
         }
 
         public IEnumerable<IInvokerJson> GetRefInvokers()
@@ -2025,7 +2029,7 @@ namespace DataWF.Data
 
         public DBColumn InitColumn(Type type, string name)
         {
-            return Columns[name] ?? DBColumnFabric.Create(type, name: name, table: this);
+            return Columns[name] ?? DBColumnFactory.Create(type, name: name, table: this);
         }
 
         private DBConstraint InitConstraint(string name)
@@ -2037,12 +2041,12 @@ namespace DataWF.Data
         {
             Columns.AddRange(new[]
             {
-                DBColumnFabric.Create(typeof(int), name: "type_id", keys: DBColumnKeys.ItemType, table: this ),
-                DBColumnFabric.Create(typeof(int?), name: "unid", keys: DBColumnKeys.Primary, table: this),
-                DBColumnFabric.Create(typeof(DateTime?), name: "datec", keys: DBColumnKeys.Date| DBColumnKeys.UtcDate, table:this),
-                DBColumnFabric.Create(typeof(DateTime?), name: "dateu", keys: DBColumnKeys.Stamp| DBColumnKeys.UtcDate, table:this),
-                DBColumnFabric.Create(typeof(DBItemState?), name: "stateid", keys: DBColumnKeys.State,table:this),
-                DBColumnFabric.Create(typeof(byte[]), name: "access", keys: DBColumnKeys.Access, table:this)
+                DBColumnFactory.Create(typeof(int), name: "type_id", keys: DBColumnKeys.ItemType, table: this ),
+                DBColumnFactory.Create(typeof(int?), name: "unid", keys: DBColumnKeys.Primary, table: this),
+                DBColumnFactory.Create(typeof(DateTime?), name: "datec", keys: DBColumnKeys.Date| DBColumnKeys.UtcDate, table:this),
+                DBColumnFactory.Create(typeof(DateTime?), name: "dateu", keys: DBColumnKeys.Stamp| DBColumnKeys.UtcDate, table:this),
+                DBColumnFactory.Create(typeof(DBItemState?), name: "stateid", keys: DBColumnKeys.State,table:this),
+                DBColumnFactory.Create(typeof(byte[]), name: "access", keys: DBColumnKeys.Access, table:this)
             });
         }
 

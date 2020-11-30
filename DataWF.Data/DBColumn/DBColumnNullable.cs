@@ -23,27 +23,22 @@ using System;
 
 namespace DataWF.Data
 {
-    public class DBColumnString : DBColumn<string>
+    public class DBColumnNullable<T> : DBColumn<T?> where T : struct
     {
-        public override bool Equal(string oldValue, string newValue)
+        public override bool Equal(object oldValue, object newValue)
         {
-            return string.Equals(oldValue, newValue, StringComparison.Ordinal);
+            return base.Equal(oldValue == null ? null : oldValue is T? ? (T?)oldValue : (T?)(T)oldValue,
+                newValue == null ? null : newValue is T? ? (T?)newValue : (T?)(T)newValue);
         }
 
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override bool Equal(T? oldValue, T? newValue)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
-            var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
-            row.SetValue(value, this, DBSetValueMode.Loading);
+            return Nullable.Equals<T>(oldValue, newValue);
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override void SetValue(object item, object value)
         {
-            var value = transaction.Reader.GetString(i);
-            return Table.GetPullIndex(this)?.SelectOne<F>(value);
+            base.SetValue((DBItem)item, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
         }
-    }    
+    }
 }
