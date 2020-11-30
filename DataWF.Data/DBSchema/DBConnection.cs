@@ -552,6 +552,30 @@ namespace DataWF.Data
             }
         }
 
+        public object ExecuteQuery(IDbCommand command, bool noTransaction = false, DBExecuteType type = DBExecuteType.Scalar)
+        {
+            if (command == null)
+                return null;
+            using (var transaction = new DBTransaction(this, null, noTransaction))
+            {
+                var result = transaction.ExecuteQuery(command, type);
+                transaction.Commit();
+                return result;
+            }
+        }
+
+        public async Task<object> ExecuteQueryAsync(IDbCommand command, bool noTransaction = false, DBExecuteType type = DBExecuteType.Scalar)
+        {
+            if (command == null)
+                return null;
+            using (var transaction = new DBTransaction(this, null, noTransaction))
+            {
+                var result = await transaction.ExecuteQueryAsync(command, type);
+                transaction.Commit();
+                return result;
+            }
+        }
+
         public IEnumerable<string> SplitGoQuery(string query)
         {
             var regex = new Regex(@"\s*go\s*(\n|$)", RegexOptions.IgnoreCase);

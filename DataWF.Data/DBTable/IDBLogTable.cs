@@ -28,8 +28,8 @@ namespace DataWF.Data
         string BaseTableName { get; set; }
         DBColumn UserLogKey { get; }
 
-        DBLogColumn GetLogColumn(DBColumn column);
-        IEnumerable<DBLogColumn> GetLogColumns();
+        DBColumn GetLogColumn(DBColumn column);
+        IEnumerable<DBColumn> GetLogColumns();
 
         DBColumn ParseLogProperty(string name);
         DBColumn ParseLogProperty(string name, ref DBColumn column);

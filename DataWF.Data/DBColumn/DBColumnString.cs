@@ -23,14 +23,27 @@ using System;
 
 namespace DataWF.Data
 {
-    [Flags]
-    public enum DBTableKeys
+    public class DBColumnString : DBColumn<string>
     {
-        None = 0,
-        NoLogs = 1 << 0,
-        Caching = 1 << 1,
-        ReadOnly = 1 << 2,
-        Private = 1 << 3,
-        NoReplicate = 1 << 4
-    }
+        public override bool Equal(string oldValue, string newValue)
+        {
+            return string.Equals(oldValue, newValue, StringComparison.Ordinal);
+        }
+
+        public override void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        {
+            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
+            {
+                return;
+            }
+            var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
+            row.SetValue(value, this, DBSetValueMode.Loading);
+        }
+
+        public override F SelectOneFromReader<F>(DBTransaction transaction, int i)
+        {
+            var value = transaction.Reader.GetString(i);
+            return Table.GetPullIndex(this)?.SelectOne<F>(value);
+        }
+    }    
 }

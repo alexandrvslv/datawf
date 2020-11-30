@@ -496,24 +496,11 @@ namespace DataWF.Data
             return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
         }
 
-        public static bool EqualClass<T>(T x, T y) where T : class
-        {
-            if (x is string xString && y is string yString)
-            {
-                return string.Equals(xString, yString, StringComparison.Ordinal);
-            }
-            if (x is byte[] xByte && y is byte[] yByte)
-            {
-                return ByteArrayComparer.Default.Equals(xByte, yByte);
-            }
-            return EqualityComparer<T>.Default.Equals(x, y);
-        }
-
         public static bool Equal<T>(T x, T y)
         {
             if (x is string xString && y is string yString)
             {
-                return StringComparer.Ordinal.Equals(xString, yString);
+                return string.Equals(xString, yString, StringComparison.Ordinal);
             }
             if (x is byte[] xByte && y is byte[] yByte)
             {

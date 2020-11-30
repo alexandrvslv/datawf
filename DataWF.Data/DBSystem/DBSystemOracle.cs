@@ -394,22 +394,12 @@ select :{FileData.IdKey.Name};");
             return null;
         }
 
-        public override Stream GetStream(IDataReader reader, int column)
-        {
-            return ((OracleDataReader)reader).GetStream(column);
-        }
-
-        public override Task<bool> ReadAsync(IDataReader reader)
-        {
-            return ((OracleDataReader)reader).ReadAsync();
-        }
-
-        public override uint GetUInt(IDataReader reader, int index)
+        public override uint GetUInt(DbDataReader reader, int index)
         {
             return ((OracleDataReader)reader).GetFieldValue<uint>(index);
         }
 
-        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        public override TimeSpan GetTimeSpan(DbDataReader reader, int index)
         {
             return ((OracleDataReader)reader).GetTimeSpan(index);
         }

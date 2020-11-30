@@ -54,20 +54,24 @@ using System.Xml.Serialization;
 [assembly: Invoker(typeof(DBColumn), nameof(DBColumn.BoolFalse), typeof(DBColumn.BoolFalseInvoker<>))]
 [assembly: Invoker(typeof(DBColumn), nameof(DBColumn.SqlName), typeof(DBColumn.SqlNameInvoker<>))]
 [assembly: Invoker(typeof(DBColumn), nameof(DBColumn.TargetType), typeof(DBColumn.TargetTypeInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.BaseName), typeof(DBColumn.BaseNameInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.BaseColumn), typeof(DBColumn.BaseColumnInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>, IPropertySerializationInfo
+    public abstract class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker, IPropertySerializeInfo
     {
-        public static readonly DBColumn EmptyKey = new DBColumn();
+        public static readonly DBColumn EmptyKey = new DBColumn<object>();
 
+        public static string GetLogName(DBColumn column)
+        {
+            return column.Name + "_log";
+        }
 
         #region Variable
         private QExpression expression;
         protected DBTable cacheReferenceTable;
         CultureInfo cacheCulture;
         DBColumnGroup cacheGroup;
-        private Pull pull;
-        private PullIndex index;
         protected DBColumnKeys keys = DBColumnKeys.None;
         protected int size;
         protected int scale;
@@ -86,16 +90,16 @@ namespace DataWF.Data
         protected string query;
         protected string subList;
         //private Dictionary<int, object> tags;
-        private ConcurrentDictionary<int, object> olds;
-        private DBLogColumn logColumn;
+        private DBColumn logColumn;
         private PropertyInfo propertyInfo;
         private IInvoker propertyInvoker;
         private PropertyInfo referencePropertyInfo;
+        private DBColumn baseColumn;
         private const int bufferSize = 4048;
 
         #endregion
 
-        public DBColumn() : this(null)
+        public DBColumn()
         {
         }
 
@@ -117,6 +121,52 @@ namespace DataWF.Data
             : this(name, reference.PrimaryKey.DataType, reference.PrimaryKey.Size)
         {
             ReferenceTable = reference;
+        }
+
+        [Browsable(false)]
+        public string BaseName { get; set; }
+
+        [XmlIgnore, JsonIgnore]
+        public DBColumn BaseColumn
+        {
+            get { return baseColumn ?? (baseColumn = (Table as IDBLogTable)?.BaseTable?.ParseColumn(BaseName)); }
+            set
+            {
+                if (value == null)
+                {
+                    throw new Exception("BaseColumn value is empty!");
+                }
+
+                baseColumn = value;
+                BaseName = value.Name;
+                Name = GetLogName(value);
+                DisplayName = value.DisplayName + " Log";
+                DBDataType = value.DBDataType;
+                DataType = value.DataType;
+                ReferenceTable = value.ReferenceTable;
+                Size = value.Size;
+                Scale = value.Scale;
+                if (value.IsFile)
+                {
+                    Keys |= DBColumnKeys.File;
+                }
+                if (value.IsFileName)
+                {
+                    Keys |= DBColumnKeys.FileName;
+                }
+                if (value.IsFileLOB)
+                {
+                    Keys |= DBColumnKeys.FileLOB;
+                }
+                if (value.IsTypeKey)
+                {
+                    Keys |= DBColumnKeys.ItemType;
+                }
+                if ((value.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
+                {
+                    Keys |= DBColumnKeys.Access;
+                }
+            }
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
@@ -218,26 +268,8 @@ namespace DataWF.Data
         public ElementSerializer Serializer { get; set; }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public Pull Pull
-        {
-            get => pull;
-            internal set
-            {
-                if (pull != value)
-                {
-                    pull = value;
+        public abstract Pull Pull { get; internal set; }
 
-                    CheckIndex();
-                }
-            }
-        }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public PullIndex Index
-        {
-            get => index;
-            set => index = value;
-        }
 
         [Category("Name")]
         public override string FullName => string.Format("{0}.{1}.{2}", Schema?.Name, Table?.Name, name);
@@ -447,21 +479,21 @@ namespace DataWF.Data
                     {
                         case DBDataType.ByteArray:
                         case DBDataType.Blob: dataType = typeof(byte[]); break;
-                        case DBDataType.Bool: dataType = typeof(bool); break;
+                        case DBDataType.Bool: dataType = typeof(bool?); break;
+                        case DBDataType.String:
                         case DBDataType.Clob: dataType = typeof(string); break;
                         case DBDataType.Date:
                         case DBDataType.DateTime:
-                        case DBDataType.TimeStamp: dataType = typeof(DateTime); break;
-                        case DBDataType.Double: dataType = typeof(double); break;
-                        case DBDataType.Float: dataType = typeof(float); break;
-                        case DBDataType.TinyInt: dataType = typeof(byte); break;
-                        case DBDataType.Int: dataType = typeof(int); break;
-                        case DBDataType.UInt: dataType = typeof(uint); break;
-                        case DBDataType.BigInt: dataType = typeof(long); break;
-                        case DBDataType.Decimal: dataType = typeof(decimal); break;
-                        case DBDataType.ShortInt: dataType = typeof(short); break;
-                        case DBDataType.String: dataType = typeof(string); break;
-                        case DBDataType.TimeSpan: dataType = typeof(TimeSpan); break;
+                        case DBDataType.TimeStamp: dataType = typeof(DateTime?); break;
+                        case DBDataType.TimeSpan: dataType = typeof(TimeSpan?); break;
+                        case DBDataType.Double: dataType = typeof(double?); break;
+                        case DBDataType.Float: dataType = typeof(float?); break;
+                        case DBDataType.TinyInt: dataType = typeof(byte?); break;
+                        case DBDataType.Int: dataType = typeof(int?); break;
+                        case DBDataType.UInt: dataType = typeof(uint?); break;
+                        case DBDataType.BigInt: dataType = typeof(long?); break;
+                        case DBDataType.Decimal: dataType = typeof(decimal?); break;
+                        case DBDataType.ShortInt: dataType = typeof(short?); break;
                         default: dataType = typeof(object); break;
                     }
                 CheckPull();
@@ -536,9 +568,6 @@ namespace DataWF.Data
                     DBDataType = DBDataType.Object;
             }
         }
-
-        [Browsable(false), XmlIgnore, JsonIgnore]
-        public Type ReaderDataType { get; set; }
 
         [Category("Database")]
         public string DefaultValue
@@ -646,7 +675,7 @@ namespace DataWF.Data
         public bool IsFileLOB => (Keys & DBColumnKeys.FileLOB) == DBColumnKeys.FileLOB;
 
         [JsonIgnore, XmlIgnore]
-        public DBLogColumn LogColumn => logColumn ?? (logColumn = Table?.LogTable?.GetLogColumn(this));
+        public DBColumn LogColumn => logColumn ?? (logColumn = Table?.LogTable?.GetLogColumn(this));
 
         [JsonIgnore, XmlIgnore]
         public object Default => null;
@@ -667,40 +696,7 @@ namespace DataWF.Data
 
         public bool IsWriteable => true;
 
-        internal protected virtual void CheckPull()
-        {
-            if (!Containers.Any())
-                return;
-
-            if (DataType == null)
-            {
-                return;
-                //throw new InvalidOperationException($"{nameof(DataType)} not specified!");
-            }
-
-            Serializer = TypeHelper.GetSerializer(DataType);
-
-            if (ColumnType == DBColumnTypes.Expression
-                || ColumnType == DBColumnTypes.Code)
-            {
-                return;
-            }
-
-            if (Pull != null &&
-                (Pull.ItemType != DataType))
-            {
-                Pull.Clear();
-                pull = null;
-            }
-            if (Pull == null && Table != null)
-            {
-                Pull = Pull.Fabric(DataType, Table.BlockSize);
-            }
-            else if (Pull.BlockSize != Table.BlockSize)
-            {
-                Pull.BlockSize = Table.BlockSize;
-            }
-        }
+        internal protected abstract void CheckPull();
 
         public IComparer CreateComparer(ListSortDirection direction = ListSortDirection.Ascending)
         {
@@ -725,7 +721,7 @@ namespace DataWF.Data
             return (IComparer<T>)CreateComparer(typeof(T), direction);
         }
 
-        public void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        public abstract void LoadFromReader(DBTransaction transaction, DBItem row, int i)
         {
             if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
             {
@@ -756,11 +752,11 @@ namespace DataWF.Data
                     break;
                 case DBDataType.BigInt:
                     var longValue = isNull ? (long?)null : transaction.Reader.GetInt64(i);
-                    row.SetValueNullable<long>(longValue, this, DBSetValueMode.Loading);
+                    row.SetValue<long>(longValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.ShortInt:
                     var shortValue = isNull ? (short?)null : transaction.Reader.GetInt16(i);
-                    row.SetValueNullable<short>(shortValue, this, DBSetValueMode.Loading);
+                    row.SetValue<short>(shortValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Date:
                 case DBDataType.DateTime:
@@ -770,7 +766,7 @@ namespace DataWF.Data
                     {
                         dateValue = DateTime.SpecifyKind(dateValue.Value, DateTimeKind.Utc);
                     }
-                    row.SetValueNullable<DateTime>(dateValue, this, DBSetValueMode.Loading);
+                    row.SetValue<DateTime>(dateValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.Bool:
                     var boolValue = isNull ? (bool?)null : transaction.Reader.GetBoolean(i);
@@ -779,7 +775,7 @@ namespace DataWF.Data
                 case DBDataType.Blob:
                 case DBDataType.ByteArray:
                     var arrayValue = isNull ? null : (byte[])transaction.Reader.GetValue(i);
-                    row.SetValueClass<byte[]>(arrayValue, this, DBSetValueMode.Loading);
+                    row.SetValue<byte[]>(arrayValue, this, DBSetValueMode.Loading);
                     break;
                 case DBDataType.ByteSerializable:
                     var byteArray = isNull ? null : (byte[])transaction.Reader.GetValue(i);
@@ -827,7 +823,7 @@ namespace DataWF.Data
             //row.SetValue(value, this, false);
         }
 
-        internal F SelectOneFromReader<F>(DBTransaction transaction, int i) where F : DBItem
+        public abstract F SelectOneFromReader<F>(DBTransaction transaction, int i) where F : DBItem
         {
             switch (DBDataType)
             {
@@ -900,31 +896,6 @@ namespace DataWF.Data
             return default(F);
         }
 
-        protected void CheckIndex()
-        {
-            if (Index != null && Index.BasePull != pull)
-            {
-                Index.Dispose();
-                Index = null;
-            }
-            if (pull == null)
-            {
-                return;
-            }
-            var build = IsPrimaryKey
-                || (Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing
-                || (Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference;
-            if (Index == null && build)
-            {
-                Index = DBPullIndexFabric.Create(Table, this);
-            }
-            else if (Index != null && !build)
-            {
-                Index.Dispose();
-                Index = null;
-            }
-        }
-
         public QExpression GetExpression()
         {
             if (expression == null)
@@ -980,25 +951,23 @@ namespace DataWF.Data
 
         public override object Clone()
         {
-            var column = new DBColumn(name)
-            {
-                subList = subList,
-                name = name,
-                size = size,
-                scale = scale,
-                culture = culture,
-                keys = keys,
-                btrue = btrue,
-                bfalse = bfalse,
-                format = format,
-                ctype = ctype,
-                type = type,
-                cdefault = cdefault,
-                gname = gname,
-                query = query,
-                //column.bcode = bcode;
-                order = order
-            };
+            var column = DBColumnFabric.Create(DataType);
+            column.subList = subList;
+            column.name = name;
+            column.size = size;
+            column.scale = scale;
+            column.culture = culture;
+            column.keys = keys;
+            column.btrue = btrue;
+            column.bfalse = bfalse;
+            column.format = format;
+            column.ctype = ctype;
+            column.type = type;
+            column.cdefault = cdefault;
+            column.gname = gname;
+            column.query = query;
+            //column.bcode = bcode;
+            column.order = order;
             return column;
         }
 
@@ -1034,97 +1003,25 @@ namespace DataWF.Data
         //    }
         //}
 
-        public virtual bool GetOld(int hindex, out object obj)
-        {
-            obj = null;
-            return olds?.TryGetValue(hindex, out obj) ?? false;
-        }
+        public abstract bool GetOld(int hindex, out object obj);
 
-        public virtual void RemoveOld(int hindex)
-        {
-            olds?.TryRemove(hindex, out _);
-        }
+        public abstract void RemoveOld(int hindex);
 
-        public virtual void SetOld(int hindex, object value)
-        {
-            if (olds == null)
-                olds = new ConcurrentDictionary<int, object>();
-            olds.TryAdd(hindex, value);
-        }
+        public abstract void SetOld(int hindex, object value);
 
-        public void Clear()
-        {
-            pull?.Clear();
-            //tags?.Clear();
-            olds?.Clear();
-        }
+        public abstract void Clear();
 
-        public object GetValue(DBItem target)
-        {
-            return Pull != null ? Pull.Get(target.block, target.blockIndex)
-                : propertyInvoker?.GetValue(target);
-        }
+        public abstract bool Equal(object oldValue, object value);
 
-        public T GetValue<T>(DBItem target)
-        {
-            if (Pull != null)
-            {
-                return Pull.GetValue<T>(target.block, target.blockIndex);
-            }
-            if (propertyInvoker is IValuedInvoker<T> valueInvoker)
-            {
-                return valueInvoker.GetValue(target);
-            }
-            return (T)propertyInvoker.GetValue(target);
-        }
+        public abstract object GetValue(object target);
 
-        public T? GetValueNullable<T>(DBItem target) where T : struct
-        {
-            return ((NullablePullArray<T>)Pull).GetValue(target.block, target.blockIndex);
-        }
+        public abstract void SetValue(object target, object value);
 
-        public object GetValue(object target)
-        {
-            return GetValue((DBItem)target);
-        }
+        internal protected abstract PullIndex CreatePullIndex();
 
-        public void SetValue(DBItem target, object value)
-        {
-            if (Pull != null)
-            {
-                Pull.Set(target.block, target.blockIndex, value);
-            }
-            else
-            {
-                propertyInvoker.SetValue(target, value);
-            }
-        }
+        internal protected abstract void AddIndex(PullIndex index, DBItem item, object value);
 
-        public void SetValue<T>(DBItem target, T value)
-        {
-            if (Pull != null)
-            {
-                Pull.SetValue<T>(target.block, target.blockIndex, value);
-            }
-            else if (propertyInvoker is IValuedInvoker<T> valueInvoker)
-            {
-                valueInvoker.SetValue(target, value);
-            }
-            else
-            {
-                propertyInvoker.SetValue(target, value);
-            }
-        }
-
-        public void SetValueNullable<T>(DBItem target, T? value) where T : struct
-        {
-            ((NullablePullArray<T>)Pull).SetValue(target.block, target.blockIndex, value);
-        }
-
-        public void SetValue(object target, object value)
-        {
-            SetValue((DBItem)target, value);
-        }
+        internal protected abstract void RemoveIndex(PullIndex index, DBItem item, object value);
 
         public string FormatCode(object value)
         {
@@ -1327,7 +1224,7 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
+        public virtual bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
         {
             return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);
         }
@@ -1344,8 +1241,24 @@ namespace DataWF.Data
 
         public bool CheckDefault(object value)
         {
-            throw new NotImplementedException();
+            return false;
         }
+
+        public abstract void PropertyToBinary(BinaryInvokerWriter writer, object element);
+
+        public abstract void PropertyToBinary<E>(BinaryInvokerWriter writer, E element);
+
+        public abstract void PropertyFromBinary(BinaryInvokerReader reader, object element, TypeSerializeInfo itemInfo);
+
+        public abstract void PropertyFromBinary<E>(BinaryInvokerReader reader, E element, TypeSerializeInfo itemInfo);
+
+        public abstract void PropertyToString(XmlInvokerWriter writer, object element);
+
+        public abstract void PropertyToString<E>(XmlInvokerWriter writer, E element);
+
+        public abstract void PropertyFromString(XmlInvokerReader reader, object element, TypeSerializeInfo itemInfo);
+
+        public abstract void PropertyFromString<E>(XmlInvokerReader reader, E element, TypeSerializeInfo itemInfo);
 
         public class GroupNameInvoker<T> : Invoker<T, string> where T : DBColumn
         {
@@ -1615,5 +1528,452 @@ namespace DataWF.Data
 
             public override void SetValue(T target, Type value) { }
         }
+
+        public class BaseNameInvoker<T> : Invoker<T, string> where T : DBColumn
+        {
+            public static readonly BaseNameInvoker<T> Instance = new BaseNameInvoker<T>();
+            public override string Name => nameof(DBColumn.BaseName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.BaseName;
+
+            public override void SetValue(T target, string value) => target.BaseName = value;
+        }
+
+        public class BaseColumnInvoker<T> : Invoker<T, DBColumn> where T : DBColumn
+        {
+            public override string Name => nameof(DBColumn.BaseColumn);
+
+            public override bool CanWrite => true;
+
+            public override DBColumn GetValue(T target) => target.BaseColumn;
+
+            public override void SetValue(T target, DBColumn value) => target.BaseColumn = value;
+        }
+    }
+
+    public static class DBColumnFabric
+    {
+        public static DBColumn Create(Type dataType)
+        {
+            var column = (DBColumn)null;
+            if (dataType == typeof(string))
+                column = new DBColumnString();
+            else if (dataType == typeof(byte[]))
+                column = new DBColumnByteArray();
+            else if (TypeHelper.IsNullable(dataType))
+            {
+                var undelineType = TypeHelper.CheckNullable(dataType);
+
+                if (undelineType == typeof(short))
+                    column = new DBColumnNInt16();
+                else if (undelineType == typeof(int))
+                    column = new DBColumnNInt32();
+                else if (undelineType == typeof(long))
+                    column = new DBColumnNInt64();
+                else if (undelineType == typeof(float))
+                    column = new DBColumnNFloat();
+                else if (undelineType == typeof(double))
+                    column = new DBColumnNDouble();
+                else if (undelineType == typeof(decimal))
+                    column = new DBColumnNDecimal();
+                else
+                    column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnNullable<>).MakeGenericType(undelineType));
+            }
+            else if (dataType == typeof(short))
+                column = new DBColumnInt16();
+            else if (dataType == typeof(int))
+                column = new DBColumnInt32();
+            else if (dataType == typeof(long))
+                column = new DBColumnInt64();
+            else if (dataType == typeof(float))
+                column = new DBColumnFloat();
+            else if (dataType == typeof(double))
+                column = new DBColumnDouble();
+            else if (dataType == typeof(decimal))
+                column = new DBColumnDecimal();
+            else
+                column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumn<>).MakeGenericType(dataType));
+            return column;
+        }
+
+        public static DBColumn Create(Type dataType, string name, DBColumnKeys keys = DBColumnKeys.None, int size = -1, DBTable table = null)
+        {
+            var column = Create(dataType);
+            column.Name = name;
+            column.Keys = keys;
+            column.Size = size;
+            column.Table = table;
+            return column;
+        }
+
+        public static DBColumn Create(DBColumn baseColumn)
+        {
+            var column = (DBColumn)EmitInvoker.CreateObject(baseColumn.GetType());
+            column.BaseColumn = baseColumn;
+            return column;
+        }
+    }
+
+    public class DBColumnNullable<T> : DBColumn<T?> where T : struct
+    {
+        public override bool Equal(object oldValue, object newValue)
+        {
+            return base.Equal(oldValue == null ? null : oldValue is T? ? (T?)oldValue : (T?)(T)oldValue,
+                newValue == null ? null : newValue is T? ? (T?)newValue : (T?)(T)newValue);
+        }
+
+        public override bool Equal(T? oldValue, T? newValue)
+        {
+            return Nullable.Equals<T>(oldValue, newValue);
+        }
+
+        public override void SetValue(object item, object value)
+        {
+            base.SetValue((DBItem)item, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
+        }
+    }
+
+    public class DBColumnFloat : DBColumn<float>
+    {
+        public override void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        {
+            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
+            {
+                return;
+            }
+            var value = transaction.Reader.IsDBNull(i) ? 0F : transaction.Reader.GetFloat(i);
+            row.SetValue(value, this, DBSetValueMode.Loading);
+        }
+
+        public override F SelectOneFromReader<F>(DBTransaction transaction, int i)
+        {
+            var value = transaction.Reader.GetFloat(i);
+            return Table.GetPullIndex(this)?.SelectOne<F>(value);
+        }
+    }
+
+    public class DBColumn<T> : DBColumn//, IValuedInvoker<T>
+    {
+        protected GenericPull<T> pull;
+        protected ConcurrentDictionary<int, T> olds;
+
+        public DBColumn() : base()
+        {
+            DataType = typeof(T);
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override Pull Pull
+        {
+            get => pull;
+            internal set
+            {
+                if (pull != value)
+                {
+                    pull = (GenericPull<T>)value;
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public IElementSerializer<T> TypedSerializer => Serializer as IElementSerializer<T>;
+
+        public override bool Equal(object oldValue, object newValue)
+        {
+            return Equal((T)oldValue, (T)newValue);
+        }
+
+        public virtual bool Equal(T oldValue, T newValue)
+        {
+            return EqualityComparer<T>.Default.Equals(oldValue, newValue);
+        }
+
+        public override object GetValue(object item)
+        {
+            return GetValue((DBItem)item);
+        }
+
+        public virtual T GetValue(DBItem item)
+        {
+            if (pull != null)
+                return pull.GetValue(item.block, item.blockIndex);
+            else if (PropertyInvoker is IValuedInvoker<T> invoker)
+                return invoker.GetValue(item);
+            return default(T);
+        }
+
+        public override void SetValue(object item, object value)
+        {
+            SetValue((DBItem)item, (T)value);
+        }
+
+        public virtual void SetValue(DBItem item, T value)
+        {
+            if (pull != null)
+            {
+                pull.SetValue(item.block, item.blockIndex, value);
+            }
+            else if (PropertyInvoker is IValuedInvoker<T> valueInvoker)
+            {
+                valueInvoker.SetValue(item, value);
+            }
+            else
+            {
+                PropertyInvoker?.SetValue(item, value);
+            }
+        }
+
+        public override bool GetOld(int hindex, out object obj)
+        {
+            if (GetOld(hindex, out var value))
+            {
+                obj = value;
+                return true;
+            }
+            obj = null;
+            return false;
+        }
+
+        public bool GetOld(int hindex, out T obj)
+        {
+            obj = default(T);
+            return olds?.TryGetValue(hindex, out obj) ?? false;
+        }
+
+        public override void RemoveOld(int hindex)
+        {
+            olds?.TryRemove(hindex, out _);
+        }
+
+        public override void SetOld(int hindex, object value)
+        {
+            SetOld(hindex, (T)value);
+        }
+
+        public void SetOld(int hindex, T value)
+        {
+            if (olds == null)
+                olds = new ConcurrentDictionary<int, T>();
+            olds.TryAdd(hindex, value);
+        }
+
+        protected internal override void CheckPull()
+        {
+            if (!Containers.Any())
+                return;
+
+            Serializer = TypeHelper.GetSerializer(DataType);
+
+            if (ColumnType == DBColumnTypes.Expression
+                || ColumnType == DBColumnTypes.Code)
+            {
+                return;
+            }
+
+            if (Pull != null &&
+                (Pull.ItemType != DataType))
+            {
+                Pull.Clear();
+                Pull = null;
+            }
+            if (Pull == null && Table != null)
+            {
+                Pull = CreatePull();
+            }
+            else if (Pull.BlockSize != Table.BlockSize)
+            {
+                Pull.BlockSize = Table.BlockSize;
+            }
+        }
+
+        protected internal override PullIndex CreatePullIndex()
+        {
+            return PullIndexFabric.Create(Pull, Table.ItemType.Type, DataType, Table.DefaultComparer);
+        }
+
+        public override bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return ListHelper.CheckItemT(GetValue(item), typedValue, comparer, (IComparer<T>)comparision);
+        }
+
+        public virtual Pull CreatePull()
+        {
+            return new PullArray<T>(Table.BlockSize);
+        }
+
+        public override void Clear()
+        {
+            Pull?.Clear();
+            //tags?.Clear();
+            olds?.Clear();
+        }
+
+        public override void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        {
+            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
+            {
+                return;
+            }
+            var value = transaction.Reader.IsDBNull(i) ? default(T) : transaction.Reader.GetFieldValue<T>(i);
+            row.SetValue<T>(value, this, DBSetValueMode.Loading);
+        }
+
+        public override F SelectOneFromReader<F>(DBTransaction transaction, int i)
+        {
+            var value = transaction.Reader.GetFieldValue<T>(i);
+            return Table.GetPullIndex<T>(this)?.SelectOne<F>(value);
+        }
+
+        internal protected override void AddIndex(PullIndex index, DBItem item, object value)
+        {
+            AddIndex(index, item, (T)value);
+        }
+
+        internal void AddIndex(PullIndex index, DBItem item, T value)
+        {
+            if (index is PullIndex<DBItem, T> pullIndex)
+                pullIndex.Add(item, value);
+        }
+
+        internal protected override void RemoveIndex(PullIndex index, DBItem item, object value)
+        {
+            RemoveIndex(index, item, (T)value);
+        }
+
+        internal void RemoveIndex(PullIndex index, DBItem item, T value)
+        {
+            if (index is PullIndex<DBItem, T> pullIndex)
+                pullIndex.Remove(item, value);
+        }
+
+        public override void PropertyToBinary(BinaryInvokerWriter writer, object element)
+        {
+            if (element is DBItem item)
+            {
+                T value = GetValue(item);
+                TypedSerializer.Write(writer, value, null, null);
+            }
+            else
+            {
+                throw new Exception("Wrong Property Invoker");
+            }
+        }
+
+        public override void PropertyToBinary<E>(BinaryInvokerWriter writer, E element)
+        {
+            if (element is DBItem item)
+            {
+                T value = GetValue(item);
+                TypedSerializer.Write(writer, value, null, null);
+            }
+            else
+            {
+                PropertyToBinary(writer, (object)element);
+            }
+        }
+
+        public override void PropertyFromBinary(BinaryInvokerReader reader, object element, TypeSerializeInfo itemInfo)
+        {
+            var token = reader.ReadToken();
+            if (element is DBItem item)
+            {
+                if (token == BinaryToken.Null)
+                {
+                    SetValue(item, default(T));
+                }
+                else
+                {
+                    T value = TypedSerializer.Read(reader, default(T), null, null);
+                    SetValue(item, value);
+                }
+            }
+            else
+            {
+                throw new Exception("Wrong Property Invoker");
+            }
+        }
+
+        public override void PropertyFromBinary<E>(BinaryInvokerReader reader, E element, TypeSerializeInfo itemInfo)
+        {
+            if (element is DBItem item)
+            {
+                var token = reader.ReadToken();
+                if (token == BinaryToken.Null)
+                {
+                    SetValue(item, default(T));
+                }
+                else
+                {
+                    T value = TypedSerializer.Read(reader, default(T), null, null);
+                    SetValue(item, value);
+                }
+            }
+            else
+            {
+                PropertyFromBinary(reader, (object)element, itemInfo);
+            }
+        }
+
+        public override void PropertyToString(XmlInvokerWriter writer, object element)
+        {
+            if (PropertyInvoker is IValuedInvoker<T> valueInvoker)
+            {
+                T value = valueInvoker.GetValue(element);
+                writer.WriteStart(this);
+                TypedSerializer.Write(writer, value, null);
+                writer.WriteEnd(this);
+            }
+            else
+            {
+                throw new Exception("Wrong Property Invoker");
+            }
+        }
+
+        public override void PropertyToString<E>(XmlInvokerWriter writer, E element)
+        {
+            if (PropertyInvoker is IInvoker<E, T> valueInvoker)
+            {
+                T value = valueInvoker.GetValue(element);
+                writer.WriteStart(this);
+                TypedSerializer.Write(writer, value, null);
+                writer.WriteEnd(this);
+            }
+            else
+            {
+                PropertyToString(writer, (object)element);
+            }
+        }
+
+        public override void PropertyFromString(XmlInvokerReader reader, object element, TypeSerializeInfo itemInfo)
+        {
+            if (PropertyInvoker is IValuedInvoker<T> valueInvoker)
+            {
+                T value = valueInvoker.GetValue(element);
+                value = TypedSerializer.Read(reader, value, itemInfo);
+                valueInvoker.SetValue(element, value);
+            }
+            else
+            {
+                throw new Exception("Wrong Property Invoker");
+            }
+        }
+
+        public override void PropertyFromString<E>(XmlInvokerReader reader, E element, TypeSerializeInfo itemInfo)
+        {
+            if (PropertyInvoker is IInvoker<E, T> valueInvoker)
+            {
+                T value = valueInvoker.GetValue(element);
+                value = TypedSerializer.Read(reader, value, itemInfo);
+                valueInvoker.SetValue(element, value);
+            }
+            else
+            {
+                PropertyFromString(reader, (object)element, itemInfo);
+            }
+        }
+
+
     }
 }

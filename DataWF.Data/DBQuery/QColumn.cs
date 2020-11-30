@@ -52,7 +52,7 @@ namespace DataWF.Data
 
         public string ColumnName
         {
-            get { return columnName; }
+            get => columnName;
             set
             {
                 if (columnName != value)
@@ -66,12 +66,7 @@ namespace DataWF.Data
 
         public virtual DBColumn Column
         {
-            get
-            {
-                if (columnn == null && columnName != null)
-                    columnn = base.Table?.ParseColumn(columnName) ?? DBService.Schems.ParseColumn(columnName);
-                return columnn;
-            }
+            get => columnn ?? (columnName != null ? (base.Table?.ParseColumn(columnName) ?? DBService.Schems.ParseColumn(columnName)) : null);
             set
             {
                 if (Column != value)
@@ -91,24 +86,39 @@ namespace DataWF.Data
 
         public override DBTable Table
         {
-            get { return Column?.Table ?? base.Table; }
+            get => Column?.Table ?? base.Table;
             set { }
         }
 
         public QTable QTable
         {
-            get { return Query.Tables.FirstOrDefault(p => p.BaseTable == BaseTable); }
+            get => Query.Tables.FirstOrDefault(p => p.BaseTable == BaseTable);
         }
+
+        public string FullName
+        {
+            get => $"{Table}.{Column}";
+        }
+
+        public string Prefix
+        {
+            get => prefix ?? QTable?.Alias;
+            set
+            {
+                if (prefix != value)
+                {
+                    prefix = value;
+                    OnPropertyChanged(nameof(Prefix));
+                }
+            }
+        }
+
+        public object Temp { get => temp; set => temp = value; }
 
         public override void Dispose()
         {
             columnn = null;
             base.Dispose();
-        }
-
-        public string FullName
-        {
-            get { return $"{Table}.{Column}"; }
         }
 
         public override string Format(IDbCommand command = null)
@@ -130,20 +140,6 @@ namespace DataWF.Data
         {
             return temp ?? Column.GetValue(row);
         }
-
-        public string Prefix
-        {
-            get { return prefix ?? QTable?.Alias; }
-            set
-            {
-                if (prefix != value)
-                {
-                    prefix = value;
-                    OnPropertyChanged(nameof(Prefix));
-                }
-            }
-        }
-        public object Temp { get { return temp; } set { temp = value; } }
 
         public override string ToString()
         {

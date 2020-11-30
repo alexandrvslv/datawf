@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Collections;
 using System.Data;
 using System.Text;
 
@@ -33,13 +34,18 @@ namespace DataWF.Data
 
         public QFunc(QFunctionType type)
         {
-            this.type = type;
+            Type = type;
+        }
+
+        public QFunc(QFunctionType type, IEnumerable parameters) : base(parameters)
+        {
+            Type = type;
         }
 
         public QFunctionType Type
         {
-            get { return type; }
-            set { type = value; }
+            get => type;
+            set => type = value;
         }
 
         public override object GetValue(DBItem row = null)
@@ -159,7 +165,9 @@ namespace DataWF.Data
             QItem prev = null;
             foreach (var item in items)
             {
-                if (!items.IsFirst(item) && !(item is QComparer) && !(prev is QComparer))
+                if (!items.IsFirst(item)
+                    && !(item is QComparer)
+                    && !(prev is QComparer))
                     rez.Append(", ");
                 rez.Append(item.Format(command));
                 prev = item;

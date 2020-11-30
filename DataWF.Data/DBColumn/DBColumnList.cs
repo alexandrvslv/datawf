@@ -27,8 +27,10 @@ using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
-    public class DBColumnList<T> : DBTableItemList<T> where T : DBColumn, new()
+    public class DBColumnList<T> : DBTableItemList<T> where T : DBColumn
     {
+        private bool isVirtual;
+
         public DBColumnList(DBTable table)
             : base(table)
         {
@@ -38,6 +40,8 @@ namespace DataWF.Data
             Indexes.Add(DBColumn.IsViewInvoker<T>.Instance);
             Indexes.Add(DBColumn.IsReferenceInvoker<T>.Instance);
             //Indexes.Add(DBColumn.ReferenceTableInvoker<T>.Instance);
+
+            isVirtual = Table is IDBVirtualTable;
         }
 
         protected override void OnPropertyChanged(string property)
@@ -52,12 +56,8 @@ namespace DataWF.Data
         public override void RemoveInternal(T item, int index)
         {
             base.RemoveInternal(item, index);
-            if (item.Index != null)
-            {
-                item.Clear();
-                item.Index.Dispose();
-                item.Index = null;
-            }
+            item.Clear();
+            Table.RemovePullIndex(item);
         }
 
         public new void Clear()
@@ -75,16 +75,17 @@ namespace DataWF.Data
             {
                 throw new InvalidOperationException($"Columns name duplication {item.Name}");
             }
-            // if (col.Order == -1 || col.Order > this.Count)
             if (item.IsPrimaryKey && index > 1)
                 index = 1;
             if (item.IsTypeKey)
                 index = 0;
-            item.Order = index;
-
+            if (!isVirtual)
+            {
+                item.Order = index;
+            }
             base.InsertInternal(index, item);
 
-            if (item.IsPrimaryKey)
+            if (item.IsPrimaryKey && !isVirtual)
             {
                 DBConstraint primary = null;
                 foreach (var constraint in Table.Constraints.GetByColumn(Table.PrimaryKey))
@@ -104,6 +105,7 @@ namespace DataWF.Data
                 }
             }
             item.CheckPull();
+            Table.CheckPullIndex(item);
         }
 
         public DBColumn Add(string name)
@@ -127,7 +129,7 @@ namespace DataWF.Data
         {
             if (Contains(name))
                 return this[name];
-            var column = new DBColumn(name, t, size) { Table = Table };
+            var column = DBColumnFabric.Create(t, name, size: size, table: Table);
             Add((T)column);
             return column;
         }

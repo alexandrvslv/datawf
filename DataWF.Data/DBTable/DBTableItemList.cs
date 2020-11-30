@@ -23,7 +23,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBTableItemList<T> : DBSchemaItemList<T> where T : DBTableItem, new()
+    public class DBTableItemList<T> : DBSchemaItemList<T> where T : DBTableItem
     {
 
         public DBTableItemList(DBTable table) : base()

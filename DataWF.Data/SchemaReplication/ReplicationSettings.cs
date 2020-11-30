@@ -17,20 +17,21 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
-using DataWF.Data;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Data
 {
-    [Flags]
-    public enum DBTableKeys
+    public class ReplicationSettings
     {
-        None = 0,
-        NoLogs = 1 << 0,
-        Caching = 1 << 1,
-        ReadOnly = 1 << 2,
-        Private = 1 << 3,
-        NoReplicate = 1 << 4
+        public SRInstance Instance { get; set; }
+        public List<SRSchema> Schems { get; set; }
+        public List<SRInstance> Instances { get; set; }
+
+        public SRSchema GetSchema(DBSchema schema)
+        {
+            return Schems.FirstOrDefault(p => p.Schema == schema);
+        }
     }
 }

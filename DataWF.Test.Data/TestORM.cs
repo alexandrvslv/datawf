@@ -169,7 +169,7 @@ namespace DataWF.Test.Data
             Assert.AreEqual(employer.DWeight, qresult.Get(0, "dweight"), "Insert sql Fail Double");
             Assert.AreEqual(employer.Salary, qresult.Get(0, "salary"), "Insert sql Fail Decimal");
 
-            var lodar = qresult.Get(0, "lodar").ToString();
+            var lodar = qresult.Get(0, "is_active").ToString();
             Assert.IsTrue(lodar == "1" || lodar == "True", "Insert sql Fail Bool");
             Assert.IsInstanceOf<byte[]>(qresult.Get(0, "group_access"), "Insert sql Fail Byte Array");
 
@@ -252,7 +252,7 @@ namespace DataWF.Test.Data
 
             //Files
             var file = new FileStore { Id = 1, FileName = "test.pdf", FileLastWrite = DateTime.UtcNow };
-            var buffer = (byte[])null;
+            ArraySegment<byte> buffer;
             using (var transaction = new DBTransaction(FileStore.DBTable.Connection))
             {
                 using (var stream = new FileStream("test.pdf", FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -268,7 +268,7 @@ namespace DataWF.Test.Data
                 using (var stream = await file.GetBLOB(transaction))
                 {
                     var newBuffer = Helper.GetBytes(stream);
-                    Assert.IsTrue(Helper.CompareByteAsSpan(newBuffer, buffer), "Get/Set BLOB Fail!");
+                    Assert.IsTrue(Helper.CompareByte(newBuffer, buffer), "Get/Set BLOB Fail!");
                 }
             }
 

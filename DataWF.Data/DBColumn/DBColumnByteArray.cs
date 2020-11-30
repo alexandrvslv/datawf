@@ -19,18 +19,24 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using DataWF.Data;
-using System;
 
 namespace DataWF.Data
 {
-    [Flags]
-    public enum DBTableKeys
+    public class DBColumnByteArray : DBColumn<byte[]>
     {
-        None = 0,
-        NoLogs = 1 << 0,
-        Caching = 1 << 1,
-        ReadOnly = 1 << 2,
-        Private = 1 << 3,
-        NoReplicate = 1 << 4
+        public override bool Equal(byte[] oldValue, byte[] newValue)
+        {
+            return ByteArrayComparer.Default.Equals(oldValue, newValue);
+        }
+
+        public override void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        {
+            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
+            {
+                return;
+            }
+            var value = transaction.Reader.IsDBNull(i) ? null : (byte[])transaction.Reader.GetValue(i);
+            row.SetValue(value, this, DBSetValueMode.Loading);
+        }
     }
 }

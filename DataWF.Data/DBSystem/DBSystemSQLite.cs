@@ -276,22 +276,12 @@ select seq from db_sequence where name = '{sequence.Name}';";
             return null;
         }
 
-        public override Stream GetStream(IDataReader reader, int column)
-        {
-            return ((SqliteDataReader)reader).GetStream(column);
-        }
-
-        public override Task<bool> ReadAsync(IDataReader reader)
-        {
-            return ((SqliteDataReader)reader).ReadAsync();
-        }
-
-        public override uint GetUInt(IDataReader reader, int index)
+        public override uint GetUInt(DbDataReader reader, int index)
         {
             return ((SqliteDataReader)reader).GetFieldValue<uint>(index);
         }
 
-        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        public override TimeSpan GetTimeSpan(DbDataReader reader, int index)
         {
             return ((SqliteDataReader)reader).GetTimeSpan(index);
         }

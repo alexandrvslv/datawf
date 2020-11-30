@@ -106,7 +106,7 @@ namespace DataWF.Data
                         var logColumn = GetLogColumn(column);
                         if (logColumn == null)
                         {
-                            logColumn = new DBLogColumn(column);
+                            logColumn = DBColumnFabric.Create(column);
                             Columns.Add(logColumn);
                         }
                         else
@@ -130,9 +130,9 @@ namespace DataWF.Data
             set { base.Access = value; }
         }
 
-        public DBLogColumn GetLogColumn(DBColumn column)
+        public DBColumn GetLogColumn(DBColumn column)
         {
-            return ParseColumn(column.Name + "_log") as DBLogColumn;
+            return ParseColumn(column.Name + "_log");
         }
 
         public DBColumn ParseLogProperty(string name)

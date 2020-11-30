@@ -207,11 +207,6 @@ namespace DataWF.Data
             return $"[{table.SqlName}] {alias}";
         }
 
-        public override Stream GetStream(IDataReader reader, int column)
-        {
-            return ((SqlDataReader)reader).GetStream(1);
-        }
-
         public override async Task SetBLOB(long id, Stream value, DBTransaction transaction)
         {
             var command = (SqlCommand)transaction.AddCommand($"insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values (@{FileData.IdKey.Name}, @{FileData.DataKey.Name})");
@@ -235,18 +230,12 @@ namespace DataWF.Data
             return null;
         }
 
-        public override Task<bool> ReadAsync(IDataReader reader)
-        {
-            var sqlReader = (SqlDataReader)reader;
-            return sqlReader.ReadAsync();
-        }
-
-        public override uint GetUInt(IDataReader reader, int index)
+        public override uint GetUInt(DbDataReader reader, int index)
         {
             return ((SqlDataReader)reader).GetFieldValue<uint>(index);
         }
 
-        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        public override TimeSpan GetTimeSpan(DbDataReader reader, int index)
         {
             return ((SqlDataReader)reader).GetTimeSpan(index);
         }

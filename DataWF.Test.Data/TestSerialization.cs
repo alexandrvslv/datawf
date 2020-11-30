@@ -2,14 +2,19 @@
 using DataWF.Data;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataWF.Test.Data
 {
     public class TestSerialization
     {
         public const string SchemaName = "test";
+        private DBSchema schema;
+
         [SetUp]
-        public void Setup()
+        public async Task Setup()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             DBService.Schems.Clear();
@@ -25,7 +30,7 @@ namespace DataWF.Test.Data
             };
 
             var connection = DBService.Connections["TestSqlLite"];
-            var schema = DBSchema.Generate(SchemaName, typeof(FileData), typeof(FileStore), typeof(Employer), typeof(Position), typeof(Figure));
+            schema = DBSchema.Generate(SchemaName, typeof(FileData), typeof(FileStore), typeof(Employer), typeof(Position), typeof(Figure));
             schema.DropDatabase();
             schema.CreateDatabase();
 
@@ -33,6 +38,7 @@ namespace DataWF.Test.Data
             new Position() { Id = 2, Code = "2", Name = "Second Position" }.Attach();
             new Position() { Id = 3, Code = "3", Name = "Third Position" }.Attach();
             new Position() { Id = 4, Code = "4", Name = "Sub Position", ParentId = 3 }.Attach();
+            await Position.DBTable.Save();
 
             var random = new Random();
             for (var i = 1; i < 100; i++)
@@ -58,12 +64,19 @@ namespace DataWF.Test.Data
                 })
                 }.Attach();
             }
-
+            await Employer.DBTable.Save();
         }
 
         [Test]
-        public void DataSerializeBenchmark()
+        public void BinarySerialize()
         {
+            var positions = ((IEnumerable<Position>)Position.DBTable).ToList();
+            var serializer = new BinarySerializer();
+            var buffer = serializer.Serialize(positions);
+
+            var newList = serializer.Deserialize<List<Position>>(buffer, null);
+
+            Assert.AreEqual(positions.Count, newList.Count, "Deserialize Fail");
         }
     }
 }

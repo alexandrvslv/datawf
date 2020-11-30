@@ -52,6 +52,8 @@ namespace DataWF.Data
         FileName = 1 << 24,
         FileLOB = 1 << 25,
         FileLastWrite = 1 << 26,
-        UtcDate = 1 << 27
+        UtcDate = 1 << 27,
+        ReplicateStamp = 1 << 28,
+        NoReplicate = 1 << 29
     }
 }

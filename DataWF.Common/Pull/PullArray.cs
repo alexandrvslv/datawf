@@ -102,7 +102,7 @@ namespace DataWF.Common
                 size += 32;
             }
             var temp = new T[size][];
-            array.CopyTo(temp, 0);
+            array.AsSpan().CopyTo(temp.AsSpan());
             array = temp;
         }
 

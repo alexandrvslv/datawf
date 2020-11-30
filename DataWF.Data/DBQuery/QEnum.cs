@@ -37,10 +37,7 @@ namespace DataWF.Data
             Column = column;
             foreach (var item in list)
             {
-                if (item is QItem)
-                    items.Add((QItem)item);
-                else
-                    items.Add(QParam.Fabric(item, column));
+                items.Add(QParam.Fabric(item, column));
             }
         }
 

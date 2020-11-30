@@ -10,23 +10,23 @@ namespace DataWF.Common
         {
             { typeof(string), "\u0000" },
             { typeof(bool), false },
-            { typeof(long), long.MinValue },
-            { typeof(int), int.MinValue },
-            { typeof(short), short.MinValue },
-            { typeof(char), char.MinValue },
-            { typeof(sbyte), sbyte.MinValue },
-            { typeof(ulong), ulong.MinValue },
-            { typeof(uint), uint.MinValue },
-            { typeof(ushort), uint.MinValue },
-            { typeof(byte), byte.MinValue },
-            { typeof(decimal), decimal.MinValue },
-            { typeof(double), double.MinValue },
-            { typeof(float), float.MinValue }
+            { typeof(long), long.MaxValue },
+            { typeof(ulong), ulong.MaxValue },
+            { typeof(int), int.MaxValue },
+            { typeof(uint), uint.MaxValue },
+            { typeof(short), short.MaxValue },
+            { typeof(ushort), uint.MaxValue },
+            { typeof(char), char.MaxValue },
+            { typeof(sbyte), sbyte.MaxValue },
+            { typeof(byte), byte.MaxValue },
+            { typeof(decimal), decimal.MaxValue },
+            { typeof(double), double.MaxValue },
+            { typeof(float), float.MaxValue }
         };
 
         public static N? GetNullableKey<N>() where N : struct
         {
-            return (N?)GetNullKey<N>();
+            return (N?)null;
         }
 
         public static N GetNullKey<N>()
@@ -36,7 +36,10 @@ namespace DataWF.Common
 
         public static object GetNullKey(Type type)
         {
-            type = TypeHelper.CheckNullable(type);
+            if (TypeHelper.IsNullable(type))
+            {
+                return Activator.CreateInstance(type);
+            }
             if (type.IsEnum)
             {
                 return Enum.ToObject(type, int.MinValue);
@@ -45,8 +48,10 @@ namespace DataWF.Common
             {
                 return value;
             }
-
-            return FormatterServices.GetUninitializedObject(type);
+            else
+            {
+                return nullKeys[type] = FormatterServices.GetUninitializedObject(type);
+            }
         }
 
         public static ListIndex<T, K> Create<T, K>(IValuedInvoker<K> invoker, bool concurrent)

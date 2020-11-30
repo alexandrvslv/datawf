@@ -37,6 +37,11 @@ namespace DataWF.Data
         public static readonly DBSystem Postgres = new DBSystemPostgres();
         public static readonly DBSystem SQLite = new DBSystemSQLite();
         public static readonly DBSystem Default = new DBSystemDefault();
+        public static IEnumerable<DBSystem> GetSystems()
+        {
+            return new[] { DBSystem.MSSql, DBSystem.MySql, DBSystem.Oracle, DBSystem.Postgres, DBSystem.SQLite };
+        }
+
 
         public string Name { get; internal set; }
 
@@ -90,15 +95,6 @@ namespace DataWF.Data
             FillParameter(command, parameter, value, column);
             return parameter;
         }
-
-        public static IEnumerable<DBSystem> GetSystems()
-        {
-            return new[] { DBSystem.MSSql, DBSystem.MySql, DBSystem.Oracle, DBSystem.Postgres, DBSystem.SQLite };
-        }
-
-        public abstract Task<bool> ReadAsync(IDataReader reader);
-
-        public abstract Stream GetStream(IDataReader reader, int column);
 
         public virtual IEnumerable<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName = null, string tableName = null)
         {
@@ -191,10 +187,10 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
         {
             var command = transaction.AddCommand($"select {FileData.IdKey.Name}, {FileData.DataKey.Name} from {FileData.DBTable.Name} where {FileData.IdKey.Name} = {ParameterPrefix}{FileData.IdKey.Name}");
             CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.Name}", id, FileData.IdKey);
-            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (await transaction.ReadAsync())
+            transaction.Reader = (DbDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
+            if (await transaction.Reader.ReadAsync())
             {
-                return transaction.GetStream(1);
+                return transaction.Reader.GetStream(1);
             }
             throw new Exception("No Data Found!");
         }
@@ -210,7 +206,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
         {
             var command = transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values ({ParameterPrefix}{FileData.IdKey.Name}, {ParameterPrefix}{FileData.DataKey.Name});");
             CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.Name}", id, FileData.IdKey);
-            CreateParameter(command, $"{ParameterPrefix}{FileData.DataKey.Name}", await Helper.GetBytesAsync(value), FileData.DataKey);//Double buffering!!!
+            CreateParameter(command, $"{ParameterPrefix}{FileData.DataKey.Name}", await Helper.GetBufferedBytesAsync(value), FileData.DataKey);//Double buffering!!!
             await transaction.ExecuteQueryAsync(command);
         }
 
@@ -852,12 +848,12 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return value;
         }
 
-        public virtual uint GetUInt(IDataReader reader, int index)
+        public virtual uint GetUInt(DbDataReader reader, int index)
         {
             return (uint)reader.GetValue(index);
         }
 
-        public virtual TimeSpan GetTimeSpan(IDataReader reader, int index)
+        public virtual TimeSpan GetTimeSpan(DbDataReader reader, int index)
         {
             return (TimeSpan)reader.GetValue(index);
         }
@@ -970,7 +966,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
         public virtual Stream ReadSequential(DBItem item, DBColumn column, DBTransaction transaction)
         {
             var command = transaction.AddCommand(item.Table.CreatePrimaryKeyCommmand(item.PrimaryId, new[] { column }));
-            transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
+            transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
             if (transaction.Reader.Read())
             {
                 return new DataReaderStream(transaction.Reader, false);
@@ -989,7 +985,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
         public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, DBTransaction transaction, int bufferSize = 81920)
         {
             var command = transaction.AddCommand(item.Table.CreatePrimaryKeyCommmand(item.PrimaryId, new[] { column }));
-            using (transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
+            using (transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
             {
                 if (transaction.Reader.Read())
                 {
@@ -997,7 +993,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     {
                         throw new Exception("No Data Found!");
                     }
-                    using (var dbStream = transaction.GetStream(1))
+                    using (var dbStream = transaction.Reader.GetStream(1))
                     {
                         dbStream.CopyTo(stream, bufferSize);
                     }

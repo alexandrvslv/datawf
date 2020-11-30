@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
@@ -223,7 +224,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> SelectParents()
         {
-            return Select(GroupKey, CompareType.Is, null);
+            return Select(GroupKey, CompareType.Is, (object)null);
         }
 
         #region IEnumerable Members
@@ -255,9 +256,9 @@ namespace DataWF.Data
             queryViews.Add(view);
         }
 
-        public override void OnItemChanging<V>(DBItem item, string property, DBColumn column, V value)
+        public override void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
-            column?.Index?.Remove<T, V>((T)item, value);
+            column.RemoveIndex(item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanging<V>(item, property, column, value);
@@ -266,14 +267,14 @@ namespace DataWF.Data
 
         public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
         {
-            column?.Index?.Remove((object)item, value);
+            column.RemoveIndex(item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanging(item, property, column, value);
             }
         }
 
-        public override void OnItemChanged<V>(DBItem item, string property, DBColumn column, V value)
+        public override void OnItemChanged<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
             if (string.Equals(property, nameof(DBItem.Attached), StringComparison.Ordinal)
                 || string.Equals(property, nameof(DBItem.UpdateState), StringComparison.Ordinal))
@@ -281,7 +282,7 @@ namespace DataWF.Data
                 return;
             }
 
-            column?.Index?.Add<T, V>((T)item, value);
+            column.AddIndex(item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanged<V>(item, property, column, value);
@@ -297,7 +298,7 @@ namespace DataWF.Data
                 return;
             }
 
-            column?.Index?.Add((object)item, value);
+            column.AddIndex(item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanged(item, property, column, value);
@@ -512,7 +513,7 @@ namespace DataWF.Data
                         items.Capacity = arg.TotalCount;
                     //arg.TotalCount = Rows._items.Capacity;
                 }
-                if (transaction.Canceled)
+                if (transaction.State != DBTransactionState.Default)
                 {
                     return list;
                 }
@@ -527,15 +528,15 @@ namespace DataWF.Data
                     LoadReferencingBlock(command, transaction);
                 }
 
-                if (transaction.Canceled)
+                if (transaction.State != DBTransactionState.Default)
                 {
                     return list;
                 }
 
-                using (transaction.Reader = transaction.ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
+                using (transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader))
                 {
                     CheckColumns(transaction);
-                    while (!transaction.Canceled && transaction.Reader.Read())
+                    while (transaction.State == DBTransactionState.Default && transaction.Reader.Read())
                     {
                         T row = null;
                         lock (Lock)
@@ -612,7 +613,7 @@ namespace DataWF.Data
                         items.Capacity = arg.TotalCount;
                     //arg.TotalCount = Rows._items.Capacity;
                 }
-                if (transaction.Canceled)
+                if (transaction.State != DBTransactionState.Default)
                 {
                     return list;
                 }
@@ -627,15 +628,15 @@ namespace DataWF.Data
                     LoadReferencingBlock(command, transaction);
                 }
 
-                if (transaction.Canceled)
+                if (transaction.State != DBTransactionState.Default)
                 {
                     return list;
                 }
 
-                using (transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader))
+                using (transaction.Reader = (DbDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader))
                 {
                     CheckColumns(transaction);
-                    while (!transaction.Canceled && await transaction.ReadAsync())
+                    while (transaction.State == DBTransactionState.Default && await transaction.Reader.ReadAsync())
                     {
                         T row = null;
                         lock (Lock)
@@ -966,13 +967,16 @@ namespace DataWF.Data
             IEnumerable<T> buf = param.IsCompaund ? Select(param.Parameters, list) : null;
             if (buf == null)
             {
-                if (param.ValueLeft is QColumn)
+                if (param.ValueLeft is QColumn lColumn)
                 {
-                    buf = Select(param.Column, param.Comparer, param.Value, list);
+                    if (param.ValueRight is QColumn rColumn)
+                        buf = Select(lColumn.Column, param.Comparer, rColumn.Column, list);
+                    else
+                        buf = Select(lColumn.Column, param.Comparer, param.Value, list);
                 }
-                else if (param.ValueLeft is QReflection)
+                else if (param.ValueLeft is QReflection lReflection)
                 {
-                    buf = Select(((QReflection)param.ValueLeft).Invoker, param.Comparer, param.Value, list);
+                    buf = Select(lReflection.Invoker, param.Comparer, param.Value, list);
                 }
                 else
                 {
@@ -1004,14 +1008,13 @@ namespace DataWF.Data
 
         public object Optimisation(DBColumn column, CompareType comparer, object value)
         {
-            if (value == null)
+            if (value == null || value is DBColumn)
                 return value;
-            if (value is QQuery)
+            if (value is QQuery query)
             {
                 if (column.IsPrimaryKey)
                 {
-                    var query = (QQuery)value;
-                    if (query.Columns[0] is QColumn qcolumn && !query.IsRefence)
+                    if (query.Columns.FirstOrDefault() is QColumn qcolumn && !query.IsRefence)
                     {
                         var buf = new List<T>();
                         foreach (DBItem item in query.Select())
@@ -1067,9 +1070,9 @@ namespace DataWF.Data
             }
         }
 
-        public T SelectOne(DBColumn column, object val)
+        public T SelectOne(DBColumn column, object value)
         {
-            var value = column.ParseValue(val);
+            value = column.ParseValue(value);
             if (column.Index != null)
             {
                 return column.Index.SelectOne<T>(value);
@@ -1077,9 +1080,18 @@ namespace DataWF.Data
             return Select(column, CompareType.Equal, value).FirstOrDefault();
         }
 
-        public override IEnumerable<DBItem> SelectItems(DBColumn column, CompareType comparer, object val)
+        public override IEnumerable<DBItem> SelectItems(DBColumn column, CompareType comparer, object value)
         {
-            return Select(column, comparer, val);
+            return Select(column, comparer, value);
+        }
+
+        public IEnumerable<T> Select(DBColumn lColumn, DBColumn rColumn, CompareType comparer, IEnumerable<T> list = null)
+        {
+            list = list ?? this;
+            if (lColumn == null)
+                return list;
+
+            return Search(lColumn, comparer, rColumn, list);
         }
 
         public IEnumerable<T> Select(DBColumn column, CompareType comparer, object value, IEnumerable<T> list = null)
@@ -1106,7 +1118,17 @@ namespace DataWF.Data
             list = list ?? this;
             foreach (T row in list)
             {
-                if (CheckItem(row, row.GetValue(column), value, comparer))
+                if (CheckItem(row, column.GetValue(row), value, comparer))
+                    yield return row;
+            }
+        }
+
+        public IEnumerable<T> Search(DBColumn lColumn, DBColumn rColumn, CompareType comparer, IEnumerable<T> list)
+        {
+            list = list ?? this;
+            foreach (T row in list)
+            {
+                if (CheckItem(row, lColumn.GetValue(row), rColumn.GetValue(row), comparer))
                     yield return row;
             }
         }

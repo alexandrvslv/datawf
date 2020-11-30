@@ -170,7 +170,7 @@ namespace DataWF.Common
         public PropertySerializeInfo(PropertyInfo property, int order = -1) : base(property, order)
         { }
 
-        public IElementSerializer<T> TypedSerialazer => serializer ?? (serializer = Serializer as IElementSerializer<T>);
+        public IElementSerializer<T> TypedSerializer => serializer ?? (serializer = Serializer as IElementSerializer<T>);
 
         public T GetValue<E>(E target)
         {
@@ -201,7 +201,7 @@ namespace DataWF.Common
             if (PropertyInvoker is IValuedInvoker<T> valueInvoker)
             {
                 T value = valueInvoker.GetValue(element);
-                TypedSerialazer.Write(writer, value, null, null);
+                TypedSerializer.Write(writer, value, null, null);
             }
             else
             {
@@ -214,7 +214,7 @@ namespace DataWF.Common
             if (PropertyInvoker is IInvoker<E, T> valueInvoker)
             {
                 T value = valueInvoker.GetValue(element);
-                TypedSerialazer.Write(writer, value, null, null);
+                TypedSerializer.Write(writer, value, null, null);
             }
             else
             {
@@ -233,7 +233,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    T value = TypedSerialazer.Read(reader, default(T), null, null);
+                    T value = TypedSerializer.Read(reader, default(T), null, null);
                     valueInvoker.SetValue(element, value);
                 }
             }
@@ -254,7 +254,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    T value = TypedSerialazer.Read(reader, default(T), null, null);
+                    T value = TypedSerializer.Read(reader, default(T), null, null);
                     valueInvoker.SetValue(element, value);
                 }
             }
@@ -270,7 +270,7 @@ namespace DataWF.Common
             {
                 T value = valueInvoker.GetValue(element);
                 writer.WriteStart(this);
-                TypedSerialazer.Write(writer, value, null);
+                TypedSerializer.Write(writer, value, null);
                 writer.WriteEnd(this);
             }
             else
@@ -285,7 +285,7 @@ namespace DataWF.Common
             {
                 T value = valueInvoker.GetValue(element);
                 writer.WriteStart(this);
-                TypedSerialazer.Write(writer, value, null);
+                TypedSerializer.Write(writer, value, null);
                 writer.WriteEnd(this);
             }
             else
@@ -299,7 +299,7 @@ namespace DataWF.Common
             if (PropertyInvoker is IValuedInvoker<T> valueInvoker)
             {
                 T value = valueInvoker.GetValue(element);
-                value = TypedSerialazer.Read(reader, value, itemInfo);
+                value = TypedSerializer.Read(reader, value, itemInfo);
                 valueInvoker.SetValue(element, value);
             }
             else
@@ -313,7 +313,7 @@ namespace DataWF.Common
             if (PropertyInvoker is IInvoker<E, T> valueInvoker)
             {
                 T value = valueInvoker.GetValue(element);
-                value = TypedSerialazer.Read(reader, value, itemInfo);
+                value = TypedSerializer.Read(reader, value, itemInfo);
                 valueInvoker.SetValue(element, value);
             }
             else
@@ -338,7 +338,7 @@ namespace DataWF.Common
                 if (value != null)
                 {
                     writer.WriteStart(this);
-                    TypedSerialazer.Write(writer, value, writer.Serializer.GetTypeInfo(value.GetType()));
+                    TypedSerializer.Write(writer, value, writer.Serializer.GetTypeInfo(value.GetType()));
                     writer.WriteEnd(this);
                 }
             }
@@ -356,7 +356,7 @@ namespace DataWF.Common
                 if (value != null)
                 {
                     writer.WriteStart(this);
-                    TypedSerialazer.Write(writer, value, writer.Serializer.GetTypeInfo<T>());
+                    TypedSerializer.Write(writer, value, writer.Serializer.GetTypeInfo<T>());
                     writer.WriteEnd(this);
                 }
             }
@@ -383,7 +383,7 @@ namespace DataWF.Common
                 if (value == null)
                     writer.WriteNull();
                 else
-                    TypedSerialazer.Write(writer, (T)value, null, null);
+                    TypedSerializer.Write(writer, (T)value, null, null);
             }
             else
             {
@@ -399,7 +399,7 @@ namespace DataWF.Common
                 if (value == null)
                     writer.WriteNull();
                 else
-                    TypedSerialazer.Write(writer, (T)value, null, null);
+                    TypedSerializer.Write(writer, (T)value, null, null);
             }
             else
             {
@@ -418,7 +418,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    T? value = TypedSerialazer.Read(reader, default(T), null, null);
+                    T? value = TypedSerializer.Read(reader, default(T), null, null);
                     valueInvoker.SetValue(element, value);
                 }
             }
@@ -439,7 +439,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    T? value = TypedSerialazer.Read(reader, default(T), null, null);
+                    T? value = TypedSerializer.Read(reader, default(T), null, null);
                     valueInvoker.SetValue(element, value);
                 }
             }
@@ -457,7 +457,7 @@ namespace DataWF.Common
                 if (value != null)
                 {
                     writer.WriteStart(this);
-                    TypedSerialazer.Write(writer, (T)value, null);
+                    TypedSerializer.Write(writer, (T)value, null);
                     writer.WriteEnd(this);
                 }
             }
@@ -475,7 +475,7 @@ namespace DataWF.Common
                 if (value != null)
                 {
                     writer.WriteStart(this);
-                    TypedSerialazer.Write(writer, (T)value, null);
+                    TypedSerializer.Write(writer, (T)value, null);
                     writer.WriteEnd(this);
                 }
             }
@@ -489,7 +489,7 @@ namespace DataWF.Common
         {
             if (PropertyInvoker is IValuedInvoker<T?> valueInvoker)
             {
-                var value = TypedSerialazer.Read(reader, null, itemInfo);
+                var value = TypedSerializer.Read(reader, null, itemInfo);
                 valueInvoker.SetValue(element, value);
             }
             else
@@ -502,7 +502,7 @@ namespace DataWF.Common
         {
             if (PropertyInvoker is IInvoker<E, T?> valueInvoker)
             {
-                var value = TypedSerialazer.Read(reader, null, itemInfo);
+                var value = TypedSerializer.Read(reader, null, itemInfo);
                 valueInvoker.SetValue(element, value);
             }
             else

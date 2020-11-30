@@ -1,4 +1,4 @@
-﻿//  The MIT License (MIT)
+//  The MIT License (MIT)
 //
 // Copyright © 2020 Vassilyev Alexandr
 //
@@ -17,20 +17,13 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
-using DataWF.Data;
-using System;
-
 namespace DataWF.Data
 {
-    [Flags]
-    public enum DBTableKeys
+    public class NotifySettings
     {
-        None = 0,
-        NoLogs = 1 << 0,
-        Caching = 1 << 1,
-        ReadOnly = 1 << 2,
-        Private = 1 << 3,
-        NoReplicate = 1 << 4
+        public NotifySettings()
+        {}
+
+        
     }
 }

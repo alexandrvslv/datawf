@@ -43,8 +43,7 @@ namespace DataWF.Data
         private bool isSynchronized;
 
         public DBSchemaItem()
-        {
-        }
+        {  }
 
         public DBSchemaItem(string name)
         {

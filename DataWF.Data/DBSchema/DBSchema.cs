@@ -89,6 +89,8 @@ namespace DataWF.Data
             Serialization.Deserialize(fileName, this);
         }
 
+        public Version Version { get; set; }
+
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBSchemaList Schems => Containers.FirstOrDefault() as DBSchemaList;
 

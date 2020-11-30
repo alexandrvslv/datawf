@@ -287,7 +287,7 @@ namespace DataWF.Data
                 var column = q.ParseColumn(word);
                 if (column != null)
                 {
-                    refmode = true;
+                    IsRefence = true;
                     return column;
                 }
                 q = q.Query as QQuery;
@@ -1269,7 +1269,7 @@ namespace DataWF.Data
                 allParameters = new SelectableList<QParam>();
                 if (e.Action == NotifyCollectionChangedAction.Reset)
                 {
-                    refmode = false;
+                    IsRefence = false;
                     allParameters.Clear();
                     foreach (QParam p in parameters)
                         AddAllParam(p);

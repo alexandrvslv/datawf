@@ -145,7 +145,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
             var result = FileData.DBTable.Sequence.GetNext(transaction);
             var command = (MySqlCommand)transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values (@{FileData.IdKey.Name}, @{FileData.DataKey.Name});");
             command.Parameters.Add($"@{FileData.IdKey.Name}", MySqlDbType.Int64).Value = result;
-            command.Parameters.Add($"@{FileData.DataKey.Name}", MySqlDbType.LongBlob).Value = await Helper.GetBytesAsync(value);//Double buffering!!!
+            command.Parameters.Add($"@{FileData.DataKey.Name}", MySqlDbType.LongBlob).Value = await Helper.GetBufferedBytesAsync(value);//Double buffering!!!
             await transaction.ExecuteQueryAsync(command);
             return result;
         }
@@ -165,22 +165,12 @@ select seq from db_sequence where name = '{sequence.Name}';";
             return null;
         }
 
-        public override Stream GetStream(IDataReader reader, int column)
-        {
-            return ((MySqlDataReader)reader).GetStream(column);
-        }
-
-        public override Task<bool> ReadAsync(IDataReader reader)
-        {
-            return ((MySqlDataReader)reader).ReadAsync();
-        }
-
-        public override uint GetUInt(IDataReader reader, int index)
+        public override uint GetUInt(DbDataReader reader, int index)
         {
             return ((MySqlDataReader)reader).GetUInt32(index);
         }
 
-        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        public override TimeSpan GetTimeSpan(DbDataReader reader, int index)
         {
             return ((MySqlDataReader)reader).GetTimeSpan(index);
         }

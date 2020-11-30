@@ -2,7 +2,7 @@
 
 namespace DataWF.Common
 {
-    public class NullablePull<T> : Pull<T?>, IEnumerable<T?> where T : struct
+    public class NullablePull<T> : Pull<T?> where T : struct
     {
         public NullablePull(int BlockSize) : base(BlockSize)
         {

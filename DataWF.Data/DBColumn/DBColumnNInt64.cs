@@ -19,18 +19,25 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using DataWF.Data;
-using System;
 
 namespace DataWF.Data
 {
-    [Flags]
-    public enum DBTableKeys
+    public class DBColumnNInt64 : DBColumnNullable<long>
     {
-        None = 0,
-        NoLogs = 1 << 0,
-        Caching = 1 << 1,
-        ReadOnly = 1 << 2,
-        Private = 1 << 3,
-        NoReplicate = 1 << 4
+        public override void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        {
+            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
+            {
+                return;
+            }
+            var value = transaction.Reader.IsDBNull(i) ? (long?)null : transaction.Reader.GetInt64(i);
+            row.SetValue(value, this, DBSetValueMode.Loading);
+        }
+
+        public override F SelectOneFromReader<F>(DBTransaction transaction, int i)
+        {
+            var value = transaction.Reader.GetInt64(i);
+            return Table.GetPullIndex(this)?.SelectOne<F>(value);
+        }
     }
 }

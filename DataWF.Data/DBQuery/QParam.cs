@@ -36,40 +36,27 @@ namespace DataWF.Data
     {
         public static QItem Fabric(object value, DBColumn column)
         {
-            if (value is QItem)
+            switch (value)
             {
-                return (QItem)value;
-            }
-            else if (value is DBColumn)
-            {
-                return new QColumn((DBColumn)value);
-            }
-            else if (value is DateInterval)
-            {
-                if (((DateInterval)value).IsEqual())
-                {
-                    return new QBetween(((DateInterval)value).Min.Date, ((DateInterval)value).Min.Date.AddDays(1), column);
-                }
-                else
-                {
-                    return new QBetween(((DateInterval)value).Min, ((DateInterval)value).Max, column);
-                }
-            }
-            else if (value is IInvoker invoker)
-            {
-                return new QReflection(invoker);
-            }
-            else if (value is string)
-            {
-                return new QValue(value, column);
-            }
-            else if (value is IEnumerable enumerable)
-            {
-                return new QEnum(enumerable, column);
-            }
-            else
-            {
-                return new QValue(value, column);
+                case QItem qItem:
+                    return qItem;
+                case DBColumn dBColumn:
+                    return new QColumn(dBColumn);
+                case DateInterval dateInterval:
+                    if (dateInterval.IsEqual())
+                    {
+                        return new QBetween(dateInterval.Min.Date, dateInterval.Min.Date.AddDays(1), column);
+                    }
+                    else
+                    {
+                        return new QBetween(dateInterval.Min, dateInterval.Max, column);
+                    }
+                case IInvoker invoker:
+                    return new QReflection(invoker);
+                case IEnumerable enumerable:
+                    return new QEnum(enumerable, column);
+                default:
+                    return new QValue(value, column);
             }
         }
 
@@ -113,15 +100,12 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public QColumn QColumn
-        {
-            get { return ValueLeft as QColumn; }
-        }
+        public QColumn QColumn => ValueLeft as QColumn;
 
         [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
-            get { return QColumn?.Column; }
+            get => QColumn?.Column;
             set
             {
                 if (QColumn != null)
@@ -138,35 +122,35 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public object Value
         {
-            get { return ValueRight?.GetValue(null); }
+            get => ValueRight?.GetValue(null);
             set
             {
-                if (ValueRight is QValue)
+                if (ValueRight is QValue qValue)
                 {
-                    ((QValue)ValueRight).Value = value;
+                    qValue.Value = value;
                     OnPropertyChanged(nameof(ValueRight));
                     return;
                 }
-                if (comparer.Type == CompareTypes.In && value is string)
-                    value = ((string)value).Split(',');
+                if (comparer.Type == CompareTypes.In && value is string str)
+                    value = str.Split(',');
                 ValueRight = Fabric(value, Column);
             }
         }
 
         public QItem ValueLeft
         {
-            get { return values.Count > 0 ? values[0] : null; }
+            get => values.Count > 0 ? values[0] : null;
             set
             {
                 if (ValueLeft != value)
                 {
-                    if (ValueLeft is QQuery)
-                        ((QQuery)ValueLeft).Parameters.CollectionChanged -= ValueListChanged;
+                    if (ValueLeft is QQuery oldQuery)
+                        oldQuery.Parameters.CollectionChanged -= ValueListChanged;
 
                     values.Insert(0, value);
 
-                    if (value is QQuery)
-                        ((QQuery)value).Parameters.CollectionChanged += ValueListChanged;
+                    if (value is QQuery newQuery)
+                        newQuery.Parameters.CollectionChanged += ValueListChanged;
 
                     OnPropertyChanged(nameof(ValueLeft));
                 }
@@ -175,18 +159,18 @@ namespace DataWF.Data
 
         public QItem ValueRight
         {
-            get { return values.Count > 1 ? values[1] : null; }
+            get => values.Count > 1 ? values[1] : null;
             set
             {
                 if (ValueRight != value)
                 {
-                    if (ValueRight is QQuery)
-                        ((QQuery)ValueRight).Parameters.CollectionChanged -= ValueListChanged;
+                    if (ValueRight is QQuery oldQuery)
+                        oldQuery.Parameters.CollectionChanged -= ValueListChanged;
 
                     values.Insert(1, value);
 
-                    if (value is QQuery)
-                        ((QQuery)value).Parameters.CollectionChanged += ValueListChanged;
+                    if (value is QQuery newQuery)
+                        newQuery.Parameters.CollectionChanged += ValueListChanged;
                 }
                 OnPropertyChanged(nameof(ValueRight));
             }
@@ -194,7 +178,7 @@ namespace DataWF.Data
 
         public CompareType Comparer
         {
-            get { return comparer; }
+            get => comparer;
             set
             {
                 if (!comparer.Equals(value))
@@ -207,7 +191,7 @@ namespace DataWF.Data
 
         public LogicType Logic
         {
-            get { return logic; }
+            get => logic;
             set
             {
                 if (!logic.Equals(value))
@@ -222,7 +206,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public QParam Group
         {
-            get { return List?.Owner as QParam; }
+            get => List?.Owner as QParam;
             set
             {
                 if (value != Group && value.Group != this && value != this)
@@ -234,16 +218,10 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public string ValueLeftText
-        {
-            get { return QColumn?.FullName; }
-        }
+        public string ValueLeftText => QColumn?.FullName;
 
         [XmlIgnore, JsonIgnore]
-        public bool IsCompaund
-        {
-            get { return parameters != null && parameters.Count > 0; }
-        }
+        public bool IsCompaund => parameters != null && parameters.Count > 0;
 
         public QItemList<QParam> Parameters
         {
@@ -266,21 +244,18 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public bool IsExpanded
-        {
-            get { return GroupHelper.GetAllParentExpand(this); }
-        }
+        public bool IsExpanded => GroupHelper.GetAllParentExpand(this);
 
         IGroup IGroup.Group
         {
-            get { return Group; }
-            set { Group = (QParam)value; }
+            get => Group;
+            set => Group = (QParam)value;
         }
 
         public bool Expand
         {
-            get { return expand; }
-            set { expand = value; }
+            get => expand;
+            set => expand = value;
         }
 
         [XmlIgnore, JsonIgnore]

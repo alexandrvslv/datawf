@@ -63,119 +63,105 @@ namespace DataWF.Data
             return list;
         }
 
-        public static void Intergate(Action<EndPointMessage> onLoad)
-        {
-            var service = new NotifyService();
-            service.MessageLoad += onLoad;
-            service.Start();
-        }
-
-        public static NotifyService Default;
-
         private static readonly object loadLock = new object();
 
         private IInstance instance;
         private readonly ConcurrentQueue<NotifyDBItem> buffer = new ConcurrentQueue<NotifyDBItem>();
         private readonly ManualResetEventSlim runEvent = new ManualResetEventSlim(false);
+        private readonly BinarySerializer serializer = new BinarySerializer();
         private const int timer = 2000;
-
-        public IUserIdentity User { get; private set; }
 
         private IPEndPoint endPoint;
 
-        public event EventHandler<NotifyEventArgs> SendChanges;
-
-        public NotifyService() : base()
+        public NotifyService(NotifySettings settings) : base()
         {
-            Default = this;
+            Settings = settings;
         }
 
-        public event Action<EndPointMessage> MessageLoad;
+        public IUserIdentity User { get; private set; }
 
-        public override void Dispose()
+        public NotifySettings Settings { get; }
+
+        public event EventHandler<NotifyEventArgs> SendChanges;
+
+        public event Action<SMBase> MessageLoad;
+
+        public override async void Dispose()
         {
-            Logout();
+            await Logout();
             base.Dispose();
         }
 
-        public async void Start()
+        public async Task Start()
         {
             StartListener();
             endPoint = new IPEndPoint(SocketHelper.GetInterNetworkIPs().First(), ListenerEndPoint.Port);
             instance = await Instance.GetByNetId(endPoint, true, User);
 
             byte[] temp = instance.EndPoint.GetBytes();
-            Send(temp, null, SocketMessageType.Login, true);
+            Instance.DBTable.Load();
+
+            await SendMessage(new SMRequest { Id = SMBase.NewId(), RequestType = SMRequestType.Login, Data = instance.Id }, null, true);
 
             DBService.AddRowAccept(OnAccept);
             runEvent.Reset();
-            new Task(SendChangesRunner, TaskCreationOptions.LongRunning).Start();
+
+            _ = SendChangesRunner();
         }
 
-        public async void Logout()
+        public async ValueTask Logout()
         {
             if (instance == null)
                 return;
-            runEvent.Set();
             DBService.RemoveRowAccept(OnAccept);
-            Send(null, null, SocketMessageType.Logout);
+            runEvent.Set();
+
+            await SendMessage(new SMRequest { Id = SMBase.NewId(), RequestType = SMRequestType.Logout, Data = "By by!" });
             StopListener();
             instance.Delete();
             await instance.Save(User);
             instance = null;
         }
 
-        public void Send(List<NotifyDBTable> items, IInstance address = null)
+        public async ValueTask SendNotify(List<NotifyDBTable> items, IInstance address = null)
         {
-            var buffer = (byte[])null;
-
+            SendChanges?.Invoke(this, new NotifyEventArgs(items));
+            if (!((IEnumerable<Instance>)Instance.DBTable).Any(p => CheckAddress(p, address)))
+            {
+                return;
+            }
+            var message = new SMNotify
+            {
+                Id = SMBase.NewId(),
+                EndPoint = endPoint,
+                Data = items
+            };
+            var buffer = serializer.Serialize(message);
             foreach (IInstance item in Instance.DBTable)
             {
                 if (CheckAddress(item, address))
                 {
-                    if (buffer == null)
-                    {
-                        buffer = EndPointMessage.Write(new EndPointMessage
-                        {
-                            SenderName = instance.Id.ToString(),
-                            SenderEndPoint = endPoint,
-                            Type = SocketMessageType.Data,
-                            Data = Serialize(items)
-                        });
-                    }
-                    Send(buffer, item.EndPoint, item);
+                    await Send(buffer, item.EndPoint, item);
                 }
             }
-            SendChanges?.Invoke(this, new NotifyEventArgs(items));
         }
 
-        public void Send(byte[] data, IInstance address = null, SocketMessageType type = SocketMessageType.Data, bool checkState = false)
+        public async ValueTask SendMessage<T>(T message, IInstance address = null, bool checkState = false) where T : SMBase
         {
-            var buffer = EndPointMessage.Write(new EndPointMessage()
-            {
-                SenderName = instance.Id.ToString(),
-                SenderEndPoint = endPoint,
-                Type = type,
-                Data = data
-            });
-
-            if (type == SocketMessageType.Login)
-            {
-                Instance.DBTable.Load();
-            }
+            var buffer = serializer.Serialize<T>(message);
 
             foreach (IInstance item in Instance.DBTable)
             {
                 if (CheckAddress(item, address, checkState))
                 {
-                    Send(buffer, item.EndPoint, item);
+                    await Send(buffer, item.EndPoint, item);
                 }
             }
         }
 
-        protected override void OnDataSend(UdpServerEventArgs arg)
+        protected override async ValueTask OnDataSend(UdpServerEventArgs arg)
         {
-            base.OnDataSend(arg);
+            await base.OnDataSend(arg);
             if (arg.Tag is IInstance instance)
             {
                 instance.SendCount++;
@@ -225,47 +211,63 @@ namespace DataWF.Data
             return default;
         }
 
-        protected override void OnDataLoad(UdpServerEventArgs arg)
+        protected override async ValueTask OnDataLoad(UdpServerEventArgs arg)
         {
-            base.OnDataLoad(arg);
+            await base.OnDataLoad(arg);
             //arg.Point
-            var message = EndPointMessage.Read(arg.Data);
-            if (message != null)
+
+            try
             {
-                message.RecivedEndPoint = arg.Point;
-                try { OnMessageLoad(message); }
-                catch (Exception e) { Helper.OnException(e); }
+                var message = serializer.Deserialize<SMBase>(arg.Data, null);
+                if (message != null)
+                { await OnMessageLoad(message, arg); }
+            }
+            catch (Exception e)
+            {
+                Helper.OnException(e);
             }
         }
 
-        protected virtual void OnMessageLoad(EndPointMessage message)
+        protected virtual async ValueTask OnMessageLoad(SMBase message, UdpServerEventArgs arg)
         {
-            var sender = Instance.DBTable.LoadById(message.SenderName);
+            var sender = ((IEnumerable<Instance>)Instance.DBTable).FirstOrDefault(p => p.EndPoint == message.EndPoint);
             if (sender == null)
                 return;
             sender.ReceiveCount++;
-            sender.ReceiveLength += message.Lenght;
-
-            switch (message.Type)
+            sender.ReceiveLength += arg.Length;
+            if (message is SMRequest request)
             {
-                case (SocketMessageType.Hello):
-                    sender.Active = true;
-                    break;
-                case (SocketMessageType.Login):
-                    sender.Active = true;
-                    Send(endPoint.GetBytes(), sender, SocketMessageType.Hello);
-                    break;
-                case (SocketMessageType.Logout):
-                    sender.Detach();
-                    break;
-                case (SocketMessageType.Data):
-                    Deserialize(message.Data);
-                    break;
+                switch (request.RequestType)
+                {
+                    case (SMRequestType.Login):
+                        sender.Active = true;
+                        await SendMessage(new SMResponce
+                        {
+                            Id = SMBase.NewId(),
+                            RequestId = request.Id,
+                            EndPoint = endPoint,
+                            ResponceType = SMResponceType.Confirm,
+                            Data = "Hi!"
+                        }, sender);
+                        break;
+                    case (SMRequestType.Logout):
+                        sender.Detach();
+                        break;
+                    case (SMRequestType.Data):
+                        break;
+                }
+            }
+            else if (message is SMNotify notify)
+            {
+                if (notify.Data is List<NotifyDBTable> list)
+                {
+                    LoadNotify(list);
+                }
             }
             MessageLoad?.Invoke(message);
         }
 
-        private void SendChangesRunner()
+        private async Task SendChangesRunner()
         {
             while (!runEvent.Wait(timer))
             {
@@ -275,7 +277,7 @@ namespace DataWF.Data
                         continue;
                     List<NotifyDBTable> list = Dequeu(buffer);
 
-                    Send(list);
+                    await SendNotify(list);
                 }
                 catch (Exception e)
                 {
@@ -284,58 +286,43 @@ namespace DataWF.Data
             }
         }
 
-        private static byte[] Serialize(List<NotifyDBTable> list)
-        {
-            using (var stream = new MemoryStream())
-            {
-                var serializer = new BinarySerializer { TypeShortName = true };
-                serializer.Serialize(stream, list);
-                return stream.ToArray();
-            }
-        }
-
-        public static void Deserialize(byte[] buffer)
+        public static void LoadNotify(List<NotifyDBTable> list)
         {
             lock (loadLock)
             {
-                using (var transaction = new DBTransaction(DBService.Schems.DefaultSchema.Connection, null, true))
+                foreach (var typeTable in list)
                 {
-                    using (var stream = new MemoryStream(buffer))
+                    if (typeTable.Type == null)
                     {
-                        var serializer = new BinarySerializer { TypeShortName = true };
-                        var list = serializer.Deserialize<List<NotifyDBTable>>(stream, null);
-                        foreach (var typeTable in list)
+                        continue;
+                    }
+                    using (var transaction = new DBTransaction(typeTable.Table.Schema.Connection, null, true))
+                    {
+                        foreach (var item in typeTable.Items)
                         {
-                            if (typeTable.Type == null)
+                            switch (item.Command)
                             {
-                                continue;
-                            }
-                            foreach (var item in typeTable.Items)
-                            {
-                                switch (item.Command)
-                                {
-                                    case DBLogType.Insert:
-                                        typeTable.Table.LoadItemById(item.Id, DBLoadParam.Load, null, transaction);
+                                case DBLogType.Insert:
+                                    typeTable.Table.LoadItemById(item.Id, DBLoadParam.Load, null, transaction);
+                                    break;
+                                case DBLogType.Update:
+                                    {
+                                        var record = typeTable.Table.LoadItemById(item.Id, DBLoadParam.None);
+                                        if (record != null)
+                                        {
+                                            typeTable.Table.ReloadItem(item.Id, DBLoadParam.Load, transaction);
+                                        }
                                         break;
-                                    case DBLogType.Update:
+                                    }
+                                case DBLogType.Delete:
+                                    {
+                                        var record = typeTable.Table.LoadItemById(item.Id, DBLoadParam.None);
+                                        if (item != null)
                                         {
-                                            var record = typeTable.Table.LoadItemById(item.Id, DBLoadParam.None);
-                                            if (record != null)
-                                            {
-                                                typeTable.Table.ReloadItem(item.Id, DBLoadParam.Load, transaction);
-                                            }
-                                            break;
+                                            typeTable.Table.Remove(record);
                                         }
-                                    case DBLogType.Delete:
-                                        {
-                                            var record = typeTable.Table.LoadItemById(item.Id, DBLoadParam.None);
-                                            if (item != null)
-                                            {
-                                                typeTable.Table.Remove(record);
-                                            }
-                                            break;
-                                        }
-                                }
+                                        break;
+                                    }
                             }
                         }
                     }

@@ -100,13 +100,13 @@ namespace DataWF.Data
             {
                 if (cacheData == null && DataStore != null)
                 {
-                    cacheData = Helper.ReadGZip(DataStore);
+                    cacheData = Helper.ReadGZip(new ArraySegment<byte>(DataStore)).Array;
                 }
                 return cacheData;
             }
             set
             {
-                DataStore = Helper.WriteGZip(value);
+                DataStore = Helper.WriteGZip(new ArraySegment<byte>(value)).Array;
                 if (DataName != null)
                 {
                     if (value != null)

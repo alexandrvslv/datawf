@@ -193,6 +193,7 @@ namespace DataWF.Data
         protected DBColumn fileLastWriteKey = DBColumn.EmptyKey;
         protected DBColumn dateKey = DBColumn.EmptyKey;
         protected DBColumn stampKey = DBColumn.EmptyKey;
+        protected DBColumn srStampKey = DBColumn.EmptyKey;
         protected DBColumn codeKey = DBColumn.EmptyKey;
         protected DBColumn typeKey = DBColumn.EmptyKey;
         protected DBColumn groupKey = DBColumn.EmptyKey;
@@ -207,6 +208,7 @@ namespace DataWF.Data
 
         private readonly ConcurrentDictionary<Type, List<IInvokerJson>> invokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
         private readonly ConcurrentDictionary<Type, List<IInvokerJson>> refingInvokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
+        private readonly Dictionary<DBColumn, PullIndex> pullIndexes = new Dictionary<DBColumn, PullIndex>();
         private IInvokerJson[] refInvoker;
 
         protected string query;
@@ -447,6 +449,9 @@ namespace DataWF.Data
         public DBColumn FileLastWriteKey => fileLastWriteKey == DBColumn.EmptyKey ? (fileLastWriteKey = Columns.GetByKey(DBColumnKeys.FileLastWrite)) : fileLastWriteKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
+        public DBColumn ReplicateStampKey => srStampKey == DBColumn.EmptyKey ? (srStampKey = Columns.GetByKey(DBColumnKeys.ReplicateStamp)) : srStampKey;
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBColumn StampKey => stampKey == DBColumn.EmptyKey ? (stampKey = Columns.GetByKey(DBColumnKeys.Stamp)) : stampKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -610,11 +615,48 @@ namespace DataWF.Data
 
         public abstract void CopyTo(DBItem[] array, int arrayIndex);
 
-        public abstract void OnItemChanging<V>(DBItem item, string property, DBColumn column, V value);
+        public abstract void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value);
         public abstract void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
-        public abstract void OnItemChanged<V>(DBItem item, string proeprty, DBColumn column, V value);
+        public abstract void OnItemChanged<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
         public abstract void OnItemChanged(DBItem item, string proeprty, DBColumn column, object value);
         public abstract void Trunc();
+
+        public PullIndex GetPullIndex(DBColumn column)
+        {
+            return pullIndexes.TryGetValue(column, out var index) ? index : null;
+        }
+
+        public PullIndex<DBItem, T> GetPullIndex<T>(DBColumn<T> column)
+        {
+            return pullIndexes.TryGetValue(column, out var index) ? (PullIndex<DBItem, T>)index : null;
+        }
+
+        public void CheckPullIndex(DBColumn column)
+        {
+            var index = GetPullIndex(column);
+            if (index != null && index.BasePull != column.Pull)
+            {
+                pullIndexes.Remove(column);
+                index.Dispose();
+                index = null;
+            }
+            if (index == null && column.Pull != null && (column.IsPrimaryKey
+                || (column.Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing
+                || (column.Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference))
+                index = column.CreatePullIndex();
+            if (index != null)
+            {
+                pullIndexes[column] = index;
+            }
+        }
+
+        public void RemovePullIndex(DBColumn column)
+        {
+            if (pullIndexes.TryGetValue(column, out var index))
+            {
+                index.Dispose();
+            }
+        }
 
         public bool IsSerializeableColumn(DBColumn column, Type type)
         {
@@ -841,11 +883,10 @@ namespace DataWF.Data
             var column = Columns[name];
             if (column == null)
             {
-                column = new DBColumn(name) { DataType = type };
+                column = DBColumnFabric.Create(typeof(Nullable<>).MakeGenericType(type), name: name, size: -1, table: this);
                 Columns.Add(column);
                 newCol = true;
             }
-            column.ReaderDataType = type;
             return column;
         }
 
@@ -934,34 +975,39 @@ namespace DataWF.Data
                     Add(item);
                 return false;
             }
-
-            if (item.UpdateState == DBUpdateState.Insert)
-            {
-                if (StampKey != null)
-                    item.Stamp = DateTime.UtcNow;
-                if (DateKey != null)
-                    item.DateCreate = DateTime.UtcNow;
-                if (IsLoging && StatusKey != null && !item.Changed(StatusKey))
-                    item.Status = DBStatus.New;
-            }
-            else if ((item.UpdateState & DBUpdateState.Update) == DBUpdateState.Update)
-            {
-                if (StampKey != null)
-                    item.Stamp = DateTime.UtcNow;
-                if (IsLoging && StatusKey != null && item.Status == DBStatus.Actual && !item.Changed(StatusKey) && !item.Changed(AccessKey))
-                    item.Status = DBStatus.Edit;
-            }
-
-            //if (!item.Attached)
-            //    Add(item);
-            transaction.AddItem(item);
             var args = new DBItemEventArgs(item, transaction);
 
-            //CheckRerencing();
+            if (!transaction.Replication)
+            {
+                if (item.UpdateState == DBUpdateState.Insert)
+                {
 
-            if (!item.OnUpdating(args))
-                return false;
-            args.Columns = item.GetChangeKeys().ToList();
+                    if (StampKey != null)
+                        item.Stamp = DateTime.UtcNow;
+                    if (DateKey != null)
+                        item.DateCreate = DateTime.UtcNow;
+                    if (IsLoging && StatusKey != null && !item.Changed(StatusKey))
+                        item.Status = DBStatus.New;
+                }
+                else if ((item.UpdateState & DBUpdateState.Update) == DBUpdateState.Update)
+                {
+                    if (StampKey != null)
+                        item.Stamp = DateTime.UtcNow;
+                    if (IsLoging && StatusKey != null && item.Status == DBStatus.Actual && !item.Changed(StatusKey) && !item.Changed(AccessKey))
+                        item.Status = DBStatus.Edit;
+                }
+                if (!item.OnUpdating(args))
+                    return false;
+            }
+            else
+            {
+                item.ReplicateStamp = item.Stamp;
+            }
+
+            transaction.AddItem(item);
+
+            var columns = item.GetChangeKeys().ToList();
+            args.Columns = columns;
             DBCommand dmlCommand = null;
 
             if (item.UpdateState == DBUpdateState.Insert)
@@ -1002,13 +1048,15 @@ namespace DataWF.Data
 
             var result = await transaction.ExecuteQueryAsync(command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
             transaction.DbConnection.System.UploadCommand(item, command);
-            if (PrimaryKey != null && item.PrimaryId == null)
+            if (dmlCommand == dmlInsertSequence)
             {
                 item[PrimaryKey] = result;
                 Sequence.SetCurrent(result);
             }
 
-            if (!transaction.NoLogs && LogTable != null)
+            if (!transaction.Replication
+                && !transaction.NoLogs
+                && LogTable != null)
             {
                 args.LogItem = (DBLogItem)LogTable.NewItem(DBUpdateState.Insert, false, item.ItemType ?? 0);
                 args.LogItem.BaseItem = item;
@@ -1180,11 +1228,13 @@ namespace DataWF.Data
             {
                 foreach (QParam param in query.AllParameters)
                 {
-                    if (param.ValueRight is QColumn)
+                    if (param.ValueRight is QColumn qColumn)
                     {
-                        DBColumn column = ((QColumn)param.ValueRight).Column;
+                        DBColumn column = qColumn.Column;
                         if (column != null && column.Table == this)
-                            ((QColumn)param.ValueRight).Temp = item[column];
+                        {
+                            qColumn.Temp = item[column];
+                        }
                     }
                 }
             }
@@ -1278,14 +1328,15 @@ namespace DataWF.Data
                 return comparer.Type == CompareTypes.Is ? !comparer.Not : val2 == null;
             else if (val2 == null)
                 return comparer.Type == CompareTypes.Is ? comparer.Not : false;
-            if (val1 is QQuery)
-                val1 = SelectQuery(item, (QQuery)val1, comparer);
-            if (val2 is QQuery)
-                val2 = SelectQuery(item, (QQuery)val2, comparer);
+            if (val1 is QQuery query1)
+                val1 = SelectQuery(item, query1, comparer);
+            if (val2 is QQuery query2)
+                val2 = SelectQuery(item, query2, comparer);
             if (val1 is Enum)
                 val1 = (int)val1;
             if (val2 is Enum)
                 val2 = (int)val1;
+
             switch (comparer.Type)
             {
                 //case CompareTypes.Is:
@@ -1489,13 +1540,16 @@ namespace DataWF.Data
 
         protected void ClearColumnsData(bool pool)
         {
+            foreach (var pullIndex in pullIndexes.Values)
+            {
+                pullIndex.Clear();
+            }
             foreach (var column in Columns)
             {
                 if (pool)
                 {
                     column.Clear();
                 }
-                column.Index?.Clear();
             }
         }
 
@@ -1837,7 +1891,7 @@ namespace DataWF.Data
                     column.DataType = typeof(double);
                 else if (data == "INT" || data == "INTEGER")
                     column.DataType = typeof(int);
-                else if (data == "BIT")
+                else if (data == "BIT" || data == "BOOL" || data == "BOOLEAN")
                     column.DataType = typeof(bool);
                 else
                 {
@@ -1969,9 +2023,9 @@ namespace DataWF.Data
             return cs;
         }
 
-        public DBColumn InitColumn(string code)
+        public DBColumn InitColumn(Type type, string name)
         {
-            return Columns[code] ?? new DBColumn(code) { Table = this };
+            return Columns[name] ?? DBColumnFabric.Create(type, name: name, table: this);
         }
 
         private DBConstraint InitConstraint(string name)
@@ -1983,12 +2037,12 @@ namespace DataWF.Data
         {
             Columns.AddRange(new[]
             {
-                new DBColumn { Name = "type_id", Keys = DBColumnKeys.ItemType, DBDataType = DBDataType.Int },
-                new DBColumn { Name = "unid", Keys = DBColumnKeys.Primary, DBDataType = DBDataType.Int },
-                new DBColumn { Name = "datec", Keys = DBColumnKeys.Date| DBColumnKeys.UtcDate, DBDataType = DBDataType.DateTime },
-                new DBColumn { Name = "dateu", Keys = DBColumnKeys.Stamp| DBColumnKeys.UtcDate, DBDataType = DBDataType.DateTime },
-                new DBColumn { Name = "stateid", Keys = DBColumnKeys.State, DBDataType = DBDataType.Decimal, Size = 28 },
-                new DBColumn { Name = "access", Keys = DBColumnKeys.Access, DBDataType = DBDataType.Blob, Size = 2000 }
+                DBColumnFabric.Create(typeof(int), name: "type_id", keys: DBColumnKeys.ItemType, table: this ),
+                DBColumnFabric.Create(typeof(int?), name: "unid", keys: DBColumnKeys.Primary, table: this),
+                DBColumnFabric.Create(typeof(DateTime?), name: "datec", keys: DBColumnKeys.Date| DBColumnKeys.UtcDate, table:this),
+                DBColumnFabric.Create(typeof(DateTime?), name: "dateu", keys: DBColumnKeys.Stamp| DBColumnKeys.UtcDate, table:this),
+                DBColumnFabric.Create(typeof(DBItemState?), name: "stateid", keys: DBColumnKeys.State,table:this),
+                DBColumnFabric.Create(typeof(byte[]), name: "access", keys: DBColumnKeys.Access, table:this)
             });
         }
 
@@ -2022,6 +2076,39 @@ namespace DataWF.Data
                 return false;
             }
             return true;
+        }
+
+        public DateTime? GetReplicateMaxStamp()
+        {
+            using (var query = new QQuery(this))
+            {
+                query.Columns.Add(new QFunc(QFunctionType.max, new[] { StampKey }));
+
+                var param = query.Add();
+                param.Parameters.Add(query.CreateParam(ReplicateStampKey, CompareType.Is, null));
+                param.Parameters.Add(query.CreateParam(LogicType.Or, StampKey, CompareType.Greater, ReplicateStampKey));
+
+                var max = Connection.ExecuteQuery(query.ToCommand(false), true, DBExecuteType.Scalar);
+                return max == null || max == DBNull.Value
+                    ? (DateTime?)null
+                    : DateTime.SpecifyKind((DateTime)max, DateTimeKind.Utc);
+            }
+        }
+
+        public IEnumerable<DBItem> GetReplicateItems(DateTime? stamp)
+        {
+            using (var query = new QQuery(this))
+            {
+                if (stamp != null)
+                {
+                    query.BuildParam(StampKey, CompareType.GreaterOrEqual, stamp);
+                }
+                var param = query.Add();
+                param.Parameters.Add(query.CreateParam(ReplicateStampKey, CompareType.Is, null));
+                param.Parameters.Add(query.CreateParam(LogicType.Or, StampKey, CompareType.Greater, ReplicateStampKey));
+
+                return LoadItems(query, DBLoadParam.Referencing);
+            }
         }
 
         public class GroupNameInvoker : Invoker<DBTable, string>

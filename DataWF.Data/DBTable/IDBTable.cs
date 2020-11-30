@@ -120,7 +120,7 @@ namespace DataWF.Data
         QParam GetStatusParam(DBStatus status);
         int GetTypeIndex(Type type);
         QParam GetTypeParam(Type type);
-        DBColumn InitColumn(string code);
+        DBColumn InitColumn(Type type, string code);
         DBColumnGroup InitColumnGroup(string code);
         void LoadFile();
         void LoadFile(string fileName);
@@ -135,9 +135,9 @@ namespace DataWF.Data
         DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true);
         DBItem NewItem(DBUpdateState state, bool def, int typeIndex);
         int NextHash();
-        void OnItemChanged<V>(DBItem item, string proeprty, DBColumn column, V value);
+        void OnItemChanged<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
         void OnItemChanged(DBItem item, string proeprty, DBColumn column, object value);
-        void OnItemChanging<V>(DBItem item, string proeprty, DBColumn column, V value);
+        void OnItemChanging<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
         void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
         void OnUpdated(DBItemEventArgs e);
         bool OnUpdating(DBItemEventArgs e);

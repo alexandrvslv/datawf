@@ -45,7 +45,7 @@ namespace DataWF.Data
             {
                 var propertyType = column.DataType;
                 writer.WritePropertyName(column.Name);
-                column.Serializer.Write(writer, column.GetValue(value), options);
+                column.Serializer.WriteObject(writer, column.GetValue(value), options);
             }
             writer.WriteEndObject();
         }

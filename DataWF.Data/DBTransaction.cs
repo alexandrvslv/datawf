@@ -21,6 +21,7 @@ using DataWF.Common;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -90,7 +91,7 @@ namespace DataWF.Data
 
         public IDbConnection Connection { get; private set; }
 
-        public IDataReader Reader { get; set; }
+        public DbDataReader Reader { get; set; }
 
         public List<DBColumn> ReaderColumns { get; set; }
 
@@ -113,6 +114,8 @@ namespace DataWF.Data
         public int ReferencingRecursion { get; set; }
 
         public bool NoLogs { get; set; }
+
+        public bool Replication { get; set; }
 
         public void Commit()
         {
@@ -353,16 +356,6 @@ namespace DataWF.Data
             {
                 Rollback();
             }
-        }
-
-        public Task<bool> ReadAsync()
-        {
-            return DbConnection.System.ReadAsync(Reader);
-        }
-
-        public Stream GetStream(int column)
-        {
-            return DbConnection.System.GetStream(Reader, column);
         }
 
         public QResult ExecuteQResult()

@@ -247,23 +247,23 @@ namespace DataWF.Data
             }
         }
 
-        public override void OnItemChanging<V>(DBItem item, string property, DBColumn column, V value)
+        public override void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
-            if (item is T && item.GetType() == typeof(T))
+            if (item.GetType() == typeof(T))
             {
-                base.OnItemChanging<V>(item, property, column == null ? null : Columns[column.Name], value);
+                base.OnItemChanging<V>(item, property, column, value);
             }
         }
 
         public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
         {
-            if (item is T && item.GetType() == typeof(T))
+            if (item.GetType() == typeof(T))
             {
-                base.OnItemChanging(item, property, column == null ? null : Columns[column.Name], value);
+                base.OnItemChanging(item, property, column, value);
             }
         }
 
-        public override void OnItemChanged<V>(DBItem item, string property, DBColumn column, V value)
+        public override void OnItemChanged<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
             if (item is T tItem && tItem.GetType() == typeof(T))
             {
@@ -277,7 +277,7 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    base.OnItemChanged<V>(item, property, column == null ? null : Columns[column.Name], value);
+                    base.OnItemChanged<V>(item, property, column, value);
                 }
             }
         }
@@ -296,15 +296,17 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    base.OnItemChanged(item, property, column == null ? null : Columns[column.Name], value);
+                    base.OnItemChanged(item, property, column, value);
                 }
             }
         }
 
         public override DBColumn CheckColumn(string name, Type type, ref bool newCol)
         {
-            var column = base.CheckColumn(name, type, ref newCol);
-            return column is DBVirtualColumn virtualColumn ? virtualColumn.BaseColumn : column;
+            var column = BaseTable.CheckColumn(name, type, ref newCol);
+            if (newCol)
+                Columns.Add(column);
+            return column;
         }
 
         public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
@@ -363,11 +365,6 @@ namespace DataWF.Data
                 yield return item;
         }
 
-        public override DBColumn ParseColumn(string name)
-        {
-            return base.ParseColumn(name);
-        }
-
         public void Generate()
         {
             if (BaseTable == null || Columns.Count > 0)
@@ -375,17 +372,13 @@ namespace DataWF.Data
             var type = typeof(T);
             foreach (DBColumn column in BaseTable.Columns)
             {
-                var exist = (DBVirtualColumn)ParseColumn(column.Name);
+                var exist = ParseColumn(column.Name);
                 if (exist == null)
                 {
-                    exist = new DBVirtualColumn(column);
-                    Columns.Add(exist);
+                    Columns.Add(column);
                     exist.DisplayName = column.DisplayName;
                 }
-                else
-                {
-                    exist.BaseColumn = column;
-                }
+                
             }
 
             foreach (DBForeignKey reference in BaseTable.Foreigns)

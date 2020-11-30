@@ -2,7 +2,7 @@
 using System;
 using System.Collections;
 
-namespace DataWF.Data
+namespace DataWF.Common
 {
     public static class PullIndexFabric
     {
@@ -17,16 +17,8 @@ namespace DataWF.Data
                 keyComparer = StringComparer.OrdinalIgnoreCase;
             }
 
-            if (keyType.IsValueType || keyType.IsEnum)
-            {
-                var gtype = typeof(NullablePullIndex<,>).MakeGenericType(type, keyType);
-                return (PullIndex)EmitInvoker.CreateObject(gtype, ctorTypes, new object[] { pull, nullKey, valueComparer, keyComparer }, true);
-            }
-            else
-            {
-                var gtype = typeof(PullIndex<,>).MakeGenericType(type, keyType);
-                return (PullIndex)EmitInvoker.CreateObject(gtype, ctorTypes, new object[] { pull, nullKey, valueComparer, keyComparer }, true);
-            }
+            var gtype = typeof(PullIndex<,>).MakeGenericType(type, keyType);
+            return (PullIndex)EmitInvoker.CreateObject(gtype, ctorTypes, new object[] { pull, nullKey, valueComparer, keyComparer }, true);
 
         }
     }
