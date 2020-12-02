@@ -14,10 +14,10 @@ namespace DataWF.Common
                 return true;
             if (x == null || y == null || x.Length != y.Length)
                 return false;
-            return EqualsAsSpan(x, y);
+            return Equals((ReadOnlySpan<byte>)x, (ReadOnlySpan<byte>)y);
         }
 
-        public bool EqualsAsSpan(ReadOnlySpan<byte> x, ReadOnlySpan<byte> y)
+        public bool Equals(ReadOnlySpan<byte> x, ReadOnlySpan<byte> y)
         {
             return x.SequenceEqual(y);
         }
@@ -28,6 +28,8 @@ namespace DataWF.Common
         }
 
         public int GetHashCode(byte[] obj) => obj.GetHashCode();
+
+        public int GetHashCode(ReadOnlySpan<byte> obj) => obj.GetHashCode();
 
         public int GetHashCode(object obj) => obj.GetHashCode();
 

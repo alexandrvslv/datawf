@@ -37,7 +37,7 @@ namespace DataWF.Data
 
         public int UserId { get; set; }
         
-        [ElementSerializer(typeof(DBItemSRSerializer))]
+        [ElementSerializer(typeof(DBItemSRSerializer<DBItem>))]
         public DBItem Value { get; set; }
 
         [XmlIgnore, JsonIgnore]

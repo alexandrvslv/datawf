@@ -205,12 +205,9 @@ namespace DataWF.Data
         public int Hash = -1;
         protected internal readonly int index = ++tableIndex;
         protected internal ConcurrentQueue<int> FreeHandlers = new ConcurrentQueue<int>();
-
-        private readonly ConcurrentDictionary<Type, List<IInvokerJson>> invokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
-        private readonly ConcurrentDictionary<Type, List<IInvokerJson>> refingInvokers = new ConcurrentDictionary<Type, List<IInvokerJson>>();
-        private readonly Dictionary<DBColumn, PullIndex> pullIndexes = new Dictionary<DBColumn, PullIndex>();
-        private IInvokerJson[] refInvoker;
-
+        protected readonly Dictionary<DBColumn, PullIndex> pullIndexes = new Dictionary<DBColumn, PullIndex>();
+        protected readonly ConcurrentDictionary<Type, List<DBColumn>> mapTypeColumn = new ConcurrentDictionary<Type, List<DBColumn>>();
+        protected readonly ConcurrentDictionary<Type, List<IInvoker>> refingInvokers = new ConcurrentDictionary<Type, List<IInvoker>>();
         protected string query;
         protected string comInsert;
         protected string comUpdate;
@@ -224,6 +221,7 @@ namespace DataWF.Data
         internal object locker = new object();
         private DBItemType itemType;
         private int itemTypeIndex = 0;
+        private DBColumn[] refInvoker;
 
         protected DBTable(string name = null) : base(name)
         {
@@ -616,9 +614,7 @@ namespace DataWF.Data
         public abstract void CopyTo(DBItem[] array, int arrayIndex);
 
         public abstract void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value);
-        public abstract void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
         public abstract void OnItemChanged<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
-        public abstract void OnItemChanged(DBItem item, string proeprty, DBColumn column, object value);
         public abstract void Trunc();
 
         public PullIndex GetPullIndex(DBColumn column)
@@ -660,12 +656,11 @@ namespace DataWF.Data
 
         public bool IsSerializeableColumn(DBColumn column, Type type)
         {
-            return column.Property != null
+            return column.PropertyName != null
                 && column.PropertyInvoker != null && column.PropertyInvoker != column
                 && column.PropertyInvoker.TargetType.IsAssignableFrom(type)
                 && !TypeHelper.IsNonSerialize(column.PropertyInfo)
                 //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
-                && (column.Keys & DBColumnKeys.Stamp) != DBColumnKeys.Stamp
                 && (column.Keys & DBColumnKeys.Password) != DBColumnKeys.Password
                 && (column.Keys & DBColumnKeys.File) != DBColumnKeys.File;
         }
@@ -906,9 +901,11 @@ namespace DataWF.Data
 
         public abstract Task<IEnumerable<DBItem>> LoadItemsAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
 
-        public abstract DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null);
+        public abstract DBItem LoadItemByCode(string code, DBColumn<string> column, DBLoadParam param, DBTransaction transaction = null);
 
         public abstract DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
+
+        public abstract DBItem LoadItemById<K>(K id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
 
         public abstract void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
 
@@ -942,7 +939,7 @@ namespace DataWF.Data
 
         protected internal int GetNextHandler(out short block, out short blockIndex)
         {
-            if (FreeHandlers.Count > 0 && FreeHandlers.TryDequeue(out var handler))
+            if (FreeHandlers.TryDequeue(out var handler))
             {
                 Helper.OneToTwoPointer(handler, out block, out blockIndex);
                 return handler;
@@ -1367,7 +1364,7 @@ namespace DataWF.Data
                 case CompareTypes.Between:
                     var between = val2 as QBetween;
                     if (between == null)
-                        throw new Exception("Expect QBetween but Get " + val2 == null ? "null" : val2.GetType().FullName);
+                        throw new Exception($"Expect QBetween but Get {(val2 == null ? "null" : val2.GetType().FullName)}");
                     return ListHelper.Compare(val1, between.Min.GetValue(item), null) >= 0
                                      && ListHelper.Compare(val1, between.Max.GetValue(item), null) <= 0;
                 default:
@@ -1555,7 +1552,15 @@ namespace DataWF.Data
 
         public IDbCommand CreateKeyCommmand(object key, DBColumn column, IEnumerable<DBColumn> cols = null)
         {
-            string idName = System.ParameterPrefix + column.Name;
+            string idName = System.ParameterPrefix + column.SqlName;
+            var command = System.CreateCommand(Schema.Connection, BuildQuery($"where a.{column.SqlName}={idName}", "a", cols));
+            System.CreateParameter(command, idName, key, column);
+            return command;
+        }
+
+        public IDbCommand CreateKeyCommmand<K>(K key, DBColumn<K> column, IEnumerable<DBColumn> cols = null)
+        {
+            string idName = System.ParameterPrefix + column.SqlName;
             var command = System.CreateCommand(Schema.Connection, BuildQuery($"where a.{column.SqlName}={idName}", "a", cols));
             System.CreateParameter(command, idName, key, column);
             return command;
@@ -1606,14 +1611,17 @@ namespace DataWF.Data
             using (var file = File.Open(fileName, FileMode.Open, FileAccess.Write))
             {
                 using (var writer = new BinaryWriter(file))
+                using (var invokerWriter = new BinaryInvokerWriter(writer))
                 {
-                    var map = DBItemBinarySerialize.WriteColumns(writer, this);
+                    invokerWriter.WriteArrayBegin();
+                    invokerWriter.WriteArrayLength(Count);
+                    var map = DBItemSerializer.Instance.WriteMap(writer, ItemType.Type, this);
                     foreach (DBItem row in this)
                     {
-                        DBItemBinarySerialize.Write(writer, row, map);
+                        invokerWriter.WriteArrayEntry();
+                        DBItemSerializer.Instance.Write(invokerWriter, item, null, map);
                     }
-
-                    DBItemBinarySerialize.WriteSeparator(writer, DBRowBinarySeparator.End);
+                    invokerWriter.WriteArrayEnd();
                 }
             }
         }
@@ -1631,13 +1639,27 @@ namespace DataWF.Data
             using (var file = File.Open(fileName, FileMode.Open, FileAccess.Read))
             {
                 using (var reader = new BinaryReader(file))
+                using (var invokerReader = new BinaryInvokerReader(reader))
                 {
-                    var map = DBItemBinarySerialize.ReadColumns(reader, this);
-                    while (true)
+                    invokerReader.ReadToken();
+                    if (invokerReader.CurrentToken == BinaryToken.ArrayBegin)
                     {
-                        DBRowBinarySeparator sep = DBItemBinarySerialize.PeekSeparator(reader);
-                        if (sep == DBRowBinarySeparator.End)
-                            break;
+                        invokerReader.ReadToken();
+                    }
+                    if (invokerReader.CurrentToken == BinaryToken.ArrayLength)
+                    {
+                        var count = Int32Serializer.Instance.Read(invokerReader.Reader);
+                        invokerReader.ReadToken();
+                    }
+                    var map = (Dictionary<short, IPropertySerializeInfo>)null;
+                    if (invokerReader.CurrentToken == BinaryToken.SchemaBegin)
+                    {
+                        var map = DBItemSerializer.Instance.ReadMap(reader, out _, out _);
+                        invokerReader.ReadToken();
+                    }
+
+                    while (invokerReader.CurrentToken == BinaryToken.ArrayEntry)
+                    {
                         DBItem row = NewItem(DBUpdateState.Default, false);
                         DBItemBinarySerialize.Read(reader, row, map);
                         Add(row);
@@ -1689,28 +1711,29 @@ namespace DataWF.Data
             fileBLOBKey = DBColumn<long?>.EmptyKey;
             fileNameKey = DBColumn<string>.EmptyKey;
             codeKey = DBColumn<string>.EmptyKey;
+            itemTypeKey = DBColumn<int>.EmptyKey;
             typeKey = DBColumn.EmptyKey;
             groupKey = DBColumn.EmptyKey;
             stateKey = DBColumn<DBStatus>.EmptyKey;
             imageKey = DBColumn<byte[]>.EmptyKey;
         }
 
-        public IEnumerable<IInvokerJson> GetRefInvokers()
+        public IEnumerable<DBColumn> GetRefColumns()
         {
-            return refInvoker ?? (refInvoker = new IInvokerJson[] { (IInvokerJson)ItemTypeKey.PropertyInvoker, (IInvokerJson)PrimaryKey.PropertyInvoker });
+            return refInvoker ?? (refInvoker = new DBColumn[] { ItemTypeKey, PrimaryKey });
         }
 
-        public IEnumerable<IInvokerJson> GetRefingInvokers<T>()
+        public IEnumerable<IInvoker> GetRefingInvokers<T>()
         {
             return GetRefingInvokers(typeof(T));
         }
 
-        public IEnumerable<IInvokerJson> GetRefingInvokers(Type t)
+        public IEnumerable<IInvoker> GetRefingInvokers(Type t)
         {
             return refingInvokers.GetOrAdd(t, CreateInvokers);
-            List<IInvokerJson> CreateInvokers(Type type)
+            List<IInvoker> CreateInvokers(Type type)
             {
-                var refingInvokers = new List<IInvokerJson>(Generator?.Referencings.Count() ?? 0);
+                var refingInvokers = new List<IInvoker>(Generator?.Referencings.Count() ?? 0);
                 if (Generator != null)
                 {
                     foreach (var refing in Generator.Referencings)
@@ -1718,7 +1741,7 @@ namespace DataWF.Data
                         if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(type)
                             || TypeHelper.IsNonSerialize(refing.PropertyInfo))
                             continue;
-                        refingInvokers.Add((IInvokerJson)refing.PropertyInvoker);
+                        refingInvokers.Add((IInvoker)refing.PropertyInvoker);
                     }
                 }
                 return refingInvokers;
@@ -1734,31 +1757,25 @@ namespace DataWF.Data
             return null;
         }
 
-        public IEnumerable<IInvokerJson> GetInvokers<T>()
+        public IEnumerable<DBColumn> GetTypeColumns<T>()
         {
-            return GetInvokers(typeof(T));
+            return GetColumns(typeof(T));
         }
 
-        public IEnumerable<IInvokerJson> GetInvokers(Type t)
+        public IEnumerable<DBColumn> GetTypeColumns(Type t)
         {
-            return invokers.GetOrAdd(t, CreateInvokers);
-            List<IInvokerJson> CreateInvokers(Type type)
+            return mapTypeColumn.GetOrAdd(t, CreateInvokers);
+            List<DBColumn> CreateInvokers(Type type)
             {
-                var invokers = new List<IInvokerJson>(Columns.Count);
+                var column = new List<DBColumn>(Columns.Count);
                 foreach (var column in Columns)
                 {
-                    if (!IsSerializeableColumn(column, type)
-                        || !(column.PropertyInvoker is IInvokerJson))
+                    if (!IsSerializeableColumn(column, type))
                         continue;
 
-                    invokers.Add((IInvokerJson)column.PropertyInvoker);
-
-                    if (column.ReferencePropertyInvoker != null)
-                    {
-                        invokers.Add((IInvokerJson)column.ReferencePropertyInvoker);
-                    }
+                    column.Add(column);
                 }
-                return invokers;
+                return column;
             }
         }
 
@@ -1837,7 +1854,10 @@ namespace DataWF.Data
             foreach (var columnInfo in tableInfo.Columns)
             {
                 string name = columnInfo.Name;
-                var column = InitColumn(columnInfo.Name);
+                (Type type, int size, int scale) = columnInfo.GetDataType();
+                var column = InitColumn(type, columnInfo.Name);
+                column.Size = size;
+                column.Scale = scale;
                 //if (col.Order == 1)
                 //    col.IsPrimaryKey = true;
                 if (name.Equals(Name, StringComparison.OrdinalIgnoreCase))
@@ -1852,61 +1872,7 @@ namespace DataWF.Data
                     column.Keys |= DBColumnKeys.Notnull;
                 column.DefaultValue = columnInfo.Default;
 
-                string data = columnInfo.DataType.ToUpper();
-                var sizeIndex = data.IndexOf('(');
-                if (data.IndexOf('(') > 0)
-                {
-                    if (columnInfo.Length == null && columnInfo.Precision == null)
-                    {
-                        var sizeData = data.Substring(sizeIndex).Trim('(', ')')
-                            .Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-                        columnInfo.Length =
-                            columnInfo.Precision = sizeData[0];
-                        if (sizeData.Length > 1)
-                            columnInfo.Scale = sizeData[1];
-                    }
-                    data = data.Substring(0, sizeIndex);
-
-                }
-                if (data.Equals("BLOB", StringComparison.OrdinalIgnoreCase) ||
-                    data.Equals("RAW", StringComparison.OrdinalIgnoreCase) ||
-                    data.Equals("VARBINARY", StringComparison.OrdinalIgnoreCase))
-                {
-                    column.DataType = typeof(byte[]);
-                    if (!string.IsNullOrEmpty(columnInfo.Length))
-                        column.Size = int.Parse(columnInfo.Length);
-                }
-                else if (data.IndexOf("DATE", StringComparison.OrdinalIgnoreCase) != -1 || data.IndexOf("TIMESTAMP", StringComparison.OrdinalIgnoreCase) != -1)
-                {
-                    column.DataType = typeof(DateTime);
-                }
-                else if (data == "NUMBER" || data == "DECIMAL" || data == "NUMERIC")
-                {
-                    column.DataType = typeof(decimal);
-                    if (!string.IsNullOrEmpty(columnInfo.Precision))
-                        column.Size = int.Parse(columnInfo.Precision);
-                    if (!string.IsNullOrEmpty(columnInfo.Scale))
-                        column.Scale = int.Parse(columnInfo.Scale);
-                }
-                else if (data == "DOUBLE")
-                    column.DataType = typeof(double);
-                else if (data == "FLOAT")
-                    column.DataType = typeof(double);
-                else if (data == "INT" || data == "INTEGER")
-                    column.DataType = typeof(int);
-                else if (data == "BIT" || data == "BOOL" || data == "BOOLEAN")
-                    column.DataType = typeof(bool);
-                else
-                {
-                    column.DataType = typeof(string);
-                    //col.DBDataType = DBDataType.Clob;
-                    if (!string.IsNullOrEmpty(columnInfo.Length))
-                    {
-                        column.Size = int.Parse(columnInfo.Length);
-                        column.DBDataType = DBDataType.String;
-                    }
-                }
                 if (!Columns.Contains(column))
                     Columns.Add(column);
             }
@@ -2055,7 +2021,7 @@ namespace DataWF.Data
             for (int i = 0; i < Columns.Count;)
             {
                 var column = Columns[i];
-                if (column.Property != null && column.PropertyInfo == null)
+                if (column.PropertyName != null && column.PropertyInfo == null)
                 {
                     column.RemoveConstraints();
                     column.RemoveForeignKeys();

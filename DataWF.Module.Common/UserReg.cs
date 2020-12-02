@@ -84,14 +84,14 @@ namespace DataWF.Module.Common
 
         public override long? Id
         {
-            get => GetValueNullable<long>(Table.PrimaryKey);
-            set => SetValueNullable(value, Table.PrimaryKey);
+            get => GetValue<long?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         public override int? UserId
         {
-            get => GetValueNullable<int>(UserKey);
-            set => SetValueNullable(value, UserKey);
+            get => GetValue<int?>(UserKey);
+            set => SetValue(value, UserKey);
         }
 
         [Reference(nameof(UserId))]
@@ -109,8 +109,8 @@ namespace DataWF.Module.Common
         [Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
         public UserRegType? RegType
         {
-            get => GetValueNullable<UserRegType>(RegTypeKey);
-            set => SetValueNullable(value, RegTypeKey);
+            get => GetValue<UserRegType?>(RegTypeKey);
+            set => SetValue(value, RegTypeKey);
         }
 
         [Browsable(false)]
@@ -132,8 +132,8 @@ namespace DataWF.Module.Common
         [Column("redo_id")]
         public long? RedoId
         {
-            get => GetValueNullable<long>(RedoKey);
-            set => SetValueNullable(value, RedoKey);
+            get => GetValue<long?>(RedoKey);
+            set => SetValue(value, RedoKey);
         }
 
         [Reference(nameof(RedoId))]

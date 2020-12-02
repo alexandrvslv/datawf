@@ -3,11 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace DataWF.Common
 {
     public class ReflectionInvoker : IInvoker
     {
+        private JsonEncodedText? jsonName;
+
         public ReflectionInvoker(Type type, string name)
         {
             Name = name;
@@ -17,13 +21,15 @@ namespace DataWF.Common
             TargetType = type;
         }
 
+        public string Name { get; set; }
+
+        public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
+
         public bool CanWrite => Last.Info is FieldInfo || (Last.Info is PropertyInfo && ((PropertyInfo)Last.Info).CanWrite);
 
         public Type DataType { get; set; }
 
         public Type TargetType { get; set; }
-
-        public string Name { get; set; }
 
         public List<MemberParseInfo> List { get; private set; }
 

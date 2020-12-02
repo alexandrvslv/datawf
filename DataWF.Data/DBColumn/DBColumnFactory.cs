@@ -137,7 +137,7 @@ namespace DataWF.Data
                 else if (enumType == typeof(ulong))
                     column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnEnumUInt64<>).MakeGenericType(dataType));
             }
-            else if (TypeHelper.IsInterface(dataType, typeof(IBinarySerializable))
+            else if (TypeHelper.IsInterface(dataType, typeof(IBinarySerializable)))
                 column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnBinarySerializable<>).MakeGenericType(dataType));
             else
                 column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumn<>).MakeGenericType(dataType));

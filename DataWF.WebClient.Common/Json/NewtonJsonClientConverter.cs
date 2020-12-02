@@ -42,7 +42,7 @@ namespace DataWF.Common
 
         public T Read(JsonReader jreader, T item, JsonSerializer serializer)
         {
-            var property = (PropertySerializeInfo)null;
+            var property = (IPropertySerializeInfo)null;
             var propertyType = (Type)null;
             var id = (K?)null;
             var isRef = true;

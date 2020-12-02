@@ -5,7 +5,7 @@ namespace DataWF.Common
     {
         ICrudClient Client { get; }
 
-        TypeSerializationInfo SerializationInfo { get; }
+        TypeSerializeInfo SerializationInfo { get; }
 #if NETSTANDARD2_0
         object Read(Newtonsoft.Json.JsonReader jreader, object item, Newtonsoft.Json.JsonSerializer serializer);
 #else

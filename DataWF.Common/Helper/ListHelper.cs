@@ -1071,7 +1071,7 @@ namespace DataWF.Common
             }
             else if (x is byte[] xByte && y is byte[] yByte)
             {
-                result = Helper.CompareByteAsSpan(xByte, yByte);
+                result = Helper.EqualsBytes(xByte, yByte);
             }
             //else if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
             //{

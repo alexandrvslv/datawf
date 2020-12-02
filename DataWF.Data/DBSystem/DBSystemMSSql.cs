@@ -151,7 +151,7 @@ namespace DataWF.Data
 
         public override void FormatInsertSequence(StringBuilder command, DBTable table, DBItem row)
         {
-            var idparam = ParameterPrefix + table.PrimaryKey.Name;
+            var idparam = ParameterPrefix + table.PrimaryKey.SqlName;
             command.AppendLine($"select {idparam} = next value for {table.SequenceName};");
             FormatInsert(command, table, idparam, row); command.AppendLine(";");
             command.AppendLine($"select {idparam};");
@@ -209,9 +209,9 @@ namespace DataWF.Data
 
         public override async Task SetBLOB(long id, Stream value, DBTransaction transaction)
         {
-            var command = (SqlCommand)transaction.AddCommand($"insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values (@{FileData.IdKey.Name}, @{FileData.DataKey.Name})");
-            command.Parameters.Add($"@{FileData.IdKey.Name}", SqlDbType.BigInt, -1).Value = id;
-            command.Parameters.Add($"@{FileData.DataKey.Name}", SqlDbType.Binary, -1).Value = value;
+            var command = (SqlCommand)transaction.AddCommand($"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) values (@{FileData.IdKey.SqlName}, @{FileData.DataKey.SqlName})");
+            command.Parameters.Add($"@{FileData.IdKey.SqlName}", SqlDbType.BigInt, -1).Value = id;
+            command.Parameters.Add($"@{FileData.DataKey.SqlName}", SqlDbType.Binary, -1).Value = value;
             await transaction.ExecuteQueryAsync(command, DBExecuteType.Scalar);
         }
 

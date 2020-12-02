@@ -6,7 +6,12 @@ using System.Text.Json;
 
 namespace DataWF.Common
 {
-    public interface IInvoker : IValueProvider, INamed
+    public interface IJsonPropertyName
+    {
+        JsonEncodedText JsonName { get; }
+    }
+
+    public interface IInvoker : IValueProvider, INamed, IJsonPropertyName
     {
         Type DataType { get; }
         Type TargetType { get; }
@@ -21,5 +26,5 @@ namespace DataWF.Common
         void SetValue(T target, V value);
 
         bool CheckItem(T item, object typedValue, CompareType comparer, IComparer comparision);
-    }    
+    }
 }

@@ -23,8 +23,10 @@ using System.Collections.Generic;
 
 namespace DataWF.Data
 {
-    public class DBItemSRSerializer<T> : ObjectSerializer<T> where T : DBItem
+    public class DBItemSerializer<T> : ObjectSerializer<T> where T : DBItem
     {
+        public static readonly DBItemSRSerializer<T> Instance = new DBItemSRSerializer<T>();
+
         public override T Read(BinaryInvokerReader reader, T value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             var token = reader.ReadToken();
@@ -33,11 +35,11 @@ namespace DataWF.Data
                 return default(T);
             }
             var type = typeof(T);
-            var table = DBTable.GetTable(typeof(T));
             if (token == BinaryToken.ObjectBegin)
             {
                 token = reader.ReadToken();
             }
+            var table = DBTable.GetTable(typeof(T));
 
             if (token == BinaryToken.SchemaBegin)
             {
@@ -68,7 +70,7 @@ namespace DataWF.Data
 
             if (property != null)
             {
-                property.PropertyFromBinary(reader, element, null);
+                property.Read(reader, element, null);
             }
             else
             {
@@ -97,7 +99,7 @@ namespace DataWF.Data
         {
             writer.WriteObjectEntry();
             writer.WriteSchemaIndex(index);
-            property.PropertyToBinary(writer, element);
+            property.Write(writer, element);
         }
 
         public Dictionary<ushort, IPropertySerializeInfo> WriteMap(BinaryInvokerWriter writer, Type type, DBTable table)
@@ -109,19 +111,26 @@ namespace DataWF.Data
             {
                 map = new Dictionary<ushort, IPropertySerializeInfo>();
                 ushort index = 0;
-                foreach (var column in table.Columns)
+                foreach (var column in GetColumns(table))
                 {
-                    if (column.ColumnType != DBColumnTypes.Default
-                        || (column.Keys & DBColumnKeys.ReplicateStamp) == DBColumnKeys.ReplicateStamp)
-                        continue;
                     writer.WriteSchemaEntry(index);
-                    writer.WriteString(column.Name, false);
+                    writer.WriteString(column.PropertyName ?? column.Name, false);
                     map[index++] = column;
                 }
                 writer.SetMap(type, map);
             }
             writer.WriteSchemaEnd();
             return map;
+        }
+
+        public virtual IEnumerable<DBColumn> GetColumns(DBTable table)
+        {
+            foreach (var column in table.Columns)
+            {
+                if (column.ColumnType != DBColumnTypes.Default)
+                    continue;
+                yield return column;
+            }
         }
 
         public Dictionary<ushort, IPropertySerializeInfo> ReadMap(BinaryInvokerReader reader, out Type type, out DBTable table)
@@ -152,7 +161,7 @@ namespace DataWF.Data
                 {
                     var index = reader.ReadSchemaIndex();
                     var propertyName = reader.ReadString();
-                    map[index] = table.ParseColumn(propertyName);
+                    map[index] = table.ParseProperty(propertyName) ?? table.ParseColumn(propertyName);
                 }
                 while (reader.ReadToken() == BinaryToken.SchemaEntry);
                 reader.SetMap(type, map);
@@ -162,6 +171,20 @@ namespace DataWF.Data
         }
     }
 
-    public class DBItemSRSerializer : DBItemSRSerializer<DBItem>
+    public class DBItemSRSerializer<T> : DBItemSerializer<T> where T : DBItem
+    {
+        public override IEnumerable<DBColumn> GetColumns(DBTable table)
+        {
+            foreach (var column in table.Columns)
+            {
+                if (column.ColumnType != DBColumnTypes.Default
+                    || (column.Keys & DBColumnKeys.NoReplicate) == DBColumnKeys.NoReplicate)
+                    continue;
+                yield return column;
+            }
+        }
+    }
+
+    public class DBItemSerializer : DBItemSerializer<DBItem>
     { }
 }

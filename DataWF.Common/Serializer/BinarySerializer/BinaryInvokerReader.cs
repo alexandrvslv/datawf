@@ -330,7 +330,7 @@ namespace DataWF.Common
 
             if (property != null)
             {
-                property.PropertyFromBinary(this, element, null);
+                property.Read(this, element, null);
             }
             else
             {
@@ -345,7 +345,7 @@ namespace DataWF.Common
 
             if (property != null)
             {
-                property.PropertyFromBinary(this, element, null);
+                property.Read(this, element, null);
             }
             else
             {

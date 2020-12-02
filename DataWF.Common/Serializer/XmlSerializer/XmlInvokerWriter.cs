@@ -166,7 +166,7 @@ namespace DataWF.Common
                 }
                 if (property.Serializer is IElementSerializer serializer)
                 {
-                    property.PropertyToString(this, element);
+                    property.Write(this, element);
                 }
                 else
                 {
@@ -206,7 +206,7 @@ namespace DataWF.Common
                 }
                 if (property.Serializer is IElementSerializer serializer)
                 {
-                    property.PropertyToString<T>(this, element);
+                    property.Write<T>(this, element);
                 }
                 else
                 {
@@ -232,13 +232,18 @@ namespace DataWF.Common
 
         public void WriteStart(IPropertySerializeInfo property)
         {
-            if (property.IsAttribute)
+            WriteStart(property.IsAttribute, property.Name);
+        }
+
+        public void WriteStart(bool isAttribute, string propertyName)
+        {
+            if (isAttribute)
             {
-                WriteStartAttribute(property.Name);
+                WriteStartAttribute(propertyName);
             }
             else
             {
-                WriteStartElement(property.Name);
+                WriteStartElement(propertyName);
             }
         }
 

@@ -17,8 +17,8 @@ namespace DataWF.Test.Data
         [Column("id", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValueNullable<int>(Table.PrimaryKey);
-            set => SetValueNullable(value, Table.PrimaryKey);
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Column("code", 20, Keys = DBColumnKeys.Code | DBColumnKeys.Unique | DBColumnKeys.Indexing)]

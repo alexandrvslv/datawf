@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -93,9 +94,9 @@ namespace DataWF.Data
                     {
                         if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
                             continue;
-                        if (column.Property != null)
+                        if (column.PropertyName != null)
                         {
-                            builder.AppendLine($"                    {column.Property} = {column.FormatCode(row.GetValue(column))},");
+                            builder.AppendLine($"                    {column.PropertyName} = {column.FormatCode(row.GetValue(column))},");
                         }
                     }
                     builder.AppendLine("                }.Save();");
@@ -164,7 +165,7 @@ namespace DataWF.Data
                             {
                                 builder.AppendLine(string.Format("if exists(select * from {0} where {1}={2})",
                                                             table.Name,
-                                                            table.PrimaryKey.Name,
+                                                            table.PrimaryKey.SqlName,
                                                             row.PrimaryId));
                                 builder.AppendLine("    " + table.Schema.System.FormatCommand(table, DBCommandTypes.Update, row));
                                 builder.AppendLine("else");
@@ -217,7 +218,7 @@ namespace DataWF.Data
         {
             return string.Format("Source: {0}; Target: {1}", SourceName, TargetName);
         }
-        
+
         public string Name { get; set; }
 
         public string Prefix
@@ -334,9 +335,9 @@ namespace DataWF.Data
                     if (table.SourceTable != null && table.SourceTable.StampKey != null)
                     {
                         if (table.SourceTable.Schema.Connection.System == DBSystem.MSSql)
-                            table.Query = string.Format("where {0} >= parse('{1:yyyy-MM-dd}' as datetime using 'ru-RU')", table.SourceTable.StampKey.Name, stamp);
+                            table.Query = string.Format("where {0} >= parse('{1:yyyy-MM-dd}' as datetime using 'ru-RU')", table.SourceTable.StampKey.SqlName, stamp);
                         else
-                            table.Query = string.Format("where {0} >= '{1:yyyy-MM-dd}'", table.SourceTable.StampKey.Name, stamp);
+                            table.Query = string.Format("where {0} >= '{1:yyyy-MM-dd}'", table.SourceTable.StampKey.SqlName, stamp);
 
                     }
                 }
@@ -523,7 +524,7 @@ namespace DataWF.Data
                     ea.Description = null;
                     OnExportProgress(ea);
 
-                    using (transacton.Reader = transacton.ExecuteQuery(table.SourceTable.CreateQuery(table.Query, null), DBExecuteType.Reader) as IDataReader)
+                    using (transacton.Reader = (DbDataReader)transacton.ExecuteQuery(table.SourceTable.CreateQuery(table.Query, null), DBExecuteType.Reader))
                     {
                         table.SourceTable.CheckColumns(transacton);
                         while (transacton.Reader.Read())

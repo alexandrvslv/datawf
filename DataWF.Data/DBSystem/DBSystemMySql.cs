@@ -143,9 +143,9 @@ select seq from db_sequence where name = '{sequence.Name}';";
         public override async Task<long> SetBLOB(Stream value, DBTransaction transaction)
         {
             var result = FileData.DBTable.Sequence.GetNext(transaction);
-            var command = (MySqlCommand)transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values (@{FileData.IdKey.Name}, @{FileData.DataKey.Name});");
-            command.Parameters.Add($"@{FileData.IdKey.Name}", MySqlDbType.Int64).Value = result;
-            command.Parameters.Add($"@{FileData.DataKey.Name}", MySqlDbType.LongBlob).Value = await Helper.GetBufferedBytesAsync(value);//Double buffering!!!
+            var command = (MySqlCommand)transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) values (@{FileData.IdKey.SqlName}, @{FileData.DataKey.SqlName});");
+            command.Parameters.Add($"@{FileData.IdKey.SqlName}", MySqlDbType.Int64).Value = result;
+            command.Parameters.Add($"@{FileData.DataKey.SqlName}", MySqlDbType.LongBlob).Value = await Helper.GetBufferedBytesAsync(value);//Double buffering!!!
             await transaction.ExecuteQueryAsync(command);
             return result;
         }

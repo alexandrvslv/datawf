@@ -147,13 +147,13 @@ namespace DataWF.Data
             return column = BaseTable?.ParseProperty(name)?.LogColumn;
         }
 
-        public IEnumerable<DBLogColumn> GetLogColumns()
+        public IEnumerable<DBColumn> GetLogColumns()
         {
             foreach (var column in Columns)
             {
-                if (column is DBLogColumn)
+                if (column.BaseColumn != null)
                 {
-                    yield return (DBLogColumn)column;
+                    yield return column;
                 }
             }
         }
@@ -161,10 +161,10 @@ namespace DataWF.Data
         public override async Task<bool> SaveItem(DBItem item, DBTransaction transaction)
         {
             if ((item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete
-                && item is DBLogItem logItem && FileBLOBKey is DBLogColumn logColumn)
+                && item is DBLogItem logItem && FileBLOBKey != null)
             {
-                var lob = item.GetValue<uint?>(logColumn);
-                var current = logItem.BaseItem == DBItem.EmptyItem ? null : logItem.BaseItem.GetValue<uint?>(logColumn.BaseColumn);
+                var lob = item.GetValue(FileBLOBKey);
+                var current = logItem.BaseItem == DBItem.EmptyItem ? null : logItem.BaseItem.GetValue((DBColumn<long?>)FileBLOBKey.BaseColumn);
                 if (lob != null && lob != current)
                 {
                     var qquery = new QQuery(this);
@@ -195,7 +195,7 @@ namespace DataWF.Data
             for (int i = 0; i < Columns.Count;)
             {
                 var column = Columns[i];
-                if (column is DBLogColumn logColumn && logColumn.BaseColumn == null)
+                if (column.BaseName != null && column.BaseColumn == null)
                 {
                     column.RemoveConstraints();
                     column.RemoveForeignKeys();

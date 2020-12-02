@@ -28,12 +28,13 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 [assembly: Invoker(typeof(DBColumn), nameof(DBColumn.GroupName), typeof(DBColumn.GroupNameInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Property), typeof(DBColumn.PropertyNameInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ReferenceProperty), typeof(DBColumn.ReferencePropertyNameInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.PropertyName), typeof(DBColumn.PropertyNameInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ReferencePropertyName), typeof(DBColumn.ReferencePropertyNameInvoker<>))]
 [assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ReferenceTable), typeof(DBColumn.ReferenceTableInvoker<>))]
 [assembly: Invoker(typeof(DBColumn), "ReferenceTableName", typeof(DBColumn.ReferenceTableNameInvoker<>))]
 [assembly: Invoker(typeof(DBColumn), nameof(DBColumn.IsView), typeof(DBColumn.IsViewInvoker<>))]
@@ -182,16 +183,16 @@ namespace DataWF.Data
                     propertyInfo = value;
                     if (propertyInfo != null)
                     {
-                        if (Property == null)
-                            Property = propertyInfo.Name;
-                        if (PropertyInvoker == this && string.Equals(Property, propertyInfo.Name, StringComparison.Ordinal))
+                        if (PropertyName == null)
+                            PropertyName = propertyInfo.Name;
+                        if (PropertyInvoker == this && string.Equals(PropertyName, propertyInfo.Name, StringComparison.Ordinal))
                         {
                             PropertyInvoker = EmitInvoker.Initialize(propertyInfo, true);
                         }
                         else
                         { }
                     }
-                    OnPropertyChanged(nameof(PropertyInfo));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -205,13 +206,13 @@ namespace DataWF.Data
                 if (propertyInvoker != value)
                 {
                     propertyInvoker = value;
-                    OnPropertyChanged(nameof(PropertyInvoker));
+                    OnPropertyChanged();
                 }
             }
         }
 
         [Browsable(false)]
-        public virtual string Property
+        public virtual string PropertyName
         {
             get => property;
             set
@@ -219,7 +220,7 @@ namespace DataWF.Data
                 if (property != value)
                 {
                     property = value;
-                    OnPropertyChanged(nameof(Property));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -233,7 +234,7 @@ namespace DataWF.Data
                 if (referencePropertyInfo != value)
                 {
                     referencePropertyInfo = value;
-                    ReferenceProperty = value?.Name;
+                    ReferencePropertyName = value?.Name;
                     if (referencePropertyInfo != null && ReferencePropertyInvoker == null)
                     {
                         ReferencePropertyInvoker = EmitInvoker.Initialize(referencePropertyInfo, true);
@@ -247,7 +248,7 @@ namespace DataWF.Data
         public virtual IInvoker ReferencePropertyInvoker { get; set; }
 
         [Browsable(false)]
-        public virtual string ReferenceProperty
+        public virtual string ReferencePropertyName
         {
             get => referenceProperty;
             set
@@ -255,7 +256,7 @@ namespace DataWF.Data
                 if (referenceProperty != value)
                 {
                     referenceProperty = value;
-                    OnPropertyChanged(nameof(ReferenceProperty));
+                    OnPropertyChanged(nameof(ReferencePropertyName));
                 }
             }
         }
@@ -264,7 +265,7 @@ namespace DataWF.Data
         public bool CanWrite => true;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public ElementSerializer Serializer { get; set; }
+        public abstract IElementSerializer Serializer { get; }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public abstract Pull Pull { get; internal set; }
@@ -293,7 +294,7 @@ namespace DataWF.Data
                 if (!string.IsNullOrEmpty(value))
                     keys |= DBColumnKeys.View;
                 cacheCulture = null;
-                OnPropertyChanged(nameof(CultureCode));
+                OnPropertyChanged();
             }
         }
 
@@ -327,7 +328,7 @@ namespace DataWF.Data
                     return;
                 gname = value;
                 cacheGroup = null;
-                OnPropertyChanged(nameof(GroupName));
+                OnPropertyChanged();
             }
         }
 
@@ -365,7 +366,7 @@ namespace DataWF.Data
 
                     OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.Default);
                 }
-                Table.CheckPullIndex(this);
+                Table?.CheckPullIndex(this);
             }
         }
 
@@ -849,12 +850,23 @@ namespace DataWF.Data
         //        tags[hindex] = value;
         //    }
         //}
+        public abstract bool IsNull(DBItem item);
 
-        public abstract bool GetOld(int hindex, out object obj);
+        public abstract bool IsNull(int item);
 
-        public abstract void RemoveOld(int hindex);
+        public abstract void Clear(DBItem item, DBSetValueMode mode = DBSetValueMode.Default);
 
-        public abstract void SetOld(int hindex, object value);
+        public abstract void Clear(int handler);
+
+        public abstract void Copy(int fromIndex, int toIndex);
+
+        public abstract void Copy(DBItem fromItem, DBColumn fromColumn, DBItem toItem, DBSetValueMode mode = DBSetValueMode.Default);
+
+        public abstract void Copy(DBItem fromItem, DBItem toItem, DBSetValueMode mode = DBSetValueMode.Default);
+
+        public abstract bool GetOld(DBItem item, out object obj);
+
+        public abstract void Reject(DBItem dBItem, DBSetValueMode mode = DBSetValueMode.Default);
 
         public abstract void Clear();
 
@@ -864,11 +876,15 @@ namespace DataWF.Data
 
         public abstract void SetValue(object target, object value);
 
+        public abstract void SetValue(DBItem item, object value, DBSetValueMode mode);
+
+        public abstract R GetReference<R>(DBItem item, DBLoadParam param) where R : DBItem;
+
+        public abstract R GetReference<R>(DBItem item, ref R reference, DBLoadParam param) where R : DBItem;
+
+        public abstract void SetReference<R>(DBItem item, R value) where R : DBItem;
+
         internal protected abstract PullIndex CreatePullIndex();
-
-        internal protected abstract void AddIndex(PullIndex index, DBItem item, object value);
-
-        internal protected abstract void RemoveIndex(PullIndex index, DBItem item, object value);
 
         public string FormatCode(object value)
         {
@@ -1091,21 +1107,29 @@ namespace DataWF.Data
             return false;
         }
 
-        public abstract void PropertyToBinary(BinaryInvokerWriter writer, object element);
+        public abstract void Write(BinaryInvokerWriter writer, object element);
 
-        public abstract void PropertyToBinary<E>(BinaryInvokerWriter writer, E element);
+        public abstract void Write<E>(BinaryInvokerWriter writer, E element);
 
-        public abstract void PropertyFromBinary(BinaryInvokerReader reader, object element, TypeSerializeInfo itemInfo);
+        public abstract void Read(BinaryInvokerReader reader, object element, TypeSerializeInfo itemInfo);
 
-        public abstract void PropertyFromBinary<E>(BinaryInvokerReader reader, E element, TypeSerializeInfo itemInfo);
+        public abstract void Read<E>(BinaryInvokerReader reader, E element, TypeSerializeInfo itemInfo);
 
-        public abstract void PropertyToString(XmlInvokerWriter writer, object element);
+        public abstract void Write(XmlInvokerWriter writer, object element);
 
-        public abstract void PropertyToString<E>(XmlInvokerWriter writer, E element);
+        public abstract void Write<E>(XmlInvokerWriter writer, E element);
 
-        public abstract void PropertyFromString(XmlInvokerReader reader, object element, TypeSerializeInfo itemInfo);
+        public abstract void Read(XmlInvokerReader reader, object element, TypeSerializeInfo itemInfo);
 
-        public abstract void PropertyFromString<E>(XmlInvokerReader reader, E element, TypeSerializeInfo itemInfo);
+        public abstract void Read<E>(XmlInvokerReader reader, E element, TypeSerializeInfo itemInfo);
+
+        public abstract void Write(Utf8JsonWriter writer, object element, JsonSerializerOptions option = null);
+
+        public abstract void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions option = null);
+
+        public abstract void Read(ref Utf8JsonReader reader, object element, JsonSerializerOptions option = null);
+
+        public abstract void Read<E>(ref Utf8JsonReader reader, E element, JsonSerializerOptions option = null);
 
         public class GroupNameInvoker<T> : Invoker<T, string> where T : DBColumn
         {
@@ -1124,26 +1148,26 @@ namespace DataWF.Data
         {
             public static readonly PropertyNameInvoker<T> Instance = new PropertyNameInvoker<T>();
 
-            public override string Name => nameof(Property);
+            public override string Name => nameof(PropertyName);
 
             public override bool CanWrite => true;
 
-            public override string GetValue(T target) => target.Property;
+            public override string GetValue(T target) => target.PropertyName;
 
-            public override void SetValue(T target, string value) => target.Property = value;
+            public override void SetValue(T target, string value) => target.PropertyName = value;
         }
 
         public class ReferencePropertyNameInvoker<T> : Invoker<T, string> where T : DBColumn
         {
             public static readonly ReferencePropertyNameInvoker<T> Instance = new ReferencePropertyNameInvoker<T>();
 
-            public override string Name => nameof(ReferenceProperty);
+            public override string Name => nameof(ReferencePropertyName);
 
             public override bool CanWrite => true;
 
-            public override string GetValue(T target) => target.ReferenceProperty;
+            public override string GetValue(T target) => target.ReferencePropertyName;
 
-            public override void SetValue(T target, string value) => target.ReferenceProperty = value;
+            public override void SetValue(T target, string value) => target.ReferencePropertyName = value;
         }
 
         public class ReferenceTableInvoker<T> : Invoker<T, DBTable> where T : DBColumn
@@ -1398,329 +1422,5 @@ namespace DataWF.Data
 
             public override void SetValue(T target, DBColumn value) => target.BaseColumn = value;
         }
-    }
-
-    public class DBColumn<T> : DBColumn//, IValuedInvoker<T>
-    {
-        public new static readonly DBColumn<T> EmptyKey = new DBColumn<T>();
-
-        protected GenericPull<T> pull;
-        protected ConcurrentDictionary<int, T> olds;
-        public DBColumn() : base()
-        {
-            DataType = typeof(T);
-        }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public override Pull Pull
-        {
-            get => pull;
-            internal set
-            {
-                if (pull != value)
-                {
-                    pull = (GenericPull<T>)value;
-                }
-            }
-        }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public IElementSerializer<T> TypedSerializer => Serializer as IElementSerializer<T>;
-
-        public override bool Equal(object oldValue, object newValue)
-        {
-            return Equal((T)oldValue, (T)newValue);
-        }
-
-        public virtual bool Equal(T oldValue, T newValue)
-        {
-            return EqualityComparer<T>.Default.Equals(oldValue, newValue);
-        }
-
-        public override object GetValue(object item)
-        {
-            return GetValue((DBItem)item);
-        }
-
-        public virtual T GetValue(DBItem item)
-        {
-            if (pull != null)
-                return pull.GetValue(item.block, item.blockIndex);
-            else if (PropertyInvoker is IValuedInvoker<T> invoker)
-                return invoker.GetValue(item);
-            return default(T);
-        }
-
-        public override void SetValue(object item, object value)
-        {
-            SetValue((DBItem)item, (T)value);
-        }
-
-        public virtual void SetValue(DBItem item, T value)
-        {
-            if (pull != null)
-            {
-                pull.SetValue(item.block, item.blockIndex, value);
-            }
-            else if (PropertyInvoker is IValuedInvoker<T> valueInvoker)
-            {
-                valueInvoker.SetValue(item, value);
-            }
-            else
-            {
-                PropertyInvoker?.SetValue(item, value);
-            }
-        }
-
-        public override bool GetOld(int hindex, out object obj)
-        {
-            if (GetOld(hindex, out var value))
-            {
-                obj = value;
-                return true;
-            }
-            obj = null;
-            return false;
-        }
-
-        public bool GetOld(int hindex, out T obj)
-        {
-            obj = default(T);
-            return olds?.TryGetValue(hindex, out obj) ?? false;
-        }
-
-        public override void RemoveOld(int hindex)
-        {
-            olds?.TryRemove(hindex, out _);
-        }
-
-        public override void SetOld(int hindex, object value)
-        {
-            SetOld(hindex, (T)value);
-        }
-
-        public void SetOld(int hindex, T value)
-        {
-            if (olds == null)
-                olds = new ConcurrentDictionary<int, T>();
-            olds.TryAdd(hindex, value);
-        }
-
-        protected internal override void CheckPull()
-        {
-            if (!Containers.Any())
-                return;
-
-            Serializer = TypeHelper.GetSerializer(DataType);
-
-            if (ColumnType == DBColumnTypes.Expression
-                || ColumnType == DBColumnTypes.Code)
-            {
-                return;
-            }
-
-            if (Pull != null &&
-                (Pull.ItemType != DataType))
-            {
-                Pull.Clear();
-                Pull = null;
-            }
-            if (Pull == null && Table != null)
-            {
-                Pull = CreatePull();
-            }
-            else if (Pull.BlockSize != Table.BlockSize)
-            {
-                Pull.BlockSize = Table.BlockSize;
-            }
-        }
-
-        protected internal override PullIndex CreatePullIndex()
-        {
-            return PullIndexFabric.Create(Pull, Table.ItemType.Type, DataType, Table.DefaultComparer);
-        }
-
-        public override bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
-        {
-            return ListHelper.CheckItemT(GetValue(item), typedValue, comparer, (IComparer<T>)comparision);
-        }
-
-        public virtual Pull CreatePull()
-        {
-            return new PullArray<T>(Table.BlockSize);
-        }
-
-        public override void Clear()
-        {
-            Pull?.Clear();
-            //tags?.Clear();
-            olds?.Clear();
-        }
-
-        public override void Read(DBTransaction transaction, DBItem row, int i)
-        {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
-            var value = transaction.Reader.IsDBNull(i) ? default(T) : transaction.Reader.GetFieldValue<T>(i);
-            row.SetValue<T>(value, this, DBSetValueMode.Loading);
-        }
-
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
-        {
-            var value = transaction.Reader.GetFieldValue<T>(i);
-            return Table.GetPullIndex<T>(this)?.SelectOne<F>(value);
-        }
-
-        internal protected override void AddIndex(PullIndex index, DBItem item, object value)
-        {
-            AddIndex(index, item, (T)value);
-        }
-
-        internal void AddIndex(PullIndex index, DBItem item, T value)
-        {
-            if (index is PullIndex<DBItem, T> pullIndex)
-                pullIndex.Add(item, value);
-        }
-
-        internal protected override void RemoveIndex(PullIndex index, DBItem item, object value)
-        {
-            RemoveIndex(index, item, (T)value);
-        }
-
-        internal void RemoveIndex(PullIndex index, DBItem item, T value)
-        {
-            if (index is PullIndex<DBItem, T> pullIndex)
-                pullIndex.Remove(item, value);
-        }
-
-        public override void PropertyToBinary(BinaryInvokerWriter writer, object element)
-        {
-            if (element is DBItem item)
-            {
-                T value = GetValue(item);
-                TypedSerializer.Write(writer, value, null, null);
-            }
-            else
-            {
-                throw new Exception("Wrong Property Invoker");
-            }
-        }
-
-        public override void PropertyToBinary<E>(BinaryInvokerWriter writer, E element)
-        {
-            if (element is DBItem item)
-            {
-                T value = GetValue(item);
-                TypedSerializer.Write(writer, value, null, null);
-            }
-            else
-            {
-                PropertyToBinary(writer, (object)element);
-            }
-        }
-
-        public override void PropertyFromBinary(BinaryInvokerReader reader, object element, TypeSerializeInfo itemInfo)
-        {
-            var token = reader.ReadToken();
-            if (element is DBItem item)
-            {
-                if (token == BinaryToken.Null)
-                {
-                    SetValue(item, default(T));
-                }
-                else
-                {
-                    T value = TypedSerializer.Read(reader, default(T), null, null);
-                    SetValue(item, value);
-                }
-            }
-            else
-            {
-                throw new Exception("Wrong Property Invoker");
-            }
-        }
-
-        public override void PropertyFromBinary<E>(BinaryInvokerReader reader, E element, TypeSerializeInfo itemInfo)
-        {
-            if (element is DBItem item)
-            {
-                var token = reader.ReadToken();
-                if (token == BinaryToken.Null)
-                {
-                    SetValue(item, default(T));
-                }
-                else
-                {
-                    T value = TypedSerializer.Read(reader, default(T), null, null);
-                    SetValue(item, value);
-                }
-            }
-            else
-            {
-                PropertyFromBinary(reader, (object)element, itemInfo);
-            }
-        }
-
-        public override void PropertyToString(XmlInvokerWriter writer, object element)
-        {
-            if (PropertyInvoker is IValuedInvoker<T> valueInvoker)
-            {
-                T value = valueInvoker.GetValue(element);
-                writer.WriteStart(this);
-                TypedSerializer.Write(writer, value, null);
-                writer.WriteEnd(this);
-            }
-            else
-            {
-                throw new Exception("Wrong Property Invoker");
-            }
-        }
-
-        public override void PropertyToString<E>(XmlInvokerWriter writer, E element)
-        {
-            if (PropertyInvoker is IInvoker<E, T> valueInvoker)
-            {
-                T value = valueInvoker.GetValue(element);
-                writer.WriteStart(this);
-                TypedSerializer.Write(writer, value, null);
-                writer.WriteEnd(this);
-            }
-            else
-            {
-                PropertyToString(writer, (object)element);
-            }
-        }
-
-        public override void PropertyFromString(XmlInvokerReader reader, object element, TypeSerializeInfo itemInfo)
-        {
-            if (PropertyInvoker is IValuedInvoker<T> valueInvoker)
-            {
-                T value = valueInvoker.GetValue(element);
-                value = TypedSerializer.Read(reader, value, itemInfo);
-                valueInvoker.SetValue(element, value);
-            }
-            else
-            {
-                throw new Exception("Wrong Property Invoker");
-            }
-        }
-
-        public override void PropertyFromString<E>(XmlInvokerReader reader, E element, TypeSerializeInfo itemInfo)
-        {
-            if (PropertyInvoker is IInvoker<E, T> valueInvoker)
-            {
-                T value = valueInvoker.GetValue(element);
-                value = TypedSerializer.Read(reader, value, itemInfo);
-                valueInvoker.SetValue(element, value);
-            }
-            else
-            {
-                PropertyFromString(reader, (object)element, itemInfo);
-            }
-        }
-
-
     }
 }

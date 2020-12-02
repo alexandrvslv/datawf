@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
@@ -87,6 +88,17 @@ namespace DataWF.Data
             return flag;
         }
 
+        public override int Add(T item)
+        {
+            var index = base.Add(item);
+            if (index > -1)
+            {
+                if (Schema != null)
+                    DBService.OnDBSchemaChanged(item, GetInsertType(item));
+            }
+            return index;
+        }
+
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnItemPropertyChanged(sender, e);
@@ -124,8 +136,6 @@ namespace DataWF.Data
                 item.Schema = Schema;
 
             base.InsertInternal(index, item);
-            if (Schema != null)
-                DBService.OnDBSchemaChanged(item, GetInsertType(item));
         }
 
         public virtual DDLType GetInsertType(T item)

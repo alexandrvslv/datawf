@@ -140,7 +140,7 @@ namespace DataWF.Data
             Column.Keys = Attribute.Keys;
             Column.Culture = Culture;
             Column.GroupName = GroupName;
-            Column.Property = PropertyName;
+            Column.PropertyName = PropertyName;
             Column.PropertyInfo = PropertyInfo;
             Column.ReferencePropertyInfo = ReferencePropertyInfo;
             Column.DefaultValues = DefaultValues;

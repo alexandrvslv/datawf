@@ -33,13 +33,13 @@ namespace DataWF.WebService.Common
             var settings = Factory.HttpJsonSettings;
             var valueType = value.GetType();
             var isRef = false;
-            var invokers = value.Table.GetInvokers(valueType);
+            var columns = value.Table.GetTypeColumns(valueType);
             if (settings.Referenced && settings.Reference)
             {
                 if (writer.CurrentDepth > 0 && Factory.referenceSet.Contains(value))
                 {
                     isRef = true;
-                    invokers = value.Table.GetRefInvokers();
+                    columns = value.Table.GetRefColumns();
                 }
                 else
                 {
@@ -48,40 +48,38 @@ namespace DataWF.WebService.Common
             }
 
             writer.WriteStartObject();
-            foreach (IInvokerJson invoker in invokers)
+            foreach (DBColumn column in columns)
             {
-                var propertyType = invoker.DataType;
-                if (TypeHelper.IsBaseType(propertyType, typeof(DBItem)))
+                if ((column.Keys & DBColumnKeys.Access) != 0)
+                {
+                    var propertyValue = (AccessValue)column.PropertyInvoker.GetValue(value);
+                    var accessValue = propertyValue.GetFlags(Factory.CurrentUser);
+                    writer.WritePropertyName(column.PropertyInvoker.JsonName);
+                    JsonSerializer.Serialize<AccessType>(writer, accessValue, options);
+                }
+                else
+                {
+                    column.Write(writer, value, options);
+                }
+                if (column.IsReference)
                 {
                     if (!settings.Referenced || writer.CurrentDepth > settings.MaxDepth)
                     {
                         continue;
                     }
 
-                    var item = (DBItem)invoker.GetValue(value);
+                    var item = (DBItem)column.ReferencePropertyInvoker.GetValue(value);
                     if (!(item?.Access.GetFlag(AccessType.Read, Factory.CurrentUser) ?? true))
                     {
                         continue;
                     }
-                    writer.WritePropertyName(invoker.JsonName);
-                    JsonSerializer.Serialize(writer, item, propertyType, options);
-                }
-                else if (propertyType == typeof(AccessValue))
-                {
-                    var propertyValue = (AccessValue)invoker.GetValue(value);
-                    var accessValue = propertyValue.GetFlags(Factory.CurrentUser);
-                    writer.WritePropertyName(invoker.JsonName);
-                    JsonSerializer.Serialize<AccessType>(writer, accessValue, options);
-                }
-                else
-                {
-                    writer.WritePropertyName(invoker.JsonName);
-                    invoker.WriteValue(writer, value, options);
+                    writer.WritePropertyName(column.Utf8EncodedReferenceProperty);
+                    JsonSerializer.Serialize(writer, item, column.ReferencePropertyInvoker.DataType, options);
                 }
             }
             if (settings.Referencing && writer.CurrentDepth <= settings.MaxDepth && !isRef)
             {
-                foreach (IInvokerJson invoker in value.Table.GetRefingInvokers(valueType))
+                foreach (IInvoker invoker in value.Table.GetRefingInvokers(valueType))
                 {
                     writer.WritePropertyName(invoker.JsonName);
 

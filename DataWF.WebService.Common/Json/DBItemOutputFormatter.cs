@@ -52,15 +52,15 @@ namespace DataWF.WebService.Common
             }
 
             var httpContext = context.HttpContext;
-
             httpContext.DisableBuffering();
+
+            var objectType = context.Object?.GetType() ?? context.ObjectType ?? typeof(object);
+
 
             var option = new JsonSerializerOptions();
             using (var factory = new DBItemConverterFactory(httpContext))
             {
                 option.InitDefaults(factory);
-
-                var objectType = context.Object?.GetType() ?? context.ObjectType ?? typeof(object);
 
                 if (TypeHelper.IsEnumerable(objectType))
                 {

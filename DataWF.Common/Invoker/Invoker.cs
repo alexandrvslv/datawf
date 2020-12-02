@@ -11,7 +11,7 @@ using System.Text.Json;
 namespace DataWF.Common
 {
 
-    public abstract class Invoker<T, V> : IInvoker<T, V>, IValuedInvoker<V>, IInvokerJson, IInvokerExtension
+    public abstract class Invoker<T, V> : IInvoker<T, V>, IValuedInvoker<V>, IInvokerExtension
     {
         private JsonEncodedText? jsonName;
 
@@ -100,30 +100,6 @@ namespace DataWF.Common
         public virtual bool CheckItem(T item, object typedValue, CompareType comparer, IComparer comparision)
         {
             return ListHelper.CheckItemT<V>(GetValue(item), typedValue, comparer, (IComparer<V>)comparision);//
-        }
-
-        public virtual void WriteValue(Utf8JsonWriter writer, object item, JsonSerializerOptions option)
-        {
-            var value = GetValue((T)item);
-            JsonSerializer.Serialize<V>(writer, value, option);
-        }
-
-        public virtual void ReadValue(ref Utf8JsonReader reader, object item, JsonSerializerOptions option)
-        {
-            var value = JsonSerializer.Deserialize<V>(ref reader, option);
-            SetValue((T)item, value);
-        }
-
-        public virtual void WriteValue(BinaryInvokerWriter writer, object item)
-        {
-            var value = GetValue((T)item);
-            BinarySerializer.Serialize<V>(writer, value);
-        }
-
-        public virtual void ReadValue(BinaryInvokerReader reader, object item)
-        {
-            var value = BinarySerializer.Deserialize<V>(reader, default(V));
-            SetValue((T)item, value);
         }
     }
 }

@@ -526,7 +526,7 @@ namespace DataWF.Data
             else if (x is Enum || y is Enum)
                 equal = ((int)x).Equals((int)y);
             else if (x is byte[] byteX && y is byte[] byteY)
-                equal = Helper.CompareByteAsSpan(byteX, byteY);
+                equal = Helper.EqualsBytes(byteX, byteY);
             else
                 equal = x.Equals(y);
             return equal;

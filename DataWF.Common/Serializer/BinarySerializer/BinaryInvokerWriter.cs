@@ -220,14 +220,14 @@ namespace DataWF.Common
         {
             WriteObjectEntry();
             WriteSchemaIndex(index);
-            property.PropertyToBinary(this, element);
+            property.Write(this, element);
         }
 
         public void WriteProperty<T>(IPropertySerializeInfo property, T element, ushort index)
         {
             WriteObjectEntry();
             WriteSchemaIndex(index);
-            property.PropertyToBinary(this, element);
+            property.Write(this, element);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -269,6 +269,13 @@ namespace DataWF.Common
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteSchemaEntry(ushort index)
+        {
+            Writer.Write((byte)BinaryToken.SchemaEntry);
+            Writer.Write(index);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteSchemaEntry(ushort index, IPropertySerializeInfo property)
         {
             Writer.Write((byte)BinaryToken.SchemaEntry);
             Writer.Write(index);

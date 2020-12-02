@@ -96,7 +96,7 @@ namespace DataWF.Common
         {
             if (property.Serializer is IElementSerializer serializer)
             {
-                property.PropertyFromString(this, element, itemInfo);
+                property.Read(this, element, itemInfo);
             }
             else if (Reader.NodeType == XmlNodeType.Attribute)
             {
@@ -117,7 +117,7 @@ namespace DataWF.Common
         {
             if (property.Serializer is IElementSerializer serializer)
             {
-                property.PropertyFromString<T>(this, element, itemInfo);
+                property.Read<T>(this, element, itemInfo);
             }
             else if (Reader.NodeType == XmlNodeType.Attribute)
             {

@@ -255,14 +255,6 @@ namespace DataWF.Data
             }
         }
 
-        public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
-        {
-            if (item.GetType() == typeof(T))
-            {
-                base.OnItemChanging(item, property, column, value);
-            }
-        }
-
         public override void OnItemChanged<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
             if (item is T tItem && tItem.GetType() == typeof(T))
@@ -278,25 +270,6 @@ namespace DataWF.Data
                 else
                 {
                     base.OnItemChanged<V>(item, property, column, value);
-                }
-            }
-        }
-
-        public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
-        {
-            if (item is T tItem && tItem.GetType() == typeof(T))
-            {
-                if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(column?.Name) && !BaseTable.CheckItem(tItem, FilterQuery)))
-                {
-                    if (items.Remove(tItem))
-                    {
-                        CheckViews(item, NotifyCollectionChangedAction.Remove);
-                        RemoveIndexes(tItem);
-                    }
-                }
-                else
-                {
-                    base.OnItemChanged(item, property, column, value);
                 }
             }
         }

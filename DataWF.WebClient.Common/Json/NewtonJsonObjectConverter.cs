@@ -19,7 +19,7 @@ namespace DataWF.Common
             {
                 return default(T);
             }
-            var property = (PropertySerializeInfo)null;
+            var property = (IPropertySerializeInfo)null;
             var propertyType = (Type)null;
             if (item == null)
                 item = new T();

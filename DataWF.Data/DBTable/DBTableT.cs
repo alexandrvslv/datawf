@@ -136,9 +136,9 @@ namespace DataWF.Data
 
         protected void AddIndexes(T item)
         {
-            foreach (var column in Columns.Where(p => p.Index != null))
+            foreach (var pullIndex in pullIndexes.Values)
             {
-                column.Index.Add(item);
+                pullIndex.Add(item);
             }
         }
 
@@ -162,9 +162,9 @@ namespace DataWF.Data
 
         protected void RemoveIndexes(T item)
         {
-            foreach (var column in Columns.Where(p => p.Index != null))
+            foreach (var pullIndex in pullIndexes.Values)
             {
-                column.Index.Remove(item);
+                pullIndex.Remove(item);
             }
         }
 
@@ -176,9 +176,9 @@ namespace DataWF.Data
             }
             else
             {
-                foreach (var column in Columns.Where(p => p.Index != null))
+                foreach (var pullIndex in pullIndexes.Values)
                 {
-                    column.Index.RefreshSort(item);
+                    pullIndex.RefreshSort(item);
                 }
             }
             foreach (var collection in virtualTables)
@@ -258,19 +258,10 @@ namespace DataWF.Data
 
         public override void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
-            column.RemoveIndex(item, value);
+            GetPullIndex(column)?.Remove(item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanging<V>(item, property, column, value);
-            }
-        }
-
-        public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
-        {
-            column.RemoveIndex(item, value);
-            foreach (var table in virtualTables)
-            {
-                table.OnItemChanging(item, property, column, value);
             }
         }
 
@@ -282,26 +273,10 @@ namespace DataWF.Data
                 return;
             }
 
-            column.AddIndex(item, value);
+            GetPullIndex(column)?.Add(item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanged<V>(item, property, column, value);
-            }
-            CheckViews(item, property, column);
-        }
-
-        public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
-        {
-            if (string.Equals(property, nameof(DBItem.Attached), StringComparison.Ordinal)
-                || string.Equals(property, nameof(DBItem.UpdateState), StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            column.AddIndex(item, value);
-            foreach (var table in virtualTables)
-            {
-                table.OnItemChanged(item, property, column, value);
             }
             CheckViews(item, property, column);
         }
@@ -700,12 +675,22 @@ namespace DataWF.Data
             return Load(CreateKeyCommmand(id, column, cols), param, transaction).FirstOrDefault();
         }
 
+        public T LoadItem<K>(K id, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            return Load(CreateKeyCommmand(id, column, cols), param, transaction).FirstOrDefault();
+        }
+
         public async Task<T> LoadItemAsync(object id, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             return (await LoadAsync(CreateKeyCommmand(id, column, cols), param, transaction)).FirstOrDefault();
         }
 
         public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            return LoadById(id, param, cols, transaction);
+        }
+
+        public override DBItem LoadItemById<K>(K id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             return LoadById(id, param, cols, transaction);
         }
@@ -720,6 +705,11 @@ namespace DataWF.Data
             return LoadByKey(id, PrimaryKey, param, cols, transaction);
         }
 
+        public T LoadById<K>(K id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            return LoadByKey(id, PrimaryKey, param, cols, transaction);
+        }
+
         public ValueTask<T> LoadByIdAsync(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             return LoadByKeyAsync(id, PrimaryKey, param, cols, transaction);
@@ -730,6 +720,17 @@ namespace DataWF.Data
             return LoadByKey(id, PrimaryKey);
         }
 
+        public T LoadByKey<K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            T row = SelectOne(column, key);
+
+            if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
+            {
+                row = LoadItem(key, column, param, cols, transaction);
+            }
+            return row;
+        }
+
         public T LoadByKey(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             object val = column?.ParseValue(key);
@@ -737,7 +738,7 @@ namespace DataWF.Data
             if (val == null || column == null)
                 return null;
 
-            T row = SelectOne(column, key) as T;
+            T row = SelectOne(column, val);
 
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
             {
@@ -771,21 +772,21 @@ namespace DataWF.Data
 
         public T LoadByCode(string code, string column, DBLoadParam param = DBLoadParam.None)
         {
-            return LoadByCode(code, ParseColumn(column), param);
+            return LoadByCode(code, (DBColumn<string>)ParseColumn(column), param);
         }
 
-        public override DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        public override DBItem LoadItemByCode(string code, DBColumn<string> column, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
             return LoadByCode(code, column, param);
         }
 
-        public T LoadByCode(string code, DBColumn column, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        public T LoadByCode(string code, DBColumn<string> column, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
             var row = SelectOne(column, code);
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)//&& !IsSynchronized
             {
-                var command = System.CreateCommand(Schema.Connection, CreateQuery($"where a.{column.Name}={Schema.System.ParameterPrefix}{column.Name}", "a", Columns));
-                System.CreateParameter(command, Schema.System.ParameterPrefix + column.Name, code, column);
+                var command = System.CreateCommand(Schema.Connection, CreateQuery($"where a.{column.SqlName}={Schema.System.ParameterPrefix}{column.SqlName}", "a", Columns));
+                System.CreateParameter(command, Schema.System.ParameterPrefix + column.SqlName, code, column);
                 row = Load(command, param, transaction).FirstOrDefault();
             }
             return row;
@@ -1070,12 +1071,21 @@ namespace DataWF.Data
             }
         }
 
+        public T SelectOne<V>(DBColumn<V> column, V value)
+        {
+            if (pullIndexes.TryGetValue(column, out var index))
+            {
+                return index.SelectOne<T>(value);
+            }
+            return Select(column, CompareType.Equal, value).FirstOrDefault();
+        }
+
         public T SelectOne(DBColumn column, object value)
         {
             value = column.ParseValue(value);
-            if (column.Index != null)
+            if (pullIndexes.TryGetValue(column, out var index))
             {
-                return column.Index.SelectOne<T>(value);
+                return index.SelectOne<T>(value);
             }
             return Select(column, CompareType.Equal, value).FirstOrDefault();
         }
@@ -1106,9 +1116,9 @@ namespace DataWF.Data
                 return enumerabble;
             }
 
-            if (column.Index != null)
+            if (pullIndexes.TryGetValue(column, out var index))
             {
-                return column.Index.Select<T>(value, comparer);
+                return index.Select<T>(value, comparer);
             }
             return Search(column, comparer, value, list);
         }

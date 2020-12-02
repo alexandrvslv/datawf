@@ -156,8 +156,8 @@ namespace DataWF.Module.CommonGui
             string userPassword = user.Password;
 
             var list = User.DBTable.Select("where " +
-                                                 User.DBTable.CodeKey.Name + " = '" + userLogin + "' and " +
-                                                 User.DBTable.ParseProperty(nameof(User.Password)).Name + " = '" + userPassword + "'").ToList();
+                                                 User.DBTable.CodeKey.SqlName + " = '" + userLogin + "' and " +
+                                                 User.DBTable.ParseProperty(nameof(User.Password)).SqlName + " = '" + userPassword + "'").ToList();
 
             if (list.Count != 0)
             {

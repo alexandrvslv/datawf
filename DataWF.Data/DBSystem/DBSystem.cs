@@ -178,15 +178,15 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual async Task DeleteBLOB(long id, DBTransaction transaction)
         {
-            var command = transaction.AddCommand($"delete from {FileData.DBTable.Name} where {FileData.IdKey.Name} = {ParameterPrefix}{FileData.IdKey.Name}");
-            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.Name}", id, FileData.IdKey);
+            var command = transaction.AddCommand($"delete from {FileData.DBTable.Name} where {FileData.IdKey.SqlName} = {ParameterPrefix}{FileData.IdKey.SqlName}");
+            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.SqlName}", id, FileData.IdKey);
             await ExecuteQueryAsync(command, DBExecuteType.Scalar, CommandBehavior.Default);
         }
 
         public virtual async Task<Stream> GetBLOB(long id, DBTransaction transaction, int bufferSize = 81920)
         {
-            var command = transaction.AddCommand($"select {FileData.IdKey.Name}, {FileData.DataKey.Name} from {FileData.DBTable.Name} where {FileData.IdKey.Name} = {ParameterPrefix}{FileData.IdKey.Name}");
-            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.Name}", id, FileData.IdKey);
+            var command = transaction.AddCommand($"select {FileData.IdKey.SqlName}, {FileData.DataKey.SqlName} from {FileData.DBTable.Name} where {FileData.IdKey.SqlName} = {ParameterPrefix}{FileData.IdKey.SqlName}");
+            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.SqlName}", id, FileData.IdKey);
             transaction.Reader = (DbDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
             if (await transaction.Reader.ReadAsync())
             {
@@ -204,9 +204,9 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual async Task SetBLOB(long id, Stream value, DBTransaction transaction)
         {
-            var command = transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values ({ParameterPrefix}{FileData.IdKey.Name}, {ParameterPrefix}{FileData.DataKey.Name});");
-            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.Name}", id, FileData.IdKey);
-            CreateParameter(command, $"{ParameterPrefix}{FileData.DataKey.Name}", await Helper.GetBufferedBytesAsync(value), FileData.DataKey);//Double buffering!!!
+            var command = transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) values ({ParameterPrefix}{FileData.IdKey.SqlName}, {ParameterPrefix}{FileData.DataKey.SqlName});");
+            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.SqlName}", id, FileData.IdKey);
+            CreateParameter(command, $"{ParameterPrefix}{FileData.DataKey.SqlName}", await Helper.GetBufferedBytesAsync(value), FileData.DataKey);//Double buffering!!!
             await transaction.ExecuteQueryAsync(command);
         }
 
@@ -471,9 +471,9 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 refer = ((IDBVirtualTable)refer).BaseTable;
             ddl.AppendFormat(" constraint {0} foreign key ({1}) references {2}({3})",
                              constraint.Name,
-                             constraint.Column.Name,
+                             constraint.Column.SqlName,
                              refer.Name,
-                             constraint.Reference.Name);
+                             constraint.Reference.SqlName);
         }
 
         public virtual void Format(StringBuilder ddl, DBIndex index, DDLType ddlType)
@@ -510,9 +510,9 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 foreach (var column in table.Columns)
                 {
                     if (column.ColumnType == DBColumnTypes.Default)
-                        ddl.Append($"a.{column.Name} as {column.Name}");
+                        ddl.Append($"a.{column.SqlName} as {column.SqlName}");
                     else if (column.ColumnType == DBColumnTypes.Query)
-                        ddl.Append($"({column.Query}) as {column.Name}");
+                        ddl.Append($"({column.Query}) as {column.SqlName}");
                     else
                         continue;
                     ddl.Append(", ");
@@ -695,7 +695,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual void FormatInsert(StringBuilder command, DBTable table, DBItem row = null)
         {
-            var id = $"{ParameterPrefix}{table.PrimaryKey?.Name}";
+            var id = $"{ParameterPrefix}{table.PrimaryKey?.SqlName}";
             if (table.PrimaryKey != null && row != null && row.PrimaryId == null)
             {
                 id = SequenceInline(table.Sequence);
@@ -729,7 +729,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     else
                     {
                         command.Append(ParameterPrefix);
-                        command.Append(column.Name);
+                        command.Append(column.SqlName);
                     }
                 }
                 else
@@ -763,14 +763,14 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             {
                 if (column.ColumnType == DBColumnTypes.Default && !column.IsPrimaryKey)
                 {
-                    command.AppendFormat("{0}={1}, ", column.SqlName, row == null ? ParameterPrefix + column.Name : FormatText(row[column]));
+                    command.AppendFormat("{0}={1}, ", column.SqlName, row == null ? ParameterPrefix + column.SqlName : FormatText(row[column]));
                     flag = true;
                 }
             }
             if (flag)
             {
                 command.Length -= 2;
-                command.AppendFormat(" where {0}={1}", table.PrimaryKey.SqlName, row == null ? ParameterPrefix + table.PrimaryKey.Name : FormatText(row.PrimaryId));
+                command.AppendFormat(" where {0}={1}", table.PrimaryKey.SqlName, row == null ? ParameterPrefix + table.PrimaryKey.SqlName : FormatText(row.PrimaryId));
             }
         }
 
@@ -781,8 +781,8 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             {
                 command.AppendFormat("delete from {0} where {1}={2}",
                     table.SqlName,
-                    table.PrimaryKey.Name,
-                    row == null ? prefix + table.PrimaryKey.Name : FormatText(row.PrimaryId));
+                    table.PrimaryKey.SqlName,
+                    row == null ? prefix + table.PrimaryKey.SqlName : FormatText(row.PrimaryId));
             }
         }
 
@@ -909,7 +909,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 || column.ColumnType == DBColumnTypes.Code)
                 return string.Empty;
             else if (column.ColumnType == DBColumnTypes.Query && column.Table.Type != DBTableType.View)
-                return string.Format("({0}) as \"{1}\"", column.Query, column.Name);
+                return string.Format("({0}) as \"{1}\"", column.Query, column.SqlName);
             else
                 return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}{column.SqlName}";
         }

@@ -347,15 +347,15 @@ namespace DataWF.Common
         }
 
         //http://stackoverflow.com/questions/5417070/c-sharp-version-of-sql-likea
+        private static readonly Regex likeExp = new Regex(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         public static Regex BuildLike(string toFind)
         {
-            Regex exp = new Regex(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.IgnoreCase);
-            return new Regex(@"\A" + exp.Replace(toFind, ch => @"\" + ch).Replace('_', '.').Replace("%", ".*") + @"\z", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-            //@"\A" + exp.Replace(toFind, ch => @"\" + ch).Replace('_', '.').Replace("%", ".*") + @"\z"
+            return new Regex(@"\A" + likeExp.Replace(toFind, ch => @"\" + ch).Replace('_', '.').Replace("%", ".*") + @"\z", RegexOptions.IgnoreCase | RegexOptions.Singleline);
         }
 
         //http://stackoverflow.com/questions/43289/comparing-two-byte-arrays-in-net/8808245#8808245
-        public static unsafe bool CompareByte(byte[] a1, byte[] a2)
+        public static unsafe bool EqualsBytesUnsafe(byte[] a1, byte[] a2)
         {
             if (a1 == a2)
                 return true;
@@ -387,7 +387,7 @@ namespace DataWF.Common
             }
         }
 
-        public static bool CompareByteAsSpan(byte[] a1, byte[] a2)
+        public static bool EqualsBytes(byte[] a1, byte[] a2)
         {
             return ByteArrayComparer.Default.Equals(a1, a2);
         }
@@ -395,7 +395,7 @@ namespace DataWF.Common
         //https://stackoverflow.com/a/48599119/4682355
         public static bool CompareByte(ReadOnlySpan<byte> a1, in ReadOnlySpan<byte> a2)
         {
-            return ByteArrayComparer.Default.EqualsAsSpan(a1, a2);
+            return ByteArrayComparer.Default.Equals(a1, a2);
         }
 
         public static void CopyStream(Stream input, Stream output, int bufferSize)

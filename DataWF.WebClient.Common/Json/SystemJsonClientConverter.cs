@@ -44,7 +44,7 @@ namespace DataWF.Common
 
         public T Read(ref Utf8JsonReader jreader, T item, JsonSerializerOptions options)
         {
-            var property = (PropertySerializeInfo)null;
+            var property = (IPropertySerializeInfo)null;
             var propertyType = (Type)null;
             var id = (object)null;
             var isRef = true;
@@ -109,19 +109,37 @@ namespace DataWF.Common
                     }
 
                     isRef = false;
-                    lock (item)
+                    if (property.IsAttribute)
                     {
-                        object value = Read(ref jreader, property.DataType, options, currentValue);
                         if (synchItem.SyncStatus == SynchronizedStatus.Actual)
                         {
                             synchItem.SyncStatus = SynchronizedStatus.Load;
                         }
                         else if (synchItem.SyncStatus != SynchronizedStatus.Load
-                            && synchItem.Changes.ContainsKey(property.Name))
+                                && synchItem.Changes.ContainsKey(property.Name))
                         {
+                            _ = Read(ref jreader, property.DataType, options, currentValue);
                             continue;
                         }
-                        property.PropertyInvoker.SetValue(item, value);
+                        property.Read(ref jreader, item, options);
+
+                    }
+                    else
+                    {
+                        lock (item)
+                        {
+                            object value = Read(ref jreader, property.DataType, options, currentValue);
+                            if (synchItem.SyncStatus == SynchronizedStatus.Actual)
+                            {
+                                synchItem.SyncStatus = SynchronizedStatus.Load;
+                            }
+                            else if (synchItem.SyncStatus != SynchronizedStatus.Load
+                                && synchItem.Changes.ContainsKey(property.Name))
+                            {
+                                continue;
+                            }
+                            property.PropertyInvoker.SetValue(item, value);
+                        }
                     }
                 }
             }
@@ -266,31 +284,39 @@ namespace DataWF.Common
                 {
                     continue;
                 }
-
-                var value = property.PropertyInvoker.GetValue(item);
-                if (value is ISynchronized synchedValue)
+                if (property.IsAttribute)
                 {
-                    if (context != null && context.Items.Contains(value))
-                        continue;
-
-                    if (synchedValue.SyncStatus != SynchronizedStatus.New
-                        && synchedValue.SyncStatus != SynchronizedStatus.Edit)
-                    {
-                        continue;
-                    }
-                }
-                jwriter.WritePropertyName(property.Name);
-                if (property.IsAttribute || value == null)
-                {
-                    JsonSerializer.Serialize(jwriter, value, property.DataType, options);
-                }
-                else if (value is IList list)
-                {
-                    SerializeArray(jwriter, list, options);
+                    property.Write(jwriter, item);
                 }
                 else
                 {
-                    JsonSerializer.Serialize(jwriter, value, property.DataType, options);
+                    var value = property.PropertyInvoker.GetValue(item);
+                    if (value is ISynchronized synchedValue)
+                    {
+                        if (context != null && context.Items.Contains(value))
+                            continue;
+
+                        if (synchedValue.SyncStatus != SynchronizedStatus.New
+                            && synchedValue.SyncStatus != SynchronizedStatus.Edit)
+                        {
+                            continue;
+                        }
+                    }
+
+                    if (value == null)
+                    {
+                        jwriter.WriteNull(property.Utf8EncodedName);
+                    }
+                    else if (value is IList list)
+                    {
+                        jwriter.WritePropertyName(property.Utf8EncodedName);
+                        SerializeArray(jwriter, list, options);
+                    }
+                    else
+                    {
+                        jwriter.WritePropertyName(property.Utf8EncodedName);
+                        JsonSerializer.Serialize(jwriter, value, property.DataType, options);
+                    }
                 }
             }
             jwriter.WriteEndObject();

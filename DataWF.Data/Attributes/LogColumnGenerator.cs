@@ -38,20 +38,9 @@ namespace DataWF.Data
 
         public LogTableGenerator LogTable => Table as LogTableGenerator;
 
-        public DBLogColumn LogColumn
-        {
-            get => Column as DBLogColumn;
-            set => Column = value;
-        }
-
         public override int Size => BaseColumn?.Size ?? base.Size;
 
         public ColumnGenerator BaseColumn => LogTable?.BaseTableGenerator?.GetColumn(LogAttribute?.BaseName);
-
-        public override DBColumn CreateColumn(string name)
-        {
-            return new DBLogColumn() { Name = name, Table = Table.Table };
-        }
 
         public override void GenerateColumn(DBTable table)
         {
@@ -60,13 +49,13 @@ namespace DataWF.Data
             if (BaseColumn?.Column == null)
                 throw new Exception("Log Column Expect Base Column");
 
-            LogColumn = table.Columns[ColumnName] as DBLogColumn;
-            if (LogColumn == null)
+            Column = table.Columns[ColumnName];
+            if (Column == null || Column.DataType != DataType)
             {
-                LogColumn = (DBLogColumn)CreateColumn(ColumnName);
+                Column = CreateColumn(ColumnName);
             }
-            LogColumn.BaseColumn = BaseColumn.Column;
-            Column.Property = PropertyName;
+            Column.BaseColumn = BaseColumn.Column;
+            Column.PropertyName = PropertyName;
             Column.PropertyInfo = PropertyInfo;
             Column.ReferencePropertyInfo = ReferencePropertyInfo;
             Column.DefaultValues = DefaultValues;

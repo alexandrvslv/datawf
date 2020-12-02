@@ -16,7 +16,7 @@ namespace DataWF.Common
         public LocaleImageList()
         {
             Indexes.Add(LocaleImage.KeyInvoker.Instance.Name,
-                new ListIndex<LocaleImage, string>(LocaleImage.KeyInvoker.Instance, ListIndexFabric.GetNullKey<string>(), StringComparer.Ordinal));
+                new ListIndex<LocaleImage, string>(LocaleImage.KeyInvoker.Instance, ListIndexFactory.GetNullKey<string>(), StringComparer.Ordinal));
         }
 
         public bool Contains(string name)

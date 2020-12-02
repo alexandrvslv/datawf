@@ -30,6 +30,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -47,7 +48,7 @@ namespace DataWF.Data
             return DBTable.GetTable<T>();
         }
 
-        public object Tag;
+        internal int? oldHandler;
         internal int handler = -1;
         internal short block = -1;
         internal short blockIndex = -1;
@@ -56,7 +57,6 @@ namespace DataWF.Data
         protected DBItemState state = DBItemState.New;
         protected internal DBUpdateState update = DBUpdateState.Insert;
         private AccessValue access;
-        protected object saveLock = new object();
 
         public DBItem()
         {
@@ -292,7 +292,7 @@ namespace DataWF.Data
                 if (update != value)
                 {
                     update = value;
-                    OnPropertyChanged(nameof(UpdateState));
+                    OnPropertyChanged<DBUpdateState>();
                     //var arg = new DBItemEventArgs(this) { State = update };
                     //DBService.OnStateEdited(arg);
                 }
@@ -308,34 +308,19 @@ namespace DataWF.Data
                 if (Check != value)
                 {
                     state = value ? state | DBItemState.Check : state & ~DBItemState.Check;
-                    OnPropertyChanged();
+                    OnPropertyChanged<bool>();
                 }
             }
         }
 
         public bool GetOld(DBColumn column, out object value)
         {
-            return column.GetOld(handler, out value);
+            return column.GetOld(this, out value);
         }
 
         public bool GetOld<T>(DBColumn<T> column, out T value)
         {
-            return column.GetOld(handler, out value);
-        }
-
-        public void RemoveOld(DBColumn column)
-        {
-            column.RemoveOld(handler);
-        }
-
-        public void SetOld(DBColumn column, object value)
-        {
-            column.SetOld(handler, value);
-        }
-
-        public void SetOld<T>(DBColumn<T> column, T value)
-        {
-            column.SetOld(handler, value);
+            return column.GetOld(this, out value);
         }
 
         protected object GetPropertyValue(DBColumn column)
@@ -343,10 +328,23 @@ namespace DataWF.Data
             return column.PropertyInvoker != null ? column.PropertyInvoker.GetValue(this) : GetValue(column);
         }
 
+        protected T GetPropertyValue<T>(DBColumn<T> column)
+        {
+            return column.PropertyInvoker is IValuedInvoker<T> valueInvoker ? valueInvoker.GetValue(this) : GetValue(column);
+        }
+
         protected void SetPropertyValue(object value, DBColumn column, DBSetValueMode mode = DBSetValueMode.Default)
         {
             if (column.PropertyInvoker != null)
                 column.PropertyInvoker.SetValue(this, value);
+            else
+                SetValue(value, column, mode);
+        }
+
+        protected void SetPropertyValue<T>(T value, DBColumn<T> column, DBSetValueMode mode = DBSetValueMode.Default)
+        {
+            if (column.PropertyInvoker is IValuedInvoker<T> valueInvoker)
+                valueInvoker.SetValue(this, value);
             else
                 SetValue(value, column, mode);
         }
@@ -371,47 +369,46 @@ namespace DataWF.Data
 
         public T GetProperty<T>([CallerMemberName] string property = null)
         {
-            return GetValue<T>(Table.Columns.GetByProperty(property));
+            return GetValue<T>((DBColumn<T>)Table.Columns.GetByProperty(property));
         }
 
-        private void RefreshOld<T>(DBColumn<T> column, T value, T field)
+        protected virtual internal void ClearBackup(bool accept)
         {
-            if (GetOld(column, out var old))
+            if (oldHandler is int oldHandlervalue)
             {
-                if (column.Equal(old, value))
+                if (accept)
                 {
-                    RemoveOld(column);
+                    FreeHandler(oldHandlervalue);
                 }
-            }
-            else
-            {
-                SetOld(column, field);
+                else
+                {
+                    var newHandler = handler;
+                    handler = oldHandlervalue;
+                    FreeHandler(newHandler);
+                }
+                oldHandler = null;
             }
         }
 
-        private void RefreshOld(DBColumn column, object value, object field)
+        protected virtual internal void Backup()
         {
-            if (GetOld(column, out object old))
+            if (oldHandler == null && (UpdateState & DBUpdateState.Insert) == 0)
             {
-                if (column.Equal(old, value))
-                {
-                    RemoveOld(column);
-                }
-            }
-            else
-            {
-                SetOld(column, field);
+                var newHandler = table.GetNextHandler(out block, out blockIndex);
+                CopyTo(newHandler);
+                //swap
+                oldHandler = handler;
+                handler = newHandler;
             }
         }
 
-        private void CheckState(DBTransaction transaction)
+        internal void CheckState()
         {
             var temp = UpdateState;
             if (temp == DBUpdateState.Default || (temp & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
                 temp &= ~DBUpdateState.Commit;
                 temp |= DBUpdateState.Update;
-                transaction?.AddItem(this);
             }
             else if (temp == DBUpdateState.Update && !GetIsChanged())
             {
@@ -420,6 +417,7 @@ namespace DataWF.Data
             UpdateState = temp;
             //DBService.OnEdited(args);
         }
+
         public void SetProperty<T>(T value, [CallerMemberName] string property = null)
         {
             SetValue<T>(value, (DBColumn<T>)Table.Columns.GetByProperty(property));
@@ -451,70 +449,17 @@ namespace DataWF.Data
 
         public void SetValue<T>(T value, DBColumn<T> column, DBSetValueMode mode)
         {
-            if (mode == DBSetValueMode.Loading && !Attached)
-            {
-                column.SetValue(this, value);
-                return;
-            }
-
-            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
-            var oldValue = column.GetValue(this);
-
-            if (column.Equal(oldValue, value))
-            {
-                return;
-            }
-            if (check)
-            {
-                RefreshOld(column, value, oldValue);
-            }
-
-            OnPropertyChanging<T>(column.Property ?? column.Name, column, oldValue);
-
-            column.SetValue(this, value);
-
-            OnPropertyChanged<T>(column.Property ?? column.Name, column, value);
-
-            if (check)
-            {
-                CheckState(null);
-            }
+            column.SetValue(this, value, mode);
         }
 
         public void SetValue(object value, DBColumn column, DBSetValueMode mode)
         {
-            if (mode == DBSetValueMode.Loading && !Attached)
-            {
-                column.SetValue(this, value);
-                return;
-            }
-            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
-            var oldValue = column.GetValue(this);
-
-            if (DBService.Equal(oldValue, value))
-            {
-                return;
-            }
-            if (check)
-            {
-                RefreshOld(column, value, oldValue);
-            }
-
-            OnPropertyChanging(column.Property ?? column.Name, column, oldValue);
-
-            column.SetValue(this, value);
-
-            OnPropertyChanged(column.Property ?? column.Name, column, value);
-
-            if (check)
-            {
-                CheckState(null);
-            }
+            column.SetValue(this, value, mode);
         }
 
         public bool IsChangedKey(DBColumn column)
         {
-            return column.GetOld(handler, out object value);
+            return column.GetOld(this, out _);
         }
 
         public virtual bool GetIsChanged()
@@ -526,7 +471,7 @@ namespace DataWF.Data
         {
             foreach (var column in Table.Columns)
             {
-                if (column.GetOld(handler, out object value))
+                if (column.GetOld(this, out _))
                 {
                     yield return column;
                 }
@@ -564,14 +509,6 @@ namespace DataWF.Data
             }
         }
 
-        protected virtual internal void RemoveOld()
-        {
-            foreach (DBColumn column in Table.Columns)
-            {
-                RemoveOld(column);
-            }
-        }
-
         public DBItem GetReference(string code, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
         {
             DBItem row = this;
@@ -587,50 +524,24 @@ namespace DataWF.Data
             }
             return row.GetReference(row.Table.Columns[code.Substring(pi)], param);
         }
-
         public DBItem GetReference(DBColumn column, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
         {
-            if (column == null)
-                return null;
-            if (!column.IsReference)
-                return null;
-            if (column.IsPrimaryKey)
-                return this;
-            object value = GetPropertyValue(column);
-            if (value == null)
-                return null;
-            return column.ReferenceTable.LoadItemById(value, param);
+            return GetReference<DBItem>(column, param);
         }
 
-        public DBItem GetReference(string code, ref DBItem item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
+        public R GetReference<R>(DBColumn column, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where R : DBItem
         {
-            if (item != null)
-                return item;
-            return item = GetReference(code, param);
+            return column?.GetReference<R>(this, param);
         }
 
-        public DBItem GetReference(DBColumn column, ref DBItem item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
+        public R GetReference<R>(DBColumn column, ref R item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where R : DBItem
         {
-            object value = GetPropertyValue(column);
-            if (value != null && value.Equals(item?.PrimaryId))
-                return item;
-
-            return item = value == null ? null : column.ReferenceTable.LoadItemById(value, param);
+            return column?.GetReference<R>(this, ref item, param);
         }
 
-        public T GetReference<T>(DBColumn column, ref T item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBItem
+        public R GetPropertyReference<R>(ref R item, [CallerMemberName] string property = null) where R : DBItem
         {
-            object value = GetPropertyValue(column);
-            if (value != null && value.Equals(item?.PrimaryId))
-                return item;
-
-            return item = value == null ? (T)null : (T)column.ReferenceTable.LoadItemById(value, param);
-        }
-
-        public T GetPropertyReference<T>(ref T item, [CallerMemberName] string property = null) where T : DBItem
-        {
-            var column = Table.Columns.GetByReferenceProperty(property);
-            return GetReference(column, ref item);
+            return GetReference(Table.Columns.GetByReferenceProperty(property), ref item);
         }
 
         //public T GetReference<T>(string code, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBItem, new()
@@ -649,30 +560,24 @@ namespace DataWF.Data
         //    return row.GetReference<T>(row.Table.Columns[code.Substring(pi)], param);
         //}
 
-        public T GetReference<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBItem
-        {
-            return (T)GetReference(column, param);
-        }
-
-        public DBItem SetReference(DBItem value, string column)
-        {
-            return SetReference(value, Table.Columns[column]);
-        }
-
         public T SetPropertyReference<T>(T value, [CallerMemberName] string property = null) where T : DBItem
         {
             return SetReference(value, Table.Columns.GetByReferenceProperty(property));
         }
 
-        public DBItem SetReference(DBItem value, DBColumn column)
+        public DBItem SetReference(DBItem value, string column)
         {
-            SetPropertyValue(value?.PrimaryId, column);
-            return value;
+            return SetReference<DBItem>(value, Table.Columns[column]);
         }
 
-        public T SetReference<T>(T value, DBColumn column) where T : DBItem
+        public DBItem SetReference(DBItem value, DBColumn column)
         {
-            SetPropertyValue(value?.PrimaryId, column);
+            return SetReference<DBItem>(value, column);
+        }
+
+        public R SetReference<R>(R value, DBColumn column) where R : DBItem
+        {
+            column.SetReference<R>(this, value);
             return value;
         }
 
@@ -847,7 +752,7 @@ namespace DataWF.Data
             }
             if (Table.ItemTypeKey != null)
             {
-                SetValue<int?>(itemType < 0 ? table.GetTypeIndex(GetType()) : itemType, table.ItemTypeKey, DBSetValueMode.Loading);
+                SetValue(itemType < 0 ? table.GetTypeIndex(GetType()) : itemType, table.ItemTypeKey, DBSetValueMode.Loading);
             }
         }
 
@@ -919,18 +824,8 @@ namespace DataWF.Data
 
         private AccessValue ReadAccess()
         {
-            var accessData = Table.AccessKey != null ? GetValue<byte[]>(Table.AccessKey) : null;
+            var accessData = Table.AccessKey != null ? GetValue(Table.AccessKey) : null;
             return accessData != null ? new AccessValue(accessData) { Owner = this } : null;
-        }
-
-        public void Accept(string column)
-        {
-            Accept(Table.Columns[column]);
-        }
-
-        public void Accept(DBColumn column)
-        {
-            RemoveOld(column);
         }
 
         public virtual void Accept(IUserIdentity user)
@@ -948,7 +843,7 @@ namespace DataWF.Data
                     Table.Accept(this);
                     UpdateState = DBUpdateState.Default;
                 }
-                RemoveOld();
+                ClearBackup(true);
             }
             OnAccepted(user, oldState);
         }
@@ -965,8 +860,7 @@ namespace DataWF.Data
 
         public void Reject(DBColumn column)
         {
-            if (GetOld(column, out object value))
-                SetValue(value, column);
+            column.Reject(this);
         }
 
         public bool Changed(DBColumn column)
@@ -985,14 +879,7 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    foreach (var column in Table.Columns)
-                    {
-                        if (GetOld(column, out object old))
-                        {
-                            SetValue(old, column, DBSetValueMode.Loading);
-                            RemoveOld(column);
-                        }
-                    }
+                    ClearBackup(false);
                     UpdateState = DBUpdateState.Default;
                 }
                 DBService.OnReject(new DBItemEventArgs(this, null, user));
@@ -1015,15 +902,16 @@ namespace DataWF.Data
 
         public void CopyTo(DBItem item)
         {
+            CopyTo(item.handler);
+        }
+
+        public void CopyTo(int hindex)
+        {
             foreach (var column in Table.Columns)
             {
-                if (column.ColumnType == DBColumnTypes.Default)
+                if (column.Pull != null)
                 {
-                    var value = GetValue(column);
-                    if (value != null)
-                    {
-                        item.SetValue(value, column);
-                    }
+                    column.Copy(this.handler, hindex);
                 }
             }
         }
@@ -1051,7 +939,7 @@ namespace DataWF.Data
             if (Attached)
                 return;
             State |= DBItemState.Attached;
-            OnPropertyChanged(nameof(Attached), null);
+            OnPropertyChanged<bool>(nameof(Attached), null, Attached);
             //DBService.OnAdded(this);
         }
 
@@ -1060,7 +948,7 @@ namespace DataWF.Data
             if (!Attached)
                 return;
             State &= ~DBItemState.Attached;
-            OnPropertyChanged(nameof(Attached), null);
+            OnPropertyChanged<bool>(nameof(Attached), null, Attached);
             //DBService.OnRemoved(this);
         }
 
@@ -1079,20 +967,11 @@ namespace DataWF.Data
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangingEventHandler PropertyChanging;
 
-        protected void OnPropertyChanging<V>(string property, DBColumn<V> column = null, V value = default(V))
+        protected internal void OnPropertyChanging<V>(string property, DBColumn<V> column = null, V value = default(V))
         {
             if (Attached)
             {
                 Table.OnItemChanging<V>(this, property, column, value);
-            }
-            RaisePropertyChanging(property);
-        }
-
-        protected void OnPropertyChanging(string property, DBColumn column = null, object value = null)
-        {
-            if (Attached)
-            {
-                Table.OnItemChanging(this, property, column, value);
             }
             RaisePropertyChanging(property);
         }
@@ -1102,7 +981,7 @@ namespace DataWF.Data
             PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(property));
         }
 
-        protected void OnPropertyChanged<V>([CallerMemberName] string property = null, DBColumn<V> column = null, V value = default(V))
+        protected internal void OnPropertyChanged<V>([CallerMemberName] string property = null, DBColumn<V> column = null, V value = default(V))
         {
             if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
             {
@@ -1111,23 +990,6 @@ namespace DataWF.Data
             if (Attached)
             {
                 Table.OnItemChanged<V>(this, property, column, value);
-                if (property == nameof(Access) && access != null)
-                {
-                    access = ReadAccess();
-                }
-            }
-            RaisePropertyChanged(property);
-        }
-
-        protected void OnPropertyChanged([CallerMemberName] string property = null, DBColumn column = null, object value = null)
-        {
-            if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
-            {
-                cacheToString = string.Empty;
-            }
-            if (Attached)
-            {
-                Table.OnItemChanged(this, property, column, value);
                 if (property == nameof(Access) && access != null)
                 {
                     access = ReadAccess();
@@ -1166,9 +1028,15 @@ namespace DataWF.Data
         public void Free()
         {
             Detach();
+            FreeHandler(handler);
+        }
+
+        private void FreeHandler(int handler)
+        {
             foreach (DBColumn column in Table.Columns)
             {
-                column.SetValue(this, null);
+                if (column.Pull != null)
+                    column.Clear(handler);
             }
             Table.FreeHandlers.Enqueue(handler);
         }
@@ -1238,7 +1106,7 @@ namespace DataWF.Data
         public string FormatPatch()
         {
             var rez = new StringBuilder();
-            rez.AppendLine(string.Format("if exists(select * from {0} where {1}={2})", Table.Name, Table.PrimaryKey.Name, PrimaryId));
+            rez.AppendLine(string.Format("if exists(select * from {0} where {1}={2})", Table.Name, Table.PrimaryKey.SqlName, PrimaryId));
             rez.AppendLine("    " + Table.System.FormatCommand(Table, DBCommandTypes.Update, this) + ";");
             rez.AppendLine("else");
             rez.AppendLine("    " + Table.System.FormatCommand(Table, DBCommandTypes.Insert, this) + ";");
@@ -1428,9 +1296,9 @@ namespace DataWF.Data
                 {
                     if (column.ColumnType != DBColumnTypes.Default)
                         continue;
-                    if (GetValue(column) == null && item.GetValue(column) != null)
+                    if (column.IsNull(this))
                     {
-                        SetValue(item.GetValue(column), column);
+                        column.Copy(item, this);
                     }
                 }
 
@@ -1488,10 +1356,7 @@ namespace DataWF.Data
                     if (item != null && item != this && item.IsChanged)
                     {
                         await item.Save(transaction);
-                        if (GetValue(column) == null)
-                        {
-                            SetValue(item.PrimaryId, column);
-                        }
+                        column.Copy(item, item.Table.PrimaryKey, this);
                     }
                 }
             }
@@ -1582,13 +1447,14 @@ namespace DataWF.Data
             }
         }
 
-        public void AttachOrUpdate(DBLoadParam param = DBLoadParam.None)
+        public DBItem AttachOrUpdate(DBLoadParam param = DBLoadParam.None)
         {
             var exist = FindAndUpdate(param);
             if (exist == null)
             {
                 Attach();
             }
+            return exist ?? this;
         }
 
         public DBItem FindAndUpdate(DBLoadParam param = DBLoadParam.None)
@@ -1608,13 +1474,8 @@ namespace DataWF.Data
                     {
                         continue;
                     }
-                    var value = GetValue(column);
-                    if (value != null)
-                    {
-                        exist.SetValue(value, column);
-                    }
+                    column.Copy(this, exist);
                 }
-
             }
             return exist;
         }
@@ -1797,7 +1658,7 @@ namespace DataWF.Data
             return Table.System.GetBLOB(oid.Value, transaction, bufferSize);
         }
 
-        public async Task<FileStream> GetBLOBFileStream(DBColumn column, string path, int bufferSize = 81920)
+        public async Task<FileStream> GetBLOBFileStream(DBColumn<long?> column, string path, int bufferSize = 81920)
         {
             using (var transaction = new DBTransaction(Table.Connection))
             {
@@ -1805,7 +1666,7 @@ namespace DataWF.Data
             }
         }
 
-        public async Task<FileStream> GetBLOBFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public async Task<FileStream> GetBLOBFileStream(DBColumn<long?> column, string path, DBTransaction transaction, int bufferSize = 81920)
         {
             using (var lobStream = await GetBLOB(column, transaction))
             {

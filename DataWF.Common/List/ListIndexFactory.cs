@@ -9,6 +9,8 @@ namespace DataWF.Common
         private static readonly Dictionary<Type, object> nullKeys = new Dictionary<Type, object>
         {
             { typeof(string), "\u0000" },
+            { typeof(char), '\u0000' },
+            { typeof(byte[]), new byte[] { 0 } },
             { typeof(bool), false },
             { typeof(long), long.MaxValue },
             { typeof(ulong), ulong.MaxValue },
@@ -16,7 +18,6 @@ namespace DataWF.Common
             { typeof(uint), uint.MaxValue },
             { typeof(short), short.MaxValue },
             { typeof(ushort), uint.MaxValue },
-            { typeof(char), char.MaxValue },
             { typeof(sbyte), sbyte.MaxValue },
             { typeof(byte), byte.MaxValue },
             { typeof(decimal), decimal.MaxValue },
@@ -25,11 +26,6 @@ namespace DataWF.Common
             { typeof(DateTime), DateTime.MaxValue },
             { typeof(TimeSpan), TimeSpan.MaxValue }
         };
-
-        public static N? GetNullableKey<N>() where N : struct
-        {
-            return (N?)null;
-        }
 
         public static N GetNullKey<N>()
         {
@@ -58,9 +54,11 @@ namespace DataWF.Common
 
         public static ListIndex<T, K> Create<T, K>(IValuedInvoker<K> invoker, bool concurrent)
         {
-            var comparer = invoker.DataType == typeof(string)
-                ? (IEqualityComparer<K>)StringComparer.OrdinalIgnoreCase
-                : EqualityComparer<K>.Default;
+            var comparer = (IEqualityComparer<K>)EqualityComparer<K>.Default;
+            if (invoker.DataType == typeof(string))
+                comparer = (IEqualityComparer<K>)StringComparer.OrdinalIgnoreCase;
+            if (invoker.DataType == typeof(byte))
+                comparer = (IEqualityComparer<K>)ByteArrayComparer.Default;
 
             return new ListIndex<T, K>(invoker, GetNullKey<K>(), comparer, concurrent);
         }

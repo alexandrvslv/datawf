@@ -443,7 +443,7 @@ namespace DataWF.Data
                             writer.WriteEndElement();//td
 
                             writer.WriteStartElement("td");
-                            writer.WriteElementString("p", column.Name);
+                            writer.WriteElementString("p", column.PropertyName);
                             writer.WriteEndElement();//td
 
                             writer.WriteStartElement("td");

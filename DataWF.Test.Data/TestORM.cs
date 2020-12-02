@@ -101,7 +101,7 @@ namespace DataWF.Test.Data
             Assert.IsInstanceOf<DBTable<Employer>>(table);
             var column = table.Columns["id"];
             Assert.IsNotNull(column);
-            Assert.AreEqual(typeof(int), column.DataType);
+            Assert.AreEqual(typeof(int?), column.DataType);
         }
 
         public async Task Generate(DBConnection connection)

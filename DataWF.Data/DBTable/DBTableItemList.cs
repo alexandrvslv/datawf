@@ -34,8 +34,8 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public override DBSchema Schema
         {
-            get { return base.Schema ?? Table?.Schema; }
-            internal set { base.Schema = value; }
+            get => base.Schema ?? Table?.Schema;
+            internal set => base.Schema = value;
         }
 
         [XmlIgnore, JsonIgnore]

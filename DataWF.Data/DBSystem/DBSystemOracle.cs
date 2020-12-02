@@ -172,8 +172,8 @@ namespace DataWF.Data
         public override void FormatInsertSequence(StringBuilder command, DBTable table, DBItem row)
         {
             command.AppendLine($"begin");
-            command.AppendLine($"select {SequenceInline(table.Sequence)} into :{table.PrimaryKey.Name} from dual;");
-            FormatInsert(command, table, $":{table.PrimaryKey.Name}", row); command.AppendLine(";");
+            command.AppendLine($"select {SequenceInline(table.Sequence)} into :{table.PrimaryKey.SqlName} from dual;");
+            FormatInsert(command, table, $":{table.PrimaryKey.SqlName}", row); command.AppendLine(";");
             command.Append("end;");
         }
 
@@ -368,11 +368,11 @@ namespace DataWF.Data
                 await value.CopyToAsync(blob);
                 var command = (OracleCommand)transaction.AddCommand($@"begin
 select {FileData.DBTable.SequenceName}.nextval into :oid = next from dual;
-insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values (:{FileData.IdKey.Name}, :{FileData.DataKey.Name});
-select :{FileData.IdKey.Name};");
-                var oidParameter = command.Parameters.Add($":{FileData.IdKey.Name}", OracleDbType.Long);
+insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) values (:{FileData.IdKey.SqlName}, :{FileData.DataKey.SqlName});
+select :{FileData.IdKey.SqlName};");
+                var oidParameter = command.Parameters.Add($":{FileData.IdKey.SqlName}", OracleDbType.Long);
                 oidParameter.Direction = ParameterDirection.Output;
-                command.Parameters.Add($":{FileData.IdKey.Name}", OracleDbType.Blob, -1).Value = blob;
+                command.Parameters.Add($":{FileData.IdKey.SqlName}", OracleDbType.Blob, -1).Value = blob;
                 await transaction.ExecuteQueryAsync(command, DBExecuteType.NoReader);
 
                 return (long)oidParameter.Value;

@@ -72,10 +72,16 @@ namespace DataWF.Data
                 return;
             }
             var exist = this[item.Name];
-            if (exist!=null)
+            if (exist != null)
             {
-                if()
-                throw new InvalidOperationException($"Columns name duplication {item.Name}");
+                if (exist.DataType == item.DataType)
+                {
+                    throw new InvalidOperationException($"Columns name duplication {item.Name}");
+                }
+                else
+                {
+                    RemoveInternal(exist, IndexOf(exist));
+                }
             }
             if (item.IsPrimaryKey && index > 1)
                 index = 1;
@@ -85,6 +91,7 @@ namespace DataWF.Data
             {
                 item.Order = index;
             }
+
             base.InsertInternal(index, item);
 
             if (item.IsPrimaryKey && !isVirtual)

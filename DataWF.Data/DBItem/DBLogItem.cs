@@ -72,7 +72,7 @@ namespace DataWF.Data
         }
 
         [LogColumn("item_type", "item_type_log", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0), DefaultValue(0)]
-        public override int? ItemType
+        public override int ItemType
         {
             get => base.ItemType;
             set => base.ItemType = value;
@@ -103,7 +103,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBItem BaseItem
         {
-            get { return baseItem ?? (baseItem = BaseTable.LoadItemById(GetValue(LogTable.BaseKey)) ?? DBItem.EmptyItem); }
+            get => baseItem ?? (baseItem = BaseTable.LoadItemById(GetValue(LogTable.BaseKey)) ?? DBItem.EmptyItem);
             set
             {
                 baseItem = value;
@@ -114,7 +114,7 @@ namespace DataWF.Data
                               ? DBLogType.Delete : DBLogType.None;
                 foreach (var column in LogTable.GetLogColumns())
                 {
-                    SetValue(value.GetValue(column.BaseColumn), column);
+                    column.Copy(value, column.BaseColumn, this);
                 }
             }
         }
@@ -178,7 +178,7 @@ namespace DataWF.Data
         {
             foreach (var logColumn in LogTable.GetLogColumns())
             {
-                value.SetValue(GetValue(logColumn), logColumn.BaseColumn);
+                logColumn.BaseColumn.Copy(this, logColumn, value);
             }
         }
 
@@ -270,14 +270,13 @@ namespace DataWF.Data
                 if (column.ReferenceTable == null
                     || !TypeHelper.IsBaseType(BaseItem.GetType(), column.PropertyInvoker?.TargetType))
                     continue;
-                var value = BaseItem.GetValue(column);
-                if (value != null && BaseItem.GetReference(column) == null)
+                if (!column.IsNull(BaseItem) && BaseItem.GetReference(column) == null)
                 {
                     if (column.ReferenceTable.IsLoging)
                     {
                         using (var query = new QQuery((DBTable)column.ReferenceTable.LogTable))
                         {
-                            query.BuildParam(column.ReferenceTable.LogTable.BaseKey, CompareType.Equal, value);
+                            query.BuildParam(column.ReferenceTable.LogTable.BaseKey, CompareType.Equal, BaseItem.GetValue(column));
                             query.BuildParam(column.ReferenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
                             var logItem = column.ReferenceTable.LogTable.LoadItems(query).Cast<DBLogItem>().OrderByDescending(p => p.DateCreate).FirstOrDefault();
                             if (logItem != null)

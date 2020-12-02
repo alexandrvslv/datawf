@@ -17,15 +17,15 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValueNullable<int>(Table.PrimaryKey);
-            set => SetValueNullable(value, Table.PrimaryKey);
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Column("template_id"), Index("rtemplate_property_index", true)]
         public int? TemplateId
         {
-            get => GetValueNullable<int>(TemplateKey);
-            set => SetValueNullable(value, TemplateKey);
+            get => GetValue<int?>(TemplateKey);
+            set => SetValue(value, TemplateKey);
         }
 
         [Reference(nameof(TemplateId))]

@@ -16,15 +16,15 @@ namespace DataWF.Test.Data
         [Column("id", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValueNullable<int>(IdKey);
-            set => SetValueNullable(value, IdKey);
+            get => GetValue<int?>(IdKey);
+            set => SetValue(value, IdKey);
         }
 
         [Column("file_ref", Keys = DBColumnKeys.FileLOB)]
         public long? FileRef
         {
-            get => GetValueNullable<long>(FileRefKey);
-            set => SetValueNullable(value, FileRefKey);
+            get => GetValue<long?>(FileRefKey);
+            set => SetValue(value, FileRefKey);
         }
 
         [Column("file_name", 2048, Keys = DBColumnKeys.FileName)]
@@ -37,8 +37,8 @@ namespace DataWF.Test.Data
         [Column("file_last_write", Keys = DBColumnKeys.FileLastWrite | DBColumnKeys.UtcDate)]
         public DateTime? FileLastWrite
         {
-            get => GetValueNullable<DateTime>(FileLastWriteKey);
-            set => SetValueNullable(value, FileLastWriteKey);
+            get => GetValue<DateTime?>(FileLastWriteKey);
+            set => SetValue(value, FileLastWriteKey);
         }
     }
 }

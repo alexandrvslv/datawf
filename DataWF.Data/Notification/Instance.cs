@@ -66,8 +66,8 @@ namespace DataWF.Data
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValueNullable<int>(Table.PrimaryKey);
-            set => SetValueNullable(value, Table.PrimaryKey);
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Column("instance_host", Keys = DBColumnKeys.View)]
@@ -80,15 +80,15 @@ namespace DataWF.Data
         [Column("instance_port", Keys = DBColumnKeys.View)]
         public int? Port
         {
-            get => GetValueNullable<int>(PortKey);
-            set => SetValueNullable(value, PortKey);
+            get => GetValue<int?>(PortKey);
+            set => SetValue(value, PortKey);
         }
 
         [Column("instance_active")]
         public bool? Active
         {
-            get => GetValueNullable<bool>(ActiveKey);
-            set => SetValueNullable(value, ActiveKey);
+            get => GetValue<bool?>(ActiveKey);
+            set => SetValue(value, ActiveKey);
         }
 
         [JsonIgnore, XmlIgnore]

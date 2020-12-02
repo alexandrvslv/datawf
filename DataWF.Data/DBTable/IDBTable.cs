@@ -30,19 +30,19 @@ namespace DataWF.Data
     public interface IDBTable : IDBSchemaItem, ICollection<DBItem>, IDisposable
     {
         DBItem this[int index] { get; }
-        DBColumn AccessKey { get; }
-        DBColumn CodeKey { get; }
-        DBColumn DateKey { get; }
+        DBColumn<byte[]> AccessKey { get; }
+        DBColumn<string> CodeKey { get; }
+        DBColumn<DateTime?> DateKey { get; }
         DBColumn ElementTypeKey { get; }
-        DBColumn FileKey { get; }
-        DBColumn FileBLOBKey { get; }
-        DBColumn FileNameKey { get; }
+        DBColumn<byte[]> FileKey { get; }
+        DBColumn<long?> FileBLOBKey { get; }
+        DBColumn<string> FileNameKey { get; }
         DBColumn GroupKey { get; }
-        DBColumn ImageKey { get; }
-        DBColumn ItemTypeKey { get; }
+        DBColumn<byte[]> ImageKey { get; }
+        DBColumn<int> ItemTypeKey { get; }
         DBColumn PrimaryKey { get; }
-        DBColumn StampKey { get; }
-        DBColumn StatusKey { get; }
+        DBColumn<DateTime?> StampKey { get; }
+        DBColumn<DBStatus> StatusKey { get; }
         DBSystem System { get; }
         int BlockSize { get; set; }
         List<DBForeignKey> ChildRelations { get; }
@@ -107,9 +107,9 @@ namespace DataWF.Data
         IEnumerable<DBForeignKey> GetChildRelations();
         IEnumerable<DBTable> GetVirtualTables();
         IEnumerable<DBTable> GetChildTables();
-        DBColumn GetCultureColumn(string group, CultureInfo culture);
+        DBColumn<string> GetCultureColumn(string group, CultureInfo culture);
         DBItemType GetItemType(int typeIndex);
-        DBColumn GetNameKey(string group);
+        DBColumn<string> GetNameKey(string group);
         IEnumerable<DBTable> GetParentTables();
         int GetRowCount(DBTransaction transaction, string where);
         string GetRowText(object id);
@@ -124,7 +124,7 @@ namespace DataWF.Data
         DBColumnGroup InitColumnGroup(string code);
         void LoadFile();
         void LoadFile(string fileName);
-        DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null);
+        DBItem LoadItemByCode(string code, DBColumn<string> column, DBLoadParam param, DBTransaction transaction = null);
         DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
         DBItem LoadItemFromReader(DBTransaction transaction);
         IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
@@ -136,9 +136,7 @@ namespace DataWF.Data
         DBItem NewItem(DBUpdateState state, bool def, int typeIndex);
         int NextHash();
         void OnItemChanged<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
-        void OnItemChanged(DBItem item, string proeprty, DBColumn column, object value);
         void OnItemChanging<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
-        void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
         void OnUpdated(DBItemEventArgs e);
         bool OnUpdating(DBItemEventArgs e);
         DBColumn ParseColumn(string name);

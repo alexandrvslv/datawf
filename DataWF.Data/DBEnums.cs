@@ -184,18 +184,6 @@ namespace DataWF.Data
         max,
         min,
         count
-
-    }
-
-    public enum DBRowBinarySeparator
-    {
-        None,
-        ColumnsStart,
-        ColumnsEnd,
-        RowStart,
-        RowEnd,
-        End,
-        Null
     }
 
     public enum DBLogType

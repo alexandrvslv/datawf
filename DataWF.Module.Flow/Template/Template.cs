@@ -89,7 +89,7 @@ namespace DataWF.Module.Flow
         }
 
         [Index("rtemplate_item_type", false)]
-        public override int? ItemType { get => base.ItemType; set => base.ItemType = value; }
+        public override int ItemType { get => base.ItemType; set => base.ItemType = value; }
 
         [Column("code", 250, Keys = DBColumnKeys.Code)]
         public virtual string Code
@@ -141,8 +141,8 @@ namespace DataWF.Module.Flow
         [DefaultValue(0), Column("document_type", 250)]
         public int? DocumentType
         {
-            get => GetValueNullable<int>(DocumentTypeKey);
-            set => SetValueNullable(value, DocumentTypeKey);
+            get => GetValue<int?>(DocumentTypeKey);
+            set => SetValue(value, DocumentTypeKey);
         }
 
         [Browsable(false)]
@@ -171,8 +171,8 @@ namespace DataWF.Module.Flow
         [Column("work_id")]
         public int? WorkId
         {
-            get => GetValueNullable<int>(WorkKey);
-            set => SetValueNullable(value, WorkKey);
+            get => GetValue<int?>(WorkKey);
+            set => SetValue(value, WorkKey);
         }
 
         [Reference(nameof(WorkId))]

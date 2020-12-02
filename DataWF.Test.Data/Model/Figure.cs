@@ -12,8 +12,8 @@ namespace DataWF.Test.Data
         [Column("id", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValueNullable<int>(DBTable.PrimaryKey);
-            set => SetValueNullable(value, DBTable.PrimaryKey);
+            get => GetValue<int?>(DBTable.PrimaryKey);
+            set => SetValue(value, DBTable.PrimaryKey);
         }
 
         [Column("location", 16)]

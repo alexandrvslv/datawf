@@ -54,7 +54,7 @@ namespace DataWF.Module.Common
                 else if (value is DBColumn column)
                 {
                     type = PermissionType.GColumn;
-                    name = column.Property ?? value.ToString();
+                    name = column.PropertyName ?? value.ToString();
                 }
             }
             else if (value is Type valueType)
@@ -177,7 +177,7 @@ namespace DataWF.Module.Common
         {
             var type = GetPermissionType(obj, out string code, out string name);
 
-            string filter = $"{ DBTable.CodeKey.Name}='{code}' and {DBTable.ElementTypeKey.Name}={type}";
+            string filter = $"{ DBTable.CodeKey.SqlName}='{code}' and {DBTable.ElementTypeKey.SqlName}={type}";
 
             GroupPermission permission = DBTable.Select(filter).FirstOrDefault();
 

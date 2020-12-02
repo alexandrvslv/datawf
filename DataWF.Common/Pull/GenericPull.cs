@@ -11,6 +11,18 @@ namespace DataWF.Common
         internal GenericPull(int blockSize) : base(blockSize)
         { }
 
+        public T GetValue(int index)
+        {
+            Helper.OneToTwoShift(index, out short block, out short blockIndex);
+            return GetValue(block, blockIndex);
+        }
+
+        public void SetValue(int index, T value)
+        {
+            Helper.OneToTwoShift(index, out short block, out short blockIndex);
+            SetValue(block, blockIndex, value);
+        }
+
         public abstract T GetValue(short block, short blockIndex);
         public abstract void SetValue(short block, short blockIndex, T value);
     }

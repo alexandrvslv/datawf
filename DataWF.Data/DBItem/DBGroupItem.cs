@@ -89,7 +89,7 @@ namespace DataWF.Data
                 if (Expand != value)
                 {
                     state = value ? state | DBItemState.Expand : state & ~DBItemState.Expand;
-                    OnPropertyChanged();
+                    OnPropertyChanged<bool>();
                 }
             }
         }
@@ -105,24 +105,9 @@ namespace DataWF.Data
             }
         }
 
-        public T? GetGroupValueNullable<T>() where T : struct
-        {
-            return GetValueNullable<T>(Table.GroupKey);
-        }
-
         public T GetGroupValue<T>()
         {
             return GetValue<T>(Table.GroupKey);
-        }
-
-        public void SetGroupValueNullable<T>(T? value) where T : struct
-        {
-            if (value != null && value.Equals(PrimaryId))
-            {
-                throw new InvalidOperationException("Self reference detected!");
-            }
-            SetValueNullable(value, Table.GroupKey);
-            group = null;
         }
 
         public void SetGroupValue<T>(T value)

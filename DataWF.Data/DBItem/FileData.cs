@@ -35,10 +35,10 @@ namespace DataWF.Data
         { }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public long? Id
         {
-            get => GetValueNullable<int>(IdKey);
-            set => SetValueNullable(value, IdKey);
+            get => GetValue<long?>(IdKey);
+            set => SetValue(value, IdKey);
         }
 
         [Column("file_data", Keys = DBColumnKeys.File)]
@@ -51,8 +51,8 @@ namespace DataWF.Data
         [Column("file_size")]
         public int? Size
         {
-            get => GetValueNullable<int>(SizeKey);
-            set => SetValueNullable(value, SizeKey);
+            get => GetValue<int?>(SizeKey);
+            set => SetValue(value, SizeKey);
         }
 
         [Column("file_hash", size: 128)]

@@ -63,11 +63,6 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public override Task<bool> ReadAsync(IDataReader reader)
-        {
-            throw new NotImplementedException();
-        }
-
         public override string SequenceCurrentValue(DBSequence sequence)
         {
             throw new NotImplementedException();
@@ -94,11 +89,6 @@ namespace DataWF.Data
         }
 
         public override Task<long> SetBLOB(Stream value, DBTransaction transaction)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Stream GetStream(IDataReader reader, int column)
         {
             throw new NotImplementedException();
         }
