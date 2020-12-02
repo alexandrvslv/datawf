@@ -1615,8 +1615,8 @@ namespace DataWF.Data
                 {
                     invokerWriter.WriteArrayBegin();
                     invokerWriter.WriteArrayLength(Count);
-                    var map = DBItemSerializer.Instance.WriteMap(writer, ItemType.Type, this);
-                    foreach (DBItem row in this)
+                    var map = DBItemSerializer.Instance.WriteMap(invokerWriter, ItemType.Type, this);
+                    foreach (DBItem item in this)
                     {
                         invokerWriter.WriteArrayEntry();
                         DBItemSerializer.Instance.Write(invokerWriter, item, null, map);
@@ -1651,19 +1651,19 @@ namespace DataWF.Data
                         var count = Int32Serializer.Instance.Read(invokerReader.Reader);
                         invokerReader.ReadToken();
                     }
-                    var map = (Dictionary<short, IPropertySerializeInfo>)null;
+                    var map = (Dictionary<ushort, IPropertySerializeInfo>)null;
                     if (invokerReader.CurrentToken == BinaryToken.SchemaBegin)
                     {
-                        var map = DBItemSerializer.Instance.ReadMap(reader, out _, out _);
+                        map = DBItemSerializer.Instance.ReadMap(invokerReader, out _, out _);
                         invokerReader.ReadToken();
                     }
 
                     while (invokerReader.CurrentToken == BinaryToken.ArrayEntry)
                     {
-                        DBItem row = NewItem(DBUpdateState.Default, false);
-                        DBItemBinarySerialize.Read(reader, row, map);
-                        Add(row);
-                        row.Accept((IUserIdentity)null);
+                        DBItem item = NewItem(DBUpdateState.Default, false);
+                        DBItemSerializer.Instance.Read(invokerReader, item, null, map);
+                        Add(item);
+                        item.Accept((IUserIdentity)null);
                     }
                 }
             }
@@ -1759,7 +1759,7 @@ namespace DataWF.Data
 
         public IEnumerable<DBColumn> GetTypeColumns<T>()
         {
-            return GetColumns(typeof(T));
+            return GetTypeColumns(typeof(T));
         }
 
         public IEnumerable<DBColumn> GetTypeColumns(Type t)
@@ -1767,15 +1767,15 @@ namespace DataWF.Data
             return mapTypeColumn.GetOrAdd(t, CreateInvokers);
             List<DBColumn> CreateInvokers(Type type)
             {
-                var column = new List<DBColumn>(Columns.Count);
+                var columns = new List<DBColumn>(Columns.Count);
                 foreach (var column in Columns)
                 {
                     if (!IsSerializeableColumn(column, type))
                         continue;
 
-                    column.Add(column);
+                    columns.Add(column);
                 }
-                return column;
+                return columns;
             }
         }
 

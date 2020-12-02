@@ -58,6 +58,7 @@ namespace DataWF.Data
             }
         }
 
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public override IInvoker PropertyInvoker
         {
             get => base.PropertyInvoker;

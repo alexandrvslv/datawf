@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-
     public abstract class NullableSerializer<T> : ElementSerializer<T>, IElementSerializer<T?> where T : struct
     {
         protected int size;

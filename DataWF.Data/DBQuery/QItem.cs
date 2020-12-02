@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
@@ -112,6 +113,8 @@ namespace DataWF.Data
             get => Query?.Table;
             set { }
         }
+
+        public JsonEncodedText JsonName { get => default(JsonEncodedText); }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual DBSchema Schema => Table?.Schema;

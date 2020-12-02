@@ -89,10 +89,13 @@ namespace DataWF.Test.Data
         public void SchemaSerialization()
         {
             var schem = DBSchema.Generate(SchemaName, GetType().Assembly);
-            var file = "data.xml";
-            Serialization.Serialize(DBService.Schems, file);
+
+            var buffer = Serialization.Instance.Serialize(DBService.Schems);
+            PrintBuffer(buffer);
+
+
             DBService.Schems.Clear();
-            Serialization.Deserialize(file, DBService.Schems);
+            Serialization.Instance.Deserialize(buffer, DBService.Schems);
             Assert.AreEqual(2, DBService.Schems.Count);
 
             Assert.AreEqual(4, schem.Tables.Count);
@@ -102,6 +105,24 @@ namespace DataWF.Test.Data
             var column = table.Columns["id"];
             Assert.IsNotNull(column);
             Assert.AreEqual(typeof(int?), column.DataType);
+
+            void PrintBuffer(ArraySegment<byte> buffer)
+            {
+                var text = System.Text.Encoding.UTF8.GetString(buffer);
+                using (var reader = new StringReader(text))
+                {
+                    for (; ; )
+                    {
+                        var line = reader.ReadLine();
+                        if (line != null)
+                            Console.WriteLine(line);
+                        else
+                            break;
+                    }
+                }
+            }
+
+
         }
 
         public async Task Generate(DBConnection connection)

@@ -319,11 +319,11 @@ namespace DataWF.Common
             return cacheValueSerializer[type] = serializer;
         }
 
-        public static ElementSerializer GetSerializer(Type type)
+        public static ElementSerializer GetSerializer(Type elementType)
         {
-            if (!cacheValueSerializer.TryGetValue(type, out var serializer))
+            if (!cacheValueSerializer.TryGetValue(elementType, out var serializer))
             {
-                type = CheckNullable(type);
+                var type = CheckNullable(elementType);
                 var attribute = type.GetCustomAttribute<ElementSerializerAttribute>(false);
                 serializer = null;
                 if (attribute != null && attribute.SerializerType != null)
@@ -377,7 +377,12 @@ namespace DataWF.Common
                 else if (type.IsEnum)
                     serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
                 else if (IsInterface(type, typeof(IBinarySerializable)))
-                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(BytesSerializer<>).MakeGenericType(type));
+                {
+                    if (elementType.IsValueType)
+                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(NBytesSerializer<>).MakeGenericType(type));
+                    else
+                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(BytesSerializer<>).MakeGenericType(type));
+                }
                 else if (IsInterface(type, typeof(IXMLSerializable)))
                     serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(XMLSerializer<>).MakeGenericType(type));
                 else if (IsInterface(type, typeof(IDictionary)))

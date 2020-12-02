@@ -28,6 +28,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
@@ -91,10 +92,11 @@ namespace DataWF.Data
         protected string subList;
         //private Dictionary<int, object> tags;
         private DBColumn logColumn;
+        private DBColumn baseColumn;
         private PropertyInfo propertyInfo;
         private IInvoker propertyInvoker;
         private PropertyInfo referencePropertyInfo;
-        private DBColumn baseColumn;
+        private JsonEncodedText? jsonName;
         private const int bufferSize = 4048;
 
         #endregion
@@ -122,6 +124,9 @@ namespace DataWF.Data
         {
             ReferenceTable = reference;
         }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
 
         [Browsable(false)]
         public string BaseName { get; set; }
@@ -503,7 +508,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false)]
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public Type TargetType => typeof(DBItem);
 
         [Browsable(false), Category("Database")]
@@ -711,8 +716,10 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore]
         public bool IsRequired => IsNotNull;
 
+        [JsonIgnore, XmlIgnore]
         public bool IsText => false;
 
+        [JsonIgnore, XmlIgnore]
         public bool IsWriteable => true;
 
         internal protected abstract void CheckPull();
