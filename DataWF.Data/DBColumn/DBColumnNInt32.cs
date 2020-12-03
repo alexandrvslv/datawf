@@ -31,7 +31,7 @@ namespace DataWF.Data
                 return;
             }
             var value = transaction.Reader.IsDBNull(i) ? (int?)null : transaction.Reader.GetInt32(i);
-            row.SetValue(value, this, DBSetValueMode.Loading);
+            SetValue(row, value, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)

@@ -99,7 +99,6 @@ namespace DataWF.Data
         UInt,
         Object,
         ByteSerializable,
-        LargeObject
     }
 
     public enum DBCommandTypes

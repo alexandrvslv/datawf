@@ -21,21 +21,22 @@ namespace DataWF.Module.Common
     public class User : DBUser, IComparable, IDisposable
     {
         public static readonly DBTable<User> DBTable = GetTable<User>();
-        public static readonly DBColumn AbbreviationKey = DBTable.ParseProperty(nameof(Abbreviation));
-        public static readonly DBColumn DepartmentKey = DBTable.ParseProperty(nameof(DepartmentId));
-        public static readonly DBColumn PositionKey = DBTable.ParseProperty(nameof(PositionId));
-        public static readonly DBColumn EmailKey = DBTable.ParseProperty(nameof(EMail));
-        public static readonly DBColumn PhoneKey = DBTable.ParseProperty(nameof(Phone));
-        public static readonly DBColumn PasswordKey = DBTable.ParseProperty(nameof(Password));
-        public static readonly DBColumn IsTemporaryPasswordKey = DBTable.ParseProperty(nameof(IsTemporaryPassword));
-        public static readonly DBColumn SuperKey = DBTable.ParseProperty(nameof(Super));
-        public static readonly DBColumn RefreshTokenKey = DBTable.ParseProperty(nameof(RefreshToken));
-        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
-        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
-        public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
-        public static readonly DBColumn AuthTokenKey = DBTable.ParseProperty(nameof(AuthType));
-        public static readonly DBColumn AddressIdKey = DBTable.ParseProperty(nameof(AddessId));
-        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
+        public static readonly DBColumn<string> AbbreviationKey = DBTable.ParseProperty<string>(nameof(Abbreviation));
+        public static readonly DBColumn<int?> DepartmentKey = DBTable.ParseProperty<int?>(nameof(DepartmentId));
+        public static readonly DBColumn<int?> PositionKey = DBTable.ParseProperty<int?>(nameof(PositionId));
+        public static readonly DBColumn<string> EmailKey = DBTable.ParseProperty<string>(nameof(EMail));
+        public static readonly DBColumn<string> LoginKey = DBTable.ParseProperty<string>(nameof(Login));
+        public static readonly DBColumn<string> PhoneKey = DBTable.ParseProperty<string>(nameof(Phone));
+        public static readonly DBColumn<string> PasswordKey = DBTable.ParseProperty<string>(nameof(Password));
+        public static readonly DBColumn<bool?> IsTemporaryPasswordKey = DBTable.ParseProperty<bool?>(nameof(IsTemporaryPassword));
+        public static readonly DBColumn<bool?> SuperKey = DBTable.ParseProperty<bool?>(nameof(Super));
+        public static readonly DBColumn<string> RefreshTokenKey = DBTable.ParseProperty<string>(nameof(RefreshToken));
+        public static readonly DBColumn<string> NameENKey = DBTable.ParseProperty<string>(nameof(NameEN));
+        public static readonly DBColumn<string> NameRUKey = DBTable.ParseProperty<string>(nameof(NameRU));
+        public static readonly DBColumn<int?> CompanyKey = DBTable.ParseProperty<int?>(nameof(CompanyId));
+        public static readonly DBColumn<UserAuthType?> AuthTokenKey = DBTable.ParseProperty<UserAuthType?>(nameof(AuthType));
+        public static readonly DBColumn<int?> AddressKey = DBTable.ParseProperty<int?>(nameof(AddessId));
+        public static readonly DBColumn<int?> ExternalIdKey = DBTable.ParseProperty<int?>(nameof(ExternalId));
         private static readonly PasswordSpec PasswordSpecification = PasswordSpec.Lenght6 | PasswordSpec.CharSpecial | PasswordSpec.CharNumbers;
 
         public const string AuthenticationScheme = "Bearer";
@@ -400,7 +401,7 @@ namespace DataWF.Module.Common
                 if (online == value)
                     return;
                 online = value;
-                OnPropertyChanged();
+                OnPropertyChanged<bool>();
             }
         }
 
@@ -492,15 +493,15 @@ namespace DataWF.Module.Common
         [Column("address_id"), Browsable(false)]
         public int? AddessId
         {
-            get => GetValue<int?>(AddressIdKey);
-            set => SetValue(value, AddressIdKey);
+            get => GetValue<int?>(AddressKey);
+            set => SetValue(value, AddressKey);
         }
 
         [Reference(nameof(AddessId))]
         public Address Address
         {
-            get => GetReference(AddressIdKey, ref address);
-            set => SetReference(address = value, AddressIdKey);
+            get => GetReference(AddressKey, ref address);
+            set => SetReference(address = value, AddressKey);
         }
         public override string AuthenticationType => AuthType?.ToString();
 

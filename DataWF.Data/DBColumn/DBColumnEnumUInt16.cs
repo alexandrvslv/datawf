@@ -31,7 +31,7 @@ namespace DataWF.Data
             }
             var value = transaction.Reader.IsDBNull(i) ? default(ushort) : (ushort)transaction.Reader.GetInt16(i);
             var enumValue = Unsafe.As<ushort, T>(ref value);
-            row.SetValue(enumValue, this, DBSetValueMode.Loading);
+            SetValue(row, enumValue, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
@@ -39,6 +39,12 @@ namespace DataWF.Data
             var value = (ushort)transaction.Reader.GetInt16(i);
             var enumValue = Unsafe.As<ushort, T>(ref value);
             return Table.GetPullIndex(this)?.SelectOne<F>(enumValue);
+        }
+
+        public override object GetParameterValue(DBItem item)
+        {
+            var value = GetValue(item);
+            return (short)Unsafe.As<T, ushort>(ref value);
         }
     }
 }

@@ -18,6 +18,8 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 
+using System;
+
 namespace DataWF.Data
 {
     public class DBColumnNUInt64 : DBColumnNullable<ulong>
@@ -29,13 +31,21 @@ namespace DataWF.Data
                 return;
             }
             var value = transaction.Reader.IsDBNull(i) ? (ulong?)null : (ulong)transaction.Reader.GetInt64(i);
-            row.SetValue(value, this, DBSetValueMode.Loading);
+            SetValue(row, value, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = (ulong)transaction.Reader.GetInt64(i);
             return Table.GetPullIndex(this)?.SelectOne<F>(value);
+        }
+
+        public override object GetParameterValue(DBItem item)
+        {
+            var value = GetValue(item);
+            if (value == null)
+                return DBNull.Value;
+            return (long)value;
         }
     }
 }

@@ -134,6 +134,10 @@ namespace DataWF.Data
             {
                 logSchema = value;
                 LogSchemaName = value?.Name;
+                if (value != null && !DBService.Schems.Contains(value.Name))
+                {
+                    DBService.Schems.Add(value);
+                }
             }
         }
 
@@ -336,6 +340,8 @@ namespace DataWF.Data
                     Connection = connection,
                     BaseSchema = this
                 };
+
+
                 foreach (DBTable table in Tables)
                 {
                     if (table.IsLoging)

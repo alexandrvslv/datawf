@@ -71,10 +71,11 @@ namespace DataWF.Module.Flow
     public class DocumentData : DBItem, IDocumentDetail
     {
         public static readonly DBTable<DocumentData> DBTable = GetTable<DocumentData>();
-        public static readonly DBColumn TemplateDataKey = DBTable.ParseProperty(nameof(TemplateDataId));
-        public static readonly DBColumn FileUrlKey = DBTable.ParseProperty(nameof(FileUrl));
-        public static readonly DBColumn FileLastWriteKey = DBTable.ParseProperty(nameof(FileLastWrite));
-        public static readonly DBColumn DocumentKey = DBTable.ParseProperty(nameof(DocumentId));
+        public static readonly DBColumn<int?> TemplateDataKey = DBTable.ParseProperty<int?>(nameof(TemplateDataId));
+        public static readonly DBColumn<string> FileUrlKey = DBTable.ParseProperty<string>(nameof(FileUrl));
+        public static readonly DBColumn<string> FileNameKey = DBTable.ParseProperty<string>(nameof(FileName));
+        public static readonly DBColumn<DateTime?> FileLastWriteKey = DBTable.ParseProperty<DateTime?>(nameof(FileLastWrite));
+        public static readonly DBColumn<long?> DocumentKey = DBTable.ParseProperty<long?>(nameof(DocumentId));
 
         private byte[] buf;
         private User currentUser;
@@ -107,7 +108,11 @@ namespace DataWF.Module.Flow
         }
 
         [Index("ddocument_data_item_type", false)]
-        public override int? ItemType { get => base.ItemType; set => base.ItemType = value; }
+        public override int ItemType
+        {
+            get => base.ItemType;
+            set => base.ItemType = value;
+        }
 
         [Column("template_data_id")]
         public int? TemplateDataId
@@ -147,14 +152,14 @@ namespace DataWF.Module.Flow
         [Column("file_data", Keys = DBColumnKeys.File)]
         public virtual byte[] FileData
         {
-            get => buf ?? (buf = GetZip(Table.FileKey));
+            get => buf ?? (buf = GetValue(Table.FileKey));
             set => SetValue(value, Table.FileKey);
         }
 
-        [Column("file_lob", DBDataType = DBDataType.LargeObject, Keys = DBColumnKeys.FileLOB)]
-        public virtual uint? FileLOB
+        [Column("file_lob", Keys = DBColumnKeys.FileLOB)]
+        public virtual long? FileLOB
         {
-            get => GetValue<uint?>(Table.FileBLOBKey);
+            get => GetValue<long?>(Table.FileBLOBKey);
             set => SetValue(value, Table.FileBLOBKey);
         }
 

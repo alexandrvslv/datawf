@@ -22,7 +22,7 @@ using DataWF.Data;
 
 namespace DataWF.Data
 {
-    public class DBColumnByteArray : DBColumn<byte[]>
+    public class DBColumnByteArray : DBColumnReferenceType<byte[]>
     {
         public override bool Equal(byte[] oldValue, byte[] newValue)
         {
@@ -36,7 +36,28 @@ namespace DataWF.Data
                 return;
             }
             var value = transaction.Reader.IsDBNull(i) ? null : (byte[])transaction.Reader.GetValue(i);
-            row.SetValue(value, this, DBSetValueMode.Loading);
+            SetValue(row, value, DBSetValueMode.Loading);
+        }
+
+        public override string FormatValue(byte[] val)
+        {
+            if (val == null)
+                return string.Empty;
+
+            if ((Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
+            {
+                var cash = new AccessValue(val);
+                string rez = string.Empty;
+                foreach (var item in cash)
+                {
+                    rez += string.Format("{0}{1}", rez.Length > 0 ? "; " : string.Empty, item);
+                }
+                return rez;
+            }
+            else
+            {
+                return Helper.LenghtFormat(val.Length);
+            }
         }
     }
 }

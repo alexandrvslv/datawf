@@ -43,10 +43,17 @@ namespace DataWF.Test.Data
             set => SetPropertyReference(position = value);
         }
 
-        [Column("typeid", Keys = DBColumnKeys.ElementType), DefaultValue(EmployerType.Type2)]
-        public EmployerType? Type
+        [Column("typeid", Keys = DBColumnKeys.ElementType), DefaultValue(EmployerIntType.Type2)]
+        public EmployerIntType? Type
         {
-            get => GetProperty<EmployerType?>();
+            get => GetProperty<EmployerIntType?>();
+            set => SetProperty(value);
+        }
+
+        [Column("subtypeid")]
+        public EmployerByteType SubType
+        {
+            get => GetProperty<EmployerByteType>();
             set => SetProperty(value);
         }
 

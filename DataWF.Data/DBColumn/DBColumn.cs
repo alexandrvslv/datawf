@@ -92,7 +92,7 @@ namespace DataWF.Data
         protected string subList;
         //private Dictionary<int, object> tags;
         private DBColumn logColumn;
-        private DBColumn baseColumn;
+        private DBColumn baseColumn = DBColumn.EmptyKey;
         private PropertyInfo propertyInfo;
         private IInvoker propertyInvoker;
         private PropertyInfo referencePropertyInfo;
@@ -134,7 +134,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn BaseColumn
         {
-            get { return baseColumn ?? (baseColumn = (Table as IDBLogTable)?.BaseTable?.ParseColumn(BaseName)); }
+            get { return baseColumn == DBColumn.EmptyKey ? (baseColumn = (Table as IDBLogTable)?.BaseTable?.Columns[BaseName]) : baseColumn; }
             set
             {
                 if (value == null)
@@ -511,7 +511,7 @@ namespace DataWF.Data
         [Browsable(false), XmlIgnore, JsonIgnore]
         public Type TargetType => typeof(DBItem);
 
-        [Browsable(false), Category("Database")]
+        [Browsable(false), Category("Database"), XmlIgnore, JsonIgnore]
         public virtual Type DataType
         {
             get => dataType;
@@ -935,69 +935,14 @@ namespace DataWF.Data
             }
         }
 
-        public string FormatValue(object val)
+        public virtual object GetParameterValue(DBItem item)
         {
-            //if value passed to format is null
-            if (val == null)
-                return string.Empty;
-            if ((Keys & DBColumnKeys.Boolean) == DBColumnKeys.Boolean)
-            {
-                if (val.ToString().Equals(BoolTrue))
-                    return "Check";
-                else
-                    return "Uncheck";
-            }
-            if (IsReference)
-            {
-                DBItem temp = ReferenceTable.LoadItemById(val);
-                return temp == null ? "<new or empty>" : temp.ToString();
-            }
-
-            if (DataType == typeof(string))
-                return val.ToString();
-
-            if (DataType == typeof(byte[]))
-            {
-                if ((Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
-                {
-                    var cash = new AccessValue((byte[])val);
-                    string rez = string.Empty;
-                    foreach (var item in cash)
-                    {
-                        rez += string.Format("{0}{1}", rez.Length > 0 ? "; " : string.Empty, item);
-                    }
-                    return rez;
-                }
-                else
-                    return Helper.LenghtFormat(((byte[])val).LongLength);
-            }
-            if (Format != null)
-            {
-                var mi = val.GetType().GetMethod("ToString", new Type[] { typeof(string) });
-                if (Format.ToLower() == "p")
-                    if (val is decimal)
-                        return ((decimal)val * 100).ToString("N") + "%";
-                    else if (val is double)
-                        return ((double)val * 100).ToString("N") + "%";
-                    else if (val is float)
-                        return ((float)val * 100).ToString("N") + "%";
-                    else
-                        return (decimal.Parse(val.ToString()) * 100).ToString("N") + "%";
-                if (Format.ToLower() == "b" && DataType == typeof(string) && Size == 1)
-                    if (val.ToString() == "RowSetting")
-                        return "V";
-                    else
-                        return "X";
-                else if (mi != null)
-                    return EmitInvoker.Invoke(mi, val, Format) as string;
-            }
-
-            if (val is DateTime)
-            {
-                return val.Equals(((DateTime)val).Date) ? ((DateTime)val).ToString("yyyy.MM.dd") : val.ToString();
-            }
-            return val.ToString();
+            return GetValue(item);
         }
+
+        public abstract string FormatValue(DBItem item);
+
+        public abstract string FormatValue(object val);
 
         public object ParseValue(object value)
         {

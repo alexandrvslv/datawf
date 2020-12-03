@@ -85,7 +85,7 @@ namespace DataWF.Module.Common
                                     await position.Save(transaction);
                                 }
 
-                                var user = User.DBTable.LoadByCode(attribute.StringValue, User.DBTable.ParseProperty(nameof(User.Login)), DBLoadParam.None);
+                                var user = User.DBTable.LoadByCode(attribute.StringValue, User.LoginKey, DBLoadParam.None);
                                 if (user == null)
                                 {
                                     user = new User();

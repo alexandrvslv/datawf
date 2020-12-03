@@ -429,7 +429,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn<byte[]> AccessKey => accessKey == DBColumn.EmptyKey ? (accessKey = (DBColumn<byte[]>)Columns.GetByKey(DBColumnKeys.Access)) : accessKey;
+        public DBColumn<byte[]> AccessKey => accessKey == DBColumn<byte[]>.EmptyKey ? (accessKey = (DBColumn<byte[]>)Columns.GetByKey(DBColumnKeys.Access)) : accessKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBColumn PrimaryKey => primaryKey == DBColumn.EmptyKey ? (primaryKey = Columns.GetByKey(DBColumnKeys.Primary)) : primaryKey;
@@ -438,7 +438,7 @@ namespace DataWF.Data
         public DBColumn<long?> FileBLOBKey => fileBLOBKey == DBColumn<long?>.EmptyKey ? (fileBLOBKey = (DBColumn<long?>)Columns.GetByKey(DBColumnKeys.FileLOB)) : fileBLOBKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn<byte[]> FileKey => fileKey == DBColumn.EmptyKey ? (fileKey = (DBColumn<byte[]>)Columns.GetByKey(DBColumnKeys.File)) : fileKey;
+        public DBColumn<byte[]> FileKey => fileKey == DBColumn<byte[]>.EmptyKey ? (fileKey = (DBColumn<byte[]>)Columns.GetByKey(DBColumnKeys.File)) : fileKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBColumn<string> FileNameKey => fileNameKey == DBColumn<string>.EmptyKey ? (fileNameKey = (DBColumn<string>)Columns.GetByKey(DBColumnKeys.FileName)) : fileNameKey;
@@ -681,6 +681,11 @@ namespace DataWF.Data
         {
             return Columns.GetByProperty(property)
                 ?? Columns.GetByReferenceProperty(property);
+        }
+
+        public DBColumn<T> ParseProperty<T>(string property)
+        {
+            return (DBColumn<T>)ParseProperty(property);
         }
 
         protected internal void SetItemType(Type type)
@@ -1808,8 +1813,18 @@ namespace DataWF.Data
             {
                 var genericType = TypeHelper.ParseType(ItemType.Type.Name + "Log");
                 var itemType = genericType ?? typeof(DBLogItem);
-                LogTable = (IDBLogTable)GetTable(itemType, Schema.LogSchema ?? Schema)
-                    ?? (IDBLogTable)EmitInvoker.CreateObject(typeof(DBLogTable<>).MakeGenericType(itemType));
+                LogTable = (IDBLogTable)GetTable(itemType, Schema.LogSchema ?? Schema, true);
+                if (LogTable == null)
+                {
+                    var tableGenerator = new LogTableGenerator()
+                    {
+                        Attribute = new LogTableAttribute(ItemType.Type, Name + "_log") { SequenceName = SequenceName + "_log" },
+                        Schema = Schema.LogSchema ?? Schema,
+                        BaseTableGenerator = Generator
+                    };
+                    tableGenerator.Initialize(itemType);
+                    LogTable = (IDBLogTable)tableGenerator.Generate();
+                }
                 LogTable.BaseTable = this;
                 if (!LogTable.Schema.Tables.Contains(LogTable))
                 {

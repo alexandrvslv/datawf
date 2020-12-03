@@ -48,7 +48,7 @@ namespace DataWF.Module.Counterpart
 
         public LocationType LocationType
         {
-            get { return ItemType == null ? LocationType.Default : (LocationType)ItemType; }
+            get { return ItemType == 0 ? LocationType.Default : (LocationType)ItemType; }
         }
 
         [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rlocation_typeid_code", false)]

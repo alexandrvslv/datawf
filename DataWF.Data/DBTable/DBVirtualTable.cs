@@ -349,7 +349,6 @@ namespace DataWF.Data
                 if (exist == null)
                 {
                     Columns.Add(column);
-                    exist.DisplayName = column.DisplayName;
                 }
                 
             }

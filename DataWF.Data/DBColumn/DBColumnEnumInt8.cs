@@ -31,7 +31,7 @@ namespace DataWF.Data
             }
             var value = transaction.Reader.IsDBNull(i) ? default(sbyte) : (sbyte)transaction.Reader.GetByte(i);
             var enumValue = Unsafe.As<sbyte, T>(ref value);
-            row.SetValue(enumValue, this, DBSetValueMode.Loading);
+            SetValue(row, enumValue, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
@@ -39,6 +39,12 @@ namespace DataWF.Data
             var value = (sbyte)transaction.Reader.GetByte(i);
             var enumValue = Unsafe.As<sbyte, T>(ref value);
             return Table.GetPullIndex(this)?.SelectOne<F>(enumValue);
+        }
+
+        public override object GetParameterValue(DBItem item)
+        {
+            var value = GetValue(item);
+            return (byte)Unsafe.As<T, sbyte>(ref value);
         }
     }
 }

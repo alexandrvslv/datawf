@@ -29,13 +29,19 @@ namespace DataWF.Data
                 return;
             }
             var value = transaction.Reader.IsDBNull(i) ? default(ulong) : (ulong)transaction.Reader.GetInt64(i);
-            row.SetValue(value, this, DBSetValueMode.Loading);
+            SetValue(row, value, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = (ulong)transaction.Reader.GetInt64(i);
             return Table.GetPullIndex(this)?.SelectOne<F>(value);
+        }
+
+        public override object GetParameterValue(DBItem item)
+        {
+            var value = GetValue(item);
+            return (long)value;
         }
     }
 }

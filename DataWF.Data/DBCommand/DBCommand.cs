@@ -141,7 +141,7 @@ namespace DataWF.Data
 
                     command.Parameters.Add(dbParameter);
                 }
-                param.Column.Schema.System.FillParameter(command, dbParameter, row[param.Column], param.Column);
+                param.Column.Schema.System.FillParameter(command, dbParameter, param.Column.GetParameterValue(row), param.Column);
             }
         }
     }

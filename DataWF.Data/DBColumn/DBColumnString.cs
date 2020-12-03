@@ -23,7 +23,7 @@ using System;
 
 namespace DataWF.Data
 {
-    public class DBColumnString : DBColumn<string>
+    public class DBColumnString : DBColumnReferenceType<string>
     {
         public override bool Equal(string oldValue, string newValue)
         {
@@ -37,7 +37,7 @@ namespace DataWF.Data
                 return;
             }
             var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
-            row.SetValue(value, this, DBSetValueMode.Loading);
+            SetValue(row, value, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
@@ -45,5 +45,5 @@ namespace DataWF.Data
             var value = transaction.Reader.GetString(i);
             return Table.GetPullIndex(this)?.SelectOne<F>(value);
         }
-    }    
+    }
 }

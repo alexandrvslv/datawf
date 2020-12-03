@@ -4,6 +4,7 @@ using Mono.TextEditor;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -242,7 +243,7 @@ namespace DataWF.Data.Gui
                     try
                     {
                         arg.Table.Access = null;
-                        using (transaction.Reader = transaction.ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
+                        using (transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader))
                         {
                             arg.Table.CheckColumns(transaction);
                             Application.Invoke(() => list.ResetColumns());
@@ -424,7 +425,7 @@ namespace DataWF.Data.Gui
                                 {
                                     if (celement is DocumentFormat.OpenXml.Spreadsheet.Cell cell)
                                     {
-                                        DBColumn column = new DBColumn(XlsxSaxFormatter.ReadCell(cell, sp));
+                                        DBColumn column = DBColumnFactory.Create(typeof(string), XlsxSaxFormatter.ReadCell(cell, sp));
                                         table.Columns.Add(column);
                                     }
                                 }
@@ -498,7 +499,7 @@ namespace DataWF.Data.Gui
                     string[] csplit = Regex.Split(split[0], param.FieldSeparator);
                     for (int i = 0; i < csplit.Length; i++)
                     {
-                        DBColumn column = new DBColumn(csplit[i].Trim().Replace(" ", "_"));
+                        DBColumn column = DBColumnFactory.Create(typeof(string), csplit[i].Trim().Replace(" ", "_"));
                         table.Columns.Add(column);
                     }
                     sb.AppendLine("-- -================================= " + table.Name + " =================================");

@@ -17,6 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using System;
 using System.Runtime.CompilerServices;
 
 namespace DataWF.Data
@@ -31,13 +32,13 @@ namespace DataWF.Data
             }
             if (transaction.Reader.IsDBNull(i))
             {
-                row.SetValue((T?)null, this, DBSetValueMode.Loading);
+                SetValue(row, (T?)null, DBSetValueMode.Loading);
             }
             else
             {
                 var value = transaction.Reader.GetInt32(i);
                 var enumValue = Unsafe.As<int, T>(ref value);
-                row.SetValue((T?)enumValue, this, DBSetValueMode.Loading);
+                SetValue(row, (T?)enumValue, DBSetValueMode.Loading);
             }
         }
 
@@ -46,6 +47,15 @@ namespace DataWF.Data
             var value = transaction.Reader.GetInt32(i);
             var enumValue = Unsafe.As<int, T>(ref value);
             return Table.GetPullIndex(this)?.SelectOne<F>(enumValue);
+        }
+
+        public override object GetParameterValue(DBItem item)
+        {
+            var value = GetValue(item);
+            if (value == null)
+                return DBNull.Value;
+            var nnValue = (T)value;
+            return Unsafe.As<T, int>(ref nnValue);
         }
     }
 }

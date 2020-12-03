@@ -37,7 +37,7 @@ namespace DataWF.Data
         public new static readonly DBColumn<T> EmptyKey = new DBColumn<T>();
 
         protected GenericPull<T> pull;
-        private IInvoker<DBItem, T> typedPropertyInvoker;
+        private IValuedInvoker<T> typedPropertyInvoker;
 
         public DBColumn() : base()
         {
@@ -65,7 +65,7 @@ namespace DataWF.Data
             set
             {
                 base.PropertyInvoker = value;
-                typedPropertyInvoker = value as IInvoker<DBItem, T>;
+                typedPropertyInvoker = value as IValuedInvoker<T>;
             }
         }
 
@@ -222,6 +222,34 @@ namespace DataWF.Data
             typedPropertyInvoker.SetValue(item, id);
         }
 
+        public override object GetParameterValue(DBItem item)
+        {
+            return GetValue(item);
+        }
+
+        public override string FormatValue(DBItem item)
+        {
+            return FormatValue(GetValue(item));
+        }
+
+        public override string FormatValue(object val)
+        {
+            return FormatValue((T)val);
+        }
+
+        public virtual string FormatValue(T val)
+        {
+            //if value passed to format is null
+            if (val == null)
+                return string.Empty;
+            if (IsReference)
+            {
+                DBItem temp = ReferenceTable.LoadItemById(val);
+                return temp == null ? "<new or empty>" : temp.ToString();
+            }
+            return val.ToString();;
+        }
+
         public override bool GetOld(DBItem item, out object obj)
         {
             if (GetOld(item, out T value))
@@ -251,7 +279,7 @@ namespace DataWF.Data
         {
             if (GetOld(item, out var value))
             {
-                item.SetValue(value, this, mode);
+                SetValue(item, value, mode);
             }
         }
 
@@ -284,7 +312,7 @@ namespace DataWF.Data
 
         protected internal override PullIndex CreatePullIndex()
         {
-            return PullIndexFactory.Create(Pull, Table.ItemType.Type, DataType, Table.DefaultComparer);
+            return PullIndexFactory.Create(Pull, typeof(DBItem), DataType, Table.DefaultComparer);
         }
 
         public override bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
@@ -309,7 +337,7 @@ namespace DataWF.Data
                 return;
             }
             var value = transaction.Reader.IsDBNull(i) ? default(T) : transaction.Reader.GetFieldValue<T>(i);
-            row.SetValue<T>(value, this, DBSetValueMode.Loading);
+            SetValue(row, value, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)

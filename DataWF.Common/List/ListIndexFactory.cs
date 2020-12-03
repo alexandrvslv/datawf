@@ -11,20 +11,21 @@ namespace DataWF.Common
             { typeof(string), "\u0000" },
             { typeof(char), '\u0000' },
             { typeof(byte[]), new byte[] { 0 } },
+            { typeof(char[]), new char[] { '\u0000' } },
             { typeof(bool), false },
-            { typeof(long), long.MaxValue },
+            { typeof(long), long.MinValue },
             { typeof(ulong), ulong.MaxValue },
-            { typeof(int), int.MaxValue },
+            { typeof(int), int.MinValue },
             { typeof(uint), uint.MaxValue },
-            { typeof(short), short.MaxValue },
-            { typeof(ushort), uint.MaxValue },
-            { typeof(sbyte), sbyte.MaxValue },
+            { typeof(short), short.MinValue },
+            { typeof(ushort), ushort.MaxValue },
+            { typeof(sbyte), sbyte.MinValue },
             { typeof(byte), byte.MaxValue },
-            { typeof(decimal), decimal.MaxValue },
-            { typeof(double), double.MaxValue },
-            { typeof(float), float.MaxValue },
+            { typeof(decimal), decimal.MinValue },
+            { typeof(double), double.MinValue },
+            { typeof(float), float.MinValue },
             { typeof(DateTime), DateTime.MaxValue },
-            { typeof(TimeSpan), TimeSpan.MaxValue }
+            { typeof(TimeSpan), TimeSpan.MaxValue },
         };
 
         public static N GetNullKey<N>()
@@ -34,22 +35,32 @@ namespace DataWF.Common
 
         public static object GetNullKey(Type type)
         {
-            if (TypeHelper.IsNullable(type))
+            if (!nullKeys.TryGetValue(type, out var value))
             {
-                return Activator.CreateInstance(type);
+                var nullable = TypeHelper.CheckNullable(type);
+                if (nullable != type
+                    && nullKeys.TryGetValue(nullable, out value))
+                {
+                    return nullKeys[type] = Activator.CreateInstance(type, value);
+                }
+                if (nullable.IsEnum)
+                {
+                    var undelineType = Enum.GetUnderlyingType(nullable);
+                    value = Enum.ToObject(nullable, nullKeys[undelineType]);
+                }
+                else
+                {
+                    value = FormatterServices.GetUninitializedObject(nullable);
+                }
+
+                if (nullable != type)
+                {
+                    value = Activator.CreateInstance(type, value);
+                }
+                nullKeys[type] = value;
             }
-            if (type.IsEnum)
-            {
-                return Enum.ToObject(type, int.MinValue);
-            }
-            if (nullKeys.TryGetValue(type, out var value))
-            {
-                return value;
-            }
-            else
-            {
-                return nullKeys[type] = FormatterServices.GetUninitializedObject(type);
-            }
+            return value;
+
         }
 
         public static ListIndex<T, K> Create<T, K>(IValuedInvoker<K> invoker, bool concurrent)
@@ -57,9 +68,8 @@ namespace DataWF.Common
             var comparer = (IEqualityComparer<K>)EqualityComparer<K>.Default;
             if (invoker.DataType == typeof(string))
                 comparer = (IEqualityComparer<K>)StringComparer.OrdinalIgnoreCase;
-            if (invoker.DataType == typeof(byte))
+            if (invoker.DataType == typeof(byte[]))
                 comparer = (IEqualityComparer<K>)ByteArrayComparer.Default;
-
             return new ListIndex<T, K>(invoker, GetNullKey<K>(), comparer, concurrent);
         }
     }

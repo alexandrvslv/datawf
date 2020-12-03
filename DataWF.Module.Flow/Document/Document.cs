@@ -162,7 +162,11 @@ namespace DataWF.Module.Flow
         }
 
         [Index("ddocument_item_type", false)]
-        public override int? ItemType { get => base.ItemType; set => base.ItemType = value; }
+        public override int ItemType
+        {
+            get => base.ItemType;
+            set => base.ItemType = value;
+        }
 
         [Browsable(false)]
         [Column("template_id", Keys = DBColumnKeys.View | DBColumnKeys.Notnull), Index("ddocument_template_id", Unique = false)]

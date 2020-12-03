@@ -102,11 +102,10 @@ namespace DataWF.Data.Gui
                     if (row == null)
                         row = table.NewItem();
 
-                    DBColumn col = new DBColumn
-                    {
-                        Name = !string.IsNullOrEmpty(param.Name) ? param.Name : "NewParam",
-                        Table = table
-                    };
+                    DBColumn col = DBColumnFactory.Create(param.DataType,
+                        name: !string.IsNullOrEmpty(param.Name) ? param.Name : "NewParam",
+                        table: table
+                    );
                     if (param.Column != null)
                     {
                         if (param.Column.IsPrimaryKey)
@@ -114,7 +113,6 @@ namespace DataWF.Data.Gui
                         if (param.Column.IsReference)
                             col.ReferenceTable = param.Column.ReferenceTable;
                     }
-                    col.DataType = param.DataType;
                     table.Columns.Add(col);
 
                     var tool = new ToolDataFieldEditor

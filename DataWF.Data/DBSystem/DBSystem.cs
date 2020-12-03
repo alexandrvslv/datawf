@@ -78,13 +78,11 @@ namespace DataWF.Data
         public virtual IDataParameter CreateParameter(IDbCommand command, string name, object value, DBColumn column)
         {
             IDataParameter parameter = null;
-            foreach (IDataParameter param in command.Parameters)
-                if (param.ParameterName == name)
-                {
-                    parameter = param;
-                    break;
-                }
-            if (parameter == null)
+            if (command.Parameters.Contains(name))
+            {
+                parameter = (IDataParameter)command.Parameters[name];
+            }
+            else
             {
                 parameter = command.CreateParameter();
                 parameter.ParameterName = name;
@@ -832,18 +830,6 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual object FillParameter(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
-            if (value == null)
-            {
-                value = DBNull.Value;
-            }
-            else if (column != null && column.DataType.IsEnum)
-            {
-                value = (int)value;
-            }
-            else if (value is IBinarySerializable serializable)
-            {
-                value = serializable.Serialize();
-            }
             parameter.Value = value;
             return value;
         }

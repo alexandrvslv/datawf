@@ -18,11 +18,12 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using System;
 using System.Runtime.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBColumnBinarySerializable<T> : DBColumn<T> where T : class, IBinarySerializable
+    public class DBColumnBinarySerializable<T> : DBColumn<T> where T : IBinarySerializable
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
@@ -35,11 +36,11 @@ namespace DataWF.Data
                 var byteArray = (byte[])transaction.Reader.GetValue(i);
                 var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
                 serializable.Deserialize(byteArray);
-                row.SetValue(serializable, this, DBSetValueMode.Loading);
+                SetValue(row, serializable, DBSetValueMode.Loading);
             }
             else
             {
-                row.SetValue(null, this, DBSetValueMode.Loading);
+                SetValue(row, default(T), DBSetValueMode.Loading);
             }
         }
 
@@ -49,6 +50,14 @@ namespace DataWF.Data
             var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
             serializable.Deserialize(byteArray);
             return Table.GetPullIndex(this)?.SelectOne<F>(serializable);
+        }
+
+        public override object GetParameterValue(DBItem item)
+        {
+            var value = GetValue(item);
+            if (Equal(value, default(T)))
+                return DBNull.Value;
+            return value.Serialize();
         }
     }
 }

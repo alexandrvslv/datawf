@@ -73,7 +73,7 @@ namespace DataWF.WebService.Common
                     {
                         continue;
                     }
-                    writer.WritePropertyName(column.Utf8EncodedReferenceProperty);
+                    writer.WritePropertyName(column.ReferencePropertyInvoker.JsonName);
                     JsonSerializer.Serialize(writer, item, column.ReferencePropertyInvoker.DataType, options);
                 }
             }

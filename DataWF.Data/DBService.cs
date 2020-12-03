@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -381,6 +382,15 @@ namespace DataWF.Data
                             continue;
                         }
                     }
+                    if (ex is SqliteException sqliteException)
+                    {
+                        if (sqliteException.SqliteErrorCode == 1
+                            || (sqliteException.SqliteErrorCode == 19 && ex.Message.IndexOf("db_sequence.name", StringComparison.OrdinalIgnoreCase) > -1))
+                        {
+                            Console.WriteLine($"sqlinfo: skip already exist");
+                            continue;
+                        }
+                    }
                     //TODO MSSql, MySql, Oracle, Sqlite
                     if (ex.Message.IndexOf("already exist", StringComparison.OrdinalIgnoreCase) >= 0
                         || ex.Message.IndexOf("duplicate column name", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -388,7 +398,7 @@ namespace DataWF.Data
                         Console.WriteLine($"sqlinfo: skip already exist");
                         continue;
                     }
-                    throw ex;
+                    throw;
                 }
             }
             Console.WriteLine();

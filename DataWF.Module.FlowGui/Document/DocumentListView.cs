@@ -490,7 +490,7 @@ namespace DataWF.Module.FlowGui
                     foreach (string fileName in ofDialog.FileNames)
                     {
                         string name = System.IO.Path.GetFileName(fileName);
-                        var drow = DocumentData.DBTable.LoadByCode(name, DocumentData.DBTable.ParseProperty(nameof(DocumentData.FileName)), DBLoadParam.Load);
+                        var drow = DocumentData.DBTable.LoadByCode(name, DocumentData.FileNameKey, DBLoadParam.Load);
                         if (drow != null)
                         {
                             if (dr == Command.Save)

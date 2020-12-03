@@ -47,14 +47,16 @@ namespace DataWF.Geometry
         }
 
         public Polygon2DArray()
-        { }
+        {
+            Polygons = new List<Polygon2D>();
+        }
 
-        public Polygon2DArray(IEnumerable<Polygon2D> polygons)
+        public Polygon2DArray(IEnumerable<Polygon2D> polygons) : this()
         {
             Polygons.AddRange(polygons);
         }
 
-        public List<Polygon2D> Polygons { get; set; } = new List<Polygon2D>();
+        public List<Polygon2D> Polygons { get; set; }
 
         [XmlIgnore, JsonIgnore]
         public Rectangle2D Bounds => RefreshBounds();
@@ -107,7 +109,7 @@ namespace DataWF.Geometry
 
         public void Deserialize(BinaryReader reader)
         {
-            Polygons.Clear();
+            Polygons = new List<Polygon2D>();
             Polygons.Capacity = reader.ReadInt32();
             while (Polygons.Count < Polygons.Capacity)
             {

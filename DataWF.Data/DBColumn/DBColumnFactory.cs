@@ -84,6 +84,8 @@ namespace DataWF.Data
                     else if (enumType == typeof(ulong))
                         column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnNEnumUInt64<>).MakeGenericType(dataType));
                 }
+                else if (TypeHelper.IsInterface(dataType, typeof(IBinarySerializable)))
+                    column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnNBinarySerializable<>).MakeGenericType(dataType));
                 else
                 {
                     column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnNullable<>).MakeGenericType(dataType));
@@ -144,7 +146,7 @@ namespace DataWF.Data
             return column;
         }
 
-        public static DBColumn Create(Type dataType, string name, DBColumnKeys keys = DBColumnKeys.None, int size = -1, DBTable table = null)
+        public static DBColumn Create(Type dataType, string name, DBColumnKeys keys = DBColumnKeys.None, int size = 0, DBTable table = null)
         {
             var column = Create(dataType);
             column.Name = name;

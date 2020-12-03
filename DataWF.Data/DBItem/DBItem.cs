@@ -423,22 +423,7 @@ namespace DataWF.Data
             SetValue<T>(value, (DBColumn<T>)Table.Columns.GetByProperty(property));
         }
 
-        public void SetValue<T>(T value, DBColumn column)
-        {
-            SetValue<T>(value, column, DBSetValueMode.Default);
-        }
-
-        public void SetValue<T>(T value, DBColumn<T> column)
-        {
-            SetValue<T>(value, column, DBSetValueMode.Default);
-        }
-
-        public void SetValue(object value, DBColumn column)
-        {
-            SetValue(value, column, DBSetValueMode.Default);
-        }
-
-        public void SetValue<T>(T value, DBColumn column, DBSetValueMode mode)
+        public void SetValue<T>(T value, DBColumn column, DBSetValueMode mode = DBSetValueMode.Default)
         {
             if (column is DBColumn<T> typedColumn)
             {
@@ -447,12 +432,12 @@ namespace DataWF.Data
             else throw new Exception($"Wrong Type {typeof(T)} for column {column}");
         }
 
-        public void SetValue<T>(T value, DBColumn<T> column, DBSetValueMode mode)
+        public void SetValue<T>(T value, DBColumn<T> column, DBSetValueMode mode = DBSetValueMode.Default)
         {
             column.SetValue(this, value, mode);
         }
 
-        public void SetValue(object value, DBColumn column, DBSetValueMode mode)
+        public void SetValue(object value, DBColumn column, DBSetValueMode mode = DBSetValueMode.Default)
         {
             column.SetValue(this, value, mode);
         }
@@ -735,7 +720,7 @@ namespace DataWF.Data
 
         public string Format(DBColumn column)
         {
-            return column.FormatValue(GetValue(column));
+            return column.FormatValue(this);
         }
 
         public string Format(string code)
@@ -1152,7 +1137,7 @@ namespace DataWF.Data
             foreach (DBColumn column in parameters)
             {
                 string header = (showColumn) ? header = $"{column}: " : string.Empty;
-                string value = column.FormatValue(GetValue(column));
+                string value = column.FormatValue(this);
                 if (column.IsCulture)
                 {
                     if (value.Length != 0)

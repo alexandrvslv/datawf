@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Globalization;
 
 namespace DataWF.Data
 {
@@ -39,6 +40,36 @@ namespace DataWF.Data
         public override void SetValue(object item, object value)
         {
             base.SetValue((DBItem)item, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
+        }
+
+        public override object GetParameterValue(DBItem item)
+        {
+            var value = GetValue(item);
+            if (value == null)
+                return DBNull.Value;
+            return (T)value;
+        }
+
+        public override string FormatValue(T? value)
+        {
+            if (value is T val)
+            {
+                if (IsReference)
+                {
+                    DBItem temp = ReferenceTable.LoadItemById(value);
+                    return temp?.ToString() ?? "<new or empty>";
+                }
+                if (Format != null && val is IFormattable formattable)
+                {
+                    return formattable.ToString(Format, CultureInfo.InvariantCulture);
+                }
+
+                return val.ToString();
+            }
+            else
+            {
+                return string.Empty;
+            }
         }
     }
 }

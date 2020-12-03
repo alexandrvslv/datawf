@@ -418,8 +418,6 @@ namespace DataWF.WebService.Generator
         {
             SyntaxHelper.AddUsing(TypeHelper.CheckNullable(column.PropertyInfo.PropertyType), usings);
             var typeText = TypeHelper.FormatCode(column.PropertyInfo.PropertyType);
-            var nullable = typeText.IndexOf('?') >= 0 ? "Nullable" : string.Empty;
-            var nullableType = nullable.Length > 0 ? typeText.Replace("?", "") : typeText;
             yield return SF.PropertyDeclaration(
                    attributeLists: SF.List(GenLogPropertyAttributes(column, table, itemType)),
                    modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword) }),
@@ -431,12 +429,12 @@ namespace DataWF.WebService.Generator
                         kind: SyntaxKind.GetAccessorDeclaration,
                         attributeLists: SF.List<AttributeListSyntax>(),
                         modifiers: SF.TokenList(SF.Token(SyntaxKind.None)),
-                        expressionBody:SF.ArrowExpressionClause(SF.ParseExpression($"GetValue{nullable}<{nullableType}>({GetKeyName(column)});"))),
+                        expressionBody:SF.ArrowExpressionClause(SF.ParseExpression($"GetValue<{typeText}>({GetKeyName(column)});"))),
                     SF.AccessorDeclaration(
                         kind: SyntaxKind.SetAccessorDeclaration,
                         attributeLists: SF.List<AttributeListSyntax>(),
                         modifiers: SF.TokenList(SF.Token(SyntaxKind.None)),
-                        expressionBody:SF.ArrowExpressionClause(SF.ParseExpression($"SetValue{nullable}(value, {GetKeyName(column)});"))),
+                        expressionBody:SF.ArrowExpressionClause(SF.ParseExpression($"SetValue(value, {GetKeyName(column)});"))),
                        })),
                    expressionBody: null,
                    initializer: null,
@@ -560,7 +558,7 @@ namespace DataWF.WebService.Generator
             if (!controllers.TryGetValue(name, out var baseController))
             {
                 var fileColumn = table.Columns.FirstOrDefault(p => (p.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File);
-                var primaryKeyType = table.PrimaryKey?.GetDataType() ?? typeof(int);
+                var primaryKeyType = table.PrimaryKey?.DataType ?? typeof(int);
                 var baseType = $"Base{(table.FileKey != null ? "File" : "")}{(IsPrimaryType(itemType.BaseType) ? "" : itemType.BaseType.Name)}Controller<T, K>";
                 baseController = SF.ClassDeclaration(
                     attributeLists: SF.List<AttributeListSyntax>(),
@@ -597,15 +595,15 @@ namespace DataWF.WebService.Generator
         //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
         private ClassDeclarationSyntax GetOrGenController(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            var primaryKeyType = table.PrimaryKey?.GetDataType() ?? typeof(int);
-            var baseName = $"Base{(table.FileKey != null ? "File" : "")}Controller<{itemType.Name}, {primaryKeyType.Name}>";
+            var primaryKeyType = table.PrimaryKey?.DataType ?? typeof(int);
+            var baseName = $"Base{(table.FileKey != null ? "File" : "")}Controller<{itemType.Name}, {TypeHelper.FormatCode(primaryKeyType)}>";
 
             if ((table.Attribute.Keys & DBTableKeys.NoLogs) == 0)
             {
                 var logItemName = itemType.Name + "Log";
                 var logItemType = (Mode & CodeGeneratorMode.Logs) != 0 ? logItemName : TypeHelper.ParseType(logItemName)?.FullName;
                 //AddUsing(logItemType, usings);
-                baseName = $"Base{(table.FileKey != null ? "File" : "Logged")}Controller<{itemType.Name}, {primaryKeyType.Name}, {logItemType}>";
+                baseName = $"Base{(table.FileKey != null ? "File" : "Logged")}Controller<{itemType.Name}, {TypeHelper.FormatCode(primaryKeyType)}, {logItemType}>";
             }
             var baseType = itemType;
 
@@ -1146,7 +1144,7 @@ namespace DataWF.WebService.Generator
             {
                 yield return SF.Parameter(attributeLists: SF.List(GenParameterAttributes()),
                                                              modifiers: SF.TokenList(),
-                                                             type: SF.ParseTypeName(TypeHelper.FormatCode(table.PrimaryKey?.GetDataType() ?? typeof(int))),
+                                                             type: SF.ParseTypeName(TypeHelper.FormatCode(table.PrimaryKey?.DataType ?? typeof(int))),
                                                              identifier: SF.Identifier("id"),
                                                              @default: null);
             }
@@ -1283,7 +1281,7 @@ namespace DataWF.WebService.Generator
                     var primaryKey = Table?.PrimaryKey;
                     if (primaryKey != null)
                     {
-                        Type = primaryKey.GetDataType();
+                        Type = primaryKey.DataType;
                         ValueName += "Value";
                     }
                 }

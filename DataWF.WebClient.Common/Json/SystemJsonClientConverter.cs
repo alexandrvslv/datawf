@@ -305,16 +305,16 @@ namespace DataWF.Common
 
                     if (value == null)
                     {
-                        jwriter.WriteNull(property.Utf8EncodedName);
+                        jwriter.WriteNull(property.PropertyInvoker.JsonName);
                     }
                     else if (value is IList list)
                     {
-                        jwriter.WritePropertyName(property.Utf8EncodedName);
+                        jwriter.WritePropertyName(property.PropertyInvoker.JsonName);
                         SerializeArray(jwriter, list, options);
                     }
                     else
                     {
-                        jwriter.WritePropertyName(property.Utf8EncodedName);
+                        jwriter.WritePropertyName(property.PropertyInvoker.JsonName);
                         JsonSerializer.Serialize(jwriter, value, property.DataType, options);
                     }
                 }

@@ -30,7 +30,7 @@ namespace DataWF.Data
     public class DBColumnList<T> : DBTableItemList<T> where T : DBColumn
     {
         private bool isVirtual;
-
+        private HashSet<DBColumn> toReplace = new HashSet<DBColumn>();
         public DBColumnList(DBTable table)
             : base(table)
         {
@@ -81,6 +81,7 @@ namespace DataWF.Data
                 else
                 {
                     RemoveInternal(exist, IndexOf(exist));
+                    toReplace.Add(item);
                 }
             }
             if (item.IsPrimaryKey && index > 1)
@@ -115,6 +116,14 @@ namespace DataWF.Data
             }
             item.CheckPull();
             Table.CheckPullIndex(item);
+        }
+
+        public override DDLType GetInsertType(T item)
+        {
+            var isReplace = toReplace.Remove(item);
+            return (item.ColumnType == DBColumnTypes.Default)
+                ? isReplace ? DDLType.Alter : DDLType.Create
+                : DDLType.Default;
         }
 
         public DBColumn Add(string name)

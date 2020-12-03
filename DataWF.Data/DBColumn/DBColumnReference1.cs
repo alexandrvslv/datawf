@@ -17,45 +17,21 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+
 using System;
-using System.Runtime.CompilerServices;
 
 namespace DataWF.Data
 {
-    public class DBColumnNEnumUInt64<T> : DBColumnNullable<T> where T : struct
+    public abstract class DBColumnReferenceType<T> : DBColumn<T> where T : class
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
-        {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
-            if (transaction.Reader.IsDBNull(i))
-            {
-                SetValue(row, (T?)null, DBSetValueMode.Loading);
-            }
-            else
-            {
-                var value = (ulong)transaction.Reader.GetInt64(i);
-                var enumValue = Unsafe.As<ulong, T>(ref value);
-                SetValue(row, (T?)enumValue, DBSetValueMode.Loading);
-            }
-        }
-
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
-        {
-            var value = (ulong)transaction.Reader.GetInt64(i);
-            var enumValue = Unsafe.As<ulong, T>(ref value);
-            return Table.GetPullIndex(this)?.SelectOne<F>(enumValue);
-        }
-
         public override object GetParameterValue(DBItem item)
         {
             var value = GetValue(item);
             if (value == null)
                 return DBNull.Value;
-            var nnValue = (T)value;
-            return (long)Unsafe.As<T, ulong>(ref nnValue);
+            return value;
         }
+
+
     }
 }

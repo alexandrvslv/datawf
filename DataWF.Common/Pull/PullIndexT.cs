@@ -8,7 +8,8 @@ using System.Text.RegularExpressions;
 
 namespace DataWF.Common
 {
-    public class PullIndex<T, K> : PullIndex, IDisposable where T : class, IPullHandler
+    public class PullIndex<T, K> : PullIndex, IDisposable
+        where T : class, IPullHandler
     {
         private ConcurrentDictionary<K, ThreadSafeList<T>> store;
         private readonly IComparer<T> valueComparer;
@@ -114,6 +115,7 @@ namespace DataWF.Common
 
         public void Remove(T item, K key)
         {
+            CheckNull(ref key);
             lock (store)
             {
                 if (store.TryGetValue(key, out var val))

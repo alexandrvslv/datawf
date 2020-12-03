@@ -123,9 +123,10 @@ namespace DataWF.Data
             {
                 Column = CreateColumn(ColumnName);
             }
-            if (Column.DisplayName.Equals(Column.Name, StringComparison.Ordinal)
-                || (Column.DisplayName.Equals(PropertyInfo.Name, StringComparison.Ordinal)
-                && ReferencePropertyInfo != null))
+
+            //|| (Column.DisplayName.Equals(PropertyInfo.Name, StringComparison.Ordinal)
+            //&& ReferencePropertyInfo != null)
+            if (Column.DisplayName.Equals(Column.Name, StringComparison.Ordinal))
             {
                 Column.DisplayName = DisplayName;
             }

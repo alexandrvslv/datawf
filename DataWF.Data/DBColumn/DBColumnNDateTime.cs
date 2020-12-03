@@ -37,7 +37,7 @@ namespace DataWF.Data
             {
                 value = DateTime.SpecifyKind((DateTime)value, DateTimeKind.Utc);
             }
-            row.SetValue(value, this, DBSetValueMode.Loading);
+            SetValue(row, value, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
@@ -48,6 +48,18 @@ namespace DataWF.Data
                 value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
             }
             return Table.GetPullIndex(this)?.SelectOne<F>(value);
+        }
+
+        public override string FormatValue(DateTime? value)
+        {
+            if (value is DateTime val)
+            {
+                if (Format != null)
+                    return val.ToString(Format);
+                return val.Equals(val.Date) ? val.ToString("yyyy.MM.dd") : val.ToString();
+            }
+            else
+                return string.Empty;
         }
     }
 }

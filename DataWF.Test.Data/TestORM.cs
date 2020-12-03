@@ -4,6 +4,7 @@ using DataWF.Geometry;
 using DocumentFormat.OpenXml.Bibliography;
 using NUnit.Framework;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -115,7 +116,7 @@ namespace DataWF.Test.Data
                     {
                         var line = reader.ReadLine();
                         if (line != null)
-                            Console.WriteLine(line);
+                            Debug.WriteLine(line);
                         else
                             break;
                     }
@@ -165,6 +166,7 @@ namespace DataWF.Test.Data
                 DWeight = 123.1233433424434D,
                 Salary = 231323.32M,
                 Name = "Ivan",
+                SubType = EmployerByteType.Type3,
                 Access = new AccessValue(new[]
                 {
                     new AccessItem(AccessValue.Groups.First(i => i.Id == 1), AccessType.Read),
@@ -172,7 +174,7 @@ namespace DataWF.Test.Data
                     new AccessItem(AccessValue.Groups.First(i => i.Id == 3), AccessType.Create)
                 })
             };
-            Assert.AreEqual(employer.Type, EmployerType.Type2, "Default Value & Enum");
+            Assert.AreEqual(employer.Type, EmployerIntType.Type2, "Default Value & Enum");
 
             employer.GenerateId();
             Assert.NotNull(employer.Id, "Id Generator Fail");

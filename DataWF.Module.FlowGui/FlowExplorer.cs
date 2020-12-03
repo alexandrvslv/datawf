@@ -172,11 +172,8 @@ namespace DataWF.Module.FlowGui
 
         private void ToolStatClick(object sender, EventArgs e)
         {
-            if (NotifyService.Default != null)
-            {
-                var window = new StatWindow();
-                window.Show(this, new Point());
-            }
+            var window = new StatWindow();
+            window.Show(this, new Point());
         }
 
         private void ContextAddItemClicked(object sender, ToolItemEventArgs e)

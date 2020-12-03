@@ -24,11 +24,10 @@ namespace DataWF.Data.Gui
             {
                 if (existingParam.ContainsKey(param.Name.ToString()))
                     continue;
-                DBColumn col = new DBColumn
-                {
-                    Name = param.Name != null && param.Name.Length > 0 ? param.Name : "NewColumn",
-                    Table = table
-                };
+                DBColumn col = DBColumnFactory.Create(param.DataType,
+                    name: !string.IsNullOrEmpty(param.Name) ? param.Name : "NewColumn",
+                    table: table
+                );
                 if (param.Column != null)
                 {
                     if (param.Column.IsPrimaryKey)
@@ -36,7 +35,6 @@ namespace DataWF.Data.Gui
                     if (param.Column.IsReference)
                         col.ReferenceTable = param.Column.ReferenceTable;
                 }
-                col.DataType = param.DataType;
                 table.Columns.Add(col);
             }
 

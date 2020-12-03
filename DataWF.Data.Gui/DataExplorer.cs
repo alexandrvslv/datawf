@@ -633,7 +633,7 @@ namespace DataWF.Data.Gui
             {
                 group = column.Group;
             }
-            ShowNewItem(new DBColumn()
+            ShowNewItem(new DBColumnString()
             {
                 Table = table,
                 Group = group,

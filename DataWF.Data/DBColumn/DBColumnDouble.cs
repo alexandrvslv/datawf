@@ -30,15 +30,8 @@ namespace DataWF.Data
             {
                 return;
             }
-            if (!transaction.Reader.IsDBNull(i))
-            {
-                var value = transaction.Reader.GetDouble(i);
-                row.SetValue(value, this, DBSetValueMode.Loading);
-            }
-            else if (row.Attached)
-            {
-                row.SetValue(default(double), this, DBSetValueMode.Loading);
-            }
+            var value = transaction.Reader.IsDBNull(i) ? default(double) : transaction.Reader.GetDouble(i);
+            SetValue(row, value, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)

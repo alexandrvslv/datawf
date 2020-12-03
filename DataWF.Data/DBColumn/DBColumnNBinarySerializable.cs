@@ -17,12 +17,13 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF.Common;
 using System;
-using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBColumnNEnumUInt64<T> : DBColumnNullable<T> where T : struct
+    public class DBColumnNBinarySerializable<T> : DBColumnNullable<T> where T : struct, IBinarySerializable
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
@@ -30,23 +31,25 @@ namespace DataWF.Data
             {
                 return;
             }
-            if (transaction.Reader.IsDBNull(i))
+            if (!transaction.Reader.IsDBNull(i))
             {
-                SetValue(row, (T?)null, DBSetValueMode.Loading);
+                var byteArray = (byte[])transaction.Reader.GetValue(i);
+                var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
+                serializable.Deserialize(byteArray);
+                SetValue(row, serializable, DBSetValueMode.Loading);
             }
             else
             {
-                var value = (ulong)transaction.Reader.GetInt64(i);
-                var enumValue = Unsafe.As<ulong, T>(ref value);
-                SetValue(row, (T?)enumValue, DBSetValueMode.Loading);
+                SetValue(row, (T?)null, DBSetValueMode.Loading);
             }
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
-            var value = (ulong)transaction.Reader.GetInt64(i);
-            var enumValue = Unsafe.As<ulong, T>(ref value);
-            return Table.GetPullIndex(this)?.SelectOne<F>(enumValue);
+            var byteArray = (byte[])transaction.Reader.GetValue(i);
+            var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
+            serializable.Deserialize(byteArray);
+            return Table.GetPullIndex(this)?.SelectOne<F>(serializable);
         }
 
         public override object GetParameterValue(DBItem item)
@@ -54,8 +57,7 @@ namespace DataWF.Data
             var value = GetValue(item);
             if (value == null)
                 return DBNull.Value;
-            var nnValue = (T)value;
-            return (long)Unsafe.As<T, ulong>(ref nnValue);
+            return ((T)value).Serialize();
         }
     }
 }

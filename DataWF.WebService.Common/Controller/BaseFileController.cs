@@ -161,7 +161,7 @@ namespace DataWF.WebService.Common
                         {
                             if (table.FileLastWriteKey != null && !item.IsChangedKey(table.FileLastWriteKey))
                             {
-                                item.SetValueNullable<DateTime>(upload.ModificationDate ?? DateTime.UtcNow, table.FileLastWriteKey);
+                                item.SetValue<DateTime?>(upload.ModificationDate ?? DateTime.UtcNow, table.FileLastWriteKey);
                             }
 
                             if (table.FileBLOBKey != null)
@@ -227,7 +227,7 @@ namespace DataWF.WebService.Common
 
                         if (table.FileLastWriteKey != null)
                         {
-                            item.SetValueNullable<DateTime>(upload.ModificationDate ?? DateTime.UtcNow, table.FileLastWriteKey);
+                            item.SetValue<DateTime?>(upload.ModificationDate ?? DateTime.UtcNow, table.FileLastWriteKey);
                         }
 
                         if (table.FileBLOBKey != null)
