@@ -134,7 +134,9 @@ namespace DataWF.Data
             {
                 logSchema = value;
                 LogSchemaName = value?.Name;
-                if (value != null && !DBService.Schems.Contains(value.Name))
+                if (value != null
+                    && DBService.Schems.Contains(this)
+                    && !DBService.Schems.Contains(value.Name))
                 {
                     DBService.Schems.Add(value);
                 }
@@ -340,15 +342,6 @@ namespace DataWF.Data
                     Connection = connection,
                     BaseSchema = this
                 };
-
-
-                foreach (DBTable table in Tables)
-                {
-                    if (table.IsLoging)
-                    {
-                        table.GenerateLogTable();
-                    }
-                }
             }
             return LogSchema;
         }
@@ -570,6 +563,14 @@ namespace DataWF.Data
                     tableGenerator.Generate(this);
                 }
                 tableGenerator.Table.RemoveDeletedColumns();
+            }
+
+            foreach (DBTable table in Tables)
+            {
+                if (!(table is IDBLogTable) && table.IsLoging)
+                {
+                    table.GenerateLogTable();
+                }
             }
 
             Procedures.CheckDeleted();

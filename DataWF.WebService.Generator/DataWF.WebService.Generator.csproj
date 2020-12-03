@@ -3,11 +3,11 @@
   <PropertyGroup>
     <Description>Web Service Code Generation Tool</Description>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>dotnet-wscodegen</AssemblyName>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>wscodegen</ToolCommandName>
-    <VersionPrefix>1.7.9</VersionPrefix>
+    <VersionPrefix>1.8.0</VersionPrefix>
     <Authors>Alexandr</Authors>
     <PackageId>DataWF.WebService.Generator</PackageId>
     <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
@@ -17,13 +17,13 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.8" />
-    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="3.1.8" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.7.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.1.6" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.18.0" />
-    <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="13.7.4" />
-    <PackageReference Include="System.Text.Json" Version="4.7.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="5.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.23.0" />
+    <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="13.9.4" />
+    <PackageReference Include="System.Text.Json" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

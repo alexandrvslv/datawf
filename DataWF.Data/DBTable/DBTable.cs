@@ -570,8 +570,7 @@ namespace DataWF.Data
             {
                 if (value)
                 {
-                    Keys &= ~DBTableKeys.NoLogs;
-                    GenerateLogTable();
+                    Keys &= ~DBTableKeys.NoLogs;                   
                 }
                 else
                 {
