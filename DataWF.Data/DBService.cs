@@ -271,16 +271,22 @@ namespace DataWF.Data
             {
                 foreach (var column in table.Columns)
                 {
+                    if (column.ColumnType != DBColumnTypes.Default)
+                        continue;
                     OnDBSchemaChanged(column, DDLType.Create);
                 }
 
                 foreach (var constraint in table.Constraints)
                 {
+                    if (constraint.Column?.ColumnType != DBColumnTypes.Default)
+                        continue;
                     OnDBSchemaChanged(constraint, DDLType.Create);
                 }
 
                 foreach (var foreign in table.Foreigns)
                 {
+                    if (foreign.Column?.ColumnType != DBColumnTypes.Default)
+                        continue;
                     OnDBSchemaChanged(foreign, DDLType.Create);
                 }
             }
