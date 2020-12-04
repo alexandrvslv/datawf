@@ -43,7 +43,7 @@ namespace DataWF.WebService.Common
         {
             DBService.AddRowAccept(OnAccept);
             runEvent.Reset();
-            _ = SendChangesRunner();
+            Task.Run(() => _ = SendChangesRunner());
         }
 
         public void Stop()

@@ -45,7 +45,7 @@ namespace DataWF.Data
                     var itemType = item.Value.GetType();
                     if (!map.TryGetValue(itemType, out var typeTable))
                     {
-                        map[itemType] = new NotifyDBTable { Type = itemType, Table = item.Value.Table };
+                        map[itemType] = typeTable = new NotifyDBTable { Type = itemType, Table = item.Value.Table };
                     }
                     if (!typeTable.Items.Any(p => p.Id.Equals(item.Id)))
                     {

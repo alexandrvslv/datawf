@@ -32,7 +32,7 @@ namespace DataWF.Data
 
         public Type Type { get; protected set; }
 
-        public TableGenerator TableAttribute { get; set; }
+        public TableGenerator TableGenerator { get; set; }
 
         public IDBVirtualTable VirtualTable { get { return (IDBVirtualTable)Table; } }
 
@@ -44,19 +44,19 @@ namespace DataWF.Data
 
         public DBSchema Schema
         {
-            get { return schema ?? TableAttribute.Schema; }
+            get { return schema ?? TableGenerator.Schema; }
             set { schema = value; }
         }
 
         public virtual void Initialize(Type type)
         {
             Type = type;
-            TableAttribute = DBTable.GetTableGeneratorInherit(type.BaseType);
-            if (TableAttribute == null)
+            TableGenerator = DBTable.GetTableGeneratorInherit(type.BaseType);
+            if (TableGenerator == null)
             {
                 throw new Exception($"Class with {nameof(ItemTypeAttribute)} must have are {nameof(Type.BaseType)} with {nameof(Data.TableAttribute)}!");
             }
-            TableAttribute.InitializeItemType(this);
+            TableGenerator.InitializeItemType(this);
         }
 
         public virtual DBTable Generate(DBSchema schema)
@@ -66,16 +66,16 @@ namespace DataWF.Data
             {
                 Table = CreateTable();
             }
-            Table.Query = $"a.{TableAttribute.Table.ItemTypeKey.SqlName} = {TableAttribute.Table.GetTypeIndex(Type)}";
+            Table.Query = $"a.{TableGenerator.Table.ItemTypeKey.SqlName} = {TableGenerator.Table.GetTypeIndex(Type)}";
             if (!Schema.Tables.Contains(Type.Name))
             {
                 Schema.Tables.Add(Table);
             }
-            Table.Generator = TableAttribute;
+            Table.Generator = TableGenerator;
             Table.ItemTypeIndex = Attribute.Id;
             Table.Schema = schema;
-            VirtualTable.BaseTable = TableAttribute.Table;
-            foreach (var columnAttribute in TableAttribute.Columns)
+            VirtualTable.BaseTable = TableGenerator.Table;
+            foreach (var columnAttribute in TableGenerator.Columns)
             {
                 var virtualColumn = Table.ParseColumn(columnAttribute.ColumnName);
                 if (virtualColumn != null)
@@ -98,16 +98,16 @@ namespace DataWF.Data
 
         public virtual DBTable CreateTable()
         {
-            if (TableAttribute == null)
+            if (TableGenerator == null)
             {
                 throw new InvalidOperationException("Table attribute not initializes!");
             }
-            Debug.WriteLine($"Generate {TableAttribute.Attribute.TableName} - {Type.Name}");
+            Debug.WriteLine($"Generate {TableGenerator.Attribute.TableName} - {Type.Name}");
 
             var table = (DBTable)EmitInvoker.CreateObject(typeof(DBVirtualTable<>).MakeGenericType(Type));
             table.Name = Type.Name;
             table.Schema = Schema;
-            ((IDBVirtualTable)table).BaseTable = TableAttribute.Table;
+            ((IDBVirtualTable)table).BaseTable = TableGenerator.Table;
             table.DisplayName = Type.Name;
 
             return table;

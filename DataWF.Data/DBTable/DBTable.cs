@@ -118,7 +118,7 @@ namespace DataWF.Data
             if (tableGenerator == null)
             {
                 var itemType = GetItemTypeGenerator(type);
-                tableGenerator = itemType?.TableAttribute;
+                tableGenerator = itemType?.TableGenerator;
             }
             return tableGenerator;
         }
@@ -155,23 +155,29 @@ namespace DataWF.Data
             if (!cacheTables.TryGetValue(type, out var table))
             {
                 var tableGenerator = GetTableGenerator(type);
-                if (tableGenerator != null)
+                if (tableGenerator != null && tableGenerator.ItemType == type)
                 {
                     if (tableGenerator.Table == null && generate)
                         tableGenerator.Generate(schema);
+                    if (tableGenerator.Table != null)
+                        return cacheTables[type] = tableGenerator.Table;
+                }
+                else
+                {
                     var itemGenerator = GetItemTypeGenerator(type);
                     if (itemGenerator != null)
                     {
                         if (itemGenerator.Table == null && generate)
                             itemGenerator.Generate(schema);
-                        return cacheTables[type] = itemGenerator.Table;
+                        if (itemGenerator.Table != null)
+                            return cacheTables[type] = itemGenerator.Table;
                     }
-                    return cacheTables[type] = tableGenerator.Table;
+                    else
+                    {
+                        cacheTables[type] = null;
+                    }
                 }
-                else
-                {
-                    cacheTables[type] = null;
-                }
+
             }
             return table;
         }
@@ -570,7 +576,7 @@ namespace DataWF.Data
             {
                 if (value)
                 {
-                    Keys &= ~DBTableKeys.NoLogs;                   
+                    Keys &= ~DBTableKeys.NoLogs;
                 }
                 else
                 {

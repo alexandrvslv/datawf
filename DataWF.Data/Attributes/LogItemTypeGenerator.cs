@@ -29,13 +29,13 @@ namespace DataWF.Data
             set => Attribute = value;
         }
 
-        public LogTableGenerator LogTableAttribute
+        public LogTableGenerator LogTableGenerator
         {
-            get => TableAttribute as LogTableGenerator;
-            set => TableAttribute = value;
+            get => TableGenerator as LogTableGenerator;
+            set => TableGenerator = value;
         }
 
-        public override DBTable Table { get => LogTableAttribute.Table; internal set => base.Table = value; }
+        public override DBTable Table { get => LogTableGenerator.Table; internal set => base.Table = value; }
 
         public override DBTable CreateTable()
         {
