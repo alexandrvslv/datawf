@@ -173,7 +173,7 @@ namespace DataWF.Common
             }
             else// if (mtype != null)
             {
-                reader.ReadElement(list, listInfo, itemInfo);
+                reader.ReadElement(list, listInfo, itemInfo != defaultTypeInfo ? itemInfo : null);
             }
         }
 

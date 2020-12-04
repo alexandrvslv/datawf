@@ -216,7 +216,7 @@ namespace DataWF.Common
             }
             else// if (mtype != null)
             {
-                ReadElement(element, listInfo, itemInfo);
+                ReadElement(element, listInfo, itemInfo != defaultTypeInfo ? itemInfo : null);
             }
         }
 
