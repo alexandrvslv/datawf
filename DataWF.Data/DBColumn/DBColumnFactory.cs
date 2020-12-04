@@ -156,10 +156,17 @@ namespace DataWF.Data
             return column;
         }
 
-        public static DBColumn Create(DBColumn baseColumn)
+        public static DBColumn CreateLog(DBColumn baseColumn)
         {
             var column = (DBColumn)EmitInvoker.CreateObject(baseColumn.GetType());
-            column.BaseColumn = baseColumn;
+            column.RefreshLogColumn(baseColumn);
+            return column;
+        }
+
+        public static DBColumn CreateVirtual(DBColumn baseColumn)
+        {
+            var column = (DBColumn)EmitInvoker.CreateObject(baseColumn.GetType());
+            column.RefreshVirtualColumn(column);
             return column;
         }
     }

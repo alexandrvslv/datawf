@@ -35,7 +35,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = (ushort)transaction.Reader.GetInt16(i);
-            return Table.GetPullIndex(this)?.SelectOne<F>(value);
+            return PullIndex?.SelectOne<F>(value);
         }
 
         public override object GetParameterValue(DBItem item)

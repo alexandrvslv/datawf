@@ -57,7 +57,6 @@ namespace DataWF.Data
         {
             base.RemoveInternal(item, index);
             item.Clear();
-            Table.RemovePullIndex(item);
         }
 
         public new void Clear()
@@ -88,14 +87,11 @@ namespace DataWF.Data
                 index = 1;
             if (item.IsTypeKey)
                 index = 0;
-            if (!isVirtual)
-            {
-                item.Order = index;
-            }
+            item.Order = index;
 
             base.InsertInternal(index, item);
 
-            if (item.IsPrimaryKey && !isVirtual)
+            if (item.IsPrimaryKey)
             {
                 DBConstraint primary = null;
                 foreach (var constraint in Table.Constraints.GetByColumn(Table.PrimaryKey))
@@ -115,7 +111,6 @@ namespace DataWF.Data
                 }
             }
             item.CheckPull();
-            Table.CheckPullIndex(item);
         }
 
         public override DDLType GetInsertType(T item)

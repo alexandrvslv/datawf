@@ -136,9 +136,17 @@ namespace DataWF.Data
 
         protected void AddIndexes(T item)
         {
-            foreach (var pullIndex in pullIndexes.Values)
+            foreach (var column in Columns)
             {
-                pullIndex.Add(item);
+                column.PullIndex?.Add(item);
+            }
+        }
+
+        protected void RemoveIndexes(T item)
+        {
+            foreach (var column in Columns)
+            {
+                column.PullIndex?.Remove(item);
             }
         }
 
@@ -160,14 +168,6 @@ namespace DataWF.Data
             return true;
         }
 
-        protected void RemoveIndexes(T item)
-        {
-            foreach (var pullIndex in pullIndexes.Values)
-            {
-                pullIndex.Remove(item);
-            }
-        }
-
         public override void Accept(DBItem item)
         {
             if (!item.Attached)
@@ -176,9 +176,9 @@ namespace DataWF.Data
             }
             else
             {
-                foreach (var pullIndex in pullIndexes.Values)
+                foreach (var column in Columns)
                 {
-                    pullIndex.RefreshSort(item);
+                    column.PullIndex?.RefreshSort(item);
                 }
             }
             foreach (var collection in virtualTables)
@@ -258,10 +258,14 @@ namespace DataWF.Data
 
         public override void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
-            GetPullIndex(column)?.Remove(item, value);
+            if (column.PullIndex is PullIndex<DBItem, V> pullIndex)
+                pullIndex.Remove(item, value);
             foreach (var table in virtualTables)
             {
-                table.OnItemChanging<V>(item, property, column, value);
+                if (table.Columns[column.Name] is DBColumn<V> vColumn)
+                {
+                    table.OnItemChanging<V>(item, property, column, value);
+                }
             }
         }
 
@@ -273,7 +277,8 @@ namespace DataWF.Data
                 return;
             }
 
-            GetPullIndex(column)?.Add(item, value);
+            if (column.PullIndex is PullIndex<DBItem, V> pullIndex)
+                pullIndex.Add(item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanged<V>(item, property, column, value);
@@ -1073,7 +1078,7 @@ namespace DataWF.Data
 
         public T SelectOne<V>(DBColumn<V> column, V value)
         {
-            if (pullIndexes.TryGetValue(column, out var index))
+            if (column.PullIndex is PullIndex<DBItem, V> index)
             {
                 return index.SelectOne<T>(value);
             }
@@ -1083,7 +1088,7 @@ namespace DataWF.Data
         public T SelectOne(DBColumn column, object value)
         {
             value = column.ParseValue(value);
-            if (pullIndexes.TryGetValue(column, out var index))
+            if (column.PullIndex is PullIndex index)
             {
                 return index.SelectOne<T>(value);
             }
@@ -1116,9 +1121,9 @@ namespace DataWF.Data
                 return enumerabble;
             }
 
-            if (pullIndexes.TryGetValue(column, out var index))
+            if (column.PullIndex != null)
             {
-                return index.Select<T>(value, comparer);
+                return column.PullIndex.Select<T>(value, comparer);
             }
             return Search(column, comparer, value, list);
         }

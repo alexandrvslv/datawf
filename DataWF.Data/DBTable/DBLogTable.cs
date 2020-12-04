@@ -99,12 +99,12 @@ namespace DataWF.Data
                         var logColumn = GetLogColumn(column);
                         if (logColumn == null)
                         {
-                            logColumn = DBColumnFactory.Create(column);
+                            logColumn = DBColumnFactory.CreateLog(column);
                             Columns.Add(logColumn);
                         }
                         else
                         {
-                            logColumn.BaseColumn = column;
+                            logColumn.RefreshLogColumn(column);
                         }
                     }
                 }

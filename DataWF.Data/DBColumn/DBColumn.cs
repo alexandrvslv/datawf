@@ -134,43 +134,11 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn BaseColumn
         {
-            get { return baseColumn == DBColumn.EmptyKey ? (baseColumn = (Table as IDBLogTable)?.BaseTable?.Columns[BaseName]) : baseColumn; }
+            get { return baseColumn == DBColumn.EmptyKey ? (baseColumn = (Table as IDBDependTable)?.BaseTable?.Columns[BaseName]) : baseColumn; }
             set
             {
-                if (value == null)
-                {
-                    throw new Exception("BaseColumn value is empty!");
-                }
-
                 baseColumn = value;
-                BaseName = value.Name;
-                Name = GetLogName(value);
-                DisplayName = value.DisplayName + " Log";
-                DBDataType = value.DBDataType;
-                DataType = value.DataType;
-                ReferenceTable = value.ReferenceTable;
-                Size = value.Size;
-                Scale = value.Scale;
-                if (value.IsFile)
-                {
-                    Keys |= DBColumnKeys.File;
-                }
-                if (value.IsFileName)
-                {
-                    Keys |= DBColumnKeys.FileName;
-                }
-                if (value.IsFileLOB)
-                {
-                    Keys |= DBColumnKeys.FileLOB;
-                }
-                if (value.IsTypeKey)
-                {
-                    Keys |= DBColumnKeys.ItemType;
-                }
-                if ((value.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
-                {
-                    Keys |= DBColumnKeys.Access;
-                }
+                BaseName = value?.Name;
             }
         }
 
@@ -275,6 +243,9 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public abstract Pull Pull { get; internal set; }
 
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public abstract PullIndex PullIndex { get; internal set; }
+
 
         [Category("Name")]
         public override string FullName => string.Format("{0}.{1}.{2}", Schema?.Name, Table?.Name, name);
@@ -371,7 +342,7 @@ namespace DataWF.Data
 
                     OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.Default);
                 }
-                Table?.CheckPullIndex(this);
+                CheckPullIndex();
             }
         }
 
@@ -723,6 +694,57 @@ namespace DataWF.Data
         public bool IsWriteable => true;
 
         internal protected abstract void CheckPull();
+
+        internal protected abstract void CheckPullIndex();
+
+        public void RefreshLogColumn(DBColumn baseColumn)
+        {
+            BaseColumn = baseColumn;
+            Name = GetLogName(baseColumn);
+            DisplayName = baseColumn.DisplayName + " Log";
+            DBDataType = baseColumn.DBDataType;
+            DataType = baseColumn.DataType;
+            ReferenceTable = baseColumn.ReferenceTable;
+            Size = baseColumn.Size;
+            Scale = baseColumn.Scale;
+            if (baseColumn.IsFile)
+            {
+                Keys |= DBColumnKeys.File;
+            }
+            if (baseColumn.IsFileName)
+            {
+                Keys |= DBColumnKeys.FileName;
+            }
+            if (baseColumn.IsFileLOB)
+            {
+                Keys |= DBColumnKeys.FileLOB;
+            }
+            if (baseColumn.IsTypeKey)
+            {
+                Keys |= DBColumnKeys.ItemType;
+            }
+            if ((baseColumn.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
+            {
+                Keys |= DBColumnKeys.Access;
+            }
+        }
+
+        public void RefreshVirtualColumn(DBColumn baseColumn)
+        {
+            BaseColumn = baseColumn;
+            Name = baseColumn.Name;
+            Keys = baseColumn.Keys;
+            Size = baseColumn.Size;
+            Scale = baseColumn.Scale;
+            DBDataType = baseColumn.DBDataType;
+            ColumnType = baseColumn.ColumnType;
+            Culture = baseColumn.Culture;
+            PropertyInvoker = baseColumn.PropertyInvoker;
+            PropertyInfo = baseColumn.PropertyInfo;
+            ReferencePropertyInvoker = baseColumn.ReferencePropertyInvoker;
+            ReferencePropertyInfo = baseColumn.ReferencePropertyInfo;
+            Pull = baseColumn.Pull;
+        }
 
         public IComparer CreateComparer(ListSortDirection direction = ListSortDirection.Ascending)
         {

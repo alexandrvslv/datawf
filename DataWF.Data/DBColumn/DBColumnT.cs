@@ -37,6 +37,7 @@ namespace DataWF.Data
         public new static readonly DBColumn<T> EmptyKey = new DBColumn<T>();
 
         protected GenericPull<T> pull;
+        protected PullIndex<DBItem, T> pullIndex;
         private IValuedInvoker<T> typedPropertyInvoker;
 
         public DBColumn() : base()
@@ -54,6 +55,20 @@ namespace DataWF.Data
                 if (pull != value)
                 {
                     pull = (GenericPull<T>)value;
+                    CheckPullIndex();
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override PullIndex PullIndex
+        {
+            get => pullIndex;
+            internal set
+            {
+                if (pullIndex != value)
+                {
+                    pullIndex = (PullIndex<DBItem, T>)value;
                 }
             }
         }
@@ -74,6 +89,33 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public override IElementSerializer Serializer { get => TypedSerializer; }
+
+        protected internal override void CheckPullIndex()
+        {
+            if (pullIndex != null && pullIndex.BasePull != Pull)
+            {
+                pullIndex.Dispose();
+                pullIndex = null;
+            }
+            if (pullIndex == null && Pull != null && (IsPrimaryKey
+                || (Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing
+                || (Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference))
+                PullIndex = CreatePullIndex();
+        }
+
+        public void RemovePullIndex()
+        {
+            if (pullIndex != null)
+            {
+                pullIndex.Dispose();
+                pullIndex = null;
+            }
+        }
+
+        protected internal override PullIndex CreatePullIndex()
+        {
+            return PullIndexFactory.Create(Pull, typeof(DBItem), DataType, Table.DefaultComparer);
+        }
 
         public override bool Equal(object oldValue, object newValue)
         {
@@ -247,7 +289,7 @@ namespace DataWF.Data
                 DBItem temp = ReferenceTable.LoadItemById(val);
                 return temp == null ? "<new or empty>" : temp.ToString();
             }
-            return val.ToString();;
+            return val.ToString(); ;
         }
 
         public override bool GetOld(DBItem item, out object obj)
@@ -310,11 +352,6 @@ namespace DataWF.Data
             }
         }
 
-        protected internal override PullIndex CreatePullIndex()
-        {
-            return PullIndexFactory.Create(Pull, typeof(DBItem), DataType, Table.DefaultComparer);
-        }
-
         public override bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
         {
             return ListHelper.CheckItemT(GetValue(item), typedValue, comparer, (IComparer<T>)comparision);
@@ -327,6 +364,7 @@ namespace DataWF.Data
 
         public override void Clear()
         {
+            PullIndex?.Clear();
             Pull?.Clear();
         }
 
@@ -343,7 +381,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.Reader.GetFieldValue<T>(i);
-            return Table.GetPullIndex<T>(this)?.SelectOne<F>(value);
+            return pullIndex?.SelectOne<F>(value);
         }
 
         public override void Write(BinaryInvokerWriter writer, object element)

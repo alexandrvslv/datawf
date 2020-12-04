@@ -54,7 +54,7 @@ namespace DataWF.Data
             {
                 Column = CreateColumn(ColumnName);
             }
-            Column.BaseColumn = BaseColumn.Column;
+            Column.RefreshLogColumn(BaseColumn.Column);
             Column.PropertyName = PropertyName;
             Column.PropertyInfo = PropertyInfo;
             Column.ReferencePropertyInfo = ReferencePropertyInfo;

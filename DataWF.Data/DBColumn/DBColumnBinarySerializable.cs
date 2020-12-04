@@ -49,7 +49,7 @@ namespace DataWF.Data
             var byteArray = (byte[])transaction.Reader.GetValue(i);
             var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
             serializable.Deserialize(byteArray);
-            return Table.GetPullIndex(this)?.SelectOne<F>(serializable);
+            return PullIndex?.SelectOne<F>(serializable);
         }
 
         public override object GetParameterValue(DBItem item)

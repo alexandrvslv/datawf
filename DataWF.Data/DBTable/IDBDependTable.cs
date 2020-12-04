@@ -17,34 +17,11 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using System.Runtime.CompilerServices;
 
 namespace DataWF.Data
 {
-    public class DBColumnEnumInt32<T> : DBColumn<T> where T : struct
+    public interface IDBDependTable : IDBTable
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
-        {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
-            var value = transaction.Reader.IsDBNull(i) ? default(int) : transaction.Reader.GetInt32(i);
-            var enumValue = Unsafe.As<int, T>(ref value);
-            SetValue(row, enumValue, DBSetValueMode.Loading);
-        }
-
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
-        {
-            var value = transaction.Reader.GetInt32(i);
-            var enumValue = Unsafe.As<int, T>(ref value);
-            return PullIndex?.SelectOne<F>(enumValue);
-        }
-
-        public override object GetParameterValue(DBItem item)
-        {
-            var value = GetValue(item);
-            return Unsafe.As<T, int>(ref value);
-        }
+        DBTable BaseTable { get; set; }
     }
 }

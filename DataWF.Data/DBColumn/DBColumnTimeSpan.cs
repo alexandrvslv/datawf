@@ -38,7 +38,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.GetTimeSpan(i);
-            return Table.GetPullIndex(this)?.SelectOne<F>(value);
+            return PullIndex?.SelectOne<F>(value);
         }
     }
 }

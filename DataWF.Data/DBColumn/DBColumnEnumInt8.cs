@@ -38,7 +38,7 @@ namespace DataWF.Data
         {
             var value = (sbyte)transaction.Reader.GetByte(i);
             var enumValue = Unsafe.As<sbyte, T>(ref value);
-            return Table.GetPullIndex(this)?.SelectOne<F>(enumValue);
+            return PullIndex?.SelectOne<F>(enumValue);
         }
 
         public override object GetParameterValue(DBItem item)

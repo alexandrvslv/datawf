@@ -36,7 +36,7 @@ namespace DataWF.Data
             return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName);
         }
 
-        public IEnumerable<T> GetByColumnAndTYpe(DBColumn column, DBConstraintType type)
+        public IEnumerable<T> GetByColumnAndType(DBColumn column, DBConstraintType type)
         {
             return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName).Where(p => p.Type == type);
         }

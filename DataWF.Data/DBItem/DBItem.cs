@@ -362,6 +362,7 @@ namespace DataWF.Data
                 return default(T);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetValue<T>(DBColumn<T> column)
         {
             return column.GetValue(this);

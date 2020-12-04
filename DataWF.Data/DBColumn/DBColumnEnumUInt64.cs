@@ -38,7 +38,7 @@ namespace DataWF.Data
         {
             var value = (ulong)transaction.Reader.GetInt64(i);
             var enumValue = Unsafe.As<ulong, T>(ref value);
-            return Table.GetPullIndex(this)?.SelectOne<F>(enumValue);
+            return PullIndex?.SelectOne<F>(enumValue);
         }
 
         public override object GetParameterValue(DBItem item)

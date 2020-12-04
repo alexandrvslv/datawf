@@ -251,7 +251,7 @@ namespace DataWF.Data
         {
             if (item.GetType() == typeof(T))
             {
-                base.OnItemChanging<V>(item, property, column, value);
+                base.OnItemChanging<V>(item, property, column == null ? null : (DBColumn<V>)Columns[column.Name], value);
             }
         }
 
@@ -269,7 +269,7 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    base.OnItemChanged<V>(item, property, column, value);
+                    base.OnItemChanged<V>(item, property, column == null ? null : (DBColumn<V>)Columns[column.Name], value);
                 }
             }
         }
@@ -278,7 +278,7 @@ namespace DataWF.Data
         {
             var column = BaseTable.CheckColumn(name, type, ref newCol);
             if (newCol)
-                Columns.Add(column);
+                Columns.Add(DBColumnFactory.CreateVirtual(column));
             return column;
         }
 
@@ -345,17 +345,22 @@ namespace DataWF.Data
             var type = typeof(T);
             foreach (DBColumn column in BaseTable.Columns)
             {
-                var exist = ParseColumn(column.Name);
+                var exist = Columns[column.Name];
                 if (exist == null)
                 {
-                    Columns.Add(column);
+                    if (!(column.PropertyInvoker?.TargetType.IsAssignableFrom(type) ?? true))
+                        continue;
+                    Columns.Add(DBColumnFactory.CreateVirtual(column));
                 }
-                
+                else
+                {
+                    exist.RefreshVirtualColumn(column);
+                }
             }
 
             foreach (DBForeignKey reference in BaseTable.Foreigns)
             {
-                var existColumn = ParseColumn(reference.Column.Name);
+                var existColumn = Columns[reference.Column.Name];
                 if (existColumn == null || reference.Reference == null)
                     continue;
                 var exist = Foreigns.GetByColumns(existColumn, reference.Reference);
@@ -374,8 +379,10 @@ namespace DataWF.Data
 
             foreach (DBConstraint constraint in BaseTable.Constraints)
             {
-                var existColumn = ParseColumn(constraint.Column.Name);
-                var exist = Constraints.GetByColumnAndTYpe(existColumn, constraint.Type).FirstOrDefault();
+                var existColumn = Columns[constraint.Column.Name];
+                if (existColumn == null)
+                    continue;
+                var exist = Constraints.GetByColumnAndType(existColumn, constraint.Type).FirstOrDefault();
                 if (exist == null)
                 {
                     exist = new DBConstraint

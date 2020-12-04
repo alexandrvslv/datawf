@@ -21,9 +21,8 @@ using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
-    public interface IDBVirtualTable: IDBTable
+    public interface IDBVirtualTable: IDBDependTable
     {
-        DBTable BaseTable { get; set; }
         QQuery FilterQuery { get; }
         void OnTableChanged(DBItem item, NotifyCollectionChangedAction type);
         

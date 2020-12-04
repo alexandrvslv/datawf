@@ -46,7 +46,7 @@ namespace DataWF.Data
         {
             var value = transaction.Reader.GetInt32(i);
             var enumValue = Unsafe.As<int, T>(ref value);
-            return Table.GetPullIndex(this)?.SelectOne<F>(enumValue);
+            return PullIndex?.SelectOne<F>(enumValue);
         }
 
         public override object GetParameterValue(DBItem item)

@@ -210,7 +210,6 @@ namespace DataWF.Data
         public int Hash = -1;
         protected internal readonly int index = ++tableIndex;
         protected internal ConcurrentQueue<int> FreeHandlers = new ConcurrentQueue<int>();
-        protected readonly Dictionary<DBColumn, PullIndex> pullIndexes = new Dictionary<DBColumn, PullIndex>();
         protected readonly ConcurrentDictionary<Type, List<DBColumn>> mapTypeColumn = new ConcurrentDictionary<Type, List<DBColumn>>();
         protected readonly ConcurrentDictionary<Type, List<IInvoker>> refingInvokers = new ConcurrentDictionary<Type, List<IInvoker>>();
         protected string query;
@@ -620,43 +619,6 @@ namespace DataWF.Data
         public abstract void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value);
         public abstract void OnItemChanged<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
         public abstract void Trunc();
-
-        public PullIndex GetPullIndex(DBColumn column)
-        {
-            return pullIndexes.TryGetValue(column, out var index) ? index : null;
-        }
-
-        public PullIndex<DBItem, T> GetPullIndex<T>(DBColumn<T> column)
-        {
-            return pullIndexes.TryGetValue(column, out var index) ? (PullIndex<DBItem, T>)index : null;
-        }
-
-        public void CheckPullIndex(DBColumn column)
-        {
-            var index = GetPullIndex(column);
-            if (index != null && index.BasePull != column.Pull)
-            {
-                pullIndexes.Remove(column);
-                index.Dispose();
-                index = null;
-            }
-            if (index == null && column.Pull != null && (column.IsPrimaryKey
-                || (column.Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing
-                || (column.Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference))
-                index = column.CreatePullIndex();
-            if (index != null)
-            {
-                pullIndexes[column] = index;
-            }
-        }
-
-        public void RemovePullIndex(DBColumn column)
-        {
-            if (pullIndexes.TryGetValue(column, out var index))
-            {
-                index.Dispose();
-            }
-        }
 
         public bool IsSerializeableColumn(DBColumn column, Type type)
         {
@@ -1546,12 +1508,9 @@ namespace DataWF.Data
 
         protected void ClearColumnsData(bool pool)
         {
-            foreach (var pullIndex in pullIndexes.Values)
-            {
-                pullIndex.Clear();
-            }
             foreach (var column in Columns)
             {
+                column.PullIndex?.Clear();
                 if (pool)
                 {
                     column.Clear();
