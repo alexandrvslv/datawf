@@ -154,30 +154,29 @@ namespace DataWF.Data
                 return null;
             if (!cacheTables.TryGetValue(type, out var table))
             {
-                var tableGenerator = GetTableGenerator(type);
-                if (tableGenerator != null && tableGenerator.ItemType == type)
+                var itemGenerator = GetItemTypeGenerator(type);
+                if (itemGenerator != null)
                 {
-                    if (tableGenerator.Table == null && generate)
-                        tableGenerator.Generate(schema);
-                    if (tableGenerator.Table != null)
-                        return cacheTables[type] = tableGenerator.Table;
+                    if (itemGenerator.Table == null && generate)
+                        itemGenerator.Generate(schema);
+                    if (itemGenerator.Table != null)
+                        return cacheTables[type] = itemGenerator.Table;
                 }
                 else
                 {
-                    var itemGenerator = GetItemTypeGenerator(type);
-                    if (itemGenerator != null)
+                    var tableGenerator = GetTableGenerator(type);
+                    if (tableGenerator != null && tableGenerator.ItemType == type)
                     {
-                        if (itemGenerator.Table == null && generate)
-                            itemGenerator.Generate(schema);
-                        if (itemGenerator.Table != null)
-                            return cacheTables[type] = itemGenerator.Table;
+                        if (tableGenerator.Table == null && generate)
+                            tableGenerator.Generate(schema);
+                        if (tableGenerator.Table != null)
+                            return cacheTables[type] = tableGenerator.Table;
                     }
                     else
                     {
                         cacheTables[type] = null;
                     }
                 }
-
             }
             return table;
         }

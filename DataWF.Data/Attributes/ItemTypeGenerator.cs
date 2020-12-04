@@ -38,7 +38,7 @@ namespace DataWF.Data
 
         public virtual DBTable Table
         {
-            get { return cacheTable ?? (cacheTable = DBService.Schems.ParseTable(Type.Name)); }
+            get { return cacheTable ?? (cacheTable = Schema?.Tables[Type.Name] ?? DBService.Schems.ParseTable(Type.Name)); }
             internal set { cacheTable = value; }
         }
 
@@ -62,6 +62,12 @@ namespace DataWF.Data
         public virtual DBTable Generate(DBSchema schema)
         {
             Schema = schema;
+            if (TableGenerator.Table == null)
+            {
+                TableGenerator.Generate(schema);
+                if (Table != null)
+                    return Table;
+            }
             if (Table == null)
             {
                 Table = CreateTable();

@@ -17,8 +17,9 @@ namespace DataWF.Common
         {
             Type = type;
             TypeName = TypeHelper.FormatBinary(Type);
-            Serialazer = TypeHelper.GetSerializer(type);
-
+            Serializer = TypeHelper.GetSerializer(type);
+            if (Serializer.GetType().IsGenericType && Serializer.GetType().GetGenericArguments()[0] != type)
+            { }
             var keys = TypeSerializationInfoKeys.None;
             if (TypeHelper.IsSerializeAttribute(Type))
             {
@@ -122,7 +123,7 @@ namespace DataWF.Common
 
         public SelectableListView<IPropertySerializeInfo> XmlProperties { get; }
 
-        public ElementSerializer Serialazer { get; }
+        public ElementSerializer Serializer { get; }
 
         public string ShortName { get; internal set; } = "e";
 
@@ -133,15 +134,15 @@ namespace DataWF.Common
 
         public string TextFormat(object value)
         {
-            return Serialazer != null
-                ? Serialazer.ObjectToString(value)
+            return Serializer != null
+                ? Serializer.ObjectToString(value)
                 : Helper.TextBinaryFormat(value);
         }
 
         public object TextParse(string value)
         {
-            return Serialazer != null
-                ? Serialazer.ObjectFromString(value)
+            return Serializer != null
+                ? Serializer.ObjectFromString(value)
                 : Helper.TextParse(value, Type);
         }
 

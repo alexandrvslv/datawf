@@ -85,7 +85,7 @@ namespace DataWF.Common
                 fileSerialize.Save();
                 Writer.WriteElementString("FileName", fileSerialize.FileName);
             }
-            else if (typeInfo.Serialazer is IElementSerializer serializer)
+            else if (typeInfo.Serializer is IElementSerializer serializer)
             {
                 serializer.WriteObject(this, element, typeInfo);
             }
@@ -93,7 +93,7 @@ namespace DataWF.Common
             {
                 if (typeInfo.IsAttribute)
                 {
-                    Writer.WriteValue(typeInfo.Serialazer.ObjectToString(element));
+                    Writer.WriteValue(typeInfo.Serializer.ObjectToString(element));
                 }
                 else if (typeInfo.IsDictionary)
                 {
@@ -124,7 +124,7 @@ namespace DataWF.Common
                 fileSerialize.Save();
                 Writer.WriteElementString("FileName", fileSerialize.FileName);
             }
-            if (typeInfo.Serialazer is IElementSerializer<T> serializer)
+            if (typeInfo.Serializer is IElementSerializer<T> serializer)
             {
                 serializer.Write(this, element, typeInfo);
             }
@@ -132,7 +132,7 @@ namespace DataWF.Common
             {
                 if (typeInfo.IsAttribute)
                 {
-                    Writer.WriteValue(typeInfo.Serialazer.ObjectToString(element));
+                    Writer.WriteValue(typeInfo.Serializer.ObjectToString(element));
                 }
                 else if (typeInfo.IsDictionary)
                 {
@@ -297,7 +297,7 @@ namespace DataWF.Common
         public void WriteAttribute<T>(string name, T value)
         {
             var typeInfo = Serializer.GetTypeInfo<T>();
-            if (typeInfo.Serialazer is IElementSerializer<T> serializer)
+            if (typeInfo.Serializer is IElementSerializer<T> serializer)
             {
                 Writer.WriteAttributeString(name, serializer.ToString(value));
             }

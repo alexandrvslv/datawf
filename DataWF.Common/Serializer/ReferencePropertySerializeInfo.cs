@@ -19,8 +19,13 @@ namespace DataWF.Common
                 T value = valueInvoker.GetValue(element);
                 if (value != null)
                 {
+                    var typeInfo = writer.Serializer.GetTypeInfo(value.GetType());
+                    if (typeInfo.Type != valueInvoker.DataType)
+                    {
+                        writer.WriteType(typeInfo);
+                    }
                     writer.WriteStart(this);
-                    TypedSerializer.Write(writer, value, writer.Serializer.GetTypeInfo(value.GetType()));
+                    TypedSerializer.Write(writer, value, typeInfo);
                     writer.WriteEnd(this);
                 }
             }
@@ -37,8 +42,13 @@ namespace DataWF.Common
                 T value = valueInvoker.GetValue(element);
                 if (value != null)
                 {
+                    var typeInfo = writer.Serializer.GetTypeInfo(value.GetType());
+                    if (typeInfo.Type != valueInvoker.DataType)
+                    {
+                        writer.WriteType(typeInfo);
+                    }
                     writer.WriteStart(this);
-                    TypedSerializer.Write(writer, value, writer.Serializer.GetTypeInfo<T>());
+                    TypedSerializer.Write(writer, value, typeInfo);
                     writer.WriteEnd(this);
                 }
             }

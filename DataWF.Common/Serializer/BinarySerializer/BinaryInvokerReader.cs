@@ -145,7 +145,7 @@ namespace DataWF.Common
 
         public object ReadObject(object element, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
-            if (info?.Serialazer is IElementSerializer serializer)
+            if (info?.Serializer is IElementSerializer serializer)
             {
                 return serializer.ReadObject(this, element, info, map);
             }
@@ -178,7 +178,7 @@ namespace DataWF.Common
 
         public T ReadObject<T>(T element, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
-            if (info.Serialazer is IElementSerializer<T> serializer)
+            if (info.Serializer is IElementSerializer<T> serializer)
             {
                 return serializer.Read(this, element, info, map);
             }
@@ -276,7 +276,7 @@ namespace DataWF.Common
             {
                 return null;
             }
-            else if (info?.Serialazer is IElementSerializer serializer)
+            else if (info?.Serializer is IElementSerializer serializer)
             {
                 return serializer.ReadObject(this, element, info, map);
             }
@@ -303,7 +303,7 @@ namespace DataWF.Common
             {
                 return default(T);
             }
-            else if (info.Serialazer is IElementSerializer<T> serializer)
+            else if (info.Serializer is IElementSerializer<T> serializer)
             {
                 return serializer.Read(this, element, info, map);
             }

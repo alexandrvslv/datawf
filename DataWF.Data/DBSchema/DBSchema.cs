@@ -567,7 +567,9 @@ namespace DataWF.Data
 
             foreach (DBTable table in Tables)
             {
-                if (!(table is IDBLogTable) && table.IsLoging)
+                if (!(table is IDBLogTable)
+                    && !(table is IDBVirtualTable)
+                    && table.IsLoging)
                 {
                     table.GenerateLogTable();
                 }

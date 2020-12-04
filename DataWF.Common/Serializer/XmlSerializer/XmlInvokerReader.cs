@@ -327,7 +327,7 @@ namespace DataWF.Common
             {
                 return ReadIFile(element, typeInfo);
             }
-            else if (typeInfo.Serialazer is IElementSerializer serializer)
+            else if (typeInfo.Serializer is IElementSerializer serializer)
             {
                 return serializer.ReadObject(this, element, typeInfo);
             }
@@ -354,7 +354,7 @@ namespace DataWF.Common
             {
                 return (T)ReadIFile(element, typeInfo);
             }
-            else if (typeInfo.Serialazer is IElementSerializer<T> serializer)
+            else if (typeInfo.Serializer is IElementSerializer<T> serializer)
             {
                 return serializer.Read(this, element, typeInfo);
             }

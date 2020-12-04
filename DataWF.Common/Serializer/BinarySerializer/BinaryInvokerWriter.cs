@@ -151,7 +151,7 @@ namespace DataWF.Common
             {
                 typeInfo = Serializer.GetTypeInfo(element.GetType());
             }
-            if (typeInfo.Serialazer is IElementSerializer serializer)
+            if (typeInfo.Serializer is IElementSerializer serializer)
             {
                 serializer.WriteObject(this, element, typeInfo, map);
             }
@@ -175,7 +175,7 @@ namespace DataWF.Common
             {
                 typeInfo = Serializer.GetTypeInfo(element.GetType());
             }
-            if (typeInfo.Serialazer is IElementSerializer<T> serializer)
+            if (typeInfo.Serializer is IElementSerializer<T> serializer)
             {
                 serializer.Write(this, element, typeInfo, map);
             }
