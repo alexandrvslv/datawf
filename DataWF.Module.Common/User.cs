@@ -90,7 +90,7 @@ namespace DataWF.Module.Common
             {
                 throw new KeyNotFoundException("User not found!");
             }
-            var password = SMTPSetting.Current == null ? login.Password : Helper.Decript(login.Password, SMTPSetting.Current.PassKey);
+            var password = SMTPSetting.Current?.PassKey == null ? login.Password : Helper.Decript(login.Password, SMTPSetting.Current.PassKey);
 
             if (user.AuthType == UserAuthType.SMTP)
             {

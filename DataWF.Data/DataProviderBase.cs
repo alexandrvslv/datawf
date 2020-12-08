@@ -92,5 +92,7 @@ namespace DataWF.Data
         {
             DBService.Save();
         }
+
+        public abstract DBUser FindUser(string email);
     }
 }

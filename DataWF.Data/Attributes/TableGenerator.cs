@@ -149,7 +149,15 @@ namespace DataWF.Data
 
         private void GenerateVirtualTables(DBSchema schema)
         {
-            Table.ItemTypes.Clear();
+            foreach (var entry in Table.ItemTypes.ToList())
+            {
+                if (entry.Value == null || entry.Value.Type == null)
+                    Table.ItemTypes.Remove(entry.Key);
+            }
+            if (Table.ItemTypes.Count == 0)
+            {
+                Table.ItemTypes[0] = new DBItemType { Type = ItemType };
+            }
             foreach (var itemType in cacheItemTypes)
             {
                 Table.ItemTypes[itemType.Attribute.Id] = new DBItemType { Type = itemType.Type };

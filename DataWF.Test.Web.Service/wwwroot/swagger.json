@@ -5,6 +5,303 @@
     "version": "v1"
   },
   "paths": {
+    "/api/Access/Get/{name}": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessValue"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/GetProperty/{name}/{property}": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "GetProperty",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "property",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessValue"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/GetItems/{name}/{id}": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/SetItems/{name}/{id}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Set",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AccessItem"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/SetItems/{name}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Set",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessUpdatePackage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/ClearAccess/{name}/{id}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Clear",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/ClearAccess/{name}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Clear",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Address/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -52,7 +349,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -372,7 +670,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -403,7 +702,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -432,7 +732,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -499,7 +800,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -543,7 +845,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -664,7 +967,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -984,7 +1288,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -1015,7 +1320,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -1044,7 +1350,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -1111,7 +1418,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -1155,7 +1463,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -1276,7 +1585,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -1596,7 +1906,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -1627,7 +1938,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -1656,7 +1968,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -1723,7 +2036,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -1767,7 +2081,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -1888,7 +2203,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -2208,7 +2524,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -2239,7 +2556,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -2268,7 +2586,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -2335,7 +2654,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -2379,7 +2699,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -2500,7 +2821,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -2820,7 +3142,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -2851,7 +3174,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -2880,7 +3204,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -2947,7 +3272,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -2991,7 +3317,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -3112,7 +3439,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -3432,7 +3760,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -3463,7 +3792,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -3492,7 +3822,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -3559,7 +3890,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -3603,7 +3935,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -3724,7 +4057,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4044,7 +4378,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4075,7 +4410,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4104,7 +4440,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4171,7 +4508,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4215,7 +4553,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4336,7 +4675,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4656,7 +4996,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4687,7 +5028,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4716,7 +5058,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4783,7 +5126,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4827,7 +5171,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -4948,7 +5293,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -5268,7 +5614,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -5299,7 +5646,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -5328,7 +5676,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -5395,7 +5744,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -5439,7 +5789,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -5560,7 +5911,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -5880,7 +6232,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -5911,7 +6264,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -5940,7 +6294,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6007,7 +6362,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6051,7 +6407,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6138,7 +6495,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6172,7 +6530,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6240,7 +6599,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6560,7 +6920,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6591,7 +6952,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6620,7 +6982,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6687,7 +7050,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6731,7 +7095,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6805,6 +7170,32 @@
         }
       }
     },
+    "/api/Diagnostics/collect": {
+      "get": {
+        "tags": [
+          "Diagnostics"
+        ],
+        "operationId": "GetCollect",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Diagnostics/diagnostics": {
+      "get": {
+        "tags": [
+          "Diagnostics"
+        ],
+        "operationId": "GetDiagnostics",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/Document/CreateWorkByUser/{id}/{from}/{stage}/{user}": {
       "get": {
         "tags": [
@@ -6818,7 +7209,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           },
           {
@@ -6827,7 +7219,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           },
           {
@@ -6836,7 +7229,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -6845,7 +7239,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -6876,7 +7271,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -6907,7 +7303,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           },
           {
@@ -6916,7 +7313,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -6947,7 +7345,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           },
           {
@@ -6956,7 +7355,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           },
           {
@@ -6965,7 +7365,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -6974,7 +7375,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -7005,7 +7407,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           },
           {
@@ -7014,7 +7417,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           },
           {
@@ -7023,7 +7427,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -7032,7 +7437,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -7097,7 +7503,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -7417,7 +7824,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -7448,7 +7856,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -7477,7 +7886,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -7544,7 +7954,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -7588,7 +7999,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -7868,7 +8280,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -7899,7 +8312,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -7928,7 +8342,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -7995,7 +8410,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -8039,7 +8455,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -8160,7 +8577,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -8480,7 +8898,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -8511,7 +8930,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -8540,7 +8960,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -8607,7 +9028,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -8651,7 +9073,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -8738,7 +9161,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -8770,7 +9194,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -8875,7 +9300,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -9021,7 +9447,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -9310,7 +9737,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -9341,7 +9769,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -9370,7 +9799,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -9437,7 +9867,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -9481,7 +9912,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -9602,7 +10034,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -9922,7 +10355,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -9953,7 +10387,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -9982,7 +10417,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -10049,7 +10485,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -10093,7 +10530,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -10214,7 +10652,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -10534,7 +10973,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -10565,7 +11005,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -10594,7 +11035,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -10661,7 +11103,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -10705,7 +11148,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -10891,7 +11335,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -11211,7 +11656,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -11242,7 +11688,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -11271,7 +11718,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -11338,7 +11786,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -11382,7 +11831,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -11503,7 +11953,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -11823,7 +12274,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -11854,7 +12306,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -11883,7 +12336,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -11950,7 +12404,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -11994,7 +12449,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -12115,7 +12571,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -12435,7 +12892,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -12466,7 +12924,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -12495,7 +12954,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -12562,7 +13022,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -12606,7 +13067,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -12693,7 +13155,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -12702,7 +13165,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -12742,7 +13206,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -12751,7 +13216,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -12791,7 +13257,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -12800,7 +13267,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -12840,7 +13308,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -12849,7 +13318,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -13082,7 +13552,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -13113,7 +13584,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -13142,7 +13614,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -13209,7 +13682,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -13253,7 +13727,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -13533,7 +14008,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -13564,7 +14040,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -13593,7 +14070,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -13660,7 +14138,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -13704,7 +14183,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -13984,7 +14464,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -14015,7 +14496,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -14044,7 +14526,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -14111,7 +14594,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -14155,7 +14639,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -14276,7 +14761,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -14596,7 +15082,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -14627,7 +15114,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -14656,7 +15144,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -14723,7 +15212,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -14767,7 +15257,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -14888,7 +15379,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -15208,7 +15700,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -15239,7 +15732,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -15268,7 +15762,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -15335,7 +15830,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -15379,7 +15875,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -15466,7 +15963,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -15534,7 +16032,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -15854,7 +16353,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -15885,7 +16385,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -15914,7 +16415,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -15981,7 +16483,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16025,7 +16528,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16099,6 +16603,56 @@
         }
       }
     },
+    "/api/Procedures": {
+      "get": {
+        "tags": [
+          "Procedures"
+        ],
+        "operationId": "Get",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DBProcedure"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Procedures"
+        ],
+        "operationId": "Put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DBProcedure"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DBProcedure"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Scheduler/Execute/{id}": {
       "get": {
         "tags": [
@@ -16112,7 +16666,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16223,7 +16778,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16543,7 +17099,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16574,7 +17131,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16603,7 +17161,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16670,7 +17229,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16714,7 +17274,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16801,7 +17362,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16835,7 +17397,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16869,7 +17432,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16900,7 +17464,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -16934,7 +17499,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -17010,7 +17576,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -17330,7 +17897,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -17361,7 +17929,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -17390,7 +17959,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -17457,7 +18027,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -17501,7 +18072,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -17622,7 +18194,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -17942,7 +18515,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -17973,7 +18547,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -18002,7 +18577,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -18069,7 +18645,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -18113,7 +18690,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -18234,7 +18812,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -18554,7 +19133,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -18585,7 +19165,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -18614,7 +19195,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -18681,7 +19263,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -18725,7 +19308,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -18846,7 +19430,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -19166,7 +19751,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -19197,7 +19783,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -19226,7 +19813,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -19293,7 +19881,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -19337,7 +19926,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -19458,7 +20048,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -19778,7 +20369,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -19809,7 +20401,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -19838,7 +20431,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -19905,7 +20499,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -19949,7 +20544,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -20070,7 +20666,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -20390,7 +20987,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -20421,7 +21019,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -20450,7 +21049,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -20517,7 +21117,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -20561,7 +21162,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -20682,7 +21284,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21002,7 +21605,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21033,7 +21637,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21062,7 +21667,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21129,7 +21735,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21173,7 +21780,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21260,7 +21868,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -21300,7 +21909,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           },
           {
@@ -21374,7 +21984,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21694,7 +22305,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21725,7 +22337,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21754,7 +22367,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21821,7 +22435,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21865,7 +22480,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -21986,7 +22602,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -22306,7 +22923,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -22337,7 +22955,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -22366,7 +22985,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -22433,7 +23053,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -22477,7 +23098,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -22564,7 +23186,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -22669,7 +23292,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -22815,7 +23439,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -23104,7 +23729,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -23135,7 +23761,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -23164,7 +23791,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -23231,7 +23859,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -23275,7 +23904,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -23396,7 +24026,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -23716,7 +24347,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -23747,7 +24379,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -23776,7 +24409,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -23843,7 +24477,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -23887,7 +24522,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -24008,7 +24644,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -24328,7 +24965,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -24359,7 +24997,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -24388,7 +25027,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -24455,7 +25095,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -24499,7 +25140,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -24756,7 +25398,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25076,7 +25719,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25107,7 +25751,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25136,7 +25781,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25203,7 +25849,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25247,7 +25894,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25334,7 +25982,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25365,7 +26014,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25396,7 +26046,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25483,7 +26134,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25803,7 +26455,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25834,7 +26487,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25863,7 +26517,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25930,7 +26585,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -25974,7 +26630,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -26061,7 +26718,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -26166,7 +26824,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -26312,7 +26971,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -26601,7 +27261,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -26632,7 +27293,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -26661,7 +27323,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -26728,7 +27391,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -26772,7 +27436,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -26859,7 +27524,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -26927,7 +27593,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -27247,7 +27914,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -27278,7 +27946,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -27307,7 +27976,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -27374,7 +28044,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -27418,7 +28089,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -27698,7 +28370,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -27729,7 +28402,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -27758,7 +28432,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -27825,7 +28500,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -27869,7 +28545,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "nullable": true
             }
           }
         ],
@@ -27943,6 +28620,65 @@
         }
       }
     },
+    "/api/WebNotify": {
+      "get": {
+        "tags": [
+          "WebNotify"
+        ],
+        "operationId": "Get",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/WebNotify/Connections": {
+      "get": {
+        "tags": [
+          "WebNotify"
+        ],
+        "operationId": "GetConnections",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WebNotifyConnection"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/WebNotify/Logs": {
+      "get": {
+        "tags": [
+          "WebNotify"
+        ],
+        "operationId": "GetLogs",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StateInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Work/GetTemplates/{id}": {
       "get": {
         "tags": [
@@ -27956,7 +28692,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -27990,7 +28727,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -28024,7 +28762,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -28055,7 +28794,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -28120,7 +28860,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -28440,7 +29181,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -28471,7 +29213,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -28500,7 +29243,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -28567,7 +29311,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -28611,7 +29356,8 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "nullable": true
             }
           }
         ],
@@ -28688,59 +29434,6 @@
   },
   "components": {
     "schemas": {
-      "DBStatus": {
-        "enum": [
-          0,
-          1,
-          2,
-          4,
-          8,
-          16,
-          32
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Empty",
-          "Actual",
-          "New",
-          "Edit",
-          "Error",
-          "Delete",
-          "Archive"
-        ],
-        "x-enumMembers": [
-          "Empty",
-          "Actual",
-          "New",
-          "Edit",
-          "Error",
-          "Delete",
-          "Archive"
-        ]
-      },
-      "DBLogType": {
-        "enum": [
-          0,
-          1,
-          2,
-          3
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "None",
-          "Insert",
-          "Update",
-          "Delete"
-        ],
-        "x-enumMembers": [
-          "None",
-          "Insert",
-          "Update",
-          "Delete"
-        ]
-      },
       "AccessType": {
         "enum": [
           0,
@@ -28809,6 +29502,76 @@
             }
           }
         }
+      },
+      "AccessUpdatePackage": {
+        "type": "object",
+        "properties": {
+          "Ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccessItem"
+            }
+          }
+        }
+      },
+      "DBStatus": {
+        "enum": [
+          0,
+          1,
+          2,
+          4,
+          8,
+          16,
+          32
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Empty",
+          "Actual",
+          "New",
+          "Edit",
+          "Error",
+          "Delete",
+          "Archive"
+        ],
+        "x-enumMembers": [
+          "Empty",
+          "Actual",
+          "New",
+          "Edit",
+          "Error",
+          "Delete",
+          "Archive"
+        ]
+      },
+      "DBLogType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "None",
+          "Insert",
+          "Update",
+          "Delete"
+        ],
+        "x-enumMembers": [
+          "None",
+          "Insert",
+          "Update",
+          "Delete"
+        ]
       },
       "LocationType": {
         "enum": [
@@ -29856,6 +30619,33 @@
           }
         }
       },
+      "ContinentLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LocationLog"
+          }
+        ],
+        "x-type-id": 1
+      },
+      "CountryLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LocationLog"
+          }
+        ],
+        "x-type-id": 2
+      },
+      "CurrencyLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LocationLog"
+          }
+        ],
+        "x-type-id": 3
+      },
       "LocationLog": {
         "type": "object",
         "allOf": [
@@ -29897,6 +30687,16 @@
             "format": "int32"
           }
         },
+        "discriminator": {
+          "propertyName": "ItemType",
+          "mapping": {
+            "0": "#/components/schemas/LocationLog",
+            "5": "#/components/schemas/CityLog",
+            "1": "#/components/schemas/ContinentLog",
+            "2": "#/components/schemas/CountryLog",
+            "3": "#/components/schemas/CurrencyLog"
+          }
+        },
         "x-type-id": 0
       },
       "CityLog": {
@@ -29925,6 +30725,15 @@
             }
           }
         }
+      },
+      "PersoneLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CustomerLog"
+          }
+        ],
+        "x-type-id": 2
       },
       "CustomerLog": {
         "type": "object",
@@ -29994,6 +30803,14 @@
             "format": "int32"
           }
         },
+        "discriminator": {
+          "propertyName": "ItemType",
+          "mapping": {
+            "0": "#/components/schemas/CustomerLog",
+            "1": "#/components/schemas/CompanyLog",
+            "2": "#/components/schemas/PersoneLog"
+          }
+        },
         "x-type-id": 0
       },
       "CompanyLog": {
@@ -30023,15 +30840,6 @@
           }
         }
       },
-      "ContinentLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LocationLog"
-          }
-        ],
-        "x-type-id": 1
-      },
       "ContinentPageContent": {
         "type": "object",
         "properties": {
@@ -30050,15 +30858,6 @@
           }
         }
       },
-      "CountryLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LocationLog"
-          }
-        ],
-        "x-type-id": 2
-      },
       "CountryPageContent": {
         "type": "object",
         "properties": {
@@ -30076,15 +30875,6 @@
             }
           }
         }
-      },
-      "CurrencyLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LocationLog"
-          }
-        ],
-        "x-type-id": 3
       },
       "CurrencyPageContent": {
         "type": "object",
@@ -30614,15 +31404,15 @@
             "maxLength": 250,
             "type": "string"
           },
-          "NameRU": {
-            "maxLength": 512,
-            "type": "string",
-            "x-culture": "ru-RU"
-          },
           "NameEN": {
             "maxLength": 512,
             "type": "string",
             "x-culture": "en-US"
+          },
+          "NameRU": {
+            "maxLength": 512,
+            "type": "string",
+            "x-culture": "ru-RU"
           },
           "AlterName1": {
             "maxLength": 1024,
@@ -30870,7 +31660,7 @@
           },
           "FileLOB": {
             "type": "integer",
-            "format": "int32"
+            "format": "int64"
           },
           "CurrentUserId": {
             "type": "integer",
@@ -31814,7 +32604,7 @@
           },
           "FileLOB": {
             "type": "integer",
-            "format": "int32"
+            "format": "int64"
           }
         },
         "x-type-id": 0
@@ -32347,15 +33137,6 @@
           }
         }
       },
-      "PersoneLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/CustomerLog"
-          }
-        ],
-        "x-type-id": 2
-      },
       "PersonePageContent": {
         "type": "object",
         "properties": {
@@ -32561,135 +33342,6 @@
           }
         }
       },
-      "StatusType": {
-        "enum": [
-          0,
-          1,
-          2
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Information",
-          "Warning",
-          "Error"
-        ],
-        "x-enumMembers": [
-          "Information",
-          "Warning",
-          "Error"
-        ]
-      },
-      "StateInfo": {
-        "type": "object",
-        "properties": {
-          "User": {
-            "type": "string"
-          },
-          "Date": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "Module": {
-            "type": "string"
-          },
-          "Message": {
-            "type": "string"
-          },
-          "Description": {
-            "type": "string"
-          },
-          "Stack": {
-            "type": "string"
-          },
-          "Type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/StatusType"
-              }
-            ]
-          }
-        }
-      },
-      "SchedulerType": {
-        "enum": [
-          0,
-          1,
-          2,
-          3
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Interval",
-          "DayTime",
-          "WeekDay",
-          "Manual"
-        ],
-        "x-enumMembers": [
-          "Interval",
-          "DayTime",
-          "WeekDay",
-          "Manual"
-        ]
-      },
-      "SchedulerLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LogItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "CompanyId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Company": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Company"
-              }
-            ],
-            "x-id": "CompanyId"
-          },
-          "Code": {
-            "type": "string"
-          },
-          "NameRU": {
-            "type": "string"
-          },
-          "NameEN": {
-            "type": "string"
-          },
-          "Order": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/SchedulerType"
-              }
-            ]
-          },
-          "Interval": {
-            "type": "string"
-          },
-          "ProcedureName": {
-            "type": "string"
-          },
-          "DateExecute": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "x-type-id": 0
-      },
       "ParameterDirection": {
         "enum": [
           1,
@@ -32830,6 +33482,135 @@
             ]
           }
         }
+      },
+      "StatusType": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Information",
+          "Warning",
+          "Error"
+        ],
+        "x-enumMembers": [
+          "Information",
+          "Warning",
+          "Error"
+        ]
+      },
+      "StateInfo": {
+        "type": "object",
+        "properties": {
+          "User": {
+            "type": "string"
+          },
+          "Date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Module": {
+            "type": "string"
+          },
+          "Message": {
+            "type": "string"
+          },
+          "Description": {
+            "type": "string"
+          },
+          "Stack": {
+            "type": "string"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatusType"
+              }
+            ]
+          }
+        }
+      },
+      "SchedulerType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Interval",
+          "DayTime",
+          "WeekDay",
+          "Manual"
+        ],
+        "x-enumMembers": [
+          "Interval",
+          "DayTime",
+          "WeekDay",
+          "Manual"
+        ]
+      },
+      "SchedulerLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "Order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SchedulerType"
+              }
+            ]
+          },
+          "Interval": {
+            "type": "string"
+          },
+          "ProcedureName": {
+            "type": "string"
+          },
+          "DateExecute": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "x-type-id": 0
       },
       "Scheduler": {
         "required": [
@@ -33103,6 +33884,47 @@
           }
         }
       },
+      "StageProcedureLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/StageParamLog"
+          }
+        ],
+        "properties": {
+          "ProcedureType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StageParamProcudureType"
+              }
+            ]
+          }
+        },
+        "x-type-id": 4
+      },
+      "StageReferenceLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/StageParamLog"
+          }
+        ],
+        "properties": {
+          "Next": {
+            "type": "boolean"
+          }
+        },
+        "x-type-id": 5
+      },
+      "StageTemplateLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/StageParamLog"
+          }
+        ],
+        "x-type-id": 3
+      },
       "StageParamLog": {
         "type": "object",
         "allOf": [
@@ -33132,6 +33954,16 @@
           },
           "Name": {
             "type": "string"
+          }
+        },
+        "discriminator": {
+          "propertyName": "ItemType",
+          "mapping": {
+            "0": "#/components/schemas/StageParamLog",
+            "2": "#/components/schemas/StageForeignLog",
+            "4": "#/components/schemas/StageProcedureLog",
+            "5": "#/components/schemas/StageReferenceLog",
+            "3": "#/components/schemas/StageTemplateLog"
           }
         },
         "x-type-id": 0
@@ -33181,24 +34013,6 @@
           }
         }
       },
-      "StageProcedureLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/StageParamLog"
-          }
-        ],
-        "properties": {
-          "ProcedureType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/StageParamProcudureType"
-              }
-            ]
-          }
-        },
-        "x-type-id": 4
-      },
       "StageProcedurePageContent": {
         "type": "object",
         "properties": {
@@ -33217,20 +34031,6 @@
           }
         }
       },
-      "StageReferenceLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/StageParamLog"
-          }
-        ],
-        "properties": {
-          "Next": {
-            "type": "boolean"
-          }
-        },
-        "x-type-id": 5
-      },
       "StageReferencePageContent": {
         "type": "object",
         "properties": {
@@ -33248,15 +34048,6 @@
             }
           }
         }
-      },
-      "StageTemplateLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/StageParamLog"
-          }
-        ],
-        "x-type-id": 3
       },
       "StageTemplatePageContent": {
         "type": "object",
@@ -34319,6 +35110,110 @@
             "items": {
               "$ref": "#/components/schemas/UserReg"
             }
+          }
+        }
+      },
+      "WebSocketState": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "None",
+          "Connecting",
+          "Open",
+          "CloseSent",
+          "CloseReceived",
+          "Closed",
+          "Aborted"
+        ],
+        "x-enumMembers": [
+          "None",
+          "Connecting",
+          "Open",
+          "CloseSent",
+          "CloseReceived",
+          "Closed",
+          "Aborted"
+        ]
+      },
+      "WebNotifyConnection": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DefaultItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Date": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "UserEmail": {
+            "type": "string",
+            "readOnly": true
+          },
+          "State": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebSocketState"
+              }
+            ],
+            "readOnly": true
+          },
+          "Address": {
+            "type": "string"
+          },
+          "Action": {
+            "type": "string"
+          },
+          "Platform": {
+            "type": "string"
+          },
+          "Application": {
+            "type": "string"
+          },
+          "Version": {
+            "type": "string"
+          },
+          "ReceiveCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ReceiveLength": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "SendCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SendLength": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "SendErrors": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SendError": {
+            "type": "string"
+          },
+          "SendingCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

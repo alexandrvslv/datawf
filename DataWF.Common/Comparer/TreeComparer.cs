@@ -33,10 +33,11 @@ namespace DataWF.Common
             return Compare((T)x, (T)y);
         }
 
-        public int Compare(IGroup x, IGroup y)
+        int IComparer<IGroup>.Compare(IGroup x, IGroup y)
         {
             return Compare((T)x, (T)y);
         }
+
         #endregion
     }
 

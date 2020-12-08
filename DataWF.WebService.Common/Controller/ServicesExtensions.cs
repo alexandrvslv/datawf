@@ -56,6 +56,7 @@ namespace DataWF.WebService.Common
 
         public static IServiceCollection AddDBProvider(this IServiceCollection services, IDBProvider dataProvider, bool load = false)
         {
+            FindUser = dataProvider.FindUser;
             if (load)
             {
                 dataProvider.Load();

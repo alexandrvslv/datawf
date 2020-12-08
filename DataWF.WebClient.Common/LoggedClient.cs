@@ -10,7 +10,7 @@ namespace DataWF.Common
         where K : struct
         where L : class, new()
     {
-        public LoggedClient(Invoker<T, K?> idInvoker, Invoker<T, int?> typeInvoker, int typeId = 0)
+        public LoggedClient(IInvoker<T, K?> idInvoker, IInvoker<T, int?> typeInvoker, int typeId = 0)
             : base(idInvoker, typeInvoker, typeId)
         { }
 

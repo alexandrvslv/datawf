@@ -9,7 +9,7 @@
         void RemoveItem(object item);
     }
 
-    public interface IListIndexes<T> : IListIndexes
+    public interface IListIndexes<in T> : IListIndexes
     {
         void AddItem(T item);
         void RemoveItem(T item);

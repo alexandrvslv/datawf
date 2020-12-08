@@ -1,5 +1,6 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using DataWF.Module.Common;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -20,7 +21,8 @@ namespace DataWF.Test.Web.Service
                 typeof(Module.Common.User).Assembly,
                 typeof(Module.Counterpart.Customer).Assembly,
                 typeof(Module.Messanger.Message).Assembly,
-                typeof(Module.Flow.Document).Assembly
+                typeof(Module.Flow.Document).Assembly,
+                typeof(TestDataProvider).Assembly,
             });
         }
 
@@ -45,6 +47,22 @@ namespace DataWF.Test.Web.Service
             {
                 initializer.Initialize();
             }
+
+            _ = new UserGroup
+            {
+                Id = 1,
+                NameEN = "admin",                
+            }.SaveOrUpdate((IUserIdentity)null);
+
+            _ = new User
+            {
+                Id = 1,
+                Login = "admin",
+                EMail = "admin@domain.com",
+                AuthType = UserAuthType.Internal,
+                Password = "admin1!",
+                Super = true,
+            }.SaveOrUpdate((IUserIdentity)null);
         }
 
         public override Task CreateNew()
@@ -65,6 +83,11 @@ namespace DataWF.Test.Web.Service
             Schema.CreateDatabase();
             Save();
             return Task.CompletedTask;
+        }
+
+        public override DBUser FindUser(string email)
+        {
+            return User.GetByEmail(email);
         }
     }
     public class Class1

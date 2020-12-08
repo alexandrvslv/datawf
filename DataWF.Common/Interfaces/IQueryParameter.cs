@@ -41,11 +41,14 @@ namespace DataWF.Common
 
         IEnumerable<T> Select(IEnumerable<T> items, IListIndexes<T> indexes = null);
 
-        IEnumerable<T> Distinct(IEnumerable<T> items);        
+        IEnumerable<T> Distinct(IEnumerable<T> items);
     }
 
     public interface IQueryParameter<T, V> : IQueryParameter<T>
     {
+        new IInvoker<T, V> Invoker { get; set; }
+
+
         bool CheckValue(V value);
     }
 

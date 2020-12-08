@@ -1311,6 +1311,19 @@ namespace DataWF.Data
             }
         }
 
+        public Task SaveOrUpdate(IUserIdentity user, DBLoadParam param = DBLoadParam.None)
+        {
+            var exist = FindAndUpdate(param);
+            if (exist != null)
+            {
+                return exist.Save(user);
+            }
+            else
+            {
+                return Save(user);
+            }
+        }
+
         public Task SaveOrUpdate(DBTransaction transaction, DBLoadParam param = DBLoadParam.None)
         {
             var exist = FindAndUpdate(param);
@@ -1456,10 +1469,10 @@ namespace DataWF.Data
                 foreach (var column in Table.Columns)
                 {
                     // || (column.Keys & DBColumnKeys.State) == DBColumnKeys.State
-                    if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
-                        || (column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp)
+                    if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
                     {
-                        continue;
+                        if (!column.IsChanged(this))
+                            continue;
                     }
                     column.Copy(this, exist);
                 }

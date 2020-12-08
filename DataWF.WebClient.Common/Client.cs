@@ -23,7 +23,7 @@ namespace DataWF.Common
         private ICrudClient baseClient;
         private SemaphoreSlim getActionSemaphore;
 
-        public Client(Invoker<T, K?> idInvoker, Invoker<T, int?> typeInvoker, int typeId = 0)
+        public Client(IInvoker<T, K?> idInvoker, IInvoker<T, int?> typeInvoker, int typeId = 0)
         {
             IdInvoker = idInvoker;
             Items.Indexes.Concurrent = true;
@@ -44,9 +44,9 @@ namespace DataWF.Common
 
         public IClientConverter Converter { get; }
 
-        public Invoker<T, K?> IdInvoker { get; }
+        public IInvoker<T, K?> IdInvoker { get; }
 
-        public Invoker<T, int?> TypeInvoker { get; }
+        public IInvoker<T, int?> TypeInvoker { get; }
 
         public int TypeId { get; }
 

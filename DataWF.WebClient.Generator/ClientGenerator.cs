@@ -633,8 +633,8 @@ namespace DataWF.WebClient.Generator
                     SyntaxKind.BaseConstructorInitializer,
                     SF.ArgumentList(
                         SF.SeparatedList(new[] {
-                            SF.Argument(SF.ParseExpression($"{(clientName=="Instance"?Namespace+".":"")}{clientName}.{idName}Invoker<{clientName}>.Default")),
-                            SF.Argument(SF.ParseExpression($"{(clientName=="Instance"?Namespace+".":"")}{clientName}.{typeName}Invoker<{clientName}>.Default")),
+                            SF.Argument(SF.ParseExpression($"{(clientName=="Instance"?Namespace+".":"")}{clientName}.{idName}Invoker.Default")),
+                            SF.Argument(SF.ParseExpression($"{(clientName=="Instance"?Namespace+".":"")}{clientName}.{typeName}Invoker.Default")),
                             SF.Argument(SF.ParseExpression($"{typeId}")),
                         })));
             return SF.ConstructorDeclaration(
@@ -1125,21 +1125,22 @@ namespace DataWF.WebClient.Generator
 
         private ClassDeclarationSyntax GenDefinitionClassPropertyInvoker(string name, string definitionName, string propertyName, string propertyType, List<AttributeListSyntax> attributes)
         {
-            attributes.AddRange(GenDefinitionClassPropertyInvokerAttribute(definitionName, propertyName, $"{definitionName}.{name}<>"));
+            attributes.AddRange(GenDefinitionClassPropertyInvokerAttribute(definitionName, propertyName, $"{definitionName}.{name}"));
             return SF.ClassDeclaration(
                      attributeLists: SF.List<AttributeListSyntax>(),
                      modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),//, SF.Token(SyntaxKind.PartialKeyword)
-                     identifier: SF.Identifier(name + "<T>"),
+                     identifier: SF.Identifier(name),
                      typeParameterList: null,
                      baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
-                            SF.SimpleBaseType(SF.ParseTypeName($"Invoker<T, {propertyType}>")))),
-                     constraintClauses: SF.List(new TypeParameterConstraintClauseSyntax[] {
-                         SF.TypeParameterConstraintClause(
-                             name: SF.IdentifierName("T"),
-                             constraints: SF.SeparatedList(new TypeParameterConstraintSyntax[] {
-                                 SF.TypeConstraint(SF.ParseTypeName(definitionName))
-                             }))
-                     }),
+                            SF.SimpleBaseType(SF.ParseTypeName($"Invoker<{definitionName}, {propertyType}>")))),
+                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                     //SF.List(new TypeParameterConstraintClauseSyntax[] {
+                     //    SF.TypeParameterConstraintClause(
+                     //        name: SF.IdentifierName("T"),
+                     //        constraints: SF.SeparatedList(new TypeParameterConstraintSyntax[] {
+                     //            SF.TypeConstraint(SF.ParseTypeName(definitionName))
+                     //        }))
+                     //}),
                      members: SF.List(GenDefinitionClassPropertyInvokerMemebers(name, propertyName, propertyType, definitionName)));
         }
 
@@ -1148,12 +1149,12 @@ namespace DataWF.WebClient.Generator
             yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword), SF.Token(SyntaxKind.ReadOnlyKeyword)),
                   declaration: SF.VariableDeclaration(
-                      type: SF.ParseTypeName(name + "<T>"),
+                      type: SF.ParseTypeName(name),
                       variables: SF.SingletonSeparatedList(
                           SF.VariableDeclarator(
                               identifier: SF.Identifier("Default"),
                               argumentList: null,
-                              initializer: SF.EqualsValueClause(SF.ParseExpression($"new {name}<T>()"))))));
+                              initializer: SF.EqualsValueClause(SF.ParseExpression($"new {name}()"))))));
 
             //public override string Name { get; }
             yield return SF.PropertyDeclaration(
@@ -1192,7 +1193,7 @@ namespace DataWF.WebClient.Generator
                    parameterList: SF.ParameterList(SF.SeparatedList(new[] {SF.Parameter(
                        attributeLists: SF.List<AttributeListSyntax>(),
                        modifiers: SF.TokenList(),
-                       type: SF.ParseTypeName("T"),
+                       type: SF.ParseTypeName(definitionName),
                        identifier: SF.Identifier("target"),
                        @default: null
                        ) })),
@@ -1212,7 +1213,7 @@ namespace DataWF.WebClient.Generator
                        SF.Parameter(
                            attributeLists: SF.List<AttributeListSyntax>(),
                            modifiers: SF.TokenList(),
-                           type: SF.ParseTypeName("T"),
+                           type: SF.ParseTypeName(definitionName),
                            identifier: SF.Identifier("target"),
                            @default: null),
                        SF.Parameter(
@@ -1554,7 +1555,7 @@ namespace DataWF.WebClient.Generator
                 refField.ValueType = GetTypeString(refField.ValueProperty, false, null);
                 refField.ValueFieldName = GetFieldName(refField.ValueProperty);
 
-                refField.InvokerName = $"{refField.TypeName}.{refkey}Invoker<{refField.TypeName}>.Default";
+                refField.InvokerName = $"{refField.TypeName}.{refkey}Invoker.Default";
 
                 //refField.ParameterType = $"QueryParameter<{refField.TypeName}>";
                 //refField.ParameterName = refField.TypeName + refkey + "Parameter";

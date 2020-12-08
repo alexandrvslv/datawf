@@ -27,5 +27,7 @@ namespace DataWF.Data
     {
         void Load();
         void Save();
+
+        DBUser FindUser(string email);
     }
 }

@@ -1003,21 +1003,21 @@ namespace DataWF.WebService.Generator
 
         private ClassDeclarationSyntax GenPropertyInvoker(string name, string definitionName, string propertyName, string propertyType, string holder, bool canWrite, List<AttributeListSyntax> invokerAttributes)
         {
-            invokerAttributes.AddRange(GenPropertyInvokerAttribute(definitionName, propertyName, $"{holder}.{name}<>"));
+            invokerAttributes.AddRange(GenPropertyInvokerAttribute(definitionName, propertyName, $"{holder}.{name}"));
             return SF.ClassDeclaration(
                      attributeLists: SF.List<AttributeListSyntax>(),
                      modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
-                     identifier: SF.Identifier(name + "<T>"),
+                     identifier: SF.Identifier(name),
                      typeParameterList: null,
                      baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
-                            SF.SimpleBaseType(SF.ParseTypeName($"Invoker<T, {propertyType}>")))),
-                     constraintClauses: SF.List(new TypeParameterConstraintClauseSyntax[] {
-                         SF.TypeParameterConstraintClause(
-                             name: SF.IdentifierName("T"),
-                             constraints: SF.SeparatedList(new TypeParameterConstraintSyntax[] {
-                                 SF.TypeConstraint(SF.ParseTypeName(definitionName))
-                             }))
-                     }),
+                            SF.SimpleBaseType(SF.ParseTypeName($"Invoker<{definitionName}, {propertyType}>")))),
+                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                     //SF.List(new TypeParameterConstraintClauseSyntax[] {
+                     //    SF.TypeParameterConstraintClause(
+                     //        name: SF.IdentifierName("T"),
+                     //        constraints: SF.SeparatedList(new TypeParameterConstraintSyntax[] {
+                     //            SF.TypeConstraint(SF.ParseTypeName(definitionName))
+                     //        }))}),                     
                      members: SF.List(GenPropertyInvokerMemebers(name, propertyName, propertyType, definitionName, canWrite)));
         }
 
@@ -1026,12 +1026,12 @@ namespace DataWF.WebService.Generator
             yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword), SF.Token(SyntaxKind.ReadOnlyKeyword)),
                   declaration: SF.VariableDeclaration(
-                      type: SF.ParseTypeName(name + "<T>"),
+                      type: SF.ParseTypeName(name),
                       variables: SF.SingletonSeparatedList(
                           SF.VariableDeclarator(
                               identifier: SF.Identifier("Default"),
                               argumentList: null,
-                              initializer: SF.EqualsValueClause(SF.ParseExpression($"new {name}<T>()"))))));
+                              initializer: SF.EqualsValueClause(SF.ParseExpression($"new {name}()"))))));
 
             yield return SF.PropertyDeclaration(
                    attributeLists: SF.List<AttributeListSyntax>(),
@@ -1069,7 +1069,7 @@ namespace DataWF.WebService.Generator
                    parameterList: SF.ParameterList(SF.SeparatedList(new[] {SF.Parameter(
                        attributeLists: SF.List<AttributeListSyntax>(),
                        modifiers: SF.TokenList(),
-                       type: SF.ParseTypeName("T"),
+                       type: SF.ParseTypeName(definitionName),
                        identifier: SF.Identifier("target"),
                        @default: null
                        ) })),
@@ -1089,7 +1089,7 @@ namespace DataWF.WebService.Generator
                        SF.Parameter(
                            attributeLists: SF.List<AttributeListSyntax>(),
                            modifiers: SF.TokenList(),
-                           type: SF.ParseTypeName("T"),
+                           type: SF.ParseTypeName(definitionName),
                            identifier: SF.Identifier("target"),
                            @default: null),
                        SF.Parameter(

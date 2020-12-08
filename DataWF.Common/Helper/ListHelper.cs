@@ -57,6 +57,21 @@ namespace DataWF.Common
             return false;
         }
 
+        public static IEnumerable<object> SearchByValue(this IEnumerable itemsSource, IInvoker valueInvoker, object value)
+        {
+            if (itemsSource == null)
+            {
+                yield break;
+            }
+
+            foreach (var item in itemsSource)
+            {
+                if (Equal(valueInvoker.GetValue(item), value))
+                    yield return item;
+            }
+
+        }
+
         public static IEnumerable<object> Intersect(IEnumerable a, IEnumerable b)
         {
             foreach (var item in a)
