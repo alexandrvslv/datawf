@@ -38,7 +38,7 @@ namespace DataWF.Data
 {
 
     [DataContract]
-    //[JsonConverter(typeof(DBItemJsonConverter))]
+    [ElementSerializer(typeof(DBItemSerializer))]
     public class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IDBTableContent, IPullHandler
     {
         public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
@@ -102,12 +102,12 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public byte[] Image
         {
-            get => this[Table.ImageKey] as byte[];
+            get => GetValue(Table.ImageKey);
             set
             {
                 if (Table.ImageKey == null)
                     return;
-                this[Table.ImageKey] = value;
+                SetValue(value, Table.ImageKey);
             }
         }
 
@@ -115,7 +115,7 @@ namespace DataWF.Data
         public object PrimaryId
         {
             get => Table.PrimaryKey?.GetValue(this);
-            set => SetValue(Table.PrimaryKey.ParseValue(value), Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -205,8 +205,8 @@ namespace DataWF.Data
 
         public object this[int columnIndex]
         {
-            get => this[Table.Columns[columnIndex]];
-            set => this[Table.Columns[columnIndex]] = value;
+            get => GetValue(Table.Columns[columnIndex]);
+            set => SetValue(value, Table.Columns[columnIndex]);
         }
 
         public object this[string code]
@@ -229,7 +229,7 @@ namespace DataWF.Data
                     pi = i + 1;
                     i = code.IndexOf('.', pi);
                 }
-                return row[row.Table.ParseColumnProperty(code.Substring(pi))];
+                return row.GetValue(row.Table.ParseColumnProperty(code.Substring(pi)));
             }
             set
             {
@@ -244,7 +244,7 @@ namespace DataWF.Data
                     pi = i + 1;
                     i = code.IndexOf('.', pi);
                 }
-                row[row.Table.ParseColumnProperty(code.Substring(pi))] = value;
+                row.SetValue(value, row.Table.ParseColumnProperty(code.Substring(pi)));
             }
         }
 
@@ -264,9 +264,7 @@ namespace DataWF.Data
                 if (column == null)
                     return;
 
-                SetValue(column.ParseValue(value),
-                         column,
-                         DBSetValueMode.Default);
+                SetValue(value, column, DBSetValueMode.Default);
             }
         }
 
@@ -445,7 +443,7 @@ namespace DataWF.Data
 
         public bool IsChangedKey(DBColumn column)
         {
-            return column.GetOld(this, out _);
+            return column.IsChanged(this);
         }
 
         public virtual bool GetIsChanged()
@@ -457,30 +455,30 @@ namespace DataWF.Data
         {
             foreach (var column in Table.Columns)
             {
-                if (column.GetOld(this, out _))
+                if (column.IsChanged(this))
                 {
                     yield return column;
                 }
             }
         }
 
-        public void SetValues(object[] values)
+        public void SetValues(object[] values, DBSetValueMode mode = DBSetValueMode.Loading)
         {
             if (values == null)
                 return;
 
             for (int i = 0; i < values.Length; i++)
             {
-                var Column = Table.Columns[i];
+                var column = Table.Columns[i];
 
-                if (Column.ColumnType == DBColumnTypes.Default || Column.ColumnType == DBColumnTypes.Query)
+                if (column.ColumnType == DBColumnTypes.Default || column.ColumnType == DBColumnTypes.Query)
                 {
-                    SetValue(values[i], Column, DBSetValueMode.Loading);
+                    SetValue(values[i], column, mode);
                 }
             }
         }
 
-        public void SetValues(Dictionary<string, object> values, DBTable Table)
+        public void SetValues(Dictionary<string, object> values, DBSetValueMode mode = DBSetValueMode.Loading)
         {
             if (values == null)
                 return;
@@ -488,9 +486,10 @@ namespace DataWF.Data
             foreach (var kvp in values)
             {
                 var column = Table.ParseColumn(kvp.Key);
+
                 if (column != null)
                 {
-                    SetValue(kvp.Value, column, DBSetValueMode.Loading);
+                    SetValue(kvp.Value, column, mode);
                 }
             }
         }
@@ -747,7 +746,7 @@ namespace DataWF.Data
             foreach (DBColumn column in Table.Columns)
             {
                 if (!string.IsNullOrEmpty(column.DefaultValue))
-                    SetValue(column.ParseValue(column.DefaultValue), column, DBSetValueMode.Loading);
+                    SetValue((object)column.DefaultValue, column, DBSetValueMode.Loading);
             }
         }
 
@@ -798,11 +797,11 @@ namespace DataWF.Data
         {
             if (culture == null)
                 return;
-            foreach (var column in Table.Columns.GetByGroup(@group))
+            foreach (DBColumn<string> column in Table.Columns.GetByGroup(@group))
             {
                 if (column.Culture.ThreeLetterISOLanguageName == culture.ThreeLetterISOLanguageName)
                 {
-                    this[column] = value;
+                    SetValue(value, column);
                     break;
                 }
             }
@@ -1085,8 +1084,10 @@ namespace DataWF.Data
 
         public virtual int CompareTo(DBItem obj)
         {
-            return obj == null ? 1 : table.index == obj.table.index ? handler.CompareTo(obj.handler) :
-                table.index.CompareTo(obj.table.index);
+            if (obj == null)
+                return 1;
+            var index = table.index.CompareTo(obj.table.index);
+            return index == 0 ? handler.CompareTo(obj.handler) : index;
         }
 
         public string FormatPatch()
@@ -1446,7 +1447,7 @@ namespace DataWF.Data
         public DBItem FindAndUpdate(DBLoadParam param = DBLoadParam.None)
         {
             var exist = PrimaryId == null
-                ? Table.LoadItemByCode(PrimaryCode, Table.CodeKey, param)
+                ? null
                 : Table.LoadItemById(PrimaryId, param);
             if (exist != null)
             {
@@ -1466,43 +1467,57 @@ namespace DataWF.Data
             return exist;
         }
 
-        public static DateTime GetDateVal(object val)
+        public DateTime GetDate(string column)
         {
-            if (val == null)
-                return DateTime.MinValue;
-            if (val is DateTime)
-                return (DateTime)val;
-            return DateTime.Parse(val.ToString());
+            return GetDate(Table.ParseColumnProperty(column));
         }
 
         public DateTime GetDate(DBColumn column)
         {
-            return GetDateVal(this[column]);
-        }
-
-        public DateTime GetDate(string column)
-        {
-            return GetDateVal(this[column]);
+            if (column is DBColumn<DateTime> dateColumn)
+                return dateColumn.GetValue(this);
+            if (column is DBColumn<DateTime?> nDateColumn)
+                return nDateColumn.GetValue(this) ?? DateTime.MinValue;
+            if (column is DBColumn<string> stringColumn)
+                return DateTime.Parse(stringColumn.GetValue(this));
+            else
+                throw new Exception("Unsupported Column type");
         }
 
         public void SetDate(DBColumn column, DateTime value)
         {
-            this[column] = value;
+            if (column is DBColumn<DateTime> dateColumn)
+                SetValue(value, dateColumn);
+            if (column is DBColumn<DateTime?> nDateColumn)
+                SetValue<DateTime?>(value, nDateColumn);
+            if (column is DBColumn<string> stringColumn)
+                SetValue(value.ToString("u"), stringColumn);
+            else
+                throw new Exception("Unsupported Column type");
         }
 
         public TimeSpan GetTimeSpan(DBColumn column)
         {
-            object val = this[column];
-            if (val == null)
-                return new TimeSpan();
-            if (val is TimeSpan)
-                return (TimeSpan)val;
-            return TimeSpan.Parse(val.ToString());
+            if (column is DBColumn<TimeSpan> dateColumn)
+                return dateColumn.GetValue(this);
+            if (column is DBColumn<TimeSpan?> nDateColumn)
+                return nDateColumn.GetValue(this) ?? TimeSpan.MinValue;
+            if (column is DBColumn<string> stringColumn)
+                return TimeSpan.Parse(stringColumn.GetValue(this));
+            else
+                throw new Exception("Unsupported Column type");
         }
 
         public void SetTimeSpan(DBColumn column, TimeSpan value)
         {
-            this[column] = value;
+            if (column is DBColumn<TimeSpan> dateColumn)
+                SetValue(value, dateColumn);
+            if (column is DBColumn<TimeSpan?> nDateColumn)
+                SetValue<TimeSpan?>(value, nDateColumn);
+            if (column is DBColumn<string> stringColumn)
+                SetValue(value.ToString(), stringColumn);
+            else
+                throw new Exception("Unsupported Column type");
         }
 
         public async Task<Stream> GetStream(DBTransaction transaction, int bufferSize = 81920)

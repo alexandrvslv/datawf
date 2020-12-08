@@ -99,7 +99,7 @@ namespace DataWF.Data
                         var logColumn = GetLogColumn(column);
                         if (logColumn == null)
                         {
-                            logColumn = DBColumnFactory.CreateLog(column);
+                            logColumn = DBColumnFactory.CreateLog(column, this);
                             Columns.Add(logColumn);
                         }
                         else

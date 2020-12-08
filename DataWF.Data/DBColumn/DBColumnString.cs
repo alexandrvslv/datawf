@@ -45,5 +45,10 @@ namespace DataWF.Data
             var value = transaction.Reader.GetString(i);
             return PullIndex?.SelectOne<F>(value);
         }
+
+        public override string Parse(object value)
+        {
+            return Helper.TextBinaryFormat(value);
+        }
     }
 }

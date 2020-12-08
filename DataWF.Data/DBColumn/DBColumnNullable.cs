@@ -21,6 +21,7 @@ using DataWF.Common;
 using DataWF.Data;
 using System;
 using System.Globalization;
+using System.Text.Json;
 
 namespace DataWF.Data
 {
@@ -37,9 +38,19 @@ namespace DataWF.Data
             return Nullable.Equals<T>(oldValue, newValue);
         }
 
-        public override void SetValue(object item, object value)
+        protected override T? GetReferenceId(DBItem item)
         {
-            base.SetValue((DBItem)item, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
+            if (item.Table.PrimaryKey is DBColumn<T> typedColumn)
+                return typedColumn.GetValue(item);
+            return base.GetReferenceId(item);
+        }
+
+
+        protected override DBItem LoadReference(T? id, DBLoadParam param)
+        {
+            if (ReferenceTable.PrimaryKey is DBColumn<T>)
+                return ReferenceTable.LoadItemById((T)id, param);
+            return base.LoadReference(id, param);
         }
 
         public override object GetParameterValue(DBItem item)
@@ -69,6 +80,49 @@ namespace DataWF.Data
             else
             {
                 return string.Empty;
+            }
+        }
+
+        public override T? Parse(object value)
+        {
+            return base.Parse(value);
+        }
+
+        public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, T?> valueInvoker)
+            {
+                var value = valueInvoker.GetValue(element);
+                if (value == null)
+                    writer.WriteNull(JsonName);
+                else
+                {
+                    writer.WritePropertyName(JsonName);
+                    JsonSerializer.Serialize(writer, (T)value, options);
+                }
+            }
+            else
+            {
+                Write(writer, (object)element, options);
+            }
+        }
+
+        public override void Write(Utf8JsonWriter writer, object element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IValuedInvoker<T?> valueInvoker)
+            {
+                var value = valueInvoker.GetValue(element);
+                if (value == null)
+                    writer.WriteNull(JsonName);
+                else
+                {
+                    writer.WritePropertyName(JsonName);
+                    JsonSerializer.Serialize(writer, (T)value, options);
+                }
+            }
+            else
+            {
+                throw new Exception("Wrong Property Invoker");
             }
         }
     }

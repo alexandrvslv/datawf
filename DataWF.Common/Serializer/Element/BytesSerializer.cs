@@ -6,13 +6,13 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Common
 {
-    public class BytesSerializer<T> : ElementSerializer<T> where T : IBinarySerializable
+    public class BytesSerializer<T> : ElementSerializer<T> where T : IBinarySerializable,new()
     {
         public override bool CanConvertString => false;
 
         public override T Read(BinaryReader reader)
         {
-            var obj = (T)FormatterServices.GetUninitializedObject(typeof(T));
+            var obj = new T();
             obj.Deserialize(reader);
             return obj;
         }
@@ -29,7 +29,7 @@ namespace DataWF.Common
         public override T FromString(string value)
         {
             var buffer = Convert.FromBase64String(value);
-            var obj = (T)FormatterServices.GetUninitializedObject(typeof(T));
+            var obj = new T();
             obj.Deserialize(buffer);
             return obj;
         }

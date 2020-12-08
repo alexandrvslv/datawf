@@ -97,6 +97,7 @@ namespace DataWF.Data
         private IInvoker propertyInvoker;
         private PropertyInfo referencePropertyInfo;
         private JsonEncodedText? jsonName;
+        private JsonEncodedText? jsonReferenceName;
         private const int bufferSize = 4048;
 
         #endregion
@@ -126,7 +127,11 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
+        public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(PropertyName ?? Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public JsonEncodedText JsonReferenceName { get => jsonReferenceName ?? (jsonReferenceName = JsonEncodedText.Encode(ReferencePropertyName, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
+
 
         [Browsable(false)]
         public string BaseName { get; set; }
@@ -703,7 +708,6 @@ namespace DataWF.Data
             Name = GetLogName(baseColumn);
             DisplayName = baseColumn.DisplayName + " Log";
             DBDataType = baseColumn.DBDataType;
-            DataType = baseColumn.DataType;
             ReferenceTable = baseColumn.ReferenceTable;
             Size = baseColumn.Size;
             Scale = baseColumn.Scale;
@@ -893,6 +897,8 @@ namespace DataWF.Data
 
         public abstract void Copy(DBItem fromItem, DBItem toItem, DBSetValueMode mode = DBSetValueMode.Default);
 
+        public abstract bool IsChanged(DBItem item);
+
         public abstract bool GetOld(DBItem item, out object obj);
 
         public abstract void Reject(DBItem dBItem, DBSetValueMode mode = DBSetValueMode.Default);
@@ -966,24 +972,9 @@ namespace DataWF.Data
 
         public abstract string FormatValue(object val);
 
-        public object ParseValue(object value)
-        {
-            object buf = null;
-            if (value is bool && (Keys & DBColumnKeys.Boolean) == DBColumnKeys.Boolean && DataType != typeof(bool))
-                value = (bool)value ? BoolTrue : BoolFalse;
+        public abstract object ParseValue(object value);
 
-            if (value == null || value == DBNull.Value)
-                buf = null;
-            else if (value is DBItem item)
-                buf = item.PrimaryId;
-            else
-                buf = Helper.Parse(value, DataType);
-
-            if (buf is DateTime && buf.Equals(DateTime.MinValue))
-                buf = null;
-
-            return buf;
-        }
+        public abstract bool CheckItem(DBItem item, object val2, CompareType comparer);
 
         public void RemoveConstraints()
         {

@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Globalization;
 
 namespace DataWF.Data
 {
@@ -55,6 +56,18 @@ namespace DataWF.Data
             if (Format != null)
                 return val.ToString(Format);
             return val.Equals(val.Date) ? val.ToString("yyyy.MM.dd") : val.ToString();
+        }
+
+        public override DateTime Parse(object value)
+        {
+            if (value is DateTime typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return DateTime.MinValue;
+            if (value is DBItem item)
+                return GetReferenceId(item);
+            
+            return Convert.ToDateTime(value, CultureInfo.InvariantCulture);
         }
     }
 }

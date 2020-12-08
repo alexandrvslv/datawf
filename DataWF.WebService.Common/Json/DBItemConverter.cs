@@ -5,6 +5,7 @@ using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -46,15 +47,16 @@ namespace DataWF.WebService.Common
                     Factory.referenceSet.Add(value);
                 }
             }
-
+            Debug.WriteLine($"Write {valueType.Name} {value}");
             writer.WriteStartObject();
             foreach (DBColumn column in columns)
             {
+                Debug.WriteLine($"Write {column}");
                 if ((column.Keys & DBColumnKeys.Access) != 0)
                 {
                     var propertyValue = (AccessValue)column.PropertyInvoker.GetValue(value);
                     var accessValue = propertyValue.GetFlags(Factory.CurrentUser);
-                    writer.WritePropertyName(column.PropertyInvoker.JsonName);
+                    writer.WritePropertyName(column.JsonName);
                     JsonSerializer.Serialize<AccessType>(writer, accessValue, options);
                 }
                 else
@@ -73,7 +75,7 @@ namespace DataWF.WebService.Common
                     {
                         continue;
                     }
-                    writer.WritePropertyName(column.ReferencePropertyInvoker.JsonName);
+                    writer.WritePropertyName(column.JsonReferenceName);
                     JsonSerializer.Serialize(writer, item, column.ReferencePropertyInvoker.DataType, options);
                 }
             }
@@ -81,7 +83,7 @@ namespace DataWF.WebService.Common
             {
                 foreach (IInvoker invoker in value.Table.GetRefingInvokers(valueType))
                 {
-                    writer.WritePropertyName(invoker.JsonName);
+                    writer.WritePropertyName(invoker.Name);
 
                     var typedEnumerable = invoker.GetValue(value)?.ToEnumerable<DBItem>();
                     if (typedEnumerable != null)

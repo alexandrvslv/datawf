@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Globalization;
 
 namespace DataWF.Data
 {
@@ -46,6 +47,18 @@ namespace DataWF.Data
             if (value == null)
                 return DBNull.Value;
             return (long)value;
+        }
+
+        public override ulong? Parse(object value)
+        {
+            if (value is ulong typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return (ulong?)null;
+            if (value is DBItem item)
+                return GetReferenceId(item);
+            
+            return Convert.ToUInt64(value, CultureInfo.InvariantCulture);
         }
     }
 }

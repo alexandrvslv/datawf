@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using DataWF.Data;
+using System;
 
 namespace DataWF.Data
 {
@@ -58,6 +59,27 @@ namespace DataWF.Data
             {
                 return Helper.LenghtFormat(val.Length);
             }
+        }
+
+        public override byte[] Parse(object value)
+        {
+            if (value is byte[] typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return null;
+            if (value is string stringValue)
+            {
+                try
+                {
+                    return Convert.FromBase64String(stringValue);
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    throw;
+                }
+            }
+            return base.Parse(value);
         }
     }
 }

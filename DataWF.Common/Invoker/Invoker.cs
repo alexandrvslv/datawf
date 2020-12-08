@@ -13,16 +13,12 @@ namespace DataWF.Common
 
     public abstract class Invoker<T, V> : IInvoker<T, V>, IValuedInvoker<V>, IInvokerExtension
     {
-        private JsonEncodedText? jsonName;
-
         public Invoker()
         {
             DataType = typeof(V);
         }
 
         public abstract string Name { get; }
-
-        public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
 
         public Type DataType { get; set; }// { get { return typeof(V); } }
 
@@ -68,17 +64,42 @@ namespace DataWF.Common
         public virtual IQueryParameter CreateParameter(Type type)
         {
             type = type ?? typeof(T);
-            return (IQueryParameter)Activator.CreateInstance(typeof(QueryParameter<>).MakeGenericType(type), (IInvoker)this);
+            return (IQueryParameter)Activator.CreateInstance(typeof(QueryParameter<,>).MakeGenericType(type, typeof(V)), (IInvoker)this);
         }
 
-        public virtual QueryParameter<TT> CreateParameter<TT>()
+        public virtual IQueryParameter CreateParameter(Type type, CompareType compare, object value)
         {
-            return new QueryParameter<TT> { Invoker = this };
+            type = type ?? typeof(T);
+            var parameter = CreateParameter(type);
+            parameter.Comparer = compare;
+            parameter.Value = value;
+            return parameter;
         }
 
-        public virtual QueryParameter<TT> CreateParameter<TT>(CompareType compare, object value)
+        public virtual IQueryParameter CreateParameter(Type type, LogicType logic, CompareType compare, object value = null, QueryGroup group = QueryGroup.None)
         {
-            return new QueryParameter<TT> { Invoker = this, Comparer = compare, Value = value };
+            type = type ?? typeof(T);
+            var parameter = CreateParameter(type);
+            parameter.Logic = logic;
+            parameter.Comparer = compare;
+            parameter.Value = value;
+            parameter.Group = group;
+            return parameter;
+        }
+
+        public virtual IQueryParameter<TT> CreateParameter<TT>()
+        {
+            return CreateParameter<TT>(CompareType.Equal, null);
+        }
+
+        public virtual IQueryParameter<TT> CreateParameter<TT>(CompareType compare, object value)
+        {
+            return new QueryParameter<TT, V> { Invoker = (IInvoker<TT, V>)this, Comparer = compare, Value = value };
+        }
+
+        public virtual IQueryParameter<TT> CreateParameter<TT>(LogicType logic, CompareType compare, object value = null, QueryGroup group = QueryGroup.None)
+        {
+            return new QueryParameter<TT, V> { Logic = logic, Invoker = (IInvoker<TT, V>)this, Comparer = compare, Value = value, Group = group };
         }
 
         public virtual IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)

@@ -149,6 +149,7 @@ namespace DataWF.Data
 
         private void GenerateVirtualTables(DBSchema schema)
         {
+            Table.ItemTypes.Clear();
             foreach (var itemType in cacheItemTypes)
             {
                 Table.ItemTypes[itemType.Attribute.Id] = new DBItemType { Type = itemType.Type };

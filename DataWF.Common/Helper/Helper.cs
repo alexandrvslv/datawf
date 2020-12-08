@@ -1078,57 +1078,25 @@ namespace DataWF.Common
 
         public static string TextBinaryFormat(object value)
         {
+            if (value is string stringValue)
+                return stringValue;
+
             if (value == null || value == DBNull.Value)
                 return null;
-            string result;
 
-            if (value is string stringValue)
-            {
-                result = stringValue;
-            }
-            if (value is CultureInfo cultureInfo)
-            {
-                result = cultureInfo.Name;
-            }
-            else if (value is Type typeValue)
-            {
-                result = TypeHelper.FormatBinary(typeValue);
-            }
-            else if (value is MemberInfo memberInfo)
-            {
-                result = $"{TypeHelper.FormatBinary(memberInfo.DeclaringType)};{memberInfo.Name}";
-            }
-            else if (value is byte[] byteArray)
-            {
-                result = Convert.ToBase64String(byteArray);
-            }
-            else if (value is DateTime dataValue)
-            {
-                result = dataValue.ToBinary().ToString();
-            }
-            else if (value is TimeSpan spanValue)
-            {
-                result = spanValue.ToString();
-            }
+            var serializer = TypeHelper.GetSerializer(value.GetType());
+            if (serializer != null && serializer.CanConvertString)
+                return serializer.ObjectToString(value);
             else if (value is IFormattable formattable)
-            {
-                result = formattable.ToString(string.Empty, CultureInfo.InvariantCulture);
-            }
+                return formattable.ToString(string.Empty, CultureInfo.InvariantCulture);
             else
             {
-                var serializer = TypeHelper.GetSerializer(value.GetType());
-                if (serializer != null)
-                    result = serializer.ObjectToString(value);
+                var typeConverter = TypeHelper.GetTypeConverter(value.GetType());
+                if (typeConverter != null && typeConverter.CanConvertTo(typeof(string)))
+                    return (string)typeConverter.ConvertTo(value, typeof(string));
                 else
-                {
-                    var typeConverter = TypeHelper.GetTypeConverter(value.GetType());
-                    if (typeConverter != null && typeConverter.CanConvertTo(typeof(string)))
-                        result = (string)typeConverter.ConvertTo(value, typeof(string));
-                    else
-                        result = value.ToString();
-                }
+                    return value.ToString();
             }
-            return result;
         }
 
         public static string LenghtFormat(ulong l)
@@ -1235,41 +1203,66 @@ namespace DataWF.Common
                 || TypeHelper.IsInterface(value.GetType(), type))
                 buf = value;
             else if (type == typeof(string))
-            {
                 buf = TextDisplayFormat(value, null);
+            else if (type == typeof(int))
+                buf = Convert.ToInt32(value, CultureInfo.InvariantCulture);
+            else if (type == typeof(long))
+                buf = Convert.ToInt64(value, CultureInfo.InvariantCulture);
+            else if (type == typeof(short))
+                buf = Convert.ToInt16(value, CultureInfo.InvariantCulture);
+            else if (type == typeof(sbyte))
+                buf = Convert.ToSByte(value, CultureInfo.InvariantCulture);
+            else if (type == typeof(uint))
+                buf = Convert.ToUInt32(value, CultureInfo.InvariantCulture);
+            else if (type == typeof(ulong))
+                buf = Convert.ToUInt64(value, CultureInfo.InvariantCulture);
+            else if (type == typeof(ushort))
+                buf = Convert.ToUInt16(value, CultureInfo.InvariantCulture);
+            else if (type == typeof(byte))
+                buf = Convert.ToByte(value, CultureInfo.InvariantCulture);
+            else if (type == typeof(decimal))
+                buf = Convert.ToDecimal(value, CultureInfo.InvariantCulture);
+            else if (type == typeof(double))
+                buf = Convert.ToDouble(value, CultureInfo.InvariantCulture);
+            else if (type == typeof(float))
+                buf = Convert.ToSingle(value, CultureInfo.InvariantCulture);
+            else if (type == typeof(DateTime))
+                buf = Convert.ToDateTime(value, CultureInfo.InvariantCulture);
+            else if (type.IsEnum)
+            {
+                if (value is string enumText)
+                {
+                    try
+                    {
+                        return Enum.Parse(type, enumText);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnException(ex);
+                    }
+                }
+                var enumType = Enum.GetUnderlyingType(type);
+                if (enumType == typeof(int))
+                    buf = Convert.ToInt32(value, CultureInfo.InvariantCulture);
+                else if (enumType == typeof(long))
+                    buf = Convert.ToInt64(value, CultureInfo.InvariantCulture);
+                else if (enumType == typeof(short))
+                    buf = Convert.ToInt16(value, CultureInfo.InvariantCulture);
+                else if (enumType == typeof(sbyte))
+                    buf = Convert.ToSByte(value, CultureInfo.InvariantCulture);
+                else if (enumType == typeof(uint))
+                    buf = Convert.ToUInt32(value, CultureInfo.InvariantCulture);
+                else if (enumType == typeof(ulong))
+                    buf = Convert.ToUInt64(value, CultureInfo.InvariantCulture);
+                else if (enumType == typeof(ushort))
+                    buf = Convert.ToUInt16(value, CultureInfo.InvariantCulture);
+                else if (enumType == typeof(byte))
+                    buf = Convert.ToByte(value, CultureInfo.InvariantCulture);
+                buf = Enum.ToObject(type, buf);
             }
             else if (value is string text)
             {
                 buf = TextParse(text, type, null);
-            }
-            else if (value is int intValue)
-            {
-                if (type == typeof(short))
-                    buf = (short)intValue;
-                else if (type == typeof(byte))
-                    buf = (byte)intValue;
-                else if (type.IsEnum)
-                    buf = Enum.ToObject(type, intValue);
-                else if (type == typeof(long))
-                    buf = (long)intValue;
-            }
-            else if (value is long longValue)
-            {
-                if (type == typeof(int))
-                    buf = (int)longValue;
-                else if (type == typeof(short))
-                    buf = (short)longValue;
-                else if (type == typeof(byte))
-                    buf = (byte)longValue;
-                else if (type.IsEnum)
-                    buf = Enum.ToObject(type, longValue);
-            }
-            else if (value is decimal mValue)
-            {
-                if (type == typeof(double))
-                    buf = (double)mValue;
-                if (type == typeof(float))
-                    buf = (float)mValue;
             }
             else
             {
@@ -1322,7 +1315,9 @@ namespace DataWF.Common
                 }
             }
             else if (type == typeof(TimeSpan))
+            {
                 result = TimeSpan.TryParse(value, CultureInfo.InvariantCulture, out var timeSpan) ? timeSpan : TimeSpan.MinValue;
+            }
             else if (type.IsEnum)
             {
                 result = value.Equals("null", StringComparison.Ordinal) ? null : EnumItem.Parse(type, value);

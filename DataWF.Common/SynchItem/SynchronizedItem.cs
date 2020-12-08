@@ -79,7 +79,7 @@ namespace DataWF.Common
             return false;
         }
 
-        protected override void OnPropertyChanged(object oldValue, object newValue, [CallerMemberName] string propertyName = null)
+        protected override void OnPropertyChanged<T>(T oldValue, T newValue, [CallerMemberName] string propertyName = null)
         {
             if (syncStatus == SynchronizedStatus.Actual)
             {
@@ -93,7 +93,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    if (ListHelper.Equal(cacheValue, newValue))
+                    if (ListHelper.Equal((T)cacheValue, newValue))
                     {
                         Changes.Remove(propertyName);
                         if (syncStatus == SynchronizedStatus.Edit

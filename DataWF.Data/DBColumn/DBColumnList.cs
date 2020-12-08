@@ -115,6 +115,8 @@ namespace DataWF.Data
 
         public override DDLType GetInsertType(T item)
         {
+            if (isVirtual)
+                return DDLType.Default;
             var isReplace = toReplace.Remove(item);
             return (item.ColumnType == DBColumnTypes.Default)
                 ? isReplace ? DDLType.Alter : DDLType.Create

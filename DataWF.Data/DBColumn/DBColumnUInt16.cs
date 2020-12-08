@@ -18,6 +18,9 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 
+using System;
+using System.Globalization;
+
 namespace DataWF.Data
 {
     public class DBColumnUInt16 : DBColumn<ushort>
@@ -42,6 +45,18 @@ namespace DataWF.Data
         {
             var value = GetValue(item);
             return (short)value;
+        }
+
+        public override ushort Parse(object value)
+        {
+            if (value is ushort typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return (ushort)0;
+            if (value is DBItem item)
+                return GetReferenceId(item);
+            
+            return Convert.ToUInt16(value, CultureInfo.InvariantCulture);
         }
     }
 }

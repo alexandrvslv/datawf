@@ -7,8 +7,6 @@ namespace DataWF.Common
 {
     public class QField : IIndexInvoker<object[], object, int>, IValuedInvoker<object>
     {
-        private JsonEncodedText? jsonName;
-
         public int Index { get; set; }
 
         public bool CanWrite { get { return true; } }
@@ -18,8 +16,6 @@ namespace DataWF.Common
         public Type TargetType { get { return typeof(object[]); } }
 
         public string Name { get; set; }
-
-        public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
 
         object IIndexInvoker.Index { get => Index; set => Index = (int)value; }
 
@@ -75,7 +71,7 @@ namespace DataWF.Common
 
         public IQueryParameter CreateParameter()
         {
-            return new QueryParameter<object[]>(this);
+            return new QueryParameter<object[], object>(this);
         }
 
         public bool CheckItem(object[] item, object typedValue, CompareType comparer, IComparer comparision)

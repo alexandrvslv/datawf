@@ -88,9 +88,24 @@ namespace DataWF.Data
             return ((IInvokerExtension)Invoker).CreateParameter(type);
         }
 
-        public QueryParameter<TT> CreateParameter<TT>()
+        public IQueryParameter CreateParameter(Type type, CompareType comparer, object value)
         {
-            return ((IInvokerExtension)Invoker).CreateParameter<TT>();
+            return ((IInvokerExtension)Invoker).CreateParameter(type, comparer, value);
+        }
+
+        public IQueryParameter CreateParameter(Type type, LogicType logic, CompareType comparer, object value = null, QueryGroup group = QueryGroup.None)
+        {
+            return ((IInvokerExtension)Invoker).CreateParameter(type, logic, comparer, value, group);
+        }
+
+        public IQueryParameter<TT> CreateParameter<TT>(CompareType comparer, object value)
+        {
+            return ((IInvokerExtension)Invoker).CreateParameter<TT>(comparer, value);
+        }
+
+        public IQueryParameter<TT> CreateParameter<TT>(LogicType logic, CompareType comparer, object value = null, QueryGroup group = QueryGroup.None)
+        {
+            return ((IInvokerExtension)Invoker).CreateParameter<TT>(logic, comparer, value, group);
         }
 
         public IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
@@ -102,5 +117,7 @@ namespace DataWF.Data
         {
             return ((IInvokerExtension)Invoker).CreateComparer<TT>(direction);
         }
+
+
     }
 }

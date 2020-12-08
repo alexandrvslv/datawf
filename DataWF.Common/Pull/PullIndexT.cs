@@ -11,7 +11,7 @@ namespace DataWF.Common
     public class PullIndex<T, K> : PullIndex, IDisposable
         where T : class, IPullHandler
     {
-        private ConcurrentDictionary<K, ThreadSafeList<T>> store;
+        private readonly ConcurrentDictionary<K, ThreadSafeList<T>> store;
         private readonly IComparer<T> valueComparer;
         private readonly IEqualityComparer<K> keyComparer;
         private readonly K nullKey;
@@ -164,6 +164,7 @@ namespace DataWF.Common
         public virtual void RefreshSort(T item)
         {
             var key = ReadItem(item);
+            CheckNull(ref key);
             if (store.TryGetValue(key, out var val))
             {
                 var index = val.BinarySearch(item, valueComparer);
@@ -176,9 +177,7 @@ namespace DataWF.Common
 
         public K ReadItem(T item)
         {
-            var key = Pull.GetValue(item.Block, item.BlockIndex);
-            CheckNull(ref key);
-            return key;
+            return Pull.GetValue(item.Block, item.BlockIndex);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -263,107 +262,102 @@ namespace DataWF.Common
         {
             IEnumerable<F> buf = Enumerable.Empty<F>();
 
-            if (compare.Type.Equals(CompareTypes.Is))
+            switch (compare.Type)
             {
-                compare = new CompareType(CompareTypes.Equal, compare.Not);
-                value = nullKey;
-            }
-            if (compare.Type.Equals(CompareTypes.Equal))
-            {
-                var key = CheckNull(value);
-                if (!compare.Not)
-                {
-                    buf = Select<F>(key);
-                }
-                else
-                {
-                    buf = Search<F>((item) => !item.Equals(key));
-                }
-            }
-            else if (compare.Type.Equals(CompareTypes.In))
-            {
-                //&& value is IList
-                if (!compare.Not)
-                {
-                    foreach (var item in (IEnumerable)value)
+                case CompareTypes.Like:
+                    var regex = value as Regex ?? Helper.BuildLike(value.ToString());
+                    buf = Search<F>((item) => regex.IsMatch(item.ToString()));
+                    break;
+                case CompareTypes.In:
+                    //&& value is IList
+                    if (!compare.Not)
                     {
-                        object comp = item;
-                        if (comp is IValued valued)
-                            comp = valued.GetValue();
-                        if (comp is string stringed)
-                            comp = stringed.Trim(' ', '\'');
-
-                        var temp = Select<F>(CheckNull(comp));
-                        if (buf == null)
+                        foreach (var item in (IEnumerable)value)
                         {
-                            buf = temp;
-                        }
-                        else
-                        {
-                            buf = buf.Concat(temp);
-                        }
-                    }
-                }
-                else
-                {
-                    buf = Search<F>((item) =>
-                    {
-                        foreach (var element in (IEnumerable)value)
-                        {
-                            object comp = element;
+                            object comp = item;
                             if (comp is IValued valued)
                                 comp = valued.GetValue();
                             if (comp is string stringed)
                                 comp = stringed.Trim(' ', '\'');
-                            if (item.Equals(comp))
-                                return false;
-                        }
-                        return true;
-                    });
-                }
-            }
-            else if (compare.Type.Equals(CompareTypes.Between))
-            {
-                if (!(value is IBetween between))
-                    throw new Exception("Expect QBetween but Get " + value == null ? "null" : value.GetType().FullName);
-                var min = CheckNull(between.MinValue());
-                var max = CheckNull(between.MaxValue());
-                buf = Select<F>(min);
-                buf = buf.Concat(Select<F>(max));
-                buf = buf.Concat(Search<F>((item) => ((IComparable)item).CompareTo(max) > 0));
-                buf = buf.Concat(Search<F>((item) => ((IComparable)item).CompareTo(min) < 0));
-            }
-            else if (compare.Type.Equals(CompareTypes.Like))
-            {
-                var regex = value is Regex ? (Regex)value : Helper.BuildLike(value.ToString());
-                buf = Search<F>((item) => regex.IsMatch(item.ToString()));
-            }
-            else if (value is IComparable)
-            {
-                var key = CheckNull(value);
 
-                if (compare.Type.Equals(CompareTypes.Greater))
-                {
-                    buf = Search<F>((item) => ((IComparable)item).CompareTo(key) > 0);
-                }
-                else if (compare.Type.Equals(CompareTypes.GreaterOrEqual))
-                {
-                    buf = Select<F>(key);
-                    buf = buf.Concat(Search<F>((item) => ((IComparable)item).CompareTo(key) > 0));
-                }
-                else if (compare.Type.Equals(CompareTypes.Less))
-                {
-                    buf = Search<F>((item) => ((IComparable)item).CompareTo(key) < 0);
-                }
-                else if (compare.Type.Equals(CompareTypes.LessOrEqual))
-                {
-                    buf = Select<F>(key);
-                    buf = buf.Concat(Search<F>((item) => ((IComparable)item).CompareTo(key) < 0));
-                }
+                            var temp = Select<F>(CheckNull(comp));
+                            if (buf == null)
+                            {
+                                buf = temp;
+                            }
+                            else
+                            {
+                                buf = buf.Concat(temp);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        buf = Search<F>((item) =>
+                        {
+                            foreach (var element in (IEnumerable)value)
+                            {
+                                object comp = element;
+                                if (comp is IValued valued)
+                                    comp = valued.GetValue();
+                                if (comp is string stringed)
+                                    comp = stringed.Trim(' ', '\'');
+                                if (item.Equals(comp))
+                                    return false;
+                            }
+                            return true;
+                        });
+                    }
+                    break;
+                case CompareTypes.Between:
+                    if (!(value is IBetween between))
+                        throw new Exception("Expect QBetween but Get " + value == null ? "null" : value.GetType().FullName);
+                    var min = CheckNull(between.MinValue());
+                    var max = CheckNull(between.MaxValue());
+                    buf = Select<F>(min);
+                    buf = buf.Concat(Select<F>(max));
+                    buf = buf.Concat(Search<F>((item) => ListHelper.Compare(item, max) > 0
+                                                      && ListHelper.Compare(item, min) < 0));
+                    break;
+                default:
+                    buf = Select<F>(CheckNull(value), compare);
+                    break;
             }
             return buf;
         }
 
+        public IEnumerable<F> Select<F>(K key, CompareType compare) where F : class
+        {
+            switch (compare.Type)
+            {
+                case CompareTypes.Is:
+                    if (!compare.Not)
+                        return Select<F>(nullKey);
+                    else
+                        return Search<F>((item) => !ListHelper.Equal<K>(item, nullKey));
+                case CompareTypes.Equal:
+                    if (!compare.Not)
+                        return Select<F>(key);
+                    else
+                    {
+                        CheckNull(ref key);
+                        return Search<F>((item) => !ListHelper.Equal<K>(item, key));
+                    }
+                case CompareTypes.Greater:
+                    CheckNull(ref key);
+                    return Search<F>((item) => ListHelper.Compare(item, key) > 0);
+                case CompareTypes.GreaterOrEqual:
+                    CheckNull(ref key);
+                    return Select<F>(key).Concat(Search<F>((item) => ListHelper.Compare(item, key) > 0));
+                case CompareTypes.Less:
+                    CheckNull(ref key);
+                    return Search<F>((item) => ListHelper.Compare(item, key) < 0);
+                case CompareTypes.LessOrEqual:
+                    CheckNull(ref key);
+                    return Select<F>(key).Concat(Search<F>((item) => ListHelper.Compare(item, key) < 0));
+            }
+            return Enumerable.Empty<F>();
+        }
 
         public override void Clear()
         {
@@ -383,7 +377,6 @@ namespace DataWF.Common
         public override void Dispose()
         {
             store?.Clear();
-            store = null;
         }
     }
 

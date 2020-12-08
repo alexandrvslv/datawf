@@ -81,20 +81,21 @@ namespace DataWF.Data
             Table.ItemTypeIndex = Attribute.Id;
             Table.Schema = schema;
             VirtualTable.BaseTable = TableGenerator.Table;
-            foreach (var columnAttribute in TableGenerator.Columns)
+            foreach (var columnGenerator in TableGenerator.Columns)
             {
-                var virtualColumn = Table.ParseColumn(columnAttribute.ColumnName);
+                var virtualColumn = Table.Columns[columnGenerator.ColumnName];
                 if (virtualColumn != null)
                 {
-                    if (columnAttribute.DefaultValues != null && columnAttribute.DefaultValues.TryGetValue(Type, out var defaultValue))
+                    virtualColumn.RefreshVirtualColumn(columnGenerator.Column);
+                    if (columnGenerator.DefaultValues != null && columnGenerator.DefaultValues.TryGetValue(Type, out var defaultValue))
                     {
                         virtualColumn.DefaultValue = defaultValue;
                     }
 
                     if (virtualColumn.DisplayName.Equals(virtualColumn.Name, StringComparison.Ordinal)
-                        || (virtualColumn.DisplayName.Equals(columnAttribute.PropertyInfo.Name, StringComparison.Ordinal)))
+                        || (virtualColumn.DisplayName.Equals(columnGenerator.PropertyInfo.Name, StringComparison.Ordinal)))
                     {
-                        virtualColumn.DisplayName = columnAttribute.DisplayName;
+                        virtualColumn.DisplayName = columnGenerator.DisplayName;
                     }
                 }
             }

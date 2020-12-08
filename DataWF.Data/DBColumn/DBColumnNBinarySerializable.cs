@@ -59,5 +59,28 @@ namespace DataWF.Data
                 return DBNull.Value;
             return ((T)value).Serialize();
         }
+
+        public override T? Parse(object value)
+        {
+            if (value is T typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return default(T?);
+            if (value is byte[] byteArray)
+            {
+                var item = new T();
+                item.Deserialize(byteArray);
+                return item;
+            }
+            if (value is string stringValue)
+            {
+                var item = new T();
+                //TODO string formatable
+                item.Deserialize(Convert.FromBase64String(stringValue));
+                return item;
+            }
+
+            throw new Exception($"Unable to parse type {typeof(T)} from {value}");
+        }
     }
 }

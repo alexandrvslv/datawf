@@ -28,6 +28,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -201,7 +202,7 @@ namespace DataWF.Data
 
         public override void SetValue(DBItem item, object value, DBSetValueMode mode)
         {
-            SetValue(item, (T)value, mode);
+            SetValue(item, Parse(value), mode);
         }
 
         public void SetValue(DBItem item, T value, DBSetValueMode mode)
@@ -245,22 +246,22 @@ namespace DataWF.Data
             T value = typedPropertyInvoker.GetValue(item);
             if (Equal(value, default(T)))
                 return null;
-            return (R)ReferenceTable.LoadItemById(value, param);
+            return (R)LoadReference(value, param);
         }
 
         public override R GetReference<R>(DBItem item, ref R reference, DBLoadParam param)
         {
             T value = typedPropertyInvoker.GetValue(item);
-            var id = reference == null ? default(T) : reference.GetValue<T>(reference.Table.PrimaryKey);
+            var id = reference == null ? default(T) : GetReferenceId(reference);
             if (!Equal(value, default(T)) && Equal(value, id))
                 return reference;
 
-            return reference = value == null ? (R)null : (R)ReferenceTable.LoadItemById(value, param);
+            return reference = value == null ? (R)null : (R)LoadReference(value, param);
         }
 
         public override void SetReference<R>(DBItem item, R reference)
         {
-            var id = reference == null ? default(T) : reference.GetValue<T>(reference.Table.PrimaryKey);
+            var id = reference == null ? default(T) : GetReferenceId(reference);
             typedPropertyInvoker.SetValue(item, id);
         }
 
@@ -286,10 +287,45 @@ namespace DataWF.Data
                 return string.Empty;
             if (IsReference)
             {
-                DBItem temp = ReferenceTable.LoadItemById(val);
+                DBItem temp = LoadReference(val, DBLoadParam.None);
                 return temp == null ? "<new or empty>" : temp.ToString();
             }
             return val.ToString(); ;
+        }
+
+        public override object ParseValue(object value)
+        {
+            return Parse(value);
+        }
+
+        public virtual T Parse(object value)
+        {
+            if (value is T typeValue)
+                return typeValue;
+            else if (value == null || value == DBNull.Value)
+                return default(T);
+            else if (value is DBItem item)
+                return GetReferenceId(item);
+            return (T)Helper.Parse(value, DataType);
+        }
+
+        protected virtual T GetReferenceId(DBItem item)
+        {
+            if (item.Table.PrimaryKey is DBColumn<T> typedColumn)
+                return typedColumn.GetValue(item);
+            return (T)item.PrimaryId;
+        }
+
+        protected virtual DBItem LoadReference(T id, DBLoadParam param)
+        {
+            if (ReferenceTable.PrimaryKey is DBColumn<T> typedColumn)
+                return ReferenceTable.LoadItemById(id, param);
+            return ReferenceTable.LoadItemById((object)id, param);
+        }
+
+        public override bool IsChanged(DBItem item)
+        {
+            return GetOld(item, out T _);
         }
 
         public override bool GetOld(DBItem item, out object obj)
@@ -319,7 +355,7 @@ namespace DataWF.Data
 
         public override void Reject(DBItem item, DBSetValueMode mode = DBSetValueMode.Default)
         {
-            if (GetOld(item, out var value))
+            if (GetOld(item, out T value))
             {
                 SetValue(item, value, mode);
             }
@@ -350,11 +386,6 @@ namespace DataWF.Data
             {
                 Pull.BlockSize = Table.BlockSize;
             }
-        }
-
-        public override bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
-        {
-            return ListHelper.CheckItemT(GetValue(item), typedValue, comparer, (IComparer<T>)comparision);
         }
 
         public virtual Pull CreatePull()
@@ -510,7 +541,7 @@ namespace DataWF.Data
         {
             if (PropertyInvoker is IValuedInvoker<T> valueInvoker)
             {
-                writer.WritePropertyName(valueInvoker.JsonName);
+                writer.WritePropertyName(JsonName);
                 JsonSerializer.Serialize(writer, valueInvoker.GetValue(element), options);
             }
             else
@@ -523,7 +554,7 @@ namespace DataWF.Data
         {
             if (PropertyInvoker is IInvoker<E, T> valueInvoker)
             {
-                writer.WritePropertyName(valueInvoker.JsonName);
+                writer.WritePropertyName(JsonName);
                 JsonSerializer.Serialize(writer, valueInvoker.GetValue(element), options);
             }
             else
@@ -556,5 +587,81 @@ namespace DataWF.Data
             }
         }
 
+        public override bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return ListHelper.CheckItemT(GetValue(item), typedValue, comparer, (IComparer<T>)comparision);
+        }
+
+        public override bool CheckItem(DBItem item, object val2, CompareType comparer)
+        {
+            return CheckItem(item, GetValue(item), val2, comparer);
+        }
+
+        public bool CheckItem(DBItem item, T val2, CompareType comparer)
+        {
+            return CheckItem(item, GetValue(item), val2, comparer);
+        }
+
+        public bool CheckItem(DBItem item, T val1, T val2, CompareType comparer)
+        {
+            switch (comparer.Type)
+            {
+                case CompareTypes.Is:
+                    return ListHelper.Equal<T>(val1, default(T)) ? !comparer.Not : comparer.Not;
+                case CompareTypes.Equal:
+                    return ListHelper.Equal(val1, val2) ? !comparer.Not : comparer.Not;
+                case CompareTypes.Greater:
+                    return ListHelper.Compare<T>(val1, val2) > 0;
+                case CompareTypes.GreaterOrEqual:
+                    return ListHelper.Compare<T>(val1, val2) >= 0;
+                case CompareTypes.Less:
+                    return ListHelper.Compare<T>(val1, val2) < 0;
+                case CompareTypes.LessOrEqual:
+                    return ListHelper.Compare<T>(val1, val2) <= 0;
+                default:
+                    return true;
+            }
+        }
+        public bool CheckItem(DBItem item, T val1, object val2, CompareType comparer)
+        {
+            if (item == null)
+                return false;
+            if (val2 is QQuery query2)
+                val2 = item.Table.SelectQuery(item, query2, comparer);
+
+            switch (comparer.Type)
+            {
+                case CompareTypes.Like:
+                    var r = val2 is Regex ? (Regex)val2 : Helper.BuildLike(val2.ToString());
+                    return r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
+                case CompareTypes.In:
+                    if (val2 is string)
+                        val2 = val2.ToString().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    var list = val2 as IEnumerable;
+                    if (list != null)
+                    {
+                        foreach (object s in list)
+                        {
+                            object comp = s;
+                            if (comp is QItem)
+                                comp = ((QItem)comp).GetValue(item);
+                            if (comp is string)
+                                comp = ((string)comp).Trim(' ', '\'');
+
+                            if (comp.Equals(val1) && !comparer.Not)
+                                return true;
+                        }
+                    }
+                    return comparer.Not;
+                case CompareTypes.Between:
+                    var between = val2 as QBetween;
+                    if (between == null)
+                        throw new Exception($"Expect QBetween but Get {(val2 == null ? "null" : val2.GetType().FullName)}");
+                    return ListHelper.Compare<T>(val1, (T)between.Min.GetValue(item)) >= 0
+                                     && ListHelper.Compare<T>(val1, (T)between.Max.GetValue(item)) <= 0;
+                default:
+                    return CheckItem(item, val1, Parse(val2), comparer);
+            }
+        }
     }
 }

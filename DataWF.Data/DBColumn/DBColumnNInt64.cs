@@ -19,6 +19,8 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using DataWF.Data;
+using System;
+using System.Globalization;
 
 namespace DataWF.Data
 {
@@ -38,6 +40,18 @@ namespace DataWF.Data
         {
             var value = transaction.Reader.GetInt64(i);
             return PullIndex?.SelectOne<F>(value);
+        }
+
+        public override long? Parse(object value)
+        {
+            if (value is long typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return (long?)null;
+            if (value is DBItem item)
+                return GetReferenceId(item);
+            
+            return Convert.ToInt64(value, CultureInfo.InvariantCulture);
         }
     }
 }

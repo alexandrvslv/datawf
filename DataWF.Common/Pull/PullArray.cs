@@ -63,12 +63,12 @@ namespace DataWF.Common
 
         public override T GetValue(short block, short blockIndex)
         {
-            if (block >= blockCount || array[block] == null)
+            if (block >= blockCount)
             {
                 return default(T);
             }
-
-            return array[block][blockIndex];
+            var arrayBlock = array[block];
+            return arrayBlock == null ? default(T) : arrayBlock[blockIndex];
         }
 
         public override void SetValue(short block, short blockIndex, T value)
@@ -82,12 +82,13 @@ namespace DataWF.Common
                     Reallocate(blockCount);
                 }
             }
-            if (array[block] == null)
+            var arrayBlock = array[block];
+            if (arrayBlock == null)
             {
-                array[block] = new T[blockSize];
+                array[block] = arrayBlock = new T[blockSize];
                 maxIndex = block == (blockCount - 1) ? 0 : maxIndex;
             }
-            array[block][blockIndex] = value;
+            arrayBlock[blockIndex] = value;
             if (block == blockCount - 1)
             {
                 maxIndex = Math.Max(maxIndex, blockIndex);

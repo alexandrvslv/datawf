@@ -10,7 +10,7 @@ namespace DataWF.Common
         public override BinaryToken BinaryToken => BinaryToken.ByteArray;
         public override T Read(BinaryReader reader)
         {
-            var obj = (T)FormatterServices.GetUninitializedObject(typeof(T));
+            var obj = new T();
             obj.Deserialize(reader);
             return obj;
         }
@@ -27,7 +27,7 @@ namespace DataWF.Common
         public override T FromString(string value)
         {
             var buffer = Convert.FromBase64String(value);
-            var obj = (T)FormatterServices.GetUninitializedObject(typeof(T));
+            var obj = new T();
             obj.Deserialize(buffer);
             return obj;
         }

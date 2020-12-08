@@ -24,24 +24,24 @@ namespace DataWF.Data
 {
     public class QBetween : QItem, IBetween
     {
-        private QItem value1;
-        private QItem value2;
+        private QItem min;
+        private QItem max;
 
         public QBetween(object val1 = null, object val2 = null, DBColumn column = null)
         {
             if (val1 is QItem)
-                value1 = (QItem)val1;
+                min = (QItem)val1;
             else if (val1 is DBColumn)
-                value1 = new QColumn((DBColumn)val1);
+                min = new QColumn((DBColumn)val1);
             else if (val1 != null)
-                value1 = new QValue(val1, column);
+                min = new QValue(val1, column);
 
             if (val2 is QItem)
-                value2 = (QItem)val1;
+                max = (QItem)val1;
             else if (val2 is DBColumn)
-                value2 = new QColumn((DBColumn)val2);
+                max = new QColumn((DBColumn)val2);
             else if (val2 != null)
-                value2 = new QValue(val2, column);
+                max = new QValue(val2, column);
         }
 
         public override object GetValue(DBItem row = null)
@@ -56,9 +56,9 @@ namespace DataWF.Data
 
         public override string Format(IDbCommand command = null)
         {
-            string f1 = value1?.Format(command) ?? string.Empty;
-            string f2 = value2?.Format(command) ?? string.Empty;
-            if (f1.Length == 0 || f2.Length == 0)
+            string f1 = min?.Format(command);
+            string f2 = max?.Format(command);
+            if (string.IsNullOrEmpty(f1) || string.IsNullOrEmpty(f2))
                 return string.Empty;
 
             if (Query?.Table?.Schema?.System == DBSystem.MSSql
@@ -81,14 +81,14 @@ namespace DataWF.Data
 
         public QItem Min
         {
-            get { return value1; }
-            set { value1 = value; }
+            get => min;
+            set => min = value;
         }
 
         public QItem Max
         {
-            get { return value2; }
-            set { value2 = value; }
+            get => max;
+            set => max = value;
         }
 
     }

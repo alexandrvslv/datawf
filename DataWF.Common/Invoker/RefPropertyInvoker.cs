@@ -13,8 +13,6 @@ namespace DataWF.Common
 
     public class RefPropertyInvoker<T, V> : IInvoker// where T : struct
     {
-        private JsonEncodedText? jsonName;
-
         public RefPropertyInvoker(PropertyInfo info)
         {
             Name = info.Name;
@@ -28,8 +26,6 @@ namespace DataWF.Common
         }
 
         public string Name { get; set; }
-
-        public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
 
         public bool CanWrite { get; private set; }
 

@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace DataWF.Common
 {
-    public interface IPropertySerializeInfo : INamed
+    public interface IPropertySerializeInfo : INamed, IJsonPropertyName
     {
         Type DataType { get; }
         object Default { get; }

@@ -1126,14 +1126,13 @@ namespace DataWF.WebClient.Generator
         private ClassDeclarationSyntax GenDefinitionClassPropertyInvoker(string name, string definitionName, string propertyName, string propertyType, List<AttributeListSyntax> attributes)
         {
             attributes.AddRange(GenDefinitionClassPropertyInvokerAttribute(definitionName, propertyName, $"{definitionName}.{name}<>"));
-            var nullable = propertyType.IndexOf("?") > -1;
             return SF.ClassDeclaration(
                      attributeLists: SF.List<AttributeListSyntax>(),
                      modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),//, SF.Token(SyntaxKind.PartialKeyword)
                      identifier: SF.Identifier(name + "<T>"),
                      typeParameterList: null,
                      baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
-                            SF.SimpleBaseType(SF.ParseTypeName($"{(nullable ? "Nullable" : "")}Invoker<T, {(nullable ? propertyType.Replace("?", "") : propertyType)}>")))),
+                            SF.SimpleBaseType(SF.ParseTypeName($"Invoker<T, {propertyType}>")))),
                      constraintClauses: SF.List(new TypeParameterConstraintClauseSyntax[] {
                          SF.TypeParameterConstraintClause(
                              name: SF.IdentifierName("T"),

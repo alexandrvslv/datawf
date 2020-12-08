@@ -976,7 +976,12 @@ namespace DataWF.Data
                 if (param.ValueLeft is QColumn lColumn)
                 {
                     if (param.ValueRight is QColumn rColumn)
-                        buf = Select(lColumn.Column, param.Comparer, rColumn.Column, list);
+                    {
+                        if (rColumn.Temp != null)
+                            buf = Select(lColumn.Column, param.Comparer, rColumn.Temp, list);
+                        else
+                            buf = Select(lColumn.Column, param.Comparer, rColumn.Column, list);
+                    }
                     else
                         buf = Select(lColumn.Column, param.Comparer, param.Value, list);
                 }
@@ -997,8 +1002,6 @@ namespace DataWF.Data
             list = list ?? AsReadOnly();
             foreach (T row in list)
             {
-                if (param.ValueLeft == null || param.ValueRight == null)
-                { }
                 if (CheckItem(row, param.ValueLeft.GetValue(row), param.ValueRight.GetValue(row), param.Comparer))
                     yield return row;
             }
@@ -1032,7 +1035,6 @@ namespace DataWF.Data
                             //}
                             if (reference != null)
                             {
-
                                 var index = buf.BinarySearch(reference);
                                 if (index < 0)
                                     buf.Insert(-index - 1, reference);
@@ -1050,13 +1052,14 @@ namespace DataWF.Data
             {
                 value = ((QEnum)value).Items;
             }
-            else if (comparer.Type == CompareTypes.In && value is string)
+            else if (comparer.Type == CompareTypes.In)
             {
-                value = value.ToString().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                if (value is string inString)
+                    value = inString.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             }
-            else if (comparer.Type == CompareTypes.Like)
+            else if (comparer.Type == CompareTypes.Like && value is string likeString)
             {
-                value = Helper.BuildLike(value == null ? string.Empty : value.ToString());
+                value = Helper.BuildLike(likeString);
             }
             return value;
         }
@@ -1100,7 +1103,7 @@ namespace DataWF.Data
             return Select(column, comparer, value);
         }
 
-        public IEnumerable<T> Select(DBColumn lColumn, DBColumn rColumn, CompareType comparer, IEnumerable<T> list = null)
+        public IEnumerable<T> Select(DBColumn lColumn, CompareType comparer, DBColumn rColumn, IEnumerable<T> list = null)
         {
             list = list ?? this;
             if (lColumn == null)
@@ -1133,24 +1136,41 @@ namespace DataWF.Data
             list = list ?? this;
             foreach (T row in list)
             {
-                if (CheckItem(row, column.GetValue(row), value, comparer))
+                if (column.CheckItem(row, value, comparer))
                     yield return row;
             }
         }
 
-        public IEnumerable<T> Search(DBColumn lColumn, DBColumn rColumn, CompareType comparer, IEnumerable<T> list)
+        public IEnumerable<T> Select<V>(DBColumn<V> column, CompareType comparer, V value, IEnumerable<T> list = null)
+        {
+            list = list ?? this;
+            if (column == null)
+                return list;
+
+            if (column.PullIndex is PullIndex<DBItem, V> index)
+            {
+                return index.Select<T>(value, comparer);
+            }
+            return Search(column, comparer, value, list);
+        }
+
+        public IEnumerable<T> Search<V>(DBColumn<V> column, CompareType comparer, V value, IEnumerable<T> list)
         {
             list = list ?? this;
             foreach (T row in list)
             {
-                if (CheckItem(row, lColumn.GetValue(row), rColumn.GetValue(row), comparer))
+                if (column.CheckItem(row, value, comparer))
                     yield return row;
             }
         }
-
-        public T SelectRow(DBColumn column, CompareType comparer, object value, IEnumerable<T> list = null)
+        public IEnumerable<T> Search(DBColumn lColumn, CompareType comparer, DBColumn rColumn, IEnumerable<T> list)
         {
-            return Select(column, comparer, value, list).FirstOrDefault();
+            list = list ?? this;
+            foreach (T row in list)
+            {
+                if (lColumn.CheckItem(row, rColumn.GetValue(row), comparer))
+                    yield return row;
+            }
         }
 
         public override void Dispose()

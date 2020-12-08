@@ -25,7 +25,7 @@ namespace DataWF.Common
 
         public override int Compare(T x, T y)
         {
-            return GroupHelper.Compare(x, y, Comparer);
+            return GroupHelper.Compare(x, y, (IComparer<T>)Comparer);
         }
 
         public override int Compare(object x, object y)
@@ -35,7 +35,7 @@ namespace DataWF.Common
 
         public int Compare(IGroup x, IGroup y)
         {
-            return GroupHelper.Compare(x, y, Comparer);
+            return Compare((T)x, (T)y);
         }
         #endregion
     }

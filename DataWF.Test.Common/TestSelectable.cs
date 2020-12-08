@@ -95,16 +95,16 @@ namespace DataWF.Test.Common
         [Test]
         public void TestQuery()
         {
-            var query = new Query<TestClass>(new[] {
-                new QueryParameter<TestClass>()
+            var query = new Query<TestClass>(new IQueryParameter<TestClass>[] {
+                new QueryParameter<TestClass, string>()
                 {
-                    Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
+                    Invoker = (IInvoker<TestClass, string>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
                     Comparer = CompareType.Like,
                     Value = "Threading"
                 },
-                new QueryParameter<TestClass>()
+                new QueryParameter<TestClass, int>()
                 {
-                    Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),
+                    Invoker = (IInvoker<TestClass, int>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),
                     Comparer = CompareType.NotEqual,
                     Value = 6
                 }
@@ -112,17 +112,17 @@ namespace DataWF.Test.Common
             var result = list.Select(query);
             Assert.AreEqual(1, result.Count(), "Select by Query Name and Field Fail");
 
-            query = new Query<TestClass>(new[]{
-                new QueryParameter<TestClass>()
+            query = new Query<TestClass>(new IQueryParameter<TestClass>[]{
+                new QueryParameter<TestClass, string>()
                 {
-                    Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
+                    Invoker = (IInvoker<TestClass, string>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
                     Comparer = CompareType.Like,
                     Value = "Threading"
                 },
-                new QueryParameter<TestClass>()
+                new QueryParameter<TestClass, int>()
                 {
                     Logic = LogicType.AndNot,
-                    Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),
+                    Invoker = (IInvoker<TestClass, int>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),
                     Comparer = CompareType.Equal,
                     Value = 6
                 }
@@ -130,17 +130,17 @@ namespace DataWF.Test.Common
             result = list.Select(query);
             Assert.AreEqual(1, result.Count(), "Select by Query Name and not Field Fail");
 
-            query = new Query<TestClass>(new[] {
-                new QueryParameter<TestClass>()
+            query = new Query<TestClass>(new IQueryParameter<TestClass>[] {
+                new QueryParameter<TestClass, string>()
                 {
-                    Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
+                    Invoker = (IInvoker<TestClass, string>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
                     Comparer = CompareType.Like,
                     Value = "Threading"
                 },
-                new QueryParameter<TestClass>()
+                new QueryParameter<TestClass, int>()
                 {
                     Logic = LogicType.Or,
-                    Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),
+                    Invoker = (IInvoker<TestClass, int>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),
                     Comparer = CompareType.Less,
                     Value = 3
                 }

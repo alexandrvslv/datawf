@@ -57,7 +57,7 @@ namespace DataWF.Common
                 foreach (var p in param)
                 {
                     int index = GetIndex(p);
-                    rez = ListHelper.Compare(a[index], b[index], null);
+                    rez = ListHelper.Compare(a[index], b[index], (IComparer)null);
                     if (rez != 0)
                         return rez;
                 }

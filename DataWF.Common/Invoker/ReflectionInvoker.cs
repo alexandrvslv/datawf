@@ -10,8 +10,6 @@ namespace DataWF.Common
 {
     public class ReflectionInvoker : IInvoker
     {
-        private JsonEncodedText? jsonName;
-
         public ReflectionInvoker(Type type, string name)
         {
             Name = name;
@@ -22,8 +20,6 @@ namespace DataWF.Common
         }
 
         public string Name { get; set; }
-
-        public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
 
         public bool CanWrite => Last.Info is FieldInfo || (Last.Info is PropertyInfo && ((PropertyInfo)Last.Info).CanWrite);
 

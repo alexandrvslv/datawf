@@ -23,7 +23,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBColumnBinarySerializable<T> : DBColumn<T> where T : IBinarySerializable
+    public class DBColumnBinarySerializable<T> : DBColumn<T> where T : IBinarySerializable, new()
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
@@ -34,7 +34,7 @@ namespace DataWF.Data
             if (!transaction.Reader.IsDBNull(i))
             {
                 var byteArray = (byte[])transaction.Reader.GetValue(i);
-                var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
+                var serializable = new T();
                 serializable.Deserialize(byteArray);
                 SetValue(row, serializable, DBSetValueMode.Loading);
             }
@@ -47,7 +47,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var byteArray = (byte[])transaction.Reader.GetValue(i);
-            var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
+            var serializable = new T();
             serializable.Deserialize(byteArray);
             return PullIndex?.SelectOne<F>(serializable);
         }
@@ -58,6 +58,29 @@ namespace DataWF.Data
             if (Equal(value, default(T)))
                 return DBNull.Value;
             return value.Serialize();
+        }
+
+        public override T Parse(object value)
+        {
+            if (value is T typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return default(T);
+            if (value is byte[] byteArray)
+            {
+                var item = new T();
+                item.Deserialize(byteArray);
+                return item;
+            }
+            if (value is string stringValue)
+            {
+                var item = new T();
+                //TODO string formatable
+                item.Deserialize(Convert.FromBase64String(stringValue));
+                return item;
+            }
+            
+            throw new Exception($"Unable to parse type {typeof(T)} from {value}");
         }
     }
 }

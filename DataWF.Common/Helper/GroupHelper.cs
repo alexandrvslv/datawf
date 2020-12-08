@@ -94,26 +94,26 @@ namespace DataWF.Common
             return rez.Substring(0, rez.Length - separator.Length);
         }
 
-        public static IGroup TopGroup(IGroup item)
+        public static T TopGroup<T>(T item) where T : IGroup
         {
-            IGroup g = item;
-            while (g.Group != null && g != g.Group)
+            T g = item;
+            while (g.Group is T group && !ListHelper.Equal(g, group))
             {
-                g = g.Group;
+                g = group;
             }
-            return g ?? item;
+            return g;
         }
 
-        public static IGroup TopGroup(IGroup item, out int level)
+        public static T TopGroup<T>(T item, out int level) where T : IGroup
         {
             level = 0;
-            IGroup g = item;
-            while (g.Group != null && g != g.Group)
+            T g = item;
+            while (g.Group is T group && !ListHelper.Equal(g, group))
             {
                 level++;
-                g = g.Group;
+                g = group;
             }
-            return g ?? item;
+            return g;
         }
 
         public static int Level(IGroup item)
@@ -145,23 +145,18 @@ namespace DataWF.Common
             return Compare(x, y, null);
         }
 
-        public static int Compare(IGroup x, IGroup y)
-        {
-            return Compare(x, y, null);
-        }
-
-        public static int Compare(IGroup x, IGroup y, IComparer comp)
+        public static int Compare<T>(T x, T y, IComparer<T> comp) where T : IGroup
         {
             if (x == null)
                 return (y == null) ? 0 : -1;
             if (y == null)
                 return 1;
-            if (x == y)
+            if (ListHelper.Equal(x, y))
                 return 0;
 
-            IGroup ox = TopGroup(x, out int xLevel), oy = TopGroup(y, out int yLevel);
+            T ox = TopGroup(x, out int xLevel), oy = TopGroup(y, out int yLevel);
 
-            if (ox == oy)
+            if (ListHelper.Equal(ox, oy))
             {
                 ox = x; oy = y;
                 int oxLevel = xLevel, oyLevel = yLevel;
@@ -170,28 +165,38 @@ namespace DataWF.Common
                 {
                     if (oxLevel > oyLevel)
                     {
-                        ox = ox.Group;
+                        ox = (T)ox.Group;
                         oxLevel--;
                     }
                     else if (oxLevel < oyLevel)
                     {
-                        oy = oy.Group;
+                        oy = (T)oy.Group;
                         oyLevel--;
                     }
                     else
                     {
-                        ox = ox.Group; oy = oy.Group;
+                        ox = (T)ox.Group; oy = (T)oy.Group;
                         oxLevel--; oyLevel--;
                     }
                 }
-                if (ox == oy)
+                if (ListHelper.Equal(ox, oy))
                 {
                     return xLevel.CompareTo(yLevel);
                 }
             }
 
-            return ListHelper.Compare(ox, oy, comp);
+            return ListHelper.Compare<T>(ox, oy, comp, true);
         }
+
+        //public static int Compare(IGroup x, IGroup y)
+        //{
+        // return Compare()   
+        //}
+
+        //public static int Compare(IGroup x, IGroup y, IComparer comp )
+        //{
+
+        //}
 
         public static IEnumerable<IGroup> GetSubGroups(IGroup group, bool addSender = false)
         {

@@ -50,7 +50,7 @@ namespace DataWF.Common
 
         public int BinarySearch(T item, IComparer<T> comparer)
         {
-            return list.BinarySearch(item, comparer);
+            return ListHelper.BinarySearch(list, item, comparer, false);
         }
 
         public void Insert(int index, T item)

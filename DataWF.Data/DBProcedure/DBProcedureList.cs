@@ -41,8 +41,8 @@ namespace DataWF.Data
         public IEnumerable<DBProcedure> SelectByFile(string fileName)
         {
             var query = new Query<DBProcedure>();
-            query.Parameters.Add(new QueryParameter<DBProcedure>() { Invoker = DBProcedure.ProcedureTypeInvoker.Instance, Value = ProcedureTypes.Source });
-            query.Parameters.Add(new QueryParameter<DBProcedure>() { Invoker = DBProcedure.DataNameInvoker.Instance, Value = fileName });
+            query.Parameters.Add(new QueryParameter<DBProcedure, ProcedureTypes>() { Invoker = DBProcedure.ProcedureTypeInvoker.Instance, Value = ProcedureTypes.Source });
+            query.Parameters.Add(new QueryParameter<DBProcedure, string>() { Invoker = DBProcedure.DataNameInvoker.Instance, Value = fileName });
             return Select(query);
         }
 

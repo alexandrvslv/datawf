@@ -17,6 +17,8 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace DataWF.Data
@@ -45,6 +47,19 @@ namespace DataWF.Data
         {
             var value = GetValue(item);
             return (int)Unsafe.As<T, uint>(ref value);
+        }
+
+        public override T Parse(object value)
+        {
+            if (value is T typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return default(T);
+            if (value is string stringValue && Enum.TryParse<T>(stringValue, out var parsed))
+                return parsed;
+
+            var convertedValue = Convert.ToUInt32(value, CultureInfo.InvariantCulture);
+            return Unsafe.As<uint, T>(ref convertedValue);
         }
     }
 }

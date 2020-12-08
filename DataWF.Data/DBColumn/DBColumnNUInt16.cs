@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Globalization;
 
 namespace DataWF.Data
 {
@@ -46,6 +47,18 @@ namespace DataWF.Data
             if (value == null)
                 return DBNull.Value;
             return (short)value;
+        }
+
+        public override ushort? Parse(object value)
+        {
+            if (value is ushort typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return (ushort?)null;
+            if (value is DBItem item)
+                return GetReferenceId(item);
+            
+            return Convert.ToUInt16(value, CultureInfo.InvariantCulture);
         }
     }
 }

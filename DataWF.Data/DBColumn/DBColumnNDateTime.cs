@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Globalization;
 
 namespace DataWF.Data
 {
@@ -60,6 +61,18 @@ namespace DataWF.Data
             }
             else
                 return string.Empty;
+        }
+
+        public override DateTime? Parse(object value)
+        {
+            if (value is DateTime typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return null;
+            if (value is DBItem item)
+                return GetReferenceId(item);
+
+            return Convert.ToDateTime(value, CultureInfo.InvariantCulture);
         }
     }
 }

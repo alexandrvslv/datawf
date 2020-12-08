@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Common
 {
@@ -18,6 +20,27 @@ namespace DataWF.Common
         public static bool operator !=(LogicType x, LogicType y)
         {
             return !x.Equals(y);
+        }
+
+        public static LogicTypes Parse(string code)
+        {
+            LogicTypes type = LogicTypes.Undefined;
+            if (code.Equals("and", StringComparison.OrdinalIgnoreCase))
+                type = LogicTypes.And;
+            else if (code.Equals("or", StringComparison.OrdinalIgnoreCase))
+                type = LogicTypes.Or;
+            return type;
+        }
+
+        public static LogicType ParseFull(string value)
+        {
+            var logicSplit = value.Trim().Split(' ');
+            if (logicSplit.Length > 1)
+            {
+                var compareValue = string.Equals(logicSplit[0], "not", StringComparison.OrdinalIgnoreCase) ? logicSplit[1] : logicSplit[0];
+                return new LogicType(Parse(compareValue), true);
+            }
+            return new LogicType(Parse(logicSplit[0]));
         }
 
         public LogicType(LogicTypes type, bool not = false)
@@ -61,25 +84,37 @@ namespace DataWF.Common
             return base.GetHashCode();
         }
 
-        public static LogicTypes Parse(string code)
+        public bool Concat(bool flag, bool rez)
         {
-            LogicTypes type = LogicTypes.Undefined;
-            if (code.Equals("and", StringComparison.OrdinalIgnoreCase))
-                type = LogicTypes.And;
-            else if (code.Equals("or", StringComparison.OrdinalIgnoreCase))
-                type = LogicTypes.Or;
-            return type;
+            switch (Type)
+            {
+                case LogicTypes.Or:
+                    return Not ? flag | !rez : flag | rez;
+                case LogicTypes.And:
+                    return Not ? flag & !rez : flag & rez;
+                default:
+                    return flag | rez;
+            }
         }
 
-        public static LogicType ParseFull(string value)
+
+        public IEnumerable<T> Concat<T>(IEnumerable<T> buffer, IEnumerable<T> temp)
         {
-            var logicSplit = value.Trim().Split(' ');
-            if (logicSplit.Length > 1)
+            switch (Type)
             {
-                var compareValue = string.Equals(logicSplit[0], "not", StringComparison.OrdinalIgnoreCase) ? logicSplit[1] : logicSplit[0];
-                return new LogicType(Parse(compareValue), true);
+                case LogicTypes.Or:
+                    return Not
+                    ? buffer.Except(temp)
+                    : buffer.Union(temp);
+                case LogicTypes.And:
+                    return Not
+                   ? buffer.Except(temp).Union(temp.Except(buffer))
+                   : buffer.Intersect(temp);
+                default:
+                    return buffer.Concat(temp);
             }
-            return new LogicType(Parse(logicSplit[0]));
         }
+
+        
     }
 }

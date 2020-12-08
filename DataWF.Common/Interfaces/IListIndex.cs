@@ -24,10 +24,11 @@ namespace DataWF.Common
     {
         void Add(T item);
         void Remove(T item);
-        IEnumerable<T> Scan(QueryParameter<T> parameter);
+        IEnumerable<T> Scan(IQueryParameter<T> parameter);
         new IEnumerable<T> Scan(CompareType comparer, object value);
         new T SelectOne(object value);
         void Refresh(T item);
+        void Refresh(T item, PropertyChangedDetailEventArgs details);
         void Refresh(IList<T> source);
     }
 

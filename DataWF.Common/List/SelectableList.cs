@@ -154,24 +154,22 @@ namespace DataWF.Common
         #region Use Index
         IEnumerable ISelectable.Select(IQuery query)
         {
-            return query is Query<T> typed
-                ? Select(typed)
-                : ListHelper.Select(this, query, indexes);
+            return query.Select(this, indexes);
         }
 
         public IEnumerable<T> Select(Query<T> query)
         {
-            return ListHelper.Select<T>(this, query, indexes);
+            return query.Select(this, indexes);
         }
 
         IEnumerable ISelectable.Select(IQueryParameter parameter)
         {
-            return ListHelper.Select<T>(this, (QueryParameter<T>)parameter, indexes);
+            return parameter.Select(this, indexes);
         }
 
-        public IEnumerable<T> Select(QueryParameter<T> parameter)
+        public IEnumerable<T> Select(IQueryParameter<T> parameter)
         {
-            return ListHelper.Select<T>(this, parameter, indexes);
+            return parameter.Select(this, indexes);
         }
 
         IEnumerable ISelectable.Select(string property, CompareType comparer, object value)
@@ -181,23 +179,12 @@ namespace DataWF.Common
 
         public IEnumerable<T> Select(IInvoker invoker, CompareType comparer, object value)
         {
-            return Select(new QueryParameter<T>
-            {
-                Invoker = invoker,
-                Comparer = comparer,
-                Value = value
-            });
+            return Select(((IInvokerExtension)invoker).CreateParameter<T>(comparer, value));
         }
 
         public IEnumerable<T> Select(string property, CompareType comparer, object value)
         {
-            return Select(new QueryParameter<T>
-            {
-                Invoker = Indexes.GetIndex(property)?.Invoker,
-                Name = property,
-                Comparer = comparer,
-                Value = value
-            });
+            return Select(EmitInvoker.Initialize<T>(property), comparer, value);
         }
 
         public T SelectOne<K>(string property, K value)
@@ -446,8 +433,7 @@ namespace DataWF.Common
             {
                 if (e is PropertyChangedDetailEventArgs details)
                 {
-                    lindex.Remove(item, details.OldValue);
-                    lindex.Add(item, details.NewValue);
+                    lindex.Refresh(item, details);
                 }
                 else
                 {

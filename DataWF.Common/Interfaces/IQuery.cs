@@ -32,5 +32,9 @@ namespace DataWF.Common
         void ClearValues();
 
         void Sort(IList list);
+
+        IEnumerable Select(IEnumerable items, IListIndexes indexes = null);
+
+        bool CheckItem(object item);
     }
 }

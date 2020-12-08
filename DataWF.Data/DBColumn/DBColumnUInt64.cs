@@ -18,6 +18,9 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 
+using System;
+using System.Globalization;
+
 namespace DataWF.Data
 {
     public class DBColumnUInt64 : DBColumn<ulong>
@@ -42,6 +45,18 @@ namespace DataWF.Data
         {
             var value = GetValue(item);
             return (long)value;
+        }
+
+        public override ulong Parse(object value)
+        {
+            if (value is ulong typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return 0L;
+            if (value is DBItem item)
+                return GetReferenceId(item);
+            
+            return Convert.ToUInt64(value, CultureInfo.InvariantCulture);
         }
     }
 }

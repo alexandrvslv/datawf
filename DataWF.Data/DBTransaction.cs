@@ -449,24 +449,20 @@ namespace DataWF.Data
                 }
 #if DEBUG
                 watch.Stop();
+                OnExecute(type, command.CommandText, watch.Elapsed, buf);
+#else
+                OnExecute(type, command.CommandText, TimeSpan.Zero, buf);
 #endif
             }
             catch (Exception ex)
             {
                 Rollback();
-                buf = ex;
-            }
-            finally
-            {
 #if DEBUG
-                OnExecute(type, command.CommandText, watch.Elapsed, buf);
+                OnExecute(type, command.CommandText, watch.Elapsed, ex);
 #else
-                OnExecute(type, command.CommandText, TimeSpan.Zero, buf);
+                OnExecute(type, command.CommandText, TimeSpan.Zero, ex);
 #endif
-                if (buf is Exception)
-                {
-                    throw (Exception)buf;
-                }
+                throw;
             }
             return buf;
         }
@@ -490,24 +486,20 @@ namespace DataWF.Data
                 buf = await DbConnection.System.ExecuteQueryAsync(command, type, behavior);
 #if DEBUG
                 watch.Stop();
+                OnExecute(type, command.CommandText, watch.Elapsed, buf);
+#else
+                OnExecute(type, command.CommandText, TimeSpan.Zero, buf);
 #endif
             }
             catch (Exception ex)
             {
                 Rollback();
-                buf = ex;
-            }
-            finally
-            {
 #if DEBUG
-                OnExecute(type, command.CommandText, watch.Elapsed, buf);
+                OnExecute(type, command.CommandText, watch.Elapsed, ex);
 #else
-                OnExecute(type, command.CommandText, TimeSpan.Zero, buf);
+                OnExecute(type, command.CommandText, TimeSpan.Zero, ex);
 #endif
-                if (buf is Exception)
-                {
-                    throw (Exception)buf;
-                }
+                throw;
             }
             return buf;
         }

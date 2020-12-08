@@ -114,8 +114,6 @@ namespace DataWF.Data
             set { }
         }
 
-        public JsonEncodedText JsonName { get => default(JsonEncodedText); }
-
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual DBSchema Schema => Table?.Schema;
 

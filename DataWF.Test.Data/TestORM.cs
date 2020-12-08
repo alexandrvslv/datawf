@@ -320,12 +320,8 @@ namespace DataWF.Test.Data
 
             table.Clear();
 
-            int c = 0;
-            foreach (var item in table.Load(string.Empty))
-            {
-                if (++c == 5)
-                    break;
-            }
+            table.Load(string.Empty);
+            Assert.AreEqual(1000, table.Count, "Read/Write Geometry Rectangle Fail!");
         }
 
         public class EmployerTable : DBTable<Employer>

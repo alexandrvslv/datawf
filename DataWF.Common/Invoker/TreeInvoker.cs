@@ -34,7 +34,7 @@ namespace DataWF.Common
             return parameter;
         }
 
-        public override QueryParameter<TT> CreateParameter<TT>()
+        public override IQueryParameter<TT> CreateParameter<TT>()
         {
             var parameter = base.CreateParameter<TT>();
             parameter.Value = true;

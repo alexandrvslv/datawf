@@ -79,14 +79,14 @@ namespace DataWF.Data
         #region IComparer
         public int Compare(T x, K key)
         {
-            var xo = buffered ? x.GetValue<K>(property) : (K)x[PropertyName];
-            if (Format != null && xo is IFormattable xFormat && key is IFormattable keyFormat)
+            var xValue = buffered ? x.GetValue<K>(property) : (K)x[PropertyName];
+            if (Format != null && xValue is IFormattable xFormat && key is IFormattable keyFormat)
             {
                 return string.Compare(xFormat.ToString(Format, CultureInfo.InvariantCulture), keyFormat.ToString(Format, CultureInfo.InvariantCulture), StringComparison.Ordinal);
             }
             return Direction == ListSortDirection.Ascending
-                ? ListHelper.CompareT<K>(xo, key, null)
-                : -ListHelper.CompareT<K>(xo, key, null);
+                ? ListHelper.Compare<K>(xValue, key)
+                : -ListHelper.Compare<K>(xValue, key);
         }
 
         public bool Predicate(T x)
@@ -156,7 +156,7 @@ namespace DataWF.Data
                     if (len != 0)
                         return Direction == ListSortDirection.Descending ? -len : len;
                 }
-                rez = ListHelper.CompareT(xValue, yValue, null);
+                rez = ListHelper.Compare<K>(xValue, yValue);
                 if (rez == 0 && Hash)
                     rez = x.CompareTo(y);
             }

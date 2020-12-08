@@ -174,15 +174,21 @@ namespace DataWF.Common
             var capacity = reader.ReadInt32();
             if (capacity > 0)
             {
-                var itemSize = (reader.BaseStream.Length - 4) / capacity;
-                var IsUser = itemSize > 8;
-                while (reader.BaseStream.Position < reader.BaseStream.Length)
+                var IsUser = true;
+                if (reader.BaseStream.CanSeek)
+                {
+                    var itemSize = (reader.BaseStream.Length - 4) / capacity;
+                    IsUser = itemSize > 8;
+                }
+                int index = 0;
+                while (index < capacity)
                 {
                     var item = AccessItem.Deserialize(reader, IsUser);
                     if (!item.IsEmpty)
                     {
                         items[item.Identity] = item;
                     }
+                    index++;
                 }
             }
         }

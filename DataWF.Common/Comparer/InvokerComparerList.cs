@@ -70,11 +70,7 @@ namespace DataWF.Common
                 if (retval != 0)
                     return retval;
             }
-            if (x is IComparable<T> genCompareable)
-                return genCompareable.CompareTo(y);
-            else if (x is IComparable compareable)
-                return compareable.CompareTo(y);
-            return x?.GetHashCode().CompareTo(y?.GetHashCode() ?? 0) ?? 0;
+            return ListHelper.Compare(x, y, null, true);
         }
 
         public int Compare(object x, object y)

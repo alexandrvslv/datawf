@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -8,13 +9,13 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public class QueryParameter<T> : IQueryParameter, INotifyPropertyChanged, INamed
+    public class QueryParameter<T, V> : IQueryParameter<T, V>, INotifyPropertyChanged, INamed
     {
         private object value;
         private CompareType comparer = CompareType.Equal;
         private LogicType logic = LogicType.And;
         private string name;
-        private IInvoker invoker;
+        private IInvoker<T, V> invoker;
         private object typedValue;
         private bool isEnabled = true;
         private bool emptyFormat;
@@ -25,7 +26,7 @@ namespace DataWF.Common
 
         public QueryParameter(IInvoker invoker)
         {
-            Invoker = invoker;
+            Invoker = (IInvoker<T, V>)invoker;
         }
 
         public QueryParameter(string property)
@@ -39,7 +40,7 @@ namespace DataWF.Common
 
         public string Name
         {
-            get { return name; }
+            get => name;
             set
             {
                 if (name != value)
@@ -60,10 +61,16 @@ namespace DataWF.Common
             get; set;
         }
 
-        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
-        public IInvoker Invoker
+        IInvoker IQueryParameter.Invoker
         {
-            get { return invoker ?? (invoker = EmitInvoker.Initialize<T>(Name)); }
+            get => Invoker;
+            set => Invoker = (IInvoker<T, V>)value;
+        }
+
+        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
+        public IInvoker<T, V> Invoker
+        {
+            get => invoker ?? (invoker = (IInvoker<T, V>)EmitInvoker.Initialize<T>(Name));
             set
             {
                 invoker = value;
@@ -78,7 +85,7 @@ namespace DataWF.Common
 
         public bool IsEnabled
         {
-            get { return isEnabled; }
+            get => isEnabled;
             set
             {
                 if (value != isEnabled)
@@ -93,19 +100,16 @@ namespace DataWF.Common
 
         public bool FormatEmpty
         {
-            get
-            {
-                return emptyFormat ? true : Comparer.Type != CompareTypes.Is
+            get => emptyFormat ? true : Comparer.Type != CompareTypes.Is
                     && Comparer.Type != CompareTypes.Distinct
                   && (Value == null || (Value is string strFilter && strFilter.Length == 0)
                   || string.IsNullOrEmpty(FormatValue(Value, Comparer)));
-            }
-            set { emptyFormat = value; }
+            set => emptyFormat = value;
         }
 
         public object Value
         {
-            get { return value; }
+            get => value;
             set
             {
                 if (this.value != value)
@@ -120,13 +124,13 @@ namespace DataWF.Common
         [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
         public object TypedValue
         {
-            get { return typedValue; }
-            set { typedValue = value; }
+            get => typedValue;
+            set => typedValue = value;
         }
 
         public CompareType Comparer
         {
-            get { return comparer; }
+            get => comparer;
             set
             {
                 if (comparer != value)
@@ -139,7 +143,7 @@ namespace DataWF.Common
 
         public LogicType Logic
         {
-            get { return logic; }
+            get => logic;
             set
             {
                 if (logic != value)
@@ -152,11 +156,14 @@ namespace DataWF.Common
 
         public QueryGroup Group { get => group; set => group = value; }
 
+        IComparer IQueryParameter.Comparision { get => (IComparer)Comparision; set => Comparision = (IComparer<V>)value; }
+
         [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
-        public IComparer Comparision { get; set; }
+        public IComparer<V> Comparision { get; set; }
 
         [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
         public object Tag { get; set; }
+
         public bool AlwaysTrue { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -240,6 +247,88 @@ namespace DataWF.Common
         public override string ToString()
         {
             return $"{(IsEnabled ? "On" : "Off")} {Logic} {Name} {Comparer} {FormatValue(Value, Comparer)}";
+        }
+
+        public bool CheckItem(object item)
+        {
+            return CheckItem((T)item);
+        }
+
+        public bool CheckItem(T item)
+        {
+            return ListHelper.CheckItemT(Invoker.GetValue(item), TypedValue, Comparer, Comparision);
+        }
+
+        public bool CheckValue(object value)
+        {
+            return CheckValue((V)value);
+        }
+
+        public bool CheckValue(V value)
+        {
+            return ListHelper.CheckItemT<V>(value, TypedValue, Comparer, Comparision);
+        }
+
+        public IEnumerable Search(IEnumerable items)
+        {
+            return Search((IEnumerable<T>)items);
+        }
+
+        public IEnumerable<T> Search(IEnumerable<T> items)
+        {
+            foreach (var item in items)
+            {
+                if (item != null && CheckItem(item))
+                {
+                    yield return item;
+                }
+            }
+        }
+
+        public IEnumerable Select(IEnumerable items, IListIndexes indexes = null)
+        {
+            return Select((IEnumerable<T>)items, (IListIndexes<T>)indexes);
+        }
+
+        public IEnumerable<T> Select(IEnumerable<T> items, IListIndexes<T> indexes = null)
+        {
+            if (AlwaysTrue)
+            {
+                return items;
+            }
+
+            if (Comparer.Type == CompareTypes.Distinct)
+            {
+                return Distinct(items);
+            }
+
+            var index = (IListIndex<T>)indexes?.GetIndex(Name);
+            if (index != null)
+            {
+                return index.Scan(this);
+            }
+            return Search(items);
+        }
+
+        public IEnumerable Distinct(IEnumerable items)
+        {
+            return Distinct((IEnumerable<T>)items);
+        }
+
+        public IEnumerable<T> Distinct(IEnumerable<T> items)
+        {
+            var oldValue = default(V);
+            var list = items.ToList();
+            ListHelper.QuickSort(list, (IComparer<T>)((IInvokerExtension)Invoker).CreateComparer<T>(ListSortDirection.Descending));
+            foreach (var item in list)
+            {
+                var newValue = Invoker.GetValue(item);
+                if (!ListHelper.Equal(newValue, oldValue))
+                {
+                    oldValue = newValue;
+                    yield return item;
+                }
+            }
         }
     }
 

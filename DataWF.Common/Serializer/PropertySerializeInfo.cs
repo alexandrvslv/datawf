@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 [assembly: Invoker(typeof(PropertySerializeInfo), nameof(PropertySerializeInfo.IsAttribute), typeof(PropertySerializeInfo.IsAttributeInvoker))]
@@ -13,6 +14,8 @@ namespace DataWF.Common
 {
     public abstract class PropertySerializeInfo : INamed, IPropertySerializeInfo
     {
+        private JsonEncodedText? jsonName;
+        
         public PropertySerializeInfo()
         { }
 
@@ -47,6 +50,8 @@ namespace DataWF.Common
         public PropertyInfo PropertyInfo { get; }
 
         public string Name { get; }
+
+        public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
 
         string INamed.Name { get => Name; set => throw new NotSupportedException(); }
 

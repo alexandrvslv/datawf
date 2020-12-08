@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Serialization;
@@ -42,7 +43,7 @@ namespace DataWF.Data
 
         public int CompareTo(NotifyDBItem other)
         {
-            var res = ListHelper.Compare(Id, other.Id, null);
+            var res = ListHelper.Compare(Id, other.Id, (IComparer)null);
             return res != 0 ? res : Command.CompareTo(Command);
         }
 

@@ -1201,7 +1201,7 @@ namespace DataWF.Data
                         DBColumn column = qColumn.Column;
                         if (column != null && column.Table == this)
                         {
-                            qColumn.Temp = item[column];
+                            qColumn.Temp = item.GetValue(column);
                         }
                     }
                 }
@@ -1265,6 +1265,10 @@ namespace DataWF.Data
                 {
                     result = true;
                 }
+                else if (param.ValueLeft is QColumn qColumn)
+                {
+                    result = qColumn.Column.CheckItem(item, param.ValueRight.GetValue(item), param.Comparer);
+                }
                 else
                 {
                     result = CheckItem(item, param.ValueLeft.GetValue(item), param.ValueRight.GetValue(item), param.Comparer);
@@ -1282,10 +1286,14 @@ namespace DataWF.Data
             object val1 = null;
             DBColumn dbColumn = ParseColumn(column);
             if (dbColumn == null)
+            {
                 val1 = EmitInvoker.GetValue(typeof(DBItem), column, item);
+                return CheckItem(item, val1, val, comparer);
+            }
             else
-                val1 = item[dbColumn];
-            return CheckItem(item, val1, dbColumn.ParseValue(val), comparer);
+            {
+                return dbColumn.CheckItem(item, val, comparer);
+            }
         }
 
         public bool CheckItem(DBItem item, object val1, object val2, CompareType comparer)
@@ -1336,11 +1344,11 @@ namespace DataWF.Data
                     var between = val2 as QBetween;
                     if (between == null)
                         throw new Exception($"Expect QBetween but Get {(val2 == null ? "null" : val2.GetType().FullName)}");
-                    return ListHelper.Compare(val1, between.Min.GetValue(item), null) >= 0
-                                     && ListHelper.Compare(val1, between.Max.GetValue(item), null) <= 0;
+                    return ListHelper.Compare(val1, between.Min.GetValue(item), (IComparer)null) >= 0
+                                     && ListHelper.Compare(val1, between.Max.GetValue(item), (IComparer)null) <= 0;
                 default:
                     bool f = false;
-                    int rez = ListHelper.Compare(val1, val2, null);
+                    int rez = ListHelper.Compare(val1, val2, (IComparer)null);
                     switch (comparer.Type)
                     {
                         case CompareTypes.Greater:
@@ -1361,6 +1369,8 @@ namespace DataWF.Data
                     return f;
             }
         }
+
+
 
         #endregion
 

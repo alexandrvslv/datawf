@@ -156,14 +156,14 @@ namespace DataWF.Common
                 var flag = false;
                 if (e.Action == NotifyCollectionChangedAction.Add)
                 {
-                    foreach (QueryParameter<T> item in e.NewItems)
+                    foreach (IQueryParameter<T> item in e.NewItems)
                     {
                         flag |= item.IsEnabled;
                     }
                 }
                 else if (e.Action == NotifyCollectionChangedAction.Remove)
                 {
-                    foreach (QueryParameter<T> item in e.OldItems)
+                    foreach (IQueryParameter<T> item in e.OldItems)
                     {
                         flag |= item.IsEnabled;
                     }
@@ -175,9 +175,9 @@ namespace DataWF.Common
             }
             else if (args is PropertyChangedEventArgs p)
             {
-                if (string.Equals(p.PropertyName, nameof(QueryParameter<T>.IsEnabled), StringComparison.Ordinal)
-                    || string.Equals(p.PropertyName, nameof(QueryParameter<T>.Value), StringComparison.Ordinal)
-                    || string.Equals(p.PropertyName, nameof(QueryParameter<T>.Comparer), StringComparison.Ordinal))
+                if (string.Equals(p.PropertyName, nameof(IQueryParameter.IsEnabled), StringComparison.Ordinal)
+                    || string.Equals(p.PropertyName, nameof(IQueryParameter.Value), StringComparison.Ordinal)
+                    || string.Equals(p.PropertyName, nameof(IQueryParameter.Comparer), StringComparison.Ordinal))
                 {
                     CheckUpdateFilter(sender, args);
                 }
@@ -264,7 +264,7 @@ namespace DataWF.Common
         public virtual void UpdateFilter()
         {
             var indexes = selectableSource is ISelectable<T> gSelectable ? gSelectable.Indexes : null;
-            UpdateInternal(source == null ? null : ListHelper.Select<T>(source.TypeOf<T>(), query, indexes));
+            UpdateInternal(source == null ? null : query.Select(source.TypeOf<T>(), indexes));
             OnCollectionChanged(NotifyCollectionChangedAction.Reset);
         }
 
@@ -317,7 +317,7 @@ namespace DataWF.Common
                         if (updatingFilter == 1)
                             return;
                         if (newItem != null
-                            && (query == null || ListHelper.CheckItem(newItem, query))
+                            && (query == null || query.CheckItem(newItem))
                             && GetIndexBySort(newItem) < 0)
                         {
                             addList.Add(newItem);
@@ -340,7 +340,7 @@ namespace DataWF.Common
 
             var item = (T)sender;
 
-            var checkItem = ListHelper.CheckItem(item, query);
+            var checkItem = query.CheckItem(item);
             if (checkItem)
             {
                 if (CheckIsGlobal(e))

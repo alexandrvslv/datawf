@@ -11,7 +11,7 @@ namespace DataWF.Common
         JsonEncodedText JsonName { get; }
     }
 
-    public interface IInvoker : IValueProvider, INamed, IJsonPropertyName
+    public interface IInvoker : IValueProvider, INamed
     {
         Type DataType { get; }
         Type TargetType { get; }

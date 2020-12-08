@@ -57,5 +57,18 @@ namespace DataWF.Data
             var nnValue = (T)value;
             return (short)Unsafe.As<T, ushort>(ref nnValue);
         }
+
+        public override T? Parse(object value)
+        {
+            if (value is T typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return default(T?);
+            if (value is string stringValue && Enum.TryParse<T>(stringValue, out var parsed))
+                return parsed;
+
+            var convertedValue = Convert.ToUInt16(value);
+            return Unsafe.As<ushort, T>(ref convertedValue);
+        }
     }
 }

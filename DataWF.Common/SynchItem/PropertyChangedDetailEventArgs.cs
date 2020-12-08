@@ -3,18 +3,33 @@ using System.ComponentModel;
 
 namespace DataWF.Common
 {
-    public class PropertyChangedDetailEventArgs : PropertyChangedEventArgs
+    public abstract class PropertyChangedDetailEventArgs : PropertyChangedEventArgs
     {
-        public PropertyChangedDetailEventArgs(string propertyName, object oldValue, object newValue)
+        public PropertyChangedDetailEventArgs(string propertyName)
+            : base(propertyName)
+        { }
+
+        public abstract object OldObjectValue { get; }
+
+        public abstract object NewObjectValue { get; }
+    }
+
+    public class PropertyChangedDetailEventArgs<T> : PropertyChangedDetailEventArgs
+    {
+        public PropertyChangedDetailEventArgs(string propertyName, T oldValue, T newValue)
             : base(propertyName)
         {
             OldValue = oldValue;
             NewValue = newValue;
         }
 
-        public object OldValue { get; }
+        public T OldValue { get; }
 
-        public object NewValue { get; }
+        public T NewValue { get; }
+
+        public override object OldObjectValue => OldValue;
+
+        public override object NewObjectValue => NewValue;
     }
 
     public class PropertyChangedAggregateEventArgs : PropertyChangedEventArgs

@@ -94,7 +94,7 @@ namespace DataWF.Common
 
         private void ToProperty(object element, IPropertySerializeInfo property, TypeSerializeInfo itemInfo)
         {
-            if (property.Serializer is IElementSerializer serializer)
+            if (property.Serializer != null)
             {
                 property.Read(this, element, itemInfo);
             }
@@ -115,7 +115,7 @@ namespace DataWF.Common
 
         private void ToProperty<T>(T element, IPropertySerializeInfo property, TypeSerializeInfo itemInfo)
         {
-            if (property.Serializer is IElementSerializer serializer)
+            if (property.Serializer != null)
             {
                 property.Read<T>(this, element, itemInfo);
             }

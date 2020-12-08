@@ -278,7 +278,7 @@ namespace DataWF.Data
         {
             var column = BaseTable.CheckColumn(name, type, ref newCol);
             if (newCol)
-                Columns.Add(DBColumnFactory.CreateVirtual(column));
+                Columns.Add(DBColumnFactory.CreateVirtual(column, this));
             return column;
         }
 
@@ -350,7 +350,7 @@ namespace DataWF.Data
                 {
                     if (!(column.PropertyInvoker?.TargetType.IsAssignableFrom(type) ?? true))
                         continue;
-                    Columns.Add(DBColumnFactory.CreateVirtual(column));
+                    Columns.Add(DBColumnFactory.CreateVirtual(column, this));
                 }
                 else
                 {

@@ -230,12 +230,12 @@ namespace DataWF.Common
             return index;
         }
 
-        public static int BinarySearch<T>(IList<T> array, T value, IComparer<T> comp)
+        public static int BinarySearch<T>(IList<T> array, T value, IComparer<T> comp = null, bool checkHash = true)
         {
             return BinarySearch<T>(array, 0, array.Count - 1, value, comp);
         }
 
-        public static int BinarySearch<T>(IList<T> array, int low, int high, T value, IComparer<T> comp)
+        public static int BinarySearch<T>(IList<T> array, int low, int high, T value, IComparer<T> comp = null, bool checkHash = true)
         {
             int midpoint;
             int rez;
@@ -244,11 +244,11 @@ namespace DataWF.Common
                 midpoint = low + ((high - low) >> 1);
 
                 // check to see if value is equal to item in array
-                rez = CompareT(value, array[midpoint], comp);
-                if (rez == 0)//check 
-                    if (midpoint > 0 && CompareT(value, array[midpoint - 1], comp) <= 0)
+                rez = Compare(value, array[midpoint], comp, checkHash);
+                if (rez == 0)//check miss
+                    if (midpoint > 0 && Compare(value, array[midpoint - 1], comp, checkHash) <= 0)
                         rez = -1;
-                    else if (midpoint < array.Count - 1 && CompareT(value, array[midpoint + 1], comp) >= 0)
+                    else if (midpoint < array.Count - 1 && Compare(value, array[midpoint + 1], comp, checkHash) >= 0)
                         rez = 1;
                 if (rez == 0)
                     return midpoint;
@@ -261,9 +261,9 @@ namespace DataWF.Common
             return -low - 1;
         }
 
-        public static int BinarySearch(IList array, object value, IComparer comp)
+        public static int BinarySearch(IList array, object value, IComparer comp = null, bool checkHash = true)
         {
-            return BinarySearch(array, 0, array.Count - 1, value, comp);
+            return BinarySearch(array, 0, array.Count - 1, value, comp, checkHash);
         }
 
         //Binary search finds item in sorted array.
@@ -272,7 +272,7 @@ namespace DataWF.Common
         // Based on C++ example at
         // http://en.wikibooks.org/wiki/Algorithm_implementation/Search/Binary_search#C.2B.2B_.28common_Algorithm.29
         // http://codelab.ru/task/binsearch/
-        public static int BinarySearch(IList array, int low, int high, object value, IComparer comp)
+        public static int BinarySearch(IList array, int low, int high, object value, IComparer comp = null, bool checkHash = true)
         {
             int midpoint;
             int rez;
@@ -281,12 +281,12 @@ namespace DataWF.Common
                 midpoint = (low + high) >> 1;
 
                 // check to see if value is equal to item in array
-                rez = Compare(value, array[midpoint], comp);
+                rez = Compare(value, array[midpoint], comp, checkHash);
 
-                if (rez == 0)//check 
-                    if (midpoint > 0 && Compare(value, array[midpoint - 1], comp) <= 0)
+                if (rez == 0)//check miss
+                    if (midpoint > 0 && Compare(value, array[midpoint - 1], comp, checkHash) <= 0)
                         rez = -1;
-                    else if (midpoint < array.Count - 1 && Compare(value, array[midpoint + 1], comp) >= 0)
+                    else if (midpoint < array.Count - 1 && Compare(value, array[midpoint + 1], comp, checkHash) >= 0)
                         rez = 1;
 
                 if (rez == 0)
@@ -341,85 +341,18 @@ namespace DataWF.Common
         //    }
         //}
 
-        public static bool CheckItemN<T>(T? x, object y, CompareType compare, IComparer<T?> comparer) where T : struct
-        {
-            bool result = false;
-            switch (compare.Type)
-            {
-                case CompareTypes.Equal:
-                    result = EqualN<T>(x, (T?)y);
-                    break;
-                case CompareTypes.Is:
-                    result = x == null;
-                    break;
-                case CompareTypes.Like:
-                    y = (y?.ToString() ?? string.Empty).Trim(new char[] { '%' });
-                    result = (x?.ToString() ?? string.Empty).IndexOf((string)y, 0, StringComparison.OrdinalIgnoreCase) >= 0;
-                    break;
-                case CompareTypes.In:
-                    if (x is Enum && y is Enum)
-                    {
-                        result = ((int)y & (int)(object)x) != 0;//TODO Find the way to aviod BOXING ((int)y & (int)x) != 0;
-                    }
-                    else if (y is string yString)
-                    {
-                        result = yString.IndexOf(x?.ToString(), StringComparison.OrdinalIgnoreCase) >= 0;
-                    }
-                    else
-                    {
-                        foreach (T? item in y.ToEnumerable<T?>())
-                        {
-                            if (EqualN<T>(x, item))
-                            {
-                                result = true;
-                                break;
-                            }
-                        }
-                    }
-                    break;
-                case CompareTypes.Contains:
-                    result = x.ToEnumerable().Contains(y);
-                    break;
-                case CompareTypes.Intersect:
-                    result = x.ToEnumerable().Intersect(y.ToEnumerable()).Any();
-                    break;
-                default:
-                    int i = Nullable.Compare(x, (T?)y);
-                    switch (compare.Type)
-                    {
-                        case CompareTypes.Greater:
-                            result = i > 0;
-                            break;
-                        case CompareTypes.Less:
-                            result = i < 0;
-                            break;
-                        case CompareTypes.GreaterOrEqual:
-                            result = i >= 0;
-                            break;
-                        case CompareTypes.LessOrEqual:
-                            result = i <= 0;
-                            break;
-                    }
-                    break;
-            }
-
-            return compare.Not ? !result : result;
-        }
-
-        public static IEnumerable<object> SearchByValue(this IEnumerable itemsSource, IInvoker valueInvoker, object value)
-        {
-            if (itemsSource == null)
-            {
-                yield break;
-            }
-
-            foreach (var item in itemsSource)
-            {
-                if (Equal(valueInvoker.GetValue(item), value))
-                    yield return item;
-            }
-
-        }
+        //public static IEnumerable<object> SearchByValue(this IEnumerable itemsSource, IInvoker valueInvoker, object value)
+        //{
+        //    if (itemsSource == null)
+        //    {
+        //        yield break;
+        //    }
+        //    foreach (var item in itemsSource)
+        //    {
+        //        if (Equal(valueInvoker.GetValue(item), value))
+        //            yield return item;
+        //    }
+        //}
 
         public static bool CheckItemT<T>(T x, object y, CompareType compare, IComparer<T> comparer)
         {
@@ -427,10 +360,10 @@ namespace DataWF.Common
             switch (compare.Type)
             {
                 case CompareTypes.Equal:
-                    result = EqualT(x, y == null ? default(T) : (T)y);
+                    result = Equal<T>(x, y == null ? default(T) : (T)y);
                     break;
                 case CompareTypes.Is:
-                    result = x == null;
+                    result = Equal<T>(x, default(T));
                     break;
                 case CompareTypes.Like:
                     y = (y?.ToString() ?? string.Empty).Trim(new char[] { '%' });
@@ -453,7 +386,7 @@ namespace DataWF.Common
                     {
                         foreach (T item in y.ToEnumerable<T>())
                         {
-                            if (EqualT(x, item))
+                            if (Equal(x, item))
                             {
                                 result = true;
                                 break;
@@ -468,7 +401,7 @@ namespace DataWF.Common
                     result = x.ToEnumerable().Intersect(y.ToEnumerable()).Any();
                     break;
                 default:
-                    int i = CompareT(x, y == null ? default(T) : (T)y, comparer);
+                    int i = Compare<T>(x, y == null ? default(T) : (T)y, comparer);
                     switch (compare.Type)
                     {
                         case CompareTypes.Greater:
@@ -506,11 +439,6 @@ namespace DataWF.Common
                     result = (x?.ToString() ?? string.Empty).IndexOf((string)y, 0, StringComparison.OrdinalIgnoreCase) >= 0;
                     break;
                 case CompareTypes.In:
-                    if (!(x is string) && x is IEnumerable xlist)
-                    {
-                        x = y;
-                        y = xlist;
-                    }
                     if (x is Enum && y is Enum)
                     {
                         result = ((int)y & (int)x) != 0;
@@ -518,6 +446,10 @@ namespace DataWF.Common
                     else if (y is string yString)
                     {
                         result = yString.IndexOf(x?.ToString(), StringComparison.OrdinalIgnoreCase) >= 0;
+                    }
+                    else if (x != null && TypeHelper.IsEnumerable(x.GetType()))
+                    {
+                        result = x.ToEnumerable<object>().Intersect(y.ToEnumerable<object>()).Any();
                     }
                     else
                     {
@@ -565,195 +497,18 @@ namespace DataWF.Common
             return compare.Not ? !result : result;
         }
 
-        public static bool CheckItem(object item, IQuery checkers)
-        {
-            bool? flag = null;
-            var stack = new Stack<CheckStackEntry>(0);
-            foreach (var parameter in checkers.Parameters.Where(p => p.IsEnabled))
-            {
-                bool rez = parameter.AlwaysTrue ? true : parameter.Invoker.CheckItem(item, parameter.TypedValue, parameter.Comparer, parameter.Comparision);
-                var currParameter = parameter;
-                if ((currParameter.Group & QueryGroup.Begin) == QueryGroup.Begin)
-                {
-                    stack.Push(new CheckStackEntry { Flag = rez, Parameter = currParameter });
-                    continue;
-                }
-                else if (stack.Count > 0)
-                {
-                    var entry = stack.Pop();
-                    entry.Flag = Concat(entry.Flag, rez, currParameter);
 
-                    if ((currParameter.Group & QueryGroup.End) == QueryGroup.End)
-                    {
-                        rez = entry.Flag;
-                        currParameter = entry.Parameter;
-                    }
-                    else
-                    {
-                        stack.Push(entry);
-                        continue;
-                    }
-                }
-                if (flag == null)
-                {
-                    flag = rez;
-                }
-                else
-                {
-                    flag = Concat(flag.Value, rez, currParameter);
-                }
-            }
-            return flag ?? true;
-        }
 
-        public static IEnumerable Search(IEnumerable items, IInvoker invoker, object typedValue, CompareType comparer, IComparer comparision)
-        {
-            foreach (var item in items)
-            {
-                if (item != null && invoker.CheckItem(item, typedValue, comparer, comparision))
-                {
-                    yield return item;
-                }
-            }
-        }
-
-        public static IEnumerable Search(IEnumerable items, IQueryParameter param)
-        {
-            return Search(items, param.Invoker, param.TypedValue, param.Comparer, param.Comparision);
-        }
-
-        public static IEnumerable<T> Search<T>(IEnumerable<T> items, QueryParameter<T> param)
-        {
-            foreach (var item in items)
-            {
-                if (item != null && param.Invoker.CheckItem(item, param.TypedValue, param.Comparer, param.Comparision))
-                {
-                    yield return item;
-                }
-            }
-        }
-
-        public static IEnumerable<T> Select<T>(IEnumerable<T> items, Query<T> query, ListIndexes<T> indexes = null)
-        {
-            IEnumerable<T> buffer = items;
-            var stack = new Stack<SelectStackEntry<T>>(0);
-            bool? flag = null;
-            foreach (var parameter in query.GetEnabled())
-            {
-                var curParameter = parameter;
-                var temp = Select<T>(curParameter.Logic == LogicType.And ? buffer : items, curParameter, indexes);
-                if ((curParameter.Group & QueryGroup.Begin) == QueryGroup.Begin)
-                {
-                    stack.Push(new SelectStackEntry<T>() { Buffer = temp, Parameter = curParameter });
-                    continue;
-                }
-                else if (stack.Count > 0)
-                {
-                    var entry = stack.Pop();
-                    entry.Buffer = Concat(entry.Buffer, temp, curParameter);
-                    if ((curParameter.Group & QueryGroup.End) == QueryGroup.End)
-                    {
-                        temp = entry.Buffer;
-                        curParameter = entry.Parameter;
-                    }
-                    else
-                    {
-                        stack.Push(entry);
-                        continue;
-                    }
-                }
-                if (flag == null)
-                {
-                    buffer = temp;
-                    flag = true;
-                }
-                else
-                {
-                    buffer = Concat(buffer, temp, curParameter);
-                }
-            }
-            return buffer;
-        }
-
-        public static IEnumerable<T> Concat<T>(IEnumerable<T> buffer, IEnumerable<T> temp, IQueryParameter parameter)
-        {
-            switch (parameter.Logic.Type)
-            {
-                case LogicTypes.Or:
-                    return parameter.Logic.Not
-                    ? buffer.Except(temp)
-                    : buffer.Union(temp);
-                case LogicTypes.And:
-                    return parameter.Logic.Not
-                   ? buffer.Except(temp).Union(temp.Except(buffer))
-                   : buffer.Intersect(temp);
-                default:
-                    return buffer.Concat(temp);
-            }
-        }
-
-        public static IEnumerable<T> Select<T>(IEnumerable<T> items, QueryParameter<T> param, ListIndexes<T> indexes = null)
-        {
-            if (param.AlwaysTrue)
-            {
-                return items;
-            }
-
-            if (param.Comparer.Type == CompareTypes.Distinct)
-            {
-                return Distinct(items, param.Invoker);
-            }
-
-            var index = indexes?.GetIndex(param.Name);
-            if (index != null)
-            {
-                return index.Scan(param);
-            }
-            return Search<T>(items, param);
-        }
-
-        public static IEnumerable Select(IEnumerable items, IQuery query, IListIndexes indexes = null)
-        {
-            var buffer = items.OfType<object>();
-            bool? flag = null;
-            foreach (var parameter in query.Parameters.Where(p => p.IsEnabled))
-            {
-                var temp = Select(items, parameter, indexes).OfType<object>();
-                if (flag == null)
-                {
-                    buffer = temp;
-                    flag = true;
-                }
-                else
-                {
-                    buffer = Concat(buffer, temp, parameter);
-                }
-            }
-            return buffer;
-        }
-
-        public static IEnumerable Select(IEnumerable items, IQueryParameter param, IListIndexes indexes = null)
-        {
-            if (param.AlwaysTrue)
-            {
-                return items;
-            }
-
-            if (param.Comparer.Type == CompareTypes.Distinct)
-            {
-                return Distinct(items, param.Invoker);
-            }
-
-            IListIndex index = indexes?.GetIndex(param.Name);
-            if (index == null)
-            {
-                return index.Scan(param);
-            }
-            else
-            {
-                return Search(items, param);
-            }
-        }
+        //public static IEnumerable Search(IEnumerable items, IInvoker invoker, object typedValue, CompareType comparer, IComparer comparision)
+        //{
+        //    foreach (var item in items)
+        //    {
+        //        if (item != null && invoker.CheckItem(item, typedValue, comparer, comparision))
+        //        {
+        //            yield return item;
+        //        }
+        //    }
+        //}
 
         public static IEnumerable<T> Distinct<T>(IEnumerable<T> items, IInvoker param, IComparer comparer = null)
         {
@@ -790,31 +545,6 @@ namespace DataWF.Common
                         yield return item;
                     }
                 }
-            }
-        }
-
-        public struct SelectStackEntry<T>
-        {
-            public IEnumerable<T> Buffer;
-            public QueryParameter<T> Parameter;
-        }
-
-        public struct CheckStackEntry
-        {
-            public bool Flag;
-            public IQueryParameter Parameter;
-        }
-
-        private static bool Concat(bool flag, bool rez, IQueryParameter parameter)
-        {
-            switch (parameter.Logic.Type)
-            {
-                case LogicTypes.Or:
-                    return parameter.Logic.Not ? flag | !rez : flag | rez;
-                case LogicTypes.And:
-                    return parameter.Logic.Not ? flag & !rez : flag & rez;
-                default:
-                    return flag | rez;
             }
         }
 
@@ -886,8 +616,8 @@ namespace DataWF.Common
 
             for (; i <= j; i++, j--)
             {
-                while (CompareT<T>(a[i], x, comp) < 0) ++i;
-                while (CompareT<T>(a[j], x, comp) > 0) --j;
+                while (Compare<T>(a[i], x, comp, true) < 0) ++i;
+                while (Compare<T>(a[j], x, comp, true) > 0) --j;
                 if (i > j)
                     break;
                 if (i < j)
@@ -898,7 +628,8 @@ namespace DataWF.Common
 
             if (a.Count > 200000 && low == 0 && high == a.Count - 1 && Environment.ProcessorCount > 1 && low < j && i < high)
             {
-                Parallel.Invoke(() => { QuickSort1(a, low, j, comp); }, () => { QuickSort1(a, i, high, comp); });
+                Parallel.Invoke(() => { QuickSort1(a, low, j, comp); },
+                    () => { QuickSort1(a, i, high, comp); });
             }
             else
             {
@@ -923,8 +654,8 @@ namespace DataWF.Common
 
             for (; i <= j; i++, j--)
             {
-                while (Compare(a[i], x, comp) < 0) ++i;
-                while (Compare(a[j], x, comp) > 0) --j;
+                while (Compare(a[i], x, comp, true) < 0) ++i;
+                while (Compare(a[j], x, comp, true) > 0) --j;
                 if (i > j)
                     break;
                 if (i < j)
@@ -935,7 +666,8 @@ namespace DataWF.Common
 
             if (a.Count > 200000 && low == 0 && high == a.Count - 1 && Environment.ProcessorCount > 1 && low < j && i < high)
             {
-                Parallel.Invoke(() => { QuickSort1(a, low, j, comp); }, () => { QuickSort1(a, i, high, comp); });
+                Parallel.Invoke(() => { QuickSort1(a, low, j, comp); },
+                    () => { QuickSort1(a, i, high, comp); });
                 //var args1 = QuickSortAsynch(a, low, j, comp);
                 //var args2 = QuickSortAsynch(a, i, high, comp);
                 //args1.Result.AsyncWaitHandle.WaitOne();
@@ -968,7 +700,7 @@ namespace DataWF.Common
             for (i = s + 1; i < n; i++)
             {
                 T t = x[i];
-                for (j = i; j > s && CompareT(x[j - 1], t, comp) > 0; j--)
+                for (j = i; j > s && Compare(x[j - 1], t, comp, true) > 0; j--)
                     x[j] = x[j - 1];
 
                 x[j] = t;
@@ -982,7 +714,7 @@ namespace DataWF.Common
             for (i = s + 1; i < n; i++)
             {
                 object t = x[i];
-                for (j = i; j > s && Compare(x[j - 1], t, comp) > 0; j--)
+                for (j = i; j > s && Compare(x[j - 1], t, comp, true) > 0; j--)
                     x[j] = x[j - 1];
 
                 x[j] = t;
@@ -1014,35 +746,9 @@ namespace DataWF.Common
             //TODO
         }
 
-        public static bool EqualT<T>(T x, T y)
+        public static bool Equal<T>(T x, T y)
         {
-            // var type = TypeHelper.CheckNullable(typeof(T));
-            if (x is string)
-            {
-                return string.Equals(x?.ToString(), y?.ToString(), StringComparison.OrdinalIgnoreCase);
-            }
-            if (x is byte[] xByte && y is byte[] yByte)
-            {
-                return ByteArrayComparer.Default.Equals(xByte, yByte);
-            }
-            if (x is DateTime xDate && y is DateTime yDate)
-            {
-                return DateTimePartComparer.Default.Equals(xDate, yDate);
-            }
-            //if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
-            //{
-            //    return xEnumerable.SequenceEqual(yEnumerable);
-            //}
-            return EqualityComparer<T>.Default.Equals(x, y);
-        }
-
-        public static bool EqualN<T>(T? x, T? y) where T : struct
-        {
-            if (x is DateTime xDate && y is DateTime yDate)
-            {
-                return DateTimePartComparer.Default.Equals(xDate, yDate);
-            }
-            return Nullable.Equals<T>(x, y);
+            return ListHelperEqualityComparer<T>.Default.Equals(x, y);
         }
 
         public static bool Equal(object x, object y)
@@ -1073,10 +779,10 @@ namespace DataWF.Common
             {
                 result = Helper.EqualsBytes(xByte, yByte);
             }
-            //else if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
-            //{
-            //    result = xEnumerable.SequenceEqual(yEnumerable);
-            //}
+            else if (x is IEnumerable xEnumerable && y is IEnumerable yEnumerable)
+            {
+                result = xEnumerable.ToEnumerable().SequenceEqual(yEnumerable.ToEnumerable());
+            }
             else if (x.Equals(y))
             {
                 result = true;
@@ -1084,70 +790,29 @@ namespace DataWF.Common
             return result;
         }
 
-        public static int CompareT<T>(T x, T y, IComparer<T> comp)
+        public static int Compare<T>(T x, T y, IComparer<T> comp = null, bool checkHash = false)
         {
             int result;
-            bool hash = false;
-            if (comp != null)
+            var comparer = comp ?? ListHelperComparer<T>.Default;
+            result = comparer.Compare(x, y);
+            if (checkHash && result == 0 && comp != null)
             {
-                result = comp.Compare(x, y);
-                hash = x != null && y != null && result == 0 && !EqualT(x, y);
-            }
-            else if (x == null)
-            {
-                result = y == null ? 0 : -1;
-            }
-            else if (y == null)
-            {
-                result = 1;
-            }
-            else if (x is string xs && y is string ys)
-            {
-                result = string.Compare(xs, ys, StringComparison.OrdinalIgnoreCase);
-            }
-            else if (x is DateTime xd && y is DateTime yd)
-            {
-                result = DateTimePartComparer.Default.Compare(xd, yd);
-            }
-            else if (x is byte[] xb && y is byte[] yb)
-            {
-                result = xb.Length.CompareTo(yb.Length);
-            }
-            else if (x is IComparable<T> compareable)
-            {
-                result = compareable.CompareTo(y);
-            }
-            else if (x is IComparable xc)
-            {
-                result = xc.CompareTo(y);
-            }
-            else if (EqualT(x, y))
-            {
-                result = 0;
-            }
-            else if (x is IEnumerable xEnumerable && y is IEnumerable yEnumerable)
-            {
-                result = xEnumerable.SequenceCompare(yEnumerable);
-            }
-            else
-            {
-                result = string.Compare(x.ToString(), y.ToString(), StringComparison.OrdinalIgnoreCase);
-                hash = true;
+                result = x.GetHashCode().CompareTo(y.GetHashCode());
             }
 
-            if (hash && result == 0)
-                result = x.GetHashCode().CompareTo(y.GetHashCode());
             return result;
         }
 
-        public static int Compare(object x, object y, IComparer comp)
+        public static int Compare(object x, object y, IComparer comp = null, bool checkHash = false)
         {
             int result;
-            bool hash = false;
             if (comp != null)
             {
                 result = comp.Compare(x, y);
-                hash = x != null && y != null && result == 0 && !Equal(x, y);
+                if (checkHash && result == 0 && x != null && y != null && !Equal(x, y))
+                {
+                    result = x.GetHashCode().CompareTo(y.GetHashCode());
+                }
             }
             else if (x == null)
             {
@@ -1179,86 +844,11 @@ namespace DataWF.Common
             }
             else if (x is IEnumerable xEnumerable && y is IEnumerable yEnumerable)
             {
-                result = xEnumerable.SequenceCompare(yEnumerable);
+                result = SequenceComparer.SequenceCompare(xEnumerable, yEnumerable);
             }
             else
             {
                 result = string.Compare(x.ToString(), y.ToString(), StringComparison.OrdinalIgnoreCase);
-                hash = true;
-            }
-
-            if (hash && result == 0)
-                result = x.GetHashCode().CompareTo(y.GetHashCode());
-            return result;
-        }
-
-        public static int SequenceCompare(this IEnumerable xEnumerable, IEnumerable yEnumerable)
-        {
-            int result = 0;
-            var xEnumer = xEnumerable.GetEnumerator();
-            var yEnumer = yEnumerable.GetEnumerator();
-            bool xExist = true;
-            bool yExist = true;
-            while (true)
-            {
-                xExist = xEnumer.MoveNext();
-                yExist = yEnumer.MoveNext();
-                if (xExist && !yExist)
-                {
-                    result = 1;
-                    break;
-                }
-                else if (!xExist && yExist)
-                {
-                    result = -1;
-                    break;
-                }
-                else if (xExist && yExist)
-                {
-                    result = Compare(xEnumer.Current, yEnumer.Current, null);
-                    if (result != 0)
-                        break;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return result;
-        }
-
-        public static int SequenceCompare<T>(this IEnumerable<T> xEnumerable, IEnumerable<T> yEnumerable)
-        {
-            int result = 0;
-            var xEnumer = xEnumerable.GetEnumerator();
-            var yEnumer = yEnumerable.GetEnumerator();
-            bool xExist = true;
-            bool yExist = true;
-            while (true)
-            {
-                xExist = xEnumer.MoveNext();
-                yExist = yEnumer.MoveNext();
-                if (xExist && !yExist)
-                {
-                    result = 1;
-                    break;
-                }
-                else if (!xExist && yExist)
-                {
-                    result = -1;
-                    break;
-                }
-                else if (xExist && yExist)
-                {
-                    result = CompareT(xEnumer.Current, yEnumer.Current, null);
-                    if (result != 0)
-                        break;
-                }
-                else
-                {
-                    break;
-                }
             }
 
             return result;
@@ -1287,11 +877,11 @@ namespace DataWF.Common
                 do
                 {
                     j--;
-                } while (Compare(a[j], x, comp) > 0);
+                } while (Compare(a[j], x, comp, true) > 0);
                 do
                 {
                     i++;
-                } while (Compare(a[i], x, comp) < 0);
+                } while (Compare(a[i], x, comp, true) < 0);
                 if (i < j)
                 {
                     Swap(a, i, j);
@@ -1313,8 +903,8 @@ namespace DataWF.Common
             for (int i = p; i < m; i++)
                 for (int j = r; j > m; j--)
                 {
-                    int compi = Compare(a[i], a[m], comp);
-                    int compj = Compare(a[j], a[m], comp);
+                    int compi = Compare(a[i], a[m], comp, true);
+                    int compj = Compare(a[j], a[m], comp, true);
                     if (compi > 0 &&
                         compj < 0)
                     {

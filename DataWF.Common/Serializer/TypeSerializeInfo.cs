@@ -18,8 +18,8 @@ namespace DataWF.Common
             Type = type;
             TypeName = TypeHelper.FormatBinary(Type);
             Serializer = TypeHelper.GetSerializer(type);
-            if (Serializer.GetType().IsGenericType && Serializer.GetType().GetGenericArguments()[0] != type)
-            { }
+            //if (Serializer.GetType().IsGenericType && Serializer.GetType().GetGenericArguments()[0] != type)
+            //{ }
             var keys = TypeSerializationInfoKeys.None;
             if (TypeHelper.IsSerializeAttribute(Type))
             {

@@ -18,6 +18,9 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 
+using System;
+using System.Globalization;
+
 namespace DataWF.Data
 {
     public class DBColumnUInt8 : DBColumn<byte>
@@ -36,6 +39,18 @@ namespace DataWF.Data
         {
             var value = (byte)transaction.Reader.GetByte(i);
             return PullIndex?.SelectOne<F>(value);
+        }
+
+        public override byte Parse(object value)
+        {
+            if (value is byte typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return (byte)0;
+            if (value is DBItem item)
+                return GetReferenceId(item);
+            
+            return Convert.ToByte(value, CultureInfo.InvariantCulture);
         }
     }
 }

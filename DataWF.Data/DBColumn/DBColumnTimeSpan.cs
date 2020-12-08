@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Globalization;
 
 namespace DataWF.Data
 {
@@ -39,6 +40,27 @@ namespace DataWF.Data
         {
             var value = transaction.GetTimeSpan(i);
             return PullIndex?.SelectOne<F>(value);
+        }
+
+        public override TimeSpan Parse(object value)
+        {
+            if (value is TimeSpan typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return TimeSpan.MinValue;
+            if (value is string stringValue)
+            {
+                return TimeSpan.TryParse(stringValue, CultureInfo.InvariantCulture, out var parsed) ? parsed : TimeSpan.MinValue;
+            }
+            if (value is long longValue)
+            {
+                return TimeSpan.FromTicks(longValue);
+            }
+            if (value is DBItem item)
+            {
+                return GetReferenceId(item);
+            }
+            throw new Exception($"Unable to cast from {value} to TomeSpan!");
         }
     }
 }

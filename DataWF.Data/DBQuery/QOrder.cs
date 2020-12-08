@@ -105,7 +105,27 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public QueryParameter<TT> CreateParameter<TT>()
+        public IQueryParameter<TT> CreateParameter<TT>()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IQueryParameter CreateParameter(Type type, CompareType comparer, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IQueryParameter CreateParameter(Type type, LogicType logic, CompareType comparer, object value = null, QueryGroup group = QueryGroup.None)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IQueryParameter<TT> CreateParameter<TT>(CompareType comparer, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IQueryParameter<TT> CreateParameter<TT>(LogicType logic, CompareType comparer, object value = null, QueryGroup group = QueryGroup.None)
         {
             throw new NotImplementedException();
         }
@@ -124,6 +144,8 @@ namespace DataWF.Data
         {
             return (InvokerComparer<TT>)CreateComparer(typeof(TT), direction);
         }
+
+       
     }
 }
 

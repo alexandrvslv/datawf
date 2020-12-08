@@ -29,8 +29,8 @@ namespace DataWF.Test.Data
                 new AccessGroupBung() { Id = 3, Name = "Group3"}
             };
 
-            var connection = DBService.Connections["TestSqlLite"];
             schema = DBSchema.Generate(SchemaName, typeof(FileData), typeof(FileStore), typeof(Employer), typeof(Position), typeof(Figure));
+            schema.Connection = DBService.Connections["TestSqlLite"];
             schema.DropDatabase();
             schema.CreateDatabase();
 

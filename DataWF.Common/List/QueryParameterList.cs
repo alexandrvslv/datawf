@@ -5,7 +5,7 @@ using System.ComponentModel;
 
 namespace DataWF.Common
 {
-    public class QueryParameterList<T> : NamedList<QueryParameter<T>>, ICollection<IQueryParameter>
+    public class QueryParameterList<T> : NamedList<IQueryParameter<T>>, ICollection<IQueryParameter>
     {
         public QueryParameterList()
         {
@@ -16,46 +16,31 @@ namespace DataWF.Common
             Query = query;
         }
 
-        public QueryParameterList(Query<T> query, IEnumerable<QueryParameter<T>> items) : this(query)
+        public QueryParameterList(Query<T> query, IEnumerable<IQueryParameter<T>> items) : this(query)
         {
             AddRange(items);
         }
 
         public Query<T> Query { get; set; }
 
-        public QueryParameter<T> Add(IInvoker invoker, CompareType compare, object value)
+        public IQueryParameter<T> Add(IInvoker invoker, CompareType compare, object value)
         {
-            var parameter = new QueryParameter<T>()
-            {
-                Invoker = invoker,
-                Comparer = compare,
-                Value = value
-            };
+            var parameter = ((IInvokerExtension)invoker).CreateParameter<T>(compare, value);
             Add(parameter);
             return parameter;
         }
 
-        public QueryParameter<T> Add(string property, object value)
+        public IQueryParameter<T> Add(string property, object value)
         {
-            var parameter = new QueryParameter<T>(property) { Value = value };
+            var invoker = EmitInvoker.Initialize<T>(property);
+            var parameter = ((IInvokerExtension)invoker).CreateParameter<T>(CompareType.Equal, value);
             Add(parameter);
             return parameter;
         }
 
-        public QueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
+        public IQueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
         {
-            var parameter = new QueryParameter<T>
-            {
-                Logic = logic,
-                Invoker = invoker,
-                Comparer = comparer,
-                Value = value,
-                Group = group
-            };
-            //if (parameter.Invoker?.DataType == typeof(string))
-            //{
-            //    parameter.Comparer = CompareType.Like;
-            //}
+            var parameter = ((IInvokerExtension)invoker).CreateParameter<T>(logic, comparer, value, group);
             Add(parameter);
             return parameter;
         }
@@ -85,12 +70,12 @@ namespace DataWF.Common
 
         void ICollection<IQueryParameter>.Add(IQueryParameter item)
         {
-            Add((QueryParameter<T>)item);
+            Add((IQueryParameter<T>)item);
         }
 
         bool ICollection<IQueryParameter>.Contains(IQueryParameter item)
         {
-            return Contains((QueryParameter<T>)item);
+            return Contains((IQueryParameter<T>)item);
         }
 
         void ICollection<IQueryParameter>.CopyTo(IQueryParameter[] array, int arrayIndex)
@@ -100,7 +85,7 @@ namespace DataWF.Common
 
         bool ICollection<IQueryParameter>.Remove(IQueryParameter item)
         {
-            return Remove((QueryParameter<T>)item);
+            return Remove((IQueryParameter<T>)item);
         }
 
         IEnumerator<IQueryParameter> IEnumerable<IQueryParameter>.GetEnumerator()

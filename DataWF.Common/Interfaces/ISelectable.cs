@@ -21,7 +21,7 @@ namespace DataWF.Common
 
         IEnumerable<T> Select(Query<T> checkers);
 
-        IEnumerable<T> Select(QueryParameter<T> parameter);
+        IEnumerable<T> Select(IQueryParameter<T> parameter);
 
         IEnumerable<T> Select(string property, CompareType comparer, object value);
 

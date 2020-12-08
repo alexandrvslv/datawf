@@ -19,6 +19,8 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using DataWF.Data;
+using System;
+using System.Globalization;
 
 namespace DataWF.Data
 {
@@ -38,6 +40,15 @@ namespace DataWF.Data
         {
             var value = transaction.Reader.GetBoolean(i);
             return PullIndex?.SelectOne<F>(value);
+        }
+
+        public override bool Parse(object value)
+        {
+            if (value is bool typedValue)
+                return typedValue;
+            if (value == null || value == DBNull.Value)
+                return false;
+            return Convert.ToBoolean(value, CultureInfo.InvariantCulture);
         }
     }
 }

@@ -172,7 +172,7 @@ namespace DataWF.Common
             if (PropertyInvoker is IValuedInvoker<T> valueInvoker)
             {
                 T value = valueInvoker.GetValue(element);
-                writer.WritePropertyName(valueInvoker.JsonName);
+                writer.WritePropertyName(JsonName);
                 JsonSerializer.Serialize(writer, value, options);
             }
             else
@@ -186,7 +186,7 @@ namespace DataWF.Common
             if (PropertyInvoker is IInvoker<E, T> valueInvoker)
             {
                 T value = valueInvoker.GetValue(element);
-                writer.WritePropertyName(valueInvoker.JsonName);
+                writer.WritePropertyName(JsonName);
                 JsonSerializer.Serialize(writer, value, options);
             }
             else

@@ -1,11 +1,12 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Text;
 
 namespace DataWF.Common
 {
-    public interface IQueryParameter : INotifyPropertyChanged
+    public interface IQueryParameter : INotifyPropertyChanged, INamed
     {
-        string Name { get; set; }
         IInvoker Invoker { get; set; }
         CompareType Comparer { get; set; }
         IComparer Comparision { get; set; }
@@ -20,6 +21,32 @@ namespace DataWF.Common
         bool FormatIgnore { get; set; }
         object Tag { get; set; }
         bool AlwaysTrue { get; set; }
+
+        void Format(StringBuilder builder, bool logic);
+        bool CheckItem(object item);
+        bool CheckValue(object value);
+
+        IEnumerable Search(IEnumerable items);
+
+        IEnumerable Select(IEnumerable items, IListIndexes indexes = null);
+
+        IEnumerable Distinct(IEnumerable items);
+    }
+
+    public interface IQueryParameter<T> : IQueryParameter
+    {
+        bool CheckItem(T item);
+
+        IEnumerable<T> Search(IEnumerable<T> items);
+
+        IEnumerable<T> Select(IEnumerable<T> items, IListIndexes<T> indexes = null);
+
+        IEnumerable<T> Distinct(IEnumerable<T> items);        
+    }
+
+    public interface IQueryParameter<T, V> : IQueryParameter<T>
+    {
+        bool CheckValue(V value);
     }
 
     public interface IQueryFormatable

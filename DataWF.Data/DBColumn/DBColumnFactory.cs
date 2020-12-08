@@ -156,17 +156,19 @@ namespace DataWF.Data
             return column;
         }
 
-        public static DBColumn CreateLog(DBColumn baseColumn)
+        public static DBColumn CreateLog(DBColumn baseColumn, IDBLogTable table)
         {
             var column = (DBColumn)EmitInvoker.CreateObject(baseColumn.GetType());
+            column.Table = (DBTable)table;
             column.RefreshLogColumn(baseColumn);
             return column;
         }
 
-        public static DBColumn CreateVirtual(DBColumn baseColumn)
+        public static DBColumn CreateVirtual(DBColumn baseColumn, IDBVirtualTable table)
         {
             var column = (DBColumn)EmitInvoker.CreateObject(baseColumn.GetType());
-            column.RefreshVirtualColumn(column);
+            column.Table = (DBTable)table;
+            column.RefreshVirtualColumn(baseColumn);
             return column;
         }
     }

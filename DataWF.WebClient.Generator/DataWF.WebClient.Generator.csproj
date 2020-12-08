@@ -8,7 +8,7 @@
     <PackageId>DataWF.WebClient.Generator</PackageId>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>wccodegen</ToolCommandName>
-    <VersionPrefix>1.8.0</VersionPrefix>
+    <VersionPrefix>1.8.1</VersionPrefix>
     <Authors>Alexandr</Authors>
     <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
