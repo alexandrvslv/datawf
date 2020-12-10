@@ -20,14 +20,14 @@ namespace DataWF.Common
     public struct ThreadSafeEnumerator<T> : IEnumerator<T>
     {
         private int i;
-        private readonly int count;
+        private readonly uint count;
         private readonly IList<T> items;
         private T current;
 
         public ThreadSafeEnumerator(IList<T> items)
         {
-            i = -1;
-            count = items.Count;
+            i = 0;
+            count = (uint)items.Count;
             this.items = items;
             current = default(T);
         }
@@ -41,22 +41,19 @@ namespace DataWF.Common
         object IEnumerator.Current => Current;
 
         public void Dispose()
-        {
-            Current = default(T);
-            i = -1;
-        }
+        { }
 
         public bool MoveNext()
         {
-            if (++i >= count)
-            {
-                current = default(T);
-                return false;
-            }
             try
             {
-                current = items[i];
-                return true;
+                if ((uint)i < count)
+                {
+                    current = items[i++];
+                    return true;
+                }
+                current = default(T);
+                return false;
             }
             catch (Exception e)
             {
@@ -67,7 +64,7 @@ namespace DataWF.Common
 
         public void Reset()
         {
-            i = -1;
+            i = 0;
         }
     }
 }

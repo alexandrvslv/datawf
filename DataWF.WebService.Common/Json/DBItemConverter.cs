@@ -52,7 +52,7 @@ namespace DataWF.WebService.Common
             {
                 if ((column.Keys & DBColumnKeys.Access) != 0)
                 {
-                    var propertyValue = (AccessValue)column.PropertyInvoker.GetValue(value);
+                    var propertyValue = ((IInvoker<DBItem, AccessValue>)column.PropertyInvoker).GetValue(value);
                     var accessValue = propertyValue.GetFlags(Factory.CurrentUser);
                     writer.WritePropertyName(column.JsonName);
                     JsonSerializer.Serialize<AccessType>(writer, accessValue, options);

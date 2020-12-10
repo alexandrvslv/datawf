@@ -807,9 +807,8 @@ namespace DataWF.Common
 
         public static int Compare<T>(T x, T y, IComparer<T> comp = null, bool checkHash = false)
         {
-            int result;
             var comparer = comp ?? ListHelperComparer<T>.Default;
-            result = comparer.Compare(x, y);
+            var result = comparer.Compare(x, y);
             if (checkHash && result == 0 && comp != null)
             {
                 result = x.GetHashCode().CompareTo(y.GetHashCode());

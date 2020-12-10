@@ -656,6 +656,7 @@ namespace DataWF.Data
 
         protected internal void SetItemType(Type type)
         {
+            DefaultComparer = DBItemDefaultComparer.Instance;
             itemType = ItemTypes[0] = new DBItemType { Type = type };
             OnPropertyChanged(nameof(ItemType));
             OnPropertyChanged(nameof(ItemTypeName));

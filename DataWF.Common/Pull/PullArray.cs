@@ -68,7 +68,7 @@ namespace DataWF.Common
                 return default(T);
             }
             var arrayBlock = array[block];
-            return arrayBlock == null ? default(T) : arrayBlock[blockIndex];
+            return arrayBlock != null ? arrayBlock[blockIndex] : default(T);
         }
 
         public override void SetValue(short block, short blockIndex, T value)
