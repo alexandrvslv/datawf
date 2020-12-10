@@ -36,7 +36,7 @@ namespace DataWF.Data
         {
             var value = transaction.Reader.GetByte(i);
             var enumValue = Unsafe.As<byte, T>(ref value);
-            return PullIndex?.SelectOne<F>(enumValue);
+            return pullIndex?.SelectOne<F>(enumValue);
         }
 
         public override string FormatQuery(T value)

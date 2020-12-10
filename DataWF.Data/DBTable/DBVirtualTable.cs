@@ -46,46 +46,43 @@ namespace DataWF.Data
         [Browsable(false), XmlIgnore, JsonIgnore]
         public override bool IsSynchronized
         {
-            get { return base.IsSynchronized || (BaseTable?.IsSynchronized ?? false); }
-            set
-            {
-                base.IsSynchronized = value;
-            }
+            get => base.IsSynchronized || (BaseTable?.IsSynchronized ?? false);
+            set => base.IsSynchronized = value;
         }
 
         [JsonIgnore, XmlIgnore]
         public override DBColumnList<DBColumn> Columns
         {
-            get { return base.Columns; }
-            set { base.Columns = value; }
+            get => base.Columns;
+            set => base.Columns = value;
         }
 
         [JsonIgnore, XmlIgnore]
         public override DBColumnGroupList ColumnGroups
         {
-            get { return BaseTable.ColumnGroups; }
-            set { value?.Dispose(); }
+            get => BaseTable.ColumnGroups;
+            set => value?.Dispose();
         }
 
         [JsonIgnore, XmlIgnore]
         public override DBConstraintList<DBConstraint> Constraints
         {
-            get { return base.Constraints; }
-            set { base.Constraints = value; }
+            get => base.Constraints;
+            set => base.Constraints = value;
         }
 
         [JsonIgnore, XmlIgnore]
         public override DBIndexList Indexes
         {
-            get { return BaseTable.Indexes; }
-            set { value?.Dispose(); }
+            get => BaseTable.Indexes;
+            set => value?.Dispose();
         }
 
         [JsonIgnore, XmlIgnore]
         public override DBForeignList Foreigns
         {
-            get { return base.Foreigns; }
-            set { base.Foreigns = value; }
+            get => base.Foreigns;
+            set => base.Foreigns = value;
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -102,7 +99,7 @@ namespace DataWF.Data
         [XmlAttribute, Browsable(false), Category("Database")]
         public string BaseTableName
         {
-            get { return baseTableName; }
+            get => baseTableName;
             set
             {
                 if (baseTableName != value)
@@ -110,11 +107,7 @@ namespace DataWF.Data
                     baseTableName = value;
                     baseTable = null;
                     filterQuery = null;
-                    OnPropertyChanged(nameof(BaseTableName), DDLType.Alter);
-                    if (BaseTable != null)
-                    {
-                        Generate();
-                    }
+                    OnPropertyChanged(nameof(BaseTableName), DDLType.Alter);                    
                 }
             }
         }
@@ -122,7 +115,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Category("Database")]
         public DBTable BaseTable
         {
-            get { return baseTable ?? (baseTable = Schema?.Tables[baseTableName]); }
+            get => baseTable ?? (baseTable = Schema?.Tables[baseTableName]);
             set
             {
                 if (BaseTable != value)
@@ -147,14 +140,14 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public override bool IsLoging
         {
-            get { return BaseTable.IsLoging; }
-            set { BaseTable.IsLoging = value; }
+            get => BaseTable.IsLoging;
+            set => BaseTable.IsLoging = value;
         }
 
         [XmlIgnore, JsonIgnore]
         public override IDBLogTable LogTable
         {
-            get { return BaseTable.LogTable; }
+            get => BaseTable.LogTable;
             set { }
         }
 
@@ -167,11 +160,10 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public override DBSchema Schema
         {
-            get { return base.Schema; }
+            get => base.Schema;
             set
             {
                 base.Schema = value;
-                Generate();
             }
         }
 

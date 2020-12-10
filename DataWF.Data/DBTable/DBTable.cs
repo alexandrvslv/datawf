@@ -157,7 +157,7 @@ namespace DataWF.Data
                 var itemGenerator = GetItemTypeGenerator(type);
                 if (itemGenerator != null)
                 {
-                    if (itemGenerator.Table == null && generate)
+                    if (!itemGenerator.Generated && generate)
                         itemGenerator.Generate(schema);
                     if (itemGenerator.Table != null)
                         return cacheTables[type] = itemGenerator.Table;
@@ -167,7 +167,7 @@ namespace DataWF.Data
                     var tableGenerator = GetTableGenerator(type);
                     if (tableGenerator != null && tableGenerator.ItemType == type)
                     {
-                        if (tableGenerator.Table == null && generate)
+                        if (!tableGenerator.Generated && generate)
                             tableGenerator.Generate(schema);
                         if (tableGenerator.Table != null)
                             return cacheTables[type] = tableGenerator.Table;

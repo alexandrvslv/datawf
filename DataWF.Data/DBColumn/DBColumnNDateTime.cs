@@ -44,7 +44,7 @@ namespace DataWF.Data
             {
                 value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
             }
-            return PullIndex?.SelectOne<F>(value);
+            return pullIndex?.SelectOne<F>(value);
         }
 
         public override string FormatQuery(DateTime? value)

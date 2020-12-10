@@ -44,6 +44,7 @@ namespace DataWF.Data
 
         public override DBTable Generate(DBSchema schema)
         {
+            Generated = true;
             return null;
         }
     }

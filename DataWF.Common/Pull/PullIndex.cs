@@ -20,7 +20,6 @@ namespace DataWF.Common
         public void Add<T, V>(T item, V value) where T : class, IPullHandler
         {
             var pull = (PullIndex<T, V>)this;
-            pull.CheckNull(ref value);
             pull.Add(item, value);
         }
 
@@ -29,14 +28,10 @@ namespace DataWF.Common
         public void Remove<T, V>(T item, V value) where T : class, IPullHandler
         {
             var pull = (PullIndex<T, V>)this;
-            pull.CheckNull(ref value);
             pull.Remove(item, value);
         }
         public abstract IEnumerable Select(object value, CompareType compare);
-        public abstract IEnumerable<F> Select<F>(object value, CompareType compare) where F : class;
         public abstract object SelectOne(object value);
-        public abstract F SelectOne<F>(object value) where F : class;
-        //public abstract F SelectOne<F, K>(K value) where F : class;
         public abstract void Clear();
         public abstract void Dispose();
     }

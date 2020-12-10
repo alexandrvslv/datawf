@@ -38,14 +38,16 @@ namespace DataWF.Data
 
         public virtual DBTable Table
         {
-            get { return cacheTable ?? (cacheTable = Schema?.Tables[Type.Name] ?? DBService.Schems.ParseTable(Type.Name)); }
-            internal set { cacheTable = value; }
+            get => cacheTable ?? (cacheTable = Schema?.Tables[Type.Name] ?? DBService.Schems.ParseTable(Type.Name));
+            internal set => cacheTable = value;
         }
+
+        public bool Generated { get; protected set; }
 
         public DBSchema Schema
         {
-            get { return schema ?? TableGenerator.Schema; }
-            set { schema = value; }
+            get => schema ?? TableGenerator.Schema;
+            set => schema = value;
         }
 
         public virtual void Initialize(Type type)
@@ -61,8 +63,9 @@ namespace DataWF.Data
 
         public virtual DBTable Generate(DBSchema schema)
         {
+            Generated = true;
             Schema = schema;
-            if (TableGenerator.Table == null)
+            if (!TableGenerator.Generated)
             {
                 TableGenerator.Generate(schema);
                 if (Table != null)
@@ -81,11 +84,16 @@ namespace DataWF.Data
             Table.ItemTypeIndex = Attribute.Id;
             Table.Schema = schema;
             VirtualTable.BaseTable = TableGenerator.Table;
+            VirtualTable.Generate();
             foreach (var columnGenerator in TableGenerator.Columns)
             {
                 var virtualColumn = Table.Columns[columnGenerator.ColumnName];
                 if (virtualColumn != null)
                 {
+                    if (virtualColumn.GetType() != columnGenerator.Column.GetType())
+                    {
+                        Table.Columns.Add(DBColumnFactory.CreateVirtual(columnGenerator.Column, VirtualTable));
+                    }
                     virtualColumn.RefreshVirtualColumn(columnGenerator.Column);
                     if (columnGenerator.DefaultValues != null && columnGenerator.DefaultValues.TryGetValue(Type, out var defaultValue))
                     {

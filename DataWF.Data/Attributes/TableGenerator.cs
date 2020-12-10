@@ -46,20 +46,20 @@ namespace DataWF.Data
 
         public virtual DBSchema Schema
         {
-            get { return cacheSchema; }
-            set { cacheSchema = value; }
+            get => cacheSchema;
+            set => cacheSchema = value;
         }
 
         public DBTable Table
         {
-            get { return cacheTable ?? (cacheTable = Schema?.Tables[Attribute.TableName] ?? DBService.Schems.ParseTable(Attribute.TableName)); }
-            internal set { cacheTable = value; }
+            get => cacheTable ?? (cacheTable = Schema?.Tables[Attribute.TableName] ?? DBService.Schems.ParseTable(Attribute.TableName));
+            internal set => cacheTable = value;
         }
 
         public DBTableGroup TableGroup
         {
-            get { return cacheGroup ?? (cacheGroup = Schema?.TableGroups[Attribute.GroupName]); }
-            internal set { cacheGroup = value; }
+            get => cacheGroup ?? (cacheGroup = Schema?.TableGroups[Attribute.GroupName]);
+            internal set => cacheGroup = value;
         }
 
         public Type ItemType { get; internal set; }
@@ -110,6 +110,8 @@ namespace DataWF.Data
 
         public SelectableList<ParameterInvoker> Parameters { get; private set; } = new SelectableList<ParameterInvoker>();
 
+        public bool Generated { get; protected set; }
+
         public virtual DBTable CreateTable()
         {
             Debug.WriteLine($"Generate {Attribute.TableName} - {this.ItemType.Name}");
@@ -132,6 +134,7 @@ namespace DataWF.Data
 
         public virtual DBTable Generate(DBSchema schema)
         {
+            Generated = true;
             GenerateBasic(schema);
             GenerateColumns();
             if (!Schema.Tables.Contains(Table.Name))

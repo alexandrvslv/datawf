@@ -45,7 +45,7 @@ namespace DataWF.Data
             var byteArray = (byte[])transaction.Reader.GetValue(i);
             var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
             serializable.Deserialize(byteArray);
-            return PullIndex?.SelectOne<F>(serializable);
+            return pullIndex?.SelectOne<F>(serializable);
         }
 
         public override object GetParameterValue(T? value)

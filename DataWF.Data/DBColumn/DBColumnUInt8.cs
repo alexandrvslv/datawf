@@ -34,7 +34,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = (byte)transaction.Reader.GetByte(i);
-            return PullIndex?.SelectOne<F>(value);
+            return pullIndex?.SelectOne<F>(value);
         }
 
         public override string FormatQuery(byte value)

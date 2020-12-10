@@ -117,6 +117,21 @@ namespace DataWF.Data
             return PullIndexFactory.Create(Pull, typeof(DBItem), DataType, Table.DefaultComparer);
         }
 
+        public override void AddIndex(DBItem item)
+        {
+            pullIndex?.Add(item);
+        }
+
+        public override void RemoveIndex(DBItem item)
+        {
+            pullIndex?.Remove(item);
+        }
+
+        public override IEnumerable<TT> SelectIndex<TT>(object value, CompareType comparer)
+        {
+            return pullIndex.Select<TT>(value, comparer);
+        }
+
         public override bool Equal(object oldValue, object newValue)
         {
             return Equal((T)oldValue, (T)newValue);

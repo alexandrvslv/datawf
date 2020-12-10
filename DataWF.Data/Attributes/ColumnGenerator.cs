@@ -150,7 +150,7 @@ namespace DataWF.Data
                 Column.DefaultValue = defaultValue;
             }
 
-            if (!table.Columns.Contains(Column.Name))
+            if (!table.Columns.Contains(Column))
             {
                 table.Columns.Add(Column);
             }

@@ -557,7 +557,7 @@ namespace DataWF.Data
                         DBDataType = DBDataType.TinyInt;
                     else if (underlineType == typeof(short))
                         DBDataType = DBDataType.ShortInt;
-                    else if( underlineType == typeof(ushort))
+                    else if (underlineType == typeof(ushort))
                         DBDataType = DBDataType.Int;
                     else if (underlineType == typeof(long)
                         || underlineType == typeof(ulong))
@@ -884,6 +884,10 @@ namespace DataWF.Data
         //        tags[hindex] = value;
         //    }
         //}
+        public abstract void AddIndex(DBItem item);
+
+        public abstract void RemoveIndex(DBItem item);
+
         public abstract bool IsNull(DBItem item);
 
         public abstract bool IsNull(int item);
@@ -979,6 +983,8 @@ namespace DataWF.Data
         public abstract object ParseValue(object value);
 
         public abstract bool CheckItem(DBItem item, object val2, CompareType comparer);
+
+        public abstract IEnumerable<T> SelectIndex<T>(object value, CompareType comparer) where T : DBItem;
 
         public void RemoveConstraints()
         {

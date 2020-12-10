@@ -25,6 +25,6 @@ namespace DataWF.Data
     {
         QQuery FilterQuery { get; }
         void OnTableChanged(DBItem item, NotifyCollectionChangedAction type);
-        
+        void Generate();
     }
 }

@@ -42,7 +42,7 @@ namespace DataWF.Data
             DataTypeMap = new Dictionary<DBDataType, string>(){
                     {DBDataType.String, "varchar{0}"},
                     {DBDataType.Clob, "text"},
-                    {DBDataType.DateTime, "timestamp(6)"},
+                    {DBDataType.DateTime, "timestamp{0}"},
                     {DBDataType.ByteArray, "bytea"},
                     {DBDataType.ByteSerializable, "bytea"},
                     {DBDataType.Blob, "bytea"},

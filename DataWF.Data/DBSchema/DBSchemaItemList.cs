@@ -84,7 +84,7 @@ namespace DataWF.Data
         public override bool Remove(T item)
         {
             bool flag = base.Remove(item);
-            DBService.OnDBSchemaChanged(item, DDLType.Drop);
+            DBService.OnDBSchemaChanged(item, GetRemoveType(item));
             return flag;
         }
 
@@ -141,6 +141,11 @@ namespace DataWF.Data
         public virtual DDLType GetInsertType(T item)
         {
             return DDLType.Create;
+        }
+
+        public virtual DDLType GetRemoveType(T item)
+        {
+            return DDLType.Drop;
         }
 
         public override object NewItem()

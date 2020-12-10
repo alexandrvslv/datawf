@@ -79,7 +79,8 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    RemoveInternal(exist, IndexOf(exist));
+                    index = IndexOf(exist);
+                    RemoveInternal(exist, index);
                     toReplace.Add(item);
                 }
             }
@@ -115,9 +116,9 @@ namespace DataWF.Data
 
         public override DDLType GetInsertType(T item)
         {
+            var isReplace = toReplace.Remove(item);
             if (isVirtual)
                 return DDLType.Default;
-            var isReplace = toReplace.Remove(item);
             return (item.ColumnType == DBColumnTypes.Default)
                 ? isReplace ? DDLType.Alter : DDLType.Create
                 : DDLType.Default;

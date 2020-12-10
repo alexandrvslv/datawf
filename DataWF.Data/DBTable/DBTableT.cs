@@ -138,7 +138,7 @@ namespace DataWF.Data
         {
             foreach (var column in Columns)
             {
-                column.PullIndex?.Add(item);
+                column.AddIndex(item);
             }
         }
 
@@ -146,7 +146,7 @@ namespace DataWF.Data
         {
             foreach (var column in Columns)
             {
-                column.PullIndex?.Remove(item);
+                column.RemoveIndex(item);
             }
         }
 
@@ -277,7 +277,7 @@ namespace DataWF.Data
                 return;
             }
 
-            if (column.PullIndex is PullIndex<DBItem, V> pullIndex)
+            if (column?.PullIndex is PullIndex<DBItem, V> pullIndex)
                 pullIndex.Add(item, value);
             foreach (var table in virtualTables)
             {
@@ -844,25 +844,15 @@ namespace DataWF.Data
                 var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
                 stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
 
-                if ((transaction.ReaderParam & DBLoadParam.Synchronize) != 0)
+                if (item != null && item.Stamp >= stamp)
                 {
-                    if (item != null && item.Stamp >= stamp)
-                    {
-                        return item;
-                    }
-                    else if (transaction.ReaderColumns.Count < 4)
-                    {
-                        return LoadById(transaction.Reader.GetValue(transaction.ReaderPrimaryKey));
-                    }
-                }
-                if (item != null)
-                {
-                    if (item.Stamp >= stamp)
-                    {
-                        return item;
-                    }
+                    return item;
                 }
 
+                if ((transaction.ReaderParam & DBLoadParam.Synchronize) != 0 && transaction.ReaderColumns.Count < 4)
+                {
+                    return LoadById(transaction.Reader.GetValue(transaction.ReaderPrimaryKey));
+                }
             }
             if (item == null)
             {
@@ -927,8 +917,8 @@ namespace DataWF.Data
             {
                 if (buffer != null && param.Logic.Type == LogicTypes.And)
                 {
-                    if (!buffer.Any())
-                        break;
+                    //if (!buffer.Any())
+                    //    break;
                     list = buffer;
                 }
                 var temp = Select(param, list);
@@ -1096,7 +1086,7 @@ namespace DataWF.Data
             value = column.ParseValue(value);
             if (column.PullIndex is PullIndex index)
             {
-                return index.SelectOne<T>(value);
+                return (T)index.SelectOne(value);
             }
             return Select(column, CompareType.Equal, value).FirstOrDefault();
         }
@@ -1129,7 +1119,7 @@ namespace DataWF.Data
 
             if (column.PullIndex != null)
             {
-                return column.PullIndex.Select<T>(value, comparer);
+                return column.SelectIndex<T>(value, comparer);
             }
             return Search(column, comparer, value, list);
         }

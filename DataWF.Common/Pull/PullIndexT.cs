@@ -204,25 +204,25 @@ namespace DataWF.Common
             return (K)Helper.Parse(value, typeof(K));
         }
 
-        public override F SelectOne<F>(object value)
+        public F SelectOne<F>(object value) where F : T
         {
             var key = CheckNull(value);
             if (store.TryGetValue(key, out var list))
-                return list[0] as F;
+                return (F)list[0];
             else
                 return default(F);
         }
 
-        public F SelectOne<F>(K key) where F : class
+        public F SelectOne<F>(K key) where F : T
         {
             CheckNull(ref key);
             if (store.TryGetValue(key, out var list))
-                return list[0] as F;
+                return (F)list[0];
             else
                 return default(F);
         }
 
-        public IEnumerable<F> Select<F>(K key) where F : class
+        public IEnumerable<F> Select<F>(K key) where F : T
         {
             CheckNull(ref key);
             if (store.TryGetValue(key, out var list))
@@ -241,7 +241,7 @@ namespace DataWF.Common
             }
         }
 
-        public IEnumerable<F> Search<F>(Predicate<K> comparer) where F : class
+        public IEnumerable<F> Search<F>(Predicate<K> comparer) where F : T
         {
             foreach (var entry in store)
             {
@@ -258,7 +258,7 @@ namespace DataWF.Common
             }
         }
 
-        public override IEnumerable<F> Select<F>(object value, CompareType compare)
+        public IEnumerable<F> Select<F>(object value, CompareType compare) where F : T
         {
             IEnumerable<F> buf = Enumerable.Empty<F>();
 
@@ -326,7 +326,7 @@ namespace DataWF.Common
             return buf;
         }
 
-        public IEnumerable<F> Select<F>(K key, CompareType compare) where F : class
+        public IEnumerable<F> Select<F>(K key, CompareType compare) where F : T
         {
             switch (compare.Type)
             {

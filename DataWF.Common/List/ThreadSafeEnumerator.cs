@@ -48,13 +48,9 @@ namespace DataWF.Common
 
         public bool MoveNext()
         {
-            i++;
-            if (count <= i)
+            if (++i >= count)
             {
-                if (i > 0)
-                {
-                    current = default(T);
-                }
+                current = default(T);
                 return false;
             }
             try

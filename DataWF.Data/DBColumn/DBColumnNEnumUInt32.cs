@@ -43,7 +43,7 @@ namespace DataWF.Data
         {
             var value = (uint)transaction.Reader.GetInt64(i);
             var enumValue = Unsafe.As<uint, T>(ref value);
-            return PullIndex?.SelectOne<F>(enumValue);
+            return pullIndex?.SelectOne<F>(enumValue);
         }
 
         public override string FormatQuery(T? value)
