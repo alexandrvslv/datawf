@@ -687,7 +687,7 @@ namespace DataWF.Data
             {
                 case CompareTypes.Like:
                     var r = val2 is Regex ? (Regex)val2 : Helper.BuildLike(val2.ToString());
-                    return r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
+                    return val1 != null && r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
                 case CompareTypes.In:
                     if (val2 is string)
                         val2 = val2.ToString().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);

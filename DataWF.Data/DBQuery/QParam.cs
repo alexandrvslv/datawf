@@ -571,6 +571,11 @@ namespace DataWF.Data
             yield break;
         }
 
+        public override object GetValue(DBItem row)
+        {
+            return row;
+        }
+
         public class GroupInvoker : Invoker<QParam, QParam>
         {
             public static readonly GroupInvoker Instance = new GroupInvoker();

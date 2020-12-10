@@ -195,7 +195,9 @@ namespace DataWF.Data
 
         public QParam Add()
         {
-            return parameters.Add();
+            var param = new QParam();
+            parameters.Add(param);
+            return param;
         }
 
         public void SimpleFilter(object text)
@@ -287,7 +289,7 @@ namespace DataWF.Data
             {
                 string prefix = word.Substring(0, word.IndexOf('.'));
                 foreach (var table in tables)
-                    if (prefix.Equals(table.Text, StringComparison.OrdinalIgnoreCase) ||
+                    if (prefix.Equals(table.TableName, StringComparison.OrdinalIgnoreCase) ||
                         prefix.Equals(table.Alias, StringComparison.OrdinalIgnoreCase))
                         return table.Table.ParseColumnProperty(word);
             }
@@ -304,7 +306,7 @@ namespace DataWF.Data
             }
             return null;
         }
-        
+
         public int FindFrom(string query)
         {
             int exit = 0;
@@ -337,7 +339,6 @@ namespace DataWF.Data
             orders.Clear();
             if (query == null || query.Length == 0)
                 return;
-            object val = null;
             bool alias = false;
             bool not = false;
             QParcerState state = QParcerState.Where;
@@ -511,8 +512,7 @@ namespace DataWF.Data
 
                                     if (Helper.IsDecimal(word))
                                     {
-                                        val = decimal.Parse(word, NumberStyles.Number, CultureInfo.InvariantCulture.NumberFormat);
-                                        parameter.SetValue(new QValue(val, column?.Column) { Text = word });
+                                        parameter.SetValue(new QValue(word, column?.Column));
                                     }
                                     else if (word.Equals("true", StringComparison.OrdinalIgnoreCase))
                                     {
@@ -595,7 +595,7 @@ namespace DataWF.Data
                                                                         pTable = dbColumn.ReferenceTable;
                                                                         pQuery = new QQuery("", pTable, new[] { pTable.PrimaryKey }, pQuery);
                                                                         parameter.SetValue(pQuery);
-                                                                        parameter = pQuery.Parameters.Add();
+                                                                        parameter = pQuery.Add();
                                                                     }
                                                                     else
                                                                     {
@@ -608,7 +608,7 @@ namespace DataWF.Data
                                                                             pTable = referencing.ReferenceTable.Table;
                                                                             pQuery = new QQuery("", pTable, new[] { referencing.ReferenceColumn.Column }, pQuery);
                                                                             parameter.SetValue(pQuery);
-                                                                            parameter = pQuery.Parameters.Add();
+                                                                            parameter = pQuery.Add();
                                                                         }
                                                                     }
                                                                 }
@@ -884,7 +884,7 @@ namespace DataWF.Data
                     {
                         if (Helper.IsDecimal(word))
                         {
-                            function.Items.Add(new QItem(word));
+                            function.Items.Add(new QValue(word));
                         }
                         else
                         {
@@ -915,7 +915,7 @@ namespace DataWF.Data
                                         if (col != null)
                                             function.Items.Add(new QColumn(col));
                                         else
-                                            function.Items.Add(new QItem(word));
+                                            function.Items.Add(new QValue(word));
                                     }
                                 }
                             }
@@ -1134,7 +1134,7 @@ namespace DataWF.Data
                     }
                     else
                     {
-                        param = parameters.Add();
+                        param = Add();
                         foreach (string item in split)
                         {
                             if (item.Trim().Length == 0)

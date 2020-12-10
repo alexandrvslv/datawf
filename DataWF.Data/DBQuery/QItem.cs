@@ -29,24 +29,17 @@ using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(QItem), nameof(QItem.Text), typeof(QItem.TextInvoker))]
 [assembly: Invoker(typeof(QItem), nameof(QItem.Order), typeof(QItem.OrderInvoker))]
 namespace DataWF.Data
 {
-    public class QItem : IDisposable, IEntryNotifyPropertyChanged, IComparable, IComparable<QItem>, IValued, IInvoker
+    public abstract class QItem : IDisposable, IEntryNotifyPropertyChanged, IComparable, IComparable<QItem>, IValued, IInvoker
     {
         protected int order = -1;
-        protected string text;
         protected string alias;
         private QItem holder;
 
         public QItem()
         {
-        }
-
-        public QItem(string name)
-        {
-            this.text = name;
         }
 
         [JsonIgnore, XmlIgnore]
@@ -61,18 +54,6 @@ namespace DataWF.Data
             set
             {
                 order = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public virtual string Text
-        {
-            get => text;
-            set
-            {
-                if (text == value)
-                    return;
-                text = value;
                 OnPropertyChanged();
             }
         }
@@ -132,10 +113,7 @@ namespace DataWF.Data
             set { }
         }
 
-        public virtual string Format(IDbCommand command = null)
-        {
-            return text;
-        }
+        public abstract string Format(IDbCommand command = null);
 
         public object GetValue()
         {
@@ -147,10 +125,7 @@ namespace DataWF.Data
             return GetValue((DBItem)target);
         }
 
-        public virtual object GetValue(DBItem row)
-        {
-            return text;
-        }
+        public abstract object GetValue(DBItem row);
 
         public void SetValue(object target, object value)
         {
@@ -214,19 +189,6 @@ namespace DataWF.Data
                 command.Parameters.Add(parameter);
             }
             return param;
-        }
-
-        public class TextInvoker : Invoker<QItem, string>
-        {
-            public static readonly TextInvoker Instance = new TextInvoker();
-
-            public override string Name => nameof(QItem.Text);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(QItem target) => target.Text;
-
-            public override void SetValue(QItem target, string value) => target.Text = value;
         }
 
         public class OrderInvoker : Invoker<QItem, int>

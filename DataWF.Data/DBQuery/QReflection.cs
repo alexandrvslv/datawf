@@ -34,10 +34,6 @@ namespace DataWF.Data
         public QReflection()
         { }
 
-        public QReflection(string name)
-            : base(name)
-        { }
-
         public QReflection(IInvoker invoker)
             : this()
         {
@@ -46,19 +42,13 @@ namespace DataWF.Data
 
         public IInvoker Invoker
         {
-            get
-            {
-                if (invoker == null)
-                    invoker = EmitInvoker.Initialize(typeof(DBItem), this.text);
-                return invoker;
-            }
+            get => invoker;
             set
             {
                 if (invoker != value)
                 {
                     invoker = value;
-                    Text = value?.Name;
-                    OnPropertyChanged(nameof(Invoker));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -70,7 +60,7 @@ namespace DataWF.Data
 
         public override string Format(IDbCommand command = null)
         {
-            return command != null ? string.Empty : base.Format(command);
+            return command != null ? string.Empty : Invoker?.Name;
         }
 
         public IListIndex CreateIndex(bool concurrent)

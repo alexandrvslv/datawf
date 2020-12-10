@@ -27,7 +27,7 @@ namespace DataWF.Data
     public class QValue : QColumn
     {
         [DefaultValue(null)]
-        protected object value = null;
+        protected object _value = null;
 
         public QValue()
         { }
@@ -40,12 +40,7 @@ namespace DataWF.Data
 
         public object Value
         {
-            get
-            {
-                if (value == null && text != null)
-                    value = Column?.ParseValue(text) ?? text;
-                return value;
-            }
+            get => _value;
             set
             {
                 if (Column == null)
@@ -62,10 +57,9 @@ namespace DataWF.Data
                 }
                 else
                     value = Column.ParseValue(value);
-                if (this.value != value)
+                if (_value != value)
                 {
-                    this.value = value;
-                    this.text = Column?.FormatQuery(value) ?? DBSystem.FormatQuery(value);
+                    _value = value;
                     OnPropertyChanged(nameof(Value));
                 }
             }
@@ -78,33 +72,25 @@ namespace DataWF.Data
             {
                 if (Column != value)
                 {
-                    ColumnName = value?.FullName;
-                    //prefix = value.Table.Code;
-                    columnn = value;
+                    base.Column = value;
+                    if (Column != null)
+                    {
+                        _value = Column.ParseValue(_value);
+                    }
                 }
-            }
-        }
-
-        public override string Text
-        {
-            get => base.Text;
-            set
-            {
-                base.Text = value;
-                this.value = null;
             }
         }
 
         public override string Format(IDbCommand command = null)
         {
             return command == null
-                ? DBSystem.FormatQuery(Value)
+                ? ToString()
                 : CreateCommandParameter(command, Column != null ? Column.GetParameterValue(Value) : Value, Column);
         }
 
         public override string ToString()
         {
-            return DBSystem.FormatQuery(Value);
+            return Column != null ? Column.FormatQuery(Value) : DBSystem.FormatQuery(Value);
         }
 
         public override object GetValue(DBItem row)

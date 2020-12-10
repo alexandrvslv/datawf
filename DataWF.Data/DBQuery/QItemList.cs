@@ -30,13 +30,12 @@ namespace DataWF.Data
         void Delete(QItem item);
     }
 
-    public class QItemList<T> : SelectableList<T>, IQItemList where T : QItem, new()
+    public class QItemList<T> : SelectableList<T>, IQItemList where T : QItem
     {
         protected IQuery query;
 
         public QItemList()
         {
-            Indexes.Add(QItem.TextInvoker.Instance);
             ApplySort(new InvokerComparer(QItem.OrderInvoker.Instance, ListSortDirection.Ascending));
         }
 
@@ -53,11 +52,6 @@ namespace DataWF.Data
         public IQItemList Owner { get; set; }
 
         public IQuery Query => Owner.Query;
-
-        public T this[string name]
-        {
-            get => SelectOne(nameof(QItem.Text), CompareType.Equal, name);
-        }
 
         public void Delete(QItem item)
         {
@@ -80,13 +74,6 @@ namespace DataWF.Data
                     item.Order = index;
             }
             base.InsertInternal(index, item);
-        }
-
-        public virtual T Add()
-        {
-            T item = new T() { Text = "Param" + Count.ToString() };
-            Add(item);
-            return item;
         }
 
         public override void Dispose()

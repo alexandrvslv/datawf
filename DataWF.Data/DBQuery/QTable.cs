@@ -40,14 +40,14 @@ namespace DataWF.Data
 
         public string TableName
         {
-            get { return tableName; }
+            get => tableName;
             set
             {
                 if (tableName != value)
                 {
                     tableName = value;
                     table = null;
-                    OnPropertyChanged(nameof(TableName));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -82,8 +82,7 @@ namespace DataWF.Data
             {
                 if (Table != value)
                 {
-                    TableName = value?.FullName;
-                    Text = value?.Name;
+                    TableName = value?.Name;
                     table = value;
                     OnPropertyChanged(nameof(Table));
                 }
@@ -92,9 +91,12 @@ namespace DataWF.Data
 
         public override string Format(IDbCommand command = null)
         {
-            var schema = Table.Schema.Connection.Schema;
+            return $"{Join.Format()} {Table?.FormatQTable(alias) ?? ($"{TableName} {alias}")}";
+        }
 
-            return $"{Join.Format()} {Table?.FormatQTable(alias) ?? ($"{text} {alias}")}";
+        public override object GetValue(DBItem row)
+        {
+            return TableName;
         }
     }
 }

@@ -39,14 +39,19 @@ namespace DataWF.Data
                 if (type != value)
                 {
                     type = value;
-                    text = CompareType.Format(value);
+                    OnPropertyChanged();
                 }
             }
         }
 
         public override string Format(IDbCommand command = null)
         {
-            return " " + text + " ";
+            return $" {CompareType.Format(Type)} ";
+        }
+
+        public override object GetValue(DBItem row)
+        {
+            return CompareType.Format(Type);
         }
     }
 }

@@ -39,13 +39,12 @@ namespace DataWF.Data
         }
 
         public QColumn(string name)
-            : base(name)
+            : base()
         {
             columnName = name;
         }
 
         public QColumn(DBColumn column)
-            : base(column.Name)
         {
             Column = column;
         }
@@ -60,7 +59,7 @@ namespace DataWF.Data
                     columnName = value;
                     columnn = null;
                 }
-                OnPropertyChanged(nameof(ColumnName));
+                OnPropertyChanged();
             }
         }
 
@@ -71,8 +70,7 @@ namespace DataWF.Data
             {
                 if (Column != value)
                 {
-                    ColumnName = value?.FullName;
-                    base.Text = value?.Name;
+                    ColumnName = value?.Name;
                     //prefix = value.Table.Code;
                     columnn = value;
                 }
@@ -124,16 +122,16 @@ namespace DataWF.Data
         public override string Format(IDbCommand command = null)
         {
             if (Column == null)
-                return text;
+                return ColumnName;
             else if (command != null
                 && (Column.ColumnType == DBColumnTypes.Internal
                 || Column.ColumnType == DBColumnTypes.Expression
                 || Column.ColumnType == DBColumnTypes.Code))
                 return string.Empty;
             else if (Column.ColumnType == DBColumnTypes.Query && Column.Table.Type != DBTableType.View)
-                return $"({Column.Query}) as {text}";
+                return $"({Column.Query}) as {ColumnName}";
             else
-                return $"{(Prefix != null ? (Prefix + ".") : "")}{text}{(alias != null ? (" as " + alias) : "")}";
+                return $"{(Prefix != null ? (Prefix + ".") : "")}{ColumnName}{(alias != null ? (" as " + alias) : "")}";
         }
 
         public override object GetValue(DBItem row)
@@ -196,6 +194,6 @@ namespace DataWF.Data
             return (IComparer<TT>)Column?.CreateComparer(typeof(TT), direction);
         }
 
-       
+
     }
 }

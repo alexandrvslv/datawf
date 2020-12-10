@@ -105,7 +105,7 @@ namespace DataWF.Data
                                 string format = "yyyy-MM-dd HH:mm:ss.fff";
                                 if (items.Count == 3)
                                 {
-                                    string f = items[2].Text;
+                                    string f = items[2].GetValue()?.ToString();
                                     if (f == "112")
                                         format = "yyyyMMdd";
                                     else if (f == "12")
@@ -129,8 +129,10 @@ namespace DataWF.Data
                     }
                 case QFunctionType.parse:
                     {
-                        var param = items[0].Text.Trim('\'');
-                        var local = items.Count > 3 ? System.Globalization.CultureInfo.GetCultureInfo(items[4].Text.Trim('\'')) : System.Globalization.CultureInfo.CurrentCulture;
+                        var param = items[0].GetValue()?.ToString().Trim('\'');
+                        var local = items.Count > 3
+                            ? System.Globalization.CultureInfo.GetCultureInfo(items[4].GetValue()?.ToString().Trim('\''))
+                            : System.Globalization.CultureInfo.CurrentCulture;
                         var t = items[2] as QType;
                         if (t.Type == DBDataType.Date || t.Type == DBDataType.DateTime)
                         {
@@ -145,7 +147,7 @@ namespace DataWF.Data
                     }
                 case QFunctionType.datename:
                     {
-                        var param = items[0].Text;
+                        var param = items[0].GetValue()?.ToString();
                         var val = items[1].GetValue(row);
                         if (!(val is DateTime))
                             val = DateTime.Parse(val.ToString());
