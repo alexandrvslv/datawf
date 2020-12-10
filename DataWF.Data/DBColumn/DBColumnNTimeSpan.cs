@@ -28,10 +28,6 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             var value = transaction.Reader.IsDBNull(i) ? (TimeSpan?)null : transaction.GetTimeSpan(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
@@ -40,6 +36,16 @@ namespace DataWF.Data
         {
             var value = transaction.GetTimeSpan(i);
             return PullIndex?.SelectOne<F>(value);
+        }
+
+        public override string FormatQuery(TimeSpan? value)
+        {
+            return value != null ? $"'{value.Value}'" : "null";
+        }
+
+        public override string FormatDisplay(TimeSpan? value)
+        {
+            return value?.ToString(Format, CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
         public override TimeSpan? Parse(object value)

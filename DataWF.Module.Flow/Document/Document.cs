@@ -603,7 +603,7 @@ namespace DataWF.Module.Flow
         {
             var work = new DocumentWork
             {
-                DateCreate = DateTime.Now,
+                DateCreate = DateTime.UtcNow,
                 Document = this,
                 Stage = stage,
                 Staff = staff,

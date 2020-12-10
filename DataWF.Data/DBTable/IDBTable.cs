@@ -32,7 +32,7 @@ namespace DataWF.Data
         DBItem this[int index] { get; }
         DBColumn<byte[]> AccessKey { get; }
         DBColumn<string> CodeKey { get; }
-        DBColumn<DateTime?> DateKey { get; }
+        DBColumn<DateTime> DateKey { get; }
         DBColumn ElementTypeKey { get; }
         DBColumn<byte[]> FileKey { get; }
         DBColumn<long?> FileBLOBKey { get; }
@@ -41,7 +41,7 @@ namespace DataWF.Data
         DBColumn<byte[]> ImageKey { get; }
         DBColumn<int> ItemTypeKey { get; }
         DBColumn PrimaryKey { get; }
-        DBColumn<DateTime?> StampKey { get; }
+        DBColumn<DateTime> StampKey { get; }
         DBColumn<DBStatus> StatusKey { get; }
         DBSystem System { get; }
         int BlockSize { get; set; }
@@ -86,11 +86,6 @@ namespace DataWF.Data
         string BuildQuery(string whereFilter, string alias, IEnumerable<DBColumn> cols, string function = null);
         DBColumn CheckColumn(string name, Type type, ref bool newCol);
         void CheckColumns(DBTransaction transaction);
-        bool CheckItem(DBItem item, object val1, object val2, CompareType comparer);
-        bool CheckItem(DBItem item, QItemList<QParam> parameters);
-        bool CheckItem(DBItem item, QParam param);
-        bool CheckItem(DBItem item, QQuery query);
-        bool CheckItem(DBItem item, string column, object val, CompareType comparer);
         IDbCommand CreatePrimaryKeyCommmand(object id, IEnumerable<DBColumn> cols = null);
         IDBTableView CreateItemsView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
         string CreateQuery(string whereText, string alias, IEnumerable<DBColumn> cols = null);

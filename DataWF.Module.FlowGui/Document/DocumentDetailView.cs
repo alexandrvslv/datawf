@@ -44,7 +44,7 @@ namespace DataWF.Module.FlowGui
                 if (document != value)
                 {
                     document = value;
-                    view.DefaultParam.Value = document?.Id ?? 0;
+                    view.DefaultParam.RightValue = document?.Id ?? 0;
                     view.UpdateFilter();
                     view.IsSynchronized = false;
                 }

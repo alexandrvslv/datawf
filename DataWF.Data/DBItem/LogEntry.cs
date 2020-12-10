@@ -42,13 +42,13 @@ namespace DataWF.Data
 
         public object OldFormat
         {
-            get { return Column.FormatValue(Old); }
+            get { return Column.FormatDisplay(Old); }
             set { Old = value; }
         }
 
         public object NewFormat
         {
-            get { return Column.FormatValue(New); }
+            get { return Column.FormatDisplay(New); }
             set { New = value; }
         }
 

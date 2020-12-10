@@ -85,8 +85,7 @@ namespace DataWF.Data
                 case QFunctionType.convert:
                     {
                         var paramType = items[0] as QType;
-                        var column = ((QColumn)items[1]).Column;
-                        var val = row[column];
+                        var val = items[1].GetValue(row);
 
                         if (paramType.Type == DBDataType.Date)
                         {
@@ -117,7 +116,7 @@ namespace DataWF.Data
                                 temp = ((DateTime)val).ToString(format);
                             }
                             else
-                                temp = DBSystem.FormatText(val);
+                                temp = DBSystem.FormatQuery(val);
                             if (paramType.Size > 0 && temp.Length > paramType.Size)
                                 temp = temp.Substring(0, (int)paramType.Size);
                             return temp;
@@ -147,8 +146,7 @@ namespace DataWF.Data
                 case QFunctionType.datename:
                     {
                         var param = items[0].Text;
-                        var column = ((QColumn)items[1]).Column;
-                        var val = row[column];
+                        var val = items[1].GetValue(row);
                         if (!(val is DateTime))
                             val = DateTime.Parse(val.ToString());
                         return ((DateTime)val).ToString(param);

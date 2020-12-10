@@ -18,12 +18,11 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
-using DataWF.Data;
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -267,30 +266,74 @@ namespace DataWF.Data
 
         public override object GetParameterValue(DBItem item)
         {
-            return GetValue(item);
+            return GetParameterValue(GetValue(item));
         }
 
-        public override string FormatValue(DBItem item)
+        public virtual object GetParameterValue(T value)
         {
-            return FormatValue(GetValue(item));
+            return value;
         }
 
-        public override string FormatValue(object val)
+        public override object GetParameterValue(object value)
         {
-            return FormatValue((T)val);
+            if (value is T typedValue)
+                return GetParameterValue(typedValue);
+            else
+                return GetParameterValue(Parse(value));
         }
 
-        public virtual string FormatValue(T val)
+        public override string FormatQuery(DBItem item)
         {
-            //if value passed to format is null
-            if (val == null)
+            return FormatQuery(GetValue(item));
+        }
+
+        public override string FormatQuery(object value)
+        {
+            if (value is T typedValue)
+                return FormatQuery(typedValue);
+            else
+                return FormatQuery(Parse(value));
+        }
+
+        public virtual string FormatQuery(T value)
+        {
+            if (Equal(value, default(T)))
+                return "null";
+            if (value is IFormattable formattable)
+            {
+                return formattable.ToString(Format, CultureInfo.InvariantCulture);
+            }
+            return $"'{value}'";
+        }
+
+        public override string FormatDisplay(DBItem item)
+        {
+            return FormatDisplay(GetValue(item));
+        }
+
+        public override string FormatDisplay(object value)
+        {
+            if (value is T typedValue)
+                return FormatDisplay(typedValue);
+            else
+                return FormatDisplay(Parse(value));
+        }
+
+        public virtual string FormatDisplay(T value)
+        {
+            if (Equal(value, default(T)))
                 return string.Empty;
+
             if (IsReference)
             {
-                DBItem temp = LoadReference(val, DBLoadParam.None);
+                DBItem temp = LoadReference(value, DBLoadParam.None);
                 return temp == null ? "<new or empty>" : temp.ToString();
             }
-            return val.ToString(); ;
+            if (value is IFormattable formattable)
+            {
+                return formattable.ToString(Format, CultureInfo.InvariantCulture);
+            }
+            return value.ToString();
         }
 
         public override object ParseValue(object value)
@@ -401,10 +444,6 @@ namespace DataWF.Data
 
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             var value = transaction.Reader.IsDBNull(i) ? default(T) : transaction.Reader.GetFieldValue<T>(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }

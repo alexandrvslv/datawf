@@ -53,7 +53,7 @@ namespace DataWF.Data
                 else if (dataType == typeof(long))
                     column = new DBColumnNInt64();
                 else if (dataType == typeof(ulong))
-                    column = new DBColumnNUInt64();
+                    throw new Exception("Unsupported type unsigned long");
                 else if (dataType == typeof(float))
                     column = new DBColumnNFloat();
                 else if (dataType == typeof(double))
@@ -82,7 +82,7 @@ namespace DataWF.Data
                     else if (enumType == typeof(long))
                         column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnNEnumInt64<>).MakeGenericType(dataType));
                     else if (enumType == typeof(ulong))
-                        column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnNEnumUInt64<>).MakeGenericType(dataType));
+                        throw new Exception("Unsupported type unsigned long");
                 }
                 else if (TypeHelper.IsInterface(dataType, typeof(IBinarySerializable)))
                     column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnNBinarySerializable<>).MakeGenericType(dataType));
@@ -108,7 +108,7 @@ namespace DataWF.Data
             else if (dataType == typeof(long))
                 column = new DBColumnInt64();
             else if (dataType == typeof(ulong))
-                column = new DBColumnUInt64();
+                throw new Exception("Unsupported type unsigned long");
             else if (dataType == typeof(float))
                 column = new DBColumnFloat();
             else if (dataType == typeof(double))
@@ -137,7 +137,7 @@ namespace DataWF.Data
                 else if (enumType == typeof(long))
                     column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnEnumInt64<>).MakeGenericType(dataType));
                 else if (enumType == typeof(ulong))
-                    column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnEnumUInt64<>).MakeGenericType(dataType));
+                    throw new Exception("Unsupported type unsigned long");
             }
             else if (TypeHelper.IsInterface(dataType, typeof(IBinarySerializable)))
                 column = (DBColumn)EmitInvoker.CreateObject(typeof(DBColumnBinarySerializable<>).MakeGenericType(dataType));

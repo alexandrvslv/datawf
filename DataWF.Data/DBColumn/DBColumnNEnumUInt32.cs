@@ -27,17 +27,13 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             if (transaction.Reader.IsDBNull(i))
             {
                 SetValue(row, (T?)null, DBSetValueMode.Loading);
             }
             else
             {
-                var value = (uint)transaction.Reader.GetInt32(i);
+                var value = (uint)transaction.Reader.GetInt64(i);
                 var enumValue = Unsafe.As<uint, T>(ref value);
                 SetValue(row, (T?)enumValue, DBSetValueMode.Loading);
             }
@@ -45,18 +41,30 @@ namespace DataWF.Data
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
-            var value = (uint)transaction.Reader.GetInt32(i);
+            var value = (uint)transaction.Reader.GetInt64(i);
             var enumValue = Unsafe.As<uint, T>(ref value);
             return PullIndex?.SelectOne<F>(enumValue);
         }
 
-        public override object GetParameterValue(DBItem item)
+        public override string FormatQuery(T? value)
         {
-            var value = GetValue(item);
+            if (value == null)
+                return "null";
+            var val = value.Value;
+            return Unsafe.As<T, uint>(ref val).ToString(CultureInfo.InvariantCulture);
+        }
+
+        public override string FormatDisplay(T? value)
+        {
+            return value?.ToString() ?? string.Empty;
+        }
+
+        public override object GetParameterValue(T? value)
+        {
             if (value == null)
                 return DBNull.Value;
-            var nnValue = (T)value;
-            return (int)Unsafe.As<T, uint>(ref nnValue);
+            var nnValue = value.Value;
+            return (long)Unsafe.As<T, uint>(ref nnValue);
         }
 
         public override T? Parse(object value)

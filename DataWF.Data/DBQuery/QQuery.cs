@@ -37,7 +37,6 @@ namespace DataWF.Data
         static readonly char[] separator = new char[] { ',' };
 
         public string CacheQuery;
-        protected SelectableList<QParam> allParameters;
         protected QParamList parameters;
         protected QItemList<QItem> columns;
         protected QItemList<QOrder> orders;
@@ -68,29 +67,6 @@ namespace DataWF.Data
         public QQuery(Type type) : this(DBTable.GetTable(type))
         { }
 
-        public void Sort<T>(List<T> list)
-        {
-            DBComparerList comparer = GetComparer();
-            if (comparer != null)
-            {
-                ListHelper.QuickSort(list, comparer);
-            }
-        }
-
-        public DBComparerList GetComparer()
-        {
-            var comparer = new DBComparerList();
-            foreach (QOrder order in Orders)
-            {
-                var comparerEntry = order.CreateComparer();
-                if (comparerEntry != null)
-                {
-                    comparer.Comparers.Add(comparerEntry);
-                }
-            }
-            return comparer.Comparers.Count == 0 ? null : comparer;
-        }
-
         public QQuery(string query, DBTable table = null, IEnumerable cols = null, QQuery bquery = null)
             : this()
         {
@@ -110,6 +86,34 @@ namespace DataWF.Data
                 }
             }
         }
+
+        public QTable QTable
+        {
+            get => tables.FirstOrDefault();
+            set => tables.Add(value);
+        }
+
+        public override DBTable Table
+        {
+            get => QTable?.Table;
+            set
+            {
+                if (value != Table)
+                {
+                    if (value != null)
+                        tables.Add(new QTable(value, "a"));
+                    else
+                        tables.Clear();
+                }
+            }
+        }
+        public QItemList<QTable> Tables => tables;
+
+        public QItemList<QItem> Columns => columns;
+
+        public QItemList<QOrder> Orders => orders;
+
+        public QParamList Parameters => parameters;
 
         public IQItemList Owner => baseQuery ?? this;
 
@@ -144,7 +148,7 @@ namespace DataWF.Data
                     }
                     else
                     {
-                        param.ValueRight = new QValue(typeIndex, Table.ItemTypeKey);
+                        param.RightItem = new QValue(typeIndex, Table.ItemTypeKey);
                     }
                 }
             }
@@ -176,11 +180,17 @@ namespace DataWF.Data
                         }
                         else
                         {
-                            param.ValueRight = Table.GetStatusEnum(status);
+                            param.RightItem = Table.GetStatusEnum(status);
                         }
                     }
                 }
             }
+        }
+
+        public bool IsRefence
+        {
+            get => refmode;
+            set => refmode = value;
         }
 
         public QParam Add()
@@ -294,7 +304,7 @@ namespace DataWF.Data
             }
             return null;
         }
-        //public QFunc ParseFunc(string query, )
+        
         public int FindFrom(string query)
         {
             int exit = 0;
@@ -488,8 +498,8 @@ namespace DataWF.Data
                                 if (word.Length > 0)
                                 {
                                     if (parameter == null || parameter.IsCompaund ||
-                                        (parameter.ValueRight != null && parameter.Comparer.Type != CompareTypes.Between) ||
-                                        (parameter.ValueRight is QBetween && ((QBetween)parameter.ValueRight).Max != null))
+                                        (parameter.RightItem != null && parameter.Comparer.Type != CompareTypes.Between) ||
+                                        (parameter.RightItem is QBetween && ((QBetween)parameter.RightItem).Max != null))
                                     {
                                         column = null;
                                         parameter = new QParam();
@@ -520,7 +530,7 @@ namespace DataWF.Data
                                     {
                                         if (parameter.Comparer.Type == CompareTypes.Is)
                                             parameter.Comparer = new CompareType(CompareTypes.Is, true);
-                                        else if (parameter.Logic.Type != LogicTypes.Undefined && parameter.ValueLeft == null)
+                                        else if (parameter.Logic.Type != LogicTypes.Undefined && parameter.LeftItem == null)
                                             parameter.Logic = new LogicType(parameter.Logic.Type, true);
                                         else
                                             not = true;
@@ -539,7 +549,7 @@ namespace DataWF.Data
                                             {
                                                 if (parameter.Comparer.Type == CompareTypes.Between && lg == LogicTypes.And)
                                                 {
-                                                    parameter.ValueRight = new QBetween(parameter.ValueRight, null, column?.Column);
+                                                    parameter.RightItem = new QBetween(parameter.RightItem, null, column?.Column);
                                                 }
                                                 else
                                                 {
@@ -567,7 +577,7 @@ namespace DataWF.Data
                                                     }
                                                     else
                                                     {
-                                                        if (parameter.ValueLeft == null)
+                                                        if (parameter.LeftItem == null)
                                                         {
                                                             if (prefix.Count > 0)
                                                             {
@@ -619,7 +629,7 @@ namespace DataWF.Data
                                                         }
                                                         else// if (parameter.Column != null)
                                                         {
-                                                            parameter.SetValue(new QValue(word, parameter.Column));
+                                                            parameter.SetValue(new QValue(word, parameter.LeftColumn));
                                                             prefix.Clear();
                                                         }
                                                     }
@@ -686,11 +696,11 @@ namespace DataWF.Data
                                             }
 
                                             parameter.SetValue(list);
-                                            if (parameter.Comparer.Type == CompareTypes.Between && parameter.ValueRight is QEnum)
+                                            if (parameter.Comparer.Type == CompareTypes.Between && parameter.RightItem is QEnum)
                                             {
-                                                var qEnum = (QEnum)parameter.ValueRight;
+                                                var qEnum = (QEnum)parameter.RightItem;
                                                 var between = new QBetween(qEnum.Items[0], qEnum.Items[1], column?.Column);
-                                                parameter.ValueRight = between;
+                                                parameter.RightItem = between;
                                             }
                                         }
                                         else
@@ -943,6 +953,29 @@ namespace DataWF.Data
             }
         }
 
+        public void Sort<T>(List<T> list)
+        {
+            DBComparerList comparer = GetComparer();
+            if (comparer != null)
+            {
+                ListHelper.QuickSort(list, comparer);
+            }
+        }
+
+        public DBComparerList GetComparer()
+        {
+            var comparer = new DBComparerList();
+            foreach (QOrder order in Orders)
+            {
+                var comparerEntry = order.CreateComparer();
+                if (comparerEntry != null)
+                {
+                    comparer.Comparers.Add(comparerEntry);
+                }
+            }
+            return comparer.Comparers.Count == 0 ? null : comparer;
+        }
+
         public override string ToString()
         {
             string rez = "Query";
@@ -971,9 +1004,9 @@ namespace DataWF.Data
             QParam param = new QParam
             {
                 Logic = logic,
-                ValueLeft = new QColumn(column),
+                LeftItem = new QColumn(column),
                 Comparer = compare,
-                Value = value
+                RightValue = value
             };
             return param;
         }
@@ -1015,7 +1048,7 @@ namespace DataWF.Data
                             q.Parameters.Add(param);
                             table = dbColumn.ReferenceTable;
                             q = new QQuery("", table);
-                            param.ValueRight = q;
+                            param.RightItem = q;
                             q.Columns.Add(new QColumn(dbColumn.ReferenceTable.PrimaryKey.Name));
                         }
                 }
@@ -1177,118 +1210,55 @@ namespace DataWF.Data
             return "";
         }
 
-        public QTable QTable
+        public IEnumerable<QParam> GetAllParameters()
         {
-            get => tables.FirstOrDefault();
-            set => tables.Add(value);
-        }
-
-        public override DBTable Table
-        {
-            get => QTable?.Table;
-            set
+            foreach (var param in Parameters)
             {
-                if (value != Table)
+                foreach (var item in GetParameters(param))
                 {
-                    if (value != null)
-                        tables.Add(new QTable(value, "a"));
-                    else
-                        tables.Clear();
-                }
-            }
-        }
-        public QItemList<QTable> Tables => tables;
-
-        public QItemList<QItem> Columns => columns;
-
-        public QItemList<QOrder> Orders => orders;
-
-        public QParamList Parameters => parameters;
-
-        public SelectableList<QParam> AllParameters
-        {
-            get => allParameters;
-            set
-            {
-                if (allParameters != value)
-                {
-                    allParameters = value;
-                    OnParametersListChanged(null, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    yield return item;
                 }
             }
         }
 
-        private void AddAllParam(QParam param)
+        private IEnumerable<QParam> GetParameters(QParam param)
         {
+            yield return param;
+
             if (param.IsCompaund)
             {
-                foreach (var p in param.Parameters)
-                    AddAllParam(p);
-            }
-
-            if (!allParameters.Contains(param))
-            {
-                allParameters.Add(param);
-            }
-
-            if (param.ValueRight is QQuery)
-            {
-                foreach (QParam pp in ((QQuery)param.ValueRight).Parameters)
+                foreach (QParam parameter in param.Parameters)
                 {
-                    AddAllParam(pp);
+                    foreach (var subParam in GetParameters(parameter))
+                    {
+                        yield return subParam;
+                    }
+                }
+                yield break;
+            }
+            if (param.LeftValue is QQuery leftQuery)
+            {
+                foreach (var subParam in leftQuery.GetAllParameters())
+                {
+                    yield return subParam;
                 }
             }
-        }
-
-        private void RemoveAllParam(QParam param)
-        {
-            if (param.IsCompaund)
+            if (param.RightItem is QQuery rightQuery)
             {
-                foreach (var p in param.Parameters)
-                    RemoveAllParam(p);
-            }
-
-            if (allParameters.Contains(param))
-            {
-                allParameters.Remove(param);
-            }
-
-            if (param.ValueRight is QQuery)
-            {
-                foreach (QParam pp in ((QQuery)param.ValueRight).Parameters)
+                foreach (var subParam in rightQuery.GetAllParameters())
                 {
-                    RemoveAllParam(pp);
+                    yield return subParam;
                 }
             }
         }
 
         public void OnParametersListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (allParameters != null)
-            {
-                allParameters = new SelectableList<QParam>();
-                if (e.Action == NotifyCollectionChangedAction.Reset)
-                {
-                    IsRefence = false;
-                    allParameters.Clear();
-                    foreach (QParam p in parameters)
-                        AddAllParam(p);
-                }
-                else if (e.Action == NotifyCollectionChangedAction.Remove)
-                {
-                    foreach (QParam parameter in e.OldItems)
-                    {
-                        RemoveAllParam(parameter);
-                    }
-                }
-                else if (e.Action == NotifyCollectionChangedAction.Add)
-                {
-                    foreach (QParam parameter in e.NewItems)
-                    {
-                        AddAllParam(parameter);
-                    }
-                }
-            }
+        }
+
+        public bool CheckItem(DBItem item)
+        {
+            return QParam.CheckItem(item, Parameters);
         }
 
         public override string Format(IDbCommand command = null)
@@ -1374,7 +1344,7 @@ namespace DataWF.Data
                     buf.Append("(");
                 foreach (QParam param in vtable.FilterQuery.Parameters)
                 {
-                    if (Contains(param.Column))
+                    if (Contains(param.LeftColumn))
                         continue;
                     string bufRez = param.Format(command);
                     if (bufRez.Length > 0)
@@ -1463,9 +1433,6 @@ namespace DataWF.Data
 
         public override void Dispose()
         {
-            allParameters?.Dispose();
-            allParameters = null;
-
             parameters?.Dispose();
             parameters = null;
             columns?.Dispose();
@@ -1476,12 +1443,6 @@ namespace DataWF.Data
             groups = null;
             tables?.Dispose();
             tables = null;
-        }
-
-        public bool IsRefence
-        {
-            get => refmode;
-            set => refmode = value;
         }
 
         public void BuildColumn(DBColumn dBColumn)

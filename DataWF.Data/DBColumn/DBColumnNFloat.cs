@@ -28,12 +28,18 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             var value = transaction.Reader.IsDBNull(i) ? (float?)null : transaction.Reader.GetFloat(i);
             SetValue(row, value, DBSetValueMode.Loading);
+        }
+
+        public override string FormatQuery(float? value)
+        {
+            return value?.ToString(CultureInfo.InvariantCulture) ?? "null";
+        }
+
+        public override string FormatDisplay(float? value)
+        {
+            return value?.ToString(Format, CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
@@ -50,7 +56,7 @@ namespace DataWF.Data
                 return null;
             if (value is DBItem item)
                 return GetReferenceId(item);
-            
+
             return Convert.ToSingle(value, CultureInfo.InvariantCulture);
         }
     }

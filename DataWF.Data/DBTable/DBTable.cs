@@ -196,8 +196,8 @@ namespace DataWF.Data
         protected DBColumn<string> fileNameKey = DBColumn<string>.EmptyKey;
         protected DBColumn<long?> fileBLOBKey = DBColumn<long?>.EmptyKey;
         protected DBColumn<DateTime?> fileLastWriteKey = DBColumn<DateTime?>.EmptyKey;
-        protected DBColumn<DateTime?> dateKey = DBColumn<DateTime?>.EmptyKey;
-        protected DBColumn<DateTime?> stampKey = DBColumn<DateTime?>.EmptyKey;
+        protected DBColumn<DateTime> dateKey = DBColumn<DateTime>.EmptyKey;
+        protected DBColumn<DateTime> stampKey = DBColumn<DateTime>.EmptyKey;
         protected DBColumn<DateTime?> replicateStampKey = DBColumn<DateTime?>.EmptyKey;
         protected DBColumn<string> codeKey = DBColumn<string>.EmptyKey;
         protected DBColumn typeKey = DBColumn.EmptyKey;
@@ -454,10 +454,10 @@ namespace DataWF.Data
         public DBColumn<DateTime?> ReplicateStampKey => replicateStampKey == DBColumn<DateTime?>.EmptyKey ? (replicateStampKey = (DBColumn<DateTime?>)Columns.GetByKey(DBColumnKeys.ReplicateStamp)) : replicateStampKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn<DateTime?> StampKey => stampKey == DBColumn<DateTime?>.EmptyKey ? (stampKey = (DBColumn<DateTime?>)Columns.GetByKey(DBColumnKeys.Stamp)) : stampKey;
+        public DBColumn<DateTime> StampKey => stampKey == DBColumn<DateTime>.EmptyKey ? (stampKey = (DBColumn<DateTime>)Columns.GetByKey(DBColumnKeys.Stamp)) : stampKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn<DateTime?> DateKey => dateKey == DBColumn<DateTime?>.EmptyKey ? (dateKey = (DBColumn<DateTime?>)Columns.GetByKey(DBColumnKeys.Date)) : dateKey;
+        public DBColumn<DateTime> DateKey => dateKey == DBColumn<DateTime>.EmptyKey ? (dateKey = (DBColumn<DateTime>)Columns.GetByKey(DBColumnKeys.Date)) : dateKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBColumn GroupKey => groupKey == DBColumn.EmptyKey ? (groupKey = Columns.GetByKey(DBColumnKeys.Group)) : groupKey;
@@ -1194,14 +1194,14 @@ namespace DataWF.Data
             }
             if (query.IsRefence && item != null)
             {
-                foreach (QParam param in query.AllParameters)
+                foreach (QParam param in query.GetAllParameters())
                 {
-                    if (param.ValueRight is QColumn qColumn)
+                    if (param.RightIsColumn)
                     {
-                        DBColumn column = qColumn.Column;
-                        if (column != null && column.Table == this)
+                        DBColumn column = param.RightColumn;
+                        if (column.Table == this)
                         {
-                            qColumn.Temp = item.GetValue(column);
+                            param.RightQColumn.Temp = item.GetValue(column);
                         }
                     }
                 }
@@ -1223,153 +1223,6 @@ namespace DataWF.Data
         public abstract IEnumerable<DBItem> SelectItems(string qQuery);
 
         public abstract IEnumerable<DBItem> SelectItems(QQuery qQuery);
-
-        public bool CheckItem(DBItem item, QItemList<QParam> parameters)
-        {
-            bool first = true;
-            bool result = true;
-            foreach (var param in parameters)
-            {
-                if (!first && !result && param.Logic.Type == LogicTypes.And)
-                    break;
-                bool check = CheckItem(item, param);
-
-                if (first)
-                {
-                    result = check;
-                    first = false;
-                }
-                else if (param.Logic.Type == LogicTypes.Or)
-                {
-                    result |= param.Logic.Not ? !check : check;
-                }
-                else if (param.Logic.Type == LogicTypes.And)
-                {
-                    result &= param.Logic.Not ? !check : check;
-                }
-            }
-            return result;
-        }
-
-        public bool CheckItem(DBItem item, QQuery query)
-        {
-            return CheckItem(item, query.Parameters);
-        }
-
-        public bool CheckItem(DBItem item, QParam param)
-        {
-            bool result = false;
-            if (!param.IsCompaund)
-            {
-                if (param.ValueLeft == null || param.ValueRight == null)
-                {
-                    result = true;
-                }
-                else if (param.ValueLeft is QColumn qColumn)
-                {
-                    result = qColumn.Column.CheckItem(item, param.ValueRight.GetValue(item), param.Comparer);
-                }
-                else
-                {
-                    result = CheckItem(item, param.ValueLeft.GetValue(item), param.ValueRight.GetValue(item), param.Comparer);
-                }
-            }
-            else
-            {
-                result = CheckItem(item, param.Parameters);
-            }
-            return result;
-        }
-
-        public bool CheckItem(DBItem item, string column, object val, CompareType comparer)
-        {
-            object val1 = null;
-            DBColumn dbColumn = ParseColumn(column);
-            if (dbColumn == null)
-            {
-                val1 = EmitInvoker.GetValue(typeof(DBItem), column, item);
-                return CheckItem(item, val1, val, comparer);
-            }
-            else
-            {
-                return dbColumn.CheckItem(item, val, comparer);
-            }
-        }
-
-        public bool CheckItem(DBItem item, object val1, object val2, CompareType comparer)
-        {
-            if (item == null)
-                return false;
-            if (val1 == null)
-                return comparer.Type == CompareTypes.Is ? !comparer.Not : val2 == null;
-            else if (val2 == null)
-                return comparer.Type == CompareTypes.Is ? comparer.Not : false;
-            if (val1 is QQuery query1)
-                val1 = SelectQuery(item, query1, comparer);
-            if (val2 is QQuery query2)
-                val2 = SelectQuery(item, query2, comparer);
-            if (val1 is Enum)
-                val1 = (int)val1;
-            if (val2 is Enum)
-                val2 = (int)val1;
-
-            switch (comparer.Type)
-            {
-                //case CompareTypes.Is:
-                //    return val1.Equals(DBNull.Value) ? !comparer.Not : comparer.Not;
-                case CompareTypes.Equal:
-                    return ListHelper.Equal(val1, val2) ? !comparer.Not : comparer.Not;
-                case CompareTypes.Like:
-                    var r = val2 is Regex ? (Regex)val2 : Helper.BuildLike(val2.ToString());
-                    return r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
-                case CompareTypes.In:
-                    if (val2 is string)
-                        val2 = val2.ToString().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    var list = val2 as IEnumerable;
-                    if (list != null)
-                    {
-                        foreach (object s in list)
-                        {
-                            object comp = s;
-                            if (comp is QItem)
-                                comp = ((QItem)comp).GetValue(item);
-                            if (comp is string)
-                                comp = ((string)comp).Trim(' ', '\'');
-                            if (comp.Equals(val1) && !comparer.Not)
-                                return true;
-                        }
-                    }
-                    return comparer.Not;
-                case CompareTypes.Between:
-                    var between = val2 as QBetween;
-                    if (between == null)
-                        throw new Exception($"Expect QBetween but Get {(val2 == null ? "null" : val2.GetType().FullName)}");
-                    return ListHelper.Compare(val1, between.Min.GetValue(item), (IComparer)null) >= 0
-                                     && ListHelper.Compare(val1, between.Max.GetValue(item), (IComparer)null) <= 0;
-                default:
-                    bool f = false;
-                    int rez = ListHelper.Compare(val1, val2, (IComparer)null);
-                    switch (comparer.Type)
-                    {
-                        case CompareTypes.Greater:
-                            f = rez > 0;
-                            break;
-                        case CompareTypes.GreaterOrEqual:
-                            f = rez >= 0;
-                            break;
-                        case CompareTypes.Less:
-                            f = rez < 0;
-                            break;
-                        case CompareTypes.LessOrEqual:
-                            f = rez <= 0;
-                            break;
-                        default:
-                            break;
-                    }
-                    return f;
-            }
-        }
-
 
 
         #endregion
@@ -1456,7 +1309,7 @@ namespace DataWF.Data
         {
         }
 
-        public string BuildQuery(string whereFilter, string alias, IEnumerable<DBColumn> cols, string function = null)
+        public string BuildQuery(string whereFilter, string alias, IEnumerable<DBColumn> cols = null, string function = null)
         {
             var select = new StringBuilder("select ");
             if (!string.IsNullOrEmpty(function))
@@ -1682,8 +1535,8 @@ namespace DataWF.Data
             dmlDelete = null;
             accessKey = DBColumn<byte[]>.EmptyKey;
             primaryKey = DBColumn.EmptyKey;
-            dateKey = DBColumn<DateTime?>.EmptyKey;
-            stampKey = DBColumn<DateTime?>.EmptyKey;
+            dateKey = DBColumn<DateTime>.EmptyKey;
+            stampKey = DBColumn<DateTime>.EmptyKey;
             replicateStampKey = DBColumn<DateTime?>.EmptyKey;
             fileLastWriteKey = DBColumn<DateTime?>.EmptyKey;
             fileBLOBKey = DBColumn<long?>.EmptyKey;
@@ -1931,9 +1784,9 @@ namespace DataWF.Data
             {
                 return new QParam()
                 {
-                    ValueLeft = new QColumn(StatusKey),
+                    LeftItem = new QColumn(StatusKey),
                     Comparer = CompareType.In,
-                    ValueRight = GetStatusEnum(status)
+                    RightItem = GetStatusEnum(status)
                 };
             }
             return null;
@@ -1961,9 +1814,9 @@ namespace DataWF.Data
             {
                 return new QParam()
                 {
-                    ValueLeft = new QColumn(ItemTypeKey),
+                    LeftItem = new QColumn(ItemTypeKey),
                     Comparer = CompareType.Equal,
-                    ValueRight = new QValue(typeIndex, ItemTypeKey)
+                    RightItem = new QValue(typeIndex, ItemTypeKey)
                 };
             }
             return null;

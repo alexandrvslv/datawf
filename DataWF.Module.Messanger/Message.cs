@@ -72,7 +72,7 @@ namespace DataWF.Module.Messanger
                 {
                     var message = new Message()
                     {
-                        DateCreate = DateTime.Now,
+                        DateCreate = DateTime.UtcNow,
                         User = from,
                         Data = data
                     };

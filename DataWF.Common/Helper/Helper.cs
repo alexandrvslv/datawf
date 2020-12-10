@@ -435,12 +435,26 @@ namespace DataWF.Common
             return count;
         }
 
+        public static string GetHexString(byte[] data)
+        {
+            var sBuilder = new StringBuilder();
+            // Loop through each byte of the hashed data 
+            // and format each one as a hexadecimal string.
+            sBuilder.Append("0x");
+            for (int i = 0; i < data.Length; i++)
+            {
+                sBuilder.Append(data[i].ToString("x2", CultureInfo.InvariantCulture));
+            }
+
+            return sBuilder.ToString();
+        }
+        
         private static string GetString(byte[] data)
         {
             var builder = new StringBuilder();
             for (int i = 0; i < data.Length; i++)
             {
-                builder.Append(data[i].ToString("x2"));
+                builder.Append(data[i].ToString("x2", CultureInfo.InvariantCulture));
             }
             return builder.ToString();
         }

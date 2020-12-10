@@ -42,7 +42,7 @@ namespace DataWF.Data
             DataTypeMap = new Dictionary<DBDataType, string>(){
                     {DBDataType.String, "varchar{0}"},
                     {DBDataType.Clob, "text"},
-                    {DBDataType.DateTime, "timestamp"},
+                    {DBDataType.DateTime, "timestamp(6)"},
                     {DBDataType.ByteArray, "bytea"},
                     {DBDataType.ByteSerializable, "bytea"},
                     {DBDataType.Blob, "bytea"},
@@ -50,12 +50,11 @@ namespace DataWF.Data
                     {DBDataType.Int, "integer"},
                     {DBDataType.ShortInt, "smallint"},
                     {DBDataType.TinyInt, "smallint"},
-                    {DBDataType.Float, "float4"},
-                    {DBDataType.Double, "float8"},
-                    {DBDataType.Decimal, "numeric{0}"},
+                    {DBDataType.Float, "real"},
+                    {DBDataType.Double, "double precision"},
+                    {DBDataType.Decimal, "decimal{0}"},
                     {DBDataType.TimeSpan, "interval"},
                     {DBDataType.Bool, "bool"},
-                    {DBDataType.UInt, "oid"}
                 };
         }
 
@@ -261,14 +260,13 @@ namespace DataWF.Data
                 {
                     ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Interval;
                 }
-                else if (column.DBDataType == DBDataType.UInt)
+                else if (column.DBDataType == DBDataType.Decimal)
                 {
-                    ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Oid;
-                }
-                else if (column.DataType == typeof(uint))
-                {
-                    ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer;
-                }
+                    if (column.Size > 0)
+                        ((NpgsqlParameter)parameter).Precision = (byte)column.Size;
+                    if (column.Scale > 0)
+                        ((NpgsqlParameter)parameter).Scale = (byte)column.Scale;
+                }                
             }
 
             return value;

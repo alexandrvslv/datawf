@@ -28,10 +28,6 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             var isNull = transaction.Reader.IsDBNull(i);
             var value = isNull ? (DateTime?)null : transaction.Reader.GetDateTime(i);
             if (!isNull && (Keys & DBColumnKeys.UtcDate) != 0)
@@ -51,12 +47,23 @@ namespace DataWF.Data
             return PullIndex?.SelectOne<F>(value);
         }
 
-        public override string FormatValue(DateTime? value)
+        public override string FormatQuery(DateTime? value)
+        {
+            if (value == null)
+                return "null";
+            var val = value.Value;
+            if (val.TimeOfDay == TimeSpan.Zero)
+                return $"'{val:yyyy-MM-dd}'";
+            else
+                return $"'{val:yyyy-MM-dd HH:mm:ss.fff}'";
+        }
+
+        public override string FormatDisplay(DateTime? value)
         {
             if (value is DateTime val)
             {
                 if (Format != null)
-                    return val.ToString(Format);
+                    return val.ToString(Format, CultureInfo.InvariantCulture);
                 return val.Equals(val.Date) ? val.ToString("yyyy.MM.dd") : val.ToString();
             }
             else

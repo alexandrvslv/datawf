@@ -53,34 +53,38 @@ namespace DataWF.Data
             return base.LoadReference(id, param);
         }
 
-        public override object GetParameterValue(DBItem item)
+        public override object GetParameterValue(T? value)
         {
-            var value = GetValue(item);
             if (value == null)
                 return DBNull.Value;
-            return (T)value;
+
+            return value.Value;
         }
 
-        public override string FormatValue(T? value)
+        public override string FormatQuery(T? value)
         {
-            if (value is T val)
-            {
-                if (IsReference)
-                {
-                    DBItem temp = ReferenceTable.LoadItemById(value);
-                    return temp?.ToString() ?? "<new or empty>";
-                }
-                if (Format != null && val is IFormattable formattable)
-                {
-                    return formattable.ToString(Format, CultureInfo.InvariantCulture);
-                }
+            if (value == null)
+                return "null";
 
-                return val.ToString();
-            }
-            else
-            {
+            return base.FormatQuery(value.Value);
+        }
+
+        public override string FormatDisplay(T? value)
+        {
+            if (value == null)
                 return string.Empty;
+
+            var val = value.Value;
+            if (IsReference)
+            {
+                DBItem temp = LoadReference(value, DBLoadParam.Load);
+                return temp?.ToString() ?? "<new or empty>";
             }
+            if (val is IFormattable formattable)
+            {
+                return formattable.ToString(Format, CultureInfo.InvariantCulture);
+            }
+            return val.ToString();
         }
 
         public override T? Parse(object value)

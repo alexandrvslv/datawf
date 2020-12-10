@@ -141,7 +141,7 @@ namespace DataWF.Data
         }
 
         [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 1001)]
-        public virtual DateTime? DateCreate
+        public virtual DateTime DateCreate
         {
             get => GetValue(Table.DateKey);
             set => SetValue(value, Table.DateKey);
@@ -149,7 +149,7 @@ namespace DataWF.Data
 
         [Browsable(false)]
         [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 1002)]
-        public DateTime? Stamp
+        public DateTime Stamp
         {
             get => GetValue(Table.StampKey);
             set => SetValue(value, Table.StampKey);
@@ -720,7 +720,7 @@ namespace DataWF.Data
 
         public string Format(DBColumn column)
         {
-            return column.FormatValue(this);
+            return column.FormatDisplay(this);
         }
 
         public string Format(string code)
@@ -1139,7 +1139,7 @@ namespace DataWF.Data
             foreach (DBColumn column in parameters)
             {
                 string header = (showColumn) ? header = $"{column}: " : string.Empty;
-                string value = column.FormatValue(this);
+                string value = column.FormatDisplay(this);
                 if (column.IsCulture)
                 {
                     if (value.Length != 0)

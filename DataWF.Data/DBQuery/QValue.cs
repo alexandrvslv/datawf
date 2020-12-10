@@ -62,14 +62,10 @@ namespace DataWF.Data
                 }
                 else
                     value = Column.ParseValue(value);
-                if (value?.GetType().IsEnum ?? false)
-                {
-                    value = (int)value;
-                }
                 if (this.value != value)
                 {
                     this.value = value;
-                    this.text = DBSystem.FormatText(value);
+                    this.text = Column?.FormatQuery(value) ?? DBSystem.FormatQuery(value);
                     OnPropertyChanged(nameof(Value));
                 }
             }
@@ -91,7 +87,7 @@ namespace DataWF.Data
 
         public override string Text
         {
-            get { return base.Text; }
+            get => base.Text;
             set
             {
                 base.Text = value;
@@ -101,12 +97,14 @@ namespace DataWF.Data
 
         public override string Format(IDbCommand command = null)
         {
-            return (command == null || Value == null) ? DBSystem.FormatText(Value) : CreateParameter(command, Value, Column);
+            return command == null
+                ? DBSystem.FormatQuery(Value)
+                : CreateCommandParameter(command, Column != null ? Column.GetParameterValue(Value) : Value, Column);
         }
 
         public override string ToString()
         {
-            return DBSystem.FormatText(Value);
+            return DBSystem.FormatQuery(Value);
         }
 
         public override object GetValue(DBItem row)

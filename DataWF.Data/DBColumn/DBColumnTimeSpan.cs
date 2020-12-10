@@ -28,12 +28,18 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             var value = transaction.Reader.IsDBNull(i) ? default(TimeSpan) : transaction.GetTimeSpan(i);
             SetValue(row, value, DBSetValueMode.Loading);
+        }
+
+        public override string FormatQuery(TimeSpan value)
+        {
+            return $"'{value.ToString(null, CultureInfo.InvariantCulture)}'";
+        }
+
+        public override string FormatDisplay(TimeSpan value)
+        {
+            return value.ToString(Format, CultureInfo.InvariantCulture);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)

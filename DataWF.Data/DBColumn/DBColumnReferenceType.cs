@@ -19,19 +19,17 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Globalization;
 
 namespace DataWF.Data
 {
     public abstract class DBColumnReferenceType<T> : DBColumn<T> where T : class
     {
-        public override object GetParameterValue(DBItem item)
+        public override object GetParameterValue(T value)
         {
-            var value = GetValue(item);
             if (value == null)
                 return DBNull.Value;
             return value;
         }
-
-
     }
 }

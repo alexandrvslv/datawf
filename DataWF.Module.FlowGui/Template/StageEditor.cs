@@ -84,10 +84,10 @@ namespace DataWF.Module.FlowGui
                 attribures.DataSource = value;
                 attribures.ReadOnly = false;
 
-                ((DBTableView<StageProcedure>)procedures.DataSource).DefaultParam.Value = value?.Id;
+                ((DBTableView<StageProcedure>)procedures.DataSource).DefaultParam.RightValue = value?.Id;
                 ((DBTableView<StageProcedure>)procedures.DataSource).ResetFilter();
 
-                ((DBTableView<StageReference>)relations.DataSource).DefaultParam.Value = value?.Id;
+                ((DBTableView<StageReference>)relations.DataSource).DefaultParam.RightValue = value?.Id;
                 ((DBTableView<StageReference>)relations.DataSource).ResetFilter();
             }
         }

@@ -4,6 +4,7 @@ using System.ComponentModel;
 
 namespace DataWF.Test.Data
 {
+
     [Table(TestORM.EmployerTableName, "Default")]
     public class Employer : DBItem
     {
@@ -72,16 +73,16 @@ namespace DataWF.Test.Data
         }
 
         [Column("weight")]
-        public float? Weight
+        public float Weight
         {
-            get => GetProperty<float?>();
+            get => GetProperty<float>();
             set => SetProperty(value);
         }
 
         [Column("dweight")]
-        public double? DWeight
+        public double DWeight
         {
-            get => GetProperty<double?>();
+            get => GetProperty<double>();
             set => SetProperty(value);
         }
 

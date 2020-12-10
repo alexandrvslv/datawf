@@ -44,12 +44,11 @@ namespace DataWF.Data
                     {DBDataType.Blob, "blob"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
-                    {DBDataType.UInt, "integer"},
                     {DBDataType.ShortInt, "smallint"},
                     {DBDataType.TinyInt, "tinyint"},
                     {DBDataType.Float, "float"},
                     {DBDataType.Double, "double"},
-                    {DBDataType.Decimal, "numeric"},
+                    {DBDataType.Decimal, "TEXT"},
                     {DBDataType.TimeSpan, "bigint"},
                     {DBDataType.Bool, "bool"},
                 };

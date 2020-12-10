@@ -241,7 +241,6 @@ namespace DataWF.WebService.Common
             var webSocketOptions = new WebSocketOptions()
             {
                 KeepAliveInterval = TimeSpan.FromSeconds(100),
-                ReceiveBufferSize = 8 * 1024
             };
             app.UseWebSockets(webSocketOptions);
             return app;

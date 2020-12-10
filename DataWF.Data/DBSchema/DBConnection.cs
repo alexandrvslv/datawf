@@ -485,8 +485,7 @@ namespace DataWF.Data
         {
             using (var transaction = new DBTransaction(this, null, true))
             {
-                transaction.AddCommand(query);
-                return transaction.ExecuteQResult();
+                return transaction.ExecuteQResult(transaction.AddCommand(query));
             }
         }
 

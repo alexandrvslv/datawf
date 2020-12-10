@@ -27,10 +27,6 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             if (!transaction.Reader.IsDBNull(i))
             {
                 var byteArray = (byte[])transaction.Reader.GetValue(i);
@@ -52,9 +48,8 @@ namespace DataWF.Data
             return PullIndex?.SelectOne<F>(serializable);
         }
 
-        public override object GetParameterValue(DBItem item)
+        public override object GetParameterValue(T? value)
         {
-            var value = GetValue(item);
             if (value == null)
                 return DBNull.Value;
             return ((T)value).Serialize();

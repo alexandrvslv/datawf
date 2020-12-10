@@ -36,8 +36,8 @@ namespace DataWF.Data
 
         public QItemList()
         {
-            Indexes.Add(QItem.TextInvoker<T>.Instance);
-            ApplySort(new InvokerComparer(QItem.OrderInvoker<T>.Instance, ListSortDirection.Ascending));
+            Indexes.Add(QItem.TextInvoker.Instance);
+            ApplySort(new InvokerComparer(QItem.OrderInvoker.Instance, ListSortDirection.Ascending));
         }
 
         public QItemList(IEnumerable<T> items) : this()
@@ -52,14 +52,11 @@ namespace DataWF.Data
 
         public IQItemList Owner { get; set; }
 
-        public IQuery Query
-        {
-            get { return Owner.Query; }
-        }
+        public IQuery Query => Owner.Query;
 
         public T this[string name]
         {
-            get { return SelectOne(nameof(QItem.Text), CompareType.Equal, name); }
+            get => SelectOne(nameof(QItem.Text), CompareType.Equal, name);
         }
 
         public void Delete(QItem item)

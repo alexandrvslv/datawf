@@ -27,26 +27,40 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
-            var value = transaction.Reader.IsDBNull(i) ? default(uint) : (uint)transaction.Reader.GetInt32(i);
+            var value = transaction.Reader.IsDBNull(i) ? default(uint) : (uint)transaction.Reader.GetInt64(i);
             var enumValue = Unsafe.As<uint, T>(ref value);
             SetValue(row, enumValue, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
-            var value = (uint)transaction.Reader.GetInt32(i);
+            var value = (uint)transaction.Reader.GetInt64(i);
             var enumValue = Unsafe.As<uint, T>(ref value);
             return PullIndex?.SelectOne<F>(enumValue);
         }
 
-        public override object GetParameterValue(DBItem item)
+        public override string FormatQuery(T value)
         {
-            var value = GetValue(item);
-            return (int)Unsafe.As<T, uint>(ref value);
+            return Unsafe.As<T, uint>(ref value).ToString(CultureInfo.InvariantCulture);
+        }
+
+        public override string FormatDisplay(T value)
+        {
+            return value.ToString();
+        }
+
+        public override object GetParameterValue(T value)
+        {
+            return (long)Unsafe.As<T, uint>(ref value);
+        }
+
+        public override object GetParameterValue(object value)
+        {
+            if (value is uint readyValue)
+                return (long)readyValue;
+            if (value is int oreadyValue)
+                return (long)oreadyValue;
+            return base.GetParameterValue(value);
         }
 
         public override T Parse(object value)

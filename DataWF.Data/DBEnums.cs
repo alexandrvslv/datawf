@@ -96,7 +96,6 @@ namespace DataWF.Data
         ShortInt,
         TinyInt,
         Bool,
-        UInt,
         Object,
         ByteSerializable,
     }

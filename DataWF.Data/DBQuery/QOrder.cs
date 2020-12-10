@@ -46,7 +46,7 @@ namespace DataWF.Data
             set
             {
                 direction = value;
-                OnPropertyChanged(nameof(Direction));
+                OnPropertyChanged();
             }
         }
 
@@ -63,7 +63,7 @@ namespace DataWF.Data
                         column.Holder = this;
                     }
 
-                    OnPropertyChanged(nameof(Column));
+                    OnPropertyChanged();
                 }
             }
         }

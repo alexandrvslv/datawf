@@ -28,10 +28,6 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             var value = transaction.Reader.IsDBNull(i) ? (double?)null : transaction.Reader.GetDouble(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
@@ -40,6 +36,16 @@ namespace DataWF.Data
         {
             var value = transaction.Reader.GetDouble(i);
             return PullIndex?.SelectOne<F>(value);
+        }
+
+        public override string FormatQuery(double? value)
+        {
+            return value?.ToString(CultureInfo.InvariantCulture).ToLower() ?? "null";
+        }
+
+        public override string FormatDisplay(double? value)
+        {
+            return value?.ToString(Format, CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
         public override double? Parse(object value)

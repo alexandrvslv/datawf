@@ -39,16 +39,8 @@ namespace DataWF.Data
     {
         public static long Convert(object result)
         {
-            return result == null || result == DBNull.Value ? 0 :
-                result is long longvalue ? longvalue :
-                result is int intValue ? (long)intValue :
-                result is short shortValue ? (short)shortValue :
-                result is decimal decimalValue ? (long)decimalValue :
-                result is double doubleValue ? (long)doubleValue :
-                result is float floatValue ? (long)floatValue :
-                long.Parse(result.ToString());
+            return result == null || result == DBNull.Value ? 0 : System.Convert.ToInt64(result, System.Globalization.CultureInfo.InvariantCulture);
         }
-
 
         private string cacheNextQuery;
         private long current = 1;

@@ -88,12 +88,12 @@ namespace DataWF.Module.Flow
                     {
                         switch (DateType)
                         {
-                            case DocumentSearchDate.Document: paramDate.Column = Document.DBTable.ParseProperty(nameof(Document.DocumentDate)); break;
-                            case DocumentSearchDate.Create: paramDate.Column = Document.DBTable.ParseProperty(nameof(Document.DateCreate)); break;
-                            case DocumentSearchDate.WorkBegin: paramDate.Column = DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DateCreate)); break;
-                            case DocumentSearchDate.WorkEnd: paramDate.Column = DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DateComplete)); break;
+                            case DocumentSearchDate.Document: paramDate.LeftColumn = Document.DBTable.ParseProperty(nameof(Document.DocumentDate)); break;
+                            case DocumentSearchDate.Create: paramDate.LeftColumn = Document.DBTable.ParseProperty(nameof(Document.DateCreate)); break;
+                            case DocumentSearchDate.WorkBegin: paramDate.LeftColumn = DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DateCreate)); break;
+                            case DocumentSearchDate.WorkEnd: paramDate.LeftColumn = DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DateComplete)); break;
                         }
-                        paramDate.Value = Date;
+                        paramDate.RightValue = Date;
                     }
                 }
                 OnPropertyChanged(nameof(Date));
@@ -115,7 +115,7 @@ namespace DataWF.Module.Flow
                 }
                 else
                 {
-                    paramCompleate.Value = IsWork != CheckedState.Checked;
+                    paramCompleate.RightValue = IsWork != CheckedState.Checked;
                 }
                 OnPropertyChanged(nameof(IsWork));
             }
@@ -139,9 +139,9 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
-                        foreach (var param in paramReferencing.Parameters)
+                        foreach (QParam param in paramReferencing.Parameters)
                         {
-                            ((QQuery)param.ValueRight).Parameters.First().Value = value.Id;
+                            ((QQuery)param.RightItem).Parameters.First().RightValue = value.Id;
                         }
                     }
                 }
@@ -184,7 +184,7 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
-                        paramCustomer.Value = value.Id;
+                        paramCustomer.RightValue = value.Id;
                     }
                 }
                 OnPropertyChanged(nameof(Customer));
@@ -208,7 +208,7 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
-                        paramId.Value = Id;
+                        paramId.RightValue = Id;
                     }
                 }
                 OnPropertyChanged(nameof(Id));
@@ -232,7 +232,7 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
-                        paramNumber.Value = $"%{Number}%";
+                        paramNumber.RightValue = $"%{Number}%";
                     }
                     customer = null;
                     staff = null;
@@ -262,7 +262,7 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
-                        paramTemplate.Value = Template.GetSubGroupFull(true);
+                        paramTemplate.RightValue = Template.GetSubGroupFull(true);
                     }
                 }
                 OnPropertyChanged(nameof(Template));
@@ -297,8 +297,8 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
-                        paramStage.Column = column;
-                        paramStage.Value = Stage.PrimaryId;
+                        paramStage.LeftColumn = column;
+                        paramStage.RightValue = Stage.PrimaryId;
                     }
                 }
 
@@ -335,8 +335,8 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
-                        paramStaff.Column = column;
-                        paramStaff.Value = Staff.PrimaryId;
+                        paramStaff.LeftColumn = column;
+                        paramStaff.RightValue = Staff.PrimaryId;
                     }
                 }
                 OnPropertyChanged(nameof(Staff));
@@ -360,9 +360,9 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
-                        foreach (var param in paramTitle.Parameters)
+                        foreach (QParam param in paramTitle.Parameters)
                         {
-                            param.Value = $"%{Title}%";
+                            param.RightValue = $"%{Title}%";
                         }
                     }
                     customer = null;

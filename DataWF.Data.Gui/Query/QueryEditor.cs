@@ -224,12 +224,12 @@ namespace DataWF.Data.Gui
             });
             listParams.ListInfo.Columns.Add(new LayoutColumn()
             {
-                Name = nameof(QParam.Column),
+                Name = nameof(QParam.LeftColumn),
                 Width = 80,
                 Visible = false,
-                Invoker = new ActionInvoker<QParam, DBColumn>(nameof(QParam.Column),
-                                                         (item) => item.Column,
-                                                         (item, value) => item.Column = value),
+                Invoker = new ActionInvoker<QParam, DBColumn>(nameof(QParam.LeftColumn),
+                                                         (item) => item.LeftColumn,
+                                                         (item, value) => item.LeftColumn = value),
                 CellEditor = new CellEditorList() { DataType = typeof(DBColumn) }
             });
             listParams.ListInfo.Columns.Add(new LayoutColumn()
@@ -259,11 +259,11 @@ namespace DataWF.Data.Gui
             });
             listParams.ListInfo.Columns.Add(new LayoutColumn()
             {
-                Name = nameof(QParam.Value),
+                Name = nameof(QParam.RightValue),
                 Width = 250,
-                Invoker = new ActionInvoker<QParam, object>(nameof(QParam.Value),
-                                                           (item) => item.Value,
-                                                           (item, value) => item.Value = value)
+                Invoker = new ActionInvoker<QParam, object>(nameof(QParam.RightValue),
+                                                           (item) => item.RightValue,
+                                                           (item, value) => item.RightValue = value)
             });
             listParams.ListInfo.Sorters.Add(new LayoutSort(nameof(QParam.Query), ListSortDirection.Ascending, true));
             listParams.ListInfo.Sorters.Add(new LayoutSort(nameof(QParam.Order), ListSortDirection.Ascending, false));
@@ -282,26 +282,26 @@ namespace DataWF.Data.Gui
 
         ILayoutCellEditor ListParamsRetriveCellEditor(object listItem, object value, ILayoutCell cell)
         {
-            if (cell.Name == nameof(QParam.Value))
+            if (cell.Name == nameof(QParam.RightValue))
             {
                 QParam param = (QParam)listItem;
                 ILayoutCellEditor editor = null;
-                if (param != null && param.Column != null && !editors.TryGetValue(param, out editor))
+                if (param != null && param.LeftColumn != null && !editors.TryGetValue(param, out editor))
                 {
-                    if ((param.Column.IsPrimaryKey || param.Column.IsReference) && param.Comparer.Type == CompareTypes.In)
+                    if ((param.LeftColumn.IsPrimaryKey || param.LeftColumn.IsReference) && param.Comparer.Type == CompareTypes.In)
                     {
-                        if (!(param.Value is QQuery) && param.Column.IsReference && param.Value == null)
+                        if (!(param.RightValue is QQuery) && param.LeftColumn.IsReference && param.RightValue == null)
                         {
-                            var sub = new QQuery(string.Empty, param.Column.ReferenceTable);
-                            sub.BuildColumn(param.Column.ReferenceTable.PrimaryKey);
-                            param.ValueRight = sub;
+                            var sub = new QQuery(string.Empty, param.LeftColumn.ReferenceTable);
+                            sub.BuildColumn(param.LeftColumn.ReferenceTable.PrimaryKey);
+                            param.RightItem = sub;
                         }
                         editor = new CellEditorQuery();
                     }
                     else
                     {
-                        editor = TableLayoutList.InitCellEditor(param.Column);
-                        if (param.Column.DataType == typeof(DateTime) && param.Comparer.Equals(CompareType.Between))
+                        editor = TableLayoutList.InitCellEditor(param.LeftColumn);
+                        if (param.LeftColumn.DataType == typeof(DateTime) && param.Comparer.Equals(CompareType.Between))
                             ((CellEditorDate)editor).TwoDate = true;
                     }
                     editors[param] = editor;
@@ -402,7 +402,7 @@ namespace DataWF.Data.Gui
                             toolAdd.DropDownItems.Add(itemL);
                         }
                     }
-                    var column = (LayoutColumn)listParams.ListInfo.Columns[nameof(QParam.Column)];
+                    var column = (LayoutColumn)listParams.ListInfo.Columns[nameof(QParam.LeftColumn)];
                     ((CellEditorList)column.CellEditor).DataSource = value?.Columns;
 
                     OnPropertyChanged(nameof(Table));

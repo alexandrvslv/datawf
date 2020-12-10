@@ -27,10 +27,6 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             var value = transaction.Reader.IsDBNull(i) ? default(sbyte) : (sbyte)transaction.Reader.GetByte(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
@@ -41,9 +37,18 @@ namespace DataWF.Data
             return PullIndex?.SelectOne<F>(value);
         }
 
-        public override object GetParameterValue(DBItem item)
+        public override string FormatQuery(sbyte value)
         {
-            var value = GetValue(item);
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        public override string FormatDisplay(sbyte value)
+        {
+            return value.ToString(Format, CultureInfo.InvariantCulture);
+        }
+
+        public override object GetParameterValue(sbyte value)
+        {
             return (byte)value;
         }
 
@@ -55,7 +60,7 @@ namespace DataWF.Data
                 return (sbyte)0;
             if (value is DBItem item)
                 return GetReferenceId(item);
-            
+
             return Convert.ToSByte(value, CultureInfo.InvariantCulture);
         }
     }

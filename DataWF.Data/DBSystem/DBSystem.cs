@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -742,7 +743,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     }
                     else
                     {
-                        command.Append(FormatText(row[column]));
+                        command.Append(FormatQuery(row[column]));
                     }
                 }
                 command.Append(", ");
@@ -761,14 +762,14 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             {
                 if (column.ColumnType == DBColumnTypes.Default && !column.IsPrimaryKey)
                 {
-                    command.AppendFormat("{0}={1}, ", column.SqlName, row == null ? ParameterPrefix + column.SqlName : FormatText(row[column]));
+                    command.AppendFormat("{0}={1}, ", column.SqlName, row == null ? ParameterPrefix + column.SqlName : FormatQuery(row[column]));
                     flag = true;
                 }
             }
             if (flag)
             {
                 command.Length -= 2;
-                command.AppendFormat(" where {0}={1}", table.PrimaryKey.SqlName, row == null ? ParameterPrefix + table.PrimaryKey.SqlName : FormatText(row.PrimaryId));
+                command.AppendFormat(" where {0}={1}", table.PrimaryKey.SqlName, row == null ? ParameterPrefix + table.PrimaryKey.SqlName : FormatQuery(row.PrimaryId));
             }
         }
 
@@ -780,7 +781,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 command.AppendFormat("delete from {0} where {1}={2}",
                     table.SqlName,
                     table.PrimaryKey.SqlName,
-                    row == null ? prefix + table.PrimaryKey.SqlName : FormatText(row.PrimaryId));
+                    row == null ? prefix + table.PrimaryKey.SqlName : FormatQuery(row.PrimaryId));
             }
         }
 
@@ -910,13 +911,13 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return $"{table.SqlName} {alias}";
         }
 
-        public virtual string FormatText(object value)
+        public virtual string FormatQuery(object value)
         {
             if (value == null)
                 return "null";
 
-            if (value is DBItem)
-                value = ((DBItem)value).PrimaryId;
+            if (value is DBItem item)
+                value = item.PrimaryId;
             else if (value.GetType().IsEnum)
                 value = (int)value;
 
@@ -945,6 +946,8 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
                 return sBuilder.ToString();
             }
+            else if (value is IFormattable formatable)
+                return formatable.ToString(null, CultureInfo.InvariantCulture);
             else
                 return value.ToString().Replace(",", ".");
         }

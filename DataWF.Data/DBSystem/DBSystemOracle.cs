@@ -44,7 +44,6 @@ namespace DataWF.Data
                 {DBDataType.Blob, "blob"},
                 {DBDataType.BigInt, "number(18)"},
                 {DBDataType.Int, "number(9)"},
-                {DBDataType.UInt, "number(9)"},
                 {DBDataType.ShortInt, "number(4)"},
                 {DBDataType.TinyInt, "number(2)"},
                 {DBDataType.Float, "binary_float"},

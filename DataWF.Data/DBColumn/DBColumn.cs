@@ -132,6 +132,8 @@ namespace DataWF.Data
         [Browsable(false), XmlIgnore, JsonIgnore]
         public JsonEncodedText JsonReferenceName { get => jsonReferenceName ?? (jsonReferenceName = JsonEncodedText.Encode(ReferencePropertyName, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
 
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public DBSystem DBSystem { get => Schema?.System ?? DBSystem.Default; }
 
         [Browsable(false)]
         public string BaseName { get; set; }
@@ -472,7 +474,6 @@ namespace DataWF.Data
                         case DBDataType.Float: dataType = typeof(float?); break;
                         case DBDataType.TinyInt: dataType = typeof(byte?); break;
                         case DBDataType.Int: dataType = typeof(int?); break;
-                        case DBDataType.UInt: dataType = typeof(uint?); break;
                         case DBDataType.BigInt: dataType = typeof(long?); break;
                         case DBDataType.Decimal: dataType = typeof(decimal?); break;
                         case DBDataType.ShortInt: dataType = typeof(short?); break;
@@ -533,13 +534,11 @@ namespace DataWF.Data
                 else if (value == typeof(int))
                     DBDataType = DBDataType.Int;
                 else if (value == typeof(uint))
-                {
-                    if (DBDataType != DBDataType.UInt)
-                        DBDataType = DBDataType.Int;
-                }
-                else if (value == typeof(short)
-                    || value == typeof(ushort))
+                    DBDataType = DBDataType.BigInt;
+                else if (value == typeof(short))
                     DBDataType = DBDataType.ShortInt;
+                else if (value == typeof(ushort))
+                    DBDataType = DBDataType.Int;
                 else if (value == typeof(string))
                     DBDataType = DBDataType.String;
                 else if (value == typeof(DateTime))
@@ -549,15 +548,17 @@ namespace DataWF.Data
                 else if (value.IsEnum)
                 {
                     var underlineType = Enum.GetUnderlyingType(value);
-                    if (underlineType == typeof(int)
-                        || underlineType == typeof(uint))
+                    if (underlineType == typeof(int))
                         DBDataType = DBDataType.Int;
+                    else if (underlineType == typeof(uint))
+                        DBDataType = DBDataType.BigInt;
                     else if (underlineType == typeof(byte)
                         || underlineType == typeof(sbyte))
                         DBDataType = DBDataType.TinyInt;
-                    else if (underlineType == typeof(short)
-                        || underlineType == typeof(ushort))
+                    else if (underlineType == typeof(short))
                         DBDataType = DBDataType.ShortInt;
+                    else if( underlineType == typeof(ushort))
+                        DBDataType = DBDataType.Int;
                     else if (underlineType == typeof(long)
                         || underlineType == typeof(ulong))
                         DBDataType = DBDataType.BigInt;
@@ -963,14 +964,17 @@ namespace DataWF.Data
             }
         }
 
-        public virtual object GetParameterValue(DBItem item)
-        {
-            return GetValue(item);
-        }
+        public abstract object GetParameterValue(DBItem item);
 
-        public abstract string FormatValue(DBItem item);
+        public abstract object GetParameterValue(object value);
 
-        public abstract string FormatValue(object val);
+        public abstract string FormatDisplay(DBItem item);
+
+        public abstract string FormatDisplay(object val);
+
+        public abstract string FormatQuery(DBItem item);
+
+        public abstract string FormatQuery(object val);
 
         public abstract object ParseValue(object value);
 

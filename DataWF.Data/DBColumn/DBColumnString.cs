@@ -32,10 +32,6 @@ namespace DataWF.Data
 
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
@@ -44,6 +40,14 @@ namespace DataWF.Data
         {
             var value = transaction.Reader.GetString(i);
             return PullIndex?.SelectOne<F>(value);
+        }
+
+        public override string FormatQuery(string value)
+        {
+            if (value == null)
+                return "null";
+
+            return $"'{value.Replace("'", "''")}'";
         }
 
         public override string Parse(object value)

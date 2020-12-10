@@ -17,6 +17,7 @@ namespace DataWF.Test.Data
     {
         public const string SchemaName = "test";
         public const string EmployerTableName = "tb_employer";
+        public const string TestColumnsTableName = "tb_test_column";
         public const string PositionTableName = "tb_position";
         public const string FigureTableName = "tb_figure";
         public const string FileTableName = "tb_file";
@@ -40,50 +41,50 @@ namespace DataWF.Test.Data
         }
 
         [Test]
-        public Task GenerateSqlite()
+        public async Task GenerateSqlite()
         {
-            return Generate(DBService.Connections["TestSqlLite"]);
+            await Generate(DBService.Connections["TestSqlLite"]);
         }
 
         [Test]
-        public Task GeneratePostgresWithLOB()
+        public async Task GeneratePostgresWithLOB()
         {
             DBSystemPostgres.StoreFileAsLargeObject = true;
             DBSystemPostgres.LargeObjectSetBuffering = false;
-            return Generate(DBService.Connections["TestPostgres"]);
+            await Generate(DBService.Connections["TestPostgres"]);
         }
 
         [Test]
-        public Task GeneratePostgresWithLOBBuffeing()
+        public async Task GeneratePostgresWithLOBBuffeing()
         {
             DBSystemPostgres.StoreFileAsLargeObject = true;
             DBSystemPostgres.LargeObjectSetBuffering = true;
-            return Generate(DBService.Connections["TestPostgres"]);
+            await Generate(DBService.Connections["TestPostgres"]);
         }
 
         [Test]
-        public Task GeneratePostgresWithoutLOB()
+        public async Task GeneratePostgresWithoutLOB()
         {
             DBSystemPostgres.StoreFileAsLargeObject = false;
-            return Generate(DBService.Connections["TestPostgres"]);
+            await Generate(DBService.Connections["TestPostgres"]);
         }
 
         [Test]
-        public Task GenerateOracle()
+        public async Task GenerateOracle()
         {
-            return Generate(DBService.Connections["TestOracle"]);
+            await Generate(DBService.Connections["TestOracle"]);
         }
 
         [Test]
-        public Task GenerateMySql()
+        public async Task GenerateMySql()
         {
-            return Generate(DBService.Connections["TestMySql"]);
+            await Generate(DBService.Connections["TestMySql"]);
         }
 
         [Test]
-        public Task GenerateMsSql()
+        public async Task GenerateMsSql()
         {
-            return Generate(DBService.Connections["TestMSSql"]);
+            await Generate(DBService.Connections["TestMSSql"]);
         }
 
         [Test]
@@ -99,7 +100,7 @@ namespace DataWF.Test.Data
             Serialization.Instance.Deserialize(buffer, DBService.Schems);
             Assert.AreEqual(2, DBService.Schems.Count);
 
-            Assert.AreEqual(4, schem.Tables.Count);
+            Assert.AreEqual(5, schem.Tables.Count);
             var table = schem.Tables[EmployerTableName];
             Assert.IsNotNull(table);
             Assert.IsInstanceOf<DBTable<Employer>>(table);
@@ -129,7 +130,7 @@ namespace DataWF.Test.Data
         public async Task Generate(DBConnection connection)
         {
             Assert.AreEqual(true, connection.CheckConnection(true), $"Connection Fail!");
-            schema = DBSchema.Generate(SchemaName, typeof(FileData), typeof(FileStore), typeof(Employer), typeof(Position), typeof(Figure));
+            schema = DBSchema.Generate(SchemaName, typeof(FileData), typeof(FileStore), typeof(Employer), typeof(Position), typeof(Figure), typeof(TestColumns));
 
             Assert.IsNotNull(schema, "Attribute Generator Fail. On Schema");
             Assert.IsNotNull(Employer.DBTable, "Attribute Generator Fail. On Employer Table");
@@ -137,6 +138,44 @@ namespace DataWF.Test.Data
             Assert.IsNotNull(Figure.DBTable, "Attribute Generator Fail. On Figure Table");
             Assert.IsNotNull(FileData.DBTable, "Attribute Generator Fail. On FileData Table");
             Assert.IsNotNull(FileStore.DBTable, "Attribute Generator Fail. On FileStore Table");
+            Assert.IsNotNull(TestColumns.DBTable, "Attribute Generator Fail. On FileStore Table");
+
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.IntId)) is DBColumn<int>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.IntUnsigned)) is DBColumn<uint>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.IntNullable)) is DBColumn<int?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.Short)) is DBColumn<short>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.ShortUnsigned)) is DBColumn<ushort>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.ShortNullable)) is DBColumn<short?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.Long)) is DBColumn<long>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.LongNullable)) is DBColumn<long?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.Byte)) is DBColumn<byte>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.ByteSigned)) is DBColumn<sbyte>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.ByteNullable)) is DBColumn<byte?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.Float)) is DBColumn<float>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.FloatNullable)) is DBColumn<float?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.Double)) is DBColumn<double>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.DoubleNullable)) is DBColumn<double?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.Decimal)) is DBColumn<decimal>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.DecimalNullable)) is DBColumn<decimal?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.Bool)) is DBColumn<bool>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.BoolNullable)) is DBColumn<bool?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.DateTime)) is DBColumn<DateTime>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.DateTimeNullable)) is DBColumn<DateTime?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.TimeSpan)) is DBColumn<TimeSpan>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.TimeSpanNullable)) is DBColumn<TimeSpan?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.EnumByte)) is DBColumn<UInt8Enum>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.EnumByteSigned)) is DBColumn<Int8Enum>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.EnumByteNullable)) is DBColumn<UInt8Enum?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.EnumShort)) is DBColumn<Int16Enum>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.EnumShortUnsigned)) is DBColumn<UInt16Enum>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.EnumShortNullable)) is DBColumn<Int16Enum?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.EnumInt)) is DBColumn<Int32Enum>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.EnumIntUnsigned)) is DBColumn<UInt32Enum>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.EnumIntNullable)) is DBColumn<Int32Enum?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.EnumLong)) is DBColumn<Int64Enum>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.EnumLongNullable)) is DBColumn<Int64Enum?>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.ByteArray)) is DBColumn<byte[]>);
+            Assert.IsTrue(TestColumns.DBTable.ParseProperty(nameof(TestColumns.String)) is DBColumn<string>);
 
             var idColumn = Employer.DBTable.Columns["id"];
             Assert.IsNotNull(idColumn, "Attribute Generator Fail. On Column Employer Id");
@@ -155,6 +194,94 @@ namespace DataWF.Test.Data
             result = schema.GetTablesInfo(connection.Schema, FigureTableName);
             Assert.IsTrue(result.Count() == 1, "Generate Sql Table / Get Information Fail.");
             //Insert
+            var tcDefault = new TestColumns()
+            {
+                IntId = 1,
+                String = "Default Values"
+                //DateTime = System.Data.SqlTypes.SqlDateTime.MinValue.Value//MSSQL
+            };
+            var tcFillNull = new TestColumns()
+            {
+                IntId = 2,
+                String = "Nullable Default Values",
+                BoolNullable = false,
+                //DateTime = System.Data.SqlTypes.SqlDateTime.MinValue.Value,//MSSQL
+                DateTimeNullable = new DateTime(2000, 01, 01),
+                TimeSpanNullable = TimeSpan.Zero,
+                ByteNullable = 0,
+                IntNullable = 0,
+                ShortNullable = 0,
+                LongNullable = 0,
+                DecimalNullable = 0M,
+                DoubleNullable = 0D,
+                FloatNullable = 0F,
+                EnumByteNullable = UInt8Enum.Min,
+                EnumIntNullable = Int32Enum.Default,
+                EnumLongNullable = Int64Enum.Default,
+                EnumShortNullable = Int16Enum.Default,
+            };
+            var tcFillMax = new TestColumns()
+            {
+                IntId = 3,
+                String = "Max Values",
+                Bool = true,
+                BoolNullable = true,
+                DateTimeNullable = DateTime.Now,
+                TimeSpanNullable = new TimeSpan(1, 1, 1),
+                Byte = byte.MaxValue,
+                ByteSigned = sbyte.MaxValue,
+                ByteNullable = byte.MaxValue,
+                IntUnsigned = uint.MaxValue,
+                IntNullable = int.MaxValue,
+                Short = short.MaxValue,
+                ShortUnsigned = ushort.MaxValue,
+                ShortNullable = short.MaxValue,
+                Long = long.MaxValue,
+                LongNullable = long.MaxValue,
+                Decimal = decimal.MaxValue,
+                DecimalNullable = decimal.MaxValue,
+                Double = double.MaxValue,
+                DoubleNullable = double.MaxValue,
+                Float = float.MaxValue,
+                FloatNullable = float.MaxValue,
+                EnumLong = Int64Enum.Max,
+                EnumLongNullable = Int64Enum.Max,
+                EnumInt = Int32Enum.Max,
+                EnumIntUnsigned = UInt32Enum.Max,
+                EnumIntNullable = Int32Enum.Max,
+                EnumShort = Int16Enum.Max,
+                EnumShortUnsigned = UInt16Enum.Max,
+                EnumShortNullable = Int16Enum.Max,
+                EnumByte = UInt8Enum.Max,
+                EnumByteSigned = Int8Enum.Max,
+                EnumByteNullable = UInt8Enum.Max,
+            };
+            TestColumns.DBTable.Add(tcDefault);
+            TestColumns.DBTable.Add(tcFillNull);
+            TestColumns.DBTable.Add(tcFillMax);
+
+            await TestColumns.DBTable.Save();
+
+            var tcresult = schema.Connection.ExecuteQResult(TestColumns.DBTable.BuildQuery("", "a") + " order by int_value");
+            Assert.AreEqual(TestColumns.DBTable.Count, tcresult.Values.Count, "Insert sql Fail");
+            for (int r = 0; r < tcresult.Values.Count; r++)
+            {
+                for (int i = 0; i < tcresult.Columns.Count; i++)
+                {
+                    var column = TestColumns.DBTable.Columns[i];
+                    var cvalue = TestColumns.DBTable[r].GetValue(column);
+                    var rvalue = column.ParseValue(tcresult.Values[r][i]);
+                    Debug.WriteLine($"{column} value: {column.FormatQuery(cvalue)} qvalue: {rvalue ?? "null"}");
+                    if (column.DBDataType == DBDataType.DateTime
+                        && cvalue is DateTime cdate && rvalue is DateTime rdate)
+                    {
+                        cvalue = cdate.AddTicks(-(cdate.Ticks % TimeSpan.TicksPerSecond));
+                        rvalue = rdate.AddTicks(-(rdate.Ticks % TimeSpan.TicksPerSecond));
+                    }
+                    Assert.AreEqual(cvalue, rvalue, $"Insert sql Fail {column}");
+                }
+            }
+
             var employer = new Employer()
             {
                 Identifier = $"{1:8}",
@@ -188,9 +315,12 @@ namespace DataWF.Test.Data
             Assert.AreEqual(employer.Age, qresult.Get(0, "age"), "Insert sql Fail Byte");
             Assert.AreEqual(employer.Days, qresult.Get(0, "height"), "Insert sql Fail Short");
             Assert.AreEqual(employer.LongId, qresult.Get(0, "longid"), "Insert sql Fail Long");
-            Assert.AreEqual(employer.Weight, qresult.Get(0, "weight"), "Insert sql Fail Float");
+            if (connection.System != DBSystem.MySql)
+            {
+                Assert.AreEqual(employer.Weight, qresult.Get(0, "weight"), "Insert sql Fail Float");
+            }
             Assert.AreEqual(employer.DWeight, qresult.Get(0, "dweight"), "Insert sql Fail Double");
-            Assert.AreEqual(employer.Salary, qresult.Get(0, "salary"), "Insert sql Fail Decimal");
+            Assert.AreEqual(employer.Salary, Employer.DBTable.ParseProperty(nameof(Employer.Salary)).ParseValue(qresult.Get(0, "salary")), "Insert sql Fail Decimal");
 
             var lodar = qresult.Get(0, "is_active").ToString();
             Assert.IsTrue(lodar == "1" || lodar == "True", "Insert sql Fail Bool");
@@ -295,12 +425,14 @@ namespace DataWF.Test.Data
                 }
             }
 
+            result = schema.GetTablesInfo(connection.Schema, TestColumnsTableName);
+
             connection.ExecuteQuery(@"create table test_table(
       id int primary key, 
       test_date date, 
       test_varchar varchar(512),
       test_numeric numeric(20,10))");
-
+            
             result = schema.GetTablesInfo(connection.Schema, "test_table");
             schema.GenerateTablesInfo(result);
             var table = schema.Tables["test_table"] as DBTable<DBItem>;

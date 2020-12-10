@@ -307,10 +307,10 @@ namespace DataWF.Data
 
             if (indexes.Item1 < 0)
             {
-                if (table.CheckItem(item, query))
+                if (query.CheckItem(item))
                     Insert(indexes.Item2, item);
             }
-            else if (!table.CheckItem(item, query))
+            else if (!query.CheckItem(item))
             {
                 RemoveAt(indexes.Item1);
             }
@@ -367,7 +367,7 @@ namespace DataWF.Data
                         }
                         break;
                     case NotifyCollectionChangedAction.Add:
-                        if ((keys & DBViewKeys.Static) != DBViewKeys.Static && table.CheckItem(item, query))
+                        if ((keys & DBViewKeys.Static) != DBViewKeys.Static && query.CheckItem(item))
                         {
                             Add(item);
                         }
@@ -442,16 +442,16 @@ namespace DataWF.Data
                     string code = pcolumn.Name;
                     QParam param = new QParam()
                     {
-                        Column = pcolumn,
+                        LeftColumn = pcolumn,
                         Logic = filter.Logic,
                         Comparer = filter.Comparer,
-                        Value = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
+                        RightValue = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
                     };
-                    if (param.Value is string && param.Comparer.Type == CompareTypes.Like)
+                    if (param.RightValue is string && param.Comparer.Type == CompareTypes.Like)
                     {
-                        string s = (string)param.Value;
+                        string s = (string)param.RightValue;
                         if (s.IndexOf('%') < 0)
-                            param.Value = string.Format("%{0}%", s);
+                            param.RightValue = string.Format("%{0}%", s);
                     }
                     int i = code.IndexOf('.');
                     if (i >= 0)
@@ -489,10 +489,10 @@ namespace DataWF.Data
                 {
                     var param = new QParam()
                     {
-                        ValueLeft = new QReflection(filter.Invoker),
+                        LeftItem = new QReflection(filter.Invoker),
                         Logic = filter.Logic,
                         Comparer = filter.Comparer,
-                        Value = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
+                        RightValue = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
                     };
                     Query.Parameters.Add(param);
                 }

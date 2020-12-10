@@ -231,7 +231,7 @@ namespace DataWF.Data
                 switch (type)
                 {
                     case NotifyCollectionChangedAction.Add:
-                        if (BaseTable.CheckItem(item, FilterQuery))
+                        if (FilterQuery.CheckItem(item))
                         {
                             Add(view);
                         }
@@ -259,7 +259,7 @@ namespace DataWF.Data
         {
             if (item is T tItem && tItem.GetType() == typeof(T))
             {
-                if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(column?.Name) && !BaseTable.CheckItem(tItem, FilterQuery)))
+                if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(column?.Name) && !FilterQuery.CheckItem(tItem)))
                 {
                     if (items.Remove(tItem))
                     {

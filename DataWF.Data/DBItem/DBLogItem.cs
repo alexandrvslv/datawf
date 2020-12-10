@@ -79,7 +79,7 @@ namespace DataWF.Data
         }
 
         [Column("datecreate", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 100)]
-        public override DateTime? DateCreate
+        public override DateTime DateCreate
         {
             get => base.DateCreate;
             set => base.DateCreate = value;
@@ -253,7 +253,7 @@ namespace DataWF.Data
                     var logItems = referenceTable.LogTable.LoadItems(query).Cast<DBLogItem>().OrderByDescending(p => p.DateCreate);
                     foreach (var refed in logItems)
                     {
-                        if (!stack.Contains(refed.BaseId) && Math.Abs((DateCreate - refed.DateCreate)?.TotalMinutes ?? 10) < 5)
+                        if (!stack.Contains(refed.BaseId) && Math.Abs((DateCreate - refed.DateCreate).TotalMinutes) < 5)
                         {
                             stack.Add(refed.BaseId);
                             await refed.Undo(transaction);

@@ -27,10 +27,6 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             if (!transaction.Reader.IsDBNull(i))
             {
                 var byteArray = (byte[])transaction.Reader.GetValue(i);
@@ -52,12 +48,18 @@ namespace DataWF.Data
             return PullIndex?.SelectOne<F>(serializable);
         }
 
-        public override object GetParameterValue(DBItem item)
+        public override object GetParameterValue(T value)
         {
-            var value = GetValue(item);
             if (Equal(value, default(T)))
                 return DBNull.Value;
             return value.Serialize();
+        }
+
+        public override object GetParameterValue(object value)
+        {
+            if (value is byte[] data)
+                return data;
+            return base.GetParameterValue(value);
         }
 
         public override T Parse(object value)
@@ -79,8 +81,23 @@ namespace DataWF.Data
                 item.Deserialize(Convert.FromBase64String(stringValue));
                 return item;
             }
-            
+
             throw new Exception($"Unable to parse type {typeof(T)} from {value}");
+        }
+
+        public override string FormatQuery(T value)
+        {
+            if (Equal(value, default(T)))
+                return "null";
+            var data = (byte[])GetParameterValue(value);
+            return Helper.GetHexString(data);
+        }
+
+        public override string FormatDisplay(T value)
+        {
+            if (Equal(value, default(T)))
+                return string.Empty;
+            return value.ToString();
         }
     }
 }

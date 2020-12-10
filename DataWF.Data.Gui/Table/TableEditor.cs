@@ -248,7 +248,7 @@ namespace DataWF.Data.Gui
                 {
                     if (view != null && view.DefaultParam != null)
                     {
-                        view.DefaultParam.Value = value?.PrimaryId ?? 0;
+                        view.DefaultParam.RightValue = value?.PrimaryId ?? 0;
                         view.ResetFilter();
                         loader.LoadAsync();
                     }
@@ -518,7 +518,7 @@ namespace DataWF.Data.Gui
         private bool CheckP(SortedList<LayoutField, object> val, QParam p)
         {
             foreach (LayoutField f in val.Keys)
-                if (f.Invoker.Equals(p.Column))
+                if (f.Invoker.Equals(p.LeftColumn))
                     return true;
             return false;
         }

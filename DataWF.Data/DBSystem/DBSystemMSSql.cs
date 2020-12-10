@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Data.SqlTypes;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,19 +38,18 @@ namespace DataWF.Data
             DataTypeMap = new Dictionary<DBDataType, string>(){
                     {DBDataType.String, "nvarchar{0}"},
                     {DBDataType.Clob, "nvarchar(max)"},
-                    {DBDataType.DateTime, "datetime"},
+                    {DBDataType.DateTime, "datetime2"},
                     {DBDataType.ByteArray, "varbinary{0}"},
                     {DBDataType.ByteSerializable, "varbinary{0}"},
                     {DBDataType.Blob, "varbinary(max)"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
-                    {DBDataType.UInt, "integer"},
                     {DBDataType.ShortInt, "smallint"},
                     {DBDataType.TinyInt, "tinyint"},
-                    {DBDataType.Float, "float(24)"},
-                    {DBDataType.Double, "float(53)"},
-                    {DBDataType.Decimal, "decimal{0}"},
-                    {DBDataType.TimeSpan, "bigint"},
+                    {DBDataType.Float, "real"},
+                    {DBDataType.Double, "float"},
+                    {DBDataType.Decimal, "numeric{0}"},
+                    {DBDataType.TimeSpan, "time"},
                     {DBDataType.Bool, "bit"},
                 };
         }
@@ -90,6 +90,15 @@ namespace DataWF.Data
         public override DbProviderFactory GetFactory()
         {
             return SqlClientFactory.Instance;
+        }
+
+        public override void Format(StringBuilder ddl, DBColumn column)
+        {
+            base.Format(ddl, column);
+            if (column.DataType == typeof(DateTime?))
+            {
+                ddl.Append(" default NULL");
+            }
         }
 
         public override string SequenceCurrentValue(DBSequence sequence)
@@ -171,11 +180,27 @@ namespace DataWF.Data
                         dbParameter.Size = column.Size;
                     break;
                 case DbType.Decimal:
-                    if (column.Size != 0)
+                    if (column.Size > 0)
                         dbParameter.Precision = (byte)column.Size;
-                    if (column.Scale != 0)
-                        dbParameter.Scale = (byte)column.Scale;
+                    if (column.Scale > 0)
+                        dbParameter.Scale = (byte)(column.Scale);
                     break;
+            }
+            if (column.DBDataType == DBDataType.TimeSpan)
+            {
+                dbParameter.SqlDbType = SqlDbType.Time;
+            }
+            else if (column.DBDataType == DBDataType.DateTime)
+            {
+                dbParameter.SqlDbType = SqlDbType.DateTime2;
+                //dbParameter.SqlDbType = SqlDbType.DateTime;
+                //if (value is DateTime date)
+                //{
+                //    if (date < System.Data.SqlTypes.SqlDateTime.MinValue.Value)
+                //        value = System.Data.SqlTypes.SqlDateTime.MinValue.Value;
+                //    else if (date > System.Data.SqlTypes.SqlDateTime.MaxValue.Value)
+                //        value = System.Data.SqlTypes.SqlDateTime.MaxValue.Value;
+                //}
             }
 
             if (column.IsPrimaryKey && value == null)

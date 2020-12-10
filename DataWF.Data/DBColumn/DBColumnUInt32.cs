@@ -27,24 +27,29 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
-            var value = transaction.Reader.IsDBNull(i) ? default(uint) : (uint)transaction.Reader.GetInt32(i);
+            var value = transaction.Reader.IsDBNull(i) ? default(uint) : (uint)transaction.Reader.GetInt64(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
-            var value = (uint)transaction.Reader.GetInt32(i);
+            var value = (uint)transaction.Reader.GetInt64(i);
             return PullIndex?.SelectOne<F>(value);
         }
 
-        public override object GetParameterValue(DBItem item)
+        public override string FormatQuery(uint value)
         {
-            var value = GetValue(item);
-            return (int)value;
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        public override string FormatDisplay(uint value)
+        {
+            return value.ToString(Format, CultureInfo.InvariantCulture);
+        }
+
+        public override object GetParameterValue(uint value)
+        {
+            return (long)value;
         }
 
         public override uint Parse(object value)
@@ -55,7 +60,7 @@ namespace DataWF.Data
                 return 0;
             if (value is DBItem item)
                 return GetReferenceId(item);
-            
+
             return Convert.ToUInt32(value, CultureInfo.InvariantCulture);
         }
     }

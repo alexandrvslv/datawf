@@ -20,6 +20,7 @@
 using System.Data;
 using System.Collections;
 using System.Linq;
+using System.Text;
 
 namespace DataWF.Data
 {
@@ -68,17 +69,19 @@ namespace DataWF.Data
             //    return $"({base.CreateParameter(command, Items.Select(p => p.GetValue()).ToList(), Column)})";
             //}
 
-            string rez = string.Empty;
+            var rez = new StringBuilder();
             foreach (QItem item in Items)
             {
-                rez += item.Format(command);
-                if (!items.IsLast(item))
-                    rez += ", ";
+                rez.Append(item.Format(command));
+                rez.Append(", ");
             }
             if (rez.Length > 0)
-                rez = $"({rez})";
+            {
+                rez.Length -= 2;
+                return $"({rez})";
+            }
             //DBService.FormatToSqlText(value)
-            return rez;
+            return string.Empty;
         }
 
         public void Delete(QItem item)

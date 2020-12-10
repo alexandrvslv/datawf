@@ -5,7 +5,7 @@ namespace DataWF.Common
 {
     public class CharSerializer : NullableSerializer<char>
     {
-        public static readonly UInt8Serializer Instance = new UInt8Serializer();
+        public static readonly CharSerializer Instance = new CharSerializer();
 
         public override BinaryToken BinaryToken => BinaryToken.Char;
 

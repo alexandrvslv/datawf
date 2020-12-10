@@ -27,11 +27,7 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
-            var value = transaction.Reader.IsDBNull(i) ? (uint?)null : (uint)transaction.Reader.GetInt32(i);
+            var value = transaction.Reader.IsDBNull(i) ? (uint?)null : (uint)transaction.Reader.GetInt64(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
@@ -41,12 +37,21 @@ namespace DataWF.Data
             return PullIndex?.SelectOne<F>(value);
         }
 
-        public override object GetParameterValue(DBItem item)
+        public override string FormatQuery(uint? value)
         {
-            var value = GetValue(item);
+            return value?.ToString(CultureInfo.InvariantCulture) ?? "null";
+        }
+
+        public override string FormatDisplay(uint? value)
+        {
+            return value?.ToString(Format, CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+        public override object GetParameterValue(uint? value)
+        {
             if (value == null)
                 return DBNull.Value;
-            return (int)value;
+            return (long)value.Value;
         }
 
         public override uint? Parse(object value)
@@ -57,7 +62,7 @@ namespace DataWF.Data
                 return (uint?)null;
             if (value is DBItem item)
                 return GetReferenceId(item);
-            
+
             return Convert.ToUInt32(value, CultureInfo.InvariantCulture);
         }
     }

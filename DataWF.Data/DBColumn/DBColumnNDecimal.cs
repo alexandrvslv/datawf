@@ -28,10 +28,6 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             var value = transaction.Reader.IsDBNull(i) ? (decimal?)null : transaction.Reader.GetDecimal(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
@@ -42,6 +38,16 @@ namespace DataWF.Data
             return PullIndex?.SelectOne<F>(value);
         }
 
+        public override string FormatQuery(decimal? value)
+        {
+            return value?.ToString(CultureInfo.InvariantCulture).ToLower() ?? "null";
+        }
+
+        public override string FormatDisplay(decimal? value)
+        {
+            return value?.ToString(Format, CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
         public override decimal? Parse(object value)
         {
             if (value is decimal typedValue)
@@ -50,7 +56,7 @@ namespace DataWF.Data
                 return null;
             if (value is DBItem item)
                 return GetReferenceId(item);
-            
+
             return Convert.ToDecimal(value, CultureInfo.InvariantCulture);
         }
     }

@@ -28,10 +28,6 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             if (transaction.Reader.IsDBNull(i))
             {
                 SetValue(row, (T?)null, DBSetValueMode.Loading);
@@ -51,13 +47,34 @@ namespace DataWF.Data
             return PullIndex?.SelectOne<F>(enumValue);
         }
 
-        public override object GetParameterValue(DBItem item)
+        public override string FormatQuery(T? value)
         {
-            var value = GetValue(item);
+            if (value == null)
+                return "null";
+            var val = value.Value;
+            return Unsafe.As<T, short>(ref val).ToString(CultureInfo.InvariantCulture);
+        }
+
+        public override string FormatDisplay(T? value)
+        {
+            return value?.ToString() ?? string.Empty;
+        }
+
+        public override object GetParameterValue(T? value)
+        {
             if (value == null)
                 return DBNull.Value;
             var nnValue = (T)value;
             return Unsafe.As<T, short>(ref nnValue);
+        }
+
+        public override object GetParameterValue(object value)
+        {
+            if (value == null)
+                return DBNull.Value;
+            if (value is short oreadyValue)
+                return oreadyValue;
+            return base.GetParameterValue(value);
         }
 
         public override T? Parse(object value)

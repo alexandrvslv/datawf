@@ -18,8 +18,9 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
-using DataWF.Data;
 using System;
+using System.Globalization;
+using System.Text;
 
 namespace DataWF.Data
 {
@@ -32,22 +33,26 @@ namespace DataWF.Data
 
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             var value = transaction.Reader.IsDBNull(i) ? null : (byte[])transaction.Reader.GetValue(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
-        public override string FormatValue(byte[] val)
+        public override string FormatQuery(byte[] value)
         {
-            if (val == null)
+            if (value == null)
+                return "null";
+
+            return Helper.GetHexString(value);
+        }
+
+        public override string FormatDisplay(byte[] value)
+        {
+            if (value == null)
                 return string.Empty;
 
             if ((Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
             {
-                var cash = new AccessValue(val);
+                var cash = new AccessValue(value);
                 string rez = string.Empty;
                 foreach (var item in cash)
                 {
@@ -57,7 +62,7 @@ namespace DataWF.Data
             }
             else
             {
-                return Helper.LenghtFormat(val.Length);
+                return Helper.LenghtFormat(value.Length);
             }
         }
 

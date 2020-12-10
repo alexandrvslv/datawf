@@ -47,11 +47,9 @@ namespace DataWF.WebService.Common
                     Factory.referenceSet.Add(value);
                 }
             }
-            Debug.WriteLine($"Write {valueType.Name} {value}");
             writer.WriteStartObject();
             foreach (DBColumn column in columns)
             {
-                Debug.WriteLine($"Write {column}");
                 if ((column.Keys & DBColumnKeys.Access) != 0)
                 {
                     var propertyValue = (AccessValue)column.PropertyInvoker.GetValue(value);

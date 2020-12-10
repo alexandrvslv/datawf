@@ -835,27 +835,18 @@ namespace DataWF.Data
         public virtual T LoadFromReader(DBTransaction transaction)
         {
             T item = null;
-
             if (transaction.ReaderPrimaryKey >= 0)
             {
                 item = PrimaryKey.ReadAndSelect<T>(transaction, transaction.ReaderPrimaryKey);
             }
             if (transaction.ReaderStampKey >= 0 && !transaction.Reader.IsDBNull(transaction.ReaderStampKey))
             {
-                if (item != null && (transaction.ReaderParam & DBLoadParam.Referencing) != 0)
+                var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
+                stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
+
+                if ((transaction.ReaderParam & DBLoadParam.Synchronize) != 0)
                 {
-                    var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
-                    stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
-                    if (Nullable.Compare(item.Stamp, stamp) >= 0)
-                    {
-                        return item;
-                    }
-                }
-                else if ((transaction.ReaderParam & DBLoadParam.Synchronize) != 0)
-                {
-                    var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
-                    stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
-                    if (item != null && Nullable.Compare(item.Stamp, stamp) >= 0)
+                    if (item != null && item.Stamp >= stamp)
                     {
                         return item;
                     }
@@ -864,6 +855,14 @@ namespace DataWF.Data
                         return LoadById(transaction.Reader.GetValue(transaction.ReaderPrimaryKey));
                     }
                 }
+                if (item != null)
+                {
+                    if (item.Stamp >= stamp)
+                    {
+                        return item;
+                    }
+                }
+
             }
             if (item == null)
             {
@@ -876,9 +875,22 @@ namespace DataWF.Data
             for (int i = 0; i < transaction.ReaderColumns.Count; i++)
             {
                 var column = transaction.ReaderColumns[i];
+                if (item.Attached && item.UpdateState != DBUpdateState.Default && item.IsChangedKey(column))
+                {
+                    continue;
+                }
+
                 column.Read(transaction, item, i);
             }
             return item;
+        }
+
+        private IEnumerable<T> AsReadOnly()
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                yield return items[i];
+            }
         }
 
         public override IEnumerable<DBItem> GetChangedItems()
@@ -908,12 +920,11 @@ namespace DataWF.Data
             }
         }
 
-        public IEnumerable<T> Select(QItemList<QParam> parameters, IEnumerable<T> list = null)
+        public IEnumerable<T> Select(IEnumerable<QParam> parameters, IEnumerable<T> list = null)
         {
             IEnumerable<T> buffer = null;
-            for (int i = 0; i < parameters.Count; i++)
+            foreach (QParam param in parameters)
             {
-                QParam param = parameters[i];
                 if (buffer != null && param.Logic.Type == LogicTypes.And)
                 {
                     if (!buffer.Any())
@@ -964,37 +975,35 @@ namespace DataWF.Data
 
         public IEnumerable<T> Select(QParam param, IEnumerable<T> list = null)
         {
-            if (param.ValueLeft is QFunc func
+            if (param.LeftItem is QFunc func
                 && func.Type == QFunctionType.distinct
                 && func.Items.FirstOrDefault() is QItem item)
             {
                 return ListHelper.Distinct(list ?? items, item, param.Query?.GetComparer());//
             }
-            IEnumerable<T> buf = param.IsCompaund ? Select(param.Parameters, list) : null;
-            if (buf == null)
+            if (param.IsCompaund)
             {
-                if (param.ValueLeft is QColumn lColumn)
-                {
-                    if (param.ValueRight is QColumn rColumn)
-                    {
-                        if (rColumn.Temp != null)
-                            buf = Select(lColumn.Column, param.Comparer, rColumn.Temp, list);
-                        else
-                            buf = Select(lColumn.Column, param.Comparer, rColumn.Column, list);
-                    }
-                    else
-                        buf = Select(lColumn.Column, param.Comparer, param.Value, list);
-                }
-                else if (param.ValueLeft is QReflection lReflection)
-                {
-                    buf = Select(lReflection.Invoker, param.Comparer, param.Value, list);
-                }
-                else
-                {
-                    buf = Search(param, list);
-                }
+                return Select(param.Parameters.OfType<QParam>(), list);
             }
-            return buf;
+            if (param.LeftIsColumn)
+            {
+                var lColumn = param.LeftColumn;
+                if (param.RightIsColumn)
+                {
+                    var rColumn = param.RightQColumn;
+                    if (rColumn.Temp != null)
+                        return Select(lColumn, param.Comparer, rColumn.Temp, list);
+
+                    return Select(lColumn, param.Comparer, rColumn.Column, list);
+                }
+
+                return Select(lColumn, param.Comparer, param.RightValue, list);
+            }
+            else if (param.LeftItem is QReflection lReflection)
+            {
+                return Select(lReflection.Invoker, param.Comparer, param.RightValue, list);
+            }
+            return Search(param, list);
         }
 
         public IEnumerable<T> Search(QParam param, IEnumerable<T> list = null)
@@ -1002,16 +1011,8 @@ namespace DataWF.Data
             list = list ?? AsReadOnly();
             foreach (T row in list)
             {
-                if (CheckItem(row, param.ValueLeft.GetValue(row), param.ValueRight.GetValue(row), param.Comparer))
+                if (QParam.CheckItem(row, param.LeftItem.GetValue(row), param.RightItem.GetValue(row), param.Comparer))
                     yield return row;
-            }
-        }
-
-        private IEnumerable<T> AsReadOnly()
-        {
-            for (int i = 0; i < items.Count; i++)
-            {
-                yield return items[i];
             }
         }
 
@@ -1019,6 +1020,8 @@ namespace DataWF.Data
         {
             if (value == null || value is DBColumn)
                 return value;
+            if (value is QItem qItem)
+                value = qItem.GetValue();
             if (value is QQuery query)
             {
                 if (column.IsPrimaryKey)
@@ -1045,7 +1048,7 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    value = SelectQuery(null, (QQuery)value, comparer);
+                    value = SelectQuery(null, query, comparer);
                 }
             }
             else if (value.GetType() == typeof(QEnum))
@@ -1074,7 +1077,7 @@ namespace DataWF.Data
 
             foreach (T row in list)
             {
-                if (CheckItem(row, invoker.GetValue(row), value, comparer))
+                if (QParam.CheckItem(row, invoker.GetValue(row), value, comparer))
                     yield return row;
             }
         }
@@ -1163,6 +1166,7 @@ namespace DataWF.Data
                     yield return row;
             }
         }
+
         public IEnumerable<T> Search(DBColumn lColumn, CompareType comparer, DBColumn rColumn, IEnumerable<T> list)
         {
             list = list ?? this;

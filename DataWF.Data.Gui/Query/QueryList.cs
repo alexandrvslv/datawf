@@ -84,17 +84,17 @@ namespace DataWF.Data.Gui
             {
                 QParam param = (QParam)listItem;
                 ILayoutCellEditor editor = null;
-                if (param.Column != null)
+                if (param.LeftColumn != null)
                 {
-                    if ((param.Column.IsPrimaryKey || param.Column.IsReference) && param.Comparer.Type == CompareTypes.In)
+                    if ((param.LeftColumn.IsPrimaryKey || param.LeftColumn.IsReference) && param.Comparer.Type == CompareTypes.In)
                     {
-                        if (param.Column.IsReference && param.Value == null)
-                            param.ValueRight = new QQuery(string.Empty, param.Column.ReferenceTable);
+                        if (param.LeftColumn.IsReference && param.RightValue == null)
+                            param.RightItem = new QQuery(string.Empty, param.LeftColumn.ReferenceTable);
                         editor = new CellEditorQuery();
                     }
                     else
                     {
-                        editor = TableLayoutList.InitCellEditor(param.Column);
+                        editor = TableLayoutList.InitCellEditor(param.LeftColumn);
                     }
                     return editor;
                 }

@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace DataWF.Data
@@ -26,17 +27,13 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
             if (transaction.Reader.IsDBNull(i))
             {
                 SetValue(row, (T?)null, DBSetValueMode.Loading);
             }
             else
             {
-                var value = (ushort)transaction.Reader.GetInt16(i);
+                var value = (ushort)transaction.Reader.GetInt32(i);
                 var enumValue = Unsafe.As<ushort, T>(ref value);
                 SetValue(row, (T?)enumValue, DBSetValueMode.Loading);
             }
@@ -44,18 +41,30 @@ namespace DataWF.Data
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
-            var value = (ushort)transaction.Reader.GetInt16(i);
+            var value = (ushort)transaction.Reader.GetInt32(i);
             var enumValue = Unsafe.As<ushort, T>(ref value);
             return PullIndex?.SelectOne<F>(enumValue);
         }
 
-        public override object GetParameterValue(DBItem item)
+        public override string FormatQuery(T? value)
         {
-            var value = GetValue(item);
+            if (value == null)
+                return "null";
+            var val = value.Value;
+            return Unsafe.As<T, ushort>(ref val).ToString(CultureInfo.InvariantCulture);
+        }
+
+        public override string FormatDisplay(T? value)
+        {
+            return value?.ToString() ?? string.Empty;
+        }
+
+        public override object GetParameterValue(T? value)
+        {
             if (value == null)
                 return DBNull.Value;
-            var nnValue = (T)value;
-            return (short)Unsafe.As<T, ushort>(ref nnValue);
+            var nnValue = value.Value;
+            return (int)Unsafe.As<T, ushort>(ref nnValue);
         }
 
         public override T? Parse(object value)
@@ -67,7 +76,7 @@ namespace DataWF.Data
             if (value is string stringValue && Enum.TryParse<T>(stringValue, out var parsed))
                 return parsed;
 
-            var convertedValue = Convert.ToUInt16(value);
+            var convertedValue = Convert.ToUInt16(value, CultureInfo.InvariantCulture);
             return Unsafe.As<ushort, T>(ref convertedValue);
         }
     }

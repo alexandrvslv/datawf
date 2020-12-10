@@ -27,24 +27,29 @@ namespace DataWF.Data
     {
         public override void Read(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
-            {
-                return;
-            }
-            var value = transaction.Reader.IsDBNull(i) ? default(ushort) : (ushort)transaction.Reader.GetInt16(i);
+            var value = transaction.Reader.IsDBNull(i) ? default(ushort) : (ushort)transaction.Reader.GetInt32(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
-            var value = (ushort)transaction.Reader.GetInt16(i);
+            var value = (ushort)transaction.Reader.GetInt32(i);
             return PullIndex?.SelectOne<F>(value);
         }
 
-        public override object GetParameterValue(DBItem item)
+        public override string FormatQuery(ushort value)
         {
-            var value = GetValue(item);
-            return (short)value;
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        public override string FormatDisplay(ushort value)
+        {
+            return value.ToString(Format, CultureInfo.InvariantCulture);
+        }
+
+        public override object GetParameterValue(ushort value)
+        {
+            return (int)value;
         }
 
         public override ushort Parse(object value)

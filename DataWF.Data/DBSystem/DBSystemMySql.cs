@@ -38,19 +38,18 @@ namespace DataWF.Data
             DataTypeMap = new Dictionary<DBDataType, string>(){
                     {DBDataType.String, "varchar{0}"},
                     {DBDataType.Clob, "text"},
-                    {DBDataType.DateTime, "datetime"},
+                    {DBDataType.DateTime, "datetime(6)"},
                     {DBDataType.ByteArray, "varbinary{0}"},
                     {DBDataType.ByteSerializable, "varbinary{0}"},
                     {DBDataType.Blob, "longblob"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
-                    {DBDataType.UInt, "integer"},
                     {DBDataType.ShortInt, "smallint"},
                     {DBDataType.TinyInt, "tinyint unsigned"},
-                    {DBDataType.Float, "float(22,11)"},
-                    {DBDataType.Double, "double"},
+                    {DBDataType.Float, "real"},
+                    {DBDataType.Double, "double precision"},
                     {DBDataType.Decimal, "numeric{0}"},
-                    {DBDataType.TimeSpan, "bigint"},
+                    {DBDataType.TimeSpan, "time"},
                     {DBDataType.Bool, "bool"},
                 };
         }
@@ -138,6 +137,23 @@ select seq from db_sequence where name = '{sequence.Name}';";
                 ddl.AppendLine($"use {schema.DataBase};");
                 ddl.AppendLine($"create table db_sequence(name varchar(512) not null primary key, seq long);");
             }
+        }
+
+        public override object FillParameter(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        {
+            if (column != null)
+            {
+                switch (column.DBDataType)
+                {
+                    case DBDataType.Float:
+                        ((MySqlParameter)parameter).MySqlDbType = MySqlDbType.Float;
+                        break;
+                    case DBDataType.Double:
+                        ((MySqlParameter)parameter).MySqlDbType = MySqlDbType.Double;
+                        break;
+                }
+            }
+            return base.FillParameter(command, parameter, value, column);
         }
 
         public override async Task<long> SetBLOB(Stream value, DBTransaction transaction)

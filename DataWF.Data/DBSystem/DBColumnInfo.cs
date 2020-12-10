@@ -54,6 +54,7 @@ namespace DataWF.Data
             }
 
             if (data.Equals("BLOB", StringComparison.OrdinalIgnoreCase) ||
+                data.Equals("LONGBLOB", StringComparison.OrdinalIgnoreCase) ||
                 data.Equals("RAW", StringComparison.OrdinalIgnoreCase) ||
                 data.Equals("VARBINARY", StringComparison.OrdinalIgnoreCase))
             {
@@ -61,7 +62,13 @@ namespace DataWF.Data
                 if (!string.IsNullOrEmpty(Length))
                     size = int.Parse(Length);
             }
+            else if (data.IndexOf("TIME", StringComparison.OrdinalIgnoreCase) != -1
+                || data.IndexOf("INTERVAL", StringComparison.OrdinalIgnoreCase) != -1)
+            {
+                type = NotNull ? typeof(TimeSpan) : typeof(TimeSpan?);
+            }
             else if (data.IndexOf("DATE", StringComparison.OrdinalIgnoreCase) != -1
+                || data.IndexOf("DATETIME", StringComparison.OrdinalIgnoreCase) != -1
                 || data.IndexOf("TIMESTAMP", StringComparison.OrdinalIgnoreCase) != -1)
             {
                 type = NotNull ? typeof(DateTime) : typeof(DateTime?);
@@ -77,9 +84,22 @@ namespace DataWF.Data
                     scale = int.Parse(Scale);
             }
             else if (data.Equals("DOUBLE", StringComparison.OrdinalIgnoreCase)
-                || data.Equals("FLOAT", StringComparison.OrdinalIgnoreCase))
+                || data.Equals("FLOAT", StringComparison.OrdinalIgnoreCase)
+                || data.Equals("REAL", StringComparison.OrdinalIgnoreCase))
             {
                 type = NotNull ? typeof(double) : typeof(double?);
+            }
+            else if (data.Equals("BIGINT", StringComparison.OrdinalIgnoreCase))
+            {
+                type = NotNull ? typeof(long) : typeof(long?);
+            }
+            else if (data.Equals("SMALLINT", StringComparison.OrdinalIgnoreCase))
+            {
+                type = NotNull ? typeof(short) : typeof(short?);
+            }
+            else if (data.Equals("TINYINT", StringComparison.OrdinalIgnoreCase))
+            {
+                type = NotNull ? typeof(byte) : typeof(byte?);
             }
             else if (data.Equals("INT", StringComparison.OrdinalIgnoreCase)
                 || data.Equals("INTEGER", StringComparison.OrdinalIgnoreCase))
@@ -96,9 +116,9 @@ namespace DataWF.Data
             {
                 type = typeof(string);
                 //col.DBDataType = DBDataType.Clob;
-                if (!string.IsNullOrEmpty(Length))
+                if (Length != null && int.TryParse(Length, out var length))
                 {
-                    size = int.Parse(Length);
+                    size = length;
                 }
             }
             return (type, size, scale);
