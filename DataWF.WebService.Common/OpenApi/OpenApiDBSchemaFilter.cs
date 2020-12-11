@@ -21,9 +21,6 @@ namespace DataWF.WebService.Common
                 && !TypeHelper.IsEnumerable(context.Type)
                 && context.Type != typeof(object))
             {
-                //if (context.Type.Name == "UserReg")
-                //{ }
-
                 schema.Type = "object";
                 schema.Properties.Clear();
                 schema.AdditionalPropertiesAllowed = true;
@@ -123,6 +120,10 @@ namespace DataWF.WebService.Common
                         AllOf = new List<OpenApiSchema> { propertySchema },
                     };
                 }
+                if (propertyType != property.DataType)
+                {
+                    propertySchema.Nullable = true;
+                }
                 if (columnAttribute != null)
                 {
                     ApplyColumnAttribute(schema, propertySchema, columnAttribute, property.PropertyInfo);
@@ -216,6 +217,10 @@ namespace DataWF.WebService.Common
                     {
                         AllOf = new List<OpenApiSchema> { columnSchema },
                     };
+                }
+                if (propertyType != column.PropertyInfo.PropertyType)
+                {
+                    columnSchema.Nullable = true;
                 }
                 ApplyColumn(schema, columnSchema, column);
                 if (column.ReferencePropertyInfo != null)

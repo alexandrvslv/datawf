@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using DataWF.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -86,6 +87,15 @@ namespace DataWF.Data
         public DBColumnReference Get(string column)
         {
             return Select(DBColumnReference.ColumnNameInvoker.Instance, CompareType.Equal, column).FirstOrDefault();
+        }
+
+        public void Replace(DBColumn exist, DBColumn replacer)
+        {
+            foreach (var item in this)
+            {
+                if (item.Column == exist)
+                    item.Column = replacer;
+            }
         }
 
         protected override void OnPropertyChanged(string property)

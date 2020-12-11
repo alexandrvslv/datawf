@@ -82,9 +82,9 @@ namespace DataWF.Module.Common
         public UserReg()
         { }
 
-        public override long? Id
+        public override long Id
         {
-            get => GetValue<long?>(Table.PrimaryKey);
+            get => GetValue<long>(Table.PrimaryKey);
             set => SetValue(value, Table.PrimaryKey);
         }
 

@@ -7,7 +7,7 @@ namespace DataWF.Test.Data
 {
     public class AccessGroupBung : IGroupIdentity, IPrimaryKey
     {
-        public int? Id { get; set; }
+        public int Id { get; set; }
 
         public string Name { get; set; }
         public bool Expand { get; set; }

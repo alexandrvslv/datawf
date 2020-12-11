@@ -8,8 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace DataWF.Common
 {
-    public class PullIndex<T, K> : PullIndex, IDisposable
-        where T : class, IPullHandler
+    public class PullIndex<T, K> : PullIndex, IDisposable, IPullIndex<T, K> where T : class, IPullHandler
     {
         private readonly ConcurrentDictionary<K, ThreadSafeList<T>> store;
         private readonly IComparer<T> valueComparer;

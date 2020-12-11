@@ -92,10 +92,24 @@ namespace DataWF.Data
 
             base.InsertInternal(index, item);
 
-            if (item.IsPrimaryKey)
+            if (exist != null)
+            {
+                Table.Constraints.Replace(exist, item);
+                Table.Foreigns.Replace(exist, item);
+                Table.Indexes.Replace(exist, item);
+                if (exist != null)
+                {
+                    Table.ClearCache();
+                    foreach (var relation in Table.ChildRelations)
+                    {
+                        relation.References.Replace(exist, item);
+                    }
+                }
+            }
+            if (item.IsPrimaryKey && Schema != null)
             {
                 DBConstraint primary = null;
-                foreach (var constraint in Table.Constraints.GetByColumn(Table.PrimaryKey))
+                foreach (var constraint in Table.Constraints.GetByColumn(item))
                 {
                     if (constraint.Type == DBConstraintType.Primary)
                     {
@@ -103,9 +117,9 @@ namespace DataWF.Data
                         break;
                     }
                 }
-                if (primary == null && Table.PrimaryKey != null)
+                if (primary == null)
                 {
-                    primary = new DBConstraint() { Column = Table.PrimaryKey, Type = DBConstraintType.Primary };
+                    primary = new DBConstraint() { Column = item, Type = DBConstraintType.Primary };
                     primary.GenerateName();
                     Table.Constraints.Add(primary);
                     //Table.DefaultComparer = item.CreateComparer(); Commented for poerformance of Index creation

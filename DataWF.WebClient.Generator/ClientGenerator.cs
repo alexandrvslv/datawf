@@ -512,7 +512,7 @@ namespace DataWF.WebClient.Generator
                 typeKey = GetTypeKey(schema);
                 typeId = GetTypeId(schema);
 
-                return $"{(loggedTypeName != null ? "Logged" : "")}Client<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, false, usings, "List"))}{(logged != null ? $", {loggedTypeName}" : "")}>";
+                return $"{(loggedTypeName != null ? "Logged" : "")}Client<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, usings, "List"))}{(logged != null ? $", {loggedTypeName}" : "")}>";
             }
             return $"ClientBase";
         }
@@ -680,7 +680,7 @@ namespace DataWF.WebClient.Generator
             var returnType = "string";
             if (descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce.Schema != null)
             {
-                returnType = $"{GetTypeString(responce.Schema, false, usings, "List")}";
+                returnType = $"{GetTypeString(responce.Schema, usings, "List")}";
             }
             return returnType;
         }
@@ -825,7 +825,7 @@ namespace DataWF.WebClient.Generator
                     continue;
                 yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
                                                          modifiers: SF.TokenList(),
-                                                         type: GetTypeDeclaration(parameter, false, usings, "List"),
+                                                         type: GetTypeDeclaration(parameter, usings, "List"),
                                                          identifier: SF.Identifier(parameter.Name),
                                                          @default: null);
             }
@@ -1087,7 +1087,7 @@ namespace DataWF.WebClient.Generator
                             body: SF.Block(new[]{ SF.ParseStatement($"return {idKey.Name};") })),
                         SF.AccessorDeclaration(
                             kind: SyntaxKind.SetAccessorDeclaration,
-                            body: SF.Block(new[]{ SF.ParseStatement($"{idKey.Name} = ({GetTypeString(idKey, true, usings, "List")})value;")}))
+                            body: SF.Block(new[]{ SF.ParseStatement($"{idKey.Name} = ({GetTypeString(idKey, usings, "List")})value;")}))
                     })),
                     expressionBody: null,
                     initializer: null,
@@ -1111,7 +1111,7 @@ namespace DataWF.WebClient.Generator
             {
                 var name = GetInvokerName(property.Value);
                 var refkey = GetPropertyRefKey(property.Value);
-                var propertyType = GetTypeString(property.Value, property.Value.IsNullableRaw ?? true, usings, refkey == null ? "SelectableList" : "ReferenceList");
+                var propertyType = GetTypeString(property.Value, usings, refkey == null ? "SelectableList" : "ReferenceList");
                 var propertyName = GetPropertyName(property.Value);
 
                 yield return GenDefinitionClassPropertyInvoker(name, definitionName, propertyName, propertyType, attributes);
@@ -1297,7 +1297,7 @@ namespace DataWF.WebClient.Generator
             Dictionary<string, UsingDirectiveSyntax> usings, bool isOverride = false)
         {
             var refkey = GetPropertyRefKey(property);
-            var typeDeclaration = GetTypeDeclaration(property, property.IsNullableRaw ?? true, usings, refkey == null ? "SelectableList" : "ReferenceList");
+            var typeDeclaration = GetTypeDeclaration(property, usings, refkey == null ? "SelectableList" : "ReferenceList");
 
             return SF.PropertyDeclaration(
                 attributeLists: SF.List(GenDefinitionClassPropertyAttributes(property, idKey, typeKey, usings)),
@@ -1452,7 +1452,7 @@ namespace DataWF.WebClient.Generator
         {
             if (!isOverride)
             {
-                var type = GetTypeString(property, true, usings, "SelectableList");
+                var type = GetTypeString(property, usings, "SelectableList");
                 if (type.Equals("string", StringComparison.Ordinal))
                 {
                     yield return SF.ParseStatement($"if(string.Equals({GetFieldName(property)}, value, StringComparison.Ordinal)) return;");
@@ -1466,7 +1466,11 @@ namespace DataWF.WebClient.Generator
                 if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var refPropertyName))
                 {
                     var idProperty = GetPrimaryKey(property.Reference ?? property.AllOf.FirstOrDefault()?.Reference ?? property.AnyOf.FirstOrDefault()?.Reference);
-                    yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)};");
+                    var idType = GetTypeString(idProperty, usings);
+                    if (idProperty.IsNullableRaw ?? false)
+                        yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)};");
+                    else
+                        yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)} ?? default({idType});");
                 }
                 //Change - refence from single json
                 var objectProperty = GetReferenceProperty((JsonSchema)property.Parent, property.Name);
@@ -1475,7 +1479,9 @@ namespace DataWF.WebClient.Generator
                     var objectFieldName = GetFieldName(objectProperty);
                     yield return SF.ParseStatement($"if({objectFieldName}?.Id != value)");
                     yield return SF.ParseStatement("{");
-                    yield return SF.ParseStatement($"{objectFieldName} = value == null ? null : {GetTypeString(objectProperty, false, usings, "List")}Client.Instance.Select(value.Value);");
+                    yield return SF.ParseStatement($"{objectFieldName} = value == default({type}) ? null " +
+                        $": {GetTypeString(objectProperty, usings, "List")}Client.Instance.Select(value{(type.EndsWith('?') ? ".Value" : "")});");
+
                     yield return SF.ParseStatement($"OnPropertyChanged(nameof({GetPropertyName(objectProperty)}));");
                     yield return SF.ParseStatement("}");
                 }
@@ -1539,7 +1545,7 @@ namespace DataWF.WebClient.Generator
                     Definition = property.ParentSchema.Id,
                     RefKey = refkey,
                     TypeSchema = property.Item.ActualTypeSchema,
-                    TypeName = GetTypeString(property.Item, false, usings),
+                    TypeName = GetTypeString(property.Item, usings),
                 };
                 refFields.Add(refField);
                 //var refTypePrimary = GetPrimaryKey(refTypeSchema);
@@ -1547,12 +1553,12 @@ namespace DataWF.WebClient.Generator
                 //var refTypePrimaryType = GetTypeString(refTypePrimary, true, "SelectableList");
                 refField.KeyProperty = GetProperty(refField.TypeSchema, refkey);
                 refField.KeyName = GetPropertyName(refField.KeyProperty);
-                refField.KeyType = GetTypeString(refField.KeyProperty, true, usings);
+                refField.KeyType = GetTypeString(refField.KeyProperty, usings);
 
                 refField.ValueProperty = GetReferenceProperty((JsonSchema)refField.KeyProperty.Parent, refField.KeyName);
                 refField.ValueName = GetPropertyName(refField.ValueProperty);
 
-                refField.ValueType = GetTypeString(refField.ValueProperty, false, null);
+                refField.ValueType = GetTypeString(refField.ValueProperty, null);
                 refField.ValueFieldName = GetFieldName(refField.ValueProperty);
 
                 refField.InvokerName = $"{refField.TypeName}.{refkey}Invoker.Default";
@@ -1572,7 +1578,7 @@ namespace DataWF.WebClient.Generator
                 //               initializer: SF.EqualsValueClause(
                 //                   SF.ParseExpression($"new {refField.ParameterType}{{ Invoker = {refField.InvokerName}}}"))))));
 
-                refField.FieldType = GetTypeString(property, property.IsNullableRaw ?? true, usings, "ReferenceList");
+                refField.FieldType = GetTypeString(property, usings, "ReferenceList");
                 refField.FieldName = GetFieldName(property);
                 yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.ProtectedKeyword)),
@@ -1586,7 +1592,7 @@ namespace DataWF.WebClient.Generator
             }
             else
             {
-                var type = GetTypeString(property, property.IsNullableRaw ?? true, usings);
+                var type = GetTypeString(property, usings);
                 yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
                     modifiers: SF.TokenList(type.EndsWith('?')
                     ? new[] { SF.Token(SyntaxKind.ProtectedKeyword) }
@@ -1606,7 +1612,7 @@ namespace DataWF.WebClient.Generator
         private ExpressionSyntax GenFieldDefault(JsonSchemaProperty property, JsonSchemaProperty idKey, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var text = property.Default.ToString();
-            var type = GetTypeString(property, false, usings);
+            var type = GetTypeString(property, usings).TrimEnd('?');
             if (type == "bool")
                 text = text.ToLowerInvariant();
             else if (type == "string")
@@ -1619,16 +1625,13 @@ namespace DataWF.WebClient.Generator
         private string GetArrayElementTypeString(JsonSchema schema, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             return schema.Type == JsonObjectType.Array
-                ? GetTypeString(schema.Item, false, usings, "List")
+                ? GetTypeString(schema.Item, usings, "List")
                 : null;
         }
 
-        private string GetTypeString(JsonSchema schema, bool nullable, Dictionary<string, UsingDirectiveSyntax> usings, string listType = "SelectableList")
+        private string GetTypeString(JsonSchema schema, Dictionary<string, UsingDirectiveSyntax> usings, string listType = "SelectableList", bool nullDefault = false)
         {
-            if (!nullable && schema.IsNullableRaw == true)
-            {
-                nullable = true;
-            }
+            var nullable = schema.IsNullableRaw ?? nullDefault;
             switch (schema.Type)
             {
                 case JsonObjectType.Integer:
@@ -1672,16 +1675,16 @@ namespace DataWF.WebClient.Generator
                             return "string";
                     }
                 case JsonObjectType.Array:
-                    return $"{listType}<{GetTypeString(schema.Item, false, usings, listType)}>";
+                    return $"{listType}<{GetTypeString(schema.Item, usings, listType, nullDefault)}>";
                 case JsonObjectType.None:
                     if (schema.ActualTypeSchema != schema)
                     {
-                        return GetTypeString(schema.ActualTypeSchema, nullable, usings, listType);
+                        return GetTypeString(schema.ActualTypeSchema, usings, listType, nullable);
                     }
                     else if (schema is JsonSchemaProperty propertySchema)
                     {
                         return GetTypeString(propertySchema.AllOf.FirstOrDefault()?.Reference
-                            ?? propertySchema.AnyOf.FirstOrDefault()?.Reference, nullable, usings, listType);
+                            ?? propertySchema.AnyOf.FirstOrDefault()?.Reference, usings, listType, nullable);
                     }
                     else
                     {
@@ -1720,9 +1723,9 @@ namespace DataWF.WebClient.Generator
 
 
 
-        private TypeSyntax GetTypeDeclaration(JsonSchema property, bool nullable, Dictionary<string, UsingDirectiveSyntax> usings, string listType)
+        private TypeSyntax GetTypeDeclaration(JsonSchema property, Dictionary<string, UsingDirectiveSyntax> usings, string listType)
         {
-            return SF.ParseTypeName(GetTypeString(property, nullable, usings, listType));
+            return SF.ParseTypeName(GetTypeString(property, usings, listType));
         }
 
         private IEnumerable<AttributeListSyntax> DefinitionAttributeList()

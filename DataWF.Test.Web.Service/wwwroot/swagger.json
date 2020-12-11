@@ -7239,8 +7239,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -13155,8 +13154,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           },
           {
@@ -13165,8 +13163,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           },
           {
@@ -13206,8 +13203,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           },
           {
@@ -13216,8 +13212,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           },
           {
@@ -13257,8 +13252,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           },
           {
@@ -13308,8 +13302,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           },
           {
@@ -25398,8 +25391,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -25719,8 +25711,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -25751,8 +25742,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -25781,8 +25771,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -25849,8 +25838,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -25894,8 +25882,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -27524,8 +27511,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -27593,8 +27579,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -27914,8 +27899,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -27946,8 +27930,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -27976,8 +27959,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -28044,8 +28026,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -28089,8 +28070,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -28370,8 +28350,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64",
-              "nullable": true
+              "format": "int64"
             }
           }
         ],
@@ -28402,8 +28381,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64",
-              "nullable": true
+              "format": "int64"
             }
           }
         ],
@@ -28432,8 +28410,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64",
-              "nullable": true
+              "format": "int64"
             }
           }
         ],
@@ -28500,8 +28477,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64",
-              "nullable": true
+              "format": "int64"
             }
           }
         ],
@@ -28545,8 +28521,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int64",
-              "nullable": true
+              "format": "int64"
             }
           }
         ],

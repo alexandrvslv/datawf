@@ -296,6 +296,7 @@ namespace DataWF.Data
                     {
                         continue;
                     }
+                    var primaryKey = typeTable.Table.PrimaryKey;
                     using (var transaction = new DBTransaction(typeTable.Table.Schema.Connection, null, true))
                     {
                         foreach (var item in typeTable.Items)
@@ -303,11 +304,11 @@ namespace DataWF.Data
                             switch (item.Command)
                             {
                                 case DBLogType.Insert:
-                                    typeTable.Table.LoadItemById(item.Id, DBLoadParam.Load, null, transaction);
+                                    primaryKey.LoadByKey(item.Id, DBLoadParam.Load, null, transaction);
                                     break;
                                 case DBLogType.Update:
                                     {
-                                        var record = typeTable.Table.LoadItemById(item.Id, DBLoadParam.None);
+                                        var record = primaryKey.LoadByKey(item.Id, DBLoadParam.None);
                                         if (record != null)
                                         {
                                             typeTable.Table.ReloadItem(item.Id, DBLoadParam.Load, transaction);
@@ -316,7 +317,7 @@ namespace DataWF.Data
                                     }
                                 case DBLogType.Delete:
                                     {
-                                        var record = typeTable.Table.LoadItemById(item.Id, DBLoadParam.None);
+                                        var record = primaryKey.LoadByKey(item.Id, DBLoadParam.None);
                                         if (item != null)
                                         {
                                             typeTable.Table.Remove(record);

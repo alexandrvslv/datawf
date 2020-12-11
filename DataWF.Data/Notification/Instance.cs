@@ -64,9 +64,9 @@ namespace DataWF.Data
         { }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
+            get => GetValue<int>(Table.PrimaryKey);
             set => SetValue(value, Table.PrimaryKey);
         }
 

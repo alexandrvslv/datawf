@@ -885,14 +885,14 @@ namespace DataWF.Data.Gui
                 foreach (string fileName in dialog.FileNames)
                 {
                     string name = Path.GetFileName(fileName);
-                    var query = new Query<DBProcedure>(new[]
+                    var query = new Query<DBProcedure>(new IQueryParameter<DBProcedure>[]
                         {
-                        new QueryParameter<DBProcedure>(){
-                            Invoker = EmitInvoker.Initialize<DBProcedure>(nameof(DBProcedure.DataName)),
+                        new QueryParameter<DBProcedure, string>(){
+                            Invoker = DBProcedure.DataNameInvoker.Instance,
                             Value = name
                         },
-                        new QueryParameter<DBProcedure>(){
-                            Invoker = EmitInvoker.Initialize<DBProcedure>(nameof(DBProcedure.ProcedureType)),
+                        new QueryParameter<DBProcedure, ProcedureTypes>(){
+                            Invoker = DBProcedure.ProcedureTypeInvoker.Instance,
                             Value = ProcedureTypes.File
                         },
                         });

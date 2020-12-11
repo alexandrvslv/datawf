@@ -48,9 +48,18 @@ namespace DataWF.Data
 
         protected override DBItem LoadReference(T? id, DBLoadParam param)
         {
-            if (ReferenceTable.PrimaryKey is DBColumn<T>)
-                return ReferenceTable.LoadItemById((T)id, param);
+            if (ReferenceTable.PrimaryKey is DBColumn<T> typedColumn)
+                return ReferenceTable.LoadItemByKey((T)id, typedColumn, param);
             return base.LoadReference(id, param);
+        }
+
+        public override void Copy(DBItem fromItem, DBColumn fromColumn, DBItem toItem, DBSetValueMode mode = DBSetValueMode.Default)
+        {
+            if (fromColumn is DBColumn<T> typedColumn)
+                SetValue(toItem, typedColumn.GetValue(fromItem), mode);
+            else
+                base.Copy(fromItem, fromColumn, toItem, mode);
+
         }
 
         public override object GetParameterValue(T? value)

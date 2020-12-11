@@ -367,7 +367,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public QParam Group
         {
-            get => List?.Owner as QParam;
+            get => List?.Container as QParam;
             set
             {
                 if (value != Group && value.Group != this && value != this)
@@ -411,7 +411,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public IQItemList Owner => throw new NotImplementedException();
+        public IQItemList Container => throw new NotImplementedException();
 
         public bool IsDefault { get; set; }
 

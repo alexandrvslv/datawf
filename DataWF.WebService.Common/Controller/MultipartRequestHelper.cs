@@ -37,9 +37,7 @@ namespace DataWF.WebService.Common
         public static Encoding GetEncoding(MultipartSection section)
         {
             var hasMediaTypeHeader = MediaTypeHeaderValue.TryParse(section.ContentType, out MediaTypeHeaderValue mediaType);
-            // UTF-7 is insecure and should not be honored. UTF-8 will succeed in 
-            // most cases.
-            if (!hasMediaTypeHeader || Encoding.UTF7.Equals(mediaType.Encoding))
+            if (!hasMediaTypeHeader)
             {
                 return Encoding.UTF8;
             }

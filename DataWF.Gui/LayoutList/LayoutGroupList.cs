@@ -33,7 +33,7 @@ namespace DataWF.Gui
             get
             {
                 foreach (LayoutGroup lg in items)
-                    if (ListHelper.Compare(lg.Value, value, null) == 0)
+                    if (ListHelper.Compare(lg.Value, value, (IComparer)null) == 0)
                         return lg;
                 return null;
             }

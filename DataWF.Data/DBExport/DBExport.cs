@@ -485,7 +485,7 @@ namespace DataWF.Data
         {
             DBItem newRow = null;
             if (table.TargetTable.PrimaryKey != null && table.SourceTable.PrimaryKey != null)
-                newRow = table.TargetTable.LoadItemById(row.PrimaryId, DBLoadParam.None);
+                newRow = table.TargetTable.PrimaryKey.LoadByKey(row.PrimaryId, DBLoadParam.None);
             if (newRow == null)
                 newRow = table.TargetTable.NewItem(DBUpdateState.Insert, false);
 

@@ -1036,7 +1036,7 @@ namespace DataWF.Common
     {
         public static readonly NullUser Value = new NullUser();
 
-        public int? Id => null;
+        public int Id => 0;
 
         public IEnumerable<IAccessIdentity> Groups => Enumerable.Empty<IAccessIdentity>();
 

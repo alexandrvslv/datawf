@@ -695,7 +695,7 @@ namespace DataWF.Data
             return LoadById(id, param, cols, transaction);
         }
 
-        public override DBItem LoadItemById<K>(K id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public override DBItem LoadItemById<K>(K? id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             return LoadById(id, param, cols, transaction);
         }
@@ -710,9 +710,15 @@ namespace DataWF.Data
             return LoadByKey(id, PrimaryKey, param, cols, transaction);
         }
 
-        public T LoadById<K>(K id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public T LoadById<K>(K? id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null) where K : struct
         {
-            return LoadByKey(id, PrimaryKey, param, cols, transaction);
+            if (id == null)
+                return null;
+            if (PrimaryKey is DBColumn<K> typedColumn)
+                return LoadByKey(id.Value, typedColumn, param, cols, transaction);
+            else if (PrimaryKey is DBColumn<K?> typedNColumn)
+                return LoadByKey(id, typedNColumn, param, cols, transaction);
+            return LoadByKey((object)id, PrimaryKey, param, cols, transaction);
         }
 
         public ValueTask<T> LoadByIdAsync(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
@@ -725,6 +731,11 @@ namespace DataWF.Data
             return LoadByKey(id, PrimaryKey);
         }
 
+        public override DBItem LoadItemByKey<K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            return LoadByKey(key, column, param, cols, transaction);
+        }
+
         public T LoadByKey<K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             T row = SelectOne(column, key);
@@ -734,6 +745,11 @@ namespace DataWF.Data
                 row = LoadItem(key, column, param, cols, transaction);
             }
             return row;
+        }
+
+        public override DBItem LoadItemByKey(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            return LoadByKey(key, column, param, cols, transaction);
         }
 
         public T LoadByKey(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)

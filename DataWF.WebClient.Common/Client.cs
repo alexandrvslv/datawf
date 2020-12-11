@@ -23,7 +23,7 @@ namespace DataWF.Common
         private ICrudClient baseClient;
         private SemaphoreSlim getActionSemaphore;
 
-        public Client(IInvoker<T, K?> idInvoker, IInvoker<T, int?> typeInvoker, int typeId = 0)
+        public Client(IInvoker<T, K> idInvoker, IInvoker<T, int> typeInvoker, int typeId = 0)
         {
             IdInvoker = idInvoker;
             Items.Indexes.Concurrent = true;
@@ -44,9 +44,9 @@ namespace DataWF.Common
 
         public IClientConverter Converter { get; }
 
-        public IInvoker<T, K?> IdInvoker { get; }
+        public IInvoker<T, K> IdInvoker { get; }
 
-        public IInvoker<T, int?> TypeInvoker { get; }
+        public IInvoker<T, int> TypeInvoker { get; }
 
         public int TypeId { get; }
 
@@ -277,12 +277,12 @@ namespace DataWF.Common
 
         public virtual T SelectNoDownloads(K id)
         {
-            return Items.SelectOne<K?>(IdInvoker.Name, (K?)id);
+            return Items.SelectOne<K>(IdInvoker.Name, id);
         }
 
         public virtual T Select(K id)
         {
-            return Items.SelectOne<K?>(IdInvoker.Name, (K?)id) ?? GetDownloads(id);
+            return Items.SelectOne<K>(IdInvoker.Name, id) ?? GetDownloads(id);
         }
 
         public virtual T Get(object id)
@@ -436,7 +436,7 @@ namespace DataWF.Common
         public virtual Task<T> MergeAsync(K id, List<string> ids, HttpJsonSettings json, ProgressToken progressToken) => Task.FromResult<T>(null);
 
         public Task<T> MergeAsync(T item, List<string> ids, HttpJsonSettings json, ProgressToken progressToken)
-            => MergeAsync(IdInvoker.GetValue(item).Value, ids, json, ProgressToken.None);
+            => MergeAsync(IdInvoker.GetValue(item), ids, json, ProgressToken.None);
 
         public async Task<object> MergeAsync(object id, List<string> ids) => await MergeAsync((K)id, ids, HttpJsonSettings.Default, ProgressToken.None);
 

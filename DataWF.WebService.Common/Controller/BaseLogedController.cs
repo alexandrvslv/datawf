@@ -32,7 +32,7 @@ namespace DataWF.WebService.Common
                     }
                     var buffer = logTable.LoadItems(query, DBLoadParam.Referencing)
                                      .Where(p => p.Access.GetFlag(AccessType.Read, user)
-                                                 && p.PrimaryId != null
+                                                 && !primaryKey.IsEmpty(p)
                                                  && (p.UpdateState & DBUpdateState.Insert) == 0);
                 }
                 var result = logTable.SelectItems(query).OfType<L>();
@@ -70,7 +70,7 @@ namespace DataWF.WebService.Common
         public async Task<ActionResult<T>> UndoLog([FromRoute] long logId)
         {
             var user = CurrentUser;
-            var logItem = (DBLogItem)table.LogTable.LoadItemById(logId);
+            var logItem = (DBLogItem)table.LogTable.LoadItemById<long>(logId);
             if (logItem == null)
             {
                 return BadRequest($"Not Found!");
@@ -101,7 +101,7 @@ namespace DataWF.WebService.Common
         public async Task<ActionResult<T>> RedoLog([FromRoute] long logId)
         {
             var user = CurrentUser;
-            var logItem = (DBLogItem)table.LogTable.LoadItemById(logId);
+            var logItem = (DBLogItem)table.LogTable.LoadItemById<long>(logId);
             if (logItem == null)
             {
                 return BadRequest($"Not Found!");
@@ -137,7 +137,7 @@ namespace DataWF.WebService.Common
                 return Forbid();
             }
 
-            var logItem = (DBLogItem)table.LogTable.LoadItemById(logId);
+            var logItem = (DBLogItem)table.LogTable.LoadItemById<long>(logId);
             if (logItem == null)
             {
                 return false;

@@ -156,17 +156,20 @@ namespace DataWF.Data
 
         public override void Copy(DBItem fromItem, DBColumn fromColumn, DBItem toItem, DBSetValueMode mode = DBSetValueMode.Default)
         {
-            SetValue(toItem, ((DBColumn<T>)fromColumn).GetValue(fromItem), mode);
+            if (fromColumn is DBColumn<T> typedColumn)
+                SetValue(toItem, typedColumn.GetValue(fromItem), mode);
+            else
+                SetValue(toItem, fromColumn.GetValue(fromItem), mode);
         }
 
-        public override bool IsNull(DBItem item)
+        public override bool IsEmpty(DBItem item)
         {
             return Equal(GetValue(item), default(T));
         }
 
-        public override bool IsNull(int index)
+        public override bool IsEmpty(int handler)
         {
-            return Equal(pull.GetValue(index), default(T));
+            return Equal(pull.GetValue(handler), default(T));
         }
 
         public override void Clear(DBItem item, DBSetValueMode mode = DBSetValueMode.Default)
@@ -174,9 +177,9 @@ namespace DataWF.Data
             SetValue(item, default(T), mode);
         }
 
-        public override void Clear(int index)
+        public override void Clear(int handler)
         {
-            pull.SetValue(index, default(T));
+            pull.SetValue(handler, default(T));
         }
 
         public override object GetValue(object item)
@@ -377,8 +380,18 @@ namespace DataWF.Data
         protected virtual DBItem LoadReference(T id, DBLoadParam param)
         {
             if (ReferenceTable.PrimaryKey is DBColumn<T> typedColumn)
-                return ReferenceTable.LoadItemById(id, param);
-            return ReferenceTable.LoadItemById((object)id, param);
+                return ReferenceTable.LoadItemByKey(id, typedColumn, param);
+            return ReferenceTable.LoadItemByKey((object)id, ReferenceTable.PrimaryKey, param);
+        }
+
+        public override DBItem LoadByKey(DBItem item, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            return Table.LoadItemByKey(GetValue(item), this, param, cols, transaction);
+        }
+
+        public override DBItem LoadByKey(object key, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            return Table.LoadItemByKey(Parse(key), this, param, cols, transaction);
         }
 
         public override bool IsChanged(DBItem item)

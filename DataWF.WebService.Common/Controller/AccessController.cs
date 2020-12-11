@@ -31,7 +31,7 @@ namespace DataWF.WebService.Common
         public IUserIdentity CurrentUser => User.GetCommonUser();
 
         [HttpGet("Get/{name}")]
-        public ActionResult<AccessValue> Get([FromRoute]string name)
+        public ActionResult<AccessValue> Get([FromRoute] string name)
         {
             try
             {
@@ -49,7 +49,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("GetProperty/{name}/{property}")]
-        public ActionResult<AccessValue> GetProperty([FromRoute]string name, [FromRoute]string property)
+        public ActionResult<AccessValue> GetProperty([FromRoute] string name, [FromRoute] string property)
         {
             try
             {
@@ -68,7 +68,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("GetItems/{name}/{id}")]
-        public ActionResult<IEnumerable<AccessItem>> Get([FromRoute]string name, [FromRoute]string id)
+        public ActionResult<IEnumerable<AccessItem>> Get([FromRoute] string name, [FromRoute] string id)
         {
             var table = GetTable(name);
             if (table == null)
@@ -82,7 +82,7 @@ namespace DataWF.WebService.Common
             }
             try
             {
-                var value = table.LoadItemById(id, DBLoadParam.Load | DBLoadParam.Referencing);
+                var value = table.PrimaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing);
                 if (value == null)
                 {
                     return NotFound();
@@ -104,7 +104,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPut("SetItems/{name}/{id}")]
-        public async Task<ActionResult<bool>> Set([FromRoute]string name, [FromRoute]string id, [FromBody]List<AccessItem> accessItems)
+        public async Task<ActionResult<bool>> Set([FromRoute] string name, [FromRoute] string id, [FromBody] List<AccessItem> accessItems)
         {
             var table = GetTable(name);
             if (table == null)
@@ -120,7 +120,7 @@ namespace DataWF.WebService.Common
             {
                 try
                 {
-                    var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                    var value = table.PrimaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
                     if (value == null)
                     {
                         transaction.Rollback();
@@ -147,7 +147,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPut("SetItems/{name}")]
-        public async Task<ActionResult<bool>> Set([FromRoute]string name, [FromBody]AccessUpdatePackage accessPack)
+        public async Task<ActionResult<bool>> Set([FromRoute] string name, [FromBody] AccessUpdatePackage accessPack)
         {
             if (accessPack == null)
             {
@@ -170,7 +170,7 @@ namespace DataWF.WebService.Common
                 {
                     foreach (var id in accessPack.Ids)
                     {
-                        var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                        var value = table.PrimaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
                         if (value == null)
                         {
                             transaction.Rollback();
@@ -198,7 +198,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPut("ClearAccess/{name}/{id}")]
-        public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute]string name, [FromRoute]string id)
+        public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute] string name, [FromRoute] string id)
         {
             var table = GetTable(name);
             if (table == null)
@@ -214,7 +214,7 @@ namespace DataWF.WebService.Common
             {
                 try
                 {
-                    var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                    var value = table.PrimaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
                     if (value == null)
                     {
                         return NotFound();
@@ -240,7 +240,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPut("ClearAccess/{name}")]
-        public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute]string name, [FromBody]List<string> ids)
+        public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute] string name, [FromBody] List<string> ids)
         {
             var table = GetTable(name);
             if (table == null)
@@ -259,7 +259,7 @@ namespace DataWF.WebService.Common
                     var firstItem = (DBItem)null;
                     foreach (var id in ids)
                     {
-                        var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                        var value = table.PrimaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
                         if (value == null)
                         {
                             return NotFound();

@@ -349,8 +349,9 @@ namespace DataWF.Data.Gui
                 {
                     Table = value.Table;
 
-                    value.AllParameters.CollectionChanged += ParametersListChanged;
-                    listParams.ListSource = value.AllParameters.DefaultView;
+                    value.Parameters.CollectionChanged += ParametersListChanged;
+                    var parameterList = new SelectableList<QParam>(value.GetAllParameters());
+                    listParams.ListSource = parameterList.DefaultView;
                     listColumns.ListSource = value.Columns;
                     listTables.ListSource = value.Tables;
                 }
@@ -582,7 +583,7 @@ namespace DataWF.Data.Gui
             var list = listParams.Selection.GetItems<QParam>();
             if (list.Count > 0)
             {
-                QParam group = Query.Parameters.Add();
+                QParam group = Query.Add();
                 foreach (var s in list)
                 {
                     group.Parameters.Add(s);

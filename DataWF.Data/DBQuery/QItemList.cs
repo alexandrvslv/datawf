@@ -26,7 +26,7 @@ namespace DataWF.Data
     public interface IQItemList
     {
         IQuery Query { get; }
-        IQItemList Owner { get; }
+        IQItemList Container { get; }
         void Delete(QItem item);
     }
 
@@ -46,12 +46,12 @@ namespace DataWF.Data
 
         public QItemList(IQItemList owner) : this()
         {
-            Owner = owner;
+            Container = owner;
         }
 
-        public IQItemList Owner { get; set; }
+        public IQItemList Container { get; set; }
 
-        public IQuery Query => Owner.Query;
+        public IQuery Query => Container.Query;
 
         public void Delete(QItem item)
         {

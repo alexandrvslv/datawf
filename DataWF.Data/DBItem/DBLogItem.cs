@@ -51,9 +51,9 @@ namespace DataWF.Data
         }
 
         [Column("logid", Keys = DBColumnKeys.Primary)]
-        public long? LogId
+        public long LogId
         {
-            get => GetValue<long?>(Table.PrimaryKey);
+            get => GetValue<long>(Table.PrimaryKey);
             set => SetValue(value, Table.PrimaryKey);
         }
 
@@ -103,7 +103,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBItem BaseItem
         {
-            get => baseItem ?? (baseItem = BaseTable.LoadItemById(GetValue(LogTable.BaseKey)) ?? DBItem.EmptyItem);
+            get => baseItem ?? (baseItem = BaseTable.PrimaryKey.LoadByKey(GetValue(LogTable.BaseKey)) ?? DBItem.EmptyItem);
             set
             {
                 baseItem = value;
@@ -194,10 +194,7 @@ namespace DataWF.Data
         {
             using (var query = new QQuery("", (DBTable)LogTable))
             {
-                query.Columns.Add(new QFunc(QFunctionType.max)
-                {
-                    Items = new QItemList<QItem>(new[] { new QColumn(LogTable.PrimaryKey) })
-                });
+                query.Columns.Add(new QFunc(QFunctionType.max, new[] { new QColumn(LogTable.PrimaryKey) }));
                 query.BuildParam(LogTable.PrimaryKey, CompareType.Less, LogId);
                 query.BuildParam(LogTable.BaseKey, CompareType.Equal, GetValue(LogTable.BaseKey));
                 //query.Orders.Add(new QOrder(LogTable.PrimaryKey));
@@ -270,7 +267,7 @@ namespace DataWF.Data
                 if (column.ReferenceTable == null
                     || !TypeHelper.IsBaseType(BaseItem.GetType(), column.PropertyInvoker?.TargetType))
                     continue;
-                if (!column.IsNull(BaseItem) && BaseItem.GetReference(column) == null)
+                if (!column.IsEmpty(BaseItem) && BaseItem.GetReference(column) == null)
                 {
                     if (column.ReferenceTable.IsLoging)
                     {
@@ -376,15 +373,15 @@ namespace DataWF.Data
             }
         }
 
-        public class LogIdInvoker<T> : Invoker<T, long?> where T : DBLogItem
+        public class LogIdInvoker<T> : Invoker<T, long> where T : DBLogItem
         {
             public override string Name => nameof(DBLogItem.LogId);
 
             public override bool CanWrite => true;
 
-            public override long? GetValue(T target) => target.LogId;
+            public override long GetValue(T target) => target.LogId;
 
-            public override void SetValue(T target, long? value) => target.LogId = value;
+            public override void SetValue(T target, long value) => target.LogId = value;
         }
 
         public class LogTypeInvoker<T> : Invoker<T, DBLogType?> where T : DBLogItem

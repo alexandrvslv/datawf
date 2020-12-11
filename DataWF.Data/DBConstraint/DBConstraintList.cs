@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -49,6 +50,14 @@ namespace DataWF.Data
         public override DDLType GetInsertType(T item)
         {
             return (item.Column?.ColumnType == DBColumnTypes.Default) ? DDLType.Create : DDLType.Default;
+        }
+
+        internal void Replace(DBColumn exist, DBColumn replacer)
+        {
+            foreach (var item in this)
+            {
+                item.Columns.Replace(exist, replacer);
+            }
         }
     }
 

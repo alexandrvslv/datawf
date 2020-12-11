@@ -3,7 +3,7 @@
   "isRoot": true,
   "tools": {
     "datawf.webservice.generator": {
-      "version": "1.8.4",
+      "version": "1.8.6",
       "commands": [
         "wscodegen"
       ]

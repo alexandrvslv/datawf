@@ -115,9 +115,9 @@ namespace DataWF.Data
 
         public QParamList Parameters => parameters;
 
-        public IQItemList Owner => baseQuery ?? this;
+        public IQItemList Container => baseQuery ?? this;
 
-        public override IQuery Query => Owner as IQuery;
+        public override IQuery Query => Container as IQuery;
 
         public Type TypeFilter
         {

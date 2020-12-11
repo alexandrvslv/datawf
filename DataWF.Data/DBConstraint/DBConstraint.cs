@@ -77,7 +77,8 @@ namespace DataWF.Data
             get { return Columns.GetFirst()?.Column; }
             set
             {
-                if (Columns.Contains(value))
+                var exist = Columns.Get(value?.FullName);
+                if (exist?.Column == value)
                     return;
                 if (value == null)
                     Columns.Clear();
@@ -85,7 +86,10 @@ namespace DataWF.Data
                 {
                     if (Table == null)
                         Table = value.Table;
-                    Columns.Add(value);
+                    if (exist != null)
+                        exist.Column = value;
+                    else
+                        Columns.Add(value);
                 }
             }
         }

@@ -35,9 +35,9 @@ namespace DataWF.Data
         { }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public long? Id
+        public long Id
         {
-            get => GetValue<long?>(IdKey);
+            get => GetValue<long>(IdKey);
             set => SetValue(value, IdKey);
         }
 

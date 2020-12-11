@@ -131,7 +131,7 @@ namespace DataWF.Data
 
         public void SetGroupReference<T>(T value) where T : DBGroupItem, new()
         {
-            if (value != null && value.GroupId != null && value.GroupId == PrimaryId)
+            if (value != null && value.GroupId != null && value.GroupId.Equals(PrimaryId))
             {
                 throw new InvalidOperationException("Circle reference detected!");
             }
@@ -156,10 +156,11 @@ namespace DataWF.Data
 
         public string GetParentIds()
         {
-            string rez = PrimaryId.ToString();
+            var primaryKey = Table.PrimaryKey;
+            string rez = primaryKey.FormatQuery(this);
             foreach (var item in GroupHelper.GetAllParent<DBGroupItem>(this))
             {
-                rez += "," + item.PrimaryId;
+                rez += "," + primaryKey.FormatQuery(item);
             }
             return rez;
         }
@@ -183,15 +184,15 @@ namespace DataWF.Data
 
         public IEnumerable<DBGroupItem> GetSubGroups(DBLoadParam param)
         {
-            if (PrimaryId == null)
-                return new List<DBGroupItem>(0);
+            if (table.PrimaryKey.IsEmpty(this))
+                return Enumerable.Empty<DBGroupItem>();
             return GetReferencing(Table, Table.GroupKey, param).Cast<DBGroupItem>();
         }
 
         public IEnumerable<T> GetSubGroups<T>(DBLoadParam param) where T : DBGroupItem, new()
         {
-            if (PrimaryId == null)
-                return new List<T>(0);
+            if (table.PrimaryKey.IsEmpty(this))
+                return Enumerable.Empty<T>();
             return GetReferencing<T>((DBTable<T>)Table, Table.GroupKey, param);
         }
 
@@ -203,16 +204,22 @@ namespace DataWF.Data
                 rez.Add(this);
             rez.AddRange(buf);
             foreach (var row in buf)
+            {
                 rez.AddRange(row.GetSubGroupFull());
+            }
+
             return rez;
         }
 
         public string GetSubGroupFullIds()
         {
-            string rez = "";
-            rez = PrimaryId.ToString();
+            var primaryKey = Table.PrimaryKey;
+            var rez = primaryKey.FormatQuery(this);
             foreach (var row in GetSubGroupFull())
-                rez += "," + row.PrimaryId;
+            {
+                rez += "," + primaryKey.FormatQuery(row);
+            }
+
             return rez;
         }
 

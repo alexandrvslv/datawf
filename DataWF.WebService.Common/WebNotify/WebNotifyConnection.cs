@@ -205,7 +205,7 @@ namespace DataWF.WebService.Common
                                 var value = item.Value;
                                 if (value != null
                                     && (value.Access?.GetFlag(AccessType.Read, User) ?? false)
-                                    && value.PrimaryId != null)
+                                    && !value.Table.PrimaryKey.IsEmpty(value))
                                 {
                                     writer.WritePropertyName("Value");
                                     JsonSerializer.Serialize(writer, value, value.GetType(), jsonOptions);

@@ -27,7 +27,7 @@ namespace DataWF.Data
     public abstract class DBUserReg : DBGroupItem, IUserReg
     {
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public abstract long? Id { get; set; }
+        public abstract long Id { get; set; }
 
         [Column("user_id", Keys = DBColumnKeys.View)]
         public abstract int? UserId { get; set; }

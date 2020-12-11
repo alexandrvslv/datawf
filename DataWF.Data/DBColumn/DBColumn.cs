@@ -106,26 +106,6 @@ namespace DataWF.Data
         {
         }
 
-        public DBColumn(string name) : this(name, typeof(string))
-        {
-        }
-
-        public DBColumn(string name, Type type) : base(name)
-        {
-            DataType = type;
-        }
-
-        public DBColumn(string name, Type type, int size) : this(name, type)
-        {
-            Size = size;
-        }
-
-        public DBColumn(string name, DBTable reference)
-            : this(name, reference.PrimaryKey.DataType, reference.PrimaryKey.Size)
-        {
-            ReferenceTable = reference;
-        }
-
         [Browsable(false), XmlIgnore, JsonIgnore]
         public JsonEncodedText JsonName { get => jsonName ?? (jsonName = JsonEncodedText.Encode(PropertyName ?? Name, JavaScriptEncoder.UnsafeRelaxedJsonEscaping)).Value; }
 
@@ -421,7 +401,6 @@ namespace DataWF.Data
                 cacheReferenceTable = value;
                 if (value != null && value.PrimaryKey != null)
                 {
-                    DataType = value.PrimaryKey.DataType;
                     Size = value.PrimaryKey.Size;
                     Scale = value.PrimaryKey.Scale;
                 }
@@ -817,7 +796,7 @@ namespace DataWF.Data
 
         public new int CompareTo(object obj)
         {
-            return (CompareTo((DBColumn)obj));
+            return CompareTo((DBColumn)obj);
         }
 
         #endregion
@@ -888,9 +867,9 @@ namespace DataWF.Data
 
         public abstract void RemoveIndex(DBItem item);
 
-        public abstract bool IsNull(DBItem item);
+        public abstract bool IsEmpty(DBItem item);
 
-        public abstract bool IsNull(int item);
+        public abstract bool IsEmpty(int handler);
 
         public abstract void Clear(DBItem item, DBSetValueMode mode = DBSetValueMode.Default);
 
@@ -923,6 +902,10 @@ namespace DataWF.Data
         public abstract R GetReference<R>(DBItem item, ref R reference, DBLoadParam param) where R : DBItem;
 
         public abstract void SetReference<R>(DBItem item, R value) where R : DBItem;
+
+        public abstract DBItem LoadByKey(DBItem item, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
+
+        public abstract DBItem LoadByKey(object key, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
 
         internal protected abstract PullIndex CreatePullIndex();
 

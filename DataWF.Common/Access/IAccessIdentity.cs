@@ -4,6 +4,6 @@ namespace DataWF.Common
 {
     public interface IAccessIdentity : IIdentity
     {
-        int? Id { get; }
+        int Id { get; }
     }
 }

@@ -28,7 +28,7 @@ namespace DataWF.Data
     public abstract class DBUser : DBItem, IUserIdentity
     {
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public abstract int? Id { get; set; }
+        public abstract int Id { get; set; }
 
         [Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
         public abstract string Login { get; set; }

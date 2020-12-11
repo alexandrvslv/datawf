@@ -306,9 +306,9 @@ namespace DataWF.Module.Common
 
         public UserReg LogStart { get; set; }
 
-        public override int? Id
+        public override int Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
+            get => GetValue<int>(Table.PrimaryKey);
             set => SetValue(value, Table.PrimaryKey);
         }
 

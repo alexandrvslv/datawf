@@ -31,5 +31,14 @@ namespace DataWF.Data
         public DBIndexList(DBTable table) : base(table)
         {
         }
+
+        public void Replace(DBColumn exist, DBColumn replacer)
+        {
+            foreach (var item in this)
+            {
+                item.Columns.Replace(exist, replacer);
+                
+            }
+        }
     }
 }

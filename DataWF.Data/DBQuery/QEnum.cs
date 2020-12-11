@@ -51,11 +51,11 @@ namespace DataWF.Data
             {
                 items = value;
                 items.Indexes.Clear();
-                items.Owner = this;
+                items.Container = this;
             }
         }
 
-        public IQItemList Owner => null;
+        public IQItemList Container => null;
 
         public override object GetValue(DBItem row = null)
         {

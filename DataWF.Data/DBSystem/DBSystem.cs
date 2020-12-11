@@ -695,7 +695,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
         public virtual void FormatInsert(StringBuilder command, DBTable table, DBItem row = null)
         {
             var id = $"{ParameterPrefix}{table.PrimaryKey?.SqlName}";
-            if (table.PrimaryKey != null && row != null && row.PrimaryId == null)
+            if (table.PrimaryKey != null && row != null && row.UpdateState == DBUpdateState.Insert && table.PrimaryKey.IsEmpty(row))
             {
                 id = SequenceInline(table.Sequence);
             }
@@ -733,7 +733,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 }
                 else
                 {
-                    if (column.IsPrimaryKey && row.PrimaryId == null && table.Sequence != null)
+                    if (column.IsPrimaryKey && column.IsEmpty(row) && table.Sequence != null)
                     {
                         command.Append(id);
                     }
@@ -743,7 +743,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     }
                     else
                     {
-                        command.Append(FormatQuery(row[column]));
+                        command.Append(column.FormatQuery(row));
                     }
                 }
                 command.Append(", ");
@@ -762,14 +762,14 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             {
                 if (column.ColumnType == DBColumnTypes.Default && !column.IsPrimaryKey)
                 {
-                    command.AppendFormat("{0}={1}, ", column.SqlName, row == null ? ParameterPrefix + column.SqlName : FormatQuery(row[column]));
+                    command.AppendFormat("{0}={1}, ", column.SqlName, row == null ? ParameterPrefix + column.SqlName : column.FormatQuery(row));
                     flag = true;
                 }
             }
             if (flag)
             {
                 command.Length -= 2;
-                command.AppendFormat(" where {0}={1}", table.PrimaryKey.SqlName, row == null ? ParameterPrefix + table.PrimaryKey.SqlName : FormatQuery(row.PrimaryId));
+                command.AppendFormat(" where {0}={1}", table.PrimaryKey.SqlName, row == null ? ParameterPrefix + table.PrimaryKey.SqlName : table.PrimaryKey.FormatQuery(row));
             }
         }
 
@@ -781,7 +781,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 command.AppendFormat("delete from {0} where {1}={2}",
                     table.SqlName,
                     table.PrimaryKey.SqlName,
-                    row == null ? prefix + table.PrimaryKey.SqlName : FormatQuery(row.PrimaryId));
+                    row == null ? prefix + table.PrimaryKey.SqlName : table.PrimaryKey.FormatQuery(row));
             }
         }
 

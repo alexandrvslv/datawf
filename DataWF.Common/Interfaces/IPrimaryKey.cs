@@ -14,12 +14,12 @@ namespace DataWF.Common
 
     public interface IStampKey
     {
-        DateTime? Stamp { get; set; }
+        DateTime Stamp { get; set; }
     }
 
     public interface IDateKey
     {
-        DateTime? DateCreate { get; set; }
+        DateTime DateCreate { get; set; }
     }
 }
 

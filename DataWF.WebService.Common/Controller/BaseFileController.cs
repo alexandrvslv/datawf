@@ -256,7 +256,7 @@ namespace DataWF.WebService.Common
             var transaction = new DBTransaction(table.Connection, CurrentUser);
             try
             {
-                var logItem = (DBLogItem)table.LogTable?.LoadItemById(logId);
+                var logItem = (DBLogItem)table.LogTable?.LoadItemById<long>(logId);
                 if (logItem == null)
                 {
                     transaction.Dispose();
@@ -313,7 +313,7 @@ namespace DataWF.WebService.Common
                 return Forbid();
             }
 
-            var logItem = (DBLogItem)table.LogTable.LoadItemById(logId);
+            var logItem = (DBLogItem)table.LogTable.LoadItemById<long>(logId);
             if (logItem == null)
             {
                 return false;

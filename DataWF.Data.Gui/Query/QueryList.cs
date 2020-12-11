@@ -64,7 +64,8 @@ namespace DataWF.Data.Gui
                 if (value is QQuery)
                 {
                     this.query = (QQuery)value;
-                    base.ListSource = ((QQuery)value).AllParameters;
+                    //TODO Custome query view model;
+                    base.ListSource = new SelectableList<QParam>(query.GetAllParameters());
                 }
                 //else
                 //    throw new Exception("Wrong parameter");

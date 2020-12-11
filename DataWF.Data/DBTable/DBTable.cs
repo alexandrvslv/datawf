@@ -877,7 +877,11 @@ namespace DataWF.Data
 
         public abstract DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
 
-        public abstract DBItem LoadItemById<K>(K id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
+        public abstract DBItem LoadItemById<K>(K? id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null) where K : struct;
+
+        public abstract DBItem LoadItemByKey(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
+
+        public abstract DBItem LoadItemByKey<K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
 
         public abstract void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
 
@@ -888,9 +892,10 @@ namespace DataWF.Data
         public List<DBItem> LoadItemsById(List<string> ids, DBTransaction transaction)
         {
             var items = new List<DBItem>();
+            var primaryKey = PrimaryKey;
             foreach (var id in ids)
             {
-                var item = LoadItemById(id, DBLoadParam.Referencing, null, transaction);
+                var item = primaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
                 if (item != null)
                 {
                     items.Add(item);
@@ -929,9 +934,8 @@ namespace DataWF.Data
 
         public void DeleteById(object id)
         {
-            DBItem row = LoadItemById(id);
-            if (row != null)
-                row.Delete();
+            DBItem row = PrimaryKey.LoadByKey(id);
+            row?.Delete();
         }
 
         public abstract IEnumerable<DBItem> GetChangedItems();
@@ -981,7 +985,8 @@ namespace DataWF.Data
 
             if (item.UpdateState == DBUpdateState.Insert)
             {
-                if (PrimaryKey != null && item.PrimaryId == null && Schema.System != DBSystem.SQLite)
+                if (PrimaryKey != null && PrimaryKey.IsEmpty(item)
+                    && Schema.System != DBSystem.SQLite && Schema.System != DBSystem.Postgres)
                 {
                     if (dmlInsertSequence == null)
                         dmlInsertSequence = DBCommand.Build(this, comInsert, DBCommandTypes.InsertSequence, Columns);
@@ -1752,12 +1757,12 @@ namespace DataWF.Data
 
         public string GetRowText(object id, IEnumerable<DBColumn> parametrs, bool showColumn, string separator)
         {
-            return LoadItemById(id)?.GetRowText(parametrs, showColumn, separator) ?? "<null>";
+            return primaryKey.LoadByKey(id)?.GetRowText(parametrs, showColumn, separator) ?? "<null>";
         }
 
         public string GetRowText(object id, bool allColumns, bool showColumn, string separator)
         {
-            return LoadItemById(id)?.GetRowText((allColumns ? (IEnumerable<DBColumn>)Columns : Columns.GetIsView()), showColumn, separator);
+            return primaryKey.LoadByKey(id)?.GetRowText((allColumns ? (IEnumerable<DBColumn>)Columns : Columns.GetIsView()), showColumn, separator);
         }
 
         public QEnum GetStatusEnum(DBStatus status)

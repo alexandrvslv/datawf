@@ -35,11 +35,13 @@ namespace DataWF.WebService.Common
         }
 
         protected DBTable<T> table;
+        protected DBColumn<K> primaryKey;
 
         public BaseController()
         {
             Interlocked.Increment(ref MemoryLeak.Controllers.DiagnosticsController.Requests);
             table = DBTable.GetTable<T>();
+            primaryKey = (DBColumn<K>)table.PrimaryKey;
         }
 
         public IUserIdentity CurrentUser => User.GetCommonUser();
@@ -63,7 +65,7 @@ namespace DataWF.WebService.Common
                 }
                 var result = await table.LoadCacheAsync(filter, DBLoadParam.Referencing);
                 return new ActionResult<IEnumerable<T>>(result.Where(p => p.Access.GetFlag(AccessType.Read, user)
-                                                              && p.PrimaryId != null
+                                                              && !primaryKey.IsEmpty(p)
                                                               && (p.UpdateState & DBUpdateState.Insert) == 0));
             }
             catch (Exception ex)
@@ -88,7 +90,7 @@ namespace DataWF.WebService.Common
                 }
 
                 var result = table.Select(query).Where(p => p.Access.GetFlag(AccessType.Read, user)
-                                                         && p.PrimaryId != null
+                                                         && !primaryKey.IsEmpty(p)
                                                          && (p.UpdateState & DBUpdateState.Insert) == 0);
                 if (query.Orders.Count > 0)
                 {
@@ -266,7 +268,7 @@ namespace DataWF.WebService.Common
                     if ((value.UpdateState & DBUpdateState.Insert) != DBUpdateState.Insert)
                     {
                         value.Reject(transaction.Caller);
-                        return BadRequest($"Specified Id {value.PrimaryId} is used by another record!");
+                        return BadRequest($"Specified Id {primaryKey.FormatDisplay(value)} is used by another record!");
                     }
                     if (IsDenied(value, transaction.Caller))
                     {

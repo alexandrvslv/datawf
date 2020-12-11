@@ -368,6 +368,16 @@ namespace DataWF.Common
         //            yield return item;
         //    }
         //}
+        public static IEnumerable Search(IEnumerable items, IInvoker invoker, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            foreach (var item in items)
+            {
+                if (item != null && invoker.CheckItem(item, typedValue, comparer, comparision))
+                {
+                    yield return item;
+                }
+            }
+        }
 
         public static bool CheckItemT<T>(T x, object y, CompareType compare, IComparer<T> comparer)
         {

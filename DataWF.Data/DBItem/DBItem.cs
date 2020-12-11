@@ -90,7 +90,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool IsChanged
         {
-            get { return UpdateState != DBUpdateState.Default && (UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit; }
+            get => UpdateState != DBUpdateState.Default && (UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit;
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -381,6 +381,10 @@ namespace DataWF.Data
                 }
                 else
                 {
+                    foreach(var column in GetChangeKeys())
+                    {
+                        column.Reject(this);
+                    }
                     var newHandler = handler;
                     handler = oldHandlervalue;
                     FreeHandler(newHandler);
@@ -998,9 +1002,9 @@ namespace DataWF.Data
 
         public void GenerateId(DBTransaction transaction = null)
         {
-            if (Table.Sequence == null || Table.PrimaryKey == null)
+            if (Table.Sequence == null || Table.PrimaryKey == null || UpdateState != DBUpdateState.Insert)
                 return;
-            if (PrimaryId == null)
+            if (Table.PrimaryKey.IsEmpty(this))
             {
                 PrimaryId = transaction != null ? Table.Sequence.GetNext(transaction) : Table.Sequence.GetNext();
             }
@@ -1093,7 +1097,7 @@ namespace DataWF.Data
         public string FormatPatch()
         {
             var rez = new StringBuilder();
-            rez.AppendLine(string.Format("if exists(select * from {0} where {1}={2})", Table.Name, Table.PrimaryKey.SqlName, PrimaryId));
+            rez.AppendLine($"if exists(select * from {Table.Name} where {Table.PrimaryKey.SqlName}={Table.PrimaryKey.FormatQuery(this)})");
             rez.AppendLine("    " + Table.System.FormatCommand(Table, DBCommandTypes.Update, this) + ";");
             rez.AppendLine("else");
             rez.AppendLine("    " + Table.System.FormatCommand(Table, DBCommandTypes.Insert, this) + ";");
@@ -1283,7 +1287,7 @@ namespace DataWF.Data
                 {
                     if (column.ColumnType != DBColumnTypes.Default)
                         continue;
-                    if (column.IsNull(this))
+                    if (column.IsEmpty(this))
                     {
                         column.Copy(item, this);
                     }
@@ -1296,9 +1300,10 @@ namespace DataWF.Data
                         var referencing = item.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Referencing).ToList();
                         if (referencing.Count > 0)
                         {
+                            var primaryKey = Table.PrimaryKey;
                             foreach (DBItem subItem in referencing)
                             {
-                                subItem.SetValue(PrimaryId, relation.Column);
+                                relation.Column.Copy(this, primaryKey, subItem);
                                 await relation.Table.SaveItem(subItem, transaction);
                             }
                         }
@@ -1459,13 +1464,9 @@ namespace DataWF.Data
 
         public DBItem FindAndUpdate(DBLoadParam param = DBLoadParam.None)
         {
-            var exist = PrimaryId == null
-                ? null
-                : Table.LoadItemById(PrimaryId, param);
+            var exist = Table.PrimaryKey.IsEmpty(this) ? null : Table.PrimaryKey.LoadByKey(this, param);
             if (exist != null)
             {
-                PrimaryId = exist.PrimaryId;
-
                 foreach (var column in Table.Columns)
                 {
                     // || (column.Keys & DBColumnKeys.State) == DBColumnKeys.State
@@ -1705,8 +1706,8 @@ namespace DataWF.Data
         {
             return new LinkModel
             {
-                ProtocolLink = $"{ProtocolSetting.Current.Protocol}://{ProtocolSetting.Current.Host}/{GetType().Name}/{PrimaryId}",
-                WebLink = $"http://{ProtocolSetting.Current.Host}/api/{GetType().Name}/{PrimaryId}",
+                ProtocolLink = $"{ProtocolSetting.Current.Protocol}://{ProtocolSetting.Current.Host}/{GetType().Name}/{Table.PrimaryKey.FormatDisplay(this)}",
+                WebLink = $"http://{ProtocolSetting.Current.Host}/api/{GetType().Name}/{Table.PrimaryKey.FormatDisplay(this)}",
             };
         }
 

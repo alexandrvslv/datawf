@@ -242,7 +242,7 @@ namespace DataWF.Module.FlowGui
                 if (userGroup != null)
                     userGroup.PropertyChanged -= GroupPropertyChanged;
 
-                if (value.Id == null)
+                if (value.Id == 0)
                     value.GenerateId();
                 userGroup = value;
 
