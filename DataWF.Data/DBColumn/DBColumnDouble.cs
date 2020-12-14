@@ -35,7 +35,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.Reader.GetDouble(i);
-            return pullIndex?.SelectOne<F>(value);
+            return ((IPullOutIndex<F, double>)pullIndex).SelectOne(value);
         }
 
         public override string FormatQuery(double value)

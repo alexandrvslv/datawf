@@ -23,10 +23,10 @@ namespace DataWF.Common
             }
             value.Deserialize(reader);
 
-            while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
-            {
-                reader.Read();
-            }
+            //while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
+            //{
+            //    reader.Read();
+            //}
             return value;
         }
 

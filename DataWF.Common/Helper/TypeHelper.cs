@@ -319,6 +319,11 @@ namespace DataWF.Common
             return cacheValueSerializer[type] = serializer;
         }
 
+        public static IElementSerializer<T> GetSerializer<T>()
+        {
+            return (IElementSerializer<T>)GetSerializer(typeof(T));
+        }
+
         public static ElementSerializer GetSerializer(Type elementType)
         {
             if (!cacheValueSerializer.TryGetValue(elementType, out var serializer))

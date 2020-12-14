@@ -138,7 +138,7 @@ namespace DataWF.Data
         {
             foreach (var column in Columns)
             {
-                column.AddIndex(item);
+                column.AddIndex<T>(item);
             }
         }
 
@@ -146,7 +146,7 @@ namespace DataWF.Data
         {
             foreach (var column in Columns)
             {
-                column.RemoveIndex(item);
+                column.RemoveIndex<T>(item);
             }
         }
 
@@ -1090,9 +1090,9 @@ namespace DataWF.Data
 
         public T SelectOne<V>(DBColumn<V> column, V value)
         {
-            if (column.PullIndex is PullIndex<DBItem, V> index)
+            if (column.PullIndex is IPullOutIndex<T, V> index)
             {
-                return index.SelectOne<T>(value);
+                return index.SelectOne(value);
             }
             return Select(column, CompareType.Equal, value).FirstOrDefault();
         }
@@ -1100,9 +1100,9 @@ namespace DataWF.Data
         public T SelectOne(DBColumn column, object value)
         {
             value = column.ParseValue(value);
-            if (column.PullIndex is PullIndex index)
+            if (column.PullIndex is IPullIndex index)
             {
-                return (T)index.SelectOne(value);
+                return (T)index.SelectOneObject(value);
             }
             return Select(column, CompareType.Equal, value).FirstOrDefault();
         }
@@ -1156,9 +1156,9 @@ namespace DataWF.Data
             if (column == null)
                 return list;
 
-            if (column.PullIndex is PullIndex<DBItem, V> index)
+            if (column.PullIndex is IPullOutIndex<T, V> index)
             {
-                return index.Select<T>(value, comparer);
+                return index.Select(value, comparer);
             }
             return Search(column, comparer, value, list);
         }

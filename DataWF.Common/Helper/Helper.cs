@@ -448,7 +448,7 @@ namespace DataWF.Common
 
             return sBuilder.ToString();
         }
-        
+
         private static string GetString(byte[] data)
         {
             var builder = new StringBuilder();
@@ -1197,6 +1197,10 @@ namespace DataWF.Common
                 {
                     result = stringValue.Split(',');
                 }
+            }
+            else if (TypeHelper.IsEnumerable(dataType))
+            {
+                result = value.ToEnumerable<object>();
             }
             else
             {

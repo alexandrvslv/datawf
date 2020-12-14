@@ -19,8 +19,8 @@ namespace DataWF.Common
         public abstract void Add(object item, object value);
         public abstract void Remove(object item);
         public abstract void Remove(object item, object value);
-        public abstract IEnumerable Select(object value, CompareType compare);
-        public abstract object SelectOne(object value);
+        public abstract IEnumerable SelectObjects(object value, CompareType compare);
+        public abstract object SelectOneObject(object value);
         public abstract void Clear();
         public abstract void Dispose();
     }

@@ -1072,6 +1072,18 @@ namespace DataWF.WebClient.Generator
 
             if (GetPrimaryKey(schema, false) != null)
             {
+                var converter = "";
+                var idType = GetTypeString(idKey, usings, "List");
+                if (idType == "long")
+                    converter = "Convert.ToInt64(value)";
+                else if (idType == "int")
+                    converter = "Convert.ToInt32(value)";
+                else if (idType == "short")
+                    converter = "Convert.ToInt16(value)";
+                else if (idType == "decimal")
+                    converter = "Convert.ToDecimal(value)";
+                else
+                    converter = $"({idType})value";
                 SyntaxHelper.AddUsing("System.Text.Json.Serialization", usings);
                 yield return SF.PropertyDeclaration(
                     attributeLists: SF.List(new[] {
@@ -1087,7 +1099,7 @@ namespace DataWF.WebClient.Generator
                             body: SF.Block(new[]{ SF.ParseStatement($"return {idKey.Name};") })),
                         SF.AccessorDeclaration(
                             kind: SyntaxKind.SetAccessorDeclaration,
-                            body: SF.Block(new[]{ SF.ParseStatement($"{idKey.Name} = ({GetTypeString(idKey, usings, "List")})value;")}))
+                            body: SF.Block(new[]{ SF.ParseStatement($"{idKey.Name} = {converter};")}))
                     })),
                     expressionBody: null,
                     initializer: null,

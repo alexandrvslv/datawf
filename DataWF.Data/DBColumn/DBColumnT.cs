@@ -32,12 +32,13 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBColumn<T> : DBColumn, IInvoker<DBItem, T>
+    public class DBColumn<T> : DBColumn, IInvoker<DBItem, T>, IValuedInvoker<T>
     {
         public new static readonly DBColumn<T> EmptyKey = new DBColumn<T>();
 
         protected GenericPull<T> pull;
-        protected PullIndex<DBItem, T> pullIndex;
+        protected IPullOutIndex<DBItem, T> pullIndex;
+        private IInvoker propertyInvoker;
         private IValuedInvoker<T> typedPropertyInvoker;
 
         public DBColumn() : base()
@@ -61,14 +62,14 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public override PullIndex PullIndex
+        public override IPullIndex PullIndex
         {
             get => pullIndex;
             internal set
             {
                 if (pullIndex != value)
                 {
-                    pullIndex = (PullIndex<DBItem, T>)value;
+                    pullIndex = (IPullOutIndex<DBItem, T>)value;
                 }
             }
         }
@@ -76,10 +77,10 @@ namespace DataWF.Data
         [Browsable(false), XmlIgnore, JsonIgnore]
         public override IInvoker PropertyInvoker
         {
-            get => base.PropertyInvoker;
+            get => propertyInvoker ?? this;
             set
             {
-                base.PropertyInvoker = value;
+                propertyInvoker = value;
                 typedPropertyInvoker = value as IValuedInvoker<T>;
             }
         }
@@ -114,22 +115,22 @@ namespace DataWF.Data
 
         protected internal override PullIndex CreatePullIndex()
         {
-            return PullIndexFactory.Create(Pull, typeof(DBItem), DataType, Table.DefaultComparer);
+            return PullIndexFactory.Create(Pull, Table.ItemType.Type, DataType, Table.DefaultComparer);
         }
 
-        public override void AddIndex(DBItem item)
+        public override void AddIndex<F>(F item)
         {
-            pullIndex?.Add(item);
+            ((IPullInIndex<F, T>)pullIndex)?.Add(item);
         }
 
-        public override void RemoveIndex(DBItem item)
+        public override void RemoveIndex<F>(F item)
         {
-            pullIndex?.Remove(item);
+            ((IPullInIndex<F, T>)pullIndex)?.Remove(item);
         }
 
         public override IEnumerable<TT> SelectIndex<TT>(object value, CompareType comparer)
         {
-            return pullIndex.Select<TT>(value, comparer);
+            return ((IPullOutIndex<TT, T>)pullIndex).Select(value, comparer);
         }
 
         public override bool Equal(object oldValue, object newValue)
@@ -479,7 +480,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.Reader.GetFieldValue<T>(i);
-            return pullIndex?.SelectOne<F>(value);
+            return ((IPullOutIndex<F, T>)pullIndex).SelectOne(value);
         }
 
         public override void Write(BinaryInvokerWriter writer, object element)
@@ -729,6 +730,16 @@ namespace DataWF.Data
                 default:
                     return CheckItem(item, val1, Parse(val2), comparer);
             }
+        }
+
+        T IValuedInvoker<T>.GetValue(object target)
+        {
+            return GetValue((DBItem)target);
+        }
+
+        public void SetValue(object target, T value)
+        {
+            SetValue((DBItem)target, value);
         }
     }
 }

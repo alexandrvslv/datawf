@@ -45,7 +45,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.Reader.GetInt32(i);
-            return pullIndex?.SelectOne<F>(value);
+            return ((IPullOutIndex<F, int?>)pullIndex).SelectOne(value);
         }
 
         public override int? Parse(object value)

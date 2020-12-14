@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 
+using DataWF.Common;
 using System;
 using System.Globalization;
 
@@ -34,7 +35,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = (byte)transaction.Reader.GetByte(i);
-            return pullIndex?.SelectOne<F>(value);
+            return ((IPullOutIndex<F, byte>)pullIndex).SelectOne(value);
         }
 
         public override string FormatQuery(byte value)

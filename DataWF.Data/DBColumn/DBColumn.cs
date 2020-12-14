@@ -94,7 +94,6 @@ namespace DataWF.Data
         private DBColumn logColumn;
         private DBColumn baseColumn = DBColumn.EmptyKey;
         private PropertyInfo propertyInfo;
-        private IInvoker propertyInvoker;
         private PropertyInfo referencePropertyInfo;
         private JsonEncodedText? jsonName;
         private JsonEncodedText? jsonReferenceName;
@@ -158,18 +157,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public virtual IInvoker PropertyInvoker
-        {
-            get => propertyInvoker ?? this;
-            set
-            {
-                if (propertyInvoker != value)
-                {
-                    propertyInvoker = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
+        public abstract IInvoker PropertyInvoker { get; set; }
 
         [Browsable(false)]
         public virtual string PropertyName
@@ -231,7 +219,7 @@ namespace DataWF.Data
         public abstract Pull Pull { get; internal set; }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public abstract PullIndex PullIndex { get; internal set; }
+        public abstract IPullIndex PullIndex { get; internal set; }
 
 
         [Category("Name")]
@@ -863,9 +851,9 @@ namespace DataWF.Data
         //        tags[hindex] = value;
         //    }
         //}
-        public abstract void AddIndex(DBItem item);
+        public abstract void AddIndex<T>(T item) where T : DBItem;
 
-        public abstract void RemoveIndex(DBItem item);
+        public abstract void RemoveIndex<T>(T item) where T : DBItem;
 
         public abstract bool IsEmpty(DBItem item);
 

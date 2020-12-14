@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace DataWF.Common
 {
-    public class PullIndex<T, K> : PullIndex, IDisposable, IPullIndex<T, K> where T : class, IPullHandler
+    public class PullIndex<T, K> : PullIndex, IDisposable, IPullInIndex<T, K>, IPullOutIndex<T, K> where T : class, IPullHandler
     {
         private readonly ConcurrentDictionary<K, ThreadSafeList<T>> store;
         private readonly IComparer<T> valueComparer;
@@ -203,35 +203,32 @@ namespace DataWF.Common
             return (K)Helper.Parse(value, typeof(K));
         }
 
-        public F SelectOne<F>(object value) where F : T
+        public T SelectOne(object value)
         {
             var key = CheckNull(value);
             if (store.TryGetValue(key, out var list))
-                return (F)list[0];
+                return list[0];
             else
-                return default(F);
+                return default(T);
         }
 
-        public F SelectOne<F>(K key) where F : T
+        public T SelectOne(K key)
         {
             CheckNull(ref key);
             if (store.TryGetValue(key, out var list))
-                return (F)list[0];
+                return list[0];
             else
-                return default(F);
+                return default(T);
         }
 
-        public IEnumerable<F> Select<F>(K key) where F : T
+        public IEnumerable<T> Select(K key)
         {
             CheckNull(ref key);
             if (store.TryGetValue(key, out var list))
             {
                 foreach (var item in list)
                 {
-                    if (item is F fitem)
-                    {
-                        yield return fitem;
-                    }
+                    yield return item;
                 }
             }
             else
@@ -240,7 +237,7 @@ namespace DataWF.Common
             }
         }
 
-        public IEnumerable<F> Search<F>(Predicate<K> comparer) where F : T
+        public IEnumerable<T> Search(Predicate<K> comparer)
         {
             foreach (var entry in store)
             {
@@ -248,24 +245,21 @@ namespace DataWF.Common
                 {
                     foreach (var item in entry.Value)
                     {
-                        if (item is F fitem)
-                        {
-                            yield return fitem;
-                        }
+                        yield return item;
                     }
                 }
             }
         }
 
-        public IEnumerable<F> Select<F>(object value, CompareType compare) where F : T
+        public IEnumerable<T> Select(object value, CompareType compare)
         {
-            IEnumerable<F> buf = Enumerable.Empty<F>();
+            IEnumerable<T> buf = Enumerable.Empty<T>();
 
             switch (compare.Type)
             {
                 case CompareTypes.Like:
                     var regex = value as Regex ?? Helper.BuildLike(value.ToString());
-                    buf = Search<F>((item) => regex.IsMatch(item.ToString()));
+                    buf = Search((item) => regex.IsMatch(item.ToString()));
                     break;
                 case CompareTypes.In:
                     //&& value is IList
@@ -279,7 +273,7 @@ namespace DataWF.Common
                             if (comp is string stringed)
                                 comp = stringed.Trim(' ', '\'');
 
-                            var temp = Select<F>(CheckNull(comp));
+                            var temp = Select(CheckNull(comp));
                             if (buf == null)
                             {
                                 buf = temp;
@@ -292,7 +286,7 @@ namespace DataWF.Common
                     }
                     else
                     {
-                        buf = Search<F>((item) =>
+                        buf = Search((item) =>
                         {
                             foreach (var element in (IEnumerable)value)
                             {
@@ -313,49 +307,49 @@ namespace DataWF.Common
                         throw new Exception("Expect QBetween but Get " + value == null ? "null" : value.GetType().FullName);
                     var min = CheckNull(between.MinValue());
                     var max = CheckNull(between.MaxValue());
-                    buf = Select<F>(min);
-                    buf = buf.Concat(Select<F>(max));
-                    buf = buf.Concat(Search<F>((item) => ListHelper.Compare(item, max) > 0
-                                                      && ListHelper.Compare(item, min) < 0));
+                    buf = Select(min);
+                    buf = buf.Concat(Select(max));
+                    buf = buf.Concat(Search((item) => ListHelper.Compare(item, max) > 0
+                                                   && ListHelper.Compare(item, min) < 0));
                     break;
                 default:
-                    buf = Select<F>(CheckNull(value), compare);
+                    buf = Select(CheckNull(value), compare);
                     break;
             }
             return buf;
         }
 
-        public IEnumerable<F> Select<F>(K key, CompareType compare) where F : T
+        public IEnumerable<T> Select(K key, CompareType compare)
         {
             switch (compare.Type)
             {
                 case CompareTypes.Is:
                     if (!compare.Not)
-                        return Select<F>(nullKey);
+                        return Select(nullKey);
                     else
-                        return Search<F>((item) => !ListHelper.Equal<K>(item, nullKey));
+                        return Search((item) => !ListHelper.Equal<K>(item, nullKey));
                 case CompareTypes.Equal:
                     if (!compare.Not)
-                        return Select<F>(key);
+                        return Select(key);
                     else
                     {
                         CheckNull(ref key);
-                        return Search<F>((item) => !ListHelper.Equal<K>(item, key));
+                        return Search((item) => !ListHelper.Equal<K>(item, key));
                     }
                 case CompareTypes.Greater:
                     CheckNull(ref key);
-                    return Search<F>((item) => ListHelper.Compare(item, key) > 0);
+                    return Search((item) => ListHelper.Compare(item, key) > 0);
                 case CompareTypes.GreaterOrEqual:
                     CheckNull(ref key);
-                    return Select<F>(key).Concat(Search<F>((item) => ListHelper.Compare(item, key) > 0));
+                    return Select(key).Concat(Search((item) => ListHelper.Compare(item, key) > 0));
                 case CompareTypes.Less:
                     CheckNull(ref key);
-                    return Search<F>((item) => ListHelper.Compare(item, key) < 0);
+                    return Search((item) => ListHelper.Compare(item, key) < 0);
                 case CompareTypes.LessOrEqual:
                     CheckNull(ref key);
-                    return Select<F>(key).Concat(Search<F>((item) => ListHelper.Compare(item, key) < 0));
+                    return Select(key).Concat(Search((item) => ListHelper.Compare(item, key) < 0));
             }
-            return Enumerable.Empty<F>();
+            return Enumerable.Empty<T>();
         }
 
         public override void Clear()
@@ -363,14 +357,14 @@ namespace DataWF.Common
             store.Clear();
         }
 
-        public override IEnumerable Select(object value, CompareType compare)
+        public override IEnumerable SelectObjects(object value, CompareType compare)
         {
-            return Select<T>(value, compare);
+            return Select(value, compare);
         }
 
-        public override object SelectOne(object value)
+        public override object SelectOneObject(object value)
         {
-            return SelectOne<T>(value);
+            return SelectOne(value);
         }
 
         public override void Dispose()

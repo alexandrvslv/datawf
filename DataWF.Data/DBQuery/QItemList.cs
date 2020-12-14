@@ -34,7 +34,7 @@ namespace DataWF.Data
     {
         protected IQuery query;
 
-        public QItemList()
+        public QItemList(int capacity = 2) : base(capacity)
         {
             ApplySort(new InvokerComparer(QItem.OrderInvoker.Instance, ListSortDirection.Ascending));
         }
@@ -45,6 +45,11 @@ namespace DataWF.Data
         }
 
         public QItemList(IQItemList owner) : this()
+        {
+            Container = owner;
+        }
+
+        public QItemList(IQItemList owner, int capacity) : this(capacity)
         {
             Container = owner;
         }

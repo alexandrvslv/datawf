@@ -186,7 +186,7 @@ namespace DataWF.Data
 
         public QParam() : base()
         {
-            items = new QItemList<QItem>(this);
+            items = new QItemList<QItem>(this, 2);
             items.CollectionChanged += ParametersListChanged;
         }
 

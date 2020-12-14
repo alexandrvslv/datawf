@@ -35,7 +35,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.GetTimeSpan(i);
-            return pullIndex?.SelectOne<F>(value);
+            return ((IPullOutIndex<F, TimeSpan?>)pullIndex).SelectOne(value);
         }
 
         public override string FormatQuery(TimeSpan? value)

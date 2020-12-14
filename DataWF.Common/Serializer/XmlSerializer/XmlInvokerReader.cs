@@ -53,7 +53,7 @@ namespace DataWF.Common
         {
             string value;
             if ((value = Reader.GetAttribute(name)) != null
-                && Serializer.GetTypeInfo<T>() is IElementSerializer<T> serializer)
+                && TypeHelper.GetSerializer<T>() is IElementSerializer<T> serializer)
                 return serializer.FromString(value);
             return default(T);
         }

@@ -36,7 +36,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.Reader.GetFloat(i);
-            return pullIndex?.SelectOne<F>(value);
+            return ((IPullOutIndex<F, float>)pullIndex).SelectOne(value);
         }
 
         public override string FormatQuery(float value)
