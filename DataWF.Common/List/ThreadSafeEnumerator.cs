@@ -17,17 +17,21 @@ namespace DataWF.Common
         public void Reset() { }
     }
 
-    public struct ThreadSafeEnumerator<T> : IEnumerator<T>
+    [Serializable]
+    public struct ThreadSafeEnumerator<T> : IEnumerator<T>, IEnumerator
     {
         private int i;
         private readonly uint count;
         private readonly IList<T> items;
         private T current;
 
-        public ThreadSafeEnumerator(IList<T> items)
+        public ThreadSafeEnumerator(IList<T> items) : this(items, items.Count)
+        { }
+
+        public ThreadSafeEnumerator(IList<T> items, int count)
         {
             i = 0;
-            count = (uint)items.Count;
+            this.count = (uint)count;
             this.items = items;
             current = default(T);
         }
@@ -35,7 +39,6 @@ namespace DataWF.Common
         public T Current
         {
             get => current;
-            private set => current = value;
         }
 
         object IEnumerator.Current => Current;
@@ -65,6 +68,52 @@ namespace DataWF.Common
         public void Reset()
         {
             i = 0;
+            current = default(T);
+        }
+    }
+
+
+    [Serializable]
+    public struct ThreadSafeArrayEnumerator<T> : IEnumerator<T>, IEnumerator
+    {
+        private int i;
+        private readonly uint count;
+        private readonly T[] items;
+        private T current;
+
+        public ThreadSafeArrayEnumerator(T[] items, int count)
+        {
+            i = 0;
+            this.count = (uint)count;
+            this.items = items;
+            current = default(T);
+        }
+
+        public T Current
+        {
+            get => current;
+        }
+
+        object IEnumerator.Current => Current;
+
+        public void Dispose()
+        { }
+
+        public bool MoveNext()
+        {
+            if ((uint)i < count)
+            {
+                current = items[i++];
+                return true;
+            }
+            current = default(T);
+            return false;
+        }
+
+        public void Reset()
+        {
+            i = 0;
+            current = default(T);
         }
     }
 }

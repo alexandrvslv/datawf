@@ -11,14 +11,14 @@ namespace DataWF.Common
 
         public override void Set(int index, object value)
         {
-            Helper.OneToTwoShift(index, out short block, out short blockIndex);
+            (short block, short blockIndex) = Helper.OneToTwoShift(index);
             SetValue(block, blockIndex, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
         }
 
         public override void Set(short block, short blockIndex, object value)
         {
             SetValue(block, blockIndex, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
-        }        
+        }
     }
 
 }

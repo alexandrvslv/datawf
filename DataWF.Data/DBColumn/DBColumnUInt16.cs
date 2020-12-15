@@ -21,6 +21,7 @@
 using DataWF.Common;
 using System;
 using System.Globalization;
+using System.Text.Json;
 
 namespace DataWF.Data
 {
@@ -63,6 +64,16 @@ namespace DataWF.Data
                 return GetReferenceId(item);
             
             return Convert.ToUInt16(value, CultureInfo.InvariantCulture);
+        }
+
+        public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, ushort> valueInvoker)
+            {
+                writer.WriteNumber(JsonName, valueInvoker.GetValue(element));
+            }
+            else
+                base.Write(writer, element, options);
         }
     }
 }

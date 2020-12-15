@@ -99,16 +99,14 @@ namespace DataWF.Common
             return (a << 16) | (b & 0xFFFF);
         }
 
-        public static void OneToTwoShift(int value, out short a, out short b)
+        public static (short a, short b) OneToTwoShift(int value)
         {
-            a = (short)(value >> 16);
-            b = (short)(value & 0xFFFF);
+            return ((short)(value >> 16), (short)(value & 0xFFFF));
         }
 
-        public static void OneToTwoShift(int value, out int a, out int b)
+        public static (int a, int b) OneToTwoShiftInt(int value)
         {
-            a = (value >> 16);
-            b = (value & 0xFFFF);
+            return (value >> 16, value & 0xFFFF);
         }
 
         public static long TwoToOneShiftLong(int a, int b)
@@ -116,10 +114,9 @@ namespace DataWF.Common
             return ((long)a << 32) | ((long)b & 0xFFFFFFFF);
         }
 
-        public static void OneToTwoShiftLong(long value, out int a, out int b)
+        public static (int a, int b) OneToTwoShiftLong(long value)
         {
-            a = (int)(value >> 32);
-            b = (int)(value & 0xFFFFFFFF);
+            return ((int)(value >> 32), (int)(value & 0xFFFFFFFF));
         }
 
         public static unsafe int TwoToOnePointer(short a, short b)
@@ -131,11 +128,10 @@ namespace DataWF.Common
             return result;
         }
 
-        public static unsafe void OneToTwoPointer(int value, out short a, out short b)
+        public static unsafe (short a, short b) OneToTwoPointer(int value)
         {
             short* p = (short*)&value;
-            a = (*(p + 1));
-            b = (*p);
+            return (*(p + 1), *p);
         }
 
         public static unsafe long TwoToOnePointer(int a, int b)
@@ -147,11 +143,10 @@ namespace DataWF.Common
             return result;
         }
 
-        public static unsafe void OneToTwoPointer(long value, out int a, out int b)
+        public static unsafe (int a, int b) OneToTwoPointer(long value)
         {
             int* p = (int*)&value;
-            a = (*(p + 1));
-            b = (*p);
+            return (*(p + 1), *p);
         }
 
         public static int TwoToOneStruct(short a, short b)
@@ -166,18 +161,16 @@ namespace DataWF.Common
             return itnToLong.Value;
         }
 
-        public static void OneToTwoStruct(int value, out short a, out short b)
+        public static (short a, short b) OneToTwoStruct(int value)
         {
             var shortToInt = new ShortToInt { Value = value };
-            a = shortToInt.Low;
-            b = shortToInt.High;
+            return (shortToInt.Low, shortToInt.High);
         }
 
-        public static void OneToTwoStruct(long value, out int a, out int b)
+        public static (int a, int b) OneToTwoStruct(long value)
         {
             var itnToLong = new ItnToLong { Value = value };
-            a = itnToLong.Low;
-            b = itnToLong.High;
+            return (itnToLong.Low, itnToLong.High);
         }
 
         //https://stackoverflow.com/questions/1873402/is-there-a-nice-way-to-split-an-int-into-two-shorts-net

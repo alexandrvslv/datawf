@@ -56,11 +56,9 @@ namespace DataWF.Common
             array = narray;
         }
 
-        public static int GetHIndex(int index, int blockSize, out short block, out short blockIndex)
+        public static PullHandler GetSeqHandler(int index, int blockSize)
         {
-            block = (short)(index / blockSize);
-            blockIndex = (short)(index % blockSize);
-            return Helper.TwoToOneShift(block, blockIndex);
+            return new PullHandler((short)(index / blockSize), (short)(index % blockSize));
         }
 
         protected int blockCount;
@@ -72,6 +70,34 @@ namespace DataWF.Common
             BlockSize = blockSize;
         }
 
+        public virtual int Capacity { get { return 0; } }
+        public int BlockSize
+        {
+            get => blockSize;
+            set
+            {
+                if (blockSize != value)
+                {
+                    if (blockCount == 0)
+                    {
+                        blockSize = value;
+                    }
+                    else
+                    {
+                        throw new Exception("Unable set block size after data modified");
+                    }
+                }
+            }
+        }
+
+        public Type ItemType
+        {
+            get => itemType;
+            set => itemType = value;
+        }
+
+        public PullHandler GetSequenceHandler(int index) => GetSeqHandler(index, blockSize);
+
         public abstract object Get(int index);
 
         public abstract object Get(short block, short blockIndex);
@@ -80,9 +106,14 @@ namespace DataWF.Common
 
         public abstract void Set(short block, short blockIndex, object value);
 
+        public T GetValue<T>(PullHandler handler)
+        {
+            return GetValue<T>(handler.Block, handler.BlockIndex);
+        }
+
         public T GetValue<T>(int index)
         {
-            Helper.OneToTwoShift(index, out short block, out short blockIndex);
+            (short block, short blockIndex) = Helper.OneToTwoShift(index);
             return GetValue<T>(block, blockIndex);
         }
 
@@ -91,9 +122,14 @@ namespace DataWF.Common
             return ((GenericPull<T>)this).GetValue(block, blockIndex);
         }
 
+        public void SetValue<T>(PullHandler handler, T value)
+        {
+            ((GenericPull<T>)this).SetValue(handler.Block, handler.BlockIndex, value);
+        }
+
         public void SetValue<T>(int index, T value)
         {
-            Helper.OneToTwoShift(index, out short block, out short blockIndex);
+            (short block, short blockIndex) = Helper.OneToTwoShift(index);
             SetValue(block, blockIndex, value);
         }
 
@@ -102,38 +138,14 @@ namespace DataWF.Common
             ((GenericPull<T>)this).SetValue(block, blockIndex, value);
         }
 
-        public virtual int Capacity { get { return 0; } }
-        public int BlockSize
-        {
-            get { return blockSize; }
-            set
-            {
-                if (blockCount == 0)
-                {
-                    blockSize = value;
-                }
-                else
-                {
-                    throw new Exception("Unable set block size after data modified");
-                }
-            }
-        }
-
-        public Type ItemType
-        {
-            get { return itemType; }
-            set { itemType = value; }
-        }
-
         public abstract bool EqualNull(object value);
 
         public virtual void Clear()
-        {
-        }
+        { }
 
         public abstract void Trunc(int maxIndex);
     }
 
-    
+
 
 }

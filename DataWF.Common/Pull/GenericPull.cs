@@ -3,9 +3,76 @@ using System.Linq;
 using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace DataWF.Common
 {
+    public readonly struct PullHandler : IEquatable<PullHandler>, IComparable<PullHandler>
+    {
+        public static readonly PullHandler Zero = new PullHandler(0, 0);
+
+        public static bool operator ==(PullHandler left, PullHandler right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(PullHandler left, PullHandler right)
+        {
+            return !left.Equals(right);
+        }
+
+        public static explicit operator int(PullHandler pullBlock)
+        {
+            return Helper.TwoToOneShift(pullBlock.Block, pullBlock.BlockIndex);
+        }
+
+        public static explicit operator PullHandler(int handler)
+        {
+            (var block, var blockIndex) = Helper.OneToTwoShift(handler);
+            return new PullHandler(block, blockIndex);
+        }
+
+        public PullHandler(short block, short blockIndex)
+        {
+            Block = block;
+            BlockIndex = blockIndex;
+        }
+
+        public short Block { get; }
+
+        public short BlockIndex { get; }
+
+        public int CompareTo(PullHandler other)
+        {
+            var result = Block.CompareTo(other.Block);
+            return result != 0 ? result : BlockIndex.CompareTo(BlockIndex);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is PullHandler @ref && Equals(@ref);
+        }
+
+        public bool Equals(PullHandler other)
+        {
+            return Block == other.Block &&
+                   BlockIndex == other.BlockIndex;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = -1500031224;
+            hashCode = hashCode * -1521134295 + Block.GetHashCode();
+            hashCode = hashCode * -1521134295 + BlockIndex.GetHashCode();
+            return hashCode;
+        }
+
+        public int GetSeqence(int blockSize)
+        {
+            return Block * blockSize + BlockIndex;
+        }
+    }
+
     public abstract class GenericPull<T> : Pull
     {
         internal GenericPull(int blockSize) : base(blockSize)
@@ -13,17 +80,30 @@ namespace DataWF.Common
 
         public T GetValue(int index)
         {
-            Helper.OneToTwoShift(index, out short block, out short blockIndex);
+            (var block, var blockIndex) = Helper.OneToTwoShift(index);
             return GetValue(block, blockIndex);
         }
 
         public void SetValue(int index, T value)
         {
-            Helper.OneToTwoShift(index, out short block, out short blockIndex);
+            (var block, var blockIndex) = Helper.OneToTwoShift(index);
             SetValue(block, blockIndex, value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T GetValue(PullHandler index)
+        {
+            return GetValue(index.Block, index.BlockIndex);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetValue(PullHandler index, T value)
+        {
+            SetValue(index.Block, index.BlockIndex, value);
+        }
+
         public abstract T GetValue(short block, short blockIndex);
+
         public abstract void SetValue(short block, short blockIndex, T value);
     }
 
@@ -60,7 +140,7 @@ namespace DataWF.Common
 
         public override object Get(int index)
         {
-            Helper.OneToTwoShift(index, out short block, out short blockIndex);
+            (short block, short blockIndex) = Helper.OneToTwoShift(index);
             return GetValue(block, blockIndex);
         }
 
@@ -71,7 +151,7 @@ namespace DataWF.Common
 
         public override void Set(int index, object value)
         {
-            Helper.OneToTwoShift(index, out short block, out short blockIndex);
+            (short block, short blockIndex) = Helper.OneToTwoShift(index);
             SetValue(block, blockIndex, (T)value);
         }
 
@@ -129,7 +209,7 @@ namespace DataWF.Common
 
         public override void Trunc(int maxIndex)
         {
-            Helper.OneToTwoShift(maxIndex, out short block, out short blockIndex);
+            (short block, short blockIndex) = Helper.OneToTwoShift(maxIndex);
             while (block < blockCount - 1)
             {
                 array.RemoveAt(blockCount - 1);

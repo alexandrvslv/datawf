@@ -857,13 +857,13 @@ namespace DataWF.Data
 
         public abstract bool IsEmpty(DBItem item);
 
-        public abstract bool IsEmpty(int handler);
+        public abstract bool IsEmpty(PullHandler handler);
 
         public abstract void Clear(DBItem item, DBSetValueMode mode = DBSetValueMode.Default);
 
-        public abstract void Clear(int handler);
+        public abstract void Clear(PullHandler handler);
 
-        public abstract void Copy(int fromIndex, int toIndex);
+        public abstract void Copy(PullHandler fromIndex, PullHandler toIndex);
 
         public abstract void Copy(DBItem fromItem, DBColumn fromColumn, DBItem toItem, DBSetValueMode mode = DBSetValueMode.Default);
 

@@ -312,7 +312,7 @@ namespace DataWF.Data
             {
                 var maxIndex = 0;
                 foreach (var item in this)
-                    maxIndex = item.handler > maxIndex ? item.handler : maxIndex;
+                    maxIndex = Math.Max(item.handler.GetSeqence(blockSize), maxIndex);
                 if (Hash > maxIndex)
                 {
                     Hash = maxIndex;

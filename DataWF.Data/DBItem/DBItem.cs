@@ -48,10 +48,8 @@ namespace DataWF.Data
             return DBTable.GetTable<T>();
         }
 
-        internal int? oldHandler;
-        internal int handler = -1;
-        internal short block = -1;
-        internal short blockIndex = -1;
+        internal PullHandler? oldHandler;
+        internal PullHandler handler;
         internal string cacheToString = string.Empty;
         protected DBTable table;
         protected DBItemState state = DBItemState.New;
@@ -72,13 +70,7 @@ namespace DataWF.Data
         public bool Attached => (state & DBItemState.Attached) == DBItemState.Attached;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public int Handler { get => handler; set => handler = value; }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public short Block { get => block; set => block = value; }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public short BlockIndex { get => blockIndex; set => blockIndex = value; }
+        public PullHandler Handler { get => handler; set => handler = value; }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual string ParametersCategory
@@ -198,7 +190,7 @@ namespace DataWF.Data
                 if (table != value)
                 {
                     table = value is IDBVirtualTable virtualTable ? virtualTable.BaseTable : value;
-                    handler = table.GetNextHandler(out block, out blockIndex);
+                    handler = table.GetNextHandler();
                 }
             }
         }
@@ -373,20 +365,20 @@ namespace DataWF.Data
 
         protected virtual internal void ClearBackup(bool accept)
         {
-            if (oldHandler is int oldHandlervalue)
+            if (oldHandler is PullHandler oldHandlerValue)
             {
                 if (accept)
                 {
-                    FreeHandler(oldHandlervalue);
+                    FreeHandler(oldHandlerValue);
                 }
                 else
                 {
-                    foreach(var column in GetChangeKeys())
+                    foreach (var column in GetChangeKeys())
                     {
                         column.Reject(this);
                     }
                     var newHandler = handler;
-                    handler = oldHandlervalue;
+                    handler = oldHandlerValue;
                     FreeHandler(newHandler);
                 }
                 oldHandler = null;
@@ -397,7 +389,7 @@ namespace DataWF.Data
         {
             if (oldHandler == null && (UpdateState & DBUpdateState.Insert) == 0)
             {
-                var newHandler = table.GetNextHandler(out block, out blockIndex);
+                var newHandler = table.GetNextHandler();
                 CopyTo(newHandler);
                 //swap
                 oldHandler = handler;
@@ -894,7 +886,7 @@ namespace DataWF.Data
             CopyTo(item.handler);
         }
 
-        public void CopyTo(int hindex)
+        public void CopyTo(PullHandler hindex)
         {
             foreach (var column in Table.Columns)
             {
@@ -1020,7 +1012,7 @@ namespace DataWF.Data
             FreeHandler(handler);
         }
 
-        private void FreeHandler(int handler)
+        private void FreeHandler(PullHandler handler)
         {
             foreach (DBColumn column in Table.Columns)
             {

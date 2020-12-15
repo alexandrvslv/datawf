@@ -21,6 +21,7 @@ using DataWF.Common;
 using System;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 
 namespace DataWF.Data
 {
@@ -85,6 +86,20 @@ namespace DataWF.Data
                 }
             }
             return base.Parse(value);
+        }
+
+        public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, byte[]> valueInvoker)
+            {
+                var array = valueInvoker.GetValue(element);
+                if (array == null)
+                    writer.WriteNull(JsonName);
+                else
+                    writer.WriteBase64String(JsonName, array);
+            }
+            else
+                base.Write(writer, element, options);
         }
     }
 }

@@ -209,7 +209,7 @@ namespace DataWF.Data
         public IComparer DefaultComparer;
         public int Hash = -1;
         protected internal readonly int index = ++tableIndex;
-        protected internal ConcurrentQueue<int> FreeHandlers = new ConcurrentQueue<int>();
+        protected internal ConcurrentQueue<PullHandler> FreeHandlers = new ConcurrentQueue<PullHandler>();
         protected readonly ConcurrentDictionary<Type, List<DBColumn>> mapTypeColumn = new ConcurrentDictionary<Type, List<DBColumn>>();
         protected readonly ConcurrentDictionary<Type, List<IInvoker>> refingInvokers = new ConcurrentDictionary<Type, List<IInvoker>>();
         protected string query;
@@ -914,14 +914,13 @@ namespace DataWF.Data
             return !e.Cancel;
         }
 
-        protected internal int GetNextHandler(out short block, out short blockIndex)
+        protected internal PullHandler GetNextHandler()
         {
             if (FreeHandlers.TryDequeue(out var handler))
             {
-                Helper.OneToTwoPointer(handler, out block, out blockIndex);
                 return handler;
             }
-            return Pull.GetHIndex(NextHash(), BlockSize, out block, out blockIndex);
+            return Pull.GetSeqHandler(NextHash(), BlockSize);
         }
 
         public event EventHandler<DBItemEventArgs> RowUpdated;

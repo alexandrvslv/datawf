@@ -41,7 +41,7 @@ namespace DataWF.Common
 
         public override object Get(int index)
         {
-            Helper.OneToTwoShift(index, out short block, out short blockIndex);
+            (short block, short blockIndex) = Helper.OneToTwoShift(index);
             return GetValue(block, blockIndex);
         }
 
@@ -52,7 +52,7 @@ namespace DataWF.Common
 
         public override void Set(int index, object value)
         {
-            Helper.OneToTwoShift(index, out short block, out short blockIndex);
+            (short block, short blockIndex) = Helper.OneToTwoShift(index);
             SetValue(block, blockIndex, (T)value);
         }
 
@@ -127,7 +127,7 @@ namespace DataWF.Common
 
         public override void Trunc(int maxIndex)
         {
-            Helper.OneToTwoShift(maxIndex, out short block, out short blockIndex);
+            (short block, short blockIndex) = Helper.OneToTwoShift(maxIndex);
             while (block < blockCount - 1)
             {
                 Array.Clear(array[blockCount - 1], 0, blockSize);

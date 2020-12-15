@@ -176,7 +176,7 @@ namespace DataWF.Common
 
         public K ReadItem(T item)
         {
-            return Pull.GetValue(item.Block, item.BlockIndex);
+            return Pull.GetValue(item.Handler);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

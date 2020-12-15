@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Text.Json;
 
 namespace DataWF.Data
 {
@@ -39,7 +40,7 @@ namespace DataWF.Data
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.Reader.GetString(i);
-            return ((IPullOutIndex<F,string>)pullIndex).SelectOne(value);
+            return ((IPullOutIndex<F, string>)pullIndex).SelectOne(value);
         }
 
         public override string FormatQuery(string value)
@@ -53,6 +54,20 @@ namespace DataWF.Data
         public override string Parse(object value)
         {
             return Helper.TextBinaryFormat(value);
+        }
+
+        public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, string> valueInvoker)
+            {
+                var text = valueInvoker.GetValue(element);
+                if (text == null)
+                    writer.WriteNull(JsonName);
+                else
+                    writer.WriteString(JsonName, text);
+            }
+            else
+                base.Write(writer, element, options);
         }
     }
 }

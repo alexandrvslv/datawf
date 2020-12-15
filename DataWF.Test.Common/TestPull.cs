@@ -14,16 +14,15 @@ namespace DataWF.Test.Common
             var pull = new Pull<int>(blockSize);
             for (int i = 0; i < 1000; i++)
             {
-                var index = Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
-                Helper.OneToTwoShift(index, out short left, out short right);
-                Debug.WriteLine($"pull index {i} = {index} left {left} right {right}");
+                var index = Pull.GetSeqHandler(i, blockSize);
+                Debug.WriteLine($"pull index {i} = {(int)index} left {index.Block} right {index.BlockIndex}");
                 pull.SetValue(index, i);
             }
 
             for (int i = 0; i < 1000; i++)
             {
-                Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
-                Assert.AreEqual(i, pull.GetValue(block, blockIndex));
+                var index = Pull.GetSeqHandler(i, blockSize);
+                Assert.AreEqual(i, pull.GetValue(index));
             }
         }
 
@@ -34,16 +33,15 @@ namespace DataWF.Test.Common
             var pull = new NullablePull<int>(blockSize);
             for (int i = 0; i < 1000; i++)
             {
-                var index = Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
-                Helper.OneToTwoShift(index, out short left, out short right);
-                Debug.WriteLine($"pull index {i} = {index} left {left} right {right}");
+                var index = Pull.GetSeqHandler(i, blockSize);
+                Debug.WriteLine($"pull index {i} = {(int)index} left {index.Block} right {index.BlockIndex}");
                 pull.SetValue<int?>(index, i);
             }
 
             for (int i = 0; i < 1000; i++)
             {
-                Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
-                Assert.AreEqual(i, pull.GetValue(block, blockIndex));
+                var index = Pull.GetSeqHandler(i, blockSize);
+                Assert.AreEqual(i, pull.GetValue(index));
             }
         }
 
@@ -58,7 +56,7 @@ namespace DataWF.Test.Common
                 for (short j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOneShift(i, j);
-                    Helper.OneToTwoShift(value, out short a, out short b);
+                    (short a, short b) = Helper.OneToTwoShift(value);
                     Assert.AreEqual(i, a);
                     Assert.AreEqual(j, b);
                 }
@@ -78,7 +76,7 @@ namespace DataWF.Test.Common
                 for (short j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOnePointer(i, j);
-                    Helper.OneToTwoPointer(value, out var a, out var b);
+                    (short a, short b) = Helper.OneToTwoPointer(value);
                     Assert.AreEqual(i, a);
                     Assert.AreEqual(j, b);
                 }
@@ -98,7 +96,7 @@ namespace DataWF.Test.Common
                 for (short j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOneStruct(i, j);
-                    Helper.OneToTwoStruct(value, out var a, out var b);
+                    (short a, short b) = Helper.OneToTwoStruct(value);
                     Assert.AreEqual(i, a);
                     Assert.AreEqual(j, b);
                 }
@@ -117,8 +115,8 @@ namespace DataWF.Test.Common
             {
                 for (int j = 0; j < 1000; j++)
                 {
-                    var value = Helper.TwoToOneShift(i, j);
-                    Helper.OneToTwoShift(value, out short a, out short b);
+                    var value = Helper.TwoToOneShiftLong(i, j);
+                    (int a, int b) = Helper.OneToTwoShiftLong(value);
                     Assert.AreEqual(i, a);
                     Assert.AreEqual(j, b);
                 }
@@ -138,7 +136,7 @@ namespace DataWF.Test.Common
                 for (int j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOnePointer(i, j);
-                    Helper.OneToTwoPointer(value, out var a, out var b);
+                    (int a, int b) = Helper.OneToTwoPointer(value);
                     Assert.AreEqual(i, a);
                     Assert.AreEqual(j, b);
                 }
@@ -158,7 +156,7 @@ namespace DataWF.Test.Common
                 for (int j = 0; j < 1000; j++)
                 {
                     var value = Helper.TwoToOneStruct(i, j);
-                    Helper.OneToTwoStruct(value, out var a, out var b);
+                    (int a, int b) = Helper.OneToTwoStruct(value);
                     Assert.AreEqual(i, a);
                     Assert.AreEqual(j, b);
                 }

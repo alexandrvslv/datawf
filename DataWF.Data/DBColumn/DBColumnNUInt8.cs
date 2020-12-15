@@ -21,6 +21,7 @@
 using DataWF.Common;
 using System;
 using System.Globalization;
+using System.Text.Json;
 
 namespace DataWF.Data
 {
@@ -56,8 +57,22 @@ namespace DataWF.Data
                 return (byte?)null;
             if (value is DBItem item)
                 return GetReferenceId(item);
-            
+
             return Convert.ToByte(value, CultureInfo.InvariantCulture);
+        }
+
+        public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, byte?> valueInvoker)
+            {
+                var value = valueInvoker.GetValue(element);
+                if (value == null)
+                    writer.WriteNull(JsonName);
+                else
+                    writer.WriteNumber(JsonName, value.Value);
+            }
+            else
+                base.Write(writer, element, options);
         }
     }
 }

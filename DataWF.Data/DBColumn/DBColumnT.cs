@@ -144,7 +144,7 @@ namespace DataWF.Data
             return EqualityComparer<T>.Default.Equals(oldValue, newValue);
         }
 
-        public override void Copy(int fromIndex, int toIndex)
+        public override void Copy(PullHandler fromIndex, PullHandler toIndex)
         {
             var value = pull.GetValue(fromIndex);
             pull.SetValue(toIndex, value);
@@ -168,7 +168,7 @@ namespace DataWF.Data
             return Equal(GetValue(item), default(T));
         }
 
-        public override bool IsEmpty(int handler)
+        public override bool IsEmpty(PullHandler handler)
         {
             return Equal(pull.GetValue(handler), default(T));
         }
@@ -178,7 +178,7 @@ namespace DataWF.Data
             SetValue(item, default(T), mode);
         }
 
-        public override void Clear(int handler)
+        public override void Clear(PullHandler handler)
         {
             pull.SetValue(handler, default(T));
         }
@@ -191,7 +191,7 @@ namespace DataWF.Data
         public virtual T GetValue(DBItem item)
         {
             if (pull != null)
-                return pull.GetValue(item.block, item.blockIndex);
+                return pull.GetValue(item.Handler);
             else if (typedPropertyInvoker != null)
                 return typedPropertyInvoker.GetValue(item);
             return default(T);
@@ -206,7 +206,7 @@ namespace DataWF.Data
         {
             if (pull != null)
             {
-                pull.SetValue(item.block, item.blockIndex, value);
+                pull.SetValue(item.Handler, value);
             }
             else if (typedPropertyInvoker != null)
             {
@@ -417,12 +417,12 @@ namespace DataWF.Data
             if (pull == null)
                 return false;
 
-            if (item.oldHandler is int handler)
+            if (item.oldHandler is PullHandler handler)
             {
                 old = pull.GetValue(handler);
-                return !Equal(old, pull.GetValue(item.block, item.blockIndex));
+                return !Equal(old, pull.GetValue(item.handler));
             }
-            return (item.UpdateState & DBUpdateState.Insert) != 0 ? !Equal(old, pull.GetValue(item.block, item.blockIndex)) : false;
+            return (item.UpdateState & DBUpdateState.Insert) != 0 ? !Equal(old, pull.GetValue(item.handler)) : false;
         }
 
         public override void Reject(DBItem item, DBSetValueMode mode = DBSetValueMode.Default)

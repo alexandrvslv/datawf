@@ -21,6 +21,7 @@ using DataWF.Common;
 using DataWF.Data;
 using System;
 using System.Globalization;
+using System.Text.Json;
 
 namespace DataWF.Data
 {
@@ -55,6 +56,20 @@ namespace DataWF.Data
             if (value == null || value == DBNull.Value)
                 return null;
             return Convert.ToBoolean(value, CultureInfo.InvariantCulture);
+        }
+
+        public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, bool?> valueInvoker)
+            {
+                var value = valueInvoker.GetValue(element);
+                if (value == null)
+                    writer.WriteNull(JsonName);
+                else
+                    writer.WriteBoolean(JsonName, value.Value);
+            }
+            else
+                base.Write(writer, element, options);
         }
     }
 }
