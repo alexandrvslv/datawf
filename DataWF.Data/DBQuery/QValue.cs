@@ -34,7 +34,7 @@ namespace DataWF.Data
 
         public QValue(object value, DBColumn column = null)
         {
-            Column = column;
+            base.Column = column;
             Value = value;
         }
 

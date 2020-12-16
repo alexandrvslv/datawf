@@ -25,9 +25,10 @@ namespace DataWF.Data
     public class DBItemDefaultComparer : IComparer<DBItem>, IComparer
     {
         public static readonly DBItemDefaultComparer Instance = new DBItemDefaultComparer();
+
         public int Compare(DBItem x, DBItem y)
         {
-            return x.handler.CompareTo(y.handler);
+            return x.handler.CompareTo(in y.handler);
         }
 
         public int Compare(object x, object y)

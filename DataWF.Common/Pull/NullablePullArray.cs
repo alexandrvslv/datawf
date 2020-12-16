@@ -5,9 +5,7 @@ namespace DataWF.Common
     public class NullablePullArray<T> : PullArray<T?>, IEnumerable<T?> where T : struct
     {
         public NullablePullArray(int BlockSize) : base(BlockSize)
-        {
-            ItemType = typeof(T);
-        }
+        { }
 
         public override void Set(int index, object value)
         {

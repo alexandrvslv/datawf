@@ -2,7 +2,7 @@
 
 namespace DataWF.Common
 {
-    public struct JoinType
+    public readonly struct JoinType
     {
         public static readonly JoinType Undefined = new JoinType(JoinTypes.Undefined);
         public static readonly JoinType Left = new JoinType(JoinTypes.Left | JoinTypes.Join);
@@ -48,7 +48,7 @@ namespace DataWF.Common
             return type;
         }
 
-        public JoinTypes Type;
+        public readonly JoinTypes Type;
 
         public JoinType(JoinTypes type)
         {

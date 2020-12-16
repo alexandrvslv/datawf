@@ -36,7 +36,7 @@ namespace DataWF.Data
 
         public QItemList(int capacity = 2) : base(capacity)
         {
-            ApplySort(new InvokerComparer(QItem.OrderInvoker.Instance, ListSortDirection.Ascending));
+            ApplySort(new InvokerComparer<T, int>(QItem.OrderInvoker.Instance, ListSortDirection.Ascending));
         }
 
         public QItemList(IEnumerable<T> items) : this()
@@ -71,13 +71,15 @@ namespace DataWF.Data
 
         public override void InsertInternal(int index, T item)
         {
-            if (item.List != this)
+            var itemList = item.List;
+            if (itemList != this && itemList != null)
             {
-                if (item.List != null)
-                    item.List.Delete(item);
-                if (item.Order == -1)
-                    item.Order = index;
+                itemList.Delete(item);
             }
+            item.List = this;
+            if (item.Order == -1)
+                item.Order = index;
+
             base.InsertInternal(index, item);
         }
 

@@ -49,9 +49,9 @@ namespace DataWF.Data
         public ListSortDirection Direction;
         public CompareType Comparer;
         public K Value;
-        private readonly DBColumn property;
-        public readonly bool buffered;
-        private readonly bool refernce;
+        private DBColumn property;
+        public bool buffered;
+        private bool refernce;
         public bool Hash;
 
         public DBComparer(DBTable table, DBColumn column, string proeprty, ListSortDirection direction = ListSortDirection.Ascending)

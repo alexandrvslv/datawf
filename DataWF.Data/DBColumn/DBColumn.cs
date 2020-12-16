@@ -33,31 +33,29 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.GroupName), typeof(DBColumn.GroupNameInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.PropertyName), typeof(DBColumn.PropertyNameInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ReferencePropertyName), typeof(DBColumn.ReferencePropertyNameInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ReferenceTable), typeof(DBColumn.ReferenceTableInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), "ReferenceTableName", typeof(DBColumn.ReferenceTableNameInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.IsView), typeof(DBColumn.IsViewInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.IsReference), typeof(DBColumn.IsReferenceInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Keys), typeof(DBColumn.KeysInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Order), typeof(DBColumn.OrderInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Size), typeof(DBColumn.SizeInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Scale), typeof(DBColumn.ScaleInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.CultureCode), typeof(DBColumn.CultureCodeInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Format), typeof(DBColumn.FormatInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.DBDataType), typeof(DBColumn.DBDataTypeInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.DataType), typeof(DBColumn.DataTypeInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ColumnType), typeof(DBColumn.ColumnTypeInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.DefaultValue), typeof(DBColumn.DefaultValueInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Query), typeof(DBColumn.QueryInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.SubList), typeof(DBColumn.SubListInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.BoolTrue), typeof(DBColumn.BoolTrueInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.BoolFalse), typeof(DBColumn.BoolFalseInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.SqlName), typeof(DBColumn.SqlNameInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.TargetType), typeof(DBColumn.TargetTypeInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.BaseName), typeof(DBColumn.BaseNameInvoker<>))]
-[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.BaseColumn), typeof(DBColumn.BaseColumnInvoker<>))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.GroupName), typeof(DBColumn.GroupNameInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.PropertyName), typeof(DBColumn.PropertyNameInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ReferencePropertyName), typeof(DBColumn.ReferencePropertyNameInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ReferenceTable), typeof(DBColumn.ReferenceTableInvoker))]
+[assembly: Invoker(typeof(DBColumn), "ReferenceTableName", typeof(DBColumn.ReferenceTableNameInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.IsView), typeof(DBColumn.IsViewInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.IsReference), typeof(DBColumn.IsReferenceInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Keys), typeof(DBColumn.KeysInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Order), typeof(DBColumn.OrderInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Size), typeof(DBColumn.SizeInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Scale), typeof(DBColumn.ScaleInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.CultureCode), typeof(DBColumn.CultureCodeInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Format), typeof(DBColumn.FormatInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.DBDataType), typeof(DBColumn.DBDataTypeInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.DataType), typeof(DBColumn.DataTypeInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.ColumnType), typeof(DBColumn.ColumnTypeInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.DefaultValue), typeof(DBColumn.DefaultValueInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.Query), typeof(DBColumn.QueryInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.SubList), typeof(DBColumn.SubListInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.SqlName), typeof(DBColumn.SqlNameInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.TargetType), typeof(DBColumn.TargetTypeInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.BaseName), typeof(DBColumn.BaseNameInvoker))]
+[assembly: Invoker(typeof(DBColumn), nameof(DBColumn.BaseColumn), typeof(DBColumn.BaseColumnInvoker))]
 namespace DataWF.Data
 {
     public abstract class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker, IPropertySerializeInfo
@@ -318,32 +316,6 @@ namespace DataWF.Data
                     OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.Default);
                 }
                 CheckPullIndex();
-            }
-        }
-
-        [Browsable(false)]
-        public string BoolTrue
-        {
-            get => btrue;
-            set
-            {
-                if (btrue == value)
-                    return;
-                btrue = value;
-                OnPropertyChanged(nameof(BoolTrue));
-            }
-        }
-
-        [Browsable(false)]
-        public string BoolFalse
-        {
-            get => bfalse;
-            set
-            {
-                if (bfalse == value)
-                    return;
-                bfalse = value;
-                OnPropertyChanged(nameof(BoolFalse));
             }
         }
 
@@ -1033,14 +1005,29 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public virtual bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
-        {
-            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);
-        }
+        public abstract bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision);
 
         public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
         {
             return CheckItem((DBItem)item, typedValue, comparer, comparision);
+        }
+
+        public virtual IEnumerable<T> Search<T>(CompareType comparer, DBColumn column, IEnumerable<T> list) where T : DBItem
+        {
+            foreach (T item in list)
+            {
+                if (CheckItem(item, column.GetValue(item), comparer))
+                    yield return item;
+            }
+        }
+
+        public virtual IEnumerable<T> Search<T>(CompareType comparer, object value, IEnumerable<T> list) where T : DBItem
+        {
+            foreach (T item in list)
+            {
+                if (CheckItem(item, value, comparer))
+                    yield return item;
+            }
         }
 
         public DBColumn GetVirtualColumn(DBTable table)
@@ -1077,296 +1064,274 @@ namespace DataWF.Data
 
         public abstract void Read<E>(ref Utf8JsonReader reader, E element, JsonSerializerOptions option = null);
 
-        public class GroupNameInvoker<T> : Invoker<T, string> where T : DBColumn
+        public class GroupNameInvoker : Invoker<DBColumn, string>
         {
-            public static readonly GroupNameInvoker<T> Instance = new GroupNameInvoker<T>();
+            public static readonly GroupNameInvoker Instance = new GroupNameInvoker();
 
             public override string Name => nameof(GroupName);
 
             public override bool CanWrite => true;
 
-            public override string GetValue(T target) => target.GroupName;
+            public override string GetValue(DBColumn target) => target.GroupName;
 
-            public override void SetValue(T target, string value) => target.GroupName = value;
+            public override void SetValue(DBColumn target, string value) => target.GroupName = value;
         }
 
-        public class PropertyNameInvoker<T> : Invoker<T, string> where T : DBColumn
+        public class PropertyNameInvoker : Invoker<DBColumn, string>
         {
-            public static readonly PropertyNameInvoker<T> Instance = new PropertyNameInvoker<T>();
+            public static readonly PropertyNameInvoker Instance = new PropertyNameInvoker();
 
             public override string Name => nameof(PropertyName);
 
             public override bool CanWrite => true;
 
-            public override string GetValue(T target) => target.PropertyName;
+            public override string GetValue(DBColumn target) => target.PropertyName;
 
-            public override void SetValue(T target, string value) => target.PropertyName = value;
+            public override void SetValue(DBColumn target, string value) => target.PropertyName = value;
         }
 
-        public class ReferencePropertyNameInvoker<T> : Invoker<T, string> where T : DBColumn
+        public class ReferencePropertyNameInvoker : Invoker<DBColumn, string>
         {
-            public static readonly ReferencePropertyNameInvoker<T> Instance = new ReferencePropertyNameInvoker<T>();
+            public static readonly ReferencePropertyNameInvoker Instance = new ReferencePropertyNameInvoker();
 
             public override string Name => nameof(ReferencePropertyName);
 
             public override bool CanWrite => true;
 
-            public override string GetValue(T target) => target.ReferencePropertyName;
+            public override string GetValue(DBColumn target) => target.ReferencePropertyName;
 
-            public override void SetValue(T target, string value) => target.ReferencePropertyName = value;
+            public override void SetValue(DBColumn target, string value) => target.ReferencePropertyName = value;
         }
 
-        public class ReferenceTableInvoker<T> : Invoker<T, DBTable> where T : DBColumn
+        public class ReferenceTableInvoker : Invoker<DBColumn, DBTable>
         {
-            public static readonly ReferenceTableInvoker<T> Instance = new ReferenceTableInvoker<T>();
+            public static readonly ReferenceTableInvoker Instance = new ReferenceTableInvoker();
 
             public override string Name => nameof(ReferenceTable);
 
             public override bool CanWrite => false;
 
-            public override DBTable GetValue(T target) => target.ReferenceTable;
+            public override DBTable GetValue(DBColumn target) => target.ReferenceTable;
 
-            public override void SetValue(T target, DBTable value) => target.ReferenceTable = value;
+            public override void SetValue(DBColumn target, DBTable value) => target.ReferenceTable = value;
         }
 
-        public class ReferenceTableNameInvoker<T> : Invoker<T, string> where T : DBColumn
+        public class ReferenceTableNameInvoker : Invoker<DBColumn, string>
         {
-            public static readonly ReferenceTableNameInvoker<T> Instance = new ReferenceTableNameInvoker<T>();
+            public static readonly ReferenceTableNameInvoker Instance = new ReferenceTableNameInvoker();
 
             public override string Name => "ReferenceTableName";
 
             public override bool CanWrite => false;
 
-            public override string GetValue(T target) => target.ReferenceTable?.Name;
+            public override string GetValue(DBColumn target) => target.ReferenceTable?.Name;
 
-            public override void SetValue(T target, string value) { }
+            public override void SetValue(DBColumn target, string value) { }
         }
 
-        public class IsViewInvoker<T> : Invoker<T, bool> where T : DBColumn
+        public class IsViewInvoker : Invoker<DBColumn, bool>
         {
-            public static readonly IsViewInvoker<T> Instance = new IsViewInvoker<T>();
+            public static readonly IsViewInvoker Instance = new IsViewInvoker();
 
             public override string Name => nameof(IsView);
 
             public override bool CanWrite => false;
 
-            public override bool GetValue(T target) => target.IsView;
+            public override bool GetValue(DBColumn target) => target.IsView;
 
-            public override void SetValue(T target, bool value) { }
+            public override void SetValue(DBColumn target, bool value) { }
         }
 
-        public class IsReferenceInvoker<T> : Invoker<T, bool> where T : DBColumn
+        public class IsReferenceInvoker : Invoker<DBColumn, bool>
         {
-            public static readonly IsReferenceInvoker<T> Instance = new IsReferenceInvoker<T>();
+            public static readonly IsReferenceInvoker Instance = new IsReferenceInvoker();
 
             public override string Name => nameof(IsReference);
 
             public override bool CanWrite => false;
 
-            public override bool GetValue(T target) => target.IsReference;
+            public override bool GetValue(DBColumn target) => target.IsReference;
 
-            public override void SetValue(T target, bool value) { }
+            public override void SetValue(DBColumn target, bool value) { }
         }
 
-        public class KeysInvoker<T> : Invoker<T, DBColumnKeys> where T : DBColumn
+        public class KeysInvoker : Invoker<DBColumn, DBColumnKeys>
         {
-            public static readonly KeysInvoker<T> Instance = new KeysInvoker<T>();
+            public static readonly KeysInvoker Instance = new KeysInvoker();
             public override string Name => nameof(Keys);
 
             public override bool CanWrite => true;
 
-            public override DBColumnKeys GetValue(T target) => target.Keys;
+            public override DBColumnKeys GetValue(DBColumn target) => target.Keys;
 
-            public override void SetValue(T target, DBColumnKeys value) => target.Keys = value;
+            public override void SetValue(DBColumn target, DBColumnKeys value) => target.Keys = value;
         }
 
-        public class OrderInvoker<T> : Invoker<T, int> where T : DBColumn
+        public class OrderInvoker : Invoker<DBColumn, int>
         {
-            public static readonly OrderInvoker<T> Instance = new OrderInvoker<T>();
+            public static readonly OrderInvoker Instance = new OrderInvoker();
             public override string Name => nameof(Order);
 
             public override bool CanWrite => true;
 
-            public override int GetValue(T target) => target.Order;
+            public override int GetValue(DBColumn target) => target.Order;
 
-            public override void SetValue(T target, int value) => target.Order = value;
+            public override void SetValue(DBColumn target, int value) => target.Order = value;
         }
 
-        public class SizeInvoker<T> : Invoker<T, int> where T : DBColumn
+        public class SizeInvoker : Invoker<DBColumn, int>
         {
             public override string Name => nameof(Size);
 
             public override bool CanWrite => true;
 
-            public override int GetValue(T target) => target.Size;
+            public override int GetValue(DBColumn target) => target.Size;
 
-            public override void SetValue(T target, int value) => target.Size = value;
+            public override void SetValue(DBColumn target, int value) => target.Size = value;
         }
 
-        public class ScaleInvoker<T> : Invoker<T, int> where T : DBColumn
+        public class ScaleInvoker : Invoker<DBColumn, int>
         {
             public override string Name => nameof(Scale);
 
             public override bool CanWrite => true;
 
-            public override int GetValue(T target) => target.Scale;
+            public override int GetValue(DBColumn target) => target.Scale;
 
-            public override void SetValue(T target, int value) => target.Scale = value;
+            public override void SetValue(DBColumn target, int value) => target.Scale = value;
         }
 
-        public class CultureCodeInvoker<T> : Invoker<T, string> where T : DBColumn
+        public class CultureCodeInvoker : Invoker<DBColumn, string>
         {
             public override string Name => nameof(CultureCode);
 
             public override bool CanWrite => true;
 
-            public override string GetValue(T target) => target.CultureCode;
+            public override string GetValue(DBColumn target) => target.CultureCode;
 
-            public override void SetValue(T target, string value) => target.CultureCode = value;
+            public override void SetValue(DBColumn target, string value) => target.CultureCode = value;
         }
 
-        public class FormatInvoker<T> : Invoker<T, string> where T : DBColumn
+        public class FormatInvoker : Invoker<DBColumn, string>
         {
             public override string Name => nameof(Format);
 
             public override bool CanWrite => true;
 
-            public override string GetValue(T target) => target.Format;
+            public override string GetValue(DBColumn target) => target.Format;
 
-            public override void SetValue(T target, string value) => target.Format = value;
+            public override void SetValue(DBColumn target, string value) => target.Format = value;
         }
 
-        public class DBDataTypeInvoker<T> : Invoker<T, DBDataType> where T : DBColumn
+        public class DBDataTypeInvoker : Invoker<DBColumn, DBDataType>
         {
             public override string Name => nameof(DBDataType);
 
             public override bool CanWrite => true;
 
-            public override DBDataType GetValue(T target) => target.DBDataType;
+            public override DBDataType GetValue(DBColumn target) => target.DBDataType;
 
-            public override void SetValue(T target, DBDataType value) => target.DBDataType = value;
+            public override void SetValue(DBColumn target, DBDataType value) => target.DBDataType = value;
         }
 
-        public class DataTypeInvoker<T> : Invoker<T, Type> where T : DBColumn
+        public class DataTypeInvoker : Invoker<DBColumn, Type>
         {
             public override string Name => nameof(DBColumn.DataType);
 
             public override bool CanWrite => true;
 
-            public override Type GetValue(T target) => target.DataType;
+            public override Type GetValue(DBColumn target) => target.DataType;
 
-            public override void SetValue(T target, Type value) => target.DataType = value;
+            public override void SetValue(DBColumn target, Type value) => target.DataType = value;
         }
 
-        public class ColumnTypeInvoker<T> : Invoker<T, DBColumnTypes> where T : DBColumn
+        public class ColumnTypeInvoker : Invoker<DBColumn, DBColumnTypes>
         {
             public override string Name => nameof(ColumnType);
 
             public override bool CanWrite => true;
 
-            public override DBColumnTypes GetValue(T target) => target.ColumnType;
+            public override DBColumnTypes GetValue(DBColumn target) => target.ColumnType;
 
-            public override void SetValue(T target, DBColumnTypes value) => target.ColumnType = value;
+            public override void SetValue(DBColumn target, DBColumnTypes value) => target.ColumnType = value;
         }
 
-        public class DefaultValueInvoker<T> : Invoker<T, string> where T : DBColumn
+        public class DefaultValueInvoker : Invoker<DBColumn, string>
         {
             public override string Name => nameof(DefaultValue);
 
             public override bool CanWrite => true;
 
-            public override string GetValue(T target) => target.DefaultValue;
+            public override string GetValue(DBColumn target) => target.DefaultValue;
 
-            public override void SetValue(T target, string value) => target.DefaultValue = value;
+            public override void SetValue(DBColumn target, string value) => target.DefaultValue = value;
         }
 
-        public class QueryInvoker<T> : Invoker<T, string> where T : DBColumn
+        public class QueryInvoker : Invoker<DBColumn, string>
         {
             public override string Name => nameof(Query);
 
             public override bool CanWrite => true;
 
-            public override string GetValue(T target) => target.Query;
+            public override string GetValue(DBColumn target) => target.Query;
 
-            public override void SetValue(T target, string value) => target.Query = value;
+            public override void SetValue(DBColumn target, string value) => target.Query = value;
         }
 
-        public class SubListInvoker<T> : Invoker<T, string> where T : DBColumn
+        public class SubListInvoker : Invoker<DBColumn, string>
         {
             public override string Name => nameof(SubList);
 
             public override bool CanWrite => true;
 
-            public override string GetValue(T target) => target.SubList;
+            public override string GetValue(DBColumn target) => target.SubList;
 
-            public override void SetValue(T target, string value) => target.SubList = value;
+            public override void SetValue(DBColumn target, string value) => target.SubList = value;
         }
 
-        public class BoolTrueInvoker<T> : Invoker<T, string> where T : DBColumn
-        {
-            public override string Name => nameof(BoolTrue);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.BoolTrue;
-
-            public override void SetValue(T target, string value) => target.BoolTrue = value;
-        }
-
-        public class BoolFalseInvoker<T> : Invoker<T, string> where T : DBColumn
-        {
-            public override string Name => nameof(BoolFalse);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.BoolFalse;
-
-            public override void SetValue(T target, string value) => target.BoolFalse = value;
-        }
-
-        public class SqlNameInvoker<T> : Invoker<T, string> where T : DBColumn
+        public class SqlNameInvoker : Invoker<DBColumn, string>
         {
             public override string Name => nameof(SqlName);
 
             public override bool CanWrite => false;
 
-            public override string GetValue(T target) => target.SqlName;
+            public override string GetValue(DBColumn target) => target.SqlName;
 
-            public override void SetValue(T target, string value) { }
+            public override void SetValue(DBColumn target, string value) { }
         }
 
-        public class TargetTypeInvoker<T> : Invoker<T, Type> where T : DBColumn
+        public class TargetTypeInvoker : Invoker<DBColumn, Type>
         {
             public override string Name => nameof(DBColumn.TargetType);
 
             public override bool CanWrite => false;
 
-            public override Type GetValue(T target) => target.TargetType;
+            public override Type GetValue(DBColumn target) => target.TargetType;
 
-            public override void SetValue(T target, Type value) { }
+            public override void SetValue(DBColumn target, Type value) { }
         }
 
-        public class BaseNameInvoker<T> : Invoker<T, string> where T : DBColumn
+        public class BaseNameInvoker : Invoker<DBColumn, string>
         {
-            public static readonly BaseNameInvoker<T> Instance = new BaseNameInvoker<T>();
+            public static readonly BaseNameInvoker Instance = new BaseNameInvoker();
             public override string Name => nameof(DBColumn.BaseName);
 
             public override bool CanWrite => true;
 
-            public override string GetValue(T target) => target.BaseName;
+            public override string GetValue(DBColumn target) => target.BaseName;
 
-            public override void SetValue(T target, string value) => target.BaseName = value;
+            public override void SetValue(DBColumn target, string value) => target.BaseName = value;
         }
 
-        public class BaseColumnInvoker<T> : Invoker<T, DBColumn> where T : DBColumn
+        public class BaseColumnInvoker : Invoker<DBColumn, DBColumn>
         {
             public override string Name => nameof(DBColumn.BaseColumn);
 
             public override bool CanWrite => true;
 
-            public override DBColumn GetValue(T target) => target.BaseColumn;
+            public override DBColumn GetValue(DBColumn target) => target.BaseColumn;
 
-            public override void SetValue(T target, DBColumn value) => target.BaseColumn = value;
+            public override void SetValue(DBColumn target, DBColumn value) => target.BaseColumn = value;
         }
     }
 }

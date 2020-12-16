@@ -14,14 +14,14 @@ namespace DataWF.Test.Common
             var pull = new Pull<int>(blockSize);
             for (int i = 0; i < 1000; i++)
             {
-                var index = Pull.GetSeqHandler(i, blockSize);
+                var index = PullHandler.FromSeqence(i, blockSize);
                 Debug.WriteLine($"pull index {i} = {(int)index} left {index.Block} right {index.BlockIndex}");
                 pull.SetValue(index, i);
             }
 
             for (int i = 0; i < 1000; i++)
             {
-                var index = Pull.GetSeqHandler(i, blockSize);
+                var index = PullHandler.FromSeqence(i, blockSize);
                 Assert.AreEqual(i, pull.GetValue(index));
             }
         }
@@ -33,14 +33,14 @@ namespace DataWF.Test.Common
             var pull = new NullablePull<int>(blockSize);
             for (int i = 0; i < 1000; i++)
             {
-                var index = Pull.GetSeqHandler(i, blockSize);
+                var index = PullHandler.FromSeqence(i, blockSize);
                 Debug.WriteLine($"pull index {i} = {(int)index} left {index.Block} right {index.BlockIndex}");
                 pull.SetValue<int?>(index, i);
             }
 
             for (int i = 0; i < 1000; i++)
             {
-                var index = Pull.GetSeqHandler(i, blockSize);
+                var index = PullHandler.FromSeqence(i, blockSize);
                 Assert.AreEqual(i, pull.GetValue(index));
             }
         }

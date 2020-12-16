@@ -37,6 +37,7 @@ namespace DataWF.Data
         protected int order = -1;
         protected string alias;
         private QItem holder;
+        private IQItemList list;
 
         public QItem()
         {
@@ -46,7 +47,11 @@ namespace DataWF.Data
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public IQItemList List => (IQItemList)Containers.FirstOrDefault(p => p is IQItemList);
+        public IQItemList List
+        {
+            get => list;
+            set => list = value;
+        }
 
         public int Order
         {

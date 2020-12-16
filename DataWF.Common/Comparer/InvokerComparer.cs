@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -12,10 +13,9 @@ namespace DataWF.Common
     /// <summary>
     /// Comparer used ReflectionAccessor to get property of item.
     /// </summary>
-    public class InvokerComparer : IComparer, IEqualityComparer, INotifyPropertyChanged, INamed
+    public abstract class InvokerComparer : IComparer, IEqualityComparer, INotifyPropertyChanged, INamed
     {
-        private ListSortDirection direction;
-        private IInvoker invoker;
+        private ListSortDirection direction;        
         private string name;
 
         //bool hash = true;
@@ -70,16 +70,8 @@ namespace DataWF.Common
             }
         }
 
-        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
-        public virtual IInvoker Invoker
-        {
-            get => invoker;
-            set
-            {
-                invoker = value;
-                Name = invoker?.Name;
-            }
-        }
+        [JsonIgnore, XmlIgnore]
+        public abstract IInvoker Invoker { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -88,45 +80,17 @@ namespace DataWF.Common
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public virtual int CompareVal(object x, object key)
-        {
-            var val = Invoker.GetValue(x);
-            return ListHelper.Compare(val, key, (IComparer)null);
-        }
+        public abstract int CompareVal(object x, object key);
 
-        public virtual int Compare(object x, object y)
-        {
-            var xValue = x == null ? null : Invoker.GetValue(x);
-            var yValue = y == null ? null : Invoker.GetValue(y);
-            var rez = ListHelper.Compare(xValue, yValue, (IComparer)null);
-            //if (hash && rez == 0 && x != null && y != null)
-            //    rez = x.GetHashCode().CompareTo(y.GetHashCode());
-            return Direction == ListSortDirection.Ascending ? rez : -rez;
-        }
+        public abstract int Compare(object x, object y);
 
-        public new virtual bool Equals(object x, object y)
-        {
-            var xValue = x == null ? null : Invoker.GetValue(x);
-            var yValue = y == null ? null : Invoker.GetValue(y);
-            var rez = ListHelper.Equal(xValue, yValue);
-            //if (hash && rez == 0 && x != null && y != null)
-            //    rez = x.GetHashCode().Equals(y.GetHashCode());
-            return rez;
-        }
+        public new abstract bool Equals(object x, object y);
 
-        public int GetHashCode(object obj)
-        {
-            var objValue = obj == null ? null : Invoker.GetValue(obj);
-            return objValue?.GetHashCode() ?? obj.GetHashCode();
-        }
+        public abstract int GetHashCode(object obj);
 
         public override bool Equals(object obj)
         {
-            if (obj is InvokerComparer comp)
-            {
-                return Equals(comp);
-            }
-            return object.ReferenceEquals(this, obj);
+            return obj is InvokerComparer comp ? Equals(comp) : ReferenceEquals(this, obj);
         }
 
         private bool Equals(InvokerComparer comp)

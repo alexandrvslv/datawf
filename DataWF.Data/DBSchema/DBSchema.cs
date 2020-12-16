@@ -391,7 +391,7 @@ namespace DataWF.Data
                 writer.WriteStartElement("body");
                 writer.WriteElementString("H1", $"{DisplayName} ({ DisplayName})");
                 var tables = Tables.ToList();
-                tables.Sort(new InvokerComparer<DBTable>("Name"));
+                tables.Sort(new InvokerComparer<DBTable, string>("Name"));
                 foreach (var table in tables)
                 {
                     if (table.Type == DBTableType.Table && !(table is IDBLogTable))

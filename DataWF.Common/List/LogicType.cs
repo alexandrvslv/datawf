@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace DataWF.Common
 {
-    public struct LogicType
+    public readonly struct LogicType
     {
         public static readonly LogicType Undefined = new LogicType(LogicTypes.Undefined);
         public static readonly LogicType And = new LogicType(LogicTypes.And);

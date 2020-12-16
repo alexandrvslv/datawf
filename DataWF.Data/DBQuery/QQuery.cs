@@ -1014,7 +1014,7 @@ namespace DataWF.Data
         public QParam BuildNameParam(string property, CompareType comparer, object value)
         {
             var parameter = new QParam();
-            foreach (var item in Table.Columns.Select(DBColumn.GroupNameInvoker<DBColumn>.Instance, CompareType.Equal, property))
+            foreach (var item in Table.Columns.Select(DBColumn.GroupNameInvoker.Instance, CompareType.Equal, property))
             {
                 parameter.Parameters.Add(CreateParam(LogicType.Or, item, comparer, value));
             }

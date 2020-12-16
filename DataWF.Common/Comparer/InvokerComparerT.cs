@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DataWF.Common
 {
-    public class InvokerComparer<T> : InvokerComparer, IComparer<T>, IEqualityComparer<T>
+    public abstract class InvokerComparer<T> : InvokerComparer, IComparer<T>, IEqualityComparer<T>
     {
         public InvokerComparer()
         { }
@@ -25,31 +25,13 @@ namespace DataWF.Common
         {
         }
 
-        public override IInvoker Invoker
-        {
-            get => base.Invoker ?? (base.Invoker = EmitInvoker.Initialize<T>(Name));
-            set => base.Invoker = value;
-        }
+        public abstract int CompareVal(T x, object key);
 
-        public virtual int CompareVal(T x, object key)
-        {
-            return base.CompareVal(x, key);
-        }
+        public abstract int Compare(T x, T y);
 
-        public virtual int Compare(T x, T y)
-        {
-            return base.Compare(x, y);
-        }
+        public abstract bool Equals(T x, T y);
 
-        public virtual bool Equals(T x, T y)
-        {
-            return base.Equals(x, y);
-        }
-
-        public virtual int GetHashCode(T obj)
-        {
-            return base.GetHashCode(obj);
-        }
+        public abstract int GetHashCode(T obj);
 
         public void Format(StringBuilder builder)
         {

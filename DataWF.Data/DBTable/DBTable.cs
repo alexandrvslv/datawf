@@ -208,7 +208,7 @@ namespace DataWF.Data
 
         public IComparer DefaultComparer;
         public int Hash = -1;
-        protected internal readonly int index = ++tableIndex;
+        protected internal int index = ++tableIndex;
         protected internal ConcurrentQueue<PullHandler> FreeHandlers = new ConcurrentQueue<PullHandler>();
         protected readonly ConcurrentDictionary<Type, List<DBColumn>> mapTypeColumn = new ConcurrentDictionary<Type, List<DBColumn>>();
         protected readonly ConcurrentDictionary<Type, List<IInvoker>> refingInvokers = new ConcurrentDictionary<Type, List<IInvoker>>();
@@ -920,7 +920,7 @@ namespace DataWF.Data
             {
                 return handler;
             }
-            return Pull.GetSeqHandler(NextHash(), BlockSize);
+            return PullHandler.FromSeqence(NextHash(), BlockSize);
         }
 
         public event EventHandler<DBItemEventArgs> RowUpdated;
@@ -1050,7 +1050,7 @@ namespace DataWF.Data
             return Interlocked.Increment(ref Hash);
         }
 
-        public async Task Save(IList rows = null)
+        public async Task Save(IEnumerable<DBItem> rows = null)
         {
             using (var transaction = new DBTransaction(Connection))
             {
@@ -1067,15 +1067,15 @@ namespace DataWF.Data
             }
         }
 
-        public async Task Save(DBTransaction transaction, IList rows = null)
+        public async Task Save(DBTransaction transaction, IEnumerable<DBItem> rows = null)
         {
             if (rows == null)
-                rows = GetChangedItems().ToList();
-
-            if (rows.Count > 0)
+                rows = GetChangedItems();
+            var items = rows.ToList();
+            if (items.Count > 0)
             {
-                ListHelper.QuickSort(rows, new InvokerComparer(typeof(DBItem), nameof(DBItem.UpdateState)));
-                foreach (DBItem row in rows)
+                ListHelper.QuickSort<DBItem>(items, new InvokerComparer<DBItem, DBUpdateState>(nameof(DBItem.UpdateState)));
+                foreach (DBItem row in items)
                 {
                     row.Attach();
                     transaction.AddItem(row);

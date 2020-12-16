@@ -34,7 +34,7 @@ namespace DataWF.Common
             }
             else
             {
-                comparer = new InvokerComparer<T>(invoker, direction);
+                throw new Exception("Can't create comparer!");
             };
             Add(comparer);
             return comparer;

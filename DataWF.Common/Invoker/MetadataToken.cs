@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace DataWF.Common
 {
-    public struct MetadataToken : IComparable<MetadataToken>, IEquatable<MetadataToken>
+    public readonly struct MetadataToken : IComparable<MetadataToken>, IEquatable<MetadataToken>
     {
         public static MetadataToken GetToken(MemberInfo info, bool declaringType = true)
         {

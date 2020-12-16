@@ -56,11 +56,6 @@ namespace DataWF.Common
             array = narray;
         }
 
-        public static PullHandler GetSeqHandler(int index, int blockSize)
-        {
-            return new PullHandler((short)(index / blockSize), (short)(index % blockSize));
-        }
-
         protected int blockCount;
         protected int blockSize;
         private Type itemType;
@@ -70,7 +65,8 @@ namespace DataWF.Common
             BlockSize = blockSize;
         }
 
-        public virtual int Capacity { get { return 0; } }
+        public abstract int Capacity { get; }
+
         public int BlockSize
         {
             get => blockSize;
@@ -84,7 +80,7 @@ namespace DataWF.Common
                     }
                     else
                     {
-                        throw new Exception("Unable set block size after data modified");
+                        throw new Exception("Unable set block size after allocation!");
                     }
                 }
             }
@@ -96,7 +92,7 @@ namespace DataWF.Common
             set => itemType = value;
         }
 
-        public PullHandler GetSequenceHandler(int index) => GetSeqHandler(index, blockSize);
+        public PullHandler GetSequenceHandler(int index) => PullHandler.FromSeqence(index, blockSize);
 
         public abstract object Get(int index);
 
@@ -106,37 +102,17 @@ namespace DataWF.Common
 
         public abstract void Set(short block, short blockIndex, object value);
 
-        public T GetValue<T>(PullHandler handler)
-        {
-            return GetValue<T>(handler.Block, handler.BlockIndex);
-        }
+        public T GetValue<T>(in PullHandler handler) => ((GenericPull<T>)this).GetValue(in handler);
 
-        public T GetValue<T>(int index)
-        {
-            (short block, short blockIndex) = Helper.OneToTwoShift(index);
-            return GetValue<T>(block, blockIndex);
-        }
+        public void SetValue<T>(in PullHandler handler, T value) => ((GenericPull<T>)this).SetValue(handler, value);
 
-        public T GetValue<T>(short block, short blockIndex)
-        {
-            return ((GenericPull<T>)this).GetValue(block, blockIndex);
-        }
+        public T GetValue<T>(int index) => ((GenericPull<T>)this).GetValue(index);
 
-        public void SetValue<T>(PullHandler handler, T value)
-        {
-            ((GenericPull<T>)this).SetValue(handler.Block, handler.BlockIndex, value);
-        }
+        public void SetValue<T>(int index, T value) => ((GenericPull<T>)this).SetValue(index, value);
 
-        public void SetValue<T>(int index, T value)
-        {
-            (short block, short blockIndex) = Helper.OneToTwoShift(index);
-            SetValue(block, blockIndex, value);
-        }
+        public T GetValue<T>(short block, short blockIndex) => ((GenericPull<T>)this).GetValue(new PullHandler(block, blockIndex));
 
-        public void SetValue<T>(short block, short blockIndex, T value)
-        {
-            ((GenericPull<T>)this).SetValue(block, blockIndex, value);
-        }
+        public void SetValue<T>(short block, short blockIndex, T value) => ((GenericPull<T>)this).SetValue(new PullHandler(block, blockIndex), value);
 
         public abstract bool EqualNull(object value);
 

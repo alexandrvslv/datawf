@@ -191,7 +191,7 @@ namespace DataWF.Data
         public virtual T GetValue(DBItem item)
         {
             if (pull != null)
-                return pull.GetValue(item.Handler);
+                return pull.GetValue(item.handler);
             else if (typedPropertyInvoker != null)
                 return typedPropertyInvoker.GetValue(item);
             return default(T);
@@ -270,11 +270,12 @@ namespace DataWF.Data
         public override R GetReference<R>(DBItem item, ref R reference, DBLoadParam param)
         {
             T value = typedPropertyInvoker.GetValue(item);
+            var isEmpty = Equal(value, default(T));
             var id = reference == null ? default(T) : GetReferenceId(reference);
-            if (!Equal(value, default(T)) && Equal(value, id))
+            if (!isEmpty && Equal(value, id))
                 return reference;
 
-            return reference = value == null ? (R)null : (R)LoadReference(value, param);
+            return reference = isEmpty ? (R)null : (R)LoadReference(value, param);
         }
 
         public override void SetReference<R>(DBItem item, R reference)
@@ -657,7 +658,7 @@ namespace DataWF.Data
 
         public override bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
         {
-            return ListHelper.CheckItemT(GetValue(item), typedValue, comparer, (IComparer<T>)comparision);
+            return CheckItem(item, GetValue(item), typedValue, comparer);
         }
 
         public override bool CheckItem(DBItem item, object val2, CompareType comparer)
@@ -730,6 +731,40 @@ namespace DataWF.Data
                 default:
                     return CheckItem(item, val1, Parse(val2), comparer);
             }
+        }
+
+        public virtual IEnumerable<TT> Search<TT>(CompareType comparer, T value, IEnumerable<TT> list) where TT : DBItem
+        {
+            foreach (TT item in list)
+            {
+                if (CheckItem(item, value, comparer))
+                    yield return item;
+            }
+        }
+
+        public virtual IEnumerable<TT> Search<TT>(CompareType comparer, DBColumn<T> column, IEnumerable<TT> list) where TT : DBItem
+        {
+            foreach (TT item in list)
+            {
+                if (CheckItem(item, column.GetValue(item), comparer))
+                    yield return item;
+            }
+        }
+
+        public override IEnumerable<TT> Search<TT>(CompareType comparer, DBColumn column, IEnumerable<TT> list)
+        {
+            if (column is DBColumn<T> typedColumn)
+                return Search(comparer, typedColumn, list);
+            return base.Search(comparer, column, list);
+        }
+
+        public override IEnumerable<TT> Search<TT>(CompareType comparer, object value, IEnumerable<TT> list)
+        {
+            if (value is T typedValue)
+                return Search(comparer, typedValue, list);
+            if (value == null)
+                return Search(comparer, default(T), list);
+            return base.Search(comparer, value, list);
         }
 
         T IValuedInvoker<T>.GetValue(object target)

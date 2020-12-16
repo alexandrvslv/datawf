@@ -11,7 +11,7 @@ namespace DataWF.Common
     {
         protected readonly IDictionary<K, ThreadSafeList<T>> Dictionary;
         protected readonly IEqualityComparer<K> Comparer;
-        protected readonly K NullKey;
+        protected K NullKey;
 
         public ListIndex(IValuedInvoker<K> invoker, K nullKey, IEqualityComparer<K> comparer = null, bool concurrent = false)
         {

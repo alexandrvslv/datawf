@@ -33,19 +33,15 @@ namespace DataWF.Data
         private readonly IComparer comparer;
         private readonly DBColumn column;
         //private string property;
-        public SortIndex(DBTable list, string property)
+        public SortIndex(DBTable table, string property)
         {
-            this.row = list.NewItem(DBUpdateState.Default);
-            this.list = list;
+            this.row = table.NewItem(DBUpdateState.Default);
+            this.list = table;
             //this.property = property;
-            if (list.Columns.Contains(property))
+            if (table.Columns.Contains(property))
             {
-                column = list.Columns[property];
+                column = table.Columns[property];
                 comparer = column.CreateComparer(ListSortDirection.Ascending);
-            }
-            else
-            {
-                comparer = new InvokerComparer(typeof(DBItem), property, ListSortDirection.Ascending);
             }
             Refresh();
         }

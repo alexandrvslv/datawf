@@ -20,6 +20,7 @@
 using DataWF.Common;
 using System;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 
 namespace DataWF.Data
@@ -27,10 +28,10 @@ namespace DataWF.Data
     public class DataReaderStream : Stream
     {
         private long position = 0;
-        private readonly long? length;
+        private long? length;
         private readonly int dataColumn;
 
-        public DataReaderStream(IDataReader reader, bool withLength)
+        public DataReaderStream(DbDataReader reader, bool withLength)
         {
             Reader = reader;
             if (withLength)
@@ -40,7 +41,7 @@ namespace DataWF.Data
             }
         }
 
-        public IDataReader Reader { get; }
+        public DbDataReader Reader { get; }
 
         public override bool CanRead => true;
 

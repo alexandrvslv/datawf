@@ -67,6 +67,20 @@ namespace DataWF.Data
         public virtual string AccessorName => ToString();
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
+        public bool Loading
+        {
+            get => (state & DBItemState.Load) == DBItemState.Load;
+            set
+            {
+                if (Loading != value)
+                {
+                    state = value ? state | DBItemState.Load : state & ~DBItemState.Load;
+                    //OnPropertyChanged<bool>();
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool Attached => (state & DBItemState.Attached) == DBItemState.Attached;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -140,7 +154,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 1002)]
+        [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 2)]
         public DateTime Stamp
         {
             get => GetValue(Table.StampKey);
@@ -560,32 +574,6 @@ namespace DataWF.Data
         {
             column.SetReference<R>(this, value);
             return value;
-        }
-
-        public bool GetBool(DBColumn column)
-        {
-            if (column == null || (column.Keys & DBColumnKeys.Boolean) != DBColumnKeys.Boolean)
-                return false;
-
-            return this[column].ToString() == column.BoolTrue;
-        }
-
-        public bool GetBool(string ColumnCode)
-        {
-            return GetBool(Table.Columns[ColumnCode]);
-        }
-
-        public void SetBool(DBColumn Column, bool value)
-        {
-            if (Column == null || (Column.Keys & DBColumnKeys.Boolean) != DBColumnKeys.Boolean)
-                return;
-
-            this[Column] = value ? Column.BoolTrue : Column.BoolFalse;
-        }
-
-        public void SetBool(string ColumnCode, bool value)
-        {
-            SetBool(Table.Columns[ColumnCode], value);
         }
 
         public Task Delete(DBTransaction transaction)

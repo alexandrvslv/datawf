@@ -258,7 +258,7 @@ namespace DataWF.Data
 
         public override void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
-            if (column.PullIndex is PullIndex<DBItem, V> pullIndex)
+            if (column.PullIndex is IPullInIndex<T, V> pullIndex)
                 pullIndex.Remove(item, value);
             foreach (var table in virtualTables)
             {
@@ -277,7 +277,7 @@ namespace DataWF.Data
                 return;
             }
 
-            if (column?.PullIndex is PullIndex<DBItem, V> pullIndex)
+            if (column?.PullIndex is IPullInIndex<T, V> pullIndex)
                 pullIndex.Add(item, value);
             foreach (var table in virtualTables)
             {
@@ -851,11 +851,11 @@ namespace DataWF.Data
         public virtual T LoadFromReader(DBTransaction transaction)
         {
             T item = null;
-            if (transaction.ReaderPrimaryKey >= 0)
+            if (transaction.ReaderPrimaryKey > -1)
             {
                 item = PrimaryKey.ReadAndSelect<T>(transaction, transaction.ReaderPrimaryKey);
             }
-            if (transaction.ReaderStampKey >= 0 && !transaction.Reader.IsDBNull(transaction.ReaderStampKey))
+            if (transaction.ReaderStampKey > -1 && !transaction.Reader.IsDBNull(transaction.ReaderStampKey))
             {
                 var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
                 stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
@@ -1000,7 +1000,7 @@ namespace DataWF.Data
                     if (rColumn.Temp != null)
                         return Select(lColumn, param.Comparer, rColumn.Temp, list);
 
-                    return Select(lColumn, param.Comparer, rColumn.Column, list);
+                    return lColumn.Search(param.Comparer, rColumn.Column, list ?? this);
                 }
 
                 return Select(lColumn, param.Comparer, param.RightValue, list);
@@ -1014,7 +1014,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> Search(QParam param, IEnumerable<T> list = null)
         {
-            list = list ?? AsReadOnly();
+            list = list ?? this;
             foreach (T row in list)
             {
                 if (QParam.CheckItem(row, param.LeftItem.GetValue(row), param.RightItem.GetValue(row), param.Comparer))
@@ -1094,7 +1094,7 @@ namespace DataWF.Data
             {
                 return index.SelectOne(value);
             }
-            return Select(column, CompareType.Equal, value).FirstOrDefault();
+            return column.Search<T>(CompareType.Equal, value, this).FirstOrDefault();
         }
 
         public T SelectOne(DBColumn column, object value)
@@ -1104,7 +1104,7 @@ namespace DataWF.Data
             {
                 return (T)index.SelectOneObject(value);
             }
-            return Select(column, CompareType.Equal, value).FirstOrDefault();
+            return column.Search<T>(CompareType.Equal, value, this).FirstOrDefault();
         }
 
         public override IEnumerable<DBItem> SelectItems(DBColumn column, CompareType comparer, object value)
@@ -1112,20 +1112,10 @@ namespace DataWF.Data
             return Select(column, comparer, value);
         }
 
-        public IEnumerable<T> Select(DBColumn lColumn, CompareType comparer, DBColumn rColumn, IEnumerable<T> list = null)
-        {
-            list = list ?? this;
-            if (lColumn == null)
-                return list;
-
-            return Search(lColumn, comparer, rColumn, list);
-        }
-
         public IEnumerable<T> Select(DBColumn column, CompareType comparer, object value, IEnumerable<T> list = null)
         {
-            list = list ?? this;
             if (column == null)
-                return list;
+                return list ?? this;
 
             value = Optimisation(column, comparer, value);
             if (value is IEnumerable<T> enumerabble)
@@ -1133,54 +1123,23 @@ namespace DataWF.Data
                 return enumerabble;
             }
 
-            if (column.PullIndex != null)
+            if (list == null && column.PullIndex != null)
             {
                 return column.SelectIndex<T>(value, comparer);
             }
-            return Search(column, comparer, value, list);
-        }
-
-        public IEnumerable<T> Search(DBColumn column, CompareType comparer, object value, IEnumerable<T> list)
-        {
-            list = list ?? this;
-            foreach (T row in list)
-            {
-                if (column.CheckItem(row, value, comparer))
-                    yield return row;
-            }
+            return column.Search(comparer, value, list ?? this);
         }
 
         public IEnumerable<T> Select<V>(DBColumn<V> column, CompareType comparer, V value, IEnumerable<T> list = null)
         {
-            list = list ?? this;
             if (column == null)
-                return list;
+                return list ?? this;
 
-            if (column.PullIndex is IPullOutIndex<T, V> index)
+            if (list == null && column.PullIndex is IPullOutIndex<T, V> index)
             {
                 return index.Select(value, comparer);
             }
-            return Search(column, comparer, value, list);
-        }
-
-        public IEnumerable<T> Search<V>(DBColumn<V> column, CompareType comparer, V value, IEnumerable<T> list)
-        {
-            list = list ?? this;
-            foreach (T row in list)
-            {
-                if (column.CheckItem(row, value, comparer))
-                    yield return row;
-            }
-        }
-
-        public IEnumerable<T> Search(DBColumn lColumn, CompareType comparer, DBColumn rColumn, IEnumerable<T> list)
-        {
-            list = list ?? this;
-            foreach (T row in list)
-            {
-                if (lColumn.CheckItem(row, rColumn.GetValue(row), comparer))
-                    yield return row;
-            }
+            return column.Search(comparer, value, list ?? this);
         }
 
         public override void Dispose()

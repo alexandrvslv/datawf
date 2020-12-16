@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace DataWF.Common
 {
-    public struct EmptyEnumerator<T> : IEnumerator<T>
+    public readonly struct EmptyEnumerator<T> : IEnumerator<T>
     {
         public static readonly EmptyEnumerator<T> Default = new EmptyEnumerator<T>();
 
@@ -21,8 +21,8 @@ namespace DataWF.Common
     public struct ThreadSafeEnumerator<T> : IEnumerator<T>, IEnumerator
     {
         private int i;
-        private readonly uint count;
-        private readonly IList<T> items;
+        private uint count;
+        private IList<T> items;
         private T current;
 
         public ThreadSafeEnumerator(IList<T> items) : this(items, items.Count)
@@ -77,8 +77,8 @@ namespace DataWF.Common
     public struct ThreadSafeArrayEnumerator<T> : IEnumerator<T>, IEnumerator
     {
         private int i;
-        private readonly uint count;
-        private readonly T[] items;
+        private uint count;
+        private T[] items;
         private T current;
 
         public ThreadSafeArrayEnumerator(T[] items, int count)

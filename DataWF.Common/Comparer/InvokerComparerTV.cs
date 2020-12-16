@@ -5,6 +5,8 @@ namespace DataWF.Common
 {
     public class InvokerComparer<T, V> : InvokerComparer<T>
     {
+        private IInvoker<T, V> valuedInvoker;
+
         public InvokerComparer()
         { }
 
@@ -13,7 +15,7 @@ namespace DataWF.Common
         {
         }
 
-        public InvokerComparer(IValuedInvoker<V> accessor, ListSortDirection direction = ListSortDirection.Ascending)
+        public InvokerComparer(IInvoker<T, V> accessor, ListSortDirection direction = ListSortDirection.Ascending)
             : base(accessor, direction)
         {
         }
@@ -23,10 +25,19 @@ namespace DataWF.Common
         {
         }
 
-        public IValuedInvoker<V> ValueInvoker
+        public override IInvoker Invoker
         {
-            get => (IValuedInvoker<V>)Invoker;
-            set => Invoker = value;
+            get => ValueInvoker;
+            set
+            {
+                valuedInvoker = (IInvoker<T, V>)value;
+                Name = valuedInvoker.Name;
+            }
+        }
+
+        public IInvoker<T, V> ValueInvoker
+        {
+            get => valuedInvoker ?? (valuedInvoker = (IInvoker<T, V>)EmitInvoker.Initialize<T>(Name));
         }
 
         public override int CompareVal(object x, object key)
@@ -55,7 +66,7 @@ namespace DataWF.Common
         {
             var xValue = x == null ? default(V) : ValueInvoker.GetValue(x);
             var yValue = y == null ? default(V) : ValueInvoker.GetValue(y);
-            var result = ListHelper.Compare(xValue, yValue, null, false);
+            var result = ListHelper.Compare<V>(xValue, yValue, null, false);
             return Direction == ListSortDirection.Ascending ? result : -result;
         }
 
@@ -69,6 +80,11 @@ namespace DataWF.Common
             var xValue = x == null ? default(V) : ValueInvoker.GetValue(x);
             var yValue = y == null ? default(V) : ValueInvoker.GetValue(y);
             return ListHelper.Equal(xValue, yValue);
+        }
+
+        public override int GetHashCode(object obj)
+        {
+            return GetHashCode((T)obj);
         }
 
         public override int GetHashCode(T obj)

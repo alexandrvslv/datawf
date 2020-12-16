@@ -137,7 +137,8 @@ namespace DataWF.Data
         New = 0,
         Attached = 1,
         Check = 2,
-        Expand = 4
+        Expand = 4,
+        Load = 8,
     }
 
     public enum DBQueryTarget

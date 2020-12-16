@@ -177,6 +177,15 @@ namespace DataWF.Common
             return Select(property, comparer, value);
         }
 
+        public IEnumerable<T> Select<K>(IInvoker<T, K> invoker, CompareType comparer, object value)
+        {
+            if (indexes.GetIndex(invoker.Name) is IListIndex<T, K> index)
+            {
+                return index.Scan(comparer, value);
+            }
+            return ListHelper.Search<T, K>(this, invoker, comparer, value);
+        }
+
         public IEnumerable<T> Select(IInvoker invoker, CompareType comparer, object value)
         {
             return Select(((IInvokerExtension)invoker).CreateParameter<T>(comparer, value));
@@ -193,7 +202,7 @@ namespace DataWF.Common
             {
                 return index.SelectOne(value);
             }
-            return SelectOne(property, CompareType.Equal, value);
+            return Find(property, CompareType.Equal, value);
         }
 
         public T SelectOne(string property, object value)
@@ -790,11 +799,11 @@ namespace DataWF.Common
             //_items.Sort(comparer);
         }
 
-        public void ApplySort(IComparer comparer)
+        void ISortable.ApplySort(IComparer comparer)
         {
             ApplySort(comparer == null ? null
                       : comparer is IComparer<T> gcomparer ? gcomparer
-                      : new ComparerWrapper<T>(comparer));
+                      : throw new Exception("Wrong Comparer Type"));
         }
 
         public virtual void ApplySort(IComparer<T> comparer)

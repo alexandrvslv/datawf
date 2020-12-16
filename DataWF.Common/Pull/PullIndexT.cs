@@ -13,7 +13,7 @@ namespace DataWF.Common
         private readonly ConcurrentDictionary<K, ThreadSafeList<T>> store;
         private readonly IComparer<T> valueComparer;
         private readonly IEqualityComparer<K> keyComparer;
-        private readonly K nullKey;
+        private K nullKey;
 
         public PullIndex(Pull pull, object nullKey, IComparer valueComparer = null, IEqualityComparer keyComparer = null)
             : this((GenericPull<K>)pull,
@@ -253,7 +253,7 @@ namespace DataWF.Common
 
         public IEnumerable<T> Select(object value, CompareType compare)
         {
-            IEnumerable<T> buf = Enumerable.Empty<T>();
+            IEnumerable<T> buf = null;
 
             switch (compare.Type)
             {
@@ -316,7 +316,7 @@ namespace DataWF.Common
                     buf = Select(CheckNull(value), compare);
                     break;
             }
-            return buf;
+            return buf ?? Enumerable.Empty<T>();
         }
 
         public IEnumerable<T> Select(K key, CompareType compare)

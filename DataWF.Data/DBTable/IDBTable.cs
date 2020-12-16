@@ -148,8 +148,8 @@ namespace DataWF.Data
         void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
         void RemoveView(IDBTableView view);
         void RemoveVirtual(IDBVirtualTable view);
-        Task Save(IList rows = null);
-        Task Save(DBTransaction transaction, IList rows = null);
+        Task Save(IEnumerable<DBItem> rows = null);
+        Task Save(DBTransaction transaction, IEnumerable<DBItem> rows = null);
         void SaveFile();
         void SaveFile(string fileName);
         Task<bool> SaveItem(DBItem item, DBTransaction transaction);

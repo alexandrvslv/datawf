@@ -5,9 +5,7 @@ namespace DataWF.Common
     public class NullablePull<T> : Pull<T?> where T : struct
     {
         public NullablePull(int BlockSize) : base(BlockSize)
-        {
-            ItemType = typeof(T);
-        }
+        { }
 
         public override void Set(int index, object value)
         {

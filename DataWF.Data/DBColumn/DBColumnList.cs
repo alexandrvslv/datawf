@@ -34,11 +34,11 @@ namespace DataWF.Data
         public DBColumnList(DBTable table)
             : base(table)
         {
-            Indexes.Add(DBColumn.GroupNameInvoker<T>.Instance);
-            Indexes.Add(DBColumn.PropertyNameInvoker<T>.Instance);
-            Indexes.Add(DBColumn.ReferencePropertyNameInvoker<T>.Instance);
-            Indexes.Add(DBColumn.IsViewInvoker<T>.Instance);
-            Indexes.Add(DBColumn.IsReferenceInvoker<T>.Instance);
+            Indexes.Add(DBColumn.GroupNameInvoker.Instance);
+            Indexes.Add(DBColumn.PropertyNameInvoker.Instance);
+            Indexes.Add(DBColumn.ReferencePropertyNameInvoker.Instance);
+            Indexes.Add(DBColumn.IsViewInvoker.Instance);
+            Indexes.Add(DBColumn.IsReferenceInvoker.Instance);
             //Indexes.Add(DBColumn.ReferenceTableInvoker<T>.Instance);
 
             isVirtual = Table is IDBVirtualTable;
@@ -171,27 +171,27 @@ namespace DataWF.Data
 
         public IEnumerable<DBColumn> GetByGroup(string groupName)
         {
-            return string.IsNullOrEmpty(groupName) ? null : Select(DBColumn.GroupNameInvoker<T>.Instance, CompareType.Equal, groupName);
+            return string.IsNullOrEmpty(groupName) ? null : Select(DBColumn.GroupNameInvoker.Instance, CompareType.Equal, groupName);
         }
 
         public IEnumerable<DBColumn> GetByReference(DBTable table)
         {
-            return Select(DBColumn.ReferenceTableNameInvoker<T>.Instance, CompareType.Equal, table.Name);
+            return Select(DBColumn.ReferenceTableNameInvoker.Instance, CompareType.Equal, table.Name);
         }
 
         public IEnumerable<DBColumn> GetIsReference()
         {
-            return Select(DBColumn.IsReferenceInvoker<T>.Instance, CompareType.Equal, true);
+            return Select(DBColumn.IsReferenceInvoker.Instance, CompareType.Equal, true);
         }
 
         public IEnumerable<DBColumn> GetIsView()
         {
-            return Select(DBColumn.IsViewInvoker<T>.Instance, CompareType.Equal, true);
+            return Select(DBColumn.IsViewInvoker.Instance, CompareType.Equal, true);
         }
 
         public DBColumn GetByProperty(string property)
         {
-            var columns = Select(DBColumn.PropertyNameInvoker<T>.Instance, CompareType.Equal, property);
+            var columns = Select(DBColumn.PropertyNameInvoker.Instance, CompareType.Equal, property);
             if (columns.Count() > 1)
             {
                 return columns.Where(p => p.Culture == Locale.Instance.Culture).FirstOrDefault();
@@ -201,7 +201,7 @@ namespace DataWF.Data
 
         public DBColumn GetByReferenceProperty(string property)
         {
-            var columns = Select(DBColumn.ReferencePropertyNameInvoker<T>.Instance, CompareType.Equal, property);
+            var columns = Select(DBColumn.ReferencePropertyNameInvoker.Instance, CompareType.Equal, property);
             if (columns.Count() > 1)
             {
                 return columns.Where(p => p.Culture == Locale.Instance.Culture).FirstOrDefault();

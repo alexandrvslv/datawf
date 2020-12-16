@@ -25,6 +25,9 @@ namespace DataWF.Common
         private static readonly StateInfoList logs = new StateInfoList();
         public static readonly List<IModuleInitialize> ModuleInitializer = new List<IModuleInitialize>();
         private static readonly Dictionary<string, string> words = new Dictionary<string, string>(StringComparer.Ordinal);
+        //http://stackoverflow.com/questions/5417070/c-sharp-version-of-sql-likea
+        private static readonly Regex likeExp = new Regex(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         static Helper()
         {
             AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
@@ -338,9 +341,6 @@ namespace DataWF.Common
             }
             return rez - 1;
         }
-
-        //http://stackoverflow.com/questions/5417070/c-sharp-version-of-sql-likea
-        private static readonly Regex likeExp = new Regex(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public static Regex BuildLike(string toFind)
         {

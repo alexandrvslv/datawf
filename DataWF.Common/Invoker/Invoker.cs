@@ -110,7 +110,7 @@ namespace DataWF.Common
 
         public virtual IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
         {
-            return new InvokerComparer<TT, V>(this, direction);
+            return new InvokerComparer<TT, V>((IInvoker<TT, V>)this, direction);
         }
 
         public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)

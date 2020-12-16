@@ -3,7 +3,7 @@
 namespace DataWF.Common
 {
 
-    public struct CompareType
+    public readonly struct CompareType
     {
         public static readonly CompareType Undefined = new CompareType(CompareTypes.Undefined);
         public static readonly CompareType Like = new CompareType(CompareTypes.Like);
