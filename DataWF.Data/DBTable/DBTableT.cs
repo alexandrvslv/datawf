@@ -1064,7 +1064,7 @@ namespace DataWF.Data
             else if (comparer.Type == CompareTypes.In)
             {
                 if (value is string inString)
-                    value = inString.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    value = inString.Split(QQuery.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
             }
             else if (comparer.Type == CompareTypes.Like && value is string likeString)
             {

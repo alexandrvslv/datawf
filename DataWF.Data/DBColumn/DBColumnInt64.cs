@@ -57,8 +57,20 @@ namespace DataWF.Data
                 return 0L;
             if (value is DBItem item)
                 return GetReferenceId(item);
-            
+
             return Convert.ToInt64(value, CultureInfo.InvariantCulture);
+        }
+
+        public override void Read<E>(ref Utf8JsonReader reader, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, long> valueInvoker && reader.TryGetInt64(out var value))
+            {
+                valueInvoker.SetValue(element, value);
+            }
+            else
+            {
+                base.Read(ref reader, element, options);
+            }
         }
 
         public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)

@@ -88,6 +88,18 @@ namespace DataWF.Data
             return base.Parse(value);
         }
 
+        public override void Read<E>(ref Utf8JsonReader reader, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, byte[]> valueInvoker && reader.TryGetBytesFromBase64(out var value))
+            {
+                valueInvoker.SetValue(element, value);
+            }
+            else
+            {
+                base.Read(ref reader, element, options);
+            }
+        }
+
         public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
         {
             if (PropertyInvoker is IInvoker<E, byte[]> valueInvoker)

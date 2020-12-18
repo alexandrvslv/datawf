@@ -117,53 +117,78 @@ namespace DataWF.WebService.Common
 
         public override T Read(ref Utf8JsonReader reader, Type objectType, JsonSerializerOptions options)
         {
-            var item = (T)null;
-
             var table = DBTable.GetTable<T>();
             if (table == null)
             {
                 throw new JsonException($"Can't find table of {objectType?.Name ?? "null"}");
             }
-            var dictionary = new Dictionary<IInvoker, object>();
-            var invoker = (IInvoker)null;
+            var item = table.ItemTypeKey != null ? (T)null : (T)table.NewItem();
+            object id = null;
+            int typeId = 0;
+            var column = (DBColumn)null;
             var propertyName = (string)null;
+            var dictionary = (Dictionary<IInvoker, object>)null;
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
             {
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
                     propertyName = reader.GetString();
-                    invoker = table.GetInvoker(propertyName);
-                    if (invoker == null)
+                    column = table.ParseProperty(propertyName);
+                }
+                else
+                {
+                    if (column == null)
                     {
-                        throw new InvalidOperationException($"Property {propertyName} not found!");
+                        var invoker = table.Generator.GetReferencingByProperty(propertyName)?.PropertyInvoker;
+                        if (invoker != null)
+                        {
+                            if (dictionary == null)
+                                dictionary = new Dictionary<IInvoker, object>();
+                            dictionary[invoker] = JsonSerializer.Deserialize(ref reader, invoker.DataType, options);
+                        }
+                        else
+                        {
+                            reader.Skip();
+                            //throw new InvalidOperationException($"Property {propertyName} not found!");
+                        }
+                    }
+                    else if (column.IsPrimaryKey)
+                    {
+                        if (item == null)
+                        {
+                            id = JsonSerializer.Deserialize(ref reader, column.DataType, options);
+                        }
+                        else
+                        {
+                            column.Read<T>(ref reader, item, options);
+                        }
+                    }
+                    else if (column.IsTypeKey)
+                    {
+                        typeId = reader.GetInt32();
+                        item = (T)table.NewItem(DBUpdateState.Insert, true, typeId);
+                    }
+                    else if (item != null)
+                    {
+                        column.Read<T>(ref reader, item, options);
+                    }
+                    else
+                    {
+                        if (dictionary == null)
+                            dictionary = new Dictionary<IInvoker, object>();
+                        dictionary[column.PropertyInvoker] = JsonSerializer.Deserialize(ref reader, column.PropertyInvoker.DataType, options);
                     }
                 }
-                else
-                {
-                    dictionary[invoker] = JsonSerializer.Deserialize(ref reader, invoker.DataType, options);
-                }
             }
 
-            if (table.PrimaryKey != null && dictionary.TryGetValue(table.PrimaryKey.PropertyInvoker, out var value) && value != null)
-            {
-                item = table.LoadById(value, DBLoadParam.Load | DBLoadParam.Referencing);
-            }
+            item = (T)item.AttachOrUpdate(DBLoadParam.Load | DBLoadParam.Synchronize);
 
-            if (item == null)
+            if (dictionary != null)
             {
-                if (table.ItemTypeKey != null && dictionary.TryGetValue(table.ItemTypeKey.PropertyInvoker, out var itemType) && itemType != null)
+                foreach (var entry in dictionary)
                 {
-                    item = (T)table.NewItem(DBUpdateState.Insert, true, (int)itemType);
+                    entry.Key.SetValue(item, entry.Value);
                 }
-                else
-                {
-                    item = (T)table.NewItem(DBUpdateState.Insert, true);
-                }
-            }
-
-            foreach (var entry in dictionary)
-            {
-                entry.Key.SetValue(item, entry.Value);
             }
             return item;
         }

@@ -705,7 +705,7 @@ namespace DataWF.Data
                     return val1 != null && r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
                 case CompareTypes.In:
                     if (val2 is string)
-                        val2 = val2.ToString().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                        val2 = val2.ToString().Split(QQuery.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
                     var list = val2 as IEnumerable;
                     if (list != null)
                     {

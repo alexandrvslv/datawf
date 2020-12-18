@@ -1216,7 +1216,12 @@ namespace DataWF.Common
             else if (type == typeof(string))
                 buf = TextDisplayFormat(value, null);
             else if (type == typeof(int))
-                buf = Convert.ToInt32(value, CultureInfo.InvariantCulture);
+            {
+                if (value.GetType().IsEnum)
+                    buf = (int)value;
+                else
+                    buf = Convert.ToInt32(value, CultureInfo.InvariantCulture);
+            }
             else if (type == typeof(long))
                 buf = Convert.ToInt64(value, CultureInfo.InvariantCulture);
             else if (type == typeof(short))

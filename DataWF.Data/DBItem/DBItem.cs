@@ -755,7 +755,7 @@ namespace DataWF.Data
             }
             else
             {
-                var temp = cultures.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                var temp = cultures.Split(QQuery.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
                 foreach (string s in temp)
                 {
                     string ts = s.Trim();
@@ -1439,12 +1439,16 @@ namespace DataWF.Data
             {
                 Attach();
             }
+            else
+            {
+                Free();
+            }
             return exist ?? this;
         }
 
         public DBItem FindAndUpdate(DBLoadParam param = DBLoadParam.None)
         {
-            var exist = Table.PrimaryKey.IsEmpty(this) ? null : Table.PrimaryKey.LoadByKey(this, param);
+            var exist = (Table.PrimaryKey?.IsEmpty(this) ?? true) ? null : Table.PrimaryKey.LoadByKey(this, param);
             if (exist != null)
             {
                 foreach (var column in Table.Columns)

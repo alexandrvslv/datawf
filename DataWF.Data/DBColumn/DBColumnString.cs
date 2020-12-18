@@ -56,6 +56,18 @@ namespace DataWF.Data
             return Helper.TextBinaryFormat(value);
         }
 
+        public override void Read<E>(ref Utf8JsonReader reader, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, string> valueInvoker)
+            {
+                valueInvoker.SetValue(element, reader.GetString());
+            }
+            else
+            {
+                base.Read(ref reader, element, options);
+            }
+        }
+
         public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
         {
             if (PropertyInvoker is IInvoker<E, string> valueInvoker)

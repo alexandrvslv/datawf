@@ -982,18 +982,18 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     {
                         throw new Exception("No Data Found!");
                     }
-                    using (var dbStream = transaction.Reader.GetStream(1))
-                    {
-                        dbStream.CopyTo(stream, bufferSize);
-                    }
-                    //var buffer = new byte[bufferSize];
-                    //int position = 0;
-                    //int readed;
-                    //while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                    //using (var dbStream = transaction.Reader.GetStream(1))
                     //{
-                    //    stream.Write(buffer, 0, readed);
-                    //    position += readed;
+                    //    dbStream.CopyTo(stream, bufferSize);
                     //}
+                    var buffer = new byte[bufferSize];
+                    int position = 0;
+                    int readed;
+                    while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                    {
+                        stream.Write(buffer, 0, readed);
+                        position += readed;
+                    }
                 }
                 transaction.Reader.Close();
             }

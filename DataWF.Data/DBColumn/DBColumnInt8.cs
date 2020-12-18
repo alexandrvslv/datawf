@@ -66,6 +66,18 @@ namespace DataWF.Data
             return Convert.ToSByte(value, CultureInfo.InvariantCulture);
         }
 
+        public override void Read<E>(ref Utf8JsonReader reader, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, sbyte> valueInvoker && reader.TryGetSByte(out var value))
+            {
+                valueInvoker.SetValue(element, value);
+            }
+            else
+            {
+                base.Read(ref reader, element, options);
+            }
+        }
+
         public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
         {
             if (PropertyInvoker is IInvoker<E, sbyte> valueInvoker)

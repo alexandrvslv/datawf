@@ -57,8 +57,20 @@ namespace DataWF.Data
                 return (byte)0;
             if (value is DBItem item)
                 return GetReferenceId(item);
-            
+
             return Convert.ToByte(value, CultureInfo.InvariantCulture);
+        }
+
+        public override void Read<E>(ref Utf8JsonReader reader, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, byte> valueInvoker && reader.TryGetByte(out var value))
+            {
+                valueInvoker.SetValue(element, value);
+            }
+            else
+            {
+                base.Read(ref reader, element, options);
+            }
         }
 
         public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
@@ -68,7 +80,9 @@ namespace DataWF.Data
                 writer.WriteNumber(JsonName, valueInvoker.GetValue(element));
             }
             else
+            {
                 base.Write(writer, element, options);
+            }
         }
     }
 }

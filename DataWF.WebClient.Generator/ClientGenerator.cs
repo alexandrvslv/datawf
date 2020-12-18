@@ -1478,11 +1478,12 @@ namespace DataWF.WebClient.Generator
                 if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var refPropertyName))
                 {
                     var idProperty = GetPrimaryKey(property.Reference ?? property.AllOf.FirstOrDefault()?.Reference ?? property.AnyOf.FirstOrDefault()?.Reference);
-                    var idType = GetTypeString(idProperty, usings);
+                    var refProperty = GetProperty((JsonSchema)property.Parent, (string)refPropertyName);
+                    var refType = GetTypeString(refProperty, usings);
                     if (idProperty.IsNullableRaw ?? false)
                         yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)};");
                     else
-                        yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)} ?? default({idType});");
+                        yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)} ?? default({refType});");
                 }
                 //Change - refence from single json
                 var objectProperty = GetReferenceProperty((JsonSchema)property.Parent, property.Name);

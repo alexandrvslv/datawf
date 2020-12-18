@@ -34,7 +34,7 @@ namespace DataWF.Data
 
     public class QQuery : QItem, IQuery, IDisposable, IQItemList
     {
-        static readonly char[] separator = new char[] { ',' };
+        public static readonly char[] CommaSeparator = new char[] { ',' };
 
         public string CacheQuery;
         protected QParamList parameters;
@@ -690,7 +690,7 @@ namespace DataWF.Data
                                         else if (parameter != null && parameter.Comparer.Type != CompareTypes.Undefined)
                                         {
                                             var list = new QEnum();
-                                            foreach (var s in word2.Split(','))
+                                            foreach (var s in word2.Split(CommaSeparator, StringSplitOptions.RemoveEmptyEntries))
                                             {
                                                 list.Items.Add(new QValue(s.Trim(' ', '\''), column?.Column));
                                             }
@@ -1123,7 +1123,7 @@ namespace DataWF.Data
                 if ((buildParam & QQueryBuildParam.SplitString) != 0
                     && value is string stringValue)
                 {
-                    string[] split = stringValue.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                    string[] split = stringValue.Split(CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
                     if (split.Length == 1)
                     {
                         param = CreateParam(column, comparer, like + split[0].Trim() + like);

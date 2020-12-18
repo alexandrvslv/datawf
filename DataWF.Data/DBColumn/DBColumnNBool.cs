@@ -58,6 +58,21 @@ namespace DataWF.Data
             return Convert.ToBoolean(value, CultureInfo.InvariantCulture);
         }
 
+        public override void Read<E>(ref Utf8JsonReader reader, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, bool?> valueInvoker)
+            {
+                if (reader.TokenType == JsonTokenType.Null)
+                    valueInvoker.SetValue(element, null);
+                else
+                    valueInvoker.SetValue(element, reader.GetBoolean());
+            }
+            else
+            {
+                base.Read(ref reader, element, options);
+            }
+        }
+
         public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
         {
             if (PropertyInvoker is IInvoker<E, bool?> valueInvoker)

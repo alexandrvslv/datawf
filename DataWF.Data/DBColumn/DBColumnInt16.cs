@@ -61,6 +61,18 @@ namespace DataWF.Data
             return Convert.ToInt16(value, CultureInfo.InvariantCulture);
         }
 
+        public override void Read<E>(ref Utf8JsonReader reader, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, short> valueInvoker && reader.TryGetInt16(out var value))
+            {
+                valueInvoker.SetValue(element, value);
+            }
+            else
+            {
+                base.Read(ref reader, element, options);
+            }
+        }
+
         public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
         {
             if (PropertyInvoker is IInvoker<E, short> valueInvoker)
