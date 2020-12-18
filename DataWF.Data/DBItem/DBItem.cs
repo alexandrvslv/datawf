@@ -1451,14 +1451,11 @@ namespace DataWF.Data
             var exist = (Table.PrimaryKey?.IsEmpty(this) ?? true) ? null : Table.PrimaryKey.LoadByKey(this, param);
             if (exist != null)
             {
-                foreach (var column in Table.Columns)
+                foreach (var column in GetChangeKeys())
                 {
-                    // || (column.Keys & DBColumnKeys.State) == DBColumnKeys.State
-                    if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
-                    {
-                        if (!column.IsChanged(this))
-                            continue;
-                    }
+                    if (column == Table.PrimaryKey
+                        || column == Table.ItemTypeKey)
+                        continue;
                     column.Copy(this, exist);
                 }
             }

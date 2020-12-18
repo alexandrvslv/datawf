@@ -3036,7 +3036,7 @@ namespace DataWF.Gui
 
         protected virtual IComparer OnColumnCreateComparer(LayoutColumn column, ListSortDirection direction)
         {
-            return new InvokerComparer(column.Invoker, direction);
+            return ((IInvokerExtension)column.Invoker).CreateComparer(column.Invoker.DataType, direction);
         }
 
         protected void OnCellEditBegin()

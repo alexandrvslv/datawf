@@ -10,7 +10,7 @@ namespace DataWF.Module.Common
         public GroupPermissionList(DBTable<GroupPermission> table, string filter, DBViewKeys mode)
             : base(table, filter, mode)
         {
-            ApplySort(new InvokerComparer(typeof(GroupPermission), "ToString", ListSortDirection.Ascending));
+            ApplySort(new InvokerComparer<GroupPermission, string>("ToString", ListSortDirection.Ascending));
         }
 
         public GroupPermissionList(string filter = "", DBViewKeys mode = DBViewKeys.None)

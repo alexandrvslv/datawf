@@ -44,7 +44,7 @@ namespace DataWF.Gui
                 return selectable.Select(ListProperty, CompareType.Like, filter);
             }
 
-            return ListHelper.Search(listSource, EmitInvoker.Initialize(listSource[0].GetType(), ListProperty), filter, CompareType.Like, null);
+            return ListHelper.Search(listSource, EmitInvoker.Initialize(listSource[0].GetType(), ListProperty), CompareType.Like, filter, null);
         }
 
         protected virtual void ListSelect(IEnumerable flist)

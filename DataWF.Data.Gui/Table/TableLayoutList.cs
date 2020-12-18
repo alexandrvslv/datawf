@@ -352,16 +352,7 @@ namespace DataWF.Data.Gui
         public static ILayoutCellEditor InitCellEditor(DBColumn column)
         {
             ILayoutCellEditor editor = null;
-            if ((column.Keys & DBColumnKeys.Boolean) == DBColumnKeys.Boolean)
-            {
-                editor = new CellEditorCheck();
-
-                ((CellEditorCheck)editor).ValueNull = null;
-                ((CellEditorCheck)editor).ValueTrue = column.BoolTrue;
-                ((CellEditorCheck)editor).ValueFalse = column.BoolFalse;
-                ((CellEditorCheck)editor).TreeState = (column.Keys & DBColumnKeys.Notnull) != DBColumnKeys.Notnull;
-            }
-            else if (column.IsReference)
+            if (column.IsReference)
             {
                 editor = new CellEditorTable();
                 ((CellEditorTable)editor).Table = column.ReferenceTable;

@@ -953,7 +953,6 @@ namespace DataWF.Data
             {
                 if (item.UpdateState == DBUpdateState.Insert)
                 {
-
                     if (StampKey != null)
                         item.Stamp = DateTime.UtcNow;
                     if (DateKey != null)

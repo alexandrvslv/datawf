@@ -279,10 +279,10 @@ namespace DataWF.TestGui
             //Compare Accessor string
             watch.Reset();
             watch.Start();
-            var ce = new InvokerComparer(EmitInvoker.Initialize(typeof(TestClass).GetProperty("Comment")), ListSortDirection.Ascending);
+            var commentComparer = new InvokerComparer<TestClass, string>("Comment", ListSortDirection.Ascending);
             for (int i = 0; i <= c; i++)
             {
-                ce.Compare(p1, p2);
+                commentComparer.Compare(p1, p2);
             }
             watch.Stop();
             list.Add(new TestResult("Compare String", "Emit Invoke Property", watch.Elapsed));
@@ -300,10 +300,10 @@ namespace DataWF.TestGui
             //Compare Accessor Int
             watch.Reset();
             watch.Start();
-            ce = new InvokerComparer(EmitInvoker.Initialize(typeof(TestClass).GetProperty("Order")), ListSortDirection.Ascending);
+            var orderComparer = new InvokerComparer<TestClass, int>("Order", ListSortDirection.Ascending);
             for (int i = 0; i <= c; i++)
             {
-                ce.Compare(p1, p2);
+                orderComparer.Compare(p1, p2);
             }
             watch.Stop();
             list.Add(new TestResult("Compare Int", "Emit Invoke Property", watch.Elapsed));

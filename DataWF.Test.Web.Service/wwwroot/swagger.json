@@ -11952,8 +11952,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -12273,8 +12272,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -12305,8 +12303,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -12335,8 +12332,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -12403,8 +12399,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -12448,8 +12443,7 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "nullable": true
+              "format": "int32"
             }
           }
         ],
@@ -29611,6 +29605,7 @@
                 "$ref": "#/components/schemas/AccessType"
               }
             ],
+            "nullable": true,
             "readOnly": true
           }
         },
@@ -29664,7 +29659,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Code": {
             "maxLength": 40,
@@ -29676,7 +29672,8 @@
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -29698,7 +29695,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
         },
         "discriminator": {
@@ -29736,11 +29734,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "LocationId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Location": {
             "allOf": [
@@ -29769,7 +29769,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
         },
         "x-id": "Id",
@@ -29797,7 +29798,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "INN": {
             "maxLength": 40,
@@ -29837,7 +29839,8 @@
           },
           "CountryId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Country": {
             "allOf": [
@@ -29849,7 +29852,8 @@
           },
           "AddressId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Address": {
             "allOf": [
@@ -29861,7 +29865,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
         },
         "discriminator": {
@@ -29897,11 +29902,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -29913,7 +29920,8 @@
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -29929,7 +29937,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "NameRU": {
             "maxLength": 512,
@@ -29958,11 +29967,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -29974,7 +29985,8 @@
           },
           "DepartmentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Department": {
             "allOf": [
@@ -29986,7 +29998,8 @@
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -30002,7 +30015,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "NameRU": {
             "maxLength": 512,
@@ -30073,11 +30087,13 @@
         "properties": {
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -30103,7 +30119,8 @@
           },
           "DepartmentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Department": {
             "allOf": [
@@ -30115,7 +30132,8 @@
           },
           "PositionId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Position": {
             "allOf": [
@@ -30127,25 +30145,29 @@
           },
           "Super": {
             "type": "boolean",
-            "default": "False"
+            "default": "False",
+            "nullable": true
           },
           "Phone": {
             "maxLength": 1024,
             "type": "string"
           },
           "IsTemporaryPassword": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "AuthType": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/UserAuthType"
               }
-            ]
+            ],
+            "nullable": true
           },
           "AddessId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Address": {
             "allOf": [
@@ -30212,11 +30234,13 @@
               {
                 "$ref": "#/components/schemas/DBLogType"
               }
-            ]
+            ],
+            "nullable": true
           },
           "UserRegId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "BaseId": {
             "type": "string",
@@ -30243,7 +30267,8 @@
           },
           "LogId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           }
         }
       },
@@ -30264,7 +30289,8 @@
           },
           "UserId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
         },
         "x-id": "Id"
@@ -30282,11 +30308,13 @@
               {
                 "$ref": "#/components/schemas/UserRegType"
               }
-            ]
+            ],
+            "nullable": true
           },
           "ParentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -30298,7 +30326,8 @@
           },
           "RedoId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Redo": {
             "allOf": [
@@ -30340,7 +30369,8 @@
           },
           "LogUserId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "LogUser": {
             "allOf": [
@@ -30362,11 +30392,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "LocationId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Location": {
             "allOf": [
@@ -30390,7 +30422,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -30494,7 +30527,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Code": {
             "maxLength": 512,
@@ -30502,7 +30536,8 @@
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -30527,7 +30562,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
         },
         "x-id": "Id",
@@ -30543,14 +30579,16 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Code": {
             "type": "string"
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -30571,7 +30609,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -30631,7 +30670,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Code": {
             "type": "string"
@@ -30641,7 +30681,8 @@
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -30659,7 +30700,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
         },
         "discriminator": {
@@ -30720,7 +30762,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "INN": {
             "type": "string"
@@ -30748,7 +30791,8 @@
           },
           "CountryId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Country": {
             "allOf": [
@@ -30760,7 +30804,8 @@
           },
           "AddressId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Address": {
             "allOf": [
@@ -30775,7 +30820,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
         },
         "discriminator": {
@@ -30897,11 +30943,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CustomerId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Customer": {
             "allOf": [
@@ -30913,7 +30961,8 @@
           },
           "AddressId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Address": {
             "allOf": [
@@ -30939,11 +30988,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CustomerId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Customer": {
             "allOf": [
@@ -30955,7 +31006,8 @@
           },
           "AddressId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Address": {
             "allOf": [
@@ -30997,11 +31049,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -31013,7 +31067,8 @@
           },
           "PersoneId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Persone": {
             "allOf": [
@@ -31031,7 +31086,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -31049,11 +31105,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -31065,7 +31123,8 @@
           },
           "PersoneId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Persone": {
             "allOf": [
@@ -31085,7 +31144,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
         },
         "x-id": "Id",
@@ -31119,11 +31179,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -31135,7 +31197,8 @@
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -31150,7 +31213,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "NameRU": {
             "type": "string"
@@ -31192,7 +31256,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Code": {
             "type": "string"
@@ -31222,7 +31287,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "DataName": {
             "maxLength": 1024,
@@ -31230,7 +31296,8 @@
           },
           "DataLastWrite": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           }
         },
         "x-id": "Id",
@@ -31249,11 +31316,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "TemplateId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Template": {
             "allOf": [
@@ -31265,7 +31334,8 @@
           },
           "FileId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "File": {
             "allOf": [
@@ -31276,7 +31346,8 @@
             "x-id": "FileId"
           },
           "AutoGenerate": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         },
         "x-id": "Id",
@@ -31295,11 +31366,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "TemplateId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Template": {
             "allOf": [
@@ -31311,7 +31384,8 @@
           },
           "ReferenceId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Reference": {
             "allOf": [
@@ -31338,11 +31412,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "TemplateId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Template": {
             "allOf": [
@@ -31373,7 +31449,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Code": {
             "maxLength": 250,
@@ -31404,11 +31481,13 @@
           "DocumentType": {
             "type": "integer",
             "format": "int32",
-            "default": "0"
+            "default": "0",
+            "nullable": true
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -31420,7 +31499,8 @@
           },
           "WorkId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Work": {
             "allOf": [
@@ -31432,7 +31512,8 @@
           },
           "IsFile": {
             "type": "boolean",
-            "default": "False"
+            "default": "False",
+            "nullable": true
           },
           "Datas": {
             "type": "array",
@@ -31501,7 +31582,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Code": {
             "maxLength": 512,
@@ -31523,7 +31605,8 @@
           },
           "WorkId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Work": {
             "allOf": [
@@ -31538,10 +31621,12 @@
               {
                 "$ref": "#/components/schemas/StageKey"
               }
-            ]
+            ],
+            "nullable": true
           },
           "TimeLimit": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           }
         },
         "x-id": "Id",
@@ -31595,11 +31680,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "DocumentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Document": {
             "allOf": [
@@ -31611,7 +31698,8 @@
           },
           "TemplateDataId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "TemplateData": {
             "allOf": [
@@ -31631,15 +31719,18 @@
           },
           "FileLastWrite": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "FileLOB": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "CurrentUserId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CurrentUser": {
             "allOf": [
@@ -31666,11 +31757,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "DocumentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Document": {
             "allOf": [
@@ -31682,7 +31775,8 @@
           },
           "CustomerId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Customer": {
             "allOf": [
@@ -31694,7 +31788,8 @@
           },
           "AddressId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Address": {
             "allOf": [
@@ -31726,7 +31821,8 @@
         "properties": {
           "MessageId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Message": {
             "allOf": [
@@ -31751,11 +31847,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "UserId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "User": {
             "allOf": [
@@ -31767,7 +31865,8 @@
           },
           "PositionId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Position": {
             "allOf": [
@@ -31779,7 +31878,8 @@
           },
           "DepartmentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Department": {
             "allOf": [
@@ -31791,7 +31891,8 @@
           },
           "DateRead": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           }
         },
         "x-id": "Id",
@@ -31810,11 +31911,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "UserId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "User": {
             "allOf": [
@@ -31844,11 +31947,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "DocumentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Document": {
             "allOf": [
@@ -31860,7 +31965,8 @@
           },
           "MessageId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Message": {
             "allOf": [
@@ -31887,11 +31993,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "DocumentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Document": {
             "allOf": [
@@ -31903,7 +32011,8 @@
           },
           "ReferenceId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Reference": {
             "allOf": [
@@ -31931,11 +32040,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "TemplateId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Template": {
             "allOf": [
@@ -31947,7 +32058,8 @@
           },
           "ParentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -31959,7 +32071,8 @@
           },
           "DocumentDate": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "Number": {
             "maxLength": 80,
@@ -31967,7 +32080,8 @@
           },
           "CustomerId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Customer": {
             "allOf": [
@@ -31988,11 +32102,13 @@
           "CompleteProgress": {
             "type": "number",
             "format": "double",
-            "default": "0"
+            "default": "0",
+            "nullable": true
           },
           "CurrentWorkId": {
             "type": "integer",
             "format": "int64",
+            "nullable": true,
             "readOnly": true
           },
           "CurrentWork": {
@@ -32005,7 +32121,8 @@
           },
           "CurrentStageId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CurrentStage": {
             "allOf": [
@@ -32017,7 +32134,8 @@
           },
           "CurrentUserId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CurrentUser": {
             "allOf": [
@@ -32036,11 +32154,13 @@
             "readOnly": true
           },
           "Important": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "IsComplete": {
             "type": "boolean",
-            "default": "False"
+            "default": "False",
+            "nullable": true
           },
           "Works": {
             "type": "array",
@@ -32101,11 +32221,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "DocumentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Document": {
             "allOf": [
@@ -32117,7 +32239,8 @@
           },
           "StageId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Stage": {
             "allOf": [
@@ -32129,7 +32252,8 @@
           },
           "WorkId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Work": {
             "allOf": [
@@ -32141,7 +32265,8 @@
           },
           "UserId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "User": {
             "allOf": [
@@ -32153,7 +32278,8 @@
           },
           "PositionId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Position": {
             "allOf": [
@@ -32165,7 +32291,8 @@
           },
           "DepartmentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Department": {
             "allOf": [
@@ -32177,7 +32304,8 @@
           },
           "FromId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "From": {
             "allOf": [
@@ -32189,28 +32317,35 @@
           },
           "DateRead": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "DateLimit": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "DateComplete": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "IsComplete": {
             "type": "boolean",
-            "default": "False"
+            "default": "False",
+            "nullable": true
           },
           "IsSystem": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "IsStart": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "IsStop": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "Description": {
             "maxLength": 2048,
@@ -32230,11 +32365,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "TemplateId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Template": {
             "allOf": [
@@ -32246,7 +32383,8 @@
           },
           "ParentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -32258,14 +32396,16 @@
           },
           "DocumentDate": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "Number": {
             "type": "string"
           },
           "CustomerId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Customer": {
             "allOf": [
@@ -32283,13 +32423,16 @@
           },
           "CompleteProgress": {
             "type": "number",
-            "format": "double"
+            "format": "double",
+            "nullable": true
           },
           "Important": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "IsComplete": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -32340,11 +32483,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "DocumentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Document": {
             "allOf": [
@@ -32356,7 +32501,8 @@
           },
           "CustomerId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Customer": {
             "allOf": [
@@ -32368,7 +32514,8 @@
           },
           "AddressId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Address": {
             "allOf": [
@@ -32537,11 +32684,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "DocumentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Document": {
             "allOf": [
@@ -32553,7 +32702,8 @@
           },
           "TemplateDataId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "TemplateData": {
             "allOf": [
@@ -32571,7 +32721,8 @@
           },
           "FileLastWrite": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "FileData": {
             "type": "string",
@@ -32579,7 +32730,8 @@
           },
           "FileLOB": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -32612,11 +32764,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "DocumentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Document": {
             "allOf": [
@@ -32628,7 +32782,8 @@
           },
           "ReferenceId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Reference": {
             "allOf": [
@@ -32669,11 +32824,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "DocumentId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "Document": {
             "allOf": [
@@ -32685,7 +32842,8 @@
           },
           "StageId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Stage": {
             "allOf": [
@@ -32697,7 +32855,8 @@
           },
           "WorkId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Work": {
             "allOf": [
@@ -32709,7 +32868,8 @@
           },
           "UserId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "User": {
             "allOf": [
@@ -32721,7 +32881,8 @@
           },
           "PositionId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Position": {
             "allOf": [
@@ -32733,7 +32894,8 @@
           },
           "DepartmentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Department": {
             "allOf": [
@@ -32745,7 +32907,8 @@
           },
           "FromId": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "nullable": true
           },
           "From": {
             "allOf": [
@@ -32757,27 +32920,34 @@
           },
           "DateRead": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "DateLimit": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "DateComplete": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "IsComplete": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "IsSystem": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "IsStart": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "IsStop": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "Description": {
             "type": "string"
@@ -32844,11 +33014,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -32864,7 +33036,8 @@
                 "$ref": "#/components/schemas/PermissionType"
               }
             ],
-            "default": "GTable"
+            "default": "GTable",
+            "nullable": true
           },
           "Code": {
             "maxLength": 512,
@@ -32894,11 +33067,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -32913,7 +33088,8 @@
               {
                 "$ref": "#/components/schemas/PermissionType"
               }
-            ]
+            ],
+            "nullable": true
           },
           "Code": {
             "type": "string"
@@ -32959,10 +33135,12 @@
           },
           "Port": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Active": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -32987,10 +33165,12 @@
           },
           "Port": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Active": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         },
         "x-id": "Id",
@@ -33081,7 +33261,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "DataName": {
             "type": "string"
@@ -33140,11 +33321,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "PersoneId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Persone": {
             "allOf": [
@@ -33159,11 +33342,13 @@
           },
           "DateIssue": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "DateExpire": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "IssuedBy": {
             "type": "string"
@@ -33184,11 +33369,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "PersoneId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Persone": {
             "allOf": [
@@ -33204,11 +33391,13 @@
           },
           "DateIssue": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "DateExpire": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "IssuedBy": {
             "type": "string"
@@ -33245,11 +33434,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -33261,7 +33452,8 @@
           },
           "DepartmentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Department": {
             "allOf": [
@@ -33273,7 +33465,8 @@
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -33288,7 +33481,8 @@
           },
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "NameRU": {
             "type": "string"
@@ -33540,11 +33734,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -33565,24 +33761,28 @@
           },
           "Order": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Type": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/SchedulerType"
               }
-            ]
+            ],
+            "nullable": true
           },
           "Interval": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "ProcedureName": {
             "type": "string"
           },
           "DateExecute": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -33602,11 +33802,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -33629,7 +33831,8 @@
           },
           "Order": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Type": {
             "allOf": [
@@ -33637,17 +33840,20 @@
                 "$ref": "#/components/schemas/SchedulerType"
               }
             ],
-            "default": "Interval"
+            "default": "Interval",
+            "nullable": true
           },
           "Interval": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "ProcedureName": {
             "type": "string"
           },
           "DateExecute": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           }
         },
         "x-id": "Id",
@@ -33706,7 +33912,8 @@
               {
                 "$ref": "#/components/schemas/StageParamProcudureType"
               }
-            ]
+            ],
+            "nullable": true
           }
         },
         "x-type-id": 4
@@ -33720,7 +33927,8 @@
         ],
         "properties": {
           "Next": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         },
         "x-type-id": 5
@@ -33756,11 +33964,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "StageId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Stage": {
             "allOf": [
@@ -33802,7 +34012,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Code": {
             "type": "string"
@@ -33818,7 +34029,8 @@
           },
           "WorkId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Work": {
             "allOf": [
@@ -33833,10 +34045,12 @@
               {
                 "$ref": "#/components/schemas/StageKey"
               }
-            ]
+            ],
+            "nullable": true
           },
           "TimeLimit": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -33872,7 +34086,8 @@
               {
                 "$ref": "#/components/schemas/StageParamProcudureType"
               }
-            ]
+            ],
+            "nullable": true
           }
         },
         "x-type-id": 4
@@ -33886,7 +34101,8 @@
         ],
         "properties": {
           "Next": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         },
         "x-type-id": 5
@@ -33910,11 +34126,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "StageId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Stage": {
             "allOf": [
@@ -34052,11 +34270,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "SchedulerId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Scheduler": {
             "allOf": [
@@ -34068,7 +34288,8 @@
           },
           "Result": {
             "type": "number",
-            "format": "double"
+            "format": "double",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -34086,11 +34307,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "SchedulerId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Scheduler": {
             "allOf": [
@@ -34102,7 +34325,8 @@
           },
           "Result": {
             "type": "number",
-            "format": "double"
+            "format": "double",
+            "nullable": true
           }
         },
         "x-id": "Id",
@@ -34136,7 +34360,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Code": {
             "type": "string"
@@ -34158,11 +34383,13 @@
           },
           "DocumentType": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -34174,7 +34401,8 @@
           },
           "WorkId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Work": {
             "allOf": [
@@ -34185,7 +34413,8 @@
             "x-id": "WorkId"
           },
           "IsFile": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -34218,11 +34447,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "TemplateId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Template": {
             "allOf": [
@@ -34234,7 +34465,8 @@
           },
           "FileId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "File": {
             "allOf": [
@@ -34245,7 +34477,8 @@
             "x-id": "FileId"
           },
           "AutoGenerate": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -34278,7 +34511,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Data": {
             "type": "string",
@@ -34289,7 +34523,8 @@
           },
           "DataLastWrite": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -34322,11 +34557,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "TemplateId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Template": {
             "allOf": [
@@ -34370,11 +34607,13 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "TemplateId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Template": {
             "allOf": [
@@ -34386,7 +34625,8 @@
           },
           "ReferenceId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Reference": {
             "allOf": [
@@ -34488,7 +34728,8 @@
           },
           "Online": {
             "type": "boolean",
-            "default": "False"
+            "default": "False",
+            "nullable": true
           },
           "Platform": {
             "type": "string"
@@ -34550,11 +34791,13 @@
         "properties": {
           "ExternalId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -34575,7 +34818,8 @@
           },
           "DepartmentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Department": {
             "allOf": [
@@ -34587,7 +34831,8 @@
           },
           "PositionId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Position": {
             "allOf": [
@@ -34598,13 +34843,15 @@
             "x-id": "PositionId"
           },
           "Super": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "Phone": {
             "type": "string"
           },
           "IsTemporaryPassword": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "Password": {
             "type": "string"
@@ -34614,11 +34861,13 @@
               {
                 "$ref": "#/components/schemas/UserAuthType"
               }
-            ]
+            ],
+            "nullable": true
           },
           "AddessId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Address": {
             "allOf": [
@@ -34686,14 +34935,16 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Type": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/UserApplicationType"
               }
-            ]
+            ],
+            "nullable": true
           },
           "EMail": {
             "maxLength": 1024,
@@ -34708,6 +34959,7 @@
           "EmailVerified": {
             "type": "boolean",
             "default": "False",
+            "nullable": true,
             "readOnly": true
           },
           "Phone": {
@@ -34717,6 +34969,7 @@
           "PhoneVerified": {
             "type": "boolean",
             "default": "False",
+            "nullable": true,
             "readOnly": true
           },
           "FirstName": {
@@ -34746,6 +34999,7 @@
           "UserId": {
             "type": "integer",
             "format": "int32",
+            "nullable": true,
             "readOnly": true
           },
           "User": {
@@ -34770,14 +35024,16 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Type": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/UserApplicationType"
               }
-            ]
+            ],
+            "nullable": true
           },
           "EMail": {
             "type": "string"
@@ -34789,13 +35045,15 @@
             "type": "string"
           },
           "EmailVerified": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "Phone": {
             "type": "string"
           },
           "PhoneVerified": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           },
           "FirstName": {
             "type": "string"
@@ -34817,7 +35075,8 @@
           },
           "UserId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "User": {
             "allOf": [
@@ -34861,7 +35120,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "DataName": {
             "maxLength": 1024,
@@ -34869,11 +35129,13 @@
           },
           "DataLastWrite": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "UserId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "User": {
             "allOf": [
@@ -34884,7 +35146,8 @@
             "x-id": "UserId"
           },
           "IsAvatar": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         },
         "x-id": "Id",
@@ -34900,7 +35163,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Data": {
             "type": "string",
@@ -34911,11 +35175,13 @@
           },
           "DataLastWrite": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "UserId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "User": {
             "allOf": [
@@ -34926,7 +35192,8 @@
             "x-id": "UserId"
           },
           "IsAvatar": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         },
         "x-type-id": 0
@@ -34966,7 +35233,8 @@
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -34978,7 +35246,8 @@
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -35018,7 +35287,8 @@
           },
           "ParentId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Parent": {
             "allOf": [
@@ -35030,7 +35300,8 @@
           },
           "CompanyId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Company": {
             "allOf": [
@@ -35202,7 +35473,8 @@
         "properties": {
           "Id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "Code": {
             "type": "string"
