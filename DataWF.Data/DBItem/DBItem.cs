@@ -83,8 +83,13 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool Attached => (state & DBItemState.Attached) == DBItemState.Attached;
 
+        public ref readonly PullHandler GetRefHandler() => ref handler;
+
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public PullHandler Handler { get => handler; set => handler = value; }
+        public PullHandler Handler { get => handler; }
+
+        [XmlIgnore, JsonIgnore]
+        public long HandlerValue => handler.Value;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual string ParametersCategory
@@ -1071,7 +1076,7 @@ namespace DataWF.Data
             if (obj == null)
                 return 1;
             var index = table.index.CompareTo(obj.table.index);
-            return index == 0 ? handler.CompareTo(obj.handler) : index;
+            return index == 0 ? handler.CompareTo(in obj.handler) : index;
         }
 
         public string FormatPatch()
@@ -1688,10 +1693,16 @@ namespace DataWF.Data
             return new LinkModel
             {
                 ProtocolLink = $"{ProtocolSetting.Current.Protocol}://{ProtocolSetting.Current.Host}/{GetType().Name}/{Table.PrimaryKey.FormatDisplay(this)}",
-                WebLink = $"http://{ProtocolSetting.Current.Host}/api/{GetType().Name}/{Table.PrimaryKey.FormatDisplay(this)}",
+                WebLink = $"{ProtocolSetting.Current.WebProtocol}://{ProtocolSetting.Current.Host}/api/{GetType().Name}/{Table.PrimaryKey.FormatDisplay(this)}",
             };
         }
 
+        internal int CompareByHandler(DBItem y)
+        {
+            var xValue = handler.Value;
+            var yValue = y.handler.Value;
+            return xValue.CompareTo(yValue);
+        }
     }
 }
 

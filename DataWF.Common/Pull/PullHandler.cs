@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace DataWF.Common
@@ -7,16 +8,16 @@ namespace DataWF.Common
     public readonly struct PullHandler : IEquatable<PullHandler>, IComparable<PullHandler>
     {
         public static readonly PullHandler Zero = new PullHandler(0, 0);
-        [FieldOffset(2)]
-        public readonly short Block;
         [FieldOffset(0)]
-        public readonly short BlockIndex;
+        public readonly int BlockIndex;
+        [FieldOffset(4)]
+        public readonly int Block;
         [FieldOffset(0)]
-        public readonly int Handler;
+        public readonly long Value;
 
         public static PullHandler FromSeqence(int index, int blockSize)
         {
-            return new PullHandler((short)(index / blockSize), (short)(index % blockSize));
+            return new PullHandler(index / blockSize, index % blockSize);
         }
 
         public static bool operator ==(PullHandler left, PullHandler right)
@@ -29,38 +30,38 @@ namespace DataWF.Common
             return !left.Equals(right);
         }
 
-        public static explicit operator int(PullHandler pullBlock)
+        public static explicit operator long(PullHandler pullBlock)
         {
-            return pullBlock.Handler;
+            return pullBlock.Value;
         }
 
-        public static explicit operator PullHandler(int handler)
+        public static explicit operator PullHandler(long handler)
         {
             return new PullHandler(handler);
         }
 
-        public PullHandler(int handler)
+        public PullHandler(long handler)
         {
-            Block = 0;
-            BlockIndex = 0;
-            Handler = handler;
+            Block = default(int);
+            BlockIndex = default(int);
+            Value = handler;
         }
 
-        public PullHandler(short block, short blockIndex)
+        public PullHandler(int block, int blockIndex)
         {
-            Handler = 0;
+            Value = default(long);
             Block = block;
             BlockIndex = blockIndex;
         }
 
         public int CompareTo(PullHandler other)
         {
-            return Handler.CompareTo(other.Handler);
+            return Value.CompareTo(other.Value);
         }
 
         public int CompareTo(in PullHandler other)
         {
-            return Handler.CompareTo(other.Handler);
+            return Value.CompareTo(other.Value);
         }
 
         public override bool Equals(object obj)
@@ -70,12 +71,12 @@ namespace DataWF.Common
 
         public bool Equals(PullHandler other)
         {
-            return Handler == other.Handler;
+            return Value == other.Value;
         }
 
         public override int GetHashCode()
         {
-            return Handler;
+            return Value.GetHashCode();
         }
 
         public int GetSeqence(int blockSize)

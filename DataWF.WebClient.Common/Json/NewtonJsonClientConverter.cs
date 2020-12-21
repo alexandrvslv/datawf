@@ -67,8 +67,6 @@ namespace DataWF.Common
                         ? property.PropertyInvoker.GetValue(item)
                         : null;
 
-
-
                     if (string.Equals(property.Name, Client.TypeInvoker?.Name, StringComparison.Ordinal))
                     {
                         object value = Read(jreader, property.DataType, serializer, currentValue);

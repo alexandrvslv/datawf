@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
@@ -149,9 +150,9 @@ namespace DataWF.Data
             return true;
         }
 
-        public IEnumerable<T> GetParents<T>(bool addCurrent = false)
+        public IEnumerable<T> GetParents<T>(bool addCurrent = false) where T : DBGroupItem
         {
-            return GroupHelper.GetAllParent<T>(this, addCurrent);
+            return GroupHelper.GetAllParent<T>((T)this, addCurrent);
         }
 
         public string GetParentIds()

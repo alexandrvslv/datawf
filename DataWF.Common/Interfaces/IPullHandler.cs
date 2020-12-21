@@ -2,7 +2,9 @@
 {
     public interface IPullHandler
     {
-        PullHandler Handler { get; set; }
+        PullHandler Handler { get; }
+
+        ref readonly PullHandler GetRefHandler();
     }
 }
 

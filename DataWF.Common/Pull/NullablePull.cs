@@ -13,7 +13,7 @@ namespace DataWF.Common
             SetValue(block, blockIndex, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
         }
 
-        public override void Set(short block, short blockIndex, object value)
+        public override void Set(int block, int blockIndex, object value)
         {
             SetValue(block, blockIndex, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
         }

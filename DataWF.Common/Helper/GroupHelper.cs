@@ -62,15 +62,15 @@ namespace DataWF.Common
             return false;
         }
 
-        public static IEnumerable<T> GetAllParent<T>(IGroup item, bool addSender = false)
+        public static IEnumerable<T> GetAllParent<T>(T item, bool addSender = false) where T : IGroup
         {
             if (addSender)
-                yield return (T)item;
-            IGroup g = item.Group;
-            while (g != null && g != g.Group)
+                yield return item;
+            var g = (T)item.Group;
+            while (g != null && !ListHelper.Equal(g, (T)g.Group))
             {
-                yield return (T)g;
-                g = g.Group;
+                yield return g;
+                g = (T)g.Group;
             }
         }
 

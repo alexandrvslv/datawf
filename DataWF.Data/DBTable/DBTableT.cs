@@ -40,34 +40,27 @@ namespace DataWF.Data
         protected readonly List<T> insertItems = new List<T>();
         protected readonly List<IDBTableView> queryViews = new List<IDBTableView>(1);
 
-        public DBTable()
-        {
-            SetItemType(typeof(T));
-        }
+        public DBTable() : this(null)
+        { }
 
         public DBTable(string name) : base(name)
         {
+            DefaultComparer = DBItemDefaultComparer<T>.Instance;
             SetItemType(typeof(T));
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public int Capacity
         {
-            get { return items.Capacity; }
-            set { items.Capacity = value; }
+            get => items.Capacity;
+            set => items.Capacity = value;
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public override int Count
-        {
-            get { return items.Count; }
-        }
+        public override int Count => items.Count;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public override IDBTableView DefaultItemsView
-        {
-            get { return DefaultView; }
-        }
+        public override IDBTableView DefaultItemsView => DefaultView;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public DBTableView<T> DefaultView
@@ -1054,7 +1047,7 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    value = SelectQuery(null, query, comparer);
+                    value = SelectValues(null, query, comparer);
                 }
             }
             else if (value.GetType() == typeof(QEnum))

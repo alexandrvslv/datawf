@@ -58,23 +58,31 @@ namespace DataWF.Common
                 keys |= TypeSerializationInfoKeys.IsDictionary;
             Keys = keys;
 
-            Properties = new NamedList<IPropertySerializeInfo>(6, (ListIndex<IPropertySerializeInfo, string>)PropertySerializeInfo.NameInvoker.Instance.CreateIndex(false));
-            Properties.Indexes.Add(PropertySerializeInfo.IsAttributeInvoker.Instance);
             int order = 0;
+            var chackedProperties = new List<PropertyInfo>();
             foreach (var property in properties)
             {
-                var exist = GetProperty(property.Name);
+                var name = property.Name;
+                var exist = chackedProperties.Find(p => string.Equals(p.Name, name, StringComparison.Ordinal));
+
                 if (TypeHelper.IsNonSerialize(property))
                 {
                     if (exist != null)
-                        Properties.Remove(exist);
+                        chackedProperties.Remove(exist);
                     continue;
                 }
                 //var method = property.GetGetMethod() ?? property.GetSetMethod();
                 if (exist != null)// && method.Equals(method.GetBaseDefinition())
                 {
-                    Properties.Remove(exist);
+                    chackedProperties.Remove(exist);
                 }
+                chackedProperties.Add(property);
+            }
+
+            Properties = new NamedList<IPropertySerializeInfo>(6, (ListIndex<IPropertySerializeInfo, string>)PropertySerializeInfo.NameInvoker.Instance.CreateIndex(false));
+            Properties.Indexes.Add(PropertySerializeInfo.IsAttributeInvoker.Instance);
+            foreach (var property in chackedProperties)
+            {
                 Properties.Add(CreateProperty(property, ++order));
             }
             Properties.ApplySortInternal(PropertySerializeInfo.OrderInvoker.Instance.CreateComparer<IPropertySerializeInfo>());

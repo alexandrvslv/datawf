@@ -114,9 +114,9 @@ namespace DataWF.Data
             else if (val2 == null)
                 return comparer.Type == CompareTypes.Is ? comparer.Not : false;
             if (val1 is QQuery query1)
-                val1 = item.Table.SelectQuery(item, query1, comparer);
+                val1 = item.Table.SelectValues(item, query1, comparer);
             if (val2 is QQuery query2)
-                val2 = item.Table.SelectQuery(item, query2, comparer);
+                val2 = item.Table.SelectValues(item, query2, comparer);
             if (val1 is Enum)
                 val1 = (int)val1;
             if (val2 is Enum)

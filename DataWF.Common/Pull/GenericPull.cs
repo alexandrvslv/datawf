@@ -25,9 +25,9 @@ namespace DataWF.Common
         public abstract void SetValue(in PullHandler index, T value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetValue(short block, short blockIndex) => GetValue(new PullHandler(block, blockIndex));
+        public T GetValue(int block, int blockIndex) => GetValue(new PullHandler(block, blockIndex));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetValue(short block, short blockIndex, T value) => SetValue(new PullHandler(block, blockIndex), value);
+        public void SetValue(int block, int blockIndex, T value) => SetValue(new PullHandler(block, blockIndex), value);
     }
 }

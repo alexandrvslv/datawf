@@ -42,7 +42,7 @@ namespace DataWF.Common
             return GetValue(PullHandler.FromSeqence(index, blockSize));
         }
 
-        public override object Get(short block, short blockIndex)
+        public override object Get(int block, int blockIndex)
         {
             return GetValue(new PullHandler(block, blockIndex));
         }
@@ -52,14 +52,14 @@ namespace DataWF.Common
             SetValue(PullHandler.FromSeqence(index, blockSize), (T)value);
         }
 
-        public override void Set(short block, short blockIndex, object value)
+        public override void Set(int block, int blockIndex, object value)
         {
             SetValue(new PullHandler(block, blockIndex), (T)value);
         }
 
         public override T GetValue(in PullHandler handler)
         {
-            if (handler.Block >= blockCount)
+            if ((uint)handler.Block >= (uint)blockCount)
             {
                 return default(T);
             }
@@ -69,11 +69,11 @@ namespace DataWF.Common
 
         public override void SetValue(in PullHandler handler, T value)
         {
-            if (handler.Block >= blockCount)
+            if ((uint)handler.Block >= (uint)blockCount)
             {
                 var blockAdd = (handler.Block + 1) - blockCount;
                 Interlocked.Add(ref blockCount, blockAdd);
-                if (blockCount >= array.Length)
+                if ((uint)blockCount >= (uint)array.Length)
                 {
                     Reallocate(blockCount);
                 }

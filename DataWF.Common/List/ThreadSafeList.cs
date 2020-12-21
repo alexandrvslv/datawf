@@ -30,6 +30,7 @@ namespace DataWF.Common
         }
 
         public int Count => _count;
+
         public int Capacity => _capacity;
 
         public bool IsSynchronized => true;
@@ -112,7 +113,7 @@ namespace DataWF.Common
 
         public int BinarySearch(T item, IComparer<T> comparer)
         {
-            return Array.BinarySearch(items, 0, _count, item, comparer); //ListHelper.BinarySearch(items, 0, count, item, comparer, false);
+            return Array.BinarySearch(items, 0, _count, item, comparer);//ListHelper.BinarySearch(items, 0, _count - 1, item, comparer, false);//
         }
 
         public int IndexOf(T item)

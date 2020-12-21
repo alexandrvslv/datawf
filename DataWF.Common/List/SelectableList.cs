@@ -247,15 +247,15 @@ namespace DataWF.Common
 
             if (Interlocked.CompareExchange(ref notifySemafore, 1, 0) == 0)
             {
-                _ = DequeueNotification();
+                Task.Run(DequeueNotification);
             }
         }
 
-        private async ValueTask DequeueNotification()
+        private async void DequeueNotification()
         {
             try
             {
-                await Task.Delay(30);
+                await Task.Delay(20);
                 while (notifyQueue.TryDequeue(out var args))
                 {
                     if (args.Item2 is NotifyCollectionChangedEventArgs collectionArgs
@@ -526,7 +526,7 @@ namespace DataWF.Common
                 int index = GetIndexForAdding(item);
                 if (index < 0)
                 {
-                    index = -index - 1;
+                    index = ~index;
                     if (index > items.Count)
                     {
                         index = items.Count;
@@ -551,7 +551,7 @@ namespace DataWF.Common
         {
             if (comparer != null)
             {
-                var index = ListHelper.BinarySearch(items, item, comparer);
+                var index = ListHelper.BinarySearch(items, item, comparer, true);
                 return checkUnique ? index : -Math.Abs(index);
             }
             return checkUnique
@@ -563,7 +563,7 @@ namespace DataWF.Common
         {
             if (comparer != null)
             {
-                return ListHelper.BinarySearch(items, item, comparer);
+                return ListHelper.BinarySearch(items, item, comparer, true);
             }
             return Contains(item) ? IndexOf(item) : -(items.Count + 1);
         }

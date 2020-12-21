@@ -229,6 +229,8 @@ namespace DataWF.Data
 
         protected DBTable(string name = null) : base(name)
         {
+            DefaultComparer = DBItemDefaultComparer<DBItem>.Instance;
+
             ColumnGroups = new DBColumnGroupList(this);
             Columns = new DBColumnList<DBColumn>(this);
             Indexes = new DBIndexList(this);
@@ -298,6 +300,7 @@ namespace DataWF.Data
             }
         }
 
+        [XmlIgnore, JsonIgnore]
         public override string FullName => string.Format("{0}.{1}", Schema != null ? Schema.Name : string.Empty, name);
 
         [Category("Database")]
@@ -599,11 +602,13 @@ namespace DataWF.Data
         [Category("Performance")]
         public virtual DBForeignList Foreigns { get; set; }
 
+        [XmlIgnore, JsonIgnore]
         public abstract int Count { get; }
 
-        [Browsable(false)]
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public abstract IDBTableView DefaultItemsView { get; }
 
+        [XmlIgnore, JsonIgnore]
         public List<DBForeignKey> ChildRelations { get; } = new List<DBForeignKey>();
 
         public abstract bool Contains(DBItem item);
@@ -656,7 +661,6 @@ namespace DataWF.Data
 
         protected internal void SetItemType(Type type)
         {
-            DefaultComparer = DBItemDefaultComparer.Instance;
             itemType = ItemTypes[0] = new DBItemType { Type = type };
             OnPropertyChanged(nameof(ItemType));
             OnPropertyChanged(nameof(ItemTypeName));
@@ -1190,7 +1194,7 @@ namespace DataWF.Data
 
         #region Use Index
 
-        public IEnumerable<object> SelectQuery(DBItem item, QQuery query, CompareType compare)
+        public IEnumerable SelectValues(DBItem item, QQuery query, CompareType compare)
         {
             if (query.Columns.Count == 0)
             {
@@ -1200,15 +1204,18 @@ namespace DataWF.Data
             {
                 foreach (QParam param in query.GetAllParameters())
                 {
-                    if (param.RightIsColumn)
+                    if (param.RightColumn is var column)
                     {
-                        DBColumn column = param.RightColumn;
                         if (column.Table == this)
                         {
                             param.RightQColumn.Temp = item.GetValue(column);
                         }
                     }
                 }
+            }
+            if (query.Columns[0] is QColumn qColumn)
+            {
+               return qColumn.Column.Distinct(query.Select());
             }
             var objects = new List<object>();
             foreach (DBItem row in query.Select())
@@ -1218,9 +1225,9 @@ namespace DataWF.Data
                 if (index < 0)
                 {
                     objects.Insert(-index - 1, value);
-                    yield return value;
                 }
             }
+            return objects;
         }
         public abstract IEnumerable<DBItem> SelectItems(DBColumn column, CompareType comparer, object val);
 

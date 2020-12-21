@@ -697,11 +697,7 @@ namespace DataWF.Data
 
         public IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
         {
-            var keyType = GetDataType();
-            if (IsReference)
-            {
-                keyType = typeof(string);
-            }
+            var keyType = DataType;
             var compareType = typeof(DBComparer<,>).MakeGenericType(type, keyType);
             return (IComparer)EmitInvoker.CreateObject(compareType,
                 new Type[] { typeof(DBColumn), typeof(ListSortDirection) },
@@ -743,13 +739,6 @@ namespace DataWF.Data
         public DBForeignKey GetForeign()
         {
             return Table?.Foreigns.GetForeignByColumn(this);
-        }
-
-        public Type GetDataType()
-        {
-            if (DataType.IsValueType)
-                return typeof(Nullable<>).MakeGenericType(DataType);
-            return DataType;
         }
 
         #region IComparable Members
@@ -928,6 +917,8 @@ namespace DataWF.Data
         public abstract bool CheckItem(DBItem item, object val2, CompareType comparer);
 
         public abstract IEnumerable<T> SelectIndex<T>(object value, CompareType comparer) where T : DBItem;
+
+        public abstract IEnumerable Distinct(IEnumerable<DBItem> enumerable);
 
         public void RemoveConstraints()
         {
@@ -1333,5 +1324,7 @@ namespace DataWF.Data
 
             public override void SetValue(DBColumn target, DBColumn value) => target.BaseColumn = value;
         }
+
+        
     }
 }

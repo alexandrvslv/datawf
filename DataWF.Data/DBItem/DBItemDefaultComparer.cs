@@ -17,24 +17,31 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF.Common;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace DataWF.Data
 {
-    public class DBItemDefaultComparer : IComparer<DBItem>, IComparer
+    public class DBItemDefaultComparer<T> : IComparer<T>, IComparer where T : DBItem
     {
-        public static readonly DBItemDefaultComparer Instance = new DBItemDefaultComparer();
+        public static readonly DBItemDefaultComparer<T> Instance = new DBItemDefaultComparer<T>();
 
-        public int Compare(DBItem x, DBItem y)
+        public int Compare(T x, T y)
         {
-            return x.handler.CompareTo(in y.handler);
+            ref readonly var xHandler = ref x.handler;
+            ref readonly var yHandler = ref y.handler;
+            var xValue = xHandler.Value;
+            var yValue = yHandler.Value;
+            return xValue == yValue ? 0 : xValue > yValue ? 1 : -1;
         }
 
         public int Compare(object x, object y)
         {
-            return Compare((DBItem)x, (DBItem)y);
+            return Compare((T)x, (T)y);
         }
     }
+
 }
 

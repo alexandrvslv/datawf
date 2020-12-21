@@ -156,7 +156,7 @@ namespace DataWF.Data
         IEnumerable<DBItem> SelectItems(DBColumn column, CompareType comparer, object val);
         IEnumerable<DBItem> SelectItems(QQuery qQuery);
         IEnumerable<DBItem> SelectItems(string qQuery);
-        IEnumerable<object> SelectQuery(DBItem item, QQuery query, CompareType compare);
+        IEnumerable SelectValues(DBItem item, QQuery query, CompareType compare);
 
         bool ParseQuery(string filter, out QQuery query);
         void Trunc();

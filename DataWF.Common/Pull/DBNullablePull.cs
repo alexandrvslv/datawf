@@ -13,7 +13,7 @@ namespace DataWF.Common
             SetValue(PullHandler.FromSeqence(index, blockSize), DBNullable<T>.CheckNull(value));
         }
 
-        public override void Set(short block, short blockIndex, object value)
+        public override void Set(int block, int blockIndex, object value)
         {
             SetValue(new PullHandler(block, blockIndex), DBNullable<T>.CheckNull(value));
         }

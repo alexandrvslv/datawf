@@ -247,7 +247,7 @@ namespace DataWF.Common
 
         public static int BinarySearch<T>(IList<T> array, T value, IComparer<T> comp = null, bool checkHash = true)
         {
-            return BinarySearch<T>(array, 0, array.Count - 1, value, comp);
+            return BinarySearch<T>(array, 0, array.Count - 1, value, comp, checkHash);
         }
 
         public static int BinarySearch<T>(IList<T> array, int low, int high, T value, IComparer<T> comp = null, bool checkHash = true)
@@ -260,11 +260,7 @@ namespace DataWF.Common
 
                 // check to see if value is equal to item in array
                 rez = Compare(value, array[midpoint], comp, checkHash);
-                if (rez == 0)//check miss
-                    if (midpoint > 0 && Compare(value, array[midpoint - 1], comp, checkHash) <= 0)
-                        rez = -1;
-                    else if (midpoint < array.Count - 1 && Compare(value, array[midpoint + 1], comp, checkHash) >= 0)
-                        rez = 1;
+                
                 if (rez == 0)
                     return midpoint;
                 if (rez < 0)
@@ -273,7 +269,34 @@ namespace DataWF.Common
                     low = midpoint + 1;
             }
             // item was not found
-            return -low - 1;
+            return ~low;
+        }
+
+        public static int BinarySearch<T>(T[] array, T value, IComparer<T> comp = null, bool checkHash = true)
+        {
+            return BinarySearch<T>(array, 0, array.Length - 1, value, comp, checkHash);
+        }
+
+        public static int BinarySearch<T>(T[] array, int low, int high, T value, IComparer<T> comp = null, bool checkHash = true)
+        {
+            int midpoint;
+            int rez;
+            while (low <= high)
+            {
+                midpoint = low + ((high - low) >> 1);
+
+                // check to see if value is equal to item in array
+                rez = Compare(value, array[midpoint], comp, checkHash);
+                
+                if (rez == 0)
+                    return midpoint;
+                if (rez < 0)
+                    high = midpoint - 1;
+                else
+                    low = midpoint + 1;
+            }
+            // item was not found
+            return ~low;
         }
 
         public static int BinarySearch(IList array, object value, IComparer comp = null, bool checkHash = true)
@@ -293,16 +316,16 @@ namespace DataWF.Common
             int rez;
             while (low <= high)
             {
-                midpoint = (low + high) >> 1;
+                midpoint = low + ((high - low) >> 1);
 
                 // check to see if value is equal to item in array
                 rez = Compare(value, array[midpoint], comp, checkHash);
 
-                if (rez == 0)//check miss
-                    if (midpoint > 0 && Compare(value, array[midpoint - 1], comp, checkHash) <= 0)
-                        rez = -1;
-                    else if (midpoint < array.Count - 1 && Compare(value, array[midpoint + 1], comp, checkHash) >= 0)
-                        rez = 1;
+                //if (rez == 0)//check miss
+                //    if (midpoint > 0 && Compare(value, array[midpoint - 1], comp, checkHash) <= 0)
+                //        rez = -1;
+                //    else if (midpoint < array.Count - 1 && Compare(value, array[midpoint + 1], comp, checkHash) >= 0)
+                //        rez = 1;
 
                 if (rez == 0)
                     return midpoint;
@@ -312,7 +335,7 @@ namespace DataWF.Common
                     low = midpoint + 1;
             }
             // item was not found
-            return -low - 1;
+            return ~low;
         }
 
         public static IEnumerable<T> TypeOf<T>(this IEnumerable enumerable)

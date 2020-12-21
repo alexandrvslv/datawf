@@ -50,12 +50,6 @@ namespace DataWF.Data
         public QQuery()
             : base()
         {
-            tables = new QItemList<QTable>(this);
-            parameters = new QParamList(this);
-            parameters.CollectionChanged += OnParametersListChanged;
-            columns = new QItemList<QItem>(this);
-            orders = new QItemList<QOrder>(this);
-            groups = new QItemList<QColumn>(this);
             order = 0;
         }
 
@@ -89,8 +83,8 @@ namespace DataWF.Data
 
         public QTable QTable
         {
-            get => tables.FirstOrDefault();
-            set => tables.Add(value);
+            get => Tables.FirstOrDefault();
+            set => Tables.Add(value);
         }
 
         public override DBTable Table
@@ -101,19 +95,21 @@ namespace DataWF.Data
                 if (value != Table)
                 {
                     if (value != null)
-                        tables.Add(new QTable(value, "a"));
+                        Tables.Add(new QTable(value, "a"));
                     else
-                        tables.Clear();
+                        Tables.Clear();
                 }
             }
         }
-        public QItemList<QTable> Tables => tables;
+        public QItemList<QTable> Tables => tables ?? (tables = new QItemList<QTable>(this));
 
-        public QItemList<QItem> Columns => columns;
+        public QItemList<QItem> Columns => columns ?? (columns = new QItemList<QItem>(this));
 
-        public QItemList<QOrder> Orders => orders;
+        public QItemList<QOrder> Orders => orders ?? (orders = new QItemList<QOrder>(this));
 
-        public QParamList Parameters => parameters;
+        public QParamList Parameters => parameters ?? (parameters = new QParamList(this));
+
+        public QItemList<QColumn> Groups => groups ?? (groups = new QItemList<QColumn>(this));
 
         public IQItemList Container => baseQuery ?? this;
 
@@ -136,7 +132,7 @@ namespace DataWF.Data
                     if (param != null)
                     {
                         param.IsDefault = true;
-                        parameters.Insert(0, param);
+                        Parameters.Insert(0, param);
                     }
                 }
                 else
@@ -144,7 +140,7 @@ namespace DataWF.Data
                     var typeIndex = Table.GetTypeIndex(type);
                     if (typeIndex <= 0)
                     {
-                        parameters.Remove(param);
+                        Parameters.Remove(param);
                     }
                     else
                     {
@@ -169,14 +165,14 @@ namespace DataWF.Data
                         param.IsDefault = true;
                         if (param != null)
                         {
-                            parameters.Insert(0, param);
+                            Parameters.Insert(0, param);
                         }
                     }
                     else
                     {
                         if (status == DBStatus.Empty)
                         {
-                            parameters.Remove(param);
+                            Parameters.Remove(param);
                         }
                         else
                         {
@@ -196,7 +192,7 @@ namespace DataWF.Data
         public QParam Add()
         {
             var param = new QParam();
-            parameters.Add(param);
+            Parameters.Add(param);
             return param;
         }
 
@@ -279,16 +275,16 @@ namespace DataWF.Data
 
         public DBColumn ParseColumn(string word)
         {
-            if (tables.Count == 1)
+            if (Tables.Count == 1)
             {
-                DBColumn column = tables[0].Table.ParseColumnProperty(word);
+                DBColumn column = Tables[0].Table.ParseColumnProperty(word);
                 if (column != null)
                     return column;
             }
-            else if (tables.Count > 1)
+            else if (Tables.Count > 1)
             {
                 string prefix = word.Substring(0, word.IndexOf('.'));
-                foreach (var table in tables)
+                foreach (var table in Tables)
                     if (prefix.Equals(table.TableName, StringComparison.OrdinalIgnoreCase) ||
                         prefix.Equals(table.Alias, StringComparison.OrdinalIgnoreCase))
                         return table.Table.ParseColumnProperty(word);
@@ -334,9 +330,10 @@ namespace DataWF.Data
         public void Parse(string query)
         {
             CacheQuery = query;
-            parameters.Clear();
-            columns.Clear();
-            orders.Clear();
+            parameters?.Clear();
+            columns?.Clear();
+            orders?.Clear();
+            groups?.Clear();
             if (query == null || query.Length == 0)
                 return;
             bool alias = false;
@@ -368,7 +365,7 @@ namespace DataWF.Data
                         if (tb != null)
                         {
                             table = new QTable(tb);
-                            tables.Add(table);
+                            Tables.Add(table);
                         }
                         else if (table != null)
                         {
@@ -449,7 +446,7 @@ namespace DataWF.Data
                                             if (fn != QFunctionType.none)
                                             {
                                                 func = new QFunc(fn);
-                                                columns.Add(func);
+                                                Columns.Add(func);
                                             }
                                             else
                                             {
@@ -457,7 +454,7 @@ namespace DataWF.Data
                                                 if (scolumn != null)
                                                 {
                                                     column = new QColumn(scolumn) { Prefix = prefix.FirstOrDefault() };
-                                                    columns.Add(column);
+                                                    Columns.Add(column);
                                                     prefix.Clear();
                                                 }
                                             }
@@ -470,7 +467,7 @@ namespace DataWF.Data
                                     if (word2.StartsWith("select", StringComparison.OrdinalIgnoreCase))
                                     {
                                         sub = new QQuery(word2, null, null, this);
-                                        columns.Add(sub);
+                                        Columns.Add(sub);
                                         sub = null;
 
                                     }
@@ -507,7 +504,7 @@ namespace DataWF.Data
                                         if (parametergroup != null)
                                             parametergroup.Parameters.Add(parameter);
                                         else
-                                            parameters.Add(parameter);
+                                            Parameters.Add(parameter);
                                     }
 
                                     if (Helper.IsDecimal(word))
@@ -569,7 +566,7 @@ namespace DataWF.Data
                                                 else
                                                 {
                                                     var wcolumn = ParseColumn(word);
-                                                    if (wcolumn != null && (prefix.Count == 0 || tables.Any(p => string.Equals(p.Alias, prefix.FirstOrDefault(), StringComparison.OrdinalIgnoreCase))))
+                                                    if (wcolumn != null && (prefix.Count == 0 || Tables.Any(p => string.Equals(p.Alias, prefix.FirstOrDefault(), StringComparison.OrdinalIgnoreCase))))
                                                     {
                                                         column = new QColumn(wcolumn) { Prefix = prefix.FirstOrDefault() };
                                                         prefix.Clear();
@@ -712,7 +709,7 @@ namespace DataWF.Data
                                                 if (parametergroup != null)
                                                     parametergroup.Parameters.Add(parameter);
                                                 else
-                                                    parameters.Add(parameter);
+                                                    Parameters.Add(parameter);
                                             }
                                             parametergroup = parameter;
                                             parameter = null;
@@ -731,13 +728,13 @@ namespace DataWF.Data
                                     continue;
 
                                 var cl = ParseColumn(word);
-                                if (cl != null && (prefix.Count == 0 || tables.Any(p => string.Equals(p.Alias, prefix.FirstOrDefault(), StringComparison.OrdinalIgnoreCase))))
+                                if (cl != null && (prefix.Count == 0 || Tables.Any(p => string.Equals(p.Alias, prefix.FirstOrDefault(), StringComparison.OrdinalIgnoreCase))))
                                 {
                                     order = new QOrder
                                     {
                                         Column = new QColumn(cl) { Prefix = prefix.FirstOrDefault() }
                                     };
-                                    orders.Add(order);
+                                    Orders.Add(order);
                                     prefix.Clear();
                                 }
                                 else if (word.Equals("asc", StringComparison.OrdinalIgnoreCase))
@@ -769,7 +766,7 @@ namespace DataWF.Data
                                             {
                                                 Column = new QReflection(invoker)
                                             };
-                                            orders.Add(order);
+                                            Orders.Add(order);
                                             prefix.Clear();
                                         }
                                     }
@@ -782,7 +779,7 @@ namespace DataWF.Data
                                             {
                                                 Column = new QReflection(invoker)
                                             };
-                                            orders.Add(order);
+                                            Orders.Add(order);
                                             prefix.Clear();
                                         }
                                     }
@@ -1053,8 +1050,8 @@ namespace DataWF.Data
                         }
                 }
                 q.BuildParam(dbColumn, value, buildParam);
-                param = parameters[parameters.Count - 1];
-                if (parameters.Count > 1)
+                param = Parameters[Parameters.Count - 1];
+                if (Parameters.Count > 1)
                 {
                     param.Logic = LogicType.And;
                 }
@@ -1252,10 +1249,6 @@ namespace DataWF.Data
             }
         }
 
-        public void OnParametersListChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-        }
-
         public bool CheckItem(DBItem item)
         {
             return QParam.CheckItem(item, Parameters);
@@ -1273,9 +1266,9 @@ namespace DataWF.Data
             var from = new StringBuilder();
             var whr = ToWhere(command);
 
-            if (defColumns || columns.Count == 0)
+            if (defColumns || (columns?.Count ?? 0) == 0)
             {
-                var table = tables.FirstOrDefault();
+                var table = Tables.FirstOrDefault();
                 foreach (var col in table.Table.Columns.Where(p => !p.IsFile))
                 {
                     string temp = table.Table.FormatQColumn(col, table.Alias);
@@ -1289,7 +1282,7 @@ namespace DataWF.Data
             }
             else
             {
-                foreach (QItem col in columns)
+                foreach (QItem col in Columns)
                 {
                     string temp = col.Format(command);
                     if (temp.Length > 0)
@@ -1300,22 +1293,23 @@ namespace DataWF.Data
                     }
                 }
             }
-
-            foreach (QOrder col in orders)
+            if (orders != null)
             {
-                var formatOrder = col.Format(command);
-                if (!string.IsNullOrEmpty(formatOrder))
+                foreach (QOrder col in Orders)
                 {
-                    order.Append(formatOrder);
-                    if (!orders.IsLast(col))
-                        order.Append(", ");
+                    var formatOrder = col.Format(command);
+                    if (!string.IsNullOrEmpty(formatOrder))
+                    {
+                        order.Append(formatOrder);
+                        if (!orders.IsLast(col))
+                            order.Append(", ");
+                    }
                 }
             }
-
-            foreach (QTable table in tables)
+            foreach (QTable table in Tables)
             {
                 from.Append(table.Format(command));
-                if (!tables.IsLast(table))
+                if (!Tables.IsLast(table))
                     from.Append(", ");
             }
             return $@"select {cols.ToString()}
@@ -1327,7 +1321,7 @@ namespace DataWF.Data
         public string ToWhere(IDbCommand command = null)
         {
             var wbuf = new StringBuilder();
-            for (int i = 0; i < parameters.Count; i++)
+            for (int i = 0; i < Parameters.Count; i++)
             {
                 QParam param = parameters[i];
                 string bufRez = param.Format(command);
@@ -1372,7 +1366,7 @@ namespace DataWF.Data
         public string ToText()
         {
             string buf = string.Empty;
-            foreach (QParam param in parameters)
+            foreach (QParam param in Parameters)
             {
                 string bufRez = param.ToString();
                 if (bufRez != "")
@@ -1383,7 +1377,7 @@ namespace DataWF.Data
 
         public bool IsEmpty()
         {
-            return parameters.Count == 0;
+            return (parameters?.Count ?? 0) == 0;
         }
 
         public IEnumerable<DBItem> Load(DBLoadParam param = DBLoadParam.Load)
@@ -1398,12 +1392,12 @@ namespace DataWF.Data
 
         public bool Contains(string column)
         {
-            return parameters.Select(QParam.ColumnNameInvoker.Instance, CompareType.Equal, column).Any();
+            return parameters?.Select(QParam.ColumnNameInvoker.Instance, CompareType.Equal, column).Any() ?? false;
         }
 
         public QParam GetByColumn(DBColumn column)
         {
-            foreach (QParam p in parameters)
+            foreach (QParam p in Parameters)
                 if (p.IsColumn(column))
                     return p;
             return null;
@@ -1416,11 +1410,11 @@ namespace DataWF.Data
 
         public void Remove(DBColumn column)
         {
-            for (int i = 0; i < parameters.Count;)
+            for (int i = 0; i < Parameters.Count;)
             {
-                QParam p = parameters[i];
+                QParam p = Parameters[i];
                 if (p.IsColumn(column))
-                    parameters.Remove(p);
+                    Parameters.Remove(p);
                 else
                     i++;
             }
@@ -1448,8 +1442,7 @@ namespace DataWF.Data
         public void BuildColumn(DBColumn dBColumn)
         {
             QColumn column = new QColumn(dBColumn);
-
-            columns.Add(column);
+            Columns.Add(column);
         }
 
         public void Delete(QItem item)

@@ -35,7 +35,7 @@ namespace DataWF.Data
     public class DBColumn<T> : DBColumn, IInvoker<DBItem, T>, IValuedInvoker<T>
     {
         public new static readonly DBColumn<T> EmptyKey = new DBColumn<T>();
-
+        private static readonly char[] trimEntry = new char[] { ' ', '\'' };
         protected GenericPull<T> pull;
         protected IPullOutIndex<DBItem, T> pullIndex;
         private IInvoker propertyInvoker;
@@ -191,7 +191,7 @@ namespace DataWF.Data
         public virtual T GetValue(DBItem item)
         {
             if (pull != null)
-                return pull.GetValue(item.handler);
+                return pull.GetValue(in item.handler);
             else if (typedPropertyInvoker != null)
                 return typedPropertyInvoker.GetValue(item);
             return default(T);
@@ -206,7 +206,7 @@ namespace DataWF.Data
         {
             if (pull != null)
             {
-                pull.SetValue(item.Handler, value);
+                pull.SetValue(in item.handler, value);
             }
             else if (typedPropertyInvoker != null)
             {
@@ -691,12 +691,13 @@ namespace DataWF.Data
                     return true;
             }
         }
+
         public bool CheckItem(DBItem item, T val1, object val2, CompareType comparer)
         {
             if (item == null)
                 return false;
             if (val2 is QQuery query2)
-                val2 = item.Table.SelectQuery(item, query2, comparer);
+                val2 = item.Table.SelectValues(item, query2, comparer);
 
             switch (comparer.Type)
             {
@@ -706,16 +707,23 @@ namespace DataWF.Data
                 case CompareTypes.In:
                     if (val2 is string)
                         val2 = val2.ToString().Split(QQuery.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
-                    var list = val2 as IEnumerable;
-                    if (list != null)
+                    if (val2 is IEnumerable<T> typedList)
                     {
-                        foreach (object s in list)
+                        foreach (T entry in typedList)
                         {
-                            object comp = s;
-                            if (comp is QItem)
-                                comp = ((QItem)comp).GetValue(item);
+                            if (ListHelper.Equal(entry, val1) && !comparer.Not)
+                                return true;
+                        }
+                    }
+                    else if (val2 is IEnumerable list)
+                    {
+                        foreach (object entry in list)
+                        {
+                            object comp = entry;
+                            if (comp is QItem qItem)
+                                comp = qItem.GetValue(item);
                             if (comp is string)
-                                comp = ((string)comp).Trim(' ', '\'');
+                                comp = ((string)comp).Trim(trimEntry);
 
                             if (comp.Equals(val1) && !comparer.Not)
                                 return true;
@@ -765,6 +773,21 @@ namespace DataWF.Data
             if (value == null)
                 return Search(comparer, default(T), list);
             return base.Search(comparer, value, list);
+        }
+
+        public override IEnumerable Distinct(IEnumerable<DBItem> enumerable)
+        {
+            var result = new List<T>();
+            foreach (var item in enumerable)
+            {
+                var value = GetValue(item);
+                int index = ListHelper.BinarySearch<T>(result, value, null);
+                if (index < 0)
+                {
+                    result.Insert(-index - 1, value);
+                }
+            }
+            return result;
         }
 
         T IValuedInvoker<T>.GetValue(object target)

@@ -96,11 +96,11 @@ namespace DataWF.Common
 
         public abstract object Get(int index);
 
-        public abstract object Get(short block, short blockIndex);
+        public abstract object Get(int block, int blockIndex);
 
         public abstract void Set(int index, object value);
 
-        public abstract void Set(short block, short blockIndex, object value);
+        public abstract void Set(int block, int blockIndex, object value);
 
         public T GetValue<T>(in PullHandler handler) => ((GenericPull<T>)this).GetValue(in handler);
 
@@ -110,9 +110,9 @@ namespace DataWF.Common
 
         public void SetValue<T>(int index, T value) => ((GenericPull<T>)this).SetValue(index, value);
 
-        public T GetValue<T>(short block, short blockIndex) => ((GenericPull<T>)this).GetValue(new PullHandler(block, blockIndex));
+        public T GetValue<T>(int block, int blockIndex) => ((GenericPull<T>)this).GetValue(new PullHandler(block, blockIndex));
 
-        public void SetValue<T>(short block, short blockIndex, T value) => ((GenericPull<T>)this).SetValue(new PullHandler(block, blockIndex), value);
+        public void SetValue<T>(int block, int blockIndex, T value) => ((GenericPull<T>)this).SetValue(new PullHandler(block, blockIndex), value);
 
         public abstract bool EqualNull(object value);
 

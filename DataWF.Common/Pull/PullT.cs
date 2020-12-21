@@ -46,19 +46,19 @@ namespace DataWF.Common
             SetValue(PullHandler.FromSeqence(index, blockSize), (T)value);
         }
 
-        public override object Get(short block, short blockIndex)
+        public override object Get(int block, int blockIndex)
         {
             return GetValue(new PullHandler(block, blockIndex));
         }
 
-        public override void Set(short block, short blockIndex, object value)
+        public override void Set(int block, int blockIndex, object value)
         {
             SetValue(block, blockIndex, (T)value);
         }
 
         public override T GetValue(in PullHandler handler)
         {
-            if (handler.Block >= blockCount)
+            if ((uint)handler.Block >= (uint)blockCount)
             {
                 return default(T);
             }
@@ -68,7 +68,7 @@ namespace DataWF.Common
 
         public override void SetValue(in PullHandler handler, T value)
         {
-            if (handler.Block >= blockCount)
+            if ((uint)handler.Block >= (uint)blockCount)
             {
                 var blockAdd = (handler.Block + 1) - blockCount;
                 array.AddRange(Enumerable.Repeat((T[])null, blockAdd));
