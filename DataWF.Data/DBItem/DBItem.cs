@@ -1699,9 +1699,9 @@ namespace DataWF.Data
 
         internal int CompareByHandler(DBItem y)
         {
-            var xValue = handler.Value;
-            var yValue = y.handler.Value;
-            return xValue.CompareTo(yValue);
+            ref readonly var xHandler = ref handler;
+            ref readonly var yHandler = ref y.handler;
+            return xHandler.Value.CompareTo(yHandler.Value);
         }
     }
 }

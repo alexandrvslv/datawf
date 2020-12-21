@@ -40,11 +40,13 @@ namespace DataWF.Data
         protected IPullOutIndex<DBItem, T> pullIndex;
         private IInvoker propertyInvoker;
         private IValuedInvoker<T> typedPropertyInvoker;
+        private IEqualityComparer<T> equalityComparer;
 
         public DBColumn() : base()
         {
             DataType = typeof(T);
             TypedSerializer = (IElementSerializer<T>)TypeHelper.GetSerializer(DataType);
+            equalityComparer = ListHelperEqualityComparer<T>.Default;
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -141,7 +143,7 @@ namespace DataWF.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual bool Equal(T oldValue, T newValue)
         {
-            return EqualityComparer<T>.Default.Equals(oldValue, newValue);
+            return equalityComparer.Equals(oldValue, newValue);
         }
 
         public override void Copy(PullHandler fromIndex, PullHandler toIndex)
@@ -676,9 +678,9 @@ namespace DataWF.Data
             switch (comparer.Type)
             {
                 case CompareTypes.Is:
-                    return ListHelper.Equal<T>(val1, default(T)) ? !comparer.Not : comparer.Not;
+                    return Equal(val1, default(T)) ? !comparer.Not : comparer.Not;
                 case CompareTypes.Equal:
-                    return ListHelper.Equal(val1, val2) ? !comparer.Not : comparer.Not;
+                    return Equal(val1, val2) ? !comparer.Not : comparer.Not;
                 case CompareTypes.Greater:
                     return ListHelper.Compare<T>(val1, val2) > 0;
                 case CompareTypes.GreaterOrEqual:
@@ -707,29 +709,7 @@ namespace DataWF.Data
                 case CompareTypes.In:
                     if (val2 is string)
                         val2 = val2.ToString().Split(QQuery.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
-                    if (val2 is IEnumerable<T> typedList)
-                    {
-                        foreach (T entry in typedList)
-                        {
-                            if (ListHelper.Equal(entry, val1) && !comparer.Not)
-                                return true;
-                        }
-                    }
-                    else if (val2 is IEnumerable list)
-                    {
-                        foreach (object entry in list)
-                        {
-                            object comp = entry;
-                            if (comp is QItem qItem)
-                                comp = qItem.GetValue(item);
-                            if (comp is string)
-                                comp = ((string)comp).Trim(trimEntry);
-
-                            if (comp.Equals(val1) && !comparer.Not)
-                                return true;
-                        }
-                    }
-                    return comparer.Not;
+                    return CheckIn(item, val1, val2, comparer.Not);
                 case CompareTypes.Between:
                     var between = val2 as QBetween;
                     if (between == null)
@@ -739,6 +719,33 @@ namespace DataWF.Data
                 default:
                     return CheckItem(item, val1, Parse(val2), comparer);
             }
+        }
+
+        public virtual bool CheckIn(DBItem item, T val1, object val2, bool not)
+        {
+            if (val2 is IEnumerable<T> typedList)
+            {
+                foreach (T entry in typedList)
+                {
+                    if (Equal(entry, val1) && !not)
+                        return true;
+                }
+            }
+            else if (val2 is IEnumerable list)
+            {
+                foreach (object entry in list)
+                {
+                    object comp = entry;
+                    if (comp is QItem qItem)
+                        comp = qItem.GetValue(item);
+                    if (comp is string)
+                        comp = ((string)comp).Trim(trimEntry);
+
+                    if (comp.Equals(val1) && !not)
+                        return true;
+                }
+            }
+            return not;
         }
 
         public virtual IEnumerable<TT> Search<TT>(CompareType comparer, T value, IEnumerable<TT> list) where TT : DBItem

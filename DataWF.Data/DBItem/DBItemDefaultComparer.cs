@@ -29,12 +29,8 @@ namespace DataWF.Data
         public static readonly DBItemDefaultComparer<T> Instance = new DBItemDefaultComparer<T>();
 
         public int Compare(T x, T y)
-        {
-            ref readonly var xHandler = ref x.handler;
-            ref readonly var yHandler = ref y.handler;
-            var xValue = xHandler.Value;
-            var yValue = yHandler.Value;
-            return xValue == yValue ? 0 : xValue > yValue ? 1 : -1;
+        {            
+            return x.CompareByHandler(y);
         }
 
         public int Compare(object x, object y)

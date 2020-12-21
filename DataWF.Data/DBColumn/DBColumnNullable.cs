@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json;
 
@@ -94,6 +95,20 @@ namespace DataWF.Data
                 return formattable.ToString(Format, CultureInfo.InvariantCulture);
             }
             return val.ToString();
+        }
+
+        public override bool CheckIn(DBItem item, T? val1, object val2, bool not)
+        {
+            if (val2 is IEnumerable<T> typedList)
+            {
+                foreach (T entry in typedList)
+                {
+                    if (Equal(entry, val1) && !not)
+                        return true;
+                }
+                return not;
+            }
+            return base.CheckIn(item, val1, val2, not);
         }
 
         public override T? Parse(object value)
