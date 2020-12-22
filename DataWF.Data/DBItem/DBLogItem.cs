@@ -167,7 +167,7 @@ namespace DataWF.Data
                 {
                     using (var stream = GetMemoryStream(Table.FileKey, transaction))
                     {
-                        await BaseItem.SetBLOB(stream, BaseTable.FileBLOBKey, transaction);
+                        await BaseItem.SetBlob(stream, BaseTable.FileBLOBKey, transaction);
                     }
                 }
                 catch { }

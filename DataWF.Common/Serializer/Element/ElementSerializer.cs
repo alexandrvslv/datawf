@@ -7,6 +7,7 @@ namespace DataWF.Common
 {
     public abstract class ElementSerializer : IElementSerializer
     {
+        public int SizeOfType { get; protected set; }
         public abstract bool CanConvertString { get; }
         #region Binary
         public abstract object ReadObject(BinaryReader reader);

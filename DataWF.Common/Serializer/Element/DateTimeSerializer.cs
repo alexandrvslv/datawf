@@ -11,7 +11,9 @@ namespace DataWF.Common
         public static readonly DateTimeSerializer Instance = new DateTimeSerializer();
 
         public DateTimeSerializer() : base(false)
-        { }
+        {
+            SizeOfType = 8;
+        }
 
         public override BinaryToken BinaryToken => BinaryToken.DateTime;
 

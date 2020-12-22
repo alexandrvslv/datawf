@@ -31,6 +31,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -182,7 +183,6 @@ namespace DataWF.Data
         }
 
         protected DBCommand dmlInsert;
-        protected DBCommand dmlInsertSequence;
         protected DBCommand dmlDelete;
         protected IDBLogTable logTable;
         protected DBTableGroup tableGroup;
@@ -693,7 +693,7 @@ namespace DataWF.Data
 
         public void RefreshSequence(DBTransaction transaction, bool truncate = false)
         {
-            var maximum = DBSequence.Convert(transaction.ExecuteQuery($"select max({PrimaryKey.SqlName}) from {SqlName}"));
+            var maximum = Convert.ToInt64(transaction.ExecuteQuery($"select max({PrimaryKey.SqlName}) from {SqlName}"));
             if (!truncate)
             {
                 var current = Sequence.GetCurrent(transaction);
@@ -702,7 +702,7 @@ namespace DataWF.Data
                     return;
                 }
             }
-            Sequence.SetCurrent(maximum);
+            Sequence.Current = maximum;
             Sequence.NextInternal();
             Sequence.Save(transaction);
         }
@@ -810,6 +810,14 @@ namespace DataWF.Data
         protected void RaiseLoadCompleate(DBTransaction transaction)
         {
             LoadComplete?.Invoke(this, new DBLoadCompleteEventArgs(transaction.View, null));
+        }
+
+        public long GenerateId(DBTransaction transaction = null)
+        {
+            var id = transaction != null ? Sequence.GetNext(transaction) : Sequence.GetNext();
+            var pkSize = (PrimaryKey.SizeOfDataType - 1) * 8;
+            var identy = (long)Connection.DataBaseId << pkSize;
+            return id | identy;
         }
 
         public event EventHandler<DBLoadColumnsEventArgs> LoadColumns;
@@ -987,26 +995,15 @@ namespace DataWF.Data
 
             if (item.UpdateState == DBUpdateState.Insert)
             {
-                if (PrimaryKey != null && PrimaryKey.IsEmpty(item)
-                    && Schema.System != DBSystem.SQLite && Schema.System != DBSystem.Postgres)
-                {
-                    if (dmlInsertSequence == null)
-                        dmlInsertSequence = DBCommand.Build(this, comInsert, DBCommandTypes.InsertSequence, Columns);
-                    dmlCommand = dmlInsertSequence;
-                }
-                else
+                if (PrimaryKey != null && PrimaryKey.IsEmpty(item))
                 {
                     item.GenerateId(transaction);
-                    if (dmlInsert == null)
-                        dmlInsert = DBCommand.Build(this, comInsert, DBCommandTypes.Insert, Columns);
-                    dmlCommand = dmlInsert;
                 }
+                dmlCommand = dmlInsert ??= DBCommand.Build(this, comInsert, DBCommandTypes.Insert, Columns);
             }
             else if ((item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
             {
-                if (dmlDelete == null)
-                    dmlDelete = DBCommand.Build(this, comDelete, DBCommandTypes.Delete);
-                dmlCommand = dmlDelete;
+                dmlCommand = dmlDelete ??= DBCommand.Build(this, comDelete, DBCommandTypes.Delete);
             }
             else if ((item.UpdateState & DBUpdateState.Update) == DBUpdateState.Update)
             {
@@ -1022,13 +1019,8 @@ namespace DataWF.Data
             dmlCommand.FillCommand(command, item);
             //transaction.PrepareStatements(command);
 
-            var result = await transaction.ExecuteQueryAsync(command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
+            var result = await transaction.ExecuteQueryAsync(command, DBExecuteType.NoReader);
             transaction.DbConnection.System.UploadCommand(item, command);
-            if (dmlCommand == dmlInsertSequence)
-            {
-                item[PrimaryKey] = result;
-                Sequence.SetCurrent(result);
-            }
 
             if (!transaction.Replication
                 && !transaction.NoLogs
@@ -1215,7 +1207,7 @@ namespace DataWF.Data
             }
             if (query.Columns[0] is QColumn qColumn)
             {
-               return qColumn.Column.Distinct(query.Select());
+                return qColumn.Column.Distinct(query.Select());
             }
             var objects = new List<object>();
             foreach (DBItem row in query.Select())
@@ -1542,7 +1534,6 @@ namespace DataWF.Data
         internal void ClearCache()
         {
             dmlInsert = null;
-            dmlInsertSequence = null;
             dmlDelete = null;
             accessKey = DBColumn<byte[]>.EmptyKey;
             primaryKey = DBColumn.EmptyKey;

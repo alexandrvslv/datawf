@@ -232,9 +232,25 @@ namespace DataWF.Data
             return $"[{table.SqlName}] {alias}";
         }
 
-        public override async Task SetBLOB(long id, Stream value, DBTransaction transaction)
+        public override Task<bool> DeleteBlobDatabase(long id, DBTransaction transaction)
         {
-            var command = (SqlCommand)transaction.AddCommand($"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) values (@{FileData.IdKey.SqlName}, @{FileData.DataKey.SqlName})");
+            return DeleteBlobTable(id, transaction);
+        }
+
+        public override Task<Stream> GetBlobDatabase(long id, DBTransaction transaction, int bufferSize = 81920)
+        {
+            return GetBlobTable(id, transaction, bufferSize);
+        }
+
+        public override Task SetBlobDatabase(long id, Stream value, DBTransaction transaction)
+        {
+            return SetBlobTable(id, value, transaction);
+        }
+
+        public override async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
+        {
+            var command = (SqlCommand)transaction.AddCommand($"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) " +
+                $"values (@{FileData.IdKey.SqlName}, @{FileData.DataKey.SqlName})");
             command.Parameters.Add($"@{FileData.IdKey.SqlName}", SqlDbType.BigInt, -1).Value = id;
             command.Parameters.Add($"@{FileData.DataKey.SqlName}", SqlDbType.Binary, -1).Value = value;
             await transaction.ExecuteQueryAsync(command, DBExecuteType.Scalar);

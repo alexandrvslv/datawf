@@ -241,8 +241,8 @@ namespace DataWF.Data
                     case SMType.Request:
                         await ProcessRequest((SMRequest)message, arg);
                         break;
-                    case SMType.Responce:
-                        await ProcessResponce((SMResponce)message, arg);
+                    case SMType.Response:
+                        await ProcessResponse((SMResponce)message, arg);
                         break;
                     case SMType.Notify:
                         if (message.Data is SRTransaction transaction)
@@ -262,7 +262,7 @@ namespace DataWF.Data
             }
         }
 
-        private async ValueTask ProcessResponce(SMResponce message, TcpStreamEventArgs arg)
+        private async ValueTask ProcessResponse(SMResponce message, TcpStreamEventArgs arg)
         {
             var sender = Settings.Instances.FirstOrDefault(p => p.EndPointName == message.EndPoint.ToString());
             if (sender == null)

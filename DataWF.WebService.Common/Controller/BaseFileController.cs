@@ -108,7 +108,7 @@ namespace DataWF.WebService.Common
             var stream = (Stream)null;
             if (table.FileBLOBKey != null && item.GetValue(table.FileBLOBKey) != null)
             {
-                stream = await item.GetBLOB(table.FileBLOBKey, transaction);
+                stream = await item.GetBlob(table.FileBLOBKey, transaction);
             }
             else if (table.FileKey != null)
             {
@@ -166,7 +166,7 @@ namespace DataWF.WebService.Common
 
                             if (table.FileBLOBKey != null)
                             {
-                                await item.SetBLOB(upload.Stream, table.FileBLOBKey, transaction);
+                                await item.SetBlob(upload.Stream, table.FileBLOBKey, transaction);
                             }
                             else if (table.FileKey != null)
                             {
@@ -232,7 +232,7 @@ namespace DataWF.WebService.Common
 
                         if (table.FileBLOBKey != null)
                         {
-                            await item.SetBLOB(upload.Stream, table.FileBLOBKey, transaction);
+                            await item.SetBlob(upload.Stream, table.FileBLOBKey, transaction);
                         }
                         else if (table.FileKey != null)
                         {
@@ -288,7 +288,7 @@ namespace DataWF.WebService.Common
                 var stream = (Stream)null;
                 if (table.LogTable.FileBLOBKey != null && logItem.GetValue(table.LogTable.FileBLOBKey) != null)
                 {
-                    stream = await logItem.GetBLOB(table.LogTable.FileBLOBKey, transaction);
+                    stream = await logItem.GetBlob(table.LogTable.FileBLOBKey, transaction);
                 }
                 else if (table.LogTable.FileKey != null)
                 {

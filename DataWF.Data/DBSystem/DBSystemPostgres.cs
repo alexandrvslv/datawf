@@ -33,9 +33,6 @@ namespace DataWF.Data
 {
     public class DBSystemPostgres : DBSystem
     {
-        public static bool StoreFileAsLargeObject { get; set; }
-        public static bool LargeObjectSetBuffering { get; set; } = true;
-
         public DBSystemPostgres()
         {
             Name = "Postgres";
@@ -125,7 +122,10 @@ namespace DataWF.Data
 
         public override void CreateDatabase(DBSchema schema, DBConnection connection)
         {
-            //DropDatabase(schema);
+            if (!Directory.Exists(connection.Path))
+            {
+                Directory.CreateDirectory(connection.Path);
+            }
 
             connection.DataBase = "postgres";
 
@@ -266,7 +266,7 @@ namespace DataWF.Data
                         ((NpgsqlParameter)parameter).Precision = (byte)column.Size;
                     if (column.Scale > 0)
                         ((NpgsqlParameter)parameter).Scale = (byte)column.Scale;
-                }                
+                }
             }
 
             return value;
@@ -345,42 +345,33 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
-        public override Task<long> SetBLOB(Stream value, DBTransaction transaction)
+        public override Task SetBlobDatabase(long id, Stream value, DBTransaction transaction)
         {
-            if (StoreFileAsLargeObject)
-            {
-                return SetLOBBuffered(value, transaction);
-            }
-            else
-            {
-                return base.SetBLOB(value, transaction);
-            }
+            return SetLOBBuffered((uint)id, value, transaction);
         }
 
-        public async Task<long> SetLOBBuffered(Stream value, DBTransaction transaction, int bufferSize = 81920)
+        public async Task SetLOBBuffered(uint id, Stream value, DBTransaction transaction, int bufferSize = 81920)
         {
             if (value.CanSeek)
             {
                 value.Position = 0;
             }
-            var count = 0;
+            var read = 0;
             var buffer = new byte[bufferSize];
             var tempFileName = Helper.GetDocumentsFullPath(Path.GetRandomFileName(), "Temp");
             try
             {
                 using (var tempStream = new FileStream(tempFileName, FileMode.Create, FileAccess.ReadWrite))
                 {
-                    while ((count = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
+                    while ((read = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
                     {
-                        tempStream.Write(buffer, 0, count);
+                        await tempStream.WriteAsync(buffer, 0, read);
                     }
                 }
 
                 var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
 
-                var result = await (Task<object>)manager.ImportRemoteAsync(tempFileName, 0, CancellationToken.None);
-
-                return (uint)result;
+                await manager.ImportRemoteAsync(tempFileName, id, CancellationToken.None);
             }
             finally
             {
@@ -388,7 +379,7 @@ namespace DataWF.Data
             }
         }
 
-        public async Task<uint> SetLOBDirect(Stream value, DBTransaction transaction, int bufferSize = 81920)
+        public async Task<uint> SetLOBDirect(uint id, Stream value, DBTransaction transaction, int bufferSize = 81920)
         {
             if (value.CanSeek)
             {
@@ -397,30 +388,23 @@ namespace DataWF.Data
             var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
             var buffer = new byte[bufferSize];
 
-            var oid = await manager.CreateAsync(0, CancellationToken.None);
+            var oid = await manager.CreateAsync(id, CancellationToken.None);
 
             using (var lobStream = await manager.OpenReadWriteAsync(oid, CancellationToken.None))
             {
                 //await value.CopyToAsync(lobStream);
-                int count;
-                while ((count = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
+                int read;
+                while ((read = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
                 {
-                    lobStream.Write(buffer, 0, count);
+                    await lobStream.WriteAsync(buffer, 0, read);
                 }
             }
             return oid;
         }
 
-        public override Task<Stream> GetBLOB(long id, DBTransaction transaction, int bufferSize = 81920)
+        public override Task<Stream> GetBlobDatabase(long id, DBTransaction transaction, int bufferSize = 81920)
         {
-            if (StoreFileAsLargeObject)
-            {
-                return GetLOBDirect((uint)id, transaction);
-            }
-            else
-            {
-                return base.GetBLOB(id, transaction, bufferSize);
-            }
+            return GetLOBDirect((uint)id, transaction);
         }
 
         public async Task<Stream> GetLOBDirect(uint oid, DBTransaction transaction)
@@ -447,22 +431,24 @@ namespace DataWF.Data
             return outStream;
         }
 
-        public override Task DeleteBLOB(long id, DBTransaction transaction)
+        public override Task<bool> DeleteBlobDatabase(long id, DBTransaction transaction)
         {
-            if (StoreFileAsLargeObject)
-            {
-                return DeleteLOB((uint)id, transaction);
-            }
-            else
-            {
-                return base.DeleteBLOB(id, transaction);
-            }
+            return DeleteLOB((uint)id, transaction);
         }
 
-        public async Task DeleteLOB(uint oid, DBTransaction transaction)
+        public async Task<bool> DeleteLOB(uint oid, DBTransaction transaction)
         {
             var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
-            await manager.UnlinkAsync(oid, CancellationToken.None);
+            try
+            {
+                await manager.UnlinkAsync(oid, CancellationToken.None);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+                return false;
+            }
         }
 
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)

@@ -32,6 +32,7 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using PathHelper = System.IO.Path;
 
 [assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Name), typeof(DBConnection.NameInvoker))]
 [assembly: Invoker(typeof(DBConnection), nameof(DBConnection.SystemName), typeof(DBConnection.SystemNameInvoker))]
@@ -82,6 +83,8 @@ namespace DataWF.Data
         private DBSystem system;
         internal HashSet<IDbConnection> Buffer = new HashSet<IDbConnection>();
         private string path;
+        private FileStorage fileStorage;
+        private byte dataBaseId;
 
         public DBConnection()
         { }
@@ -99,7 +102,7 @@ namespace DataWF.Data
                 if (name != value)
                 {
                     name = value;
-                    OnPropertyChanged(nameof(Name));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -112,7 +115,7 @@ namespace DataWF.Data
             {
                 systemName = value;
                 system = GetSystem();
-                OnPropertyChanged(nameof(System));
+                OnPropertyChanged();
             }
         }
 
@@ -148,7 +151,7 @@ namespace DataWF.Data
                 if (host == value)
                     return;
                 host = value;
-                OnPropertyChanged(nameof(Host));
+                OnPropertyChanged();
             }
         }
 
@@ -161,7 +164,7 @@ namespace DataWF.Data
                 if (port == value)
                     return;
                 port = value;
-                OnPropertyChanged(nameof(Port));
+                OnPropertyChanged();
             }
         }
 
@@ -174,7 +177,7 @@ namespace DataWF.Data
                 if (database == value)
                     return;
                 database = value;
-                OnPropertyChanged(nameof(DataBase));
+                OnPropertyChanged();
             }
         }
 
@@ -187,7 +190,7 @@ namespace DataWF.Data
                 if (schem == value)
                     return;
                 schem = value;
-                OnPropertyChanged(nameof(Schema));
+                OnPropertyChanged();
             }
         }
 
@@ -200,7 +203,7 @@ namespace DataWF.Data
                 if (user == value)
                     return;
                 user = value;
-                OnPropertyChanged(nameof(User));
+                OnPropertyChanged();
             }
         }
 
@@ -214,7 +217,7 @@ namespace DataWF.Data
                 if (value == Password)
                     return;
                 password = Coding.EncodeString(value);
-                OnPropertyChanged(nameof(Password));
+                OnPropertyChanged();
             }
         }
 
@@ -227,7 +230,7 @@ namespace DataWF.Data
                 if (integrSec == value)
                     return;
                 integrSec = value;
-                OnPropertyChanged(nameof(IntegratedSecurity));
+                OnPropertyChanged();
             }
         }
 
@@ -240,7 +243,7 @@ namespace DataWF.Data
                 if (pool == value)
                     return;
                 pool = value;
-                OnPropertyChanged(nameof(Pool));
+                OnPropertyChanged();
             }
         }
 
@@ -251,7 +254,7 @@ namespace DataWF.Data
             set
             {
                 encrypt = value;
-                OnPropertyChanged(nameof(Encrypt));
+                OnPropertyChanged();
             }
         }
 
@@ -264,7 +267,7 @@ namespace DataWF.Data
                 if (timeout != value)
                 {
                     timeout = value;
-                    OnPropertyChanged(nameof(TimeOut));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -278,7 +281,7 @@ namespace DataWF.Data
                 if (level != value)
                 {
                     level = value;
-                    OnPropertyChanged(nameof(IsolationLevel));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -292,8 +295,23 @@ namespace DataWF.Data
                 if (extend == value)
                     return;
                 extend = value;
-                OnPropertyChanged(nameof(Extend));
+                OnPropertyChanged();
             }
+        }
+
+        public string GetFilesPath()
+        {
+            return PathHelper.Combine(Path, "Files");
+        }
+
+        public string GetFilePath(long id)
+        {
+            var path = GetFilesPath();
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+            return PathHelper.Combine(path, id.ToString("D20"));
         }
 
         [Category("3. Additional")]
@@ -305,7 +323,34 @@ namespace DataWF.Data
                 if (path != value)
                 {
                     path = value;
-                    OnPropertyChanged(nameof(Path));
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public FileStorage FileStorage
+        {
+            get => fileStorage;
+            set
+            {
+                if (fileStorage != value)
+                {
+                    fileStorage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        //https://www.enterprisedb.com/blog/generated-primary-and-foreign-keys-distributed-databases
+        public byte DataBaseId
+        {
+            get => dataBaseId;
+            set
+            {
+                if (dataBaseId != value)
+                {
+                    dataBaseId = value;
+                    OnPropertyChanged();
                 }
             }
         }
@@ -793,5 +838,37 @@ namespace DataWF.Data
             public override void SetValue(DBConnection target, string value) => target.Extend = value;
         }
 
+        public class FileStorageInvoker : Invoker<DBConnection, FileStorage>
+        {
+            public static readonly FileStorageInvoker Instance = new FileStorageInvoker();
+            public override string Name => nameof(DBConnection.FileStorage);
+
+            public override bool CanWrite => true;
+
+            public override FileStorage GetValue(DBConnection target) => target.FileStorage;
+
+            public override void SetValue(DBConnection target, FileStorage value) => target.FileStorage = value;
+        }
+
+        public class DataBaseIdInvoker : Invoker<DBConnection, byte>
+        {
+            public static readonly DataBaseIdInvoker Instance = new DataBaseIdInvoker();
+            public override string Name => nameof(DBConnection.DataBaseId);
+
+            public override bool CanWrite => true;
+
+            public override byte GetValue(DBConnection target) => target.DataBaseId;
+
+            public override void SetValue(DBConnection target, byte value) => target.DataBaseId = value;
+        }
+
+    }
+
+    public enum FileStorage
+    {
+        FileTable,
+        FileSystem,
+        DatabaseSystem,
+        ExternalSystem
     }
 }

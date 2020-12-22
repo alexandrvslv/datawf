@@ -156,14 +156,28 @@ select seq from db_sequence where name = '{sequence.Name}';";
             return base.FillParameter(command, parameter, value, column);
         }
 
-        public override async Task<long> SetBLOB(Stream value, DBTransaction transaction)
+        public override Task<bool> DeleteBlobDatabase(long id, DBTransaction transaction)
         {
-            var result = FileData.DBTable.Sequence.GetNext(transaction);
-            var command = (MySqlCommand)transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) values (@{FileData.IdKey.SqlName}, @{FileData.DataKey.SqlName});");
-            command.Parameters.Add($"@{FileData.IdKey.SqlName}", MySqlDbType.Int64).Value = result;
+            return DeleteBlobTable(id, transaction);
+        }
+
+        public override Task<Stream> GetBlobDatabase(long id, DBTransaction transaction, int bufferSize = 81920)
+        {
+            return GetBlobTable(id, transaction, bufferSize);
+        }
+
+        public override Task SetBlobDatabase(long id, Stream value, DBTransaction transaction)
+        {
+            return SetBlobTable(id, value, transaction);
+        }
+
+        public override async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
+        {
+            var command = (MySqlCommand)transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) 
+values (@{FileData.IdKey.SqlName}, @{FileData.DataKey.SqlName});");
+            command.Parameters.Add($"@{FileData.IdKey.SqlName}", MySqlDbType.Int64).Value = id;
             command.Parameters.Add($"@{FileData.DataKey.SqlName}", MySqlDbType.LongBlob).Value = await Helper.GetBufferedBytesAsync(value);//Double buffering!!!
             await transaction.ExecuteQueryAsync(command);
-            return result;
         }
 
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)

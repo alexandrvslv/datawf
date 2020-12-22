@@ -32,6 +32,10 @@ namespace DataWF.Data
             var value = transaction.Reader.IsDBNull(i) ? (long?)null : transaction.Reader.GetInt64(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
+        public override void SetId(DBItem item, long id)
+        {
+            SetValue(item, id, DBSetValueMode.Default);
+        }
 
         public override string FormatQuery(long? value)
         {

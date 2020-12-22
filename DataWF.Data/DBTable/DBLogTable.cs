@@ -168,7 +168,7 @@ namespace DataWF.Data
                         {
                             using (var transactionDeleteLOB = new DBTransaction(transaction.DbConnection, transaction.Caller))
                             {
-                                await System.DeleteBLOB(lob.Value, transactionDeleteLOB);
+                                await System.DeleteBlob(lob.Value, transactionDeleteLOB);
                                 transactionDeleteLOB.Commit();
                             }
                         }

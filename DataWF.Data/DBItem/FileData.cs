@@ -30,6 +30,8 @@ namespace DataWF.Data
         public static readonly DBColumn DataKey = DBTable.ParseProperty(nameof(Data));
         public static readonly DBColumn SizeKey = DBTable.ParseProperty(nameof(Size));
         public static readonly DBColumn HashKey = DBTable.ParseProperty(nameof(Hash));
+        public static readonly DBColumn PathKey = DBTable.ParseProperty(nameof(Path));
+        public static readonly DBColumn StorageKey = DBTable.ParseProperty(nameof(Storage));
 
         public FileData()
         { }
@@ -55,11 +57,25 @@ namespace DataWF.Data
             set => SetValue(value, SizeKey);
         }
 
-        [Column("file_hash", size: 128)]
+        [Column("file_hash", size: 256)]
         public byte[] Hash
         {
             get => GetValue<byte[]>(HashKey);
             set => SetValue(value, HashKey);
+        }
+
+        [Column("file_storage")]
+        public FileStorage Storage
+        {
+            get => GetValue<FileStorage>(StorageKey);
+            set => SetValue(value, StorageKey);
+        }
+
+        [Column("file_path", size: 2048)]
+        public string Path
+        {
+            get => GetValue<string>(PathKey);
+            set => SetValue(value, PathKey);
         }
 
     }

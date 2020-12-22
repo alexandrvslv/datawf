@@ -408,7 +408,7 @@ namespace DataWF.WebService.Common
         {
             try
             {
-                return (K)table.PrimaryKey.ParseValue(table.Sequence.GetNext());
+                return (K)table.PrimaryKey.ParseValue(table.GenerateId());
             }
             catch (Exception ex)
             {
@@ -426,7 +426,7 @@ namespace DataWF.WebService.Common
                 {
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add((K)table.PrimaryKey.ParseValue(table.Sequence.GetNext(transaction)));
+                        list.Add((K)table.PrimaryKey.ParseValue(table.GenerateId(transaction)));
                     }
                     transaction.Commit();
                 }

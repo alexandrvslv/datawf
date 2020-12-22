@@ -10,7 +10,9 @@ namespace DataWF.Common
         public static readonly TimeSpanSerializer Instance = new TimeSpanSerializer();
 
         public TimeSpanSerializer() : base(false)
-        { }
+        {
+            SizeOfType = 8;
+        }
 
         public override BinaryToken BinaryToken => BinaryToken.TimeSpan;
 

@@ -9,7 +9,7 @@ namespace DataWF.Common
 
         public GuidSerializer() : base(false)
         {
-            size = 16;
+            SizeOfType = 16;
         }
 
         public override BinaryToken BinaryToken => BinaryToken.Guid;

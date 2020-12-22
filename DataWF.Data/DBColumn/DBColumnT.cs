@@ -50,6 +50,9 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override int SizeOfDataType => TypedSerializer.SizeOfType;
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public override Pull Pull
         {
             get => pull;
@@ -173,6 +176,11 @@ namespace DataWF.Data
         public override bool IsEmpty(PullHandler handler)
         {
             return Equal(pull.GetValue(handler), default(T));
+        }
+
+        public override void SetId(DBItem item, long id)
+        {
+            SetValue(item, id, DBSetValueMode.Default);
         }
 
         public override void Clear(DBItem item, DBSetValueMode mode = DBSetValueMode.Default)

@@ -6,6 +6,7 @@ namespace DataWF.Common
 {
     public interface IElementSerializer
     {
+        int SizeOfType { get; }
         bool CanConvertString { get; }
 
         #region Binary

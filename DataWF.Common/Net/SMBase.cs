@@ -20,7 +20,7 @@ namespace DataWF.Common
     public enum SMType : byte
     {
         Request,
-        Responce,
+        Response,
         Notify
     }
 
@@ -147,7 +147,7 @@ namespace DataWF.Common
     {
         public SMResponce()
         {
-            Type = SMType.Responce;
+            Type = SMType.Response;
         }
 
         [Display(Order = 1)]

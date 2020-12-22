@@ -49,23 +49,18 @@ namespace DataWF.Test.Data
         [Test]
         public async Task GeneratePostgresWithLOB()
         {
-            DBSystemPostgres.StoreFileAsLargeObject = true;
-            DBSystemPostgres.LargeObjectSetBuffering = false;
-            await Generate(DBService.Connections["TestPostgres"]);
+            await Generate(DBService.Connections["TestPostgresLOB"]);
         }
 
         [Test]
-        public async Task GeneratePostgresWithLOBBuffeing()
+        public async Task GeneratePostgresWithBLOB()
         {
-            DBSystemPostgres.StoreFileAsLargeObject = true;
-            DBSystemPostgres.LargeObjectSetBuffering = true;
-            await Generate(DBService.Connections["TestPostgres"]);
+            await Generate(DBService.Connections["TestPostgresBLOB"]);
         }
 
         [Test]
-        public async Task GeneratePostgresWithoutLOB()
+        public async Task GeneratePostgres()
         {
-            DBSystemPostgres.StoreFileAsLargeObject = false;
             await Generate(DBService.Connections["TestPostgres"]);
         }
 
@@ -94,7 +89,6 @@ namespace DataWF.Test.Data
 
             var buffer = Serialization.Instance.Serialize(DBService.Schems);
             PrintBuffer(buffer);
-
 
             DBService.Schems.Clear();
             Serialization.Instance.Deserialize(buffer, DBService.Schems);
@@ -182,6 +176,9 @@ namespace DataWF.Test.Data
             var positionColumn = Employer.DBTable.Columns["positionid"];
             Assert.IsNotNull(positionColumn, "Attribute Generator Fail. On Column Employer Position");
             Assert.IsNotNull(positionColumn.ReferenceTable, "Attribute Generator Fail. On Column Employer Position Reference");
+
+            if (Directory.Exists(connection.GetFilesPath()))
+                Directory.Delete(connection.GetFilesPath(), true);
             schema.Connection = connection;
 
             schema.DropDatabase();
@@ -412,13 +409,13 @@ namespace DataWF.Test.Data
                 {
                     buffer = Helper.GetBytes(stream);
                     stream.Position = 0;
-                    await file.SetBLOB(stream, transaction);
+                    await file.SetBlob(stream, transaction);
                 }
                 transaction.Commit();
             }
             using (var transaction = new DBTransaction(FileStore.DBTable.Connection))
             {
-                using (var stream = await file.GetBLOB(transaction))
+                using (var stream = await file.GetBlob(transaction))
                 {
                     var newBuffer = Helper.GetBytes(stream);
                     Assert.IsTrue(Helper.CompareByte(newBuffer, buffer), "Get/Set BLOB Fail!");
@@ -432,7 +429,7 @@ namespace DataWF.Test.Data
       test_date date, 
       test_varchar varchar(512),
       test_numeric numeric(20,10))");
-            
+
             result = schema.GetTablesInfo(connection.Schema, "test_table");
             schema.GenerateTablesInfo(result);
             var table = schema.Tables["test_table"] as DBTable<DBItem>;
@@ -442,7 +439,7 @@ namespace DataWF.Test.Data
             for (int i = 0; i < 1000; i++)
             {
                 var row = table.NewItem();
-                row["id"] = i;
+                row["id"] = i + 1;
                 row["test_date"] = DateTime.Now.AddDays(-i);
                 row["test_varchar"] = "string value " + i;
                 row["test_numeric"] = i / 1000M;

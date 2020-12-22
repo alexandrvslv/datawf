@@ -991,12 +991,8 @@ namespace DataWF.Data
                 return;
             if (Table.PrimaryKey.IsEmpty(this))
             {
-                PrimaryId = transaction != null ? Table.Sequence.GetNext(transaction) : Table.Sequence.GetNext();
-            }
-            else
-            {
-                Table.Sequence.SetCurrent(PrimaryId);
-            }
+                Table.PrimaryKey.SetId(this, Table.GenerateId(transaction));
+            }            
         }
 
         public void Free()
@@ -1524,7 +1520,7 @@ namespace DataWF.Data
         {
             if (Table.FileBLOBKey != null && GetValue(table.FileBLOBKey) != null)
             {
-                return await GetBLOB(Table.FileBLOBKey, transaction);
+                return await GetBlob(Table.FileBLOBKey, transaction);
             }
             else if (Table.FileKey != null)
             {
@@ -1631,45 +1627,45 @@ namespace DataWF.Data
             return temp;
         }
 
-        public Task<long> SetBLOB(Stream value, DBTransaction transaction)
+        public Task<long> SetBlob(Stream value, DBTransaction transaction)
         {
-            return SetBLOB(value, Table.FileBLOBKey, transaction);
+            return SetBlob(value, Table.FileBLOBKey, transaction);
         }
 
-        public async Task<long> SetBLOB(Stream value, DBColumn<long?> column, DBTransaction transaction)
+        public async Task<long> SetBlob(Stream value, DBColumn<long?> column, DBTransaction transaction)
         {
-            var id = await Table.System.SetBLOB(value, transaction);
+            var id = await Table.System.SetBlob(value, transaction);
             SetValue<long?>(id, column);
             await Save(transaction);
             await OnSetStream(column, transaction);
             return id;
         }
 
-        public Task<Stream> GetBLOB(DBTransaction transaction, int bufferSize = 81920)
+        public Task<Stream> GetBlob(DBTransaction transaction, int bufferSize = 81920)
         {
-            return GetBLOB(Table.FileBLOBKey, transaction, bufferSize);
+            return GetBlob(Table.FileBLOBKey, transaction, bufferSize);
         }
 
-        public virtual Task<Stream> GetBLOB(DBColumn<long?> column, DBTransaction transaction, int bufferSize = 81920)
+        public virtual Task<Stream> GetBlob(DBColumn<long?> column, DBTransaction transaction, int bufferSize = 81920)
         {
             OnGetStream(column, transaction);
             var oid = GetValue<long?>(column);
             if (oid == null)
                 return null;
-            return Table.System.GetBLOB(oid.Value, transaction, bufferSize);
+            return Table.System.GetBlob(oid.Value, transaction, bufferSize);
         }
 
-        public async Task<FileStream> GetBLOBFileStream(DBColumn<long?> column, string path, int bufferSize = 81920)
+        public async Task<FileStream> GetBlobFileStream(DBColumn<long?> column, string path, int bufferSize = 81920)
         {
             using (var transaction = new DBTransaction(Table.Connection))
             {
-                return await GetBLOBFileStream(column, path, transaction, bufferSize);
+                return await GetBlobFileStream(column, path, transaction, bufferSize);
             }
         }
 
-        public async Task<FileStream> GetBLOBFileStream(DBColumn<long?> column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public async Task<FileStream> GetBlobFileStream(DBColumn<long?> column, string path, DBTransaction transaction, int bufferSize = 81920)
         {
-            using (var lobStream = await GetBLOB(column, transaction))
+            using (var lobStream = await GetBlob(column, transaction))
             {
                 if (lobStream == null)
                 {

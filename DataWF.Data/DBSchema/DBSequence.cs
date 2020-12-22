@@ -58,11 +58,15 @@ namespace DataWF.Data
             get => current;
             set
             {
-                Interlocked.CompareExchange(ref current, value, current);
+                Interlocked.Exchange(ref current, value);
             }
         }
 
         public int Increment { get; set; } = 1;
+
+        public long StartWith { get; set; } = 1;
+
+        public int Range { get; set; } = -1;
 
         [DefaultValue(DBDataType.Int)]
         public DBDataType DBDataType { get; set; } = DBDataType.Int;
@@ -74,10 +78,10 @@ namespace DataWF.Data
         public int Scale { get; set; }
 
         [JsonIgnore, XmlIgnore]
-        public string NextQuery => cacheNextQuery = cacheNextQuery ?? Schema.Connection.System.SequenceNextValue(this);
+        public string NextQuery => cacheNextQuery ??= Schema.Connection.System.SequenceNextValue(this);
 
         [JsonIgnore, XmlIgnore]
-        public string CurrentQuery => cacheCurrentQuery = cacheCurrentQuery ?? Schema.Connection.System.SequenceCurrentValue(this);
+        public string CurrentQuery => cacheCurrentQuery ??= Schema.Connection.System.SequenceCurrentValue(this);
 
         public override object Clone()
         {
@@ -86,6 +90,7 @@ namespace DataWF.Data
                 Name = name,
                 Increment = Increment,
                 DBDataType = DBDataType,
+                StartWith = StartWith,
                 Size = Size,
                 Scale = Scale
             };
@@ -129,19 +134,18 @@ namespace DataWF.Data
 
         public long GetNext(DBTransaction transaction)
         {
-            long result = 0;
-            result = Convert(transaction.ExecuteQuery(transaction.AddCommand(NextQuery)));
-            Interlocked.CompareExchange(ref current, result, current);
-            Interlocked.CompareExchange(ref changed, 0, 1);
-            return result;
+            return SetNext(Convert(transaction.ExecuteQuery(NextQuery)));
         }
 
         public async Task<long> GetNextAsync(DBTransaction transaction)
         {
-            long result = 0;
-            result = Convert(await transaction.ExecuteQueryAsync(NextQuery, DBExecuteType.Scalar));
-            Interlocked.CompareExchange(ref current, result, current);
+            return SetNext(Convert(await transaction.ExecuteQueryAsync(NextQuery, DBExecuteType.Scalar)));
+        }
+
+        private long SetNext(long result)
+        {
             Interlocked.CompareExchange(ref changed, 0, 1);
+            Interlocked.Exchange(ref current, result);
             return result;
         }
 
@@ -188,25 +192,25 @@ namespace DataWF.Data
 
         public void Save(DBTransaction transaction)
         {
-            if (changed == 0)
+            if (Interlocked.CompareExchange(ref changed, 0, 1) == 0)
                 return;
-            Interlocked.CompareExchange(ref changed, 0, 1);
             transaction.ExecuteQuery(transaction.AddCommand(FormatSql(DDLType.Alter)));
         }
 
-        public long SetCurrent(object result)
+        public bool TrySetCurrent(object result)
         {
             long temp = Convert(result);
-            SetCurrent(temp);
-            return temp;
+            return TrySetCurrent(temp);
         }
 
-        public void SetCurrent(long temp)
+        public bool TrySetCurrent(long temp)
         {
             if (current < temp)
             {
                 Current = temp;
+                return true;
             }
+            return false;
         }
 
         public class CurrentInvoker : Invoker<DBSequence, long>

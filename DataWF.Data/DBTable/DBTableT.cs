@@ -678,6 +678,11 @@ namespace DataWF.Data
             return Load(CreateKeyCommmand(id, column, cols), param, transaction).FirstOrDefault();
         }
 
+        public async Task<T> LoadItemAsync<K>(K id, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            return (await LoadAsync(CreateKeyCommmand(id, column, cols), param, transaction)).FirstOrDefault();
+        }
+
         public async Task<T> LoadItemAsync(object id, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
         {
             return (await LoadAsync(CreateKeyCommmand(id, column, cols), param, transaction)).FirstOrDefault();
@@ -719,6 +724,17 @@ namespace DataWF.Data
             return LoadByKeyAsync(id, PrimaryKey, param, cols, transaction);
         }
 
+        public async ValueTask<T> LoadByIdAsync<K>(K? id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null) where K : struct
+        {
+            if (id == null)
+                return null;
+            if (PrimaryKey is DBColumn<K> typedColumn)
+                return await LoadByKeyAsync(id.Value, typedColumn, param, cols, transaction);
+            else if (PrimaryKey is DBColumn<K?> typedNColumn)
+                return await LoadByKeyAsync(id, typedNColumn, param, cols, transaction);
+            return await LoadByKeyAsync((object)id, PrimaryKey, param, cols, transaction);
+        }
+
         public T GetById(object id)
         {
             return LoadByKey(id, PrimaryKey);
@@ -757,6 +773,17 @@ namespace DataWF.Data
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
             {
                 row = LoadItem(val, column, param, cols, transaction);
+            }
+            return row;
+        }
+
+        public async ValueTask<T> LoadByKeyAsync<K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        {
+            T row = SelectOne(column, key);
+
+            if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
+            {
+                row = await LoadItemAsync(key, column, param, cols, transaction);
             }
             return row;
         }

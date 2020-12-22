@@ -638,6 +638,9 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore]
         public bool IsWriteable => true;
 
+        [JsonIgnore, XmlIgnore]
+        public abstract int SizeOfDataType { get; }
+
         internal protected abstract void CheckPull();
 
         internal protected abstract void CheckPullIndex();
@@ -899,6 +902,8 @@ namespace DataWF.Data
                 return value.ToString().Replace(",", ".");
             }
         }
+
+        public abstract void SetId(DBItem item, long id);
 
         public abstract object GetParameterValue(DBItem item);
 
@@ -1325,6 +1330,6 @@ namespace DataWF.Data
             public override void SetValue(DBColumn target, DBColumn value) => target.BaseColumn = value;
         }
 
-        
+
     }
 }

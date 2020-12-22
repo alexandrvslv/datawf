@@ -234,7 +234,7 @@ namespace DataWF.Module.Flow
         {
             if (FileLOB != null)
             {
-                var item = await GetBLOBFileStream(Table.FileBLOBKey, fileName, transaction);
+                var item = await GetBlobFileStream(Table.FileBLOBKey, fileName, transaction);
                 if (item != null)
                 {
                     return item;
@@ -257,7 +257,7 @@ namespace DataWF.Module.Flow
             {
                 FileName = fileName;
             }
-            await SetBLOB(stream, Table.FileBLOBKey, transaction);
+            await SetBlob(stream, Table.FileBLOBKey, transaction);
             //SetStream(stream, Table.FileKey, user);
         }
 

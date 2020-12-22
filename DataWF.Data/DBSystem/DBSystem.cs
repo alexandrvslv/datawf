@@ -25,6 +25,7 @@ using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -175,35 +176,135 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
         }
 
-        public virtual async Task DeleteBLOB(long id, DBTransaction transaction)
+        public virtual async Task<bool> DeleteBlob(long id, DBTransaction transaction)
+        {
+            switch (transaction.DbConnection.FileStorage)
+            {
+                case FileStorage.FileTable:
+                    return await DeleteBlobTable(id, transaction);
+                case FileStorage.FileSystem:
+                    return await DeleteBlobFile(id, transaction);
+                case FileStorage.DatabaseSystem:
+                    return await DeleteBlobDatabase(id, transaction);
+                default:
+                    throw new Exception("Unsupperted Storage");
+            }
+        }
+
+        public abstract Task<bool> DeleteBlobDatabase(long id, DBTransaction transaction);
+
+        public virtual async Task<bool> DeleteBlobFile(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
+        {
+            var fileHandler = await FileData.DBTable.LoadByIdAsync<long>(id, DBLoadParam.Load, null, transaction);
+            var path = fileHandler?.Path ?? transaction.DbConnection.GetFilePath(id);
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                return true;
+            }
+            return false;
+        }
+
+        public virtual async Task<bool> DeleteBlobTable(long id, DBTransaction transaction)
         {
             var command = transaction.AddCommand($"delete from {FileData.DBTable.Name} where {FileData.IdKey.SqlName} = {ParameterPrefix}{FileData.IdKey.SqlName}");
             CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.SqlName}", id, FileData.IdKey);
-            await ExecuteQueryAsync(command, DBExecuteType.Scalar, CommandBehavior.Default);
+            var result = await ExecuteQueryAsync(command, DBExecuteType.Scalar, CommandBehavior.Default);
+            return Convert.ToInt32(result) != 0;
         }
 
-        public virtual async Task<Stream> GetBLOB(long id, DBTransaction transaction, int bufferSize = 81920)
+        public virtual async Task<Stream> GetBlob(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
         {
-            var command = transaction.AddCommand($"select {FileData.IdKey.SqlName}, {FileData.DataKey.SqlName} from {FileData.DBTable.Name} where {FileData.IdKey.SqlName} = {ParameterPrefix}{FileData.IdKey.SqlName}");
+            switch (transaction.DbConnection.FileStorage)
+            {
+                case FileStorage.FileTable:
+                    return await GetBlobTable(id, transaction, bufferSize);
+                case FileStorage.FileSystem:
+                    return await GetBlobFile(id, transaction, bufferSize);
+                case FileStorage.DatabaseSystem:
+                    return await GetBlobDatabase(id, transaction, bufferSize);
+                default:
+                    throw new Exception("Unsupperted Storage");
+            }
+        }
+
+        public abstract Task<Stream> GetBlobDatabase(long id, DBTransaction transaction, int bufferSize = 80 * 1024);
+
+        public virtual async Task<Stream> GetBlobFile(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
+        {
+            var fileHandler = await FileData.DBTable.LoadByIdAsync<long>(id, DBLoadParam.Load, null, transaction);
+            var path = fileHandler?.Path ?? transaction.DbConnection.GetFilePath(id);
+            return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, true);
+        }
+
+        public virtual async Task<Stream> GetBlobTable(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
+        {
+            var command = transaction.AddCommand($"select {FileData.DataKey.SqlName} from {FileData.DBTable.Name} where {FileData.IdKey.SqlName} = {ParameterPrefix}{FileData.IdKey.SqlName}");
             CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.SqlName}", id, FileData.IdKey);
             transaction.Reader = (DbDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
             if (await transaction.Reader.ReadAsync())
             {
-                return transaction.Reader.GetStream(1);
+                return transaction.Reader.GetStream(0);
             }
             throw new Exception("No Data Found!");
         }
 
-        public virtual async Task<long> SetBLOB(Stream value, DBTransaction transaction)
+        public virtual async Task<long> SetBlob(Stream value, DBTransaction transaction)
         {
             var result = FileData.DBTable.Sequence.GetNext(transaction);
-            await SetBLOB(result, value, transaction);
+            switch (transaction.DbConnection.FileStorage)
+            {
+                case FileStorage.FileTable:
+                    await SetBlobTable(result, value, transaction);
+                    break;
+                case FileStorage.FileSystem:
+                    await SetBlobFile(result, value, transaction.DbConnection.GetFilePath(result), transaction);
+                    break;
+                case FileStorage.DatabaseSystem:
+                    await SetBlobDatabase(result, value, transaction);
+                    break;
+                default:
+                    throw new Exception("Unsupperted Storage");
+            }
+
             return result;
         }
 
-        public virtual async Task SetBLOB(long id, Stream value, DBTransaction transaction)
+        public virtual async Task SetBlobFile(long id, Stream value, string path, DBTransaction transaction, int bufferSize = 80 * 1024)
         {
-            var command = transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) values ({ParameterPrefix}{FileData.IdKey.SqlName}, {ParameterPrefix}{FileData.DataKey.SqlName});");
+            using (var sha256 = new SHA256Managed())
+            {
+                var length = 0;
+                using (var fileStream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite, bufferSize, true))
+                {
+                    var buffer = new byte[bufferSize];
+                    var read = 0;
+                    while ((read = await value.ReadAsync(buffer, 0, bufferSize)) > 0)
+                    {
+                        length += read;
+                        await fileStream.WriteAsync(buffer, 0, read);
+                        sha256.TransformBlock(buffer, 0, read, null, 0);
+                    }
+                    sha256.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+                }
+                var fileHandler = new FileData
+                {
+                    Id = id,
+                    Storage = FileStorage.FileSystem,
+                    Path = path,
+                    Size = length,
+                    Hash = sha256.Hash
+                };
+                await fileHandler.Save(transaction);
+            }
+        }
+
+        public abstract Task SetBlobDatabase(long id, Stream value, DBTransaction transaction);
+
+        public virtual async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
+        {
+            var command = transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) 
+values ({ParameterPrefix}{FileData.IdKey.SqlName}, {ParameterPrefix}{FileData.DataKey.SqlName});");
             CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.SqlName}", id, FileData.IdKey);
             CreateParameter(command, $"{ParameterPrefix}{FileData.DataKey.SqlName}", await Helper.GetBufferedBytesAsync(value), FileData.DataKey);//Double buffering!!!
             await transaction.ExecuteQueryAsync(command);
@@ -211,7 +312,10 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual void CreateDatabase(DBSchema schema, DBConnection connection)
         {
-            //DropDatabase(schema);
+            if (!Directory.Exists(connection.Path))
+            {
+                Directory.CreateDirectory(connection.Path);
+            }
 
             var ddl = new StringBuilder();
             Format(ddl, schema, DDLType.Create);

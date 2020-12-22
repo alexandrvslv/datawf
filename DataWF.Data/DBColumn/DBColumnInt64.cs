@@ -33,6 +33,11 @@ namespace DataWF.Data
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
+        public override void SetId(DBItem item, long id)
+        {
+            SetValue(item, id, DBSetValueMode.Default);
+        }
+
         public override F ReadAndSelect<F>(DBTransaction transaction, int i)
         {
             var value = transaction.Reader.GetInt64(i);

@@ -9,7 +9,6 @@ namespace DataWF.Common
 {
     public abstract class NullableSerializer<T> : ElementSerializer<T>, IElementSerializer<T?> where T : struct
     {
-        protected int size;
 
         public NullableSerializer() : this(true)
         { }
@@ -18,7 +17,7 @@ namespace DataWF.Common
         {
             if (getSize)
             {
-                size = Marshal.SizeOf<T>();
+                SizeOfType = Marshal.SizeOf<T>();
             }
         }
 

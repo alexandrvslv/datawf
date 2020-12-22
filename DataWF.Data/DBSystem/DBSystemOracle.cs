@@ -359,22 +359,31 @@ namespace DataWF.Data
                     ((OracleClob)parameter.Value).Dispose();
             }
         }
+        public override Task<bool> DeleteBlobDatabase(long id, DBTransaction transaction)
+        {
+            return DeleteBlobTable(id, transaction);
+        }
 
-        public override async Task<long> SetBLOB(Stream value, DBTransaction transaction)
+        public override Task<Stream> GetBlobDatabase(long id, DBTransaction transaction, int bufferSize = 81920)
+        {
+            return GetBlobTable(id, transaction, bufferSize);
+        }
+
+        public override Task SetBlobDatabase(long id, Stream value, DBTransaction transaction)
+        {
+            return SetBlobTable(id, value, transaction);
+        }
+
+        public override async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
         {
             using (var blob = new OracleBlob((OracleConnection)transaction.Connection))
             {
                 await value.CopyToAsync(blob);
-                var command = (OracleCommand)transaction.AddCommand($@"begin
-select {FileData.DBTable.SequenceName}.nextval into :oid = next from dual;
-insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) values (:{FileData.IdKey.SqlName}, :{FileData.DataKey.SqlName});
-select :{FileData.IdKey.SqlName};");
-                var oidParameter = command.Parameters.Add($":{FileData.IdKey.SqlName}", OracleDbType.Long);
-                oidParameter.Direction = ParameterDirection.Output;
-                command.Parameters.Add($":{FileData.IdKey.SqlName}", OracleDbType.Blob, -1).Value = blob;
+                var command = (OracleCommand)transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) 
+values (:{FileData.IdKey.SqlName}, :{FileData.DataKey.SqlName})");
+                command.Parameters.Add($":{FileData.IdKey.SqlName}", OracleDbType.Long, id, ParameterDirection.Input);
+                command.Parameters.Add($":{FileData.DataKey.SqlName}", OracleDbType.Blob, -1).Value = blob;
                 await transaction.ExecuteQueryAsync(command, DBExecuteType.NoReader);
-
-                return (long)oidParameter.Value;
             }
         }
 

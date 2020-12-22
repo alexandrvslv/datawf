@@ -33,6 +33,11 @@ namespace DataWF.Data
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
+        public override void SetId(DBItem item, long id)
+        {
+            SetValue(item, (int)id, DBSetValueMode.Default);
+        }
+
         public override string FormatQuery(int? value)
         {
             return value?.ToString(CultureInfo.InvariantCulture) ?? "null";

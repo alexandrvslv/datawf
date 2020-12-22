@@ -13,19 +13,19 @@ namespace DataWF.Common
         private readonly BinaryToken binaryToken;
         public EnumSerializer() : base(false)
         {
-            size = size = Marshal.SizeOf(Enum.GetUnderlyingType(typeof(T)));
-            switch (size)
+            SizeOfType = Marshal.SizeOf(Enum.GetUnderlyingType(typeof(T)));
+            switch (SizeOfType)
             {
                 case 1:
-                    binaryToken = BinaryToken.UInt8; break;
+                    binaryToken = BinaryToken.Int8; break;
                 case 2:
-                    binaryToken = BinaryToken.UInt16; break;
+                    binaryToken = BinaryToken.Int16; break;
                 case 4:
-                    binaryToken = BinaryToken.UInt32; break;
+                    binaryToken = BinaryToken.Int32; break;
                 case 8:
-                    binaryToken = BinaryToken.UInt64; break;
+                    binaryToken = BinaryToken.Int64; break;
                 default:
-                    throw new NotSupportedException($"Unsupported Enum Size {size}");
+                    throw new NotSupportedException($"Unsupported Enum Size {SizeOfType}");
             }
         }
 
@@ -37,7 +37,7 @@ namespace DataWF.Common
 
         public override T Read(BinaryReader reader)
         {
-            switch (size)
+            switch (SizeOfType)
             {
                 case 1:
                     var tempByte = reader.ReadByte();
@@ -52,13 +52,13 @@ namespace DataWF.Common
                     var tempLong = reader.ReadInt64();
                     return Unsafe.As<long, T>(ref tempLong);
                 default:
-                    throw new NotSupportedException($"Unsupported Enum Size {size}");
+                    throw new NotSupportedException($"Unsupported Enum Size {SizeOfType}");
             }
         }
 
         public override void Write(BinaryWriter writer, T value, bool writeToken)
         {
-            switch (size)
+            switch (SizeOfType)
             {
                 case 1:
                     Int8Serializer.Instance.Write(writer, Unsafe.As<T, sbyte>(ref value), writeToken);
@@ -73,7 +73,7 @@ namespace DataWF.Common
                     Int64Serializer.Instance.Write(writer, Unsafe.As<T, long>(ref value), writeToken);
                     break;
                 default:
-                    throw new NotSupportedException($"Unsupported Enum Size {size}");
+                    throw new NotSupportedException($"Unsupported Enum Size {SizeOfType}");
             }
         }
 
