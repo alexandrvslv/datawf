@@ -99,7 +99,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
             switch (ddlType)
             {
                 case DDLType.Create:
-                    ddl.AppendLine($"insert into db_sequence(name, seq) values('{sequence.Name}', {sequence.Current - 1});");
+                    ddl.AppendLine($"insert into db_sequence(name, seq) values('{sequence.Name}', {sequence.StartWith - 1});");
                     break;
                 case DDLType.Alter:
                     ddl.AppendLine($"update db_sequence set seq = {sequence.Current} where name = '{sequence.Name}';");

@@ -116,7 +116,7 @@ namespace DataWF.Data
             switch (ddlType)
             {
                 case DDLType.Create:
-                    ddl.AppendLine($"create sequence {sequence.Name} as {FormatType(sequence.DBDataType, sequence.Size, sequence.Scale)} start with {sequence.Current} increment by {sequence.Increment};");
+                    ddl.AppendLine($"create sequence {sequence.Name} as {FormatType(sequence.DBDataType, sequence.Size, sequence.Scale)} start with {sequence.StartWith - 1} increment by {sequence.Increment};");
                     break;
                 case DDLType.Alter:
                     ddl.AppendLine($"alter sequence {sequence.Name} restart with {sequence.Current} increment by {sequence.Increment};");

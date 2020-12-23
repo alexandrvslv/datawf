@@ -46,7 +46,7 @@ namespace DataWF.Test.Data
                 new Employer()
                 {
                     Id = i,
-                    Identifier = $"{i:8}",
+                    Identifier = $"{i,8:0}",
                     PositionId = random.Next(1, 4),
                     IsActive = true,
                     Age = (byte)random.Next(18, 60),
@@ -55,7 +55,7 @@ namespace DataWF.Test.Data
                     Weight = 123.12333F,
                     DWeight = 123.1233433424434D,
                     Salary = 231323.32M,
-                    Name = $"Ivan{i:3}",
+                    Name = $"Ivan{i,3:0}",
                     Access = new AccessValue(new[]
                    {
                     new AccessItem(AccessValue.Groups.GetById(1), AccessType.Read | AccessType.Download),
@@ -68,7 +68,7 @@ namespace DataWF.Test.Data
         }
 
         [Test]
-        public void BinarySerialize()
+        public void BinarySerializePoistions()
         {
             var positions = ((IEnumerable<Position>)Position.DBTable).ToList();
             var serializer = DBBinarySerializer.Instance;
@@ -77,6 +77,25 @@ namespace DataWF.Test.Data
             var newList = serializer.Deserialize<List<Position>>(buffer, null);
 
             Assert.AreEqual(positions.Count, newList.Count, "Deserialize Fail");
+
+            foreach (var newItem in newList)
+            {
+                var oldItem = newItem.AttachOrUpdate(DBLoadParam.None);
+                Assert.AreNotEqual(newItem, oldItem);
+                Assert.IsFalse(oldItem.IsChanged);
+            }
+        }
+
+        [Test]
+        public void BinarySerializeEmployers()
+        {
+            var employers = ((IEnumerable<Employer>)Employer.DBTable).ToList();
+            var serializer = DBBinarySerializer.Instance;
+            var buffer = serializer.Serialize(employers);
+
+            var newList = serializer.Deserialize<List<Employer>>(buffer, null);
+
+            Assert.AreEqual(employers.Count, newList.Count, "Deserialize Fail");
 
             foreach (var newItem in newList)
             {

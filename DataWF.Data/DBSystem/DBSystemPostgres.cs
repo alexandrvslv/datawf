@@ -167,7 +167,7 @@ namespace DataWF.Data
             switch (ddlType)
             {
                 case DDLType.Create://if not exists  pg 9.5 or above
-                    ddl.AppendLine($"create sequence {sequence.Name} start with {sequence.Current} increment by {sequence.Increment}");
+                    ddl.AppendLine($"create sequence {sequence.Name} start with {sequence.StartWith} increment by {sequence.Increment}");
                     break;
                 case DDLType.Alter:
                     ddl.AppendLine($"alter sequence {sequence.Name} restart with {sequence.Current + 1} increment by {sequence.Increment}");
