@@ -116,6 +116,34 @@ namespace DataWF.Data
             return base.Parse(value);
         }
 
+        public override void Write(BinaryInvokerWriter writer, object element)
+        {
+            if (element is DBItem item)
+            {
+                T? value = GetValue(item);
+                if (value == null)
+                    writer.WriteNull();
+                else
+                    TypedSerializer.Write(writer, value, null, null);
+            }
+            else
+                base.Write(writer, element);
+        }
+
+        public override void Write<E>(BinaryInvokerWriter writer, E element)
+        {
+            if (element is DBItem item)
+            {
+                T? value = GetValue(item);
+                if (value == null)
+                    writer.WriteNull();
+                else
+                    TypedSerializer.Write(writer, value, null, null);
+            }
+            else
+                base.Write(writer, element);
+        }
+
         public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
         {
             if (PropertyInvoker is IInvoker<E, T?> valueInvoker)

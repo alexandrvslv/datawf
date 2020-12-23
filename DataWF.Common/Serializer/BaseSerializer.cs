@@ -41,7 +41,7 @@ namespace DataWF.Common
             return GetTypeInfo(typeof(T));
         }
 
-        public TypeSerializeInfo GetTypeInfo(Type type)
+        public virtual TypeSerializeInfo GetTypeInfo(Type type)
         {
             if (type == null)
                 return null;
@@ -56,14 +56,14 @@ namespace DataWF.Common
             return info;
         }
 
-        public abstract ISerializeWriter GetWriter(Stream stream);
-
-        public abstract ISerializeReader GetReader(Stream stream);
-
-        public void SetTypeInfo(Type type, TypeSerializeInfo info)
+        public virtual void SetTypeInfo(Type type, TypeSerializeInfo info)
         {
             SerializationInfo[type] = info;
         }
+
+        public abstract ISerializeWriter GetWriter(Stream stream);
+
+        public abstract ISerializeReader GetReader(Stream stream);
 
         public void Serialize(string file, object element)
         {

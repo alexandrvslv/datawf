@@ -109,19 +109,25 @@ namespace DataWF.Common
 
         public static Func<T, K, V> GetExpressionGet(PropertyInfo info)
         {
+            if (info.GetMethod == null)
+                return null;
+
             var index = Expression.Parameter(typeof(K), "index");
             var target = Expression.Parameter(typeof(T), "target");
-            var property = Expression.Property(target, info, index);
+            var property = Expression.Property(info.GetMethod.IsStatic ? null : target, info, index);
 
             return Expression.Lambda<Func<T, K, V>>(property, target, index).Compile();
         }
 
         public static Action<T, K, V> GetExpressionSet(PropertyInfo info)
         {
+            if (info.SetMethod == null)
+                return null;
+
             var index = Expression.Parameter(typeof(K), "index");
             var target = Expression.Parameter(typeof(T), "target");
             var value = Expression.Parameter(typeof(V), "value");
-            var property = Expression.Property(target, info, index);
+            var property = Expression.Property(info.SetMethod.IsStatic ? null : target, info, index);
 
             return Expression.Lambda<Action<T, K, V>>(Expression.Assign(property, value), target, index, value).Compile();
         }

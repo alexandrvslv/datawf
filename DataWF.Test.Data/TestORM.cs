@@ -268,7 +268,6 @@ namespace DataWF.Test.Data
                     var column = TestColumns.DBTable.Columns[i];
                     var cvalue = TestColumns.DBTable[r].GetValue(column);
                     var rvalue = column.ParseValue(tcresult.Values[r][i]);
-                    Debug.WriteLine($"{column} value: {column.FormatQuery(cvalue)} qvalue: {rvalue ?? "null"}");
                     if (column.DBDataType == DBDataType.DateTime
                         && cvalue is DateTime cdate && rvalue is DateTime rdate)
                     {

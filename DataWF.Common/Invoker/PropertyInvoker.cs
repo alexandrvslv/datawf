@@ -76,17 +76,21 @@ namespace DataWF.Common
         //https://www.codeproject.com/Articles/584720/Expression-Based-Property-Getters-and-Setters
         public static Func<T, V> GetExpressionGet(PropertyInfo info)
         {
+            if (info.GetMethod == null)
+                return null;
             var param = Expression.Parameter(typeof(T), "target");
-            var property = Expression.Property(param, info);
+            var property = Expression.Property(info.GetMethod.IsStatic ? null : param, info);
 
             return Expression.Lambda<Func<T, V>>(property, param).Compile();
         }
 
         public static Action<T, V> GetExpressionSet(PropertyInfo info)
         {
+            if (info.SetMethod == null)
+                return null;
             var param = Expression.Parameter(typeof(T), "target");
             var value = Expression.Parameter(typeof(V), "value");
-            var proeprty = Expression.Property(param, info);
+            var proeprty = Expression.Property(info.SetMethod.IsStatic ? null : param, info);
 
             return Expression.Lambda<Action<T, V>>(Expression.Assign(proeprty, value), param, value).Compile();
         }

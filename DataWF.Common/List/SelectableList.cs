@@ -186,6 +186,15 @@ namespace DataWF.Common
             return ListHelper.Search<T, K>(this, invoker, comparer, value);
         }
 
+        public IEnumerable<T> Select<K>(IInvoker<T, K> invoker, CompareType comparer, K value)
+        {
+            if (indexes.GetIndex(invoker.Name) is IListIndex<T, K> index)
+            {
+                return index.Scan(comparer, value);
+            }
+            return ListHelper.Search<T, K>(this, invoker, comparer, value);
+        }
+
         public IEnumerable<T> Select(IInvoker invoker, CompareType comparer, object value)
         {
             return Select(((IInvokerExtension)invoker).CreateParameter<T>(comparer, value));

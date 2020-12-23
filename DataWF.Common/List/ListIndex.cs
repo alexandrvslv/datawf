@@ -114,7 +114,7 @@ namespace DataWF.Common
 
         public IEnumerable<T> Scan(IQueryParameter<T> param)
         {
-            return Scan(param.Comparer, param.Value, param.TypedValue);
+            return ScanTyped(param.Comparer, param.TypedValue);
         }
 
         IEnumerable IListIndex.Scan(CompareType comparer, object value)
@@ -124,10 +124,10 @@ namespace DataWF.Common
 
         public IEnumerable<T> Scan(CompareType comparer, object value)
         {
-            return Scan(comparer, value, Helper.ParseParameter<K>(value, comparer));
+            return ScanTyped(comparer, Helper.ParseParameter<K>(value, comparer));
         }
 
-        public IEnumerable<T> Scan(CompareType comparer, object paramValue, object typedValue)
+        public IEnumerable<T> Scan(CompareType comparer, K key)
         {
             var index = Dictionary;
             switch (comparer.Type)
@@ -155,7 +155,6 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.Equal:
                     {
-                        var key = CheckNull(typedValue);
                         if (comparer.Not)
                         {
                             foreach (var entry in index)
@@ -177,6 +176,63 @@ namespace DataWF.Common
                         }
                     }
                     break;
+                case CompareTypes.Greater:
+                    {
+                        foreach (var entry in index)
+                        {
+                            if (ListHelper.Compare<K>(entry.Key, key) > 0)
+                            {
+                                foreach (var item in entry.Value)
+                                    yield return item;
+                            }
+                        }
+                    }
+                    break;
+                case CompareTypes.GreaterOrEqual:
+                    {
+                        foreach (var entry in index)
+                        {
+                            if (ListHelper.Compare<K>(entry.Key, key) >= 0)
+                            {
+                                foreach (var item in entry.Value)
+                                    yield return item;
+                            }
+                        }
+                    }
+                    break;
+                case CompareTypes.Less:
+                    {
+                        foreach (var entry in index)
+                        {
+                            if (ListHelper.Compare<K>(entry.Key, key) < 0)
+                            {
+                                foreach (var item in entry.Value)
+                                    yield return item;
+                            }
+                        }
+                    }
+                    break;
+                case CompareTypes.LessOrEqual:
+                    {
+                        foreach (var entry in index)
+                        {
+                            if (ListHelper.Compare<K>(entry.Key, key) <= 0)
+                            {
+                                foreach (var item in entry.Value)
+                                    yield return item;
+                            }
+                        }
+                    }
+                    break;
+            }
+
+        }
+
+        public IEnumerable<T> ScanTyped(CompareType comparer, object typedValue)
+        {
+            var index = Dictionary;
+            switch (comparer.Type)
+            {
                 case CompareTypes.Like:
                     {
                         var key = CheckNull(typedValue);
@@ -192,7 +248,7 @@ namespace DataWF.Common
                     }
                     break;
                 case CompareTypes.In:
-                    var list = paramValue.ToEnumerable();
+                    var list = typedValue.ToEnumerable();
                     if (comparer.Not)
                     {
                         foreach (var entry in index)
@@ -210,63 +266,14 @@ namespace DataWF.Common
                         {
                             if (index.TryGetValue(CheckNull(inItem), out var value))
                             {
-                                foreach (T item in value)
-                                    yield return item;
+
                             }
                         }
                     }
                     break;
-                case CompareTypes.Greater:
-                    {
-                        var key = CheckNull(typedValue);
-                        foreach (var entry in index)
-                        {
-                            if (ListHelper.Compare<K>(entry.Key, key) > 0)
-                            {
-                                foreach (var item in entry.Value)
-                                    yield return item;
-                            }
-                        }
-                    }
-                    break;
-                case CompareTypes.GreaterOrEqual:
-                    {
-                        var key = CheckNull(typedValue);
-                        foreach (var entry in index)
-                        {
-                            if (ListHelper.Compare<K>(entry.Key, key) >= 0)
-                            {
-                                foreach (var item in entry.Value)
-                                    yield return item;
-                            }
-                        }
-                    }
-                    break;
-                case CompareTypes.Less:
-                    {
-                        var key = CheckNull(typedValue);
-                        foreach (var entry in index)
-                        {
-                            if (ListHelper.Compare<K>(entry.Key, key) < 0)
-                            {
-                                foreach (var item in entry.Value)
-                                    yield return item;
-                            }
-                        }
-                    }
-                    break;
-                case CompareTypes.LessOrEqual:
-                    {
-                        var key = CheckNull(typedValue);
-                        foreach (var entry in index)
-                        {
-                            if (ListHelper.Compare<K>(entry.Key, key) <= 0)
-                            {
-                                foreach (var item in entry.Value)
-                                    yield return item;
-                            }
-                        }
-                    }
+                default:
+                    foreach (T item in Scan(comparer, CheckNull(typedValue)))
+                        yield return item;
                     break;
             }
         }

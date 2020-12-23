@@ -7,17 +7,23 @@ namespace DataWF.Common
 {
     public class TypeSerializeInfo
     {
-        public TypeSerializeInfo(Type type, bool onlyXmlAttributes = false) : this(type, TypeHelper.GetPropertiesByHierarchi(type, onlyXmlAttributes))
+        public TypeSerializeInfo(Type type, bool onlyXmlAttributes = false)
+            : this(type, TypeHelper.GetPropertiesByHierarchi(type, onlyXmlAttributes))
         { }
 
-        public TypeSerializeInfo(Type type, IEnumerable<string> properties) : this(type, TypeHelper.GetProperties(type, properties))
+        public TypeSerializeInfo(Type type, IEnumerable<string> properties)
+            : this(type, TypeHelper.GetProperties(type, properties))
         { }
 
         public TypeSerializeInfo(Type type, IEnumerable<PropertyInfo> properties)
+            : this(type, TypeHelper.GetSerializer(type), properties)
+        { }
+
+        public TypeSerializeInfo(Type type, IElementSerializer serializer, IEnumerable<PropertyInfo> properties)
         {
             Type = type;
             TypeName = TypeHelper.FormatBinary(Type);
-            Serializer = TypeHelper.GetSerializer(type);
+            Serializer = serializer;
             //if (Serializer.GetType().IsGenericType && Serializer.GetType().GetGenericArguments()[0] != type)
             //{ }
             var keys = TypeSerializationInfoKeys.None;
@@ -131,7 +137,7 @@ namespace DataWF.Common
 
         public SelectableListView<IPropertySerializeInfo> XmlProperties { get; }
 
-        public ElementSerializer Serializer { get; }
+        public IElementSerializer Serializer { get; }
 
         public string ShortName { get; internal set; } = "e";
 

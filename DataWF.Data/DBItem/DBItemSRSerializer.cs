@@ -20,9 +20,12 @@
 using DataWF.Common;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace DataWF.Data
 {
+
     public class DBItemSerializer<T> : ObjectSerializer<T> where T : DBItem
     {
         public static readonly DBItemSRSerializer<T> Instance = new DBItemSRSerializer<T>();

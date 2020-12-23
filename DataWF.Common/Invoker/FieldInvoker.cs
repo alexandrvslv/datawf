@@ -74,8 +74,7 @@ namespace DataWF.Common
         public static Func<T, V> GetExpressionGet(FieldInfo info)
         {
             var param = Expression.Parameter(typeof(T), "target");
-            var property = Expression.Field(param, info);
-
+            var property = Expression.Field(info.IsStatic ? null : param, info);
             return Expression.Lambda<Func<T, V>>(property, param).Compile();
         }
 
@@ -85,9 +84,10 @@ namespace DataWF.Common
             {
                 return null;
             }
+
             var param = Expression.Parameter(typeof(T), "target");
             var value = Expression.Parameter(typeof(V), "value");
-            var proeprty = Expression.Field(param, info);
+            var proeprty = Expression.Field(info.IsStatic ? null : param, info);
 
             return Expression.Lambda<Action<T, V>>(Expression.Assign(proeprty, value), param, value).Compile();
         }

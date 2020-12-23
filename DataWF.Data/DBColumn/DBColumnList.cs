@@ -192,21 +192,14 @@ namespace DataWF.Data
         public DBColumn GetByProperty(string property)
         {
             var columns = Select(DBColumn.PropertyNameInvoker.Instance, CompareType.Equal, property);
-            if (columns.Count() > 1)
-            {
-                return columns.Where(p => p.Culture == Locale.Instance.Culture).FirstOrDefault();
-            }
-            return columns.FirstOrDefault();
+            return columns.FirstOrDefault(p => p.Culture == null
+                                            || !string.Equals(property, p.GroupName, StringComparison.Ordinal)
+                                            || p.Culture == Locale.Instance.Culture);
         }
 
         public DBColumn GetByReferenceProperty(string property)
         {
-            var columns = Select(DBColumn.ReferencePropertyNameInvoker.Instance, CompareType.Equal, property);
-            if (columns.Count() > 1)
-            {
-                return columns.Where(p => p.Culture == Locale.Instance.Culture).FirstOrDefault();
-            }
-            return columns.FirstOrDefault();
+            return Select(DBColumn.ReferencePropertyNameInvoker.Instance, CompareType.Equal, property).FirstOrDefault();
         }
 
         public DBColumn GetByKey(DBColumnKeys key)

@@ -71,12 +71,19 @@ namespace DataWF.Test.Data
         public void BinarySerialize()
         {
             var positions = ((IEnumerable<Position>)Position.DBTable).ToList();
-            var serializer = new BinarySerializer();
+            var serializer = DBBinarySerializer.Instance;
             var buffer = serializer.Serialize(positions);
 
             var newList = serializer.Deserialize<List<Position>>(buffer, null);
 
             Assert.AreEqual(positions.Count, newList.Count, "Deserialize Fail");
+
+            foreach (var newItem in newList)
+            {
+                var oldItem = newItem.AttachOrUpdate(DBLoadParam.None);
+                Assert.AreNotEqual(newItem, oldItem);
+                Assert.IsFalse(oldItem.IsChanged);
+            }
         }
     }
 }

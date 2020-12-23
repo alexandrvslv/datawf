@@ -81,7 +81,7 @@ namespace DataWF.Common
             }
             else
             {
-                writer.Write((byte)BinaryToken.Null);
+                writer.WriteNull();
             }
         }
         #endregion

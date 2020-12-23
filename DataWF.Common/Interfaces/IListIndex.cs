@@ -34,6 +34,7 @@ namespace DataWF.Common
 
     public interface IListIndex<T, K> : IListIndex<T>
     {
+        IEnumerable<T> Scan(CompareType comparer, K value);
         T SelectOne(K value);
         void Add(T item, K key);
         void Remove(T item, K key);
