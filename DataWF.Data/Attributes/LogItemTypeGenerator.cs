@@ -35,16 +35,13 @@ namespace DataWF.Data
             set => TableGenerator = value;
         }
 
-        public override DBTable Table { get => LogTableGenerator.Table; internal set => base.Table = value; }
-
-        public override DBTable CreateTable()
+        public override DBTable CreateTable(DBSchema schema, DBTable baseTable)
         {
             return null;
         }
 
         public override DBTable Generate(DBSchema schema)
         {
-            Generated = true;
             return null;
         }
     }

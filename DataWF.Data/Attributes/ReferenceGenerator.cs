@@ -22,23 +22,21 @@ using DataWF.Data;
 using System;
 using System.Reflection;
 
-[assembly: Invoker(typeof(ReferenceGenerator), nameof(ReferenceGenerator.PropertyName), typeof(ReferenceGenerator.PropertyNameInvoker))]
 namespace DataWF.Data
 {
-    public class ReferenceGenerator
+    [InvokerGenerator(Instance = true)]
+    public partial class ReferenceGenerator
     {
         private ColumnGenerator cacheColumn;
-        private DBForeignKey cacheKey;
-
         public ReferenceGenerator(TableGenerator table, PropertyInfo property, ReferenceAttribute referenceAttribute)
         {
             Attribute = referenceAttribute;
-            Table = table;
+            TableGenerator = table;
             PropertyInfo = property;
             ReferenceType = property.PropertyType;
-            Column.DisplayName = property.Name;
-            Column.Attribute.Keys |= DBColumnKeys.Reference;
-            Column.ReferencePropertyInfo = property;
+            ColumnGenerator.DisplayName = property.Name;
+            ColumnGenerator.Attribute.Keys |= DBColumnKeys.Reference;
+            ColumnGenerator.ReferencePropertyInfo = property;
             GenerateName();
         }
 
@@ -46,15 +44,9 @@ namespace DataWF.Data
 
         public Type ReferenceType { get; internal set; }
 
-        public TableGenerator Table { get; internal set; }
+        public TableGenerator TableGenerator { get; internal set; }
 
-        public ColumnGenerator Column => cacheColumn ?? (cacheColumn = Table?.GetColumnByProperty(Attribute.ColumnProperty));
-
-        public DBForeignKey ForeignKey
-        {
-            get => cacheKey ?? (cacheKey = Table?.Table?.Foreigns[Attribute.Name]);
-            internal set { cacheKey = value; }
-        }
+        public ColumnGenerator ColumnGenerator => cacheColumn ?? (cacheColumn = TableGenerator?.GetColumnByProperty(Attribute.ColumnProperty));
 
         public PropertyInfo PropertyInfo { get; set; }
 
@@ -63,69 +55,58 @@ namespace DataWF.Data
 
         public void GenerateName()
         {
-            if (string.IsNullOrEmpty(Attribute.Name) && Table != null && Column != null)
+            if (string.IsNullOrEmpty(Attribute.Name) && TableGenerator != null && ColumnGenerator != null)
             {
-                Attribute.Name = $"fk_{Table.Attribute.TableName}_{Column.ColumnName}";
+                Attribute.Name = $"fk_{TableGenerator.Attribute.TableName}_{ColumnGenerator.ColumnName}";
             }
         }
 
-        public DBTable CheckReference()
-        {
-            var referenceTable = DBTable.GetTable(ReferenceType, Table.Schema, true);
+        public DBTable CheckReference(DBSchema schema)
+        {            
+            var referenceTable = schema.GetTable(ReferenceType, true);
             if (referenceTable == null)
             {
-                throw new Exception($"{nameof(ReferenceType)}({Attribute.ColumnProperty} - {ReferenceType}) Table not found! Target table: {Table.Table}");
+                throw new Exception($"{nameof(ReferenceType)}({Attribute.ColumnProperty} - {ReferenceType}) Table not found! Target table: {TableGenerator}");
             }
             if (referenceTable.PrimaryKey == null)
             {
-                throw new Exception($"{nameof(ReferenceType)}({Attribute.ColumnProperty} - {ReferenceType}) Primary key not found! Target table: {Table.Table}");
+                throw new Exception($"{nameof(ReferenceType)}({Attribute.ColumnProperty} - {ReferenceType}) Primary key not found! Target table: {TableGenerator}");
             }
             return referenceTable;
         }
 
-        public virtual DBForeignKey Generate()
+        public virtual DBForeignKey Generate(DBTable table)
         {
             if (ReferenceType == null
-                || Table == null || Table.Schema == null
-                || Column == null || Column.Column == null)
+                || TableGenerator == null
+                || ColumnGenerator == null)
             {
                 throw new Exception($"{nameof(ReferenceAttribute)} is not initialized!");
             }
-            var referenceTable = CheckReference();
 
-            if (ForeignKey == null)
+            var referenceTable = CheckReference(table.Schema);
+            var foreignKey = table?.Foreigns[Attribute.Name];
+            var column = table.Columns[ColumnGenerator.ColumnName];
+            if (foreignKey == null)
             {
-
-                ForeignKey = new DBForeignKey()
+                foreignKey = new DBForeignKey()
                 {
-                    Table = Table.Table,
-                    Column = Column.Column,
+                    Table = table,
+                    Column = column,
                     Reference = referenceTable.PrimaryKey,
                     Name = Attribute.Name,
                 };
-                Table.Table.Foreigns.Add(ForeignKey);
+                table.Foreigns.Add(foreignKey);
             }
-            Column.Column.IsReference = true;
-            ForeignKey.Reference = referenceTable.PrimaryKey;
-            ForeignKey.Property = PropertyInfo.Name;
-            ForeignKey.PropertyInfo = PropertyInfo;
-            if (ForeignKey.Invoker == null)
+            column.IsReference = true;
+            foreignKey.Reference = referenceTable.PrimaryKey;
+            foreignKey.Property = PropertyInfo.Name;
+            foreignKey.PropertyInfo = PropertyInfo;
+            if (foreignKey.Invoker == null)
             {
-                ForeignKey.Invoker = EmitInvoker.Initialize(PropertyInfo, true);
+                foreignKey.Invoker = EmitInvoker.Initialize(PropertyInfo, true);
             }
-            return ForeignKey;
-        }
-
-        public class PropertyNameInvoker : Invoker<ReferenceGenerator, string>
-        {
-            public static readonly PropertyNameInvoker Instance = new PropertyNameInvoker();
-            public override string Name => nameof(ReferenceGenerator.PropertyName);
-
-            public override bool CanWrite => false;
-
-            public override string GetValue(ReferenceGenerator target) => target.PropertyName;
-
-            public override void SetValue(ReferenceGenerator target, string value) { }
+            return foreignKey;
         }
     }
 

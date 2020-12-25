@@ -2,6 +2,7 @@
 
 namespace DataWF.Common
 {
+
     [AttributeUsage(AttributeTargets.Assembly)]
     public class ModuleInitializeAttribute : Attribute
     {

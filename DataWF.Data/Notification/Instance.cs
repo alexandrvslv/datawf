@@ -30,65 +30,45 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [Table("rinstance", "General", BlockSize = 128)]
+    [Table("rinstance", "General", BlockSize = 128, Keys = DBTableKeys.NoLogs | DBTableKeys.NoReplicate, Type = typeof(InstanceTable))]
     public class Instance : DBItem, IInstance
     {
-        public static readonly DBTable<Instance> DBTable = GetTable<Instance>();
-        public static readonly DBColumn HostKey = DBTable.ParseProperty(nameof(Host));
-        public static readonly DBColumn PortKey = DBTable.ParseProperty(nameof(Port));
-        public static readonly DBColumn ActiveKey = DBTable.ParseProperty(nameof(Active));
-
-        public static async Task<Instance> GetByNetId(IPEndPoint endPoint, bool create, IUserIdentity user = null)
-        {
-            var query = new QQuery(DBTable);
-            query.BuildPropertyParam(nameof(Host), CompareType.Equal, endPoint.Address.ToString());
-            query.BuildPropertyParam(nameof(Port), CompareType.Equal, endPoint.Port);
-            query.BuildPropertyParam(nameof(Action), CompareType.Equal, false);
-            var instance = DBTable.Load(query).LastOrDefault();
-            if (instance == null && create)
-            {
-                instance = new Instance
-                {
-                    EndPoint = endPoint,
-                    Active = true,
-                    IsCurrent = true
-                };
-                await instance.Save(user);
-            }
-            return instance;
-        }
-
         private IPEndPoint ipEndPoint;
 
         public Instance()
         { }
 
+        public Instance(DBTable table) : base(table)
+        { }
+
+        public InstanceTable InstanceTable => (InstanceTable)Table;
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int>(InstanceTable.PrimaryKey);
+            set => SetValue(value, InstanceTable.PrimaryKey);
         }
 
         [Column("instance_host", Keys = DBColumnKeys.View)]
         public string Host
         {
-            get => GetValue<string>(HostKey);
-            set => SetValue(value, HostKey);
+            get => GetValue<string>(InstanceTable.HostKey);
+            set => SetValue(value, InstanceTable.HostKey);
         }
 
         [Column("instance_port", Keys = DBColumnKeys.View)]
         public int? Port
         {
-            get => GetValue<int?>(PortKey);
-            set => SetValue(value, PortKey);
+            get => GetValue<int?>(InstanceTable.PortKey);
+            set => SetValue(value, InstanceTable.PortKey);
         }
 
         [Column("instance_active")]
         public bool? Active
         {
-            get => GetValue<bool?>(ActiveKey);
-            set => SetValue(value, ActiveKey);
+            get => GetValue<bool?>(InstanceTable.ActiveKey);
+            set => SetValue(value, InstanceTable.ActiveKey);
         }
 
         [JsonIgnore, XmlIgnore]
@@ -121,4 +101,38 @@ namespace DataWF.Data
             return $"{EndPoint} Sent: {SendCount}({Helper.LenghtFormat(SendLength)}) Receive: {ReceiveCount}({ReceiveLength})";
         }
     }
+
+    public class InstanceTable : DBTable<Instance>
+    {
+        private DBColumn<string> hostKey;
+        private DBColumn<int?> portKey;
+        private DBColumn<bool?> activeKey;
+
+        public DBColumn<string> HostKey => ParseProperty(nameof(Instance.Host), ref hostKey);
+        public DBColumn<int?> PortKey => ParseProperty(nameof(Instance.Port), ref portKey);
+        public DBColumn<bool?> ActiveKey => ParseProperty(nameof(Instance.Active), ref activeKey);
+
+
+        public async Task<Instance> GetByNetId(IPEndPoint endPoint, bool create, IUserIdentity user = null)
+        {
+            var query = new QQuery(this);
+            query.BuildParam(HostKey, CompareType.Equal, endPoint.Address.ToString());
+            query.BuildParam(PortKey, CompareType.Equal, endPoint.Port);
+            query.BuildParam(ActiveKey, CompareType.Equal, false);
+            var instance = Load(query).LastOrDefault();
+            if (instance == null && create)
+            {
+                instance = new Instance(this)
+                {
+                    EndPoint = endPoint,
+                    Active = true,
+                    IsCurrent = true
+                };
+                await instance.Save(user);
+            }
+            return instance;
+        }
+    }
+
 }
+

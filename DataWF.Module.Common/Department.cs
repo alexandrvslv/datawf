@@ -9,38 +9,35 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Common
 {
 
-    [Table("rdepartment", "User", BlockSize = 100)]
-    public class Department : DBGroupItem, IComparable, IDisposable
+    [Table("rdepartment", "User", BlockSize = 100), InvokerGenerator]
+    public partial class Department : DBGroupItem, IComparable, IDisposable
     {
-        public static readonly DBTable<Department> DBTable = GetTable<Department>();
-        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
-        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
-        public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
-        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
         private Company company;
 
         public Department()
         { }
 
+        public DepartmentTable DepartmentTable => (DepartmentTable)Table;
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int?>(DepartmentTable.IdKey);
+            set => SetValue(value, DepartmentTable.IdKey);
         }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(CompanyKey);
-            set => SetValue(value, CompanyKey);
+            get => GetValue<int?>(DepartmentTable.CompanyKey);
+            set => SetValue(value, DepartmentTable.CompanyKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(CompanyKey, ref company);
-            set => SetReference(company = value, CompanyKey);
+            get => GetReference(DepartmentTable.CompanyKey, ref company);
+            set => SetReference(company = value, DepartmentTable.CompanyKey);
         }
 
         [Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]
@@ -60,15 +57,15 @@ namespace DataWF.Module.Common
         [Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rdepartment_code", false)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
-            set => SetValue(value, Table.CodeKey);
+            get => GetValue<string>(DepartmentTable.CodeKey);
+            set => SetValue(value, DepartmentTable.CodeKey);
         }
         
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(ExternalIdKey);
-            set => SetValue(value, ExternalIdKey);
+            get => GetValue<int?>(DepartmentTable.ExternalKey);
+            set => SetValue(value, DepartmentTable.ExternalKey);
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
@@ -78,16 +75,18 @@ namespace DataWF.Module.Common
             set => SetName(value);
         }
 
+        [CultureKey]
         public string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue<string>(DepartmentTable.NameENKey);
+            set => SetValue(value, DepartmentTable.NameENKey);
         }
 
+        [CultureKey]
         public string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue<string>(DepartmentTable.NameRUKey);
+            set => SetValue(value, DepartmentTable.NameRUKey);
         }
 
         public override AccessValue Access

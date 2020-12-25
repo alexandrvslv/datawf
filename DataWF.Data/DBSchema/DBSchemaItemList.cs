@@ -28,7 +28,6 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-
     public class DBSchemaItemList<T> : SelectableList<T> where T : DBSchemaItem
     {
         public DBSchemaItemList()
@@ -38,7 +37,7 @@ namespace DataWF.Data
         public DBSchemaItemList(DBSchema schema)
             : base()
         {
-            Indexes.Add(DBSchemaItem.NameInvoker<T>.Instance);
+            Indexes.Add(DBSchemaItem.NameInvoker.Instance);
             Schema = schema;
         }
 

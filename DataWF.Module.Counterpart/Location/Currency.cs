@@ -7,7 +7,6 @@ namespace DataWF.Module.Counterpart
     [ItemType((int)Counterpart.LocationType.Currency)]
     public class Currency : Location
     {
-        public static readonly DBTable<Currency> VTTable = GetTable<Currency>();
         public Currency()
         {
             ItemType = (int)Counterpart.LocationType.Currency;

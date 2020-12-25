@@ -3,10 +3,10 @@ using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(LocaleCategory), nameof(LocaleCategory.Name), typeof(LocaleCategory.NameInvoker))]
 namespace DataWF.Common
 {
-    public class LocaleCategory : SelectableList<LocaleItem>, ICloneable, IEntryNotifyPropertyChanged
+    [InvokerGenerator(Instance = true)]
+    public partial class LocaleCategory : SelectableList<LocaleItem>, ICloneable, IEntryNotifyPropertyChanged
     {
         private string name = "";
 
@@ -57,21 +57,6 @@ namespace DataWF.Common
             var item = new LocaleCategory() { Name = name };
             item.AddRange(items);
             return item;
-        }
-
-        public class NameInvoker : Invoker<LocaleCategory, string>
-        {
-            public static readonly NameInvoker Instance = new NameInvoker();
-            public override string Name
-            {
-                get => nameof(LocaleCategory.Name);
-            }
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(LocaleCategory target) => target.Name;
-
-            public override void SetValue(LocaleCategory target, string value) => target.Name = value;
         }
     }
 

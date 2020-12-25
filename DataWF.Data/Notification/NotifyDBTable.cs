@@ -25,18 +25,17 @@ using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(NotifyDBTable), nameof(NotifyDBTable.Type), typeof(NotifyDBTable.TypeInvoker))]
-[assembly: Invoker(typeof(NotifyDBTable), nameof(NotifyDBTable.Items), typeof(NotifyDBTable.ItemsInvoker))]
 namespace DataWF.Data
 {
-    public class NotifyDBTable : IComparable<NotifyDBTable>
+    [InvokerGenerator(Instance = true)]
+    public partial class NotifyDBTable : IComparable<NotifyDBTable>
     {
         private DBTable table;
 
         [XmlIgnore, JsonIgnore]
         public DBTable Table
         {
-            get => table ?? (table = DBTable.GetTable(Type));
+            get => table ?? (table = DBService.GetTable(Type));
             set => table = value;
         }
 
@@ -48,28 +47,6 @@ namespace DataWF.Data
         public int CompareTo(NotifyDBTable other)
         {
             return Table.CompareTo(other.Table);
-        }
-
-        public class TypeInvoker : Invoker<NotifyDBTable, Type>
-        {
-            public override string Name => nameof(Type);
-
-            public override bool CanWrite => true;
-
-            public override Type GetValue(NotifyDBTable target) => target.Type;
-
-            public override void SetValue(NotifyDBTable target, Type value) => target.Type = value;
-        }
-
-        public class ItemsInvoker : Invoker<NotifyDBTable, List<NotifyDBItem>>
-        {
-            public override string Name => nameof(Items);
-
-            public override bool CanWrite => true;
-
-            public override List<NotifyDBItem> GetValue(NotifyDBTable target) => target.Items;
-
-            public override void SetValue(NotifyDBTable target, List<NotifyDBItem> value) => target.Items = value;
         }
     }
 }

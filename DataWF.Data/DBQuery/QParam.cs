@@ -29,11 +29,11 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(QParam), nameof(QParam.Group), typeof(QParam.GroupInvoker))]
 [assembly: Invoker(typeof(QParam), "Column.Name", typeof(QParam.ColumnNameInvoker))]
 namespace DataWF.Data
 {
-    public class QParam : QItem, IComparable, IGroup, IQItemList
+    [InvokerGenerator(Instance = true)]
+    public partial class QParam : QItem, IComparable, IGroup, IQItemList
     {
         public static QItem Fabric(object value, DBColumn column)
         {
@@ -574,18 +574,6 @@ namespace DataWF.Data
         public override object GetValue(DBItem row)
         {
             return row;
-        }
-
-        public class GroupInvoker : Invoker<QParam, QParam>
-        {
-            public static readonly GroupInvoker Instance = new GroupInvoker();
-            public override string Name => nameof(QParam.Group);
-
-            public override bool CanWrite => true;
-
-            public override QParam GetValue(QParam target) => target.Group;
-
-            public override void SetValue(QParam target, QParam value) => target.Group = value;
         }
 
         public class ColumnNameInvoker : Invoker<QParam, string>

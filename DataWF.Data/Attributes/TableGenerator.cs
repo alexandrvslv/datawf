@@ -29,9 +29,6 @@ namespace DataWF.Data
 {
     public class TableGenerator
     {
-        private DBSchema cacheSchema;
-        private DBTable cacheTable;
-        private DBTableGroup cacheGroup;
         protected SelectableList<ColumnGenerator> cacheColumns;
         protected SelectableList<ReferenceGenerator> cacheReferences;
         protected SelectableList<ReferencingGenerator> cacheReferencings;
@@ -41,26 +38,9 @@ namespace DataWF.Data
         protected ColumnGenerator cachePrimaryKey;
         protected ColumnGenerator cacheTypeKey;
         protected ColumnGenerator cacheFileKey;
+        private Dictionary<DBSchema, DBTable> cacheGenerated = new Dictionary<DBSchema, DBTable>();
 
         public TableAttribute Attribute { get; set; }
-
-        public virtual DBSchema Schema
-        {
-            get => cacheSchema;
-            set => cacheSchema = value;
-        }
-
-        public DBTable Table
-        {
-            get => cacheTable ?? (cacheTable = Schema?.Tables[Attribute.TableName] ?? DBService.Schems.ParseTable(Attribute.TableName));
-            internal set => cacheTable = value;
-        }
-
-        public DBTableGroup TableGroup
-        {
-            get => cacheGroup ?? (cacheGroup = Schema?.TableGroups[Attribute.GroupName]);
-            internal set => cacheGroup = value;
-        }
 
         public Type ItemType { get; internal set; }
 
@@ -110,116 +90,112 @@ namespace DataWF.Data
 
         public SelectableList<ParameterInvoker> Parameters { get; private set; } = new SelectableList<ParameterInvoker>();
 
-        public bool Generated { get; protected set; }
+        public bool IsGenerated(DBSchema schema, out DBTable table) => cacheGenerated.TryGetValue(schema, out table);
 
-        public virtual DBTable CreateTable()
+        public virtual DBTable CreateTable(DBSchema schema)
         {
             Debug.WriteLine($"Generate {Attribute.TableName} - {this.ItemType.Name}");
 
-            var type = typeof(DBTable<>).MakeGenericType(ItemType);
+            var type = Attribute?.Type ?? typeof(DBTable<>).MakeGenericType(ItemType);
             // var logicType = ItemType.Assembly.ExportedTypes.FirstOrDefault(p => p.BaseType == type);
             var table = (DBTable)EmitInvoker.CreateObject(type);
             table.Name = Attribute.TableName;
-            table.Schema = Schema;
+            table.Schema = schema;
             return table;
-        }
-
-        public DBTable Generate()
-        {
-            if (Schema == null)
-                throw new InvalidOperationException("Can't generate as Schema not defined!");
-
-            return Generate(Schema);
         }
 
         public virtual DBTable Generate(DBSchema schema)
         {
-            Generated = true;
-            GenerateBasic(schema);
-            GenerateColumns();
-            if (!Schema.Tables.Contains(Table.Name))
+            if (IsGenerated(schema, out var table))
+                return table;
+            cacheGenerated[schema] =
+                table = GenerateBasic(schema);
+            GenerateColumns(table);
+            if (!schema.Tables.Contains(table.Name))
             {
-                Schema.Tables.Add(Table);
+                schema.Tables.Add(table);
             }
-            GenerateReferences();
-            Generateindexes();
-            GenerateVirtualTables(schema);
+            GenerateReferences(table);
+            Generateindexes(table);
+            GenerateVirtualTables(table);
 
-            Table.IsLoging = (Attribute.Keys & DBTableKeys.NoLogs) == 0;
+            table.IsLoging = (Attribute.Keys & DBTableKeys.NoLogs) == 0;
 
-            return Table;
+            return table;
         }
 
-        private void GenerateVirtualTables(DBSchema schema)
+        private void GenerateVirtualTables(DBTable table)
         {
-            foreach (var entry in Table.ItemTypes.ToList())
+            foreach (var entry in table.ItemTypes.ToList())
             {
                 if (entry.Value == null || entry.Value.Type == null)
-                    Table.ItemTypes.Remove(entry.Key);
+                    table.ItemTypes.Remove(entry.Key);
             }
-            if (Table.ItemTypes.Count == 0)
+            if (table.ItemTypes.Count == 0)
             {
-                Table.ItemTypes[0] = new DBItemType { Type = ItemType };
+                table.ItemTypes[0] = new DBItemType { Type = ItemType };
             }
             foreach (var itemType in cacheItemTypes)
             {
-                Table.ItemTypes[itemType.Attribute.Id] = new DBItemType { Type = itemType.Type };
-                itemType.Generate(schema);
+                table.ItemTypes[itemType.Attribute.Id] = new DBItemType { Type = itemType.Type };
+                itemType.Generate(table.Schema);
             }
         }
 
-        private void Generateindexes()
+        private void Generateindexes(DBTable table)
         {
             foreach (var index in cacheIndexes)
             {
-                index.Generate();
+                index.Generate(table);
             }
         }
 
-        private void GenerateReferences()
+        private void GenerateReferences(DBTable table)
         {
             foreach (var reference in cacheReferences)
             {
-                reference.CheckReference();
+                reference.CheckReference(table.Schema);
             }
 
             foreach (var reference in cacheReferences)
             {
-                reference.Generate();
+                reference.Generate(table);
             }
         }
 
-        private void GenerateBasic(DBSchema schema)
+        private DBTable GenerateBasic(DBSchema schema)
         {
-            Schema = schema ?? throw new ArgumentNullException(nameof(schema));
-
-            if (TableGroup == null)
+            if (schema == null)
+                throw new ArgumentNullException(nameof(schema));
+            var tableGroup = schema.TableGroups[Attribute.GroupName];
+            if (tableGroup == null)
             {
-                TableGroup = new DBTableGroup(Attribute.GroupName)
+                tableGroup = new DBTableGroup(Attribute.GroupName)
                 {
-                    Schema = Schema,
+                    Schema = schema,
                     DisplayName = Attribute.GroupName
                 };
-                Schema.TableGroups.Add(TableGroup);
+                schema.TableGroups.Add(tableGroup);
             }
-
-            if (Table == null)
+            var table = schema.Tables[Attribute.TableName];
+            if (table == null)
             {
-                Table = CreateTable();
+                table = CreateTable(schema);
             }
-            if (Table.DisplayName.Equals(Table.Name, StringComparison.Ordinal))
+            if (table.DisplayName.Equals(table.Name, StringComparison.Ordinal))
             {
-                Table.DisplayName = ItemType.Name;
+                table.DisplayName = ItemType.Name;
             }
-            Table.Generator = this;
-            Table.Group = TableGroup;
-            Table.Type = Attribute.TableType;
-            Table.Keys = Attribute.Keys;
-            Table.BlockSize = Attribute.BlockSize;
-            Table.Sequence = Table.GenerateSequence(Attribute.SequenceName);
+            table.Generator = this;
+            table.Group = tableGroup;
+            table.Type = Attribute.TableType;
+            table.Keys = Attribute.Keys;
+            table.BlockSize = Attribute.BlockSize;
+            table.Sequence = table.GenerateSequence(Attribute.SequenceName);
+            return table;
         }
 
-        public void GenerateColumns()
+        public void GenerateColumns(DBTable table)
         {
             cacheColumns.Sort((a, b) =>
             {
@@ -229,7 +205,7 @@ namespace DataWF.Data
             });
             foreach (var column in cacheColumns)
             {
-                column.Generate();
+                column.Generate(table);
             }
         }
 
@@ -332,7 +308,7 @@ namespace DataWF.Data
             {
                 index = cacheIndexes.SelectOne(nameof(IndexGenerator.IndexName), indexAttribute.IndexName)
                     ?? new IndexGenerator { Attribute = indexAttribute };
-                index.Table = this;
+                index.TableGenerator = this;
                 var columnAttribute = GetColumnByProperty(property.Name);
                 index.Columns.Add(columnAttribute);
                 return true;
@@ -349,7 +325,7 @@ namespace DataWF.Data
             {
                 index = cacheIndexes.SelectOne(nameof(IndexGenerator.IndexName), indexAttribute.IndexName)
                     ?? new IndexGenerator { Attribute = indexAttribute };
-                index.Table = this;
+                index.TableGenerator = this;
                 index.Columns.AddRange(columns);
                 return true;
             }
@@ -465,6 +441,11 @@ namespace DataWF.Data
         public ReferencingGenerator GetReferencingByProperty(string property)
         {
             return cacheReferencings.SelectOne(nameof(ReferencingGenerator.PropertyName), property);
+        }
+
+        public void ClearCache()
+        {
+            cacheGenerated.Clear();
         }
     }
 }

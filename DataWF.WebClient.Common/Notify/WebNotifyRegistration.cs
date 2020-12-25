@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DataWF.Common
 {
-    public class WebNotifyRegistration
+    [InvokerGenerator]
+    public partial class WebNotifyRegistration
     {
         public static readonly WebNotifyRegistration Default = new WebNotifyRegistration { Platform = "Default", Application = "Default", Version = "1.0.0.0" };
 

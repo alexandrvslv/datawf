@@ -26,13 +26,10 @@ using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(NotifyDBItem), nameof(NotifyDBItem.Command), typeof(NotifyDBItem.CommandInvoker))]
-[assembly: Invoker(typeof(NotifyDBItem), nameof(NotifyDBItem.UserId), typeof(NotifyDBItem.UserIdInvoker))]
-[assembly: Invoker(typeof(NotifyDBItem), nameof(NotifyDBItem.Id), typeof(NotifyDBItem.IdInvoker))]
-[assembly: Invoker(typeof(NotifyDBItem), nameof(NotifyDBItem.Value), typeof(NotifyDBItem.ValueInvoker))]
 namespace DataWF.Data
 {
-    public class NotifyDBItem : IComparable<NotifyDBItem>
+    [InvokerGenerator(Instance = true)]
+    public partial class NotifyDBItem : IComparable<NotifyDBItem>
     {
         public DBLogType Command { get; set; }
         public int UserId { get; set; }
@@ -45,50 +42,6 @@ namespace DataWF.Data
         {
             var res = ListHelper.Compare(Id, other.Id, (IComparer)null);
             return res != 0 ? res : Command.CompareTo(Command);
-        }
-
-        public class CommandInvoker : Invoker<NotifyDBItem, DBLogType>
-        {
-            public override string Name => nameof(Command);
-
-            public override bool CanWrite => true;
-
-            public override DBLogType GetValue(NotifyDBItem target) => target.Command;
-
-            public override void SetValue(NotifyDBItem target, DBLogType value) => target.Command = value;
-        }
-
-        public class UserIdInvoker : Invoker<NotifyDBItem, int>
-        {
-            public override string Name => nameof(UserId);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(NotifyDBItem target) => target.UserId;
-
-            public override void SetValue(NotifyDBItem target, int value) => target.UserId = value;
-        }
-
-        public class IdInvoker : Invoker<NotifyDBItem, object>
-        {
-            public override string Name => nameof(Id);
-
-            public override bool CanWrite => true;
-
-            public override object GetValue(NotifyDBItem target) => target.Id;
-
-            public override void SetValue(NotifyDBItem target, object value) => target.Id = value;
-        }
-
-        public class ValueInvoker : Invoker<NotifyDBItem, DBItem>
-        {
-            public override string Name => nameof(Value);
-
-            public override bool CanWrite => true;
-
-            public override DBItem GetValue(NotifyDBItem target) => target.Value;
-
-            public override void SetValue(NotifyDBItem target, DBItem value) => target.Value = value;
         }
     }
 }

@@ -66,7 +66,7 @@ namespace DataWF.Module.Messanger
 
         public static async Task<Message> Send(User from, IEnumerable<DBItem> to, string data)
         {
-            using (var transaction = new DBTransaction(Message.DBTable.Connection, from))
+            using (var transaction = new DBTransaction(Message.DBTable, from))
             {
                 try
                 {

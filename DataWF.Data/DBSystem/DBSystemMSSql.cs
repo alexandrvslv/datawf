@@ -249,10 +249,11 @@ namespace DataWF.Data
 
         public override async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
         {
-            var command = (SqlCommand)transaction.AddCommand($"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) " +
-                $"values (@{FileData.IdKey.SqlName}, @{FileData.DataKey.SqlName})");
-            command.Parameters.Add($"@{FileData.IdKey.SqlName}", SqlDbType.BigInt, -1).Value = id;
-            command.Parameters.Add($"@{FileData.DataKey.SqlName}", SqlDbType.Binary, -1).Value = value;
+            var table = transaction.Schema.FileTable;
+            var command = (SqlCommand)transaction.AddCommand($"insert into {table.Name} ({table.IdKey.SqlName}, {table.DataKey.SqlName}) " +
+                $"values (@{table.IdKey.SqlName}, @{table.DataKey.SqlName})");
+            command.Parameters.Add($"@{table.IdKey.SqlName}", SqlDbType.BigInt, -1).Value = id;
+            command.Parameters.Add($"@{table.DataKey.SqlName}", SqlDbType.Binary, -1).Value = value;
             await transaction.ExecuteQueryAsync(command, DBExecuteType.Scalar);
         }
 

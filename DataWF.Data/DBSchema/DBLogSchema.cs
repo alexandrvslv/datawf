@@ -22,10 +22,10 @@ using DataWF.Data;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBLogSchema), nameof(DBLogSchema.BaseSchemaName), typeof(DBLogSchema.BaseSchemaNameInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBLogSchema : DBSchema
+    [InvokerGenerator(Instance = true)]
+    public partial class DBLogSchema : DBSchema
     {
         protected DBSchema baseSchema;
         protected string baseSchemaName;
@@ -52,18 +52,6 @@ namespace DataWF.Data
                 baseSchema = value;
                 BaseSchemaName = value?.Name;
             }
-        }
-
-        public class BaseSchemaNameInvoker<T> : Invoker<T, string> where T : DBLogSchema
-        {
-            public static readonly BaseSchemaNameInvoker<T> Instance = new BaseSchemaNameInvoker<T>();
-            public override string Name => nameof(DBLogSchema.BaseSchemaName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.BaseSchemaName;
-
-            public override void SetValue(T target, string value) => target.BaseSchemaName = value;
-        }
+        }        
     }
 }

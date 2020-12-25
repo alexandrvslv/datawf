@@ -33,15 +33,10 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.Source), typeof(DBProcedure.SourceInvoker))]
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.Stamp), typeof(DBProcedure.StampInvoker))]
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.Parameters), typeof(DBProcedure.ParametersInvoker))]
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.GroupName), typeof(DBProcedure.GroupNameInvoker))]
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.DataName), typeof(DBProcedure.DataNameInvoker))]
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.ProcedureType), typeof(DBProcedure.ProcedureTypeInvoker))]
 namespace DataWF.Data
 {
-    public class DBProcedure : DBSchemaItem, IData, IGroup
+    [InvokerGenerator(Instance = true)]
+    public partial class DBProcedure : DBSchemaItem, IData, IGroup
     {
         private Assembly tempAssembly;
         private byte[] cacheData;
@@ -564,7 +559,7 @@ namespace DataWF.Data
                     {
                         if (args.AutoCommit && args.Transaction == null)
                         {
-                            args.Transaction = new DBTransaction(Schema.Connection);
+                            args.Transaction = new DBTransaction(Schema);
                         }
                         result = this.ExecuteObject(obj, args);
                         if (args.AutoCommit)
@@ -594,7 +589,7 @@ namespace DataWF.Data
 
         public Dictionary<string, object> ExecuteDBProcedure(IDbCommand command, ExecuteArgs args)
         {
-            var transaction = args.Transaction ?? new DBTransaction(Schema.Connection);
+            var transaction = args.Transaction ?? new DBTransaction(Schema);
             try
             {
                 transaction.AddCommand(command);
@@ -629,7 +624,7 @@ namespace DataWF.Data
 
         public object ExecuteDBFunction(IDbCommand command)
         {
-            using (var transaction = new DBTransaction(Schema.Connection))
+            using (var transaction = new DBTransaction(Schema))
             {
                 try
                 {
@@ -656,7 +651,7 @@ namespace DataWF.Data
 
         public QResult ExecuteQueryResult(IDbCommand command)
         {
-            using (var transaction = new DBTransaction(Schema.Connection))
+            using (var transaction = new DBTransaction(Schema))
             {
                 try
                 {
@@ -679,7 +674,7 @@ namespace DataWF.Data
 
         public List<Dictionary<string, object>> ExecuteListDictionary(IDbCommand command)
         {
-            using (var transaction = new DBTransaction(Schema.Connection))
+            using (var transaction = new DBTransaction(Schema))
             {
                 try
                 {
@@ -841,76 +836,6 @@ namespace DataWF.Data
             return result;
         }
 
-        public class SourceInvoker : Invoker<DBProcedure, string>
-        {
-            public static readonly SourceInvoker Instance = new SourceInvoker();
-            public override string Name => nameof(DBProcedure.Source);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBProcedure target) => target.Source;
-
-            public override void SetValue(DBProcedure target, string value) => target.Source = value;
-        }
-
-        public class StampInvoker : Invoker<DBProcedure, DateTime>
-        {
-            public static readonly StampInvoker Instance = new StampInvoker();
-            public override string Name => nameof(DBProcedure.Stamp);
-
-            public override bool CanWrite => true;
-
-            public override DateTime GetValue(DBProcedure target) => target.Stamp;
-
-            public override void SetValue(DBProcedure target, DateTime value) => target.Stamp = value;
-        }
-
-        public class ParametersInvoker : Invoker<DBProcedure, DBProcParameterList>
-        {
-            public static readonly ParametersInvoker Instance = new ParametersInvoker();
-            public override string Name => nameof(DBProcedure.Parameters);
-
-            public override bool CanWrite => true;
-
-            public override DBProcParameterList GetValue(DBProcedure target) => target.Parameters;
-
-            public override void SetValue(DBProcedure target, DBProcParameterList value) => target.Parameters = value;
-        }
-
-        public class GroupNameInvoker : Invoker<DBProcedure, string>
-        {
-            public static readonly GroupNameInvoker Instance = new GroupNameInvoker();
-            public override string Name => nameof(DBProcedure.GroupName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBProcedure target) => target.GroupName;
-
-            public override void SetValue(DBProcedure target, string value) => target.GroupName = value;
-        }
-
-        public class DataNameInvoker : Invoker<DBProcedure, string>
-        {
-            public static readonly DataNameInvoker Instance = new DataNameInvoker();
-            public override string Name => nameof(DBProcedure.DataName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBProcedure target) => target.DataName;
-
-            public override void SetValue(DBProcedure target, string value) => target.DataName = value;
-        }
-
-        public class ProcedureTypeInvoker : Invoker<DBProcedure, ProcedureTypes>
-        {
-            public static readonly ProcedureTypeInvoker Instance = new ProcedureTypeInvoker();
-            public override string Name => nameof(DBProcedure.ProcedureType);
-
-            public override bool CanWrite => true;
-
-            public override ProcedureTypes GetValue(DBProcedure target) => target.ProcedureType;
-
-            public override void SetValue(DBProcedure target, ProcedureTypes value) => target.ProcedureType = value;
-        }
+        
     }
 }

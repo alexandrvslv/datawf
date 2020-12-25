@@ -31,7 +31,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBTableView<T> : SelectableList<T>, IDBTableView, IIdCollection<T> where T : DBItem, new()
+    public class DBTableView<T> : SelectableList<T>, IDBTableView, IIdCollection<T> where T : DBItem
     {
         protected DBViewKeys keys = DBViewKeys.Lock;
         protected QParam defaultParam;
@@ -41,16 +41,8 @@ namespace DataWF.Data
         protected DBTable<T> table;
         private Query<T> filterQuery;
 
-        public DBTableView()
-           : this(DBTable.GetTable<T>(null, false), (QParam)null, DBViewKeys.None, DBStatus.Empty)
-        { }
-
-        public DBTableView(string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
-            : this(DBTable.GetTable<T>(null, false), defaultFilter, mode, statusFilter)
-        { }
-
-        public DBTableView(QParam defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
-            : this(DBTable.GetTable<T>(null, false), defaultFilter, mode, statusFilter)
+        public DBTableView(DBTable<T> table)
+           : this(table, (QParam)null, DBViewKeys.None, DBStatus.Empty)
         { }
 
         public DBTableView(DBTable<T> table, string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
@@ -81,7 +73,7 @@ namespace DataWF.Data
 
         public bool AutoAttach
         {
-            get { return (keys & DBViewKeys.NoAttach) != DBViewKeys.NoAttach; }
+            get => (keys & DBViewKeys.NoAttach) != DBViewKeys.NoAttach;
             set
             {
                 if (value)
@@ -93,7 +85,7 @@ namespace DataWF.Data
 
         public bool CheckAccess
         {
-            get { return (keys & DBViewKeys.Access) == DBViewKeys.Access; }
+            get => (keys & DBViewKeys.Access) == DBViewKeys.Access;
             set
             {
                 if (CheckAccess == value)
@@ -111,7 +103,7 @@ namespace DataWF.Data
 
         public bool IsStatic
         {
-            get { return (keys & DBViewKeys.Static) == DBViewKeys.Static; }
+            get => (keys & DBViewKeys.Static) == DBViewKeys.Static;
             set
             {
                 if (IsStatic == value)
@@ -126,7 +118,7 @@ namespace DataWF.Data
 
         public override bool IsSynchronized
         {
-            get { return (keys & DBViewKeys.Synch) == DBViewKeys.Synch; }
+            get => (keys & DBViewKeys.Synch) == DBViewKeys.Synch;
             set
             {
                 if (IsSynchronized != value)
@@ -151,7 +143,7 @@ namespace DataWF.Data
 
         public QQuery Query
         {
-            get { return query; }
+            get => query;
             set
             {
                 if (value == null)
@@ -173,7 +165,7 @@ namespace DataWF.Data
 
         public Query<T> FilterQuery
         {
-            get { return filterQuery; }
+            get => filterQuery;
             set
             {
                 filterQuery = value;
@@ -186,7 +178,7 @@ namespace DataWF.Data
 
         public DBStatus StatusFilter
         {
-            get { return Query.StatusFilter; }
+            get => Query.StatusFilter;
             set
             {
                 if (Query.StatusFilter == value)
@@ -199,7 +191,7 @@ namespace DataWF.Data
 
         public Type TypeFilter
         {
-            get { return Query.TypeFilter; }
+            get => Query.TypeFilter;
             set
             {
                 if (Query.TypeFilter == value)
@@ -210,12 +202,9 @@ namespace DataWF.Data
             }
         }
 
-        public event EventHandler DefaultFilterChanged;
-        public event EventHandler FilterChanged;
-
         public virtual QParam DefaultParam
         {
-            get { return defaultParam; }
+            get => defaultParam;
             set
             {
                 if (defaultParam == value)
@@ -237,27 +226,24 @@ namespace DataWF.Data
 
         public IDbCommand Command
         {
-            get { return command; }
-            set { command = value; }
+            get => command;
+            set => command = value;
         }
 
-        public bool IsEdited
-        {
-            get { return GetEdited().Any(); }
-        }
+        public bool IsEdited => GetEdited().Any();
 
-        public DBSchema Schema
-        {
-            get { return Table?.Schema; }
-        }
+        public DBSchema Schema => Table?.Schema;
 
         public DBTable Table
         {
-            get { return table; }
-            set { table = value as DBTable<T>; }
+            get => table;
+            set => table = value as DBTable<T>;
         }
 
-        public IEnumerable Source { get { return table; } set { return; } }
+        public IEnumerable Source { get => table; set { return; } }
+
+        public event EventHandler DefaultFilterChanged;
+        public event EventHandler FilterChanged;
 
         public IList ToList()
         {
@@ -274,7 +260,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> Load(DBLoadParam param = DBLoadParam.None)
         {
-            using (var transaction = new DBTransaction(Table.Connection, null, true) { View = this })
+            using (var transaction = new DBTransaction(Table, null, true) { View = this })
             {
                 return table.Load(Query, param, transaction);
             }
@@ -282,7 +268,7 @@ namespace DataWF.Data
 
         public async void LoadAsynch(DBLoadParam param = DBLoadParam.None)
         {
-            using (var transaction = new DBTransaction(Table.Connection, null, true) { View = this })
+            using (var transaction = new DBTransaction(Table, null, true) { View = this })
             {
                 var items = await table.LoadAsync(Query, param, transaction).ConfigureAwait(false);
             }
@@ -529,7 +515,7 @@ namespace DataWF.Data
 
         public async Task Save()
         {
-            using (var transaction = new DBTransaction(Table.Connection))
+            using (var transaction = new DBTransaction(Table))
             {
                 try
                 {

@@ -1,6 +1,7 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Module.Common;
+using System.Linq;
 using System.Threading.Tasks;
 
 [assembly: ModuleInitialize(typeof(ModuleInitialize))]
@@ -8,15 +9,18 @@ namespace DataWF.Module.Common
 {
     public class ModuleInitialize : IModuleInitialize
     {
-        public Task Initialize()
+        public Task Initialize(object[] args)
         {
-            Book.DBTable.Load();
+            var schema = args.FirstOrDefault() as DBSchema;
 
-            Department.DBTable.Load();
-            Position.DBTable.Load();
+            schema.GetTable<Book>().Load();
 
-            UserGroup.DBTable.Load();
-            UserGroup.SetCurrent();
+            schema.GetTable<Department>().Load();
+            schema.GetTable<Position>().Load();
+
+            var userGoup = (UserGroupTable)schema.GetTable<UserGroup>();
+            userGoup.Load();
+            userGoup.SetCurrent();
 
             User.DBTable.DefaultComparer = new DBComparer<User, string>(User.DBTable.CodeKey) { Hash = true };
             User.DBTable.Load();

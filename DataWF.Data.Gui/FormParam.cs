@@ -82,7 +82,7 @@ namespace DataWF.Data.Gui
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += (sender, e) =>
             {
-                using (var transaction = new DBTransaction(procedure.Schema.Connection, GuiEnvironment.User))
+                using (var transaction = new DBTransaction(procedure.Schema, GuiEnvironment.User))
                     try
                     {
                         var args = new ExecuteArgs(document);

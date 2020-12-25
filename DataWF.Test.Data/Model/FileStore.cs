@@ -20,7 +20,7 @@ namespace DataWF.Test.Data
             set => SetValue(value, IdKey);
         }
 
-        [Column("file_ref", Keys = DBColumnKeys.FileLOB)]
+        [Column("file_ref", Keys = DBColumnKeys.FileOID)]
         public long? FileRef
         {
             get => GetValue<long?>(FileRefKey);

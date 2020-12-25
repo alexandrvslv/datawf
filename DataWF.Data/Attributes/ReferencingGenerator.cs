@@ -22,10 +22,10 @@ using DataWF.Data;
 using System;
 using System.Reflection;
 
-[assembly: Invoker(typeof(ReferencingGenerator), nameof(ReferencingGenerator.PropertyName), typeof(ReferencingGenerator.PropertyNameInvoker))]
 namespace DataWF.Data
 {
-    public class ReferencingGenerator
+    [InvokerGenerator(Instance = true)]
+    public partial class ReferencingGenerator
     {
         public ReferencingGenerator(TableGenerator table, PropertyInfo property, ReferencingAttribute referencingAttribuite)
         {
@@ -46,37 +46,44 @@ namespace DataWF.Data
                 throw new InvalidOperationException($"{nameof(ReferencingAttribute.ReferenceProperty)} expect {nameof(ColumnAttribute)}!");
             }
             Attribute = referencingAttribuite;
-            Table = table;
+            TableGenerator = table;
             PropertyInfo = property;
             ReferenceTable = referenceTable;
             ReferenceColumn = referenceColumn;
-            PropertyInvoker = EmitInvoker.Initialize(property, true);
+
         }
 
         public ReferencingAttribute Attribute { get; set; }
-        public TableGenerator Table { get; set; }
+        public TableGenerator TableGenerator { get; set; }
         public PropertyInfo PropertyInfo { get; set; }
         public string PropertyName => PropertyInfo.Name;
         public TableGenerator ReferenceTable { get; set; }
         public ColumnGenerator ReferenceColumn { get; set; }
-        public IInvoker PropertyInvoker { get; set; }
 
         public override string ToString()
         {
-            return $"{PropertyName} {ReferenceTable?.Table}";
+            return $"{PropertyName} {ReferenceTable}";
         }
 
-        public class PropertyNameInvoker : Invoker<ReferencingGenerator, string>
+        public DBReferencing Generate(DBTable table)
         {
-            public static readonly PropertyNameInvoker Instance = new PropertyNameInvoker();
-            public override string Name => nameof(ReferencingGenerator.PropertyName);
-
-            public override bool CanWrite => false;
-
-            public override string GetValue(ReferencingGenerator target) => target.PropertyName;
-
-            public override void SetValue(ReferencingGenerator target, string value) { }
+            var refTable = ReferenceTable.Generate(table.Schema);
+            var referencing = table.Referencings[PropertyName];
+            if (referencing == null)
+            {
+                referencing = new DBReferencing { Name = PropertyName };
+            }
+            referencing.PropertyInfo = PropertyInfo;
+            referencing.ReferenceTable = refTable;
+            referencing.ReferenceColumn = refTable.Columns[ReferenceColumn.ColumnName];
+            referencing.ForceLoadReference = ReferenceTable.Attribute.ForceLoadReference;
+            if (!table.Referencings.Contains(PropertyName))
+            {
+                table.Referencings.Add(referencing);
+            }
+            return referencing;
         }
+
     }
 
 

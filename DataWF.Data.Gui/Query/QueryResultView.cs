@@ -180,7 +180,7 @@ namespace DataWF.Data.Gui
             {
                 toolProgress.Visible = true;
 
-                using (var transaction = new DBTransaction(schema.Connection))
+                using (var transaction = new DBTransaction(schema))
                 {
                     transaction.ExecuteQResult(transaction.AddCommand(command), Query);
                 }

@@ -27,15 +27,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.Current), typeof(DBSequence.CurrentInvoker))]
-[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.Increment), typeof(DBSequence.IncrementInvoker))]
-[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.Size), typeof(DBSequence.SizeInvoker))]
-[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.Scale), typeof(DBSequence.ScaleInvoker))]
-[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.DBDataType), typeof(DBSequence.DBDataTypeInvoker))]
-[assembly: Invoker(typeof(DBSequence), nameof(DBSequence.NextQuery), typeof(DBSequence.NextQueryInvoker))]
 namespace DataWF.Data
 {
-    public class DBSequence : DBSchemaItem
+    [InvokerGenerator(Instance = true)]
+    public partial class DBSequence : DBSchemaItem
     {
         public static long Convert(object result)
         {
@@ -115,7 +110,7 @@ namespace DataWF.Data
 
         public long GetNext()
         {
-            using (var transaction = new DBTransaction(Schema.Connection))
+            using (var transaction = new DBTransaction(Schema))
             {
                 try
                 {
@@ -151,7 +146,7 @@ namespace DataWF.Data
 
         public long GetCurrent()
         {
-            using (var transaction = new DBTransaction(Schema.Connection))
+            using (var transaction = new DBTransaction(Schema))
             {
                 try
                 {
@@ -175,7 +170,7 @@ namespace DataWF.Data
 
         private void Save()
         {
-            using (var transaction = new DBTransaction(Schema.Connection))
+            using (var transaction = new DBTransaction(Schema))
             {
                 try
                 {
@@ -211,72 +206,6 @@ namespace DataWF.Data
                 return true;
             }
             return false;
-        }
-
-        public class CurrentInvoker : Invoker<DBSequence, long>
-        {
-            public override string Name => nameof(DBSequence.Current);
-
-            public override bool CanWrite => true;
-
-            public override long GetValue(DBSequence target) => target.Current;
-
-            public override void SetValue(DBSequence target, long value) => target.Current = value;
-        }
-
-        public class IncrementInvoker : Invoker<DBSequence, int>
-        {
-            public override string Name => nameof(DBSequence.Increment);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(DBSequence target) => target.Increment;
-
-            public override void SetValue(DBSequence target, int value) => target.Increment = value;
-        }
-
-        public class SizeInvoker : Invoker<DBSequence, int>
-        {
-            public override string Name => nameof(DBSequence.Size);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(DBSequence target) => target.Size;
-
-            public override void SetValue(DBSequence target, int value) => target.Size = value;
-        }
-
-        public class ScaleInvoker : Invoker<DBSequence, int>
-        {
-            public override string Name => nameof(DBSequence.Scale);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(DBSequence target) => target.Scale;
-
-            public override void SetValue(DBSequence target, int value) => target.Scale = value;
-        }
-
-        public class DBDataTypeInvoker : Invoker<DBSequence, DBDataType>
-        {
-            public override string Name => nameof(DBSequence.DBDataType);
-
-            public override bool CanWrite => true;
-
-            public override DBDataType GetValue(DBSequence target) => target.DBDataType;
-
-            public override void SetValue(DBSequence target, DBDataType value) => target.DBDataType = value;
-        }
-
-        public class NextQueryInvoker : Invoker<DBSequence, string>
-        {
-            public override string Name => nameof(DBSequence.NextQuery);
-
-            public override bool CanWrite => false;
-
-            public override string GetValue(DBSequence target) => target.NextQuery;
-
-            public override void SetValue(DBSequence target, string value) { }
         }
     }
 }

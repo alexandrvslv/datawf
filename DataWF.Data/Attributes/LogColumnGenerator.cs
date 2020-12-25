@@ -42,27 +42,33 @@ namespace DataWF.Data
 
         public ColumnGenerator BaseColumn => LogTable?.BaseTableGenerator?.GetColumn(LogAttribute?.BaseName);
 
-        public override void GenerateColumn(DBTable table)
+        public override DBColumn GenerateColumn(DBTable table)
         {
-            if (!(table is IDBLogTable))
+            if (!(table is IDBLogTable logTable))
                 throw new Exception("Log Column Expect Log Table");
-            if (BaseColumn?.Column == null)
-                throw new Exception("Log Column Expect Base Column");
+            if (BaseColumn == null)
+                throw new Exception("Base Column Not found");
 
-            Column = table.Columns[ColumnName];
-            if (Column == null || Column.DataType != DataType)
+            var baseColumn = logTable.BaseTable.Columns[BaseColumn.ColumnName];
+
+            if (baseColumn == null)
+                throw new Exception("Base Column Not found");
+
+            var column = table.Columns[ColumnName];
+            if (column == null || column.DataType != DataType)
             {
-                Column = CreateColumn(ColumnName);
+                column = CreateColumn(table, ColumnName);
             }
-            Column.RefreshLogColumn(BaseColumn.Column);
-            Column.PropertyName = PropertyName;
-            Column.PropertyInfo = PropertyInfo;
-            Column.ReferencePropertyInfo = ReferencePropertyInfo;
-            Column.DefaultValues = DefaultValues;
-            if (!table.Columns.Contains(Column.Name))
+            column.RefreshLogColumn(baseColumn);
+            column.PropertyName = PropertyName;
+            column.PropertyInfo = PropertyInfo;
+            column.ReferencePropertyInfo = ReferencePropertyInfo;
+            column.DefaultValues = DefaultValues;
+            if (!table.Columns.Contains(column.Name))
             {
-                table.Columns.Add(Column);
+                table.Columns.Add(column);
             }
+            return column;
         }
     }
 }

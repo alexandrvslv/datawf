@@ -28,7 +28,7 @@ namespace DataWF.Data
         {
         }
 
-        public override DBForeignKey Generate()
+        public override DBForeignKey Generate(DBTable table)
         {
             return null;
         }

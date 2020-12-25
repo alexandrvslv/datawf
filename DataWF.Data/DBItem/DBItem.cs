@@ -45,7 +45,7 @@ namespace DataWF.Data
 
         public static DBTable<T> GetTable<T>() where T : DBItem, new()
         {
-            return DBTable.GetTable<T>();
+            return DBService.GetTable<T>();
         }
 
         internal PullHandler? oldHandler;
@@ -58,7 +58,13 @@ namespace DataWF.Data
 
         public DBItem()
         {
-            var table = DBTable.GetTable(GetType());
+            var table = DBService.GetTable(GetType());
+            if (table != null)
+                Build(table);
+        }
+
+        public DBItem(DBTable table)
+        {
             if (table != null)
                 Build(table);
         }
@@ -617,7 +623,7 @@ namespace DataWF.Data
 
         public void SetReferencing<T>(IEnumerable<T> items, string property) where T : DBItem, new()
         {
-            var table = DBTable.GetTable<T>();
+            var table = Table.Schema.GetTable<T>();
             SetReferencing<T>(items, table.ParseProperty(property));
         }
 
@@ -633,7 +639,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem, new()
         {
-            var table = DBTable.GetTable<T>();
+            var table = Table.Schema.GetTable<T>();
             return GetReferencing<T>(table, table.ParseProperty(property), param);
         }
 
@@ -992,7 +998,7 @@ namespace DataWF.Data
             if (Table.PrimaryKey.IsEmpty(this))
             {
                 Table.PrimaryKey.SetId(this, Table.GenerateId(transaction));
-            }            
+            }
         }
 
         public void Free()
@@ -1018,7 +1024,7 @@ namespace DataWF.Data
 
         public async Task Save(IUserIdentity user)
         {
-            using (var transaction = new DBTransaction(Table.Connection, user))
+            using (var transaction = new DBTransaction(Table, user))
             {
                 try
                 {
@@ -1161,7 +1167,7 @@ namespace DataWF.Data
 
         public async Task Delete(int recurs, DBLoadParam param = DBLoadParam.None)
         {
-            using (DBTransaction transaction = new DBTransaction(Table.Schema.Connection))
+            using (DBTransaction transaction = new DBTransaction(Table))
             {
                 try
                 {
@@ -1235,7 +1241,7 @@ namespace DataWF.Data
 
         public async Task Merge(IEnumerable<DBItem> list)
         {
-            using (var transaction = new DBTransaction(Table.Connection))
+            using (var transaction = new DBTransaction(Table))
             {
                 try
                 {
@@ -1371,7 +1377,7 @@ namespace DataWF.Data
         {
             foreach (var referencing in Table.GetPropertyReferencing(GetType()))
             {
-                var references = (IEnumerable)referencing.PropertyInvoker.GetValue(this);
+                var references = (IEnumerable<DBItem>)referencing.PropertyInvoker.GetValue(this);
                 if (references != null)
                 {
                     foreach (DBItem item in references)
@@ -1652,12 +1658,16 @@ namespace DataWF.Data
             var oid = GetValue<long?>(column);
             if (oid == null)
                 return null;
+            if (transaction.Schema == null)
+            {
+                transaction.Schema = Table.Schema;
+            }
             return Table.System.GetBlob(oid.Value, transaction, bufferSize);
         }
 
         public async Task<FileStream> GetBlobFileStream(DBColumn<long?> column, string path, int bufferSize = 81920)
         {
-            using (var transaction = new DBTransaction(Table.Connection))
+            using (var transaction = new DBTransaction(Table))
             {
                 return await GetBlobFileStream(column, path, transaction, bufferSize);
             }

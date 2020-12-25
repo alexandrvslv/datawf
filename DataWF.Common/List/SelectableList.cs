@@ -13,16 +13,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.Disposed), typeof(SelectableList<>.DisposedInvoker))]
-[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.IsFixedSize), typeof(SelectableList<>.IsFixedSizeInvoker))]
-[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.IsReadOnly), typeof(SelectableList<>.IsReadOnlyInvoker))]
-[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.IsSorted), typeof(SelectableList<>.IsSortedInvoker))]
-[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.Comparer), typeof(SelectableList<>.ComparerInvoker))]
-[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.Count), typeof(SelectableList<>.CountInvoker))]
-[assembly: Invoker(typeof(SelectableList<>), nameof(SelectableList<object>.SyncRoot), typeof(SelectableList<>.SyncRootInvoker))]
 namespace DataWF.Common
 {
-    public class SelectableList<T> : ISelectable, ISelectable<T>, IList, IList<T>
+    [InvokerGenerator]
+    public partial class SelectableList<T> : ISelectable, ISelectable<T>, IList, IList<T>
     {
         protected readonly ListIndexes<T> indexes;
         protected Type type;
@@ -926,83 +920,6 @@ namespace DataWF.Common
         public virtual IEnumerator<T> GetEnumerator()
         {
             return items.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
-        }
-
-        public class DisposedInvoker : Invoker<SelectableList<T>, bool>
-        {
-            public override string Name => nameof(SelectableList<T>.Disposed);
-
-            public override bool CanWrite => false;
-
-            public override bool GetValue(SelectableList<T> target) => target.Disposed;
-
-            public override void SetValue(SelectableList<T> target, bool value) { }
-        }
-
-        public class IsFixedSizeInvoker : Invoker<SelectableList<T>, bool>
-        {
-            public override string Name => nameof(SelectableList<T>.IsFixedSize);
-
-            public override bool CanWrite => false;
-
-            public override bool GetValue(SelectableList<T> target) => target.IsFixedSize;
-
-            public override void SetValue(SelectableList<T> target, bool value) { }
-        }
-
-        public class IsReadOnlyInvoker : Invoker<SelectableList<T>, bool>
-        {
-            public override string Name => nameof(SelectableList<T>.IsReadOnly);
-
-            public override bool CanWrite => false;
-
-            public override bool GetValue(SelectableList<T> target) => target.IsReadOnly;
-
-            public override void SetValue(SelectableList<T> target, bool value) { }
-        }
-
-        public class IsSortedInvoker : Invoker<SelectableList<T>, bool>
-        {
-            public override string Name => nameof(SelectableList<T>.IsSorted);
-
-            public override bool CanWrite => false;
-
-            public override bool GetValue(SelectableList<T> target) => target.IsSorted;
-
-            public override void SetValue(SelectableList<T> target, bool value) { }
-        }
-
-        public class ComparerInvoker : Invoker<SelectableList<T>, IComparer<T>>
-        {
-            public override string Name => nameof(SelectableList<T>.Comparer);
-
-            public override bool CanWrite => false;
-
-            public override IComparer<T> GetValue(SelectableList<T> target) => target.Comparer;
-
-            public override void SetValue(SelectableList<T> target, IComparer<T> value) { }
-        }
-
-        public class CountInvoker : Invoker<SelectableList<T>, int>
-        {
-            public override string Name => nameof(SelectableList<T>.Count);
-
-            public override bool CanWrite => false;
-
-            public override int GetValue(SelectableList<T> target) => target.Count;
-
-            public override void SetValue(SelectableList<T> target, int value) { }
-        }
-
-        public class SyncRootInvoker : Invoker<SelectableList<T>, object>
-        {
-            public override string Name => nameof(SelectableList<T>.SyncRoot);
-
-            public override bool CanWrite => false;
-
-            public override object GetValue(SelectableList<T> target) => target.SyncRoot;
-
-            public override void SetValue(SelectableList<T> target, object value) { }
-        }
+        }        
     }
 }

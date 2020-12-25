@@ -78,6 +78,8 @@ namespace DataWF.Data
             Settings = settings;
         }
 
+        public InstanceTable InstanceTable { get; set; }
+
         public IUserIdentity User { get; private set; }
 
         public NotifySettings Settings { get; }
@@ -96,10 +98,10 @@ namespace DataWF.Data
         {
             StartListener();
             endPoint = new IPEndPoint(SocketHelper.GetInterNetworkIPs().First(), ListenerEndPoint.Port);
-            instance = await Instance.GetByNetId(endPoint, true, User);
+            instance = await InstanceTable.GetByNetId(endPoint, true, User);
 
             byte[] temp = instance.EndPoint.GetBytes();
-            Instance.DBTable.Load();
+            InstanceTable.Load();
 
             await SendMessage(new SMRequest { Id = SMBase.NewId(), RequestType = SMRequestType.Login, Data = instance.Id }, null, true);
 
@@ -126,7 +128,7 @@ namespace DataWF.Data
         public async ValueTask SendNotify(List<NotifyDBTable> items, IInstance address = null)
         {
             SendChanges?.Invoke(this, new NotifyEventArgs(items));
-            if (!((IEnumerable<Instance>)Instance.DBTable).Any(p => CheckAddress(p, address)))
+            if (!((IEnumerable<Instance>)InstanceTable).Any(p => CheckAddress(p, address)))
             {
                 return;
             }
@@ -137,7 +139,7 @@ namespace DataWF.Data
                 Data = items
             };
             var buffer = serializer.Serialize(message);
-            foreach (IInstance item in Instance.DBTable)
+            foreach (IInstance item in InstanceTable)
             {
                 if (CheckAddress(item, address))
                 {
@@ -150,7 +152,7 @@ namespace DataWF.Data
         {
             var buffer = serializer.Serialize<T>(message);
 
-            foreach (IInstance item in Instance.DBTable)
+            foreach (IInstance item in InstanceTable)
             {
                 if (CheckAddress(item, address, checkState))
                 {
@@ -230,7 +232,7 @@ namespace DataWF.Data
 
         protected virtual async ValueTask OnMessageLoad(SMBase message, UdpServerEventArgs arg)
         {
-            var sender = ((IEnumerable<Instance>)Instance.DBTable).FirstOrDefault(p => p.EndPoint == message.EndPoint);
+            var sender = ((IEnumerable<Instance>)InstanceTable).FirstOrDefault(p => p.EndPoint == message.EndPoint);
             if (sender == null)
                 return;
             sender.ReceiveCount++;
@@ -297,7 +299,7 @@ namespace DataWF.Data
                         continue;
                     }
                     var primaryKey = typeTable.Table.PrimaryKey;
-                    using (var transaction = new DBTransaction(typeTable.Table.Schema.Connection, null, true))
+                    using (var transaction = new DBTransaction(typeTable.Table, null, true))
                     {
                         foreach (var item in typeTable.Items)
                         {

@@ -10,263 +10,22 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
-    public enum PermissionType
-    {
-        GSchema,
-        GBlock,
-        GTable,
-        GColumn,
-        GType,
-        GTypeMember
-    }
 
-    [Table("rgroup_permission", "User", BlockSize = 500)]
-    public class GroupPermission : DBGroupItem
+    [Table("rgroup_permission", "User", BlockSize = 500), InvokerGenerator]
+    public partial class GroupPermission : DBGroupItem
     {
         private object target;
-        public static readonly DBTable<GroupPermission> DBTable = GetTable<GroupPermission>();
-        public static readonly DBColumn ObjectNameKey = DBTable.ParseProperty(nameof(ObjectName));
-        public static readonly DBColumn TypeKey = DBTable.ParseProperty(nameof(Type));
-
-        public static PermissionType GetPermissionType(object value, out string key, out string name)
-        {
-            key = null;
-            name = string.Empty;
-            PermissionType type = PermissionType.GTable;
-            if (value is DBSchemaItem)
-            {
-                key = ((DBSchemaItem)value).FullName;
-                if (value is DBSchema)
-                {
-                    type = PermissionType.GSchema;
-                    name = value.ToString();
-                }
-                else if (value is DBTableGroup)
-                {
-                    type = PermissionType.GBlock;
-                    name = value.ToString();
-                }
-                else if (value is DBTable table)
-                {
-                    type = PermissionType.GTable;
-                    name = table.ItemType?.Type.Name ?? value.ToString();
-                }
-                else if (value is DBColumn column)
-                {
-                    type = PermissionType.GColumn;
-                    name = column.PropertyName ?? value.ToString();
-                }
-            }
-            else if (value is Type valueType)
-            {
-                key = Helper.TextBinaryFormat(value);
-                type = PermissionType.GType;
-                name = valueType.Name;
-            }
-            else if (value is System.Reflection.MemberInfo member)
-            {
-                key = Helper.TextBinaryFormat(value);
-                type = PermissionType.GTypeMember;
-                name = member.Name;
-            }
-            return type;
-        }
-
-        public static async Task<GroupPermission> Get(GroupPermission group, DBSchemaItem item)
-        {
-            PermissionType type = GetPermissionType(item, out string code, out string name);
-
-            var list = DBTable.Select(DBTable.CodeKey, CompareType.Equal, code).ToList();
-
-            var permission = list.FirstOrDefault();
-            if (list.Count > 1)
-            {
-                await permission.Merge(list);
-            }
-
-            if (permission == null)
-            {
-                permission = new GroupPermission()
-                {
-                    Type = type,
-                    Code = code
-                };
-                permission.Attach();
-            }
-            if (string.IsNullOrEmpty(permission.ObjectName))
-            {
-                permission.ObjectName = name;
-            }
-            item.Access = permission.Access;
-
-            if (group != null)
-            {
-                permission.Parent = group;
-            }
-
-            return permission;
-        }
-
-        public static async Task CachePermissionTableGroup(GroupPermission parent, DBTableGroup group)
-        {
-            var permission = await Get(parent, group);
-
-            foreach (var subGroup in group.GetChilds())
-            {
-                await CachePermissionTableGroup(permission, subGroup);
-            }
-            var tables = group.GetTables();
-            foreach (DBTable table in tables)
-            {
-                await CachePermissionTable(permission, table);
-            }
-        }
-
-        public static async Task CachePermissionTable(GroupPermission parent, DBTable table)
-        {
-            if (table is IDBLogTable)
-                return;
-            var permission = await Get(parent, table);
-
-            foreach (DBColumn column in table.Columns)
-                await Get(permission, column);
-        }
-
-        public static async Task CachePermission()
-        {
-            using (var transaction = new DBTransaction(DBTable.Connection))
-            {
-                try
-                {
-                    await CachePermission(transaction);
-                    transaction.Commit();
-                }
-                catch (Exception ex)
-                {
-                    Helper.OnException(ex);
-                    transaction.Rollback();
-                    throw ex;
-                }
-            }
-        }
-
-        public static async Task CachePermission(DBTransaction transaction)
-        {
-            if (AccessValue.Groups == null || AccessValue.Groups.Count() == 0)
-                return;
-
-            foreach (DBSchema schema in DBService.Schems)
-            {
-                var permission = await Get(null, schema);
-                var groups = schema.TableGroups.GetTopParents();
-
-                foreach (DBTableGroup group in groups)
-                {
-                    await CachePermissionTableGroup(permission, group);
-                }
-                foreach (DBTable table in schema.Tables)
-                {
-                    if (table.Group == null)
-                        await CachePermissionTable(permission, table);
-                }
-            }
-            await DBTable.Save(transaction);
-        }
-
-        public static GroupPermission Find(GroupPermission parent, object obj, bool generate)
-        {
-            var type = GetPermissionType(obj, out string code, out string name);
-
-            string filter = $"{ DBTable.CodeKey.SqlName}='{code}' and {DBTable.ElementTypeKey.SqlName}={type}";
-
-            GroupPermission permission = DBTable.Select(filter).FirstOrDefault();
-
-            if (permission == null && generate)
-            {
-                permission = new GroupPermission()
-                {
-                    Parent = parent,
-                    Target = obj
-                };
-                permission.Attach();
-            }
-            permission.ObjectName = name;
-            return permission;
-        }
-
-        [ControllerMethod]
-        public static GroupPermission GetByName(string name)
-        {
-            return GetByName(name, PermissionType.GTable);
-        }
-
-        public static GroupPermission GetByName(string name, PermissionType type)
-        {
-            using (var query = new QQuery(DBTable))
-            {
-                query.BuildParam(ObjectNameKey, name);
-                query.BuildParam(TypeKey, type);
-                return DBTable.Select(query).FirstOrDefault();
-            }
-        }
-
-        [ControllerMethod]
-        public static IEnumerable<GroupPermission> GetGroupByName(string name)
-        {
-            return GetGroupByName(name, PermissionType.GTable);
-        }
-        public static IEnumerable<GroupPermission> GetGroupByName(string name, PermissionType type)
-        {
-            var item = GetByName(name, type);
-            return item?.GetSubGroups<GroupPermission>(DBLoadParam.None) ?? Enumerable.Empty<GroupPermission>();
-        }
-
-        public static void BeginHandleSchema()
-        {
-            DBService.DBSchemaChanged += OnDBSchemaChanged;
-        }
-
-        private static async void OnDBSchemaChanged(object sender, DBSchemaChangedArgs e)
-        {
-            try
-            {
-                if (e.Type == DDLType.Create)
-                {
-                    //List<int> groups = FlowEnvir.GetGroups(FlowEnvir.Personal.User);
-
-                    if (e.Item is DBTable && e.Item.Containers.Any())
-                    {
-                        var sgroup = await Get(null, e.Item.Schema);
-                        var tgroup = await Get(sgroup, e.Item);
-
-                        foreach (DBColumn column in ((DBTable)e.Item).Columns)
-                        {
-                            await Get(tgroup, column);
-                        }
-                    }
-                    if (e.Item is DBColumn && e.Item.Containers.Any() && ((DBColumn)e.Item).Table.Containers.Any())
-                    {
-                        var sgroup = await Get(null, e.Item.Schema);
-                        var tgroup = await Get(sgroup, ((DBColumn)e.Item).Table);
-                        await Get(tgroup, e.Item);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Helper.OnException(ex);
-            }
-        }
-
         public GroupPermission()
         {
         }
 
+        public GroupPermissionTable GroupPermissionTable => (GroupPermissionTable)Table;
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int?>(GroupPermissionTable.IdKey);
+            set => SetValue(value, GroupPermissionTable.IdKey);
         }
 
         [Column("parent_id", Keys = DBColumnKeys.Group), Index("rgroup_permission_parent_id"), Browsable(false)]
@@ -286,23 +45,23 @@ namespace DataWF.Module.Common
         [DefaultValue(PermissionType.GTable), Column("type_id", Keys = DBColumnKeys.ElementType)]
         public PermissionType? Type
         {
-            get => GetValue<PermissionType?>(Table.ElementTypeKey);
-            set => SetValue(value, Table.ElementTypeKey);
+            get => GetValue<PermissionType?>(GroupPermissionTable.TypeKey);
+            set => SetValue(value, GroupPermissionTable.TypeKey);
         }
 
         [Column("code", 512, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
         [Index("rgroup_permission_code", true)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
-            set => SetValue(value, Table.CodeKey);
+            get => GetValue<string>(GroupPermissionTable.CodeKey);
+            set => SetValue(value, GroupPermissionTable.CodeKey);
         }
 
         [Column("object_name", 1024, Keys = DBColumnKeys.Indexing)]
         public string ObjectName
         {
-            get => GetValue<string>(ObjectNameKey);
-            set => SetValue(value, ObjectNameKey);
+            get => GetValue<string>(GroupPermissionTable.ObjectNameKey);
+            set => SetValue(value, GroupPermissionTable.ObjectNameKey);
         }
 
         public object Target
@@ -331,7 +90,7 @@ namespace DataWF.Module.Common
             }
             set
             {
-                Type = GetPermissionType(value, out var code, out var name);
+                Type = GroupPermissionTable.GetPermissionType(value, out var code, out var name);
                 PrimaryCode = code;
                 ObjectName = name;
             }

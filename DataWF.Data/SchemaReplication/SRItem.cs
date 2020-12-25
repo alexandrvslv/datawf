@@ -26,12 +26,10 @@ using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(SRItem), nameof(SRItem.Command), typeof(SRItem.CommandInvoker))]
-[assembly: Invoker(typeof(SRItem), nameof(SRItem.UserId), typeof(SRItem.UserIdInvoker))]
-[assembly: Invoker(typeof(SRItem), nameof(SRItem.Value), typeof(SRItem.ValueInvoker))]
 namespace DataWF.Data
 {
-    public class SRItem
+    [InvokerGenerator(Instance = false)]
+    public partial class SRItem
     {
         public DBLogType Command { get; set; }
 
@@ -42,38 +40,6 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore]
         public List<DBColumn> Columns { get; set; }
-
-        public class CommandInvoker : Invoker<SRItem, DBLogType>
-        {
-            public override string Name => nameof(Command);
-
-            public override bool CanWrite => true;
-
-            public override DBLogType GetValue(SRItem target) => target.Command;
-
-            public override void SetValue(SRItem target, DBLogType value) => target.Command = value;
-        }
-
-        public class UserIdInvoker : Invoker<SRItem, int>
-        {
-            public override string Name => nameof(UserId);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(SRItem target) => target.UserId;
-
-            public override void SetValue(SRItem target, int value) => target.UserId = value;
-        }
-
-        public class ValueInvoker : Invoker<SRItem, DBItem>
-        {
-            public override string Name => nameof(Value);
-
-            public override bool CanWrite => true;
-
-            public override DBItem GetValue(SRItem target) => target.Value;
-
-            public override void SetValue(SRItem target, DBItem value) => target.Value = value;
-        }
+        
     }
 }

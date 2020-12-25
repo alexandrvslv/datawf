@@ -56,33 +56,38 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public static void LoadBooks()
+        public static void LoadBooks(DBSchema schema)
         {
             Helper.Logs.Add(new StateInfo("Flow Synchronization", "Start", "", StatusType.Information));
             Stopwatch watch = new Stopwatch();
             watch.Start();
-            using (var transaction = new DBTransaction(Book.DBTable.Schema.Connection) { ReaderParam = DBLoadParam.Synchronize | DBLoadParam.CheckDeleted })
+            using (var transaction = new DBTransaction(schema) { ReaderParam = DBLoadParam.Synchronize | DBLoadParam.CheckDeleted })
             {
-                Book.DBTable.Load();
+                schema.GetTable<Book>().Load();
                 //cache groups
-                UserGroup.DBTable.Load();
-                AccessValue.Groups = new IdCollectionView<IGroupIdentity, UserGroup>(UserGroup.DBTable);
-                AccessValue.Users = new IdCollectionView<IUserIdentity, User>(User.DBTable);
-                Location.DBTable.Load();
-                User.DBTable.Load();
-                Template.DBTable.Load();
-                TemplateData.DBTable.Load();
-                Work.DBTable.Load();
-                Stage.DBTable.Load();
-                StageParam.DBTable.Load();
-                GroupPermission.DBTable.Load();
-                Scheduler.DBTable.Load();
+                var groups = schema.GetTable<UserGroup>();
+                groups.Load();
+                var users = schema.GetTable<User>();
+                users.Load();
+
+                schema.GetTable<Location>().Load();
+                schema.GetTable<Template>().Load();
+                schema.GetTable<TemplateData>().Load();
+                schema.GetTable<Work>().Load();
+                schema.GetTable<Stage>().Load();
+                schema.GetTable<StageParam>().Load();
+                schema.GetTable<GroupPermission>().Load();
+                schema.GetTable<Scheduler>().Load();
+
+                AccessValue.Groups = new IdCollectionView<IGroupIdentity, UserGroup>(groups);
+                AccessValue.Users = new IdCollectionView<IUserIdentity, User>(users);
+
             }
             watch.Stop();
 
             Helper.Logs.Add(new StateInfo("Flow Synchronization", "Complete", "in " + watch.ElapsedMilliseconds + " ms", StatusType.Information));
 
-            DocumentWork.DBTable.DefaultComparer = new DBComparer<DocumentWork, long?>(DocumentWork.DBTable.PrimaryKey) { Hash = true };
+            DocumentWork.DBTable.DefaultComparer = new DBComparer<DocumentWork, long>(DocumentWork.DBTable.PrimaryKey) { Hash = true };
             //Logs.Add(new StateInfo("Flow Check", "Config Falil", "AccountInfo", StatusType.Warning));
         }
 
@@ -91,7 +96,7 @@ namespace DataWF.Module.Flow
             Helper.LogWorkingSet("DataBase Info");
             LoadEnvir();
             Helper.LogWorkingSet("Flow Config");
-            LoadBooks();
+            LoadBooks(DBService.Schems.DefaultSchema);
             Helper.LogWorkingSet("Books");
             //FlowEnvironment.LoadDocuments();
             //Helper.LogWorkingSet("Documents");

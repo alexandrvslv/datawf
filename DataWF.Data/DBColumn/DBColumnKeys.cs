@@ -50,7 +50,7 @@ namespace DataWF.Data
         ElementType = 1 << 22,
         File = 1 << 23,
         FileName = 1 << 24,
-        FileLOB = 1 << 25,
+        FileOID = 1 << 25,
         FileLastWrite = 1 << 26,
         UtcDate = 1 << 27,
         ReplicateStamp = 1 << 28,

@@ -402,7 +402,7 @@ namespace DataWF.Test.Data
             //Files
             var file = new FileStore { Id = 1, FileName = "test.pdf", FileLastWrite = DateTime.UtcNow };
             ArraySegment<byte> buffer;
-            using (var transaction = new DBTransaction(FileStore.DBTable.Connection))
+            using (var transaction = new DBTransaction(FileStore.DBTable))
             {
                 using (var stream = new FileStream("test.pdf", FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
@@ -412,7 +412,7 @@ namespace DataWF.Test.Data
                 }
                 transaction.Commit();
             }
-            using (var transaction = new DBTransaction(FileStore.DBTable.Connection))
+            using (var transaction = new DBTransaction(FileStore.DBTable))
             {
                 using (var stream = await file.GetBlob(transaction))
                 {

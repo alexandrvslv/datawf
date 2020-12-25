@@ -556,6 +556,19 @@ namespace DataWF.Data
             return DBNull.Value;
         }
 
+        public static DBTable<T> GetTable<T>() where T : DBItem => (DBTable<T>)GetTable(typeof(T));
+
+        public static DBTable GetTable(Type type)
+        {
+            foreach (var schema in Schems)
+            {
+                var table = schema.GetTable(type);
+                if (table != null)
+                    return table;
+            }
+            return null;
+        }
+
         public static List<int> AccessGroups { get; } = new List<int>();
 
         public static IDBProvider DataProvider { get; set; }

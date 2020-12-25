@@ -9,49 +9,42 @@ using System.Threading.Tasks;
 namespace DataWF.Module.Common
 {
 
-    [Table("rscheduler", "Reference Book", BlockSize = 20)]
-    public class Scheduler : DBItem//, IComparable
+    [Table("rscheduler", "Reference Book", BlockSize = 20), InvokerGenerator]
+    public partial class Scheduler : DBItem//, IComparable
     {
-        public static readonly DBTable<Scheduler> DBTable = GetTable<Scheduler>();
-        public static readonly DBColumn OrderKey = DBTable.ParseProperty(nameof(Order));
-        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
-        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
-        public static readonly DBColumn IntervalKey = DBTable.ParseProperty(nameof(Interval));
-        public static readonly DBColumn ProcedureKey = DBTable.ParseProperty(nameof(ProcedureName));
-        public static readonly DBColumn DateExecuteKey = DBTable.ParseProperty(nameof(DateExecute));
-        public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
-
         private Company company;
 
         public Scheduler()
         { }
 
+        public SchedulerTable SchedulerTable => (SchedulerTable)Table;
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int?>(SchedulerTable.IdKey);
+            set => SetValue(value, SchedulerTable.IdKey);
         }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(CompanyKey);
-            set => SetValue(value, CompanyKey);
+            get => GetValue<int?>(SchedulerTable.CompanyKey);
+            set => SetValue(value, SchedulerTable.CompanyKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(CompanyKey, ref company);
-            set => SetReference(company = value, CompanyKey);
+            get => GetReference(SchedulerTable.CompanyKey, ref company);
+            set => SetReference(company = value, SchedulerTable.CompanyKey);
         }
 
         [Column("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
-            set => SetValue(value, Table.CodeKey);
+            get => GetValue<string>(SchedulerTable.CodeKey);
+            set => SetValue(value, SchedulerTable.CodeKey);
         }
 
         [Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
@@ -61,23 +54,25 @@ namespace DataWF.Module.Common
             set => SetName(value);
         }
 
+        [CultureKey]
         public string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue<string>(SchedulerTable.NameENKey);
+            set => SetValue(value, SchedulerTable.NameENKey);
         }
 
+        [CultureKey]
         public string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue<string>(SchedulerTable.NameRUKey);
+            set => SetValue(value, SchedulerTable.NameRUKey);
         }
 
         [Column("orderid")]
         public int? Order
         {
-            get => GetValue<int?>(OrderKey);
-            set => SetValue(value, OrderKey);
+            get => GetValue<int?>(SchedulerTable.OrderKey);
+            set => SetValue(value, SchedulerTable.OrderKey);
         }
 
         [DefaultValue(SchedulerType.Interval), Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.Notnull)]
@@ -90,16 +85,16 @@ namespace DataWF.Module.Common
         [Column("run_interval", Keys = DBColumnKeys.Notnull)]
         public TimeSpan? Interval
         {
-            get => GetValue<TimeSpan?>(IntervalKey);
-            set => SetValue(value, IntervalKey);
+            get => GetValue<TimeSpan?>(SchedulerTable.IntervalKey);
+            set => SetValue(value, SchedulerTable.IntervalKey);
         }
 
         [Browsable(false)]
         [Column("procedure_name")]
         public string ProcedureName
         {
-            get => GetValue<string>(ProcedureKey);
-            set => SetValue(value, ProcedureKey);
+            get => GetValue<string>(SchedulerTable.ProcedureNameKey);
+            set => SetValue(value, SchedulerTable.ProcedureNameKey);
         }
 
         public DBProcedure Procedure
@@ -111,13 +106,13 @@ namespace DataWF.Module.Common
         [Column("date_execute")]
         public DateTime? DateExecute
         {
-            get => GetValue<DateTime?>(DateExecuteKey);
-            set => SetValue(value, DateExecuteKey);
+            get => GetValue<DateTime?>(SchedulerTable.DateExecuteKey);
+            set => SetValue(value, SchedulerTable.DateExecuteKey);
         }
 
         public async Task<StateInfo> Execute()
         {
-            using (var transaction = new DBTransaction())
+            using (var transaction = new DBTransaction(Table))
             {
                 try
                 {
@@ -164,9 +159,10 @@ namespace DataWF.Module.Common
             }
             else
             {
-                if (result is decimal rez && Statistic.DBTable != null)
+                var statisticTable = (StatisticTable)transaction.Schema.GetTable<Statistic>();
+                if (result is decimal rez && statisticTable != null)
                 {
-                    var stat = new Statistic
+                    var stat = new Statistic(statisticTable)
                     {
                         Scheduler = this,
                         Result = (decimal)rez

@@ -49,5 +49,6 @@ namespace DataWF.Data
 
         public string SequenceName { get; set; }
 
+        public Type Type { get; set; }
     }
 }

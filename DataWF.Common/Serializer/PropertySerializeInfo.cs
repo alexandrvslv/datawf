@@ -1,5 +1,4 @@
-﻿using DataWF.Common;
-using Portable.Xaml.Markup;
+﻿using Portable.Xaml.Markup;
 using System;
 using System.Diagnostics;
 using System.Reflection;
@@ -7,15 +6,13 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
-[assembly: Invoker(typeof(PropertySerializeInfo), nameof(PropertySerializeInfo.IsAttribute), typeof(PropertySerializeInfo.IsAttributeInvoker))]
-[assembly: Invoker(typeof(PropertySerializeInfo), nameof(PropertySerializeInfo.Order), typeof(PropertySerializeInfo.OrderInvoker))]
-[assembly: Invoker(typeof(PropertySerializeInfo), nameof(PropertySerializeInfo.Name), typeof(PropertySerializeInfo.NameInvoker))]
 namespace DataWF.Common
 {
-    public abstract class PropertySerializeInfo : INamed, IPropertySerializeInfo
+    [InvokerGenerator(Instance = true)]
+    public abstract partial class PropertySerializeInfo : INamed, IPropertySerializeInfo
     {
         private JsonEncodedText? jsonName;
-        
+
         public PropertySerializeInfo()
         { }
 
@@ -137,44 +134,7 @@ namespace DataWF.Common
             return $"{Order} {Name} {DataType.Name} {Keys}";
         }
 
-        public class IsAttributeInvoker : Invoker<IPropertySerializeInfo, bool>
-        {
-            public static readonly IsAttributeInvoker Instance = new IsAttributeInvoker();
 
-            public override string Name => nameof(IsAttribute);
-
-            public override bool CanWrite => false;
-
-            public override bool GetValue(IPropertySerializeInfo target) => target.IsAttribute;
-
-            public override void SetValue(IPropertySerializeInfo target, bool value) { }
-        }
-
-        public class OrderInvoker : Invoker<IPropertySerializeInfo, int>
-        {
-            public static readonly OrderInvoker Instance = new OrderInvoker();
-
-            public override string Name => nameof(Order);
-
-            public override bool CanWrite => false;
-
-            public override int GetValue(IPropertySerializeInfo target) => target.Order;
-
-            public override void SetValue(IPropertySerializeInfo target, int value) => target.Order = value;
-        }
-
-        public class NameInvoker : Invoker<IPropertySerializeInfo, string>
-        {
-            public static readonly NameInvoker Instance = new NameInvoker();
-
-            public override string Name => nameof(Name);
-
-            public override bool CanWrite => false;
-
-            public override string GetValue(IPropertySerializeInfo target) => target.Name;
-
-            public override void SetValue(IPropertySerializeInfo target, string value) => target.Name = value;
-        }
     }
 }
 

@@ -47,8 +47,7 @@ namespace DataWF.Data
         private DBStatus status = DBStatus.Empty;
         private Type type;
 
-        public QQuery()
-            : base()
+        public QQuery() : base()
         {
             order = 0;
         }
@@ -57,9 +56,6 @@ namespace DataWF.Data
         {
             Table = table;
         }
-
-        public QQuery(Type type) : this(DBTable.GetTable(type))
-        { }
 
         public QQuery(string query, DBTable table = null, IEnumerable cols = null, QQuery bquery = null)
             : this()
@@ -602,8 +598,8 @@ namespace DataWF.Data
                                                                             column = new QColumn(pTable.PrimaryKey);
                                                                             parameter.SetValue(column);
                                                                             parameter.Comparer = CompareType.In;
-                                                                            pTable = referencing.ReferenceTable.Table;
-                                                                            pQuery = new QQuery("", pTable, new[] { referencing.ReferenceColumn.Column }, pQuery);
+                                                                            pTable = referencing.ReferenceTable;
+                                                                            pQuery = new QQuery("", pTable, new[] { referencing.ReferenceColumn }, pQuery);
                                                                             parameter.SetValue(pQuery);
                                                                             parameter = pQuery.Add();
                                                                         }

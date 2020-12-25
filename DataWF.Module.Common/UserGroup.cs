@@ -9,20 +9,18 @@ using System.Security.Principal;
 
 namespace DataWF.Module.Common
 {
-    [Table("rgroup", "User", BlockSize = 10)]
-    public class UserGroup : DBGroupItem, IDisposable, IGroupIdentity
+    public partial class UserGroupTable
     {
-        public static readonly DBTable<UserGroup> DBTable = GetTable<UserGroup>();
-        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
-        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
-        public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
-
-        private Company company;
-
-        internal static void SetCurrent()
+        internal void SetCurrent()
         {
-            AccessValue.Groups = new IdCollectionView<IGroupIdentity, UserGroup>(UserGroup.DBTable);
+            AccessValue.Groups = new IdCollectionView<IGroupIdentity, UserGroup>(this);
         }
+    }
+
+    [Table("rgroup", "User", BlockSize = 10), InvokerGenerator]
+    public partial class UserGroup : DBGroupItem, IDisposable, IGroupIdentity
+    {
+        private Company company;
 
         //[NonSerialized()]
         //private GroupPermissionList _permission;
@@ -31,19 +29,20 @@ namespace DataWF.Module.Common
 
         public UserGroup()
         { }
+        public UserGroupTable UserGroupTable => (UserGroupTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int>(UserGroupTable.IdKey);
+            set => SetValue(value, UserGroupTable.IdKey);
         }
 
         [Column("parent_id", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
-            get => GetValue<int?>(Table.GroupKey);
-            set => SetValue<int?>(value, Table.GroupKey);
+            get => GetValue<int?>(UserGroupTable.ParentKey);
+            set => SetValue<int?>(value, UserGroupTable.ParentKey);
         }
 
         [Reference(nameof(ParentId))]
@@ -56,22 +55,22 @@ namespace DataWF.Module.Common
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(CompanyKey);
-            set => SetValue(value, CompanyKey);
+            get => GetValue<int?>(UserGroupTable.CompanyKey);
+            set => SetValue(value, UserGroupTable.CompanyKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(CompanyKey, ref company);
-            set => SetReference(company = value, CompanyKey);
+            get => GetReference(UserGroupTable.CompanyKey, ref company);
+            set => SetReference(company = value, UserGroupTable.CompanyKey);
         }
 
         [Column("group_number", 512, Keys = DBColumnKeys.Code), Index("rgroup_group_number")]
         public string Number
         {
-            get => GetValue<string>(Table.CodeKey);
-            set => SetValue(value, Table.CodeKey);
+            get => GetValue<string>(UserGroupTable.CodeKey);
+            set => SetValue(value, UserGroupTable.CodeKey);
         }
 
         [Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
@@ -81,16 +80,18 @@ namespace DataWF.Module.Common
             set => SetName(value);
         }
 
+        [CultureKey]
         public string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue<string>(UserGroupTable.NameENKey);
+            set => SetValue(value, UserGroupTable.NameENKey);
         }
 
+        [CultureKey]
         public string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue<string>(UserGroupTable.NameRUKey);
+            set => SetValue(value, UserGroupTable.NameRUKey);
         }
 
         string IIdentity.AuthenticationType => NameEN;
@@ -100,7 +101,8 @@ namespace DataWF.Module.Common
         [ControllerMethod]
         public IEnumerable<User> GetUsers(DBTransaction transaction)
         {
-            foreach (User user in User.DBTable)
+            var userTable = Schema.GetTable<User>();
+            foreach (User user in userTable)
             {
                 if (user.Access.Get(this, false).Create
                     && user.Access.GetFlag(AccessType.Read, transaction.Caller))

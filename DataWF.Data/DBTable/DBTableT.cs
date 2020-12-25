@@ -34,7 +34,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBTable<T> : DBTable, IIdCollection<T> where T : DBItem, new()
+    public class DBTable<T> : DBTable, IIdCollection<T> where T : DBItem
     {
         protected readonly List<T> items = new List<T>();
         protected readonly List<T> insertItems = new List<T>();
@@ -76,12 +76,12 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public override bool IsEdited
         {
-            get { return GetChanged().Any(); }
+            get => GetChanged().Any();
         }
 
         public override DBItem this[int index]
         {
-            get { return items[index]; }
+            get => items[index];
         }
 
         public override bool Contains(DBItem item)
@@ -461,7 +461,7 @@ namespace DataWF.Data
         public List<T> Load(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
         {
             var list = new List<T>();
-            var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);
+            var transaction = baseTransaction ?? new DBTransaction(this, null, true);
             if (transaction.ReaderParam == DBLoadParam.None)
                 transaction.ReaderParam = param;
             try
@@ -561,7 +561,7 @@ namespace DataWF.Data
         public async Task<IEnumerable<T>> LoadAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
         {
             var list = new List<T>();
-            var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);
+            var transaction = baseTransaction ?? new DBTransaction(this, null, true);
             if (transaction.ReaderParam == DBLoadParam.None)
                 transaction.ReaderParam = param;
             try

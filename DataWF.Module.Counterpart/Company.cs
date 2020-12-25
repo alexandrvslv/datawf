@@ -8,8 +8,6 @@ namespace DataWF.Module.Counterpart
     [ItemType((int)CustomerType.Company)]
     public class Company : Customer, IDisposable
     {
-        public static DBTable<Company> VTTable => GetTable<Company>();
-
         public Company()
         {
             ItemType = (int)CustomerType.Company;

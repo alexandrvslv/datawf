@@ -23,10 +23,10 @@ using System.ComponentModel;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBTableItem), nameof(DBTableItem.Table), typeof(DBTableItem.TableInvoker<>))]
 namespace DataWF.Data
 {
-    public abstract class DBTableItem : DBSchemaItem, IDBTableContent
+    [InvokerGenerator(Instance = true)]
+    public abstract partial class DBTableItem : DBSchemaItem, IDBTableContent
     {
         private DBTable table;
 
@@ -59,18 +59,6 @@ namespace DataWF.Data
         public override string GetLocalizeCategory()
         {
             return Table?.FullName;
-        }
-
-        public class TableInvoker<T> : Invoker<T, DBTable> where T : DBTableItem
-        {
-            public static readonly TableInvoker<T> Instance = new TableInvoker<T>();
-            public override string Name => nameof(DBTableItem.Table);
-
-            public override bool CanWrite => true;
-
-            public override DBTable GetValue(T target) => target.Table;
-
-            public override void SetValue(T target, DBTable value) => target.Table = value;
         }
     }
 }

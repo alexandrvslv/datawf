@@ -7,7 +7,7 @@ namespace DataWF.Module.Counterpart
 {
     public class CustomerList : DBTableView<Customer>
     {
-        public CustomerList() : base()
+        public CustomerList(DBTable<Customer> table) : base(table)
         {
         }
     }
@@ -22,31 +22,19 @@ namespace DataWF.Module.Counterpart
     [Table("dcustomer", "Customer", BlockSize = 100)]
     public class Customer : DBItem, IDisposable
     {
-        public static readonly DBTable<Customer> DBTable = GetTable<Customer>();
-        public static readonly DBColumn CodeKey = DBTable.ParseProperty(nameof(Code));
-        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
-        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
-        public static readonly DBColumn ShortNameENKey = DBTable.ParseProperty(nameof(ShortNameEN));
-        public static readonly DBColumn ShortNameRUKey = DBTable.ParseProperty(nameof(ShortNameRU));
-        public static readonly DBColumn EMailKey = DBTable.ParseProperty(nameof(EMail));
-        public static readonly DBColumn PhoneKey = DBTable.ParseProperty(nameof(Phone));
-        public static readonly DBColumn CountryKey = DBTable.ParseProperty(nameof(CountryId));
-        public static readonly DBColumn AddressKey = DBTable.ParseProperty(nameof(AddressId));
-        public static readonly DBColumn KeyKey = DBTable.ParseProperty(nameof(Key));
-        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
-        //public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
-
         private Address address;
         private Country country;
 
         public Customer()
         { }
 
+        public CustomerTable CustomerTable => (CustomerTable)Table;
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int?>(CustomerTable.IdKey);
+            set => SetValue(value, CustomerTable.IdKey);
         }
 
         //[Column("typeid", Keys = DBColumnKeys.ElementType), Index("dcustomer_typeid")]
@@ -60,16 +48,16 @@ namespace DataWF.Module.Counterpart
         [Index("dcustomer_inn", true)]
         public string INN
         {
-            get => GetValue<string>(Table.CodeKey);
-            set => SetValue(value, Table.CodeKey);
+            get => GetValue<string>(CustomerTable.INNKey);
+            set => SetValue(value, CustomerTable.INNKey);
         }
 
         [Column("code", 40)]
         [Index("dcustomer_code", true)]
         public string Code
         {
-            get => GetValue<string>(CodeKey);
-            set => SetValue(value, CodeKey);
+            get => GetValue<string>(CustomerTable.CodeKey);
+            set => SetValue(value, CustomerTable.CodeKey);
         }
 
         [Column("shortname", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
@@ -79,16 +67,18 @@ namespace DataWF.Module.Counterpart
             set => SetName(value);
         }
 
+        [CultureKey]
         public string ShortNameEN
         {
-            get => GetValue<string>(ShortNameENKey);
-            set => SetValue(value, ShortNameENKey);
+            get => GetValue<string>(CustomerTable.ShortNameENKey);
+            set => SetValue(value, CustomerTable.ShortNameENKey);
         }
 
+        [CultureKey]
         public string ShortNameRU
         {
-            get => GetValue<string>(ShortNameRUKey);
-            set => SetValue(value, ShortNameRUKey);
+            get => GetValue<string>(CustomerTable.ShortNameRUKey);
+            set => SetValue(value, CustomerTable.ShortNameRUKey);
         }
 
         [Column("name", 1024, Keys = DBColumnKeys.Culture)]
@@ -98,60 +88,62 @@ namespace DataWF.Module.Counterpart
             set => SetName(value);
         }
 
+        [CultureKey]
         public string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue<string>(CustomerTable.NameENKey);
+            set => SetValue(value, CustomerTable.NameENKey);
         }
 
+        [CultureKey]
         public string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue<string>(CustomerTable.NameRUKey);
+            set => SetValue(value, CustomerTable.NameRUKey);
         }
 
         [Column("email", 1024), Index("dcustomer_email")]
         public string EMail
         {
-            get => GetValue<string>(EMailKey);
-            set => SetValue(value, EMailKey);
+            get => GetValue<string>(CustomerTable.EMailKey);
+            set => SetValue(value, CustomerTable.EMailKey);
         }
 
         [Column("phone", 1024)]
         public string Phone
         {
-            get => GetValue<string>(PhoneKey);
-            set => SetValue(value, PhoneKey);
+            get => GetValue<string>(CustomerTable.PhoneKey);
+            set => SetValue(value, CustomerTable.PhoneKey);
         }
 
         [Browsable(false)]
         [Column("country_id")]
         public int? CountryId
         {
-            get => GetValue<int?>(CountryKey);
-            set => SetValue(value, CountryKey);
+            get => GetValue<int?>(CustomerTable.CountryKey);
+            set => SetValue(value, CustomerTable.CountryKey);
         }
 
         [Reference(nameof(CountryId))]
         public Country Country
         {
-            get => GetReference(CountryKey, ref country);
-            set => SetReference(country = value, CountryKey);
+            get => GetReference(CustomerTable.CountryKey, ref country);
+            set => SetReference(country = value, CustomerTable.CountryKey);
         }
 
         [Browsable(false)]
         [Column("address_id")]
         public int? AddressId
         {
-            get => GetValue<int?>(AddressKey);
-            set => SetValue(value, AddressKey);
+            get => GetValue<int?>(CustomerTable.AddressKey);
+            set => SetValue(value, CustomerTable.AddressKey);
         }
 
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get => GetReference(AddressKey, ref address);
-            set => SetReference(address = value, AddressKey);
+            get => GetReference(CustomerTable.AddressKey, ref address);
+            set => SetReference(address = value, CustomerTable.AddressKey);
         }
 
         //[Browsable(false)]
@@ -172,17 +164,17 @@ namespace DataWF.Module.Counterpart
 
         [Browsable(false)]
         [Column("sign_key", 1024, Keys = DBColumnKeys.Password | DBColumnKeys.System)]
-        public string Key
+        public string Sign
         {
-            get => GetValue<string>(KeyKey);
-            set => SetValue(value, KeyKey);
+            get => GetValue<string>(CustomerTable.SignKey);
+            set => SetValue(value, CustomerTable.SignKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(ExternalIdKey);
-            set => SetValue(value, ExternalIdKey);
+            get => GetValue<int?>(CustomerTable.ExternalKey);
+            set => SetValue(value, CustomerTable.ExternalKey);
         }
     }
 

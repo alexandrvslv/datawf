@@ -1,26 +1,29 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Data;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [Table("dstats", "Reference Book")]
-    public class Statistic : DBItem//, IComparable
+    [Table("dstats", "Reference Book"), InvokerGenerator]
+    public partial class Statistic : DBItem//, IComparable
     {
-        public static readonly DBTable<Statistic> DBTable = GetTable<Statistic>();
-        public static readonly DBColumn SchedulerKey = DBTable.ParseProperty(nameof(SchedulerId));
-        public static readonly DBColumn ResultKey = DBTable.ParseProperty(nameof(Result));
-
         private Scheduler scheduler;
 
         public Statistic()
         { }
 
+        public Statistic(DBTable table) : base(table)
+        {
+        }
+
+        public StatisticTable StatisticTable => (StatisticTable)Table;
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int?>(StatisticTable.IdKey);
+            set => SetValue(value, StatisticTable.IdKey);
         }
 
         //[Column("code", Keys = DBColumnKeys.Code)]
@@ -41,22 +44,22 @@ namespace DataWF.Module.Common
         [Column("scheduler_id")]
         public int? SchedulerId
         {
-            get => GetValue<int?>(SchedulerKey);
-            set => SetValue(value, SchedulerKey);
+            get => GetValue<int?>(StatisticTable.SchedulerKey);
+            set => SetValue(value, StatisticTable.SchedulerKey);
         }
 
         [Reference(nameof(SchedulerId))]
         public Scheduler Scheduler
         {
-            get => GetReference(SchedulerKey, ref scheduler);
-            set => SetReference(scheduler = value, SchedulerKey);
+            get => GetReference(StatisticTable.SchedulerKey, ref scheduler);
+            set => SetReference(scheduler = value, StatisticTable.SchedulerKey);
         }
 
         [Column("stat_result")]
         public decimal? Result
         {
-            get => GetValue<decimal?>(ResultKey);
-            set => SetValue(value, ResultKey);
+            get => GetValue<decimal?>(StatisticTable.ResultKey);
+            set => SetValue(value, StatisticTable.ResultKey);
         }
     }
 }

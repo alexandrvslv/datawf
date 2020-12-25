@@ -42,14 +42,21 @@ namespace DataWF.Data
         { }
 
         public DBTransaction(IUserIdentity caller)
-            : this(DBService.Schems.DefaultSchema.Connection, caller)
+            : this(DBService.Schems.DefaultSchema, caller)
         { }
 
-        public DBTransaction(DBConnection config)
-            : this(config, null)
-        { }
+        public DBTransaction(DBSchemaItem schemaItem, IUserIdentity caller = null, bool noTransaction = false)
+            : this(schemaItem.Schema, caller, noTransaction)
+        {
+        }
 
-        public DBTransaction(DBConnection config, IUserIdentity caller, bool noTransaction = false)
+        public DBTransaction(DBSchema schema, IUserIdentity caller = null, bool noTransaction = false)
+            : this(schema.Connection, caller, noTransaction)
+        {
+            Schema = schema;
+        }
+
+        public DBTransaction(DBConnection config, IUserIdentity caller = null, bool noTransaction = false)
             : this(config, caller, config.GetConnection(), noTransaction)
         { }
 
@@ -64,6 +71,7 @@ namespace DataWF.Data
             }
             //Debug.WriteLine($"New DBTransaction owner:{owner} connection:{config} is NON{noTransaction}");
         }
+        public DBSchema Schema { get; set; }
 
         public IUserIdentity Caller { get; private set; }
 

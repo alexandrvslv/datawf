@@ -161,13 +161,15 @@ namespace DataWF.Common
         }
     }
 
-    public class WebNotifyItem
+    [InvokerGenerator]
+    public partial class WebNotifyItem
     {
         public string Type { get; set; }
         public List<WebNotifyEntry> Items { get; set; }
     }
 
-    public class WebNotifyEntry
+    [InvokerGenerator]
+    public partial class WebNotifyEntry
     {
         public string Id { get; set; }
         public int Diff { get; set; }

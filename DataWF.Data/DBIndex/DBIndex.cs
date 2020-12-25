@@ -25,11 +25,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
-[assembly: Invoker(typeof(DBIndex), nameof(DBIndex.Unique), typeof(DBIndex.UniqueInvoker<>))]
-[assembly: Invoker(typeof(DBIndex), nameof(DBIndex.Columns), typeof(DBIndex.ColumnsInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBIndex : DBTableItem
+    [InvokerGenerator(Instance = true)]
+    public partial class DBIndex : DBTableItem
     {
         private bool unique;
 
@@ -71,30 +70,6 @@ namespace DataWF.Data
             var builder = new StringBuilder();
             Schema?.System?.Format(builder, this, ddlType);
             return builder.ToString();
-        }
-
-        public class UniqueInvoker<T> : Invoker<T, bool> where T : DBIndex
-        {
-            public static readonly UniqueInvoker<T> Instance = new UniqueInvoker<T>();
-            public override string Name => nameof(DBIndex.Unique);
-
-            public override bool CanWrite => true;
-
-            public override bool GetValue(T target) => target.Unique;
-
-            public override void SetValue(T target, bool value) => target.Unique = value;
-        }
-
-        public class ColumnsInvoker<T> : Invoker<T, DBColumnReferenceList> where T : DBIndex
-        {
-            public static readonly ColumnsInvoker<T> Instance = new ColumnsInvoker<T>();
-            public override string Name => nameof(DBIndex.Columns);
-
-            public override bool CanWrite => true;
-
-            public override DBColumnReferenceList GetValue(T target) => target.Columns;
-
-            public override void SetValue(T target, DBColumnReferenceList value) => target.Columns = value;
         }
     }
 }

@@ -21,83 +21,36 @@ using DataWF.Common;
 using DataWF.Data;
 using System.Collections.Generic;
 
-[assembly: Invoker(typeof(IndexGenerator), nameof(IndexGenerator.IndexName), typeof(IndexGenerator.IndexNameInvoker))]
-[assembly: Invoker(typeof(IndexGenerator), nameof(IndexGenerator.Index), typeof(IndexGenerator.IndexInvoker))]
-[assembly: Invoker(typeof(IndexGenerator), nameof(IndexGenerator.Attribute), typeof(IndexGenerator.AttributeInvoker))]
 namespace DataWF.Data
 {
-    public class IndexGenerator
+    [InvokerGenerator(Instance = true)]
+    public partial class IndexGenerator
     {
-        DBIndex cacheIndex;
-
         public IndexAttribute Attribute { get; set; }
 
         public string IndexName => Attribute?.IndexName;
 
         public List<ColumnGenerator> Columns { get; } = new List<ColumnGenerator>();
 
-        public DBIndex Index
-        {
-            get => cacheIndex ?? (cacheIndex = Table?.Table?.Indexes[Attribute.IndexName]);
-            set => cacheIndex = value;
-        }
+        public TableGenerator TableGenerator { get; set; }
 
-        public TableGenerator Table { get; set; }
-
-        public DBIndex Generate()
+        public DBIndex Generate(DBTable table)
         {
-            if (Index != null)
-                return Index;
-            Index = new DBIndex()
+            var index = table.Indexes[Attribute.IndexName];
+            if (index != null)
+                return index;
+            index = new DBIndex()
             {
                 Name = IndexName,
                 Unique = Attribute.Unique,
-                Table = Table.Table
+                Table = table
             };
             foreach (var column in Columns)
             {
-                Index.Columns.Add(column.Column);
+                index.Columns.Add(table.Columns[column.ColumnName]);
             }
-            Table.Table.Indexes.Add(Index);
-            return Index;
-        }
-
-        public class IndexNameInvoker : Invoker<IndexGenerator, string>
-        {
-            public static readonly IndexNameInvoker Instance = new IndexNameInvoker();
-            public override string Name => nameof(IndexGenerator.IndexName);
-
-            public override bool CanWrite => false;
-
-            public override string GetValue(IndexGenerator target) => target.IndexName;
-
-            public override void SetValue(IndexGenerator target, string value) { }
-        }
-
-        public class IndexInvoker : Invoker<IndexGenerator, DBIndex>
-        {
-            public static readonly IndexInvoker Instance = new IndexInvoker();
-            public override string Name => nameof(IndexGenerator.Index);
-
-            public override bool CanWrite => false;
-
-            public override DBIndex GetValue(IndexGenerator target) => target.Index;
-
-            public override void SetValue(IndexGenerator target, DBIndex value) { target.Index = value; }
-        }
-
-        public class AttributeInvoker : Invoker<IndexGenerator, IndexAttribute>
-        {
-            public static readonly AttributeInvoker Instance = new AttributeInvoker();
-            public override string Name => nameof(IndexGenerator.Attribute);
-
-            public override bool CanWrite => false;
-
-            public override IndexAttribute GetValue(IndexGenerator target) => target.Attribute;
-
-            public override void SetValue(IndexGenerator target, IndexAttribute value) { target.Attribute = value; }
+            table.Indexes.Add(index);
+            return index;
         }
     }
-
-
 }

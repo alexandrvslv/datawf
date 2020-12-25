@@ -27,31 +27,24 @@ namespace DataWF.Module.Common
         BySession
     }
 
-    [Table("duser_log", "User", BlockSize = 500, Keys = DBTableKeys.NoLogs)]
-    public class UserReg : DBUserReg
+    public partial class UserRegTable : DBTable<UserReg>
     {
         public static UserRegStrategy LogStrategy = UserRegStrategy.BySession;
+        
+        public event EventHandler<DBItemEventArgs> RowLoging;
+        public event EventHandler<DBItemEventArgs> RowLoged;
 
-        public static readonly DBTable<UserReg> DBTable = GetTable<UserReg>();
-        public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(UserId));
-        public static readonly DBColumn RegTypeKey = DBTable.ParseProperty(nameof(RegType));
-        public static readonly DBColumn RedoKey = DBTable.ParseProperty(nameof(RedoId));
-        public static readonly DBColumn TextDataKey = DBTable.ParseProperty(nameof(TextData));
-        public static event EventHandler<DBItemEventArgs> RowLoging;
-        public static event EventHandler<DBItemEventArgs> RowLoged;
-
-        private User user;
-        private UserReg redo;
-
-        public static async ValueTask OnDBItemLoging(DBItemEventArgs arg)
+        public async ValueTask OnDBItemLoging(DBItemEventArgs arg)
         {
-            if (arg.Item.Table == UserReg.DBTable || arg.Item.Table is IDBLogTable)
+            if (arg.Item.Table == this
+                || arg.Item.Table is IDBLogTable
+                || arg.Item.Table.Schema != Schema)
                 return;
             var user = arg.User as User;
             RowLoging?.Invoke(null, arg);
             if (user != null && user.LogStart == null)
             {
-                await Common.User.RegisterSession(user);
+                await ((UserTable)Schema.GetTable<User>()).RegisterSession(user);
             }
             var userLog = user?.LogStart;
 
@@ -79,8 +72,20 @@ namespace DataWF.Module.Common
             RowLoged?.Invoke(null, arg);
         }
 
+
+    }
+
+    [Table("duser_log", "User", BlockSize = 500, Keys = DBTableKeys.NoLogs), InvokerGenerator]
+    public partial class UserReg : DBUserReg
+    {
+
+        private User user;
+        private UserReg redo;
+
         public UserReg()
         { }
+
+        public UserRegTable UserRegTable => (UserRegTable)Table;
 
         public override long Id
         {
@@ -90,15 +95,15 @@ namespace DataWF.Module.Common
 
         public override int? UserId
         {
-            get => GetValue<int?>(UserKey);
-            set => SetValue(value, UserKey);
+            get => GetValue<int?>(UserRegTable.UserKey);
+            set => SetValue(value, UserRegTable.UserKey);
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get => GetReference(UserKey, ref user);
-            set => SetReference(user = value, UserKey);
+            get => GetReference(UserRegTable.UserKey, ref user);
+            set => SetReference(user = value, UserRegTable.UserKey);
         }
 
         public override DBUser DBUser
@@ -109,8 +114,8 @@ namespace DataWF.Module.Common
         [Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
         public UserRegType? RegType
         {
-            get => GetValue<UserRegType?>(RegTypeKey);
-            set => SetValue(value, RegTypeKey);
+            get => GetValue<UserRegType?>(UserRegTable.RegTypeKey);
+            set => SetValue(value, UserRegTable.RegTypeKey);
         }
 
         [Browsable(false)]
@@ -132,22 +137,22 @@ namespace DataWF.Module.Common
         [Column("redo_id")]
         public long? RedoId
         {
-            get => GetValue<long?>(RedoKey);
-            set => SetValue(value, RedoKey);
+            get => GetValue<long?>(UserRegTable.RedoKey);
+            set => SetValue(value, UserRegTable.RedoKey);
         }
 
         [Reference(nameof(RedoId))]
         public UserReg Redo
         {
-            get => GetReference(RedoKey, ref redo);
-            set => SetReference(redo = value, RedoKey);
+            get => GetReference(UserRegTable.RedoKey, ref redo);
+            set => SetReference(redo = value, UserRegTable.RedoKey);
         }
 
         [Column("text_data")]
         public string TextData
         {
-            get => GetValue<string>(TextDataKey);
-            set => SetValue(value, TextDataKey);
+            get => GetValue<string>(UserRegTable.TextDataKey);
+            set => SetValue(value, UserRegTable.TextDataKey);
         }
 
         public List<UserRegItem> Items { get; set; }

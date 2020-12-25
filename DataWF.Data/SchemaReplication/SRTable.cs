@@ -23,49 +23,21 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-[assembly: Invoker(typeof(SRTable), nameof(SRTable.TableName), typeof(SRTable.TableNameInvoker))]
-[assembly: Invoker(typeof(SRTable), nameof(SRTable.Table), typeof(SRTable.TableInvoker))]
 namespace DataWF.Data
 {
-    public class SRTable
+    [InvokerGenerator(Instance = false)]
+    public partial class SRTable
     {
         public string TableName { get; set; }
 
         [JsonIgnore]
         public DBTable Table { get; set; }
 
-
         public void Initialize(SRSchema schema)
         {
             Table = schema.Schema.Tables[TableName];
             if (Table == null)
                 throw new Exception($"Table with name {TableName} not found on schema {schema.SchemaName}");
-
         }
-
-        public class TableNameInvoker : Invoker<SRTable, string>
-        {
-            public override string Name => nameof(TableName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(SRTable target) => target.TableName;
-
-            public override void SetValue(SRTable target, string value) => target.TableName = value;
-        }
-
-        public class TableInvoker : Invoker<SRTable, DBTable>
-        {
-            public static readonly TableInvoker Instance = new TableInvoker();
-
-            public override string Name => nameof(Table);
-
-            public override bool CanWrite => true;
-
-            public override DBTable GetValue(SRTable target) => target.Table;
-
-            public override void SetValue(SRTable target, DBTable value) => target.Table = value;
-        }
-
     }
 }

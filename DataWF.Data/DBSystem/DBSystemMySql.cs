@@ -173,10 +173,11 @@ select seq from db_sequence where name = '{sequence.Name}';";
 
         public override async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
         {
-            var command = (MySqlCommand)transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) 
-values (@{FileData.IdKey.SqlName}, @{FileData.DataKey.SqlName});");
-            command.Parameters.Add($"@{FileData.IdKey.SqlName}", MySqlDbType.Int64).Value = id;
-            command.Parameters.Add($"@{FileData.DataKey.SqlName}", MySqlDbType.LongBlob).Value = await Helper.GetBufferedBytesAsync(value);//Double buffering!!!
+            var table = transaction.Schema.FileTable;
+            var command = (MySqlCommand)transaction.AddCommand($@"insert into {table.Name} ({table.IdKey.SqlName}, {table.DataKey.SqlName}) 
+values (@{table.IdKey.SqlName}, @{table.DataKey.SqlName});");
+            command.Parameters.Add($"@{table.IdKey.SqlName}", MySqlDbType.Int64).Value = id;
+            command.Parameters.Add($"@{table.DataKey.SqlName}", MySqlDbType.LongBlob).Value = await Helper.GetBufferedBytesAsync(value);//Double buffering!!!
             await transaction.ExecuteQueryAsync(command);
         }
 

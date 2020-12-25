@@ -19,14 +19,14 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace DataWF.Data
 {
     public class ItemTypeGenerator
     {
-        private DBTable cacheTable;
-        private DBSchema schema;
+        private Dictionary<DBSchema, DBTable> generateCache = new Dictionary<DBSchema, DBTable>();
 
         public ItemTypeAttribute Attribute { get; set; }
 
@@ -34,21 +34,7 @@ namespace DataWF.Data
 
         public TableGenerator TableGenerator { get; set; }
 
-        public IDBVirtualTable VirtualTable { get { return (IDBVirtualTable)Table; } }
-
-        public virtual DBTable Table
-        {
-            get => cacheTable ?? (cacheTable = Schema?.Tables[Type.Name] ?? DBService.Schems.ParseTable(Type.Name));
-            internal set => cacheTable = value;
-        }
-
-        public bool Generated { get; protected set; }
-
-        public DBSchema Schema
-        {
-            get => schema ?? TableGenerator.Schema;
-            set => schema = value;
-        }
+        public bool IsGenerated(DBSchema schema, out DBTable table) => generateCache.TryGetValue(schema, out table);
 
         public virtual void Initialize(Type type)
         {
@@ -63,38 +49,46 @@ namespace DataWF.Data
 
         public virtual DBTable Generate(DBSchema schema)
         {
-            Generated = true;
-            Schema = schema;
-            if (!TableGenerator.Generated)
+            if (schema == null)
+                throw new ArgumentException("Schema is required!", nameof(schema));
+            if (IsGenerated(schema, out var table))
+                return table;
+            table = schema.Tables[Type.Name];
+            if (!TableGenerator.IsGenerated(schema, out var baseTable))
             {
                 TableGenerator.Generate(schema);
-                if (Table != null)
-                    return Table;
+                table = schema.Tables[Type.Name];
+                if (table != null)
+                    return table;
             }
-            if (Table == null)
+            if (table == null)
             {
-                Table = CreateTable();
+                table = CreateTable(schema, baseTable);
             }
-            Table.Query = $"a.{TableGenerator.Table.ItemTypeKey.SqlName} = {TableGenerator.Table.GetTypeIndex(Type)}";
-            if (!Schema.Tables.Contains(Type.Name))
+            generateCache[schema] = table;
+
+            table.Query = $"a.{baseTable.ItemTypeKey.SqlName} = {baseTable.GetTypeIndex(Type)}";
+            if (!schema.Tables.Contains(Type.Name))
             {
-                Schema.Tables.Add(Table);
+                schema.Tables.Add(table);
             }
-            Table.Generator = TableGenerator;
-            Table.ItemTypeIndex = Attribute.Id;
-            Table.Schema = schema;
-            VirtualTable.BaseTable = TableGenerator.Table;
-            VirtualTable.Generate();
+            table.Generator = TableGenerator;
+            table.ItemTypeIndex = Attribute.Id;
+            table.Schema = schema;
+            var virtualTable = (IDBVirtualTable)table;
+            virtualTable.BaseTable = baseTable;
+            virtualTable.Generate();
             foreach (var columnGenerator in TableGenerator.Columns)
             {
-                var virtualColumn = Table.Columns[columnGenerator.ColumnName];
+                var virtualColumn = table.Columns[columnGenerator.ColumnName];
                 if (virtualColumn != null)
                 {
-                    if (virtualColumn.GetType() != columnGenerator.Column.GetType())
+                    var baseColumn = baseTable.Columns[columnGenerator.ColumnName];
+                    if (virtualColumn.DataType != columnGenerator.DataType)
                     {
-                        Table.Columns.Add(DBColumnFactory.CreateVirtual(columnGenerator.Column, VirtualTable));
+                        table.Columns.Add(DBColumnFactory.CreateVirtual(baseColumn, virtualTable));
                     }
-                    virtualColumn.RefreshVirtualColumn(columnGenerator.Column);
+                    virtualColumn.RefreshVirtualColumn(baseColumn);
                     if (columnGenerator.DefaultValues != null && columnGenerator.DefaultValues.TryGetValue(Type, out var defaultValue))
                     {
                         virtualColumn.DefaultValue = defaultValue;
@@ -108,10 +102,10 @@ namespace DataWF.Data
                 }
             }
 
-            return Table;
+            return table;
         }
 
-        public virtual DBTable CreateTable()
+        public virtual DBTable CreateTable(DBSchema schema, DBTable baseTable)
         {
             if (TableGenerator == null)
             {
@@ -119,13 +113,18 @@ namespace DataWF.Data
             }
             Debug.WriteLine($"Generate {TableGenerator.Attribute.TableName} - {Type.Name}");
 
-            var table = (DBTable)EmitInvoker.CreateObject(typeof(DBVirtualTable<>).MakeGenericType(Type));
+            var table = (DBTable)EmitInvoker.CreateObject(Attribute?.TableType ?? typeof(DBVirtualTable<>).MakeGenericType(Type));
             table.Name = Type.Name;
-            table.Schema = Schema;
-            ((IDBVirtualTable)table).BaseTable = TableGenerator.Table;
+            table.Schema = schema;
+            ((IDBVirtualTable)table).BaseTable = baseTable;
             table.DisplayName = Type.Name;
 
             return table;
+        }
+
+        public void ClearCache()
+        {
+            generateCache.Clear();
         }
     }
 }

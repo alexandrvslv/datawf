@@ -1,4 +1,5 @@
 ﻿using DataWF.Common;
+using DataWF.Data;
 using DataWF.Module.Counterpart;
 using System.Globalization;
 using System.Linq;
@@ -16,7 +17,8 @@ namespace DataWF.Module.Counterpart
 
         public static Task GenerateLocations()
         {
-            Location.DBTable.Load();
+            var locationTable = DBService.GetTable<Location>();
+            locationTable.Load();
             var euas = new Continent { Code = "EUAS", Name = "Eurasia" }; euas.Attach();
             new Continent { Code = "AF", CodeI = "", Name = "Africa" }.Attach();
             new Continent { Code = "AN", Name = "Antarctica" }.Attach();
@@ -41,7 +43,7 @@ namespace DataWF.Module.Counterpart
 
                     //make sure out generic list doesnt already
                     //contain this country
-                    if (Location.DBTable.Select(Location.DBTable.Columns["name_en"], CompareType.Equal, region.EnglishName).Count() == 0)
+                    if (locationTable.Select(locationTable.Columns["name_en"], CompareType.Equal, region.EnglishName).Count() == 0)
                     {
                         //not there so add the EnglishName (http://msdn.microsoft.com/en-us/library/system.globalization.regioninfo.englishname.aspx)
                         var country = new Country
@@ -52,7 +54,7 @@ namespace DataWF.Module.Counterpart
                             NameRU = region.DisplayName
                         };
                         country.Attach();
-                        var currency = Location.DBTable.LoadByCode(region.ISOCurrencySymbol);
+                        var currency = locationTable.LoadByCode(region.ISOCurrencySymbol);
                         if (currency == null)
                         {
                             currency = new Currency
@@ -70,10 +72,10 @@ namespace DataWF.Module.Counterpart
                 catch { }
             }
 
-            var russia = Location.DBTable.LoadByCode("RU");
+            var russia = locationTable.LoadByCode("RU");
             russia.Parent = euas;
 
-            var kazakh = Location.DBTable.LoadByCode("EUAS");
+            var kazakh = locationTable.LoadByCode("EUAS");
             kazakh.Parent = euas;
 
             new City { Parent = russia, Code = "495", Name = "Moskow" }.Attach();
@@ -82,7 +84,7 @@ namespace DataWF.Module.Counterpart
             new City { Parent = kazakh, Code = "7122", Name = "Atyrau" }.Attach();
             new City { Parent = kazakh, Code = "7292", Name = "Aktau" }.Attach();
 
-            return Location.DBTable.Save();
+            return locationTable.Save();
         }
     }
 }

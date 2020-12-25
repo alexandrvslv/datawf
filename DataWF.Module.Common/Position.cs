@@ -8,55 +8,50 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Common
 {
 
-    [Table("rposition", "User")]
-    public class Position : DBGroupItem
+    [Table("rposition", "User"), InvokerGenerator]
+    public partial class Position : DBGroupItem
     {
-        public static readonly DBTable<Position> DBTable = GetTable<Position>();
-        public static readonly DBColumn DepartmentKey = DBTable.ParseProperty(nameof(Department));
-        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
-        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
-        public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
-        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
-
         private Department department;
         private Company company;
 
         public Position()
         { }
 
+        public PositionTable PositionTable => (PositionTable)Table;
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int?>(PositionTable.IdKey);
+            set => SetValue(value, PositionTable.IdKey);
         }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(CompanyKey);
-            set => SetValue(value, CompanyKey);
+            get => GetValue<int?>(PositionTable.CompanyKey);
+            set => SetValue(value, PositionTable.CompanyKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(CompanyKey, ref company);
-            set => SetReference(company = value, CompanyKey);
+            get => GetReference(PositionTable.CompanyKey, ref company);
+            set => SetReference(company = value, PositionTable.CompanyKey);
         }
 
         [Column("department_id"), Index("rposition_department_id"), Browsable(false)]
         public int? DepartmentId
         {
-            get => GetValue<int?>(DepartmentKey);
-            set => SetValue(value, DepartmentKey);
+            get => GetValue<int?>(PositionTable.DepartmentKey);
+            set => SetValue(value, PositionTable.DepartmentKey);
         }
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get => GetReference(DepartmentKey, ref department);
-            set => SetReference(department = value, DepartmentKey);
+            get => GetReference(PositionTable.DepartmentKey, ref department);
+            set => SetReference(department = value, PositionTable.DepartmentKey);
         }
 
         [Column("parent_id", Keys = DBColumnKeys.Group), Index("rposition_parent_id"), Browsable(false)]
@@ -77,15 +72,15 @@ namespace DataWF.Module.Common
         [Index("rposition_code", true)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
-            set => SetValue(value, Table.CodeKey);
+            get => GetValue<string>(PositionTable.CodeKey);
+            set => SetValue(value, PositionTable.CodeKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(ExternalIdKey);
-            set => SetValue(value, ExternalIdKey);
+            get => GetValue<int?>(PositionTable.ExternalKey);
+            set => SetValue(value, PositionTable.ExternalKey);
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
@@ -95,16 +90,18 @@ namespace DataWF.Module.Common
             set => SetName(value);
         }
 
+        [CultureKey]
         public string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue<string>(PositionTable.NameENKey);
+            set => SetValue(value, PositionTable.NameENKey);
         }
 
+        [CultureKey]
         public string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue<string>(PositionTable.NameRUKey);
+            set => SetValue(value, PositionTable.NameRUKey);
         }
 
         public override AccessValue Access

@@ -4,6 +4,6 @@ namespace DataWF.Common
 {
     public interface IModuleInitialize
     {
-        Task Initialize();
+        Task Initialize(object[] args);
     }
 }

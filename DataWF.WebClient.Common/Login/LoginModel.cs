@@ -3,15 +3,10 @@ using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-[assembly: Invoker(typeof(LoginModel), nameof(LoginModel.Email), typeof(LoginModel.EmailInvoker<>))]
-[assembly: Invoker(typeof(LoginModel), nameof(LoginModel.Password), typeof(LoginModel.PasswordInvoker<>))]
-[assembly: Invoker(typeof(LoginModel), nameof(LoginModel.Online), typeof(LoginModel.OnlineInvoker<>))]
-[assembly: Invoker(typeof(LoginModel), nameof(LoginModel.Platform), typeof(LoginModel.PlatformInvoker<>))]
-[assembly: Invoker(typeof(LoginModel), nameof(LoginModel.Application), typeof(LoginModel.ApplicationInvoker<>))]
-[assembly: Invoker(typeof(LoginModel), nameof(LoginModel.Version), typeof(LoginModel.VersionInvoker<>))]
 namespace DataWF.Common
 {
-    public class LoginModel : DefaultItem
+    [InvokerGenerator]
+    public partial class LoginModel : DefaultItem
     {
         private string email;
         private string password;
@@ -107,72 +102,5 @@ namespace DataWF.Common
                 }
             }
         }
-
-        public class EmailInvoker<T> : Invoker<T, string> where T : LoginModel
-        {
-            public override string Name => nameof(Email);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.Email;
-
-            public override void SetValue(T target, string value) => target.Email = value;
-        }
-
-        public class PasswordInvoker<T> : Invoker<T, string> where T : LoginModel
-        {
-            public override string Name => nameof(Password);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.Password;
-
-            public override void SetValue(T target, string value) => target.Password = value;
-        }
-
-        public class OnlineInvoker<T> : Invoker<T, bool?> where T : LoginModel
-        {
-            public override string Name => nameof(Online);
-
-            public override bool CanWrite => true;
-
-            public override bool? GetValue(T target) => target.Online;
-
-            public override void SetValue(T target, bool? value) => target.Online = value;
-        }
-
-        public class PlatformInvoker<T> : Invoker<T, string> where T : LoginModel
-        {
-            public override string Name => nameof(Platform);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.Platform;
-
-            public override void SetValue(T target, string value) => target.Platform = value;
-        }
-
-        public class ApplicationInvoker<T> : Invoker<T, string> where T : LoginModel
-        {
-            public override string Name => nameof(Application);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.Application;
-
-            public override void SetValue(T target, string value) => target.Application = value;
-        }
-
-        public class VersionInvoker<T> : Invoker<T, string> where T : LoginModel
-        {
-            public override string Name => nameof(Version);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.Version;
-
-            public override void SetValue(T target, string value) => target.Version = value;
-        }
-
     }
 }

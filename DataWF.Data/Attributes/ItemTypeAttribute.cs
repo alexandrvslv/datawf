@@ -35,5 +35,7 @@ namespace DataWF.Data
         public int Id { get; private set; }
 
         public string Query { get; set; }
+
+        public Type Type { get; set; }
     }
 }

@@ -26,11 +26,10 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBTableGroup), nameof(DBTableGroup.GroupName), typeof(DBTableGroup.GroupNameInvoker))]
-[assembly: Invoker(typeof(DBTableGroup), nameof(DBTableGroup.Expand), typeof(DBTableGroup.ExpandInvoker))]
 namespace DataWF.Data
 {
-    public class DBTableGroup : DBSchemaItem, IComparable, IGroup
+    [InvokerGenerator(Instance = true)]
+    public partial class DBTableGroup : DBSchemaItem, IComparable, IGroup
     {
         protected DBTableGroup group;
         protected string groupName;
@@ -136,30 +135,6 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool IsCompaund => GetTables().Any();
         #endregion
-
-        public class GroupNameInvoker : Invoker<DBTableGroup, string>
-        {
-            public static readonly GroupNameInvoker Instance = new GroupNameInvoker();
-            public override string Name => nameof(GroupName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBTableGroup target) => target.GroupName;
-
-            public override void SetValue(DBTableGroup target, string value) => target.GroupName = value;
-        }
-
-        public class ExpandInvoker : Invoker<DBTableGroup, bool>
-        {
-            public static readonly ExpandInvoker Instance = new ExpandInvoker();
-            public override string Name => nameof(Expand);
-
-            public override bool CanWrite => true;
-
-            public override bool GetValue(DBTableGroup target) => target.Expand;
-
-            public override void SetValue(DBTableGroup target, bool value) => target.Expand = value;
-        }
     }
 }
 

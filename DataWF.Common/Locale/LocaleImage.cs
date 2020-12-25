@@ -5,12 +5,10 @@ using System.ComponentModel;
 using System.IO;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(LocaleImage), nameof(LocaleImage.Key), typeof(LocaleImage.KeyInvoker))]
-[assembly: Invoker(typeof(LocaleImage), nameof(LocaleImage.FileName), typeof(LocaleImage.FileNameInvoker))]
-[assembly: Invoker(typeof(LocaleImage), nameof(LocaleImage.Data), typeof(LocaleImage.DataInvoker))]
 namespace DataWF.Common
 {
-    public class LocaleImage : IEntryNotifyPropertyChanged
+    [InvokerGenerator(Instance = true)]
+    public partial class LocaleImage : IEntryNotifyPropertyChanged
     {
         public static event Func<LocaleImage, object> ImageCache;
 
@@ -100,51 +98,6 @@ namespace DataWF.Common
         private void OnPropertyChanged(string property)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
-
-        public class KeyInvoker : Invoker<LocaleImage, string>
-        {
-            public static readonly KeyInvoker Instance = new KeyInvoker();
-            public override string Name
-            {
-                get => nameof(LocaleImage.Key);
-            }
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(LocaleImage target) => target.Key;
-
-            public override void SetValue(LocaleImage target, string value) => target.Key = value;
-        }
-
-        public class FileNameInvoker : Invoker<LocaleImage, string>
-        {
-            public static readonly FileNameInvoker Instance = new FileNameInvoker();
-            public override string Name
-            {
-                get => nameof(LocaleImage.FileName);
-            }
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(LocaleImage target) => target.FileName;
-
-            public override void SetValue(LocaleImage target, string value) => target.FileName = value;
-        }
-
-        public class DataInvoker : Invoker<LocaleImage, byte[]>
-        {
-            public static readonly DataInvoker Instance = new DataInvoker();
-            public override string Name
-            {
-                get => nameof(LocaleImage.Data);
-            }
-
-            public override bool CanWrite => true;
-
-            public override byte[] GetValue(LocaleImage target) => target.Data;
-
-            public override void SetValue(LocaleImage target, byte[] value) => target.Data = value;
         }
 
     }

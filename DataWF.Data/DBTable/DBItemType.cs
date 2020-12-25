@@ -46,7 +46,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public DBTable Table => table ?? (table = DBTable.GetTable(Type));
+        public DBTable Table => table ?? (table = DBService.GetTable(Type));
 
         public DBItem Create()
         {

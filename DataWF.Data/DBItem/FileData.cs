@@ -19,64 +19,80 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [Table("file_data", "General", Keys = DBTableKeys.NoLogs | DBTableKeys.Private)]
+    [Table("file_data", "General", Keys = DBTableKeys.NoLogs | DBTableKeys.Private, Type = typeof(FileDataTable))]
     public class FileData : DBItem
     {
-        public static readonly DBTable<FileData> DBTable = GetTable<FileData>();
-        public static readonly DBColumn IdKey = DBTable.ParseProperty(nameof(Id));
-        public static readonly DBColumn DataKey = DBTable.ParseProperty(nameof(Data));
-        public static readonly DBColumn SizeKey = DBTable.ParseProperty(nameof(Size));
-        public static readonly DBColumn HashKey = DBTable.ParseProperty(nameof(Hash));
-        public static readonly DBColumn PathKey = DBTable.ParseProperty(nameof(Path));
-        public static readonly DBColumn StorageKey = DBTable.ParseProperty(nameof(Storage));
-
         public FileData()
         { }
+
+        public FileData(DBTable table) : base(table)
+        { }
+
+        [XmlIgnore, JsonIgnore]
+        public FileDataTable FileDataTable => (FileDataTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(IdKey);
-            set => SetValue(value, IdKey);
+            get => GetValue<long>(FileDataTable.IdKey);
+            set => SetValue(value, FileDataTable.IdKey);
         }
 
         [Column("file_data", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
-            get => GetValue<byte[]>(DataKey);
-            set => SetValue(value, DataKey);
+            get => GetValue<byte[]>(FileDataTable.DataKey);
+            set => SetValue(value, FileDataTable.DataKey);
         }
 
         [Column("file_size")]
         public int? Size
         {
-            get => GetValue<int?>(SizeKey);
-            set => SetValue(value, SizeKey);
+            get => GetValue<int?>(FileDataTable.SizeKey);
+            set => SetValue(value, FileDataTable.SizeKey);
         }
 
         [Column("file_hash", size: 256)]
         public byte[] Hash
         {
-            get => GetValue<byte[]>(HashKey);
-            set => SetValue(value, HashKey);
+            get => GetValue<byte[]>(FileDataTable.HashKey);
+            set => SetValue(value, FileDataTable.HashKey);
         }
 
         [Column("file_storage")]
         public FileStorage Storage
         {
-            get => GetValue<FileStorage>(StorageKey);
-            set => SetValue(value, StorageKey);
+            get => GetValue<FileStorage>(FileDataTable.StorageKey);
+            set => SetValue(value, FileDataTable.StorageKey);
         }
 
         [Column("file_path", size: 2048)]
         public string Path
         {
-            get => GetValue<string>(PathKey);
-            set => SetValue(value, PathKey);
+            get => GetValue<string>(FileDataTable.PathKey);
+            set => SetValue(value, FileDataTable.PathKey);
         }
+    }
+
+    public class FileDataTable : DBTable<FileData>
+    {
+        private DBColumn<long> idKey;
+        private DBColumn<byte[]> dataKey;
+        private DBColumn<int?> sizeKey;
+        private DBColumn<byte[]> hashKey;
+        private DBColumn<string> pathKey;
+        private DBColumn<FileStorage> storageKey;
+
+        public DBColumn<long> IdKey => ParseProperty(nameof(FileData.Id), ref idKey);
+        public DBColumn<byte[]> DataKey => ParseProperty(nameof(FileData.Data), ref dataKey);
+        public DBColumn<int?> SizeKey => ParseProperty(nameof(FileData.Size), ref sizeKey);
+        public DBColumn<byte[]> HashKey => ParseProperty(nameof(FileData.Hash), ref hashKey);
+        public DBColumn<string> PathKey => ParseProperty(nameof(FileData.Path), ref pathKey);
+        public DBColumn<FileStorage> StorageKey => ParseProperty(nameof(FileData.Storage), ref storageKey);
 
     }
 }

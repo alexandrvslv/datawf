@@ -24,13 +24,10 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.Type), typeof(DBConstraint.TypeInvoker<>))]
-[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.Columns), typeof(DBConstraint.ColumnsInvoker<>))]
-[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.ColumnName), typeof(DBConstraint.ColumnNameInvoker<>))]
-[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.Value), typeof(DBConstraint.ValueInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBConstraint : DBTableItem, IDBTableContent
+    [InvokerGenerator(Instance = true)]
+    public partial class DBConstraint : DBTableItem, IDBTableContent
     {
         protected DBConstraintType type;
         protected string value;
@@ -135,54 +132,6 @@ namespace DataWF.Data
                 constraint.Columns.Add(item.Clone());
             }
             return constraint;
-        }
-
-        public class TypeInvoker<T> : Invoker<T, DBConstraintType> where T : DBConstraint
-        {
-            public static readonly TypeInvoker<T> Instance = new TypeInvoker<T>();
-            public override string Name => nameof(DBConstraint.Type);
-
-            public override bool CanWrite => true;
-
-            public override DBConstraintType GetValue(T target) => target.Type;
-
-            public override void SetValue(T target, DBConstraintType value) => target.Type = value;
-        }
-
-        public class ColumnsInvoker<T> : Invoker<T, DBColumnReferenceList> where T : DBConstraint
-        {
-            public static readonly ColumnsInvoker<T> Instance = new ColumnsInvoker<T>();
-            public override string Name => nameof(DBConstraint.Columns);
-
-            public override bool CanWrite => true;
-
-            public override DBColumnReferenceList GetValue(T target) => target.Columns;
-
-            public override void SetValue(T target, DBColumnReferenceList value) => target.Columns = value;
-        }
-
-        public class ColumnNameInvoker<T> : Invoker<T, string> where T : DBConstraint
-        {
-            public static readonly ColumnNameInvoker<T> Instance = new ColumnNameInvoker<T>();
-            public override string Name => nameof(DBConstraint.ColumnName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.ColumnName;
-
-            public override void SetValue(T target, string value) => target.ColumnName = value;
-        }
-
-        public class ValueInvoker<T> : Invoker<T, string> where T : DBConstraint
-        {
-            public static readonly ValueInvoker<T> Instance = new ValueInvoker<T>();
-            public override string Name => nameof(DBConstraint.Value);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.Value;
-
-            public override void SetValue(T target, string value) => target.Value = value;
-        }
+        }        
     }
 }

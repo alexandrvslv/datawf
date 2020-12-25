@@ -7,11 +7,10 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(ReferenceList<>), nameof(ReferenceList<SynchronizedItem>.Owner), typeof(ReferenceList<>.OwnerInvoker))]
-[assembly: Invoker(typeof(ReferenceList<>), nameof(ReferenceList<SynchronizedItem>.OwnerProperty), typeof(ReferenceList<>.OwnerPropertyInvoker))]
 namespace DataWF.Common
 {
-    public class ReferenceList<T> : ChangeableList<T>, IReferenceList where T : SynchronizedItem
+    [InvokerGenerator]
+    public partial class ReferenceList<T> : ChangeableList<T>, IReferenceList where T : SynchronizedItem
     {
         //private ISelectable<T> source;
 
@@ -90,28 +89,6 @@ namespace DataWF.Common
                     }
                     break;
             }
-        }
-
-        public class OwnerInvoker : Invoker<ReferenceList<T>, SynchronizedItem>
-        {
-            public override string Name => nameof(ReferenceList<T>.Owner);
-
-            public override bool CanWrite => true;
-
-            public override SynchronizedItem GetValue(ReferenceList<T> target) => target.Owner;
-
-            public override void SetValue(ReferenceList<T> target, SynchronizedItem value) { target.Owner = value; }
-        }
-
-        public class OwnerPropertyInvoker : Invoker<ReferenceList<T>, string>
-        {
-            public override string Name => nameof(ReferenceList<T>.OwnerProperty);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(ReferenceList<T> target) => target.OwnerProperty;
-
-            public override void SetValue(ReferenceList<T> target, string value) { target.OwnerProperty = value; }
         }
     }
 }

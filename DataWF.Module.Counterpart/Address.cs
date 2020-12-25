@@ -7,59 +7,58 @@ namespace DataWF.Module.Counterpart
 {
     public class AddressList : DBTableView<Address>
     {
-        public AddressList() : base()
+        public AddressList(AddressTable table) : base(table)
         { }
+    }
+
+    public partial class AddressTable : DBTable<Address>
+    {
+
     }
 
     [Table("daddress", "Address", BlockSize = 100)]
     public class Address : DBItem
     {
-        public static readonly DBTable<Address> DBTable = GetTable<Address>();
-
-        public static readonly DBColumn LocationKey = DBTable.ParseProperty(nameof(LocationId));
-        public static readonly DBColumn PostIndexKey = DBTable.ParseProperty(nameof(PostIndex));
-        public static readonly DBColumn StreetENKey = DBTable.ParseProperty(nameof(StreetEN));
-        public static readonly DBColumn StreetRUKey = DBTable.ParseProperty(nameof(StreetRU));
-        public static readonly DBColumn FloorKey = DBTable.ParseProperty(nameof(Floor));
-        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
         private Location location;
 
         public Address()
         { }
 
+        public AddressTable AddressTable => (AddressTable)Table;
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int?>(AddressTable.IdKey);
+            set => SetValue(value, AddressTable.IdKey);
         }
 
         [Browsable(false)]
         [Column("location_id", Keys = DBColumnKeys.View), Index("daddress_location_id")]
         public int? LocationId
         {
-            get => GetValue<int?>(LocationKey);
-            set => SetValue(value, LocationKey);
+            get => GetValue<int?>(AddressTable.LocationKey);
+            set => SetValue(value, AddressTable.LocationKey);
         }
 
         [Reference(nameof(LocationId))]
         public Location Location
         {
-            get => GetReference(LocationKey, ref location);
+            get => GetReference(AddressTable.LocationKey, ref location);
             set
             {
                 if (value?.LocationType != LocationType.Region
                     && value?.LocationType != LocationType.City)
                     throw new ArgumentException("Location type mast be Region or Citi or Village");
-                SetReference(location = value, LocationKey);
+                SetReference(location = value, AddressTable.LocationKey);
             }
         }
 
         [Column("post_index", 20, Keys = DBColumnKeys.View), Index("daddress_post_index")]
         public string PostIndex
         {
-            get => GetValue<string>(PostIndexKey);
-            set => SetValue(value, PostIndexKey);
+            get => GetValue<string>(AddressTable.PostIndexKey);
+            set => SetValue(value, AddressTable.PostIndexKey);
         }
 
         [Column("street", 1024, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
@@ -69,30 +68,32 @@ namespace DataWF.Module.Counterpart
             set => SetName(value);
         }
 
+        [CultureKey(Property = nameof(Street), CultureName = "en_US")]
         public string StreetEN
         {
-            get => GetValue<string>(StreetENKey);
-            set => SetValue(value, StreetENKey);
+            get => GetValue<string>(AddressTable.StreetENKey);
+            set => SetValue(value, AddressTable.StreetENKey);
         }
 
+        [CultureKey(Property = nameof(Street), CultureName = "ru_RU")]
         public string StreetRU
         {
-            get => GetValue<string>(StreetRUKey);
-            set => SetValue(value, StreetRUKey);
+            get => GetValue<string>(AddressTable.StreetRUKey);
+            set => SetValue(value, AddressTable.StreetRUKey);
         }
 
         [Column("floor")]
         public string Floor
         {
-            get => GetValue<string>(FloorKey);
-            set => SetValue(value, FloorKey);
+            get => GetValue<string>(AddressTable.FloorKey);
+            set => SetValue(value, AddressTable.FloorKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(ExternalIdKey);
-            set => SetValue(value, ExternalIdKey);
+            get => GetValue<int?>(AddressTable.ExternalKey);
+            set => SetValue(value, AddressTable.ExternalKey);
         }
     }
 }

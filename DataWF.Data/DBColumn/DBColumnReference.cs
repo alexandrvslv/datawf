@@ -26,10 +26,10 @@ using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBColumnReference), nameof(DBColumnReference.ColumnName), typeof(DBColumnReference.ColumnNameInvoker))]
 namespace DataWF.Data
 {
-    public class DBColumnReference : IEntryNotifyPropertyChanged
+    [InvokerGenerator(Instance = true)]
+    public partial class DBColumnReference : IEntryNotifyPropertyChanged
     {
         private string columnName;
         private DBColumn column;
@@ -90,18 +90,6 @@ namespace DataWF.Data
         public DBColumnReference Clone()
         {
             return new DBColumnReference { ColumnName = ColumnName };
-        }
-
-        public class ColumnNameInvoker : Invoker<DBColumnReference, string>
-        {
-            public static readonly ColumnNameInvoker Instance = new ColumnNameInvoker();
-            public override string Name => nameof(DBColumnReference.ColumnName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBColumnReference target) => target.ColumnName;
-
-            public override void SetValue(DBColumnReference target, string value) => target.ColumnName = value;
         }
     }
 }

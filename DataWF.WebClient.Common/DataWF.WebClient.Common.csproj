@@ -6,7 +6,6 @@
     <RootNamespace>DataWF.WebClient.Common</RootNamespace>
     <AssemblyName>DataWF.WebClient.Common</AssemblyName>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
-    <LangVersion>7.1</LangVersion>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -28,11 +27,9 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Brotli.NET" Version="2.0.4.2" />
-  </ItemGroup>
+  </PropertyGroup>  
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Common.Generator\DataWF.Common.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
   </ItemGroup>
 </Project>

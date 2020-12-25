@@ -156,7 +156,7 @@ namespace DataWF.Module.Flow
             set => SetValue(value, Table.FileKey);
         }
 
-        [Column("file_lob", Keys = DBColumnKeys.FileLOB)]
+        [Column("file_lob", Keys = DBColumnKeys.FileOID)]
         public virtual long? FileLOB
         {
             get => GetValue<long?>(Table.FileBLOBKey);

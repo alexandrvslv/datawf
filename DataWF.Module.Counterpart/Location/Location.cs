@@ -16,34 +16,28 @@ namespace DataWF.Module.Counterpart
 
     public class LocationList : DBTableView<Location>
     {
-        public LocationList() : base()
+        public LocationList(LocationTable table) : base(table)
         { }
     }
 
-    [Table("rlocation", "Address", BlockSize = 100)]
+    public partial class LocationTable : DBTable<Location>
+    {
+    }
+
+    [Table("rlocation", "Address", BlockSize = 100, Type = typeof(LocationTable))]
     public class Location : DBGroupItem
     {
-        private static DBTable<Location> dbTable;
-        private static DBColumn codeIKey = DBColumn.EmptyKey;
-        private static DBColumn nameENKey = DBColumn.EmptyKey;
-        private static DBColumn nameRUKey = DBColumn.EmptyKey;
-        private static DBColumn externalIdKey = DBColumn.EmptyKey;
-
-        public static DBColumn CodeIKey => DBTable.ParseProperty(nameof(CodeI), ref codeIKey);
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
-        public static DBColumn ExternalIdKey => DBTable.ParseProperty(nameof(ExternalId), ref externalIdKey);
-        public static DBTable<Location> DBTable => dbTable ?? (dbTable = GetTable<Location>());
-
         public Location()
         {
         }
 
+        public LocationTable LocationTable => (LocationTable)Table;
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int?>(LocationTable.IdKey);
+            set => SetValue(value, LocationTable.IdKey);
         }
 
         public LocationType LocationType
@@ -62,8 +56,8 @@ namespace DataWF.Module.Counterpart
         [Index("rlocation_codei")]
         public string CodeI
         {
-            get => GetValue<string>(CodeIKey);
-            set => SetValue(value, CodeIKey);
+            get => GetValue<string>(LocationTable.CodeIKey);
+            set => SetValue(value, LocationTable.CodeIKey);
         }
 
         [Browsable(false)]
@@ -88,22 +82,25 @@ namespace DataWF.Module.Counterpart
             set => SetName(value);
         }
 
+        [CultureKey(Property = nameof(Name), CultureName = "ru_RU")]
         public string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue<string>(LocationTable.NameRUKey);
+            set => SetValue(value, LocationTable.NameRUKey);
         }
 
+        [CultureKey(Property = nameof(Name), CultureName = "en_US")]
         public string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue<string>(LocationTable.NameENKey);
+            set => SetValue(value, LocationTable.NameENKey);
         }
+
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(ExternalIdKey);
-            set => SetValue(value, ExternalIdKey);
+            get => GetValue<int?>(LocationTable.ExternalKey);
+            set => SetValue(value, LocationTable.ExternalKey);
         }
 
         public Location GetParent(LocationType parenttype)

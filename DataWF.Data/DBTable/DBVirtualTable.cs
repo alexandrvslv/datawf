@@ -29,10 +29,10 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBVirtualTable<>), nameof(DBVirtualTable<DBItem>.BaseTableName), typeof(DBVirtualTable<>.BaseTableNameInvoker))]
 namespace DataWF.Data
 {
-    public class DBVirtualTable<T> : DBTable<T>, IDBVirtualTable where T : DBItem, new()
+    [InvokerGenerator(Instance = true)]
+    public partial class DBVirtualTable<T> : DBTable<T>, IDBVirtualTable where T : DBItem, new()
     {
         private DBTable baseTable;
         protected string baseTableName;
@@ -388,19 +388,5 @@ namespace DataWF.Data
                 }
             }
         }
-
-        public class BaseTableNameInvoker : Invoker<DBVirtualTable<T>, string>
-        {
-            public static readonly BaseTableNameInvoker Instance = new BaseTableNameInvoker();
-            public override string Name => nameof(DBVirtualTable<T>.BaseTableName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBVirtualTable<T> target) => target.BaseTableName;
-
-            public override void SetValue(DBVirtualTable<T> target, string value) => target.BaseTableName = value;
-        }
     }
-
-
 }

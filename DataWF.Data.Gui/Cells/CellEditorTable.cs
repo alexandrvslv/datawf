@@ -119,7 +119,7 @@ namespace DataWF.Data.Gui
 
         private void LoadReference()
         {
-            using (var transaction = new DBTransaction(Table.Schema.Connection, GuiEnvironment.User))
+            using (var transaction = new DBTransaction(Table, GuiEnvironment.User))
             {
                 Debug.WriteLine("Get References {0}", getReferenceStack.Count);
                 while (getReferenceStack.TryPop(out PDBTableParam item))

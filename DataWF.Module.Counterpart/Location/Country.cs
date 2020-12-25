@@ -12,8 +12,6 @@ namespace DataWF.Module.Counterpart
             ItemType = (int)LocationType.Country;
         }
 
-        public static DBTable<Country> VTTable => GetTable<Country>();
-
         public Continent Continent
         {
             get => Parent as Continent;

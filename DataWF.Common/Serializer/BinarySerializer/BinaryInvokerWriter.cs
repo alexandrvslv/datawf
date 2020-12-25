@@ -230,6 +230,7 @@ namespace DataWF.Common
             property.Write(this, element);
         }
 
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteNull()
         {

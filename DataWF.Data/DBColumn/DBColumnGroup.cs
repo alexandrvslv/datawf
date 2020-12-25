@@ -24,10 +24,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBColumnGroup), nameof(DBColumnGroup.Order), typeof(DBColumnGroup.OrderInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBColumnGroup : DBTableItem, IComparable, IComparable<DBColumnGroup>
+    [InvokerGenerator(Instance = true)]
+    public partial class DBColumnGroup : DBTableItem, IComparable, IComparable<DBColumnGroup>
     {
         protected int order = -1;
 
@@ -87,18 +87,6 @@ namespace DataWF.Data
         public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             return null;
-        }
-
-        public class OrderInvoker<T> : Invoker<T, int> where T : DBColumnGroup
-        {
-            public static readonly OrderInvoker<T> Instance = new OrderInvoker<T>();
-            public override string Name => nameof(DBColumnGroup.Order);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(T target) => target.Order;
-
-            public override void SetValue(T target, int value) => target.Order = value;
         }
     }
 }

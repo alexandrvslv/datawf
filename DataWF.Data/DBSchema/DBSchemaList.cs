@@ -26,10 +26,10 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBSchemaList), nameof(DBSchemaList.HandleChanges), typeof(DBSchemaList.HandleChangesInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBSchemaList : DBSchemaItemList<DBSchema>
+    [InvokerGenerator(Instance = true)]
+    public partial class DBSchemaList : DBSchemaItemList<DBSchema>
     {
         private DBSchema defaultSchema;
 

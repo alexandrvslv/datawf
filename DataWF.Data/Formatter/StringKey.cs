@@ -23,10 +23,10 @@ using System;
 using Excel = DocumentFormat.OpenXml.Spreadsheet;
 
 //using DataControl;
-[assembly: Invoker(typeof(StringKey), nameof(StringKey.Key), typeof(StringKey.KeyInvoker))]
 namespace DataWF.Data
 {
-    public class StringKey
+    [InvokerGenerator(Instance = true)]
+    public partial class StringKey
     {
         public StringKey(Excel.SharedStringItem item)
         {
@@ -43,19 +43,6 @@ namespace DataWF.Data
         public Excel.SharedStringItem Value { get; set; }
 
         public string Key { get; set; }
-
-        public class KeyInvoker : Invoker<StringKey, String>
-        {
-            public static readonly KeyInvoker Instance = new KeyInvoker();
-            public override string Name => nameof(StringKey.Key);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(StringKey target) => target.Key;
-
-            public override void SetValue(StringKey target, string value) => target.Key = value;
-        }
     }
-
 
 }

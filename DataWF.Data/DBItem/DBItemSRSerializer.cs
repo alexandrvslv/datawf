@@ -25,10 +25,14 @@ using System.Reflection;
 
 namespace DataWF.Data
 {
-
     public class DBItemSerializer<T> : ObjectSerializer<T> where T : DBItem
     {
-        public static readonly DBItemSRSerializer<T> Instance = new DBItemSRSerializer<T>();
+        public DBItemSerializer(DBTable table)
+        {
+            Table = table;
+        }
+
+        public DBTable Table { get; set; }
 
         public override T Read(BinaryInvokerReader reader, T value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
@@ -42,18 +46,16 @@ namespace DataWF.Data
             {
                 token = reader.ReadToken();
             }
-            var table = DBTable.GetTable(typeof(T));
-
             if (token == BinaryToken.SchemaBegin)
             {
-                map = ReadMap(reader, out type, out table);
+                map = ReadMap(reader, out type);
                 token = reader.ReadToken();
             }
             map = map ?? reader.GetMap(type);
 
             if (value == null)
             {
-                value = (T)info.Constructor?.Create();
+                value = (T)Table.NewItem(DBUpdateState.Insert, false, type);
             }
             if (token == BinaryToken.ObjectEntry)
             {
@@ -66,21 +68,6 @@ namespace DataWF.Data
             return value;
         }
 
-        public void ReadProperty(BinaryInvokerReader reader, T element, Dictionary<ushort, IPropertySerializeInfo> map)
-        {
-            var index = reader.ReadSchemaIndex();
-            map.TryGetValue(index, out var property);
-
-            if (property != null)
-            {
-                property.Read(reader, element, null);
-            }
-            else
-            {
-                var value = reader.Read(null, reader.Serializer.GetTypeInfo(property.DataType));
-            }
-        }
-
         public override void Write(BinaryInvokerWriter writer, T value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             writer.WriteObjectBegin();
@@ -88,24 +75,17 @@ namespace DataWF.Data
 
             if (map == null || valueType != typeof(T))
             {
-                map = WriteMap(writer, valueType, value.Table);
+                map = WriteMap(writer, valueType);
             }
             foreach (var entry in map)
             {
                 var property = entry.Value;
-                WriteProperty(writer, property, value, entry.Key);
+                writer.WriteProperty(property, value, entry.Key);
             }
             writer.WriteObjectEnd();
         }
 
-        public void WriteProperty(BinaryInvokerWriter writer, IPropertySerializeInfo property, T element, ushort index)
-        {
-            writer.WriteObjectEntry();
-            writer.WriteSchemaIndex(index);
-            property.Write(writer, element);
-        }
-
-        public Dictionary<ushort, IPropertySerializeInfo> WriteMap(BinaryInvokerWriter writer, Type type, DBTable table)
+        public Dictionary<ushort, IPropertySerializeInfo> WriteMap(BinaryInvokerWriter writer, Type type)
         {
             writer.WriteSchemaBegin();
             writer.WriteSchemaName(type.Name);
@@ -114,7 +94,7 @@ namespace DataWF.Data
             {
                 map = new Dictionary<ushort, IPropertySerializeInfo>();
                 ushort index = 0;
-                foreach (var column in GetColumns(table))
+                foreach (var column in GetColumns(Table))
                 {
                     writer.WriteSchemaEntry(index);
                     writer.WriteString(column.PropertyName ?? column.Name, false);
@@ -136,7 +116,7 @@ namespace DataWF.Data
             }
         }
 
-        public Dictionary<ushort, IPropertySerializeInfo> ReadMap(BinaryInvokerReader reader, out Type type, out DBTable table)
+        public Dictionary<ushort, IPropertySerializeInfo> ReadMap(BinaryInvokerReader reader, out Type type)
         {
             var token = reader.ReadToken();
             if (token == BinaryToken.SchemaBegin)
@@ -144,13 +124,11 @@ namespace DataWF.Data
                 token = reader.ReadToken();
             }
             type = null;
-            table = null;
             if (token == BinaryToken.SchemaName
                 || token == BinaryToken.String)
             {
                 var name = StringSerializer.Instance.Read(reader.Reader);
                 type = TypeHelper.ParseType(name);
-                table = DBTable.GetTable(type);
                 token = reader.ReadToken();
             }
             var map = reader.GetMap(type);
@@ -164,7 +142,7 @@ namespace DataWF.Data
                 {
                     var index = reader.ReadSchemaIndex();
                     var propertyName = reader.ReadString();
-                    map[index] = table.ParseProperty(propertyName) ?? table.ParseColumn(propertyName);
+                    map[index] = Table.ParseProperty(propertyName) ?? Table.ParseColumn(propertyName);
                 }
                 while (reader.ReadToken() == BinaryToken.SchemaEntry);
                 reader.SetMap(type, map);
@@ -176,6 +154,9 @@ namespace DataWF.Data
 
     public class DBItemSRSerializer<T> : DBItemSerializer<T> where T : DBItem
     {
+        public DBItemSRSerializer(DBTable table) : base(table)
+        { }
+
         public override IEnumerable<DBColumn> GetColumns(DBTable table)
         {
             foreach (var column in table.Columns)
@@ -189,5 +170,8 @@ namespace DataWF.Data
     }
 
     public class DBItemSerializer : DBItemSerializer<DBItem>
-    { }
+    {
+        public DBItemSerializer(DBTable table) : base(table)
+        { }
+    }
 }

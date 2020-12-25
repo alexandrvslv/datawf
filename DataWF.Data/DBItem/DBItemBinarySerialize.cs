@@ -31,7 +31,7 @@ namespace DataWF.Data
     {
         public DBItemServiceConverter()
         { }
-
+        public DBTable Table { get; set; }
         //public override bool CanConvert(Type objectType)
         //{
         //    return TypeHelper.IsBaseType(objectType, typeof(T));
@@ -52,8 +52,7 @@ namespace DataWF.Data
         {
             var item = (T)null;
 
-            var table = DBTable.GetTable<T>();
-            if (table == null)
+            if (Table == null)
             {
                 throw new JsonException($"Can't find table of {objectType?.Name ?? "null"}");
             }
@@ -65,7 +64,7 @@ namespace DataWF.Data
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
                     propertyName = reader.GetString();
-                    column = table.ParseColumnProperty(propertyName);
+                    column = Table.ParseColumnProperty(propertyName);
                     if (column == null)
                     {
                         throw new InvalidOperationException($"Property {propertyName} not found!");
@@ -77,20 +76,20 @@ namespace DataWF.Data
                 }
             }
 
-            if (table.PrimaryKey != null && dictionary.TryGetValue(table.PrimaryKey, out var value) && value != null)
+            if (Table.PrimaryKey != null && dictionary.TryGetValue(Table.PrimaryKey, out var value) && value != null)
             {
-                item = table.LoadById(value, DBLoadParam.Load | DBLoadParam.Referencing);
+                item = (T)Table.LoadItemById(value, DBLoadParam.Load | DBLoadParam.Referencing);
             }
 
             if (item == null)
             {
-                if (table.ItemTypeKey != null && dictionary.TryGetValue(table.ItemTypeKey, out var itemType) && itemType != null)
+                if (Table.ItemTypeKey != null && dictionary.TryGetValue(Table.ItemTypeKey, out var itemType) && itemType != null)
                 {
-                    item = (T)table.NewItem(DBUpdateState.Insert, true, (int)itemType);
+                    item = (T)Table.NewItem(DBUpdateState.Insert, true, (int)itemType);
                 }
                 else
                 {
-                    item = (T)table.NewItem(DBUpdateState.Insert, true);
+                    item = (T)Table.NewItem(DBUpdateState.Insert, true);
                 }
             }
 

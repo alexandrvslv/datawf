@@ -40,46 +40,26 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.GroupName), typeof(DBTable.GroupNameInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.LogTableName), typeof(DBTable.LogTableNameInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.LogTable), typeof(DBTable.LogTableInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.SequenceName), typeof(DBTable.SequenceNameInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.Sequence), typeof(DBTable.SequenceInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.BlockSize), typeof(DBTable.BlockSizeInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.Columns), typeof(DBTable.ColumnsInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.ItemType), typeof(DBTable.ItemTypeInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.ItemTypeName), typeof(DBTable.ItemTypeNameInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.ColumnGroups), typeof(DBTable.ColumnGroupsInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.Indexes), typeof(DBTable.IndexesInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.Foreigns), typeof(DBTable.ForeignsInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.Constraints), typeof(DBTable.ConstraintsInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.ItemTypes), typeof(DBTable.ItemTypesInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.Query), typeof(DBTable.QueryInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.Type), typeof(DBTable.TypeInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.Keys), typeof(DBTable.KeysInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.IsCaching), typeof(DBTable.IsCachingInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.IsReadOnly), typeof(DBTable.IsReadOnlyInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.IsPrivate), typeof(DBTable.IsPrivateInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.ComDelete), typeof(DBTable.ComDeleteInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.ComInsert), typeof(DBTable.ComInsertInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.ComUpdate), typeof(DBTable.ComUpdateInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.SqlName), typeof(DBTable.SqlNameInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.Count), typeof(DBTable.CountInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.DefaultItemsView), typeof(DBTable.DefaultItemsViewInvoker))]
-[assembly: Invoker(typeof(DBTable), nameof(DBTable.ChildRelations), typeof(DBTable.ChildRelationsInvoker))]
 namespace DataWF.Data
 {
-    public abstract class DBTable : DBSchemaItem, IComparable, IDBTable
+    [InvokerGenerator(Instance = true)]
+    public abstract partial class DBTable : DBSchemaItem, IComparable, IDBTable
     {
-        private static readonly Dictionary<Type, DBTable> cacheTables = new Dictionary<Type, DBTable>();
         private static readonly Dictionary<Type, TableGenerator> cacheTableGenerators = new Dictionary<Type, TableGenerator>();
         private static readonly Dictionary<Type, ItemTypeGenerator> cacheItemTypeGenerator = new Dictionary<Type, ItemTypeGenerator>();
         private static int tableIndex;
 
         public static void ClearGeneratorCache()
         {
-            cacheTables.Clear();
+            foreach (var generator in cacheTableGenerators.Values)
+            {
+                generator.ClearCache();
+            }
             cacheTableGenerators.Clear();
+            foreach (var generator in cacheItemTypeGenerator.Values)
+            {
+                generator.ClearCache();
+            }
             cacheItemTypeGenerator.Clear();
         }
 
@@ -144,44 +124,6 @@ namespace DataWF.Data
             return itemTypeGenerator;
         }
 
-        public static DBTable<T> GetTable<T>(DBSchema schema = null, bool generate = false) where T : DBItem, new()
-        {
-            return (DBTable<T>)GetTable(typeof(T), schema, generate);
-        }
-
-        public static DBTable GetTable(Type type, DBSchema schema = null, bool generate = false)
-        {
-            if (type == null)
-                return null;
-            if (!cacheTables.TryGetValue(type, out var table))
-            {
-                var itemGenerator = GetItemTypeGenerator(type);
-                if (itemGenerator != null)
-                {
-                    if (!itemGenerator.Generated && generate)
-                        itemGenerator.Generate(schema);
-                    if (itemGenerator.Table != null)
-                        return cacheTables[type] = itemGenerator.Table;
-                }
-                else
-                {
-                    var tableGenerator = GetTableGenerator(type);
-                    if (tableGenerator != null && tableGenerator.ItemType == type)
-                    {
-                        if (!tableGenerator.Generated && generate)
-                            tableGenerator.Generate(schema);
-                        if (tableGenerator.Table != null)
-                            return cacheTables[type] = tableGenerator.Table;
-                    }
-                    else
-                    {
-                        cacheTables[type] = null;
-                    }
-                }
-            }
-            return table;
-        }
-
         protected DBCommand dmlInsert;
         protected DBCommand dmlDelete;
         protected IDBLogTable logTable;
@@ -211,7 +153,7 @@ namespace DataWF.Data
         protected internal int index = ++tableIndex;
         protected internal ConcurrentQueue<PullHandler> FreeHandlers = new ConcurrentQueue<PullHandler>();
         protected readonly ConcurrentDictionary<Type, List<DBColumn>> mapTypeColumn = new ConcurrentDictionary<Type, List<DBColumn>>();
-        protected readonly ConcurrentDictionary<Type, List<IInvoker>> refingInvokers = new ConcurrentDictionary<Type, List<IInvoker>>();
+        protected readonly ConcurrentDictionary<Type, List<DBReferencing>> mapTypeRefing = new ConcurrentDictionary<Type, List<DBReferencing>>();
         protected string query;
         protected string comInsert;
         protected string comUpdate;
@@ -236,6 +178,7 @@ namespace DataWF.Data
             Indexes = new DBIndexList(this);
             Constraints = new DBConstraintList<DBConstraint>(this);
             Foreigns = new DBForeignList(this);
+            Referencings = new DBTableItemList<DBReferencing>(this);
         }
 
         [Browsable(false)]
@@ -442,7 +385,7 @@ namespace DataWF.Data
         public DBColumn PrimaryKey => primaryKey == DBColumn.EmptyKey ? (primaryKey = Columns.GetByKey(DBColumnKeys.Primary)) : primaryKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn<long?> FileBLOBKey => fileBLOBKey == DBColumn<long?>.EmptyKey ? (fileBLOBKey = (DBColumn<long?>)Columns.GetByKey(DBColumnKeys.FileLOB)) : fileBLOBKey;
+        public DBColumn<long?> FileBLOBKey => fileBLOBKey == DBColumn<long?>.EmptyKey ? (fileBLOBKey = (DBColumn<long?>)Columns.GetByKey(DBColumnKeys.FileOID)) : fileBLOBKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBColumn<byte[]> FileKey => fileKey == DBColumn<byte[]>.EmptyKey ? (fileKey = (DBColumn<byte[]>)Columns.GetByKey(DBColumnKeys.File)) : fileKey;
@@ -603,6 +546,9 @@ namespace DataWF.Data
         public virtual DBForeignList Foreigns { get; set; }
 
         [XmlIgnore, JsonIgnore]
+        public DBTableItemList<DBReferencing> Referencings { get; set; }
+
+        [XmlIgnore, JsonIgnore]
         public abstract int Count { get; }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
@@ -645,7 +591,13 @@ namespace DataWF.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DBColumn ParseProperty(string property, ref DBColumn cache)
         {
-            return cache == DBColumn.EmptyKey ? (cache = ParseProperty(property)) : cache;
+            return cache ??= ParseProperty(property);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DBColumn<T> ParseProperty<T>(string property, ref DBColumn<T> cache)
+        {
+            return cache ??= ParseProperty<T>(property);
         }
 
         public DBColumn ParseProperty(string property)
@@ -684,7 +636,7 @@ namespace DataWF.Data
 
         public void RefreshSequence(bool truncate = false)
         {
-            using (var transaction = new DBTransaction(Connection))
+            using (var transaction = new DBTransaction(this))
             {
                 RefreshSequence(transaction, truncate);
                 transaction.Commit();
@@ -745,23 +697,25 @@ namespace DataWF.Data
             transaction.ReferencingRecursion++;
             var newAlias = Helper.IntToChar(transaction.ReferencingRecursion).ToLowerInvariant();
             string where = GetWhere(command.CommandText);
-            foreach (var reference in Generator.Referencings)
+            foreach (var reference in Referencings)
             {
+                var referenceTable = reference.ReferenceTable;
                 var referenceColumn = reference.ReferenceColumn;
-                if (!transaction.ReferencingStack.Contains(referenceColumn.Column)
-                    && (referenceColumn.Attribute.Keys & DBColumnKeys.Group) != DBColumnKeys.Group
-                    && reference.ReferenceTable.Table != this
-                    && !reference.ReferenceTable.Table.IsSynchronized
-                    && !(reference.ReferenceTable.Table is IDBVirtualTable))
+
+                if (!transaction.ReferencingStack.Contains(referenceColumn)
+                    && (referenceColumn.Keys & DBColumnKeys.Group) != DBColumnKeys.Group
+                    && referenceTable != this
+                    && !referenceTable.IsSynchronized
+                    && !(referenceTable is IDBVirtualTable))
                 {
-                    transaction.ReferencingStack.Add(referenceColumn.Column);
-                    var subCommand = DBCommand.CloneCommand(command, reference.ReferenceTable.Table.BuildQuery($@"
-    left join {SqlName} {oldAlias} on {oldAlias}.{PrimaryKey.SqlName} = {newAlias}.{referenceColumn.Column.SqlName} 
+                    transaction.ReferencingStack.Add(referenceColumn);
+                    var subCommand = DBCommand.CloneCommand(command, referenceTable.BuildQuery($@"
+    left join {SqlName} {oldAlias} on {oldAlias}.{PrimaryKey.SqlName} = {newAlias}.{referenceColumn.SqlName} 
     {where}", newAlias, null));
                     //Debug.WriteLine($"Load Referencing: {subCommand.CommandText}");
-                    var loadParam = reference.ReferenceTable.Attribute.ForceLoadReference ? DBLoadParam.Reference | DBLoadParam.Referencing : DBLoadParam.Referencing;
-                    reference.ReferenceTable.Table.LoadItems(subCommand, loadParam, transaction);
-                    transaction.ReferencingStack.Remove(referenceColumn.Column);
+                    var loadParam = reference.ForceLoadReference ? DBLoadParam.Reference | DBLoadParam.Referencing : DBLoadParam.Referencing;
+                    referenceTable.LoadItems(subCommand, loadParam, transaction);
+                    transaction.ReferencingStack.Remove(referenceColumn);
                 }
             }
             transaction.ReferencingRecursion--;
@@ -1047,7 +1001,7 @@ namespace DataWF.Data
 
         public async Task Save(IEnumerable<DBItem> rows = null)
         {
-            using (var transaction = new DBTransaction(Connection))
+            using (var transaction = new DBTransaction(this))
             {
                 try
                 {
@@ -1058,6 +1012,7 @@ namespace DataWF.Data
                 {
                     Helper.OnException(ex);
                     transaction.Rollback();
+                    throw;
                 }
             }
         }
@@ -1268,14 +1223,9 @@ namespace DataWF.Data
             return Schema?.GetChildRelations(this) ?? Enumerable.Empty<DBForeignKey>();
         }
 
-        public IEnumerable<ReferencingGenerator> GetPropertyReferencing(Type type)
+        public IEnumerable<DBReferencing> GetPropertyReferencing(Type type)
         {
-            if (Generator == null)
-            {
-                yield break;
-            }
-
-            foreach (var referencing in Generator.Referencings)
+            foreach (var referencing in Referencings)
             {
                 if (referencing.PropertyInvoker.TargetType.IsAssignableFrom(type))
                 {
@@ -1449,11 +1399,12 @@ namespace DataWF.Data
                 {
                     invokerWriter.WriteArrayBegin();
                     invokerWriter.WriteArrayLength(Count);
-                    var map = DBItemSerializer.Instance.WriteMap(invokerWriter, ItemType.Type, this);
+                    var itemSerializer = new DBItemSerializer(this);
+                    var map = itemSerializer.WriteMap(invokerWriter, ItemType.Type);
                     foreach (DBItem item in this)
                     {
                         invokerWriter.WriteArrayEntry();
-                        DBItemSerializer.Instance.Write(invokerWriter, item, null, map);
+                        itemSerializer.Write(invokerWriter, item, null, map);
                     }
                     invokerWriter.WriteArrayEnd();
                 }
@@ -1475,6 +1426,7 @@ namespace DataWF.Data
                 using (var reader = new BinaryReader(file))
                 using (var invokerReader = new BinaryInvokerReader(reader))
                 {
+                    var itemSerializer = new DBItemSerializer(this);
                     invokerReader.ReadToken();
                     if (invokerReader.CurrentToken == BinaryToken.ArrayBegin)
                     {
@@ -1485,17 +1437,18 @@ namespace DataWF.Data
                         var count = Int32Serializer.Instance.Read(invokerReader.Reader);
                         invokerReader.ReadToken();
                     }
+                    var type = ItemType.Type;
                     var map = (Dictionary<ushort, IPropertySerializeInfo>)null;
                     if (invokerReader.CurrentToken == BinaryToken.SchemaBegin)
                     {
-                        map = DBItemSerializer.Instance.ReadMap(invokerReader, out _, out _);
+                        map = itemSerializer.ReadMap(invokerReader, out type);
                         invokerReader.ReadToken();
                     }
 
                     while (invokerReader.CurrentToken == BinaryToken.ArrayEntry)
                     {
-                        DBItem item = NewItem(DBUpdateState.Default, false);
-                        DBItemSerializer.Instance.Read(invokerReader, item, null, map);
+                        DBItem item = NewItem(DBUpdateState.Default, false, type);
+                        itemSerializer.Read(invokerReader, item, null, map);
                         Add(item);
                         item.Accept((IUserIdentity)null);
                     }
@@ -1556,38 +1509,32 @@ namespace DataWF.Data
             return refInvoker ?? (refInvoker = new DBColumn[] { ItemTypeKey, PrimaryKey });
         }
 
-        public IEnumerable<IInvoker> GetRefingInvokers<T>()
+        public IEnumerable<DBReferencing> GetReferencing<T>()
         {
-            return GetRefingInvokers(typeof(T));
+            return GetReferencing(typeof(T));
         }
 
-        public IEnumerable<IInvoker> GetRefingInvokers(Type t)
+        public IEnumerable<DBReferencing> GetReferencing(Type t)
         {
-            return refingInvokers.GetOrAdd(t, CreateInvokers);
-            List<IInvoker> CreateInvokers(Type type)
+            return mapTypeRefing.GetOrAdd(t, CreateInvokers);
+            List<DBReferencing> CreateInvokers(Type type)
             {
-                var refingInvokers = new List<IInvoker>(Generator?.Referencings.Count() ?? 0);
-                if (Generator != null)
+                var refingInvokers = new List<DBReferencing>(Referencings.Count);
+                foreach (var refing in Referencings)
                 {
-                    foreach (var refing in Generator.Referencings)
-                    {
-                        if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(type)
-                            || TypeHelper.IsNonSerialize(refing.PropertyInfo))
-                            continue;
-                        refingInvokers.Add((IInvoker)refing.PropertyInvoker);
-                    }
+                    if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(type)
+                        || !refing.IsSerializable)
+                        continue;
+                    refingInvokers.Add(refing);
                 }
+
                 return refingInvokers;
             }
         }
 
-        public ReferencingGenerator ParseReferencing(string property)
+        public DBReferencing ParseReferencing(string property)
         {
-            if (Generator != null)
-            {
-                return Generator.GetReferencingByProperty(property);
-            }
-            return null;
+            return Referencings[property];
         }
 
         public IEnumerable<DBColumn> GetTypeColumns<T>()
@@ -1626,7 +1573,7 @@ namespace DataWF.Data
                 return reference.ReferencePropertyInvoker;
             }
 
-            var refing = Generator?.GetReferencingByProperty(property);
+            var refing = Referencings[property];
             if (refing != null)
             {
                 return refing.PropertyInvoker;
@@ -1641,17 +1588,16 @@ namespace DataWF.Data
             {
                 var genericType = TypeHelper.ParseType(ItemType.Type.Name + "Log");
                 var itemType = genericType ?? typeof(DBLogItem);
-                LogTable = (IDBLogTable)GetTable(itemType, Schema.LogSchema ?? Schema, true);
+                LogTable = (IDBLogTable)(Schema.LogSchema ?? Schema).GetTable(itemType, true);
                 if (LogTable == null)
                 {
                     var tableGenerator = new LogTableGenerator()
                     {
                         Attribute = new LogTableAttribute(ItemType.Type, Name + "_log") { SequenceName = SequenceName + "_log" },
-                        Schema = Schema.LogSchema ?? Schema,
                         BaseTableGenerator = Generator
                     };
                     tableGenerator.Initialize(itemType);
-                    LogTable = (IDBLogTable)tableGenerator.Generate();
+                    LogTable = (IDBLogTable)tableGenerator.Generate(Schema.LogSchema ?? Schema);
                 }
                 LogTable.BaseTable = this;
                 if (!LogTable.Schema.Tables.Contains(LogTable))
@@ -1922,312 +1868,6 @@ namespace DataWF.Data
 
                 return LoadItems(query, DBLoadParam.Referencing);
             }
-        }
-
-        public class GroupNameInvoker : Invoker<DBTable, string>
-        {
-            public static readonly GroupNameInvoker Instance = new GroupNameInvoker();
-            public override string Name => nameof(DBTable.GroupName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBTable target) => target.GroupName;
-
-            public override void SetValue(DBTable target, string value) => target.GroupName = value;
-        }
-
-        public class LogTableNameInvoker : Invoker<DBTable, string>
-        {
-            public static readonly LogTableNameInvoker Instance = new LogTableNameInvoker();
-            public override string Name => nameof(DBTable.LogTableName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBTable target) => target.LogTableName;
-
-            public override void SetValue(DBTable target, string value) => target.LogTableName = value;
-        }
-
-        public class LogTableInvoker : Invoker<DBTable, IDBLogTable>
-        {
-            public static readonly LogTableInvoker Instance = new LogTableInvoker();
-            public override string Name => nameof(DBTable.LogTable);
-
-            public override bool CanWrite => true;
-
-            public override IDBLogTable GetValue(DBTable target) => target.LogTable;
-
-            public override void SetValue(DBTable target, IDBLogTable value) => target.LogTable = value;
-        }
-
-        public class SequenceNameInvoker : Invoker<DBTable, string>
-        {
-            public static readonly SequenceNameInvoker Instance = new SequenceNameInvoker();
-            public override string Name => nameof(DBTable.SequenceName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBTable target) => target.SequenceName;
-
-            public override void SetValue(DBTable target, string value) => target.SequenceName = value;
-        }
-
-        public class SequenceInvoker : Invoker<DBTable, DBSequence>
-        {
-            public static readonly SequenceInvoker Instance = new SequenceInvoker();
-            public override string Name => nameof(DBTable.Sequence);
-
-            public override bool CanWrite => true;
-
-            public override DBSequence GetValue(DBTable target) => target.Sequence;
-
-            public override void SetValue(DBTable target, DBSequence value) => target.Sequence = value;
-        }
-
-        public class BlockSizeInvoker : Invoker<DBTable, int>
-        {
-            public static readonly BlockSizeInvoker Instance = new BlockSizeInvoker();
-            public override string Name => nameof(DBTable.BlockSize);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(DBTable target) => target.BlockSize;
-
-            public override void SetValue(DBTable target, int value) => target.BlockSize = value;
-        }
-
-        public class ColumnsInvoker : Invoker<DBTable, DBColumnList<DBColumn>>
-        {
-            public static readonly ColumnsInvoker Instance = new ColumnsInvoker();
-            public override string Name => nameof(DBTable.Columns);
-
-            public override bool CanWrite => true;
-
-            public override DBColumnList<DBColumn> GetValue(DBTable target) => target.Columns;
-
-            public override void SetValue(DBTable target, DBColumnList<DBColumn> value) => target.Columns = value;
-        }
-
-        public class ItemTypeInvoker : Invoker<DBTable, DBItemType>
-        {
-            public static readonly ItemTypeInvoker Instance = new ItemTypeInvoker();
-            public override string Name => nameof(DBTable.ItemType);
-
-            public override bool CanWrite => false;
-
-            public override DBItemType GetValue(DBTable target) => target.ItemType;
-
-            public override void SetValue(DBTable target, DBItemType value) { }
-        }
-
-        public class ItemTypeNameInvoker : Invoker<DBTable, string>
-        {
-            public static readonly ItemTypeNameInvoker Instance = new ItemTypeNameInvoker();
-            public override string Name => nameof(DBTable.ItemTypeName);
-
-            public override bool CanWrite => false;
-
-            public override string GetValue(DBTable target) => target.ItemTypeName;
-
-            public override void SetValue(DBTable target, string value) { }
-        }
-
-        public class ColumnGroupsInvoker : Invoker<DBTable, DBColumnGroupList>
-        {
-            public override string Name => nameof(DBTable.ColumnGroups);
-
-            public override bool CanWrite => true;
-
-            public override DBColumnGroupList GetValue(DBTable target) => target.ColumnGroups;
-
-            public override void SetValue(DBTable target, DBColumnGroupList value) => target.ColumnGroups = value;
-        }
-
-        public class IndexesInvoker : Invoker<DBTable, DBIndexList>
-        {
-            public override string Name => nameof(DBTable.Indexes);
-
-            public override bool CanWrite => true;
-
-            public override DBIndexList GetValue(DBTable target) => target.Indexes;
-
-            public override void SetValue(DBTable target, DBIndexList value) => target.Indexes = value;
-        }
-
-        public class ForeignsInvoker : Invoker<DBTable, DBForeignList>
-        {
-            public override string Name => nameof(DBTable.Foreigns);
-
-            public override bool CanWrite => true;
-
-            public override DBForeignList GetValue(DBTable target) => target.Foreigns;
-
-            public override void SetValue(DBTable target, DBForeignList value) => target.Foreigns = value;
-        }
-
-        public class ConstraintsInvoker : Invoker<DBTable, DBConstraintList<DBConstraint>>
-        {
-            public override string Name => nameof(DBTable.Constraints);
-
-            public override bool CanWrite => true;
-
-            public override DBConstraintList<DBConstraint> GetValue(DBTable target) => target.Constraints;
-
-            public override void SetValue(DBTable target, DBConstraintList<DBConstraint> value) => target.Constraints = value;
-        }
-
-        public class ItemTypesInvoker : Invoker<DBTable, Dictionary<int, DBItemType>>
-        {
-            public override string Name => nameof(DBTable.ItemTypes);
-
-            public override bool CanWrite => true;
-
-            public override Dictionary<int, DBItemType> GetValue(DBTable target) => target.ItemTypes;
-
-            public override void SetValue(DBTable target, Dictionary<int, DBItemType> value) => target.ItemTypes = value;
-        }
-
-        public class QueryInvoker : Invoker<DBTable, string>
-        {
-            public override string Name => nameof(DBTable.Query);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBTable target) => target.Query;
-
-            public override void SetValue(DBTable target, string value) => target.Query = value;
-        }
-
-        public class TypeInvoker : Invoker<DBTable, DBTableType>
-        {
-            public override string Name => nameof(DBTable.Type);
-
-            public override bool CanWrite => true;
-
-            public override DBTableType GetValue(DBTable target) => target.Type;
-
-            public override void SetValue(DBTable target, DBTableType value) => target.Type = value;
-        }
-
-        public class IsCachingInvoker : Invoker<DBTable, bool>
-        {
-            public override string Name => nameof(DBTable.IsCaching);
-
-            public override bool CanWrite => true;
-
-            public override bool GetValue(DBTable target) => target.IsCaching;
-
-            public override void SetValue(DBTable target, bool value) => target.IsCaching = value;
-        }
-
-        public class ComDeleteInvoker : Invoker<DBTable, string>
-        {
-            public override string Name => nameof(DBTable.ComDelete);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBTable target) => target.ComDelete;
-
-            public override void SetValue(DBTable target, string value) => target.ComDelete = value;
-        }
-
-        public class ComInsertInvoker : Invoker<DBTable, string>
-        {
-            public override string Name => nameof(DBTable.ComInsert);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBTable target) => target.ComInsert;
-
-            public override void SetValue(DBTable target, string value) => target.ComInsert = value;
-        }
-
-        public class ComUpdateInvoker : Invoker<DBTable, string>
-        {
-            public override string Name => nameof(DBTable.ComUpdate);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBTable target) => target.ComUpdate;
-
-            public override void SetValue(DBTable target, string value) => target.ComUpdate = value;
-        }
-
-        public class SqlNameInvoker : Invoker<DBTable, string>
-        {
-            public override string Name => nameof(DBTable.SqlName);
-
-            public override bool CanWrite => false;
-
-            public override string GetValue(DBTable target) => target.SqlName;
-
-            public override void SetValue(DBTable target, string value) { }
-        }
-
-        public class CountInvoker : Invoker<DBTable, int>
-        {
-            public override string Name => nameof(DBTable.Count);
-
-            public override bool CanWrite => false;
-
-            public override int GetValue(DBTable target) => target.Count;
-
-            public override void SetValue(DBTable target, int value) { }
-        }
-
-        public class IsReadOnlyInvoker : Invoker<DBTable, bool>
-        {
-            public override string Name => nameof(DBTable.IsReadOnly);
-
-            public override bool CanWrite => true;
-
-            public override bool GetValue(DBTable target) => target.IsReadOnly;
-
-            public override void SetValue(DBTable target, bool value) => target.IsReadOnly = value;
-        }
-
-        public class IsPrivateInvoker : Invoker<DBTable, bool>
-        {
-            public override string Name => nameof(DBTable.IsPrivate);
-
-            public override bool CanWrite => true;
-
-            public override bool GetValue(DBTable target) => target.IsPrivate;
-
-            public override void SetValue(DBTable target, bool value) => target.IsPrivate = value;
-        }
-
-        public class DefaultItemsViewInvoker : Invoker<DBTable, IDBTableView>
-        {
-            public override string Name => nameof(DBTable.DefaultItemsView);
-
-            public override bool CanWrite => false;
-
-            public override IDBTableView GetValue(DBTable target) => target.DefaultItemsView;
-
-            public override void SetValue(DBTable target, IDBTableView value) { }
-        }
-
-        public class ChildRelationsInvoker : Invoker<DBTable, List<DBForeignKey>>
-        {
-            public override string Name => nameof(DBTable.ChildRelations);
-
-            public override bool CanWrite => false;
-
-            public override List<DBForeignKey> GetValue(DBTable target) => target.ChildRelations;
-
-            public override void SetValue(DBTable target, List<DBForeignKey> value) { }
-        }
-
-        public class KeysInvoker : Invoker<DBTable, DBTableKeys>
-        {
-            public override string Name => nameof(DBTable.Keys);
-
-            public override bool CanWrite => true;
-
-            public override DBTableKeys GetValue(DBTable target) => target.Keys;
-
-            public override void SetValue(DBTable target, DBTableKeys value) => target.Keys = value;
         }
     }
 }

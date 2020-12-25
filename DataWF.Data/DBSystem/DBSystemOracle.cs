@@ -376,13 +376,14 @@ namespace DataWF.Data
 
         public override async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
         {
+            var table = transaction.Schema.FileTable;
             using (var blob = new OracleBlob((OracleConnection)transaction.Connection))
             {
                 await value.CopyToAsync(blob);
-                var command = (OracleCommand)transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) 
-values (:{FileData.IdKey.SqlName}, :{FileData.DataKey.SqlName})");
-                command.Parameters.Add($":{FileData.IdKey.SqlName}", OracleDbType.Long, id, ParameterDirection.Input);
-                command.Parameters.Add($":{FileData.DataKey.SqlName}", OracleDbType.Blob, -1).Value = blob;
+                var command = (OracleCommand)transaction.AddCommand($@"insert into {table.Name} ({table.IdKey.SqlName}, {table.DataKey.SqlName}) 
+values (:{table.IdKey.SqlName}, :{table.DataKey.SqlName})");
+                command.Parameters.Add($":{table.IdKey.SqlName}", OracleDbType.Long, id, ParameterDirection.Input);
+                command.Parameters.Add($":{table.DataKey.SqlName}", OracleDbType.Blob, -1).Value = blob;
                 await transaction.ExecuteQueryAsync(command, DBExecuteType.NoReader);
             }
         }

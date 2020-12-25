@@ -12,7 +12,7 @@ using System.Text.Json.Serialization;
 
 namespace DataWF.WebService.Common
 {
-    public class DBItemConverter<T> : JsonConverter<T> where T : DBItem, new()
+    public class DBItemConverter<T> : JsonConverter<T> where T : DBItem
     {
         public DBItemConverter()
         { }
@@ -20,7 +20,10 @@ namespace DataWF.WebService.Common
         public DBItemConverter(DBItemConverterFactory factory)
         {
             Factory = factory;
+            Table = DBService.GetTable<T>();
         }
+
+        public DBTable<T> Table { get; set; }
 
         public DBItemConverterFactory Factory { get; set; }
 
@@ -79,17 +82,17 @@ namespace DataWF.WebService.Common
             }
             if (settings.Referencing && writer.CurrentDepth <= settings.MaxDepth && !isRef)
             {
-                foreach (IInvoker invoker in value.Table.GetRefingInvokers(valueType))
+                foreach (var referencing in value.Table.GetReferencing(valueType))
                 {
-                    writer.WritePropertyName(invoker.Name);
+                    writer.WritePropertyName(referencing.JsonName);
 
-                    var typedEnumerable = invoker.GetValue(value)?.ToEnumerable<DBItem>();
+                    var typedEnumerable = referencing.PropertyInvoker.GetValue(value)?.ToEnumerable<DBItem>();
                     if (typedEnumerable != null)
                     {
                         if (typedEnumerable.FirstOrDefault() is DBGroupItem)
                         {
-                            var buffer = typedEnumerable.ToList();
-                            ListHelper.QuickSort(buffer, TreeComparer<IGroup>.Default);
+                            var buffer = typedEnumerable.Cast<DBGroupItem>().ToList();
+                            ListHelper.QuickSort<DBGroupItem>(buffer, TreeComparer<DBGroupItem>.Default);
                             typedEnumerable = buffer;
                         }
 
@@ -117,12 +120,11 @@ namespace DataWF.WebService.Common
 
         public override T Read(ref Utf8JsonReader reader, Type objectType, JsonSerializerOptions options)
         {
-            var table = DBTable.GetTable<T>();
-            if (table == null)
+            if (Table == null)
             {
                 throw new JsonException($"Can't find table of {objectType?.Name ?? "null"}");
             }
-            var item = table.ItemTypeKey != null ? (T)null : (T)table.NewItem();
+            var item = Table.ItemTypeKey != null ? (T)null : (T)Table.NewItem();
             object id = null;
             int typeId = 0;
             var column = (DBColumn)null;
@@ -133,13 +135,13 @@ namespace DataWF.WebService.Common
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
                     propertyName = reader.GetString();
-                    column = table.ParseProperty(propertyName);
+                    column = Table.ParseProperty(propertyName);
                 }
                 else
                 {
                     if (column == null)
                     {
-                        var invoker = table.Generator.GetReferencingByProperty(propertyName)?.PropertyInvoker;
+                        var invoker = Table.ParseReferencing(propertyName)?.PropertyInvoker;
                         if (invoker != null)
                         {
                             if (dictionary == null)
@@ -166,7 +168,7 @@ namespace DataWF.WebService.Common
                     else if (column.IsTypeKey)
                     {
                         typeId = reader.GetInt32();
-                        item = (T)table.NewItem(DBUpdateState.Insert, true, typeId);
+                        item = (T)Table.NewItem(DBUpdateState.Insert, true, typeId);
                     }
                     else if (item != null)
                     {

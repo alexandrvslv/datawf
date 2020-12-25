@@ -7,13 +7,12 @@ using System.Collections.Generic;
 [assembly: Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Count), typeof(DictionaryCountInvoker<,>))]
 [assembly: Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Keys), typeof(DictionaryKeysInvoker<,>))]
 [assembly: Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Values), typeof(DictionaryValuesInvoker<,>))]
-[assembly: Invoker(typeof(DictionaryItem<,>), nameof(DictionaryItem<object, object>.Key), typeof(DictionaryItem<,>.KeyInvoker))]
-[assembly: Invoker(typeof(DictionaryItem<,>), nameof(DictionaryItem<object, object>.Value), typeof(DictionaryItem<,>.ValueInvoker))]
 [assembly: Invoker(typeof(List<>), nameof(List<object>.Count), typeof(ListCountInvoker<>))]
 [assembly: Invoker(typeof(List<>), nameof(List<object>.Capacity), typeof(ListCapacityInvoker<>))]
 namespace DataWF.Common
 {
-    public class DictionaryItem<K, V> : IDictionaryItem
+    [InvokerGenerator]
+    public partial class DictionaryItem<K, V> : IDictionaryItem
     {
         public K Key { get; set; }
 
@@ -47,30 +46,7 @@ namespace DataWF.Common
         {
             Key = default(K);
             Value = default(V);
-        }
-
-        public class KeyInvoker : Invoker<DictionaryItem<K, V>, K>
-        {
-            public override string Name => nameof(DictionaryItem<K, V>.Key);
-
-            public override bool CanWrite => true;
-
-            public override K GetValue(DictionaryItem<K, V> target) => target.Key;
-
-            public override void SetValue(DictionaryItem<K, V> target, K value) => target.Key = value;
-        }
-
-
-        public class ValueInvoker : Invoker<DictionaryItem<K, V>, V>
-        {
-            public override string Name => nameof(DictionaryItem<K, V>.Value);
-
-            public override bool CanWrite => true;
-
-            public override V GetValue(DictionaryItem<K, V> target) => target.Value;
-
-            public override void SetValue(DictionaryItem<K, V> target, V value) => target.Value = value;
-        }
+        }       
     }
 
     public class DictionaryComparerInvoker<K, V> : Invoker<Dictionary<K, V>, IEqualityComparer<K>>

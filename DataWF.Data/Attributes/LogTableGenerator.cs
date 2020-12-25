@@ -36,22 +36,14 @@ namespace DataWF.Data
             set => baseTable = value;
         }
 
-        public override DBSchema Schema
-        {
-            get => base.Schema is DBLogSchema logSchema
-                ? logSchema
-                : base.Schema?.LogSchema;
-            set => base.Schema = value;
-        }
-
-        public override DBTable CreateTable()
+        public override DBTable CreateTable(DBSchema schema)
         {
             Debug.WriteLine($"Generate Log Table {Attribute.TableName} - {this.ItemType.Name}");
 
-            var type = typeof(DBLogTable<>).MakeGenericType(ItemType);
+            var type = Attribute.Type ?? typeof(DBLogTable<>).MakeGenericType(ItemType);
             var table = (DBTable)EmitInvoker.CreateObject(type);
             table.Name = Attribute.TableName;
-            table.Schema = Schema;
+            table.Schema = schema;
             return table;
         }
 

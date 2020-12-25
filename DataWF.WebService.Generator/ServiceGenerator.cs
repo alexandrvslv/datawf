@@ -29,9 +29,9 @@ namespace DataWF.WebService.Generator
         private readonly Dictionary<string, ClassDeclarationSyntax> logs = new Dictionary<string, ClassDeclarationSyntax>(StringComparer.Ordinal);
         private readonly Dictionary<string, Dictionary<string, UsingDirectiveSyntax>> logsUsings = new Dictionary<string, Dictionary<string, UsingDirectiveSyntax>>(StringComparer.Ordinal);
         private readonly Dictionary<string, List<AttributeListSyntax>> logsAttributes = new Dictionary<string, List<AttributeListSyntax>>(StringComparer.Ordinal);
-        private readonly Dictionary<string, ClassDeclarationSyntax> invokers = new Dictionary<string, ClassDeclarationSyntax>(StringComparer.Ordinal);
-        private readonly Dictionary<string, Dictionary<string, UsingDirectiveSyntax>> invokerUsings = new Dictionary<string, Dictionary<string, UsingDirectiveSyntax>>(StringComparer.Ordinal);
-        private readonly Dictionary<string, List<AttributeListSyntax>> invokerAttributes = new Dictionary<string, List<AttributeListSyntax>>(StringComparer.Ordinal);
+        //private readonly Dictionary<string, ClassDeclarationSyntax> invokers = new Dictionary<string, ClassDeclarationSyntax>(StringComparer.Ordinal);
+        //private readonly Dictionary<string, Dictionary<string, UsingDirectiveSyntax>> invokerUsings = new Dictionary<string, Dictionary<string, UsingDirectiveSyntax>>(StringComparer.Ordinal);
+        //private readonly Dictionary<string, List<AttributeListSyntax>> invokerAttributes = new Dictionary<string, List<AttributeListSyntax>>(StringComparer.Ordinal);
         public List<Assembly> Assemblies { get; private set; }
         public string Output { get; }
         public string Namespace { get; private set; }
@@ -157,42 +157,42 @@ namespace DataWF.WebService.Generator
                             var logAttributes = new List<AttributeListSyntax>();
                             var log = GetOrGenLog(table, itemType, logUsings);
                         }
-                        if ((Mode & CodeGeneratorMode.Invokers) != 0)
-                        {
-                            var invokerUsings = new Dictionary<string, UsingDirectiveSyntax>(StringComparer.Ordinal) {
-                                { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") },
-                                { "DataWF.Data", SyntaxHelper.CreateUsingDirective("DataWF.Data") },
-                                { "System", SyntaxHelper.CreateUsingDirective("System") },
-                                { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") }
-                            };
-                            GetOrGenInvokers(table, itemType, invokerUsings);
-                        }
+                        //if ((Mode & CodeGeneratorMode.Invokers) != 0)
+                        //{
+                        //    var invokerUsings = new Dictionary<string, UsingDirectiveSyntax>(StringComparer.Ordinal) {
+                        //        { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") },
+                        //        { "DataWF.Data", SyntaxHelper.CreateUsingDirective("DataWF.Data") },
+                        //        { "System", SyntaxHelper.CreateUsingDirective("System") },
+                        //        { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") }
+                        //    };
+                        //    GetOrGenInvokers(table, itemType, invokerUsings);
+                        //}
                     }
                 }
             }
         }
 
-        private ClassDeclarationSyntax GetOrGenInvokers(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
-        {
-            var baseType = itemType.BaseType;
-            while (baseType.IsGenericType)
-                baseType = baseType.BaseType;
-            if (baseType != typeof(object))
-            {
-                GetOrGenInvokers(table, baseType, usings);
-            }
-            if (!invokers.TryGetValue(itemType.Name, out var invokerClass))
-            {
-                var attributes = new List<AttributeListSyntax>();
-                SyntaxHelper.AddUsing(itemType, usings);
-                invokerClass = GenInvokersClass(table, itemType, usings, attributes);
+        //private ClassDeclarationSyntax GetOrGenInvokers(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
+        //{
+        //    var baseType = itemType.BaseType;
+        //    while (baseType.IsGenericType)
+        //        baseType = baseType.BaseType;
+        //    if (baseType != typeof(object))
+        //    {
+        //        GetOrGenInvokers(table, baseType, usings);
+        //    }
+        //    if (!invokers.TryGetValue(itemType.Name, out var invokerClass))
+        //    {
+        //        var attributes = new List<AttributeListSyntax>();
+        //        SyntaxHelper.AddUsing(itemType, usings);
+        //        invokerClass = GenInvokersClass(table, itemType, usings, attributes);
 
-                invokers[itemType.Name] = invokerClass;
-                invokerUsings[itemType.Name] = usings;
-                invokerAttributes[itemType.Name] = attributes;
-            }
-            return invokerClass;
-        }
+        //        invokers[itemType.Name] = invokerClass;
+        //        invokerUsings[itemType.Name] = usings;
+        //        invokerAttributes[itemType.Name] = attributes;
+        //    }
+        //    return invokerClass;
+        //}
 
         private ClassDeclarationSyntax GenInvokersClass(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings, List<AttributeListSyntax> invokerAttributes)
         {
@@ -273,7 +273,7 @@ namespace DataWF.WebService.Generator
                  itemType.Name,
                 column.PropertyInfo.GetSetMethod() != null,
                 attributes);
-            var reference = table.References.FirstOrDefault(p => p.Column == column);
+            var reference = table.References.FirstOrDefault(p => p.ColumnGenerator == column);
             if (reference != null && TypeHelper.IsBaseType(itemType, reference.PropertyInfo.DeclaringType))
             {
                 SyntaxHelper.AddUsing(reference.PropertyInfo.PropertyType, usings);
@@ -401,7 +401,7 @@ namespace DataWF.WebService.Generator
                 typeName,
                 true,
                 logAttributes);
-            var reference = table.References.FirstOrDefault(p => p.Column == column);
+            var reference = table.References.FirstOrDefault(p => p.ColumnGenerator == column);
             if (reference != null)
             {
                 yield return GenPropertyInvoker(reference.PropertyInfo.Name + "Invoker",
@@ -440,7 +440,7 @@ namespace DataWF.WebService.Generator
                    initializer: null,
                    semicolonToken: SF.Token(SyntaxKind.None)
                   );
-            var reference = table.References.FirstOrDefault(p => p.Column == column);
+            var reference = table.References.FirstOrDefault(p => p.ColumnGenerator == column);
             if (reference != null)
             {
                 SyntaxHelper.AddUsing(reference.PropertyInfo.PropertyType, usings);
@@ -694,23 +694,23 @@ namespace DataWF.WebService.Generator
                     list.Add(unit.SyntaxTree);
                 }
             }
-            if ((Mode & CodeGeneratorMode.Invokers) > 0)
-            {
-                var invokerOutput = (Mode & CodeGeneratorMode.Controllers) > 0 ? Path.Combine(Output, "Invokers") : "Invokers";
-                if (save)
-                {
-                    Directory.CreateDirectory(invokerOutput);
-                }
-                foreach (var entry in invokers)
-                {
-                    var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, invokerUsings[entry.Key].Values, invokerAttributes[entry.Key]);
-                    if (save)
-                    {
-                        WriteFile(Path.Combine(invokerOutput, $"{entry.Key}Invokers.cs"), unit);
-                    }
-                    list.Add(unit.SyntaxTree);
-                }
-            }
+            //if ((Mode & CodeGeneratorMode.Invokers) > 0)
+            //{
+            //    var invokerOutput = (Mode & CodeGeneratorMode.Controllers) > 0 ? Path.Combine(Output, "Invokers") : "Invokers";
+            //    if (save)
+            //    {
+            //        Directory.CreateDirectory(invokerOutput);
+            //    }
+            //    foreach (var entry in invokers)
+            //    {
+            //        var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, invokerUsings[entry.Key].Values, invokerAttributes[entry.Key]);
+            //        if (save)
+            //        {
+            //            WriteFile(Path.Combine(invokerOutput, $"{entry.Key}Invokers.cs"), unit);
+            //        }
+            //        list.Add(unit.SyntaxTree);
+            //    }
+            //}
             return list;
         }
 

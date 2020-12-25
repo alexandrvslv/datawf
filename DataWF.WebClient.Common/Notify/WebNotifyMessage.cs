@@ -2,7 +2,8 @@
 
 namespace DataWF.Common
 {
-    public class WebNotifyMessage
+    [InvokerGenerator]
+    public partial class WebNotifyMessage
     {
         public string Header { get; set; }
 

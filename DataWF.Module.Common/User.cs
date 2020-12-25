@@ -12,51 +12,33 @@ using System.Runtime.Serialization;
 using System.Security;
 using System.Security.Claims;
 using System.Security.Principal;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
-    [Table("ruser", "User", BlockSize = 100)]
-    public class User : DBUser, IComparable, IDisposable
+    public partial class UserTable : DBTable<User>
     {
-        public static readonly DBTable<User> DBTable = GetTable<User>();
-        public static readonly DBColumn<string> AbbreviationKey = DBTable.ParseProperty<string>(nameof(Abbreviation));
-        public static readonly DBColumn<int?> DepartmentKey = DBTable.ParseProperty<int?>(nameof(DepartmentId));
-        public static readonly DBColumn<int?> PositionKey = DBTable.ParseProperty<int?>(nameof(PositionId));
-        public static readonly DBColumn<string> EmailKey = DBTable.ParseProperty<string>(nameof(EMail));
-        public static readonly DBColumn<string> LoginKey = DBTable.ParseProperty<string>(nameof(Login));
-        public static readonly DBColumn<string> PhoneKey = DBTable.ParseProperty<string>(nameof(Phone));
-        public static readonly DBColumn<string> PasswordKey = DBTable.ParseProperty<string>(nameof(Password));
-        public static readonly DBColumn<bool?> IsTemporaryPasswordKey = DBTable.ParseProperty<bool?>(nameof(IsTemporaryPassword));
-        public static readonly DBColumn<bool?> SuperKey = DBTable.ParseProperty<bool?>(nameof(Super));
-        public static readonly DBColumn<string> RefreshTokenKey = DBTable.ParseProperty<string>(nameof(RefreshToken));
-        public static readonly DBColumn<string> NameENKey = DBTable.ParseProperty<string>(nameof(NameEN));
-        public static readonly DBColumn<string> NameRUKey = DBTable.ParseProperty<string>(nameof(NameRU));
-        public static readonly DBColumn<int?> CompanyKey = DBTable.ParseProperty<int?>(nameof(CompanyId));
-        public static readonly DBColumn<UserAuthType?> AuthTokenKey = DBTable.ParseProperty<UserAuthType?>(nameof(AuthType));
-        public static readonly DBColumn<int?> AddressKey = DBTable.ParseProperty<int?>(nameof(AddessId));
-        public static readonly DBColumn<int?> ExternalIdKey = DBTable.ParseProperty<int?>(nameof(ExternalId));
-        private static readonly PasswordSpec PasswordSpecification = PasswordSpec.Lenght6 | PasswordSpec.CharSpecial | PasswordSpec.CharNumbers;
-
+        private static PasswordSpec PasswordSpecification = PasswordSpec.Lenght6 | PasswordSpec.CharSpecial | PasswordSpec.CharNumbers;
         public const string AuthenticationScheme = "Bearer";
 
-        public static User GetByEmail(string email)
+        public User GetByEmail(string email)
         {
-            return DBTable.SelectOne(EmailKey, email);
+            return SelectOne(EmailKey, email);
         }
 
-        public static User GetByLogin(string login)
+        public User GetByLogin(string login)
         {
-            return DBTable.SelectOne(DBTable.CodeKey, login);
+            return SelectOne(CodeKey, login);
         }
 
-        public static User GetByEnvironment()
+        public User GetByEnvironment()
         {
-            return DBTable.LoadByCode(Environment.UserName);
+            return LoadByCode(Environment.UserName);
         }
 
-        public static async Task RegisterSession(User user, LoginModel login = null)
+        public async Task RegisterSession(User user, LoginModel login = null)
         {
             if (user == null || user.LogStart != null)
             {
@@ -66,12 +48,12 @@ namespace DataWF.Module.Common
             await UserReg.LogUser(user, UserRegType.Authorization, text);
         }
 
-        public static Task<User> StartSession(string login, string password)
+        public Task<User> StartSession(string login, string password)
         {
             return StartSession(new LoginModel { Email = login, Password = password, Platform = "unknown", Application = "unknown", Version = "1.0.0.0" });
         }
 
-        public static async Task<User> StartSession(string email)
+        public async Task<User> StartSession(string email)
         {
             var user = GetByEmail(email) ?? GetByLogin(email);
             if (user == null || user.Status == DBStatus.Archive || user.Status == DBStatus.Error)
@@ -83,7 +65,7 @@ namespace DataWF.Module.Common
             return user;
         }
 
-        public static async Task<User> StartSession(LoginModel login)
+        public async Task<User> StartSession(LoginModel login)
         {
             var user = GetByEmail(login.Email) ?? GetByLogin(login.Email);
             if (user == null || user.Status == DBStatus.Archive || user.Status == DBStatus.Error)
@@ -122,10 +104,10 @@ namespace DataWF.Module.Common
             return user;
         }
 
-        public static string ValidateText(User user, string password)
+        public string ValidateText(User user, string password)
         {
             string message = Helper.PasswordVerification(password, user.Login, PasswordSpecification);
-            var proc = User.DBTable.Schema?.Procedures["simple"];
+            var proc = Schema?.Procedures["simple"];
             if (proc != null)
             {
                 string[] split = proc.Source.Split('\r', '\n');
@@ -155,21 +137,22 @@ namespace DataWF.Module.Common
             return message;
         }
 
-        public static IEnumerable<UserReg> GetOld(User User)
+        public IEnumerable<UserReg> GetOld(User User)
         {
-            var filter = new QQuery(string.Empty, UserReg.DBTable);
-            filter.BuildPropertyParam(nameof(UserReg.UserId), CompareType.Equal, User.PrimaryId);
-            filter.BuildPropertyParam(nameof(UserReg.RegType), CompareType.Equal, UserRegType.Password);
-            filter.Orders.Add(new QOrder(UserReg.DBTable.PrimaryKey) { Direction = ListSortDirection.Descending });
-            return UserReg.DBTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize);
+            var regTable = (UserRegTable)Schema.GetTable<UserReg>();
+            var filter = new QQuery(string.Empty, regTable);
+            filter.BuildParam(regTable.UserKey, CompareType.Equal, User.PrimaryId);
+            filter.BuildParam(regTable.RegTypeKey, CompareType.Equal, UserRegType.Password);
+            filter.Orders.Add(new QOrder(regTable.PrimaryKey) { Direction = ListSortDirection.Descending });
+            return regTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize);
         }
 
-        public static async Task<User> GetUser(string login, string passoword)
+        public async Task<User> GetUser(string login, string passoword)
         {
-            var query = new QQuery(string.Empty, User.DBTable);
-            query.BuildPropertyParam(nameof(Login), CompareType.Equal, login);
-            query.BuildPropertyParam(nameof(Password), CompareType.Equal, passoword);
-            var user = User.DBTable.Select(query).FirstOrDefault();
+            var query = new QQuery(string.Empty, this);
+            query.BuildParam(LoginKey, CompareType.Equal, login);
+            query.BuildParam(PasswordKey, CompareType.Equal, passoword);
+            var user = Select(query).FirstOrDefault();
             if (user != null)
             {
                 await UserReg.LogUser(user, UserRegType.Authorization, "GetUser");
@@ -179,7 +162,7 @@ namespace DataWF.Module.Common
         }
 
         [ControllerMethod(Anonymous = true)]
-        public static async Task<TokenModel> LoginIn(LoginModel login)
+        public async Task<TokenModel> LoginIn(LoginModel login)
         {
             var user = await StartSession(login);
             user.AccessToken = CreateAccessToken(user);
@@ -194,7 +177,7 @@ namespace DataWF.Module.Common
         }
 
         [ControllerMethod(Anonymous = true)]
-        public static async Task<TokenModel> ReLogin(TokenModel token)
+        public async Task<TokenModel> ReLogin(TokenModel token)
         {
             var user = await StartSession(token.Email);
 
@@ -214,7 +197,7 @@ namespace DataWF.Module.Common
         }
 
         [ControllerMethod]
-        public static async Task<TokenModel> LoginOut(TokenModel token, DBTransaction transaction)
+        public async Task<TokenModel> LoginOut(TokenModel token, DBTransaction transaction)
         {
             var user = GetByEmail(token.Email) ?? GetByLogin(token.Email);
             if (user != transaction.Caller)
@@ -230,7 +213,7 @@ namespace DataWF.Module.Common
         }
 
         [ControllerMethod]
-        public static async Task<bool> ChangePassword(LoginModel login, DBTransaction transaction)
+        public async Task<bool> ChangePassword(LoginModel login, DBTransaction transaction)
         {
             var user = GetByEmail(login.Email) ?? GetByLogin(login.Email);
             if (user == null)
@@ -293,6 +276,12 @@ namespace DataWF.Module.Common
             yield return new Claim(ClaimTypes.Email, person.EMail);
         }
 
+
+    }
+
+    [Table("ruser", "User", BlockSize = 100, Type = typeof(UserTable)), InvokerGenerator]
+    public partial class User : DBUser, IComparable, IDisposable
+    {
         protected bool online = false;
         private Company company;
         private Department department;
@@ -304,7 +293,11 @@ namespace DataWF.Module.Common
         public User()
         { }
 
+        [JsonIgnore]
         public UserReg LogStart { get; set; }
+
+        [JsonIgnore]
+        public UserTable UserTable => (UserTable)Table;
 
         public override int Id
         {
@@ -315,22 +308,22 @@ namespace DataWF.Module.Common
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(ExternalIdKey);
-            set => SetValue(value, ExternalIdKey);
+            get => GetValue<int?>(UserTable.ExternalKey);
+            set => SetValue(value, UserTable.ExternalKey);
         }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(CompanyKey);
-            set => SetValue(value, CompanyKey);
+            get => GetValue<int?>(UserTable.CompanyKey);
+            set => SetValue(value, UserTable.CompanyKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(CompanyKey, ref company);
-            set => SetReference(company = value, CompanyKey);
+            get => GetReference(UserTable.CompanyKey, ref company);
+            set => SetReference(company = value, UserTable.CompanyKey);
         }
         public override string Login
         {
@@ -341,8 +334,8 @@ namespace DataWF.Module.Common
         [Column("abbreviation", 4, Keys = DBColumnKeys.Indexing), Index("ruser_abbreviation", true)]
         public string Abbreviation
         {
-            get => GetValue<string>(AbbreviationKey);
-            set => SetValue(value, AbbreviationKey);
+            get => GetValue<string>(UserTable.AbbreviationKey);
+            set => SetValue(value, UserTable.AbbreviationKey);
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
@@ -355,31 +348,31 @@ namespace DataWF.Module.Common
         [Column("department_id"), Browsable(false)]
         public int? DepartmentId
         {
-            get => GetValue<int?>(DepartmentKey);
-            set => SetValue(value, DepartmentKey);
+            get => GetValue<int?>(UserTable.DepartmentKey);
+            set => SetValue(value, UserTable.DepartmentKey);
         }
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get => GetReference(DepartmentKey, ref department);
-            set => SetReference(department = value, DepartmentKey);
+            get => GetReference(UserTable.DepartmentKey, ref department);
+            set => SetReference(department = value, UserTable.DepartmentKey);
         }
 
         [Column("position_id"), Browsable(false)]
         public int? PositionId
         {
-            get => GetValue<int?>(PositionKey);
-            set => SetValue(value, PositionKey);
+            get => GetValue<int?>(UserTable.PositionKey);
+            set => SetValue(value, UserTable.PositionKey);
         }
 
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get => GetReference<Position>(PositionKey, ref position);
+            get => GetReference<Position>(UserTable.PositionKey, ref position);
             set
             {
-                SetReference(position = value, PositionKey);
+                SetReference(position = value, UserTable.PositionKey);
                 Department = value?.Department;
             }
         }
@@ -388,8 +381,8 @@ namespace DataWF.Module.Common
         [DefaultValue(false), Column("super")]
         public bool? Super
         {
-            get => GetValue<bool?>(SuperKey);
-            set => SetValue(value, SuperKey);
+            get => GetValue<bool?>(UserTable.SuperKey);
+            set => SetValue(value, UserTable.SuperKey);
         }
 
         [Browsable(false)]
@@ -407,15 +400,15 @@ namespace DataWF.Module.Common
 
         public override string EMail
         {
-            get => GetValue<string>(EmailKey);
-            set => SetValue(value, EmailKey);
+            get => GetValue<string>(UserTable.EmailKey);
+            set => SetValue(value, UserTable.EmailKey);
         }
 
         [Column("phone", 1024), Index("ruser_phone", false)]
         public string Phone
         {
-            get => GetValue<string>(PhoneKey);
-            set => SetValue(value, PhoneKey);
+            get => GetValue<string>(UserTable.PhoneKey);
+            set => SetValue(value, UserTable.PhoneKey);
         }
 
         public bool IsBlock
@@ -424,31 +417,31 @@ namespace DataWF.Module.Common
             set => Status = value ? DBStatus.Actual : DBStatus.Error;
         }
 
-        [Column("is_temporary_password")]
-        public bool? IsTemporaryPassword
+        [Column("is_temp_pass")]
+        public bool? IsTempPassword
         {
-            get => GetValue<bool?>(IsTemporaryPasswordKey);
-            set => SetValue(value, IsTemporaryPasswordKey);
+            get => GetValue<bool?>(UserTable.IsTemPassKey);
+            set => SetValue(value, UserTable.IsTemPassKey);
         }
 
         [Column("password", 512, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
         public string Password
         {
-            get => GetValue<string>(PasswordKey);
+            get => GetValue<string>(UserTable.PasswordKey);
             set
             {
                 if (value == null)
                 {
-                    SetValue(value, PasswordKey);
+                    SetValue(value, UserTable.PasswordKey);
                     return;
                 }
-                var rez = ValidateText(this, value);
+                var rez = UserTable.ValidateText(this, value);
                 if (!string.IsNullOrEmpty(rez))
                 {
                     throw new ArgumentException(rez);
                 }
-                IsTemporaryPassword = false;
-                SetValue(Helper.GetSha512(value), PasswordKey);
+                IsTempPassword = false;
+                SetValue(Helper.GetSha512(value), UserTable.PasswordKey);
             }
         }
 
@@ -465,43 +458,43 @@ namespace DataWF.Module.Common
         [Browsable(false), Column("token_refresh", 2048, Keys = DBColumnKeys.Password | DBColumnKeys.NoLog)]
         public string RefreshToken
         {
-            get => GetValue<string>(RefreshTokenKey);
-            set => SetValue(value, RefreshTokenKey);
+            get => GetValue<string>(UserTable.RefreshTokenKey);
+            set => SetValue(value, UserTable.RefreshTokenKey);
         }
 
         [Column("auth_type")]
         public UserAuthType? AuthType
         {
-            get => GetValue<UserAuthType?>(AuthTokenKey) ?? UserAuthType.SMTP;
-            set => SetValue(value, AuthTokenKey);
+            get => GetValue<UserAuthType?>(UserTable.AuthTokenKey) ?? UserAuthType.SMTP;
+            set => SetValue(value, UserTable.AuthTokenKey);
         }
 
         public override bool IsAuthenticated => string.IsNullOrEmpty(AccessToken);
 
         public string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue<string>(UserTable.NameRUKey);
+            set => SetValue(value, UserTable.NameRUKey);
         }
 
         public string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue<string>(UserTable.NameENKey);
+            set => SetValue(value, UserTable.NameENKey);
         }
 
         [Column("address_id"), Browsable(false)]
         public int? AddessId
         {
-            get => GetValue<int?>(AddressKey);
-            set => SetValue(value, AddressKey);
+            get => GetValue<int?>(UserTable.AddressKey);
+            set => SetValue(value, UserTable.AddressKey);
         }
 
         [Reference(nameof(AddessId))]
         public Address Address
         {
-            get => GetReference(AddressKey, ref address);
-            set => SetReference(address = value, AddressKey);
+            get => GetReference(UserTable.AddressKey, ref address);
+            set => SetReference(address = value, UserTable.AddressKey);
         }
         public override string AuthenticationType => AuthType?.ToString();
 
@@ -530,7 +523,6 @@ namespace DataWF.Module.Common
                 return identities;
             }
         }
-
 
         public override void Dispose()
         {

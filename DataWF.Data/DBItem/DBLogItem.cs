@@ -28,14 +28,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBLogItem), nameof(DBLogItem.LogId), typeof(DBLogItem.LogIdInvoker<>))]
-[assembly: Invoker(typeof(DBLogItem), nameof(DBLogItem.LogType), typeof(DBLogItem.LogTypeInvoker<>))]
-[assembly: Invoker(typeof(DBLogItem), nameof(DBLogItem.UserRegId), typeof(DBLogItem.UserRegIdInvoker<>))]
-[assembly: Invoker(typeof(DBLogItem), nameof(DBLogItem.BaseId), typeof(DBLogItem.BaseIdInvoker<>))]
-[assembly: Invoker(typeof(DBLogItem), nameof(DBLogItem.BaseItem), typeof(DBLogItem.BaseItemInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBLogItem : DBItem
+    [InvokerGenerator(Instance = true)]
+    public partial class DBLogItem : DBItem
     {
         public static DBTable UserLogTable { get; set; }
         public static readonly string UserLogKeyName = "userlog_id";
@@ -184,7 +180,7 @@ namespace DataWF.Data
 
         public DBLogItem GetPrevius(IUserIdentity user = null)
         {
-            using (var transaction = new DBTransaction(Table.Connection, user, true))
+            using (var transaction = new DBTransaction(Table, user, true))
             {
                 return GetPrevius(transaction);
             }
@@ -237,8 +233,8 @@ namespace DataWF.Data
         {
             foreach (var reference in BaseTable.GetPropertyReferencing(baseItem.GetType()))
             {
-                var referenceTable = reference.ReferenceTable?.Table;
-                var referenceColumn = reference.ReferenceColumn?.Column;
+                var referenceTable = reference.ReferenceTable;
+                var referenceColumn = reference.ReferenceColumn;
 
                 if (referenceTable?.LogTable == null || referenceColumn?.LogColumn == null)
                     continue;
@@ -337,7 +333,7 @@ namespace DataWF.Data
 
             foreach (var entry in changed)
             {
-                using (var transaction = new DBTransaction(entry.Key.Table.Connection, user))
+                using (var transaction = new DBTransaction(entry.Key.Table, user))
                 {
                     //var currentLog = entry.Key.Table.LogTable.NewItem();
                     await entry.Key.Save(transaction);
@@ -357,7 +353,7 @@ namespace DataWF.Data
                 row.Status = DBStatus.Actual;
             else if (row.Status == DBStatus.Delete)
                 row.Delete();
-            using (var transaction = new DBTransaction(row.Table.Connection, user))
+            using (var transaction = new DBTransaction(row.Table, user))
             {
                 await row.Save(transaction);
 
@@ -371,61 +367,6 @@ namespace DataWF.Data
                 }
                 transaction.Commit();
             }
-        }
-
-        public class LogIdInvoker<T> : Invoker<T, long> where T : DBLogItem
-        {
-            public override string Name => nameof(DBLogItem.LogId);
-
-            public override bool CanWrite => true;
-
-            public override long GetValue(T target) => target.LogId;
-
-            public override void SetValue(T target, long value) => target.LogId = value;
-        }
-
-        public class LogTypeInvoker<T> : Invoker<T, DBLogType?> where T : DBLogItem
-        {
-            public override string Name => nameof(DBLogItem.LogType);
-
-            public override bool CanWrite => true;
-
-            public override DBLogType? GetValue(T target) => target.LogType;
-
-            public override void SetValue(T target, DBLogType? value) => target.LogType = value;
-        }
-
-        public class UserRegIdInvoker<T> : Invoker<T, long?> where T : DBLogItem
-        {
-            public override string Name => nameof(DBLogItem.UserRegId);
-
-            public override bool CanWrite => true;
-
-            public override long? GetValue(T target) => target.UserRegId;
-
-            public override void SetValue(T target, long? value) => target.UserRegId = value;
-        }
-
-        public class BaseIdInvoker<T> : Invoker<T, string> where T : DBLogItem
-        {
-            public override string Name => nameof(DBLogItem.BaseId);
-
-            public override bool CanWrite => false;
-
-            public override string GetValue(T target) => target.BaseId;
-
-            public override void SetValue(T target, string value) { }
-        }
-
-        public class BaseItemInvoker<T> : Invoker<T, DBItem> where T : DBLogItem
-        {
-            public override string Name => nameof(DBLogItem.BaseItem);
-
-            public override bool CanWrite => false;
-
-            public override DBItem GetValue(T target) => target.BaseItem;
-
-            public override void SetValue(T target, DBItem value) => target.BaseItem = value;
         }
     }
 }

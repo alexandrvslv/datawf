@@ -6,10 +6,10 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(SynchronizedItem), nameof(SynchronizedItem.SyncStatus), typeof(SynchronizedItem.SyncStatusInvoker<>))]
 namespace DataWF.Common
 {
-    public abstract class SynchronizedItem : DefaultItem, ISynchronized
+    [InvokerGenerator]
+    public abstract partial class SynchronizedItem : DefaultItem, ISynchronized
     {
         protected SynchronizedStatus syncStatus = SynchronizedStatus.New;
 
@@ -106,17 +106,6 @@ namespace DataWF.Common
             }
 
             base.OnPropertyChanged(oldValue, newValue, propertyName);
-        }
-
-        public class SyncStatusInvoker<T> : Invoker<T, SynchronizedStatus> where T : SynchronizedItem
-        {
-            public override string Name => nameof(SynchronizedItem.SyncStatus);
-
-            public override bool CanWrite => true;
-
-            public override SynchronizedStatus GetValue(T target) => target.SyncStatus;
-
-            public override void SetValue(T target, SynchronizedStatus value) => target.SyncStatus = value;
         }
     }
 }

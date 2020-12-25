@@ -25,13 +25,10 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBForeignKey), nameof(DBForeignKey.References), typeof(DBForeignKey.ReferencesInvoker))]
-[assembly: Invoker(typeof(DBForeignKey), nameof(DBForeignKey.ReferenceName), typeof(DBForeignKey.ReferenceNameInvoker))]
-[assembly: Invoker(typeof(DBForeignKey), nameof(DBForeignKey.Property), typeof(DBForeignKey.PropertyInvoker))]
-[assembly: Invoker(typeof(DBForeignKey), nameof(DBForeignKey.ReferenceTableName), typeof(DBForeignKey.ReferenceTableNameInvoker))]
 namespace DataWF.Data
 {
-    public class DBForeignKey : DBConstraint
+    [InvokerGenerator(Instance = true)]
+    public partial class DBForeignKey : DBConstraint
     {
         private string property;
 
@@ -112,56 +109,6 @@ namespace DataWF.Data
         public override string ToString()
         {
             return string.Format("{0}-{1}({2})", Column, ReferenceTable, Reference);
-        }
-
-        public class ReferencesInvoker : Invoker<DBForeignKey, DBColumnReferenceList>
-        {
-            public static readonly ReferencesInvoker Instance = new ReferencesInvoker();
-            public override string Name => nameof(DBForeignKey.References);
-
-            public override bool CanWrite => true;
-
-            public override DBColumnReferenceList GetValue(DBForeignKey target) => target.References;
-
-            public override void SetValue(DBForeignKey target, DBColumnReferenceList value) => target.References = value;
-        }
-
-        public class ReferenceNameInvoker : Invoker<DBForeignKey, string>
-        {
-            public static readonly ReferenceNameInvoker Instance = new ReferenceNameInvoker();
-            public override string Name => nameof(DBForeignKey.ReferenceName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBForeignKey target) => target.ReferenceName;
-
-            public override void SetValue(DBForeignKey target, string value) => target.ReferenceName = value;
-        }
-
-        public class PropertyInvoker : Invoker<DBForeignKey, string>
-        {
-            public static readonly PropertyInvoker Instance = new PropertyInvoker();
-
-            public override bool CanWrite => throw new System.NotImplementedException();
-
-            public override string Name => nameof(DBForeignKey.Property);
-
-            public override string GetValue(DBForeignKey target) => target.Property;
-
-            public override void SetValue(DBForeignKey target, string value) => target.Property = value;
-        }
-
-        public class ReferenceTableNameInvoker : Invoker<DBForeignKey, string>
-        {
-            public static readonly ReferenceTableNameInvoker Instance = new ReferenceTableNameInvoker();
-
-            public override string Name => nameof(DBForeignKey.ReferenceTableName);
-
-            public override bool CanWrite => false;
-
-            public override string GetValue(DBForeignKey target) => target.ReferenceTableName;
-
-            public override void SetValue(DBForeignKey target, string value) { }
-        }
+        }        
     }
 }

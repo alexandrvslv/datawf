@@ -25,12 +25,10 @@ using System.Data;
 using System.Linq;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBProcParameter), nameof(DBProcParameter.ColumnName), typeof(DBProcParameter.ColumnNameInvoker))]
-[assembly: Invoker(typeof(DBProcParameter), nameof(DBProcParameter.DataTypeName), typeof(DBProcParameter.DataTypeNameInvoker))]
-[assembly: Invoker(typeof(DBProcParameter), nameof(DBProcParameter.Direction), typeof(DBProcParameter.DirectionInvoker))]
 namespace DataWF.Data
 {
-    public class DBProcParameter : DBSchemaItem//, IComparable
+    [InvokerGenerator(Instance = true)]
+    public partial class DBProcParameter : DBSchemaItem//, IComparable
     {
         [NonSerialized]
         private DBColumn cacheColumn;
@@ -41,8 +39,8 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBProcedure Procedure
         {
-            get { return ((DBProcParameterList)Containers.FirstOrDefault()).Procedure; }
-            set { value?.Parameters.Add(this); }
+            get => ((DBProcParameterList)Containers.FirstOrDefault()).Procedure;
+            set => value?.Parameters.Add(this);
         }
 
         public string DataTypeName { get; set; }
@@ -50,8 +48,8 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public Type DataType
         {
-            get { return DataTypeName.Length == 0 ? typeof(string) : TypeHelper.ParseType(DataTypeName); }
-            set { DataTypeName = TypeHelper.FormatBinary(value); }
+            get => DataTypeName.Length == 0 ? typeof(string) : TypeHelper.ParseType(DataTypeName);
+            set => DataTypeName = TypeHelper.FormatBinary(value);
         }
 
         public ParameterDirection Direction { get; set; } = ParameterDirection.Input;
@@ -61,7 +59,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
-            get { return cacheColumn ?? (cacheColumn = DBService.Schems.ParseColumn(ColumnName)); }
+            get => cacheColumn ?? (cacheColumn = DBService.Schems.ParseColumn(ColumnName));
             set
             {
                 ColumnName = value?.FullName;
@@ -86,42 +84,6 @@ namespace DataWF.Data
         public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             return null;
-        }
-
-        public class ColumnNameInvoker : Invoker<DBProcParameter, string>
-        {
-            public static readonly ColumnNameInvoker Instance = new ColumnNameInvoker();
-            public override string Name => nameof(DBProcParameter.ColumnName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBProcParameter target) => target.ColumnName;
-
-            public override void SetValue(DBProcParameter target, string value) => target.ColumnName = value;
-        }
-
-        public class DataTypeNameInvoker : Invoker<DBProcParameter, string>
-        {
-            public static readonly DataTypeNameInvoker Instance = new DataTypeNameInvoker();
-            public override string Name => nameof(DBProcParameter.DataTypeName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBProcParameter target) => target.DataTypeName;
-
-            public override void SetValue(DBProcParameter target, string value) => target.DataTypeName = value;
-        }
-
-        public class DirectionInvoker : Invoker<DBProcParameter, ParameterDirection>
-        {
-            public static readonly DirectionInvoker Instance = new DirectionInvoker();
-            public override string Name => nameof(DBProcParameter.Direction);
-
-            public override bool CanWrite => true;
-
-            public override ParameterDirection GetValue(DBProcParameter target) => target.Direction;
-
-            public override void SetValue(DBProcParameter target, ParameterDirection value) => target.Direction = value;
         }
     }
 }

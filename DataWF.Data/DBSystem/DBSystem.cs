@@ -195,8 +195,11 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual async Task<bool> DeleteBlobFile(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
         {
-            var fileHandler = await FileData.DBTable.LoadByIdAsync<long>(id, DBLoadParam.Load, null, transaction);
+            var table = transaction.Schema.FileTable;
+            var fileHandler = await table.LoadByIdAsync<long>(id, DBLoadParam.Load, null, transaction);
             var path = fileHandler?.Path ?? transaction.DbConnection.GetFilePath(id);
+            if (fileHandler != null)
+                await fileHandler.Delete(transaction);
             if (File.Exists(path))
             {
                 File.Delete(path);
@@ -207,8 +210,9 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual async Task<bool> DeleteBlobTable(long id, DBTransaction transaction)
         {
-            var command = transaction.AddCommand($"delete from {FileData.DBTable.Name} where {FileData.IdKey.SqlName} = {ParameterPrefix}{FileData.IdKey.SqlName}");
-            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.SqlName}", id, FileData.IdKey);
+            var table = transaction.Schema.FileTable;
+            var command = transaction.AddCommand($"delete from {table.Name} where {table.IdKey.SqlName} = {ParameterPrefix}{table.IdKey.SqlName}");
+            CreateParameter(command, $"{ParameterPrefix}{table.IdKey.SqlName}", id, table.IdKey);
             var result = await ExecuteQueryAsync(command, DBExecuteType.Scalar, CommandBehavior.Default);
             return Convert.ToInt32(result) != 0;
         }
@@ -232,15 +236,17 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual async Task<Stream> GetBlobFile(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
         {
-            var fileHandler = await FileData.DBTable.LoadByIdAsync<long>(id, DBLoadParam.Load, null, transaction);
+            var table = transaction.Schema.FileTable;
+            var fileHandler = await table.LoadByIdAsync<long>(id, DBLoadParam.Load, null, transaction);
             var path = fileHandler?.Path ?? transaction.DbConnection.GetFilePath(id);
             return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, true);
         }
 
         public virtual async Task<Stream> GetBlobTable(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
         {
-            var command = transaction.AddCommand($"select {FileData.DataKey.SqlName} from {FileData.DBTable.Name} where {FileData.IdKey.SqlName} = {ParameterPrefix}{FileData.IdKey.SqlName}");
-            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.SqlName}", id, FileData.IdKey);
+            var table = transaction.Schema.FileTable;
+            var command = transaction.AddCommand($"select {table.DataKey.SqlName} from {table.Name} where {table.IdKey.SqlName} = {ParameterPrefix}{table.IdKey.SqlName}");
+            CreateParameter(command, $"{ParameterPrefix}{table.IdKey.SqlName}", id, table.IdKey);
             transaction.Reader = (DbDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
             if (await transaction.Reader.ReadAsync())
             {
@@ -251,7 +257,8 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual async Task<long> SetBlob(Stream value, DBTransaction transaction)
         {
-            var result = FileData.DBTable.Sequence.GetNext(transaction);
+            var table = transaction.Schema.FileTable;
+            var result = table.Sequence.GetNext(transaction);
             switch (transaction.DbConnection.FileStorage)
             {
                 case FileStorage.FileTable:
@@ -272,6 +279,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual async Task SetBlobFile(long id, Stream value, string path, DBTransaction transaction, int bufferSize = 80 * 1024)
         {
+            var table = transaction.Schema.FileTable;
             using (var sha256 = new SHA256Managed())
             {
                 var length = 0;
@@ -287,7 +295,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     }
                     sha256.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
                 }
-                var fileHandler = new FileData
+                var fileHandler = new FileData(table)
                 {
                     Id = id,
                     Storage = FileStorage.FileSystem,
@@ -303,10 +311,11 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
         {
-            var command = transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.SqlName}, {FileData.DataKey.SqlName}) 
-values ({ParameterPrefix}{FileData.IdKey.SqlName}, {ParameterPrefix}{FileData.DataKey.SqlName});");
-            CreateParameter(command, $"{ParameterPrefix}{FileData.IdKey.SqlName}", id, FileData.IdKey);
-            CreateParameter(command, $"{ParameterPrefix}{FileData.DataKey.SqlName}", await Helper.GetBufferedBytesAsync(value), FileData.DataKey);//Double buffering!!!
+            var table = transaction.Schema.FileTable;
+            var command = transaction.AddCommand($@"insert into {table.Name} ({table.IdKey.SqlName}, {table.DataKey.SqlName}) 
+values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.SqlName});");
+            CreateParameter(command, $"{ParameterPrefix}{table.IdKey.SqlName}", id, table.IdKey);
+            CreateParameter(command, $"{ParameterPrefix}{table.DataKey.SqlName}", await Helper.GetBufferedBytesAsync(value), table.DataKey);//Double buffering!!!
             await transaction.ExecuteQueryAsync(command);
         }
 
@@ -1069,7 +1078,7 @@ values ({ParameterPrefix}{FileData.IdKey.SqlName}, {ParameterPrefix}{FileData.Da
 
         public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)
         {
-            using (var transaction = new DBTransaction(item.Table.Connection, null, true))
+            using (var transaction = new DBTransaction(item.Table, null, true))
             {
                 ReadSequential(item, column, stream, transaction, bufferSize);
             }

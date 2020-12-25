@@ -90,7 +90,7 @@ namespace DataWF.Data.Gui
         {
             try
             {
-                using (var transaction = new DBTransaction(row.Table.Schema.Connection, GuiEnvironment.User))
+                using (var transaction = new DBTransaction(row.Table, GuiEnvironment.User))
                 {
                     foreach (DBItem r in rowsDelete)
                     {

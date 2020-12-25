@@ -29,10 +29,10 @@ using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(QItem), nameof(QItem.Order), typeof(QItem.OrderInvoker))]
 namespace DataWF.Data
 {
-    public abstract class QItem : IDisposable, IEntryNotifyPropertyChanged, IComparable, IComparable<QItem>, IValued, IInvoker
+    [InvokerGenerator(Instance = true)]
+    public abstract partial class QItem : IDisposable, IEntryNotifyPropertyChanged, IComparable, IComparable<QItem>, IValued, IInvoker
     {
         protected int order = -1;
         protected string alias;
@@ -195,18 +195,5 @@ namespace DataWF.Data
             }
             return param;
         }
-
-        public class OrderInvoker : Invoker<QItem, int>
-        {
-            public static readonly OrderInvoker Instance = new OrderInvoker();
-            public override string Name => nameof(QItem.Order);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(QItem target) => target.Order;
-
-            public override void SetValue(QItem target, int value) => target.Order = value;
-        }
-
     }
 }

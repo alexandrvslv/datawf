@@ -1,5 +1,4 @@
-﻿using DataWF.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -7,14 +6,10 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
-[assembly: Invoker(typeof(EnumItem), nameof(EnumItem.Value), typeof(EnumItem.ValueInvoker))]
-[assembly: Invoker(typeof(EnumItem), nameof(EnumItem.Name), typeof(EnumItem.NameInvoker))]
-[assembly: Invoker(typeof(EnumItem), nameof(EnumItem.Text), typeof(EnumItem.TextInvoker))]
-[assembly: Invoker(typeof(EnumItem), nameof(EnumItem.TextUI), typeof(EnumItem.TextUIInvoker))]
-[assembly: Invoker(typeof(EnumItem), nameof(EnumItem.Index), typeof(EnumItem.IndexInvoker))]
 namespace DataWF.Common
 {
-    public class EnumItem : ICheck, INamed, INotifyPropertyChanged
+    [InvokerGenerator(Instance = true)]
+    public partial class EnumItem : ICheck, INamed, INotifyPropertyChanged
     {
         public static Dictionary<Type, EnumItemList> Cache = new Dictionary<Type, EnumItemList>();
 
@@ -165,68 +160,6 @@ namespace DataWF.Common
         {
             return Text;
         }
-
-        public class ValueInvoker : Invoker<EnumItem, object>
-        {
-            public static readonly ValueInvoker Instance = new ValueInvoker();
-
-            public override string Name => nameof(EnumItem.Value);
-
-            public override bool CanWrite => false;
-
-            public override object GetValue(EnumItem target) => target.Value;
-
-            public override void SetValue(EnumItem target, object value) { }
-        }
-
-        public class NameInvoker : Invoker<EnumItem, string>
-        {
-            public static readonly NameInvoker Instance = new NameInvoker();
-            public override string Name => nameof(EnumItem.Name);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(EnumItem target) => target.Name;
-
-            public override void SetValue(EnumItem target, string value) => target.Name = value;
-        }
-
-        public class TextInvoker : Invoker<EnumItem, string>
-        {
-            public static readonly TextInvoker Instance = new TextInvoker();
-            public override string Name => nameof(EnumItem.Text);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(EnumItem target) => target.Text;
-
-            public override void SetValue(EnumItem target, string value) => target.Text = value;
-        }
-
-        public class TextUIInvoker : Invoker<EnumItem, string>
-        {
-            public static readonly TextInvoker Instance = new TextInvoker();
-            public override string Name => nameof(EnumItem.TextUI);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(EnumItem target) => target.TextUI;
-
-            public override void SetValue(EnumItem target, string value) => target.TextUI = value;
-        }
-
-        public class IndexInvoker : Invoker<EnumItem, int>
-        {
-            public static readonly IndexInvoker Instance = new IndexInvoker();
-            public override string Name => nameof(EnumItem.Index);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(EnumItem target) => target.Index;
-
-            public override void SetValue(EnumItem target, int value) => target.Index = value;
-        }
-
     }
 
     public class EnumItem<T> : EnumItem where T : struct

@@ -26,12 +26,10 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBLogTable<>), nameof(DBLogTable<DBLogItem>.BaseTableName), typeof(DBLogTable<>.BaseTableNameInvoker))]
-[assembly: Invoker(typeof(DBLogTable<>), nameof(DBLogTable<DBLogItem>.BaseKey), typeof(DBLogTable<>.BaseKeyInvoker))]
-[assembly: Invoker(typeof(DBLogTable<>), nameof(DBLogTable<DBLogItem>.UserLogKey), typeof(DBLogTable<>.UserLogKeyInvoker))]
 namespace DataWF.Data
 {
-    public class DBLogTable<T> : DBTable<T>, IDBLogTable where T : DBLogItem, new()
+    [InvokerGenerator(Instance = true)]
+    public partial class DBLogTable<T> : DBTable<T>, IDBLogTable where T : DBLogItem, new()
     {
         private DBTable baseTable;
         private DBColumn basekey = DBColumn.EmptyKey;
@@ -154,7 +152,8 @@ namespace DataWF.Data
         public override async Task<bool> SaveItem(DBItem item, DBTransaction transaction)
         {
             if ((item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete
-                && item is DBLogItem logItem && FileBLOBKey != null)
+                && item is DBLogItem logItem && FileBLOBKey != null
+                && !transaction.Replication)
             {
                 var lob = item.GetValue(FileBLOBKey);
                 var current = logItem.BaseItem == DBItem.EmptyItem ? null : logItem.BaseItem.GetValue((DBColumn<long?>)FileBLOBKey.BaseColumn);
@@ -202,40 +201,6 @@ namespace DataWF.Data
                 }
             }
         }
-
-        public class BaseTableNameInvoker : Invoker<DBLogTable<T>, string>
-        {
-            public override string Name => nameof(DBLogTable<T>.BaseTableName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBLogTable<T> target) => target.BaseTableName;
-
-            public override void SetValue(DBLogTable<T> target, string value) => target.BaseTableName = value;
-        }
-
-        public class BaseKeyInvoker : Invoker<DBLogTable<T>, DBColumn>
-        {
-            public override string Name => nameof(DBLogTable<T>.BaseKey);
-
-            public override bool CanWrite => false;
-
-            public override DBColumn GetValue(DBLogTable<T> target) => target.BaseKey;
-
-            public override void SetValue(DBLogTable<T> target, DBColumn value) { }
-        }
-
-        public class UserLogKeyInvoker : Invoker<DBLogTable<T>, DBColumn>
-        {
-            public override string Name => nameof(DBLogTable<T>.UserLogKey);
-
-            public override bool CanWrite => false;
-
-            public override DBColumn GetValue(DBLogTable<T> target) => target.UserLogKey;
-
-            public override void SetValue(DBLogTable<T> target, DBColumn value) { }
-        }
-
 
     }
 }

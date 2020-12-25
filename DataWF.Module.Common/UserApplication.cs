@@ -321,10 +321,16 @@ namespace DataWF.Module.Common
 
         private (Company company, Department department, Position position) CheckValues(DBTransaction transaction)
         {
-            Counterpart.Company.VTTable.LoadCache("", DBLoadParam.Referencing, transaction);
-            Common.Department.DBTable.LoadCache("", DBLoadParam.Referencing, transaction);
-            Common.Position.DBTable.LoadCache("", DBLoadParam.Referencing, transaction);
-            Common.User.DBTable.LoadCache("", DBLoadParam.Referencing, transaction);
+            var schema = Table.Schema;
+            var companies = schema.GetTable<Counterpart.Company>();
+            var departments = schema.GetTable<Common.Department>();
+            var positions = schema.GetTable<Common.Position>();
+            var users = schema.GetTable<Common.User>();
+            
+            companies.LoadCache("", DBLoadParam.Referencing, transaction);
+            departments.LoadCache("", DBLoadParam.Referencing, transaction);
+            positions.LoadCache("", DBLoadParam.Referencing, transaction);
+            users.LoadCache("", DBLoadParam.Referencing, transaction);
 
             if (Common.User.GetByEmail(EMail) != null)
             {
@@ -332,11 +338,11 @@ namespace DataWF.Module.Common
             }
 
             var company = (Company)null;
-            using (var queryCompany = new QQuery(Counterpart.Company.VTTable))
+            using (var queryCompany = new QQuery(companies))
             {
                 queryCompany.BuildNameParam(nameof(Customer.ShortName), CompareType.Equal, $"{Company}");
                 queryCompany.BuildNameParam(nameof(Customer.Name), CompareType.Equal, $"{Company}").Logic = LogicType.Or;
-                company = Counterpart.Company.VTTable.Select(queryCompany).FirstOrDefault();
+                company = companies.Select(queryCompany).FirstOrDefault();
             }
             if (company == null)
             {
@@ -344,7 +350,7 @@ namespace DataWF.Module.Common
             }
 
             var department = (Department)null;
-            using (var queryDepartment = new QQuery(Common.Department.DBTable))
+            using (var queryDepartment = new QQuery(departments))
             {
                 queryDepartment.BuildParam(Common.Department.CompanyKey, company);
                 queryDepartment.BuildNameParam(nameof(Common.Department.Name), CompareType.Equal, $"{Department}");
@@ -356,7 +362,7 @@ namespace DataWF.Module.Common
             }
 
             var position = (Position)null;
-            using (var queryPosition = new QQuery(Common.Position.DBTable))
+            using (var queryPosition = new QQuery(positions))
             {
                 queryPosition.BuildParam(Common.Position.DepartmentKey, department);
                 queryPosition.BuildNameParam(nameof(Common.Position.Name), CompareType.Equal, $"{Position}");
