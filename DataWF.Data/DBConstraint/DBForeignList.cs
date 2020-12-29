@@ -73,9 +73,9 @@ namespace DataWF.Data
                 {
                     table.ChildRelations.Add(item);
                 }
-                if (table is IDBVirtualTable virtualTable)
+                if (table.IsVirtual)
                 {
-                    virtualTable.BaseTable.ChildRelations.Add(item);
+                    table.BaseTable.ChildRelations.Add(item);
                 }
             }
         }

@@ -79,7 +79,7 @@ namespace DataWF.Data
 
         public DBTable BaseTable
         {
-            get => Table is IDBVirtualTable virtualTable ? virtualTable.BaseTable : Table;
+            get => Table.IsVirtual ? Table.BaseTable : Table;
         }
 
         public override DBTable Table

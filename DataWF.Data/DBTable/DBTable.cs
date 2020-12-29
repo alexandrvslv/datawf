@@ -23,6 +23,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
@@ -129,7 +130,7 @@ namespace DataWF.Data
         protected IDBLogTable logTable;
         protected DBTableGroup tableGroup;
         protected DBSequence cacheSequence;
-        protected readonly List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
+        protected readonly List<DBTable> virtualTables = new List<DBTable>(0);
         protected readonly ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
         protected DBColumn<string> nameKey = DBColumn<string>.EmptyKey;
         protected DBColumn<byte[]> accessKey = DBColumn<byte[]>.EmptyKey;
@@ -161,6 +162,8 @@ namespace DataWF.Data
         protected string groupName;
         protected string sequenceName;
         protected string logTableName;
+        private DBTable baseTable;
+        protected string baseTableName;
         protected DBTableKeys keys = DBTableKeys.None;
         protected DBTableType type = DBTableType.Table;
         protected int blockSize = 256;
@@ -181,6 +184,41 @@ namespace DataWF.Data
             Referencings = new DBTableItemList<DBReferencing>(this);
         }
 
+        [XmlIgnore, JsonIgnore]
+        public TableGenerator Generator { get; internal set; }
+
+        [XmlAttribute, Browsable(false), Category("Database")]
+        public string BaseTableName
+        {
+            get => baseTableName;
+            set
+            {
+                if (baseTableName != value)
+                {
+                    baseTableName = value;
+                    baseTable = null;
+                    OnPropertyChanged(nameof(BaseTableName), DDLType.Alter);
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Category("Database")]
+        public virtual DBTable BaseTable
+        {
+            get => baseTable ?? (baseTable = Schema?.Tables[baseTableName]);
+            set
+            {
+                if (BaseTable != value)
+                {
+                    BaseTableName = value?.Name;
+                    baseTable = value;
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, Category("Database")]
+        public abstract QQuery FilterQuery { get; set; }
+
         [Browsable(false)]
         public string LogTableName
         {
@@ -189,6 +227,7 @@ namespace DataWF.Data
             {
                 if (logTableName != value)
                 {
+                    logTable = null;
                     logTableName = value;
                     if (!string.IsNullOrEmpty(logTableName))
                     {
@@ -200,18 +239,14 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public TableGenerator Generator { get; internal set; }
-
-        [XmlIgnore, JsonIgnore]
         public virtual IDBLogTable LogTable
         {
-            get => logTable
-                    ?? (logTable = (IDBLogTable)Schema?.LogSchema?.Tables[LogTableName]
-                    ?? (IDBLogTable)Schema?.Tables[LogTableName]);
+            get => IsVirtual ? BaseTable.LogTable
+                : logTable ??= ((IDBLogTable)Schema?.LogSchema?.Tables[LogTableName] ?? (IDBLogTable)Schema?.Tables[LogTableName]);
             set
             {
-                logTable = value;
                 LogTableName = value?.Name;
+                logTable = value;
             }
         }
 
@@ -293,7 +328,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual string SqlName => name;
+        public virtual string SqlName => IsVirtual ? BaseTableName : name;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public abstract bool IsEdited { get; }
@@ -344,8 +379,8 @@ namespace DataWF.Data
             }
             set
             {
-                tableGroup = value;
                 GroupName = value?.Name;
+                tableGroup = value;
             }
         }
 
@@ -357,6 +392,7 @@ namespace DataWF.Data
             {
                 if (sequenceName != value)
                 {
+                    cacheSequence = null;
                     sequenceName = value;
                     OnPropertyChanged(nameof(SequenceName));
                 }
@@ -366,11 +402,11 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBSequence Sequence
         {
-            get => cacheSequence ?? (cacheSequence = Schema?.Sequences[SequenceName]);
+            get => cacheSequence ??= Schema?.Sequences[SequenceName];
             set
             {
-                cacheSequence = value;
                 SequenceName = value?.Name;
+                cacheSequence = value;
                 if (value != null && !Schema.Sequences.Contains(SequenceName))
                 {
                     Schema.Sequences.Add(value);
@@ -530,6 +566,23 @@ namespace DataWF.Data
             }
         }
 
+        [XmlIgnore, JsonIgnore, Category("Database")]
+        public virtual bool IsVirtual
+        {
+            get => (Keys & DBTableKeys.Virtual) != 0;
+            set
+            {
+                if (!value)
+                {
+                    Keys &= ~DBTableKeys.NoLogs;
+                }
+                else
+                {
+                    Keys |= DBTableKeys.NoLogs;
+                }
+            }
+        }
+
         [Category("Column")]
         public virtual DBColumnList<DBColumn> Columns { get; set; }
 
@@ -634,6 +687,13 @@ namespace DataWF.Data
             return virtualTables.FirstOrDefault(p => p.ItemTypeIndex == itemType) as DBTable;
         }
 
+        public DBTable GetVirtualTable(Type itemType)
+        {
+            if (itemType == GetType())
+                return this;
+            return virtualTables.FirstOrDefault(p => p.ItemType.Type == itemType) as DBTable;
+        }
+
         public void RefreshSequence(bool truncate = false)
         {
             using (var transaction = new DBTransaction(this))
@@ -706,7 +766,7 @@ namespace DataWF.Data
                     && (referenceColumn.Keys & DBColumnKeys.Group) != DBColumnKeys.Group
                     && referenceTable != this
                     && !referenceTable.IsSynchronized
-                    && !(referenceTable is IDBVirtualTable))
+                    && !(referenceTable.IsVirtual))
                 {
                     transaction.ReferencingStack.Add(referenceColumn);
                     var subCommand = DBCommand.CloneCommand(command, referenceTable.BuildQuery($@"
@@ -813,6 +873,13 @@ namespace DataWF.Data
 
         public virtual DBColumn CheckColumn(string name, Type type, ref bool newCol)
         {
+            if (IsVirtual)
+            {
+                var baseColumn = BaseTable.CheckColumn(name, type, ref newCol);
+                if (newCol)
+                    Columns.Add(DBColumnFactory.CreateVirtual(baseColumn, this));
+                return baseColumn;
+            }
             var column = Columns[name];
             if (column == null)
             {
@@ -870,6 +937,8 @@ namespace DataWF.Data
 
             return items;
         }
+        public abstract void RefreshVirtualTable(DBTable value);
+        public abstract void OnBaseTableChanged(DBItem item, NotifyCollectionChangedAction type);
 
         public event EventHandler<DBItemEventArgs> RowUpdating;
 
@@ -907,6 +976,10 @@ namespace DataWF.Data
 
         public virtual async Task<bool> SaveItem(DBItem item, DBTransaction transaction)
         {
+            if (IsVirtual)
+            {
+                return await BaseTable.SaveItem(item, transaction);
+            }
             if (item.UpdateState == DBUpdateState.Default || (item.UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
                 if (!item.Attached)
@@ -996,6 +1069,10 @@ namespace DataWF.Data
 
         public virtual int NextHash()
         {
+            if (IsVirtual)
+            {
+                return BaseTable.NextHash();
+            }
             return Interlocked.Increment(ref Hash);
         }
 
@@ -1203,24 +1280,32 @@ namespace DataWF.Data
             {
                 yield return rel.Table;
 
-                if (rel.Table is IDBVirtualTable)
-                    yield return ((IDBVirtualTable)rel.Table).BaseTable;
+                if (rel.Table.IsVirtual)
+                    yield return rel.Table.BaseTable;
             }
         }
 
-        public void RemoveVirtual(IDBVirtualTable view)
+        public void RemoveVirtual(DBTable view)
         {
             virtualTables.Remove(view);
         }
 
-        public void AddVirtual(IDBVirtualTable view)
+        public void AddVirtual(DBTable view)
         {
             virtualTables.Add(view);
         }
 
         public virtual IEnumerable<DBForeignKey> GetChildRelations()
         {
-            return Schema?.GetChildRelations(this) ?? Enumerable.Empty<DBForeignKey>();
+            foreach (var item in Schema?.GetChildRelations(this) ?? Enumerable.Empty<DBForeignKey>())
+                yield return item;
+
+            if (IsVirtual)
+            {
+                foreach (var item in BaseTable.GetChildRelations())
+                    yield return item;
+            }
+
         }
 
         public IEnumerable<DBReferencing> GetPropertyReferencing(Type type)
@@ -1253,8 +1338,8 @@ namespace DataWF.Data
             {
                 yield return item.ReferenceTable;
 
-                if (item.ReferenceTable is IDBVirtualTable)
-                    yield return ((IDBVirtualTable)item.ReferenceTable).BaseTable;
+                if (item.ReferenceTable.IsVirtual)
+                    yield return item.ReferenceTable.BaseTable;
             }
         }
 
@@ -1368,6 +1453,13 @@ namespace DataWF.Data
 
         public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
+            if (IsVirtual)
+            {
+                var ddlView = new StringBuilder();
+                Schema.System.FormatView(ddlView, this, ddlType);
+                return ddlView.ToString();
+            }
+
             var ddl = new StringBuilder();
             Schema?.Connection?.System.Format(ddl, this, ddlType, dependency, false);
             return ddl.ToString();
@@ -1742,11 +1834,19 @@ namespace DataWF.Data
 
         public virtual DBItemType GetItemType(int typeIndex)
         {
+            if (IsVirtual)
+            {
+                return BaseTable.GetItemType(typeIndex);
+            }
             return typeIndex == 0 ? ItemType : ItemTypes[typeIndex];
         }
 
         public virtual int GetTypeIndex(Type type)
         {
+            if (IsVirtual)
+            {
+                return BaseTable.GetTypeIndex(type);
+            }
             foreach (var entry in ItemTypes)
             {
                 if (entry.Value.Type == type)

@@ -6,42 +6,41 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    [Table("rtemplate_file", "Template", BlockSize = 100)]
-    public class TemplateFile : DBItem
+    [Table("rtemplate_file", "Template", BlockSize = 100), InvokerGenerator]
+    public partial class TemplateFile : TemplateItem
     {
-        public static readonly DBTable<TemplateFile> DBTable = GetTable<TemplateFile>();
-        public static readonly DBColumn DataLastWriteKey = DBTable.ParseProperty(nameof(DataLastWrite));
-
-        public TemplateFile()
+        public TemplateFile(DBTable table) : base(table)
         {
         }
 
+        public TemplateFileTable<TemplateFile> TemplateFileTable => (TemplateFileTable<TemplateFile>)Table;
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int>(TemplateFileTable.IdKey);
+            set => SetValue(value, TemplateFileTable.IdKey);
         }
 
         [Column("template_file", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
-            get => GetValue<byte[]>(Table.FileKey);
-            set => SetValue(value, Table.FileKey);
+            get => GetValue<byte[]>(TemplateFileTable.DataKey);
+            set => SetValue(value, TemplateFileTable.DataKey);
         }
 
         [Column("template_file_name", 1024, Keys = DBColumnKeys.FileName | DBColumnKeys.View | DBColumnKeys.Code)]
         public string DataName
         {
-            get => GetValue<string>(Table.FileNameKey);
-            set => SetValue(value, Table.FileNameKey);
+            get => GetValue<string>(TemplateFileTable.DataNameKey);
+            set => SetValue(value, TemplateFileTable.DataNameKey);
         }
 
         [Column("template_last_write", Keys = DBColumnKeys.FileLastWrite)]
         public DateTime? DataLastWrite
         {
-            get => GetValue<DateTime?>(DataLastWriteKey) ?? Stamp;
-            set => SetValue(value, DataLastWriteKey);
+            get => GetValue<DateTime?>(TemplateFileTable.DataLastWriteKey) ?? Stamp;
+            set => SetValue(value, TemplateFileTable.DataLastWriteKey);
         }
 
         public string FileType => Path.GetExtension(DataName);

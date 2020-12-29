@@ -25,7 +25,7 @@ using System.Text.Json.Serialization;
 
 namespace DataWF.Data
 {
-    [InvokerGenerator(Instance = false)]
+    [InvokerGenerator(Instance = true)]
     public partial class SRTable
     {
         public string TableName { get; set; }

@@ -9,21 +9,27 @@ namespace DataWF.Module.Flow
 {
     public class ModuleInitialize : IModuleInitialize
     {
-        public Task Initialize()
+        public Task Initialize(object[] args)
         {
-            Work.DBTable.DefaultComparer = new DBComparer<Work, string>(Work.DBTable.CodeKey) { Hash = true };
-            Work.DBTable.Load();
+            DBSchema schema = args[0] as DBSchema;
+            var workTable = (WorkTable)schema.GetTable<Work>();
+            workTable.DefaultComparer = new DBComparer<Work, string>(workTable.CodeKey) { Hash = true };
+            workTable.Load();
 
-            Stage.DBTable.Load();
+            var stageTable = (StageTable<Stage>)schema.GetTable<Stage>();
+            stageTable.Load();
 
-            StageParam.DBTable.DefaultComparer = new DBComparer<StageParam, int?>(StageParam.DBTable.PrimaryKey) { Hash = true };
-            StageParam.DBTable.Load();
+            var stageparamTable = (StageParamTable<StageParam>)schema.GetTable<StageParam>();
+            stageparamTable.DefaultComparer = new DBComparer<StageParam, int>(stageparamTable.IdKey) { Hash = true };
+            stageparamTable.Load();
 
-            Template.DBTable.DefaultComparer = new DBComparer<Template, string>(Template.DBTable.CodeKey) { Hash = true };
-            Template.DBTable.Load();
+            var templateTable = (TemplateTable<Template>)schema.GetTable<Template>();
+            templateTable.DefaultComparer = new DBComparer<Template, string>(templateTable.CodeKey) { Hash = true };
+            templateTable.Load();
 
-            TemplateData.DBTable.DefaultComparer = new DBComparer<TemplateData, int?>(TemplateData.DBTable.PrimaryKey) { Hash = true };
-            TemplateData.DBTable.Load();
+            var templateFile = (TemplateFileTable<TemplateFile>)schema.GetTable<TemplateFile>();
+            templateFile.DefaultComparer = new DBComparer<TemplateFile, int>(templateFile.IdKey) { Hash = true };
+            templateFile.Load();
 
             return null;
         }

@@ -48,14 +48,14 @@ namespace DataWF.Data
             }
             if (rez == 0)
             {
-                if (a is IDBVirtualTable)
+                if (a.IsVirtual)
                 {
-                    if (!(b is IDBVirtualTable))
+                    if (!b.IsVirtual)
                     {
                         rez = 1;
                     }
                 }
-                else if (b is IDBVirtualTable)
+                else if (b.IsVirtual)
                 {
                     rez = -1;
                 }

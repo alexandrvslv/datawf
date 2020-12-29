@@ -10,9 +10,7 @@ namespace DataWF.Test.Data
     {
         private Position position;
 
-        public static DBTable<Employer> DBTable => GetTable<Employer>();
-
-        public Employer()
+        public Employer(DBTable table) : base(table)
         {
         }
 

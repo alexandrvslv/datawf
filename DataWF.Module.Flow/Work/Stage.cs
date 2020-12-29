@@ -8,72 +8,37 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    public class StageList : DBTableView<Stage>
-    {
-        public StageList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(filter, mode, status)
-        {
-            ApplySortInternal(new DBComparer<Stage, string>(Stage.DBTable.CodeKey, ListSortDirection.Ascending));
-        }
-
-        public StageList()
-            : this("")
-        {
-        }
-
-        public StageList(Work flow)
-            : this(Stage.WorkKey.Name + "=" + flow.PrimaryId)
-        {
-        }
-    }
-
-    [Flags]
-    public enum StageKey
-    {
-        None = 0,
-        Stop = 1,
-        Start = 2,
-        System = 4,
-        Return = 8,
-        AutoComplete = 16
-    }
 
     [Table("rstage", "Template", BlockSize = 100)]
     public class Stage : DBItem, IDisposable
     {
-        public static readonly DBTable<Stage> DBTable = GetTable<Stage>();
-        public static readonly DBColumn ExportCodeKey = DBTable.ParseProperty(nameof(ExportCode));
-        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
-        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
-        public static readonly DBColumn WorkKey = DBTable.ParseProperty(nameof(WorkId));
-        public static readonly DBColumn KeysKey = DBTable.ParseProperty(nameof(Keys));
-        public static readonly DBColumn TimeLimitKey = DBTable.ParseProperty(nameof(TimeLimit));
-
         private Work work;
 
-        public Stage()
+        public Stage(DBTable table) : base(table)
         {
         }
+
+        public StageTable<Stage> StageTable => (StageTable<Stage>)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(table.PrimaryKey);
-            set => SetValue(value, table.PrimaryKey);
+            get => GetValue<int?>(StageTable.IdKey);
+            set => SetValue(value, StageTable.IdKey);
         }
 
         [Column("code", 512, Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get => GetValue<string>(table.CodeKey);
-            set => SetValue(value, table.CodeKey);
+            get => GetValue<string>(StageTable.CodeKey);
+            set => SetValue(value, StageTable.CodeKey);
         }
 
         [Column("export_code", 512)]
         public string ExportCode
         {
-            get => GetValue<string>(ExportCodeKey);
-            set => SetValue(value, ExportCodeKey);
+            get => GetValue<string>(StageTable.ExportCodeKey);
+            set => SetValue(value, StageTable.ExportCodeKey);
         }
 
         [Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
@@ -83,45 +48,47 @@ namespace DataWF.Module.Flow
             set => SetName(value);
         }
 
+        [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue<string>(StageTable.NameENKey);
+            set => SetValue(value, StageTable.NameENKey);
         }
 
+        [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue<string>(StageTable.NameRUKey);
+            set => SetValue(value, StageTable.NameRUKey);
         }
 
         [Browsable(false)]
         [Column("work_id")]
         public int? WorkId
         {
-            get => GetValue<int?>(WorkKey);
-            set => SetValue(value, WorkKey);
+            get => GetValue<int?>(StageTable.WorkIdKey);
+            set => SetValue(value, StageTable.WorkIdKey);
         }
 
         [Reference(nameof(WorkId))]
         public Work Work
         {
-            get => GetReference(WorkKey, ref work);
-            set => SetReference(work = value, WorkKey);
+            get => GetReference(StageTable.WorkIdKey, ref work);
+            set => SetReference(work = value, StageTable.WorkIdKey);
         }
 
         [Column("keys")]
         public StageKey? Keys
         {
-            get => GetValue<StageKey?>(KeysKey);
-            set => SetValue(value, KeysKey);
+            get => GetValue<StageKey?>(StageTable.KeysKey);
+            set => SetValue(value, StageTable.KeysKey);
         }
 
         [Column("time_limit")]
         public TimeSpan? TimeLimit
         {
-            get => GetValue<TimeSpan?>(TimeLimitKey);
-            set => SetValue(value, TimeLimitKey);
+            get => GetValue<TimeSpan?>(StageTable.TimeLimitKey);
+            set => SetValue(value, StageTable.TimeLimitKey);
         }
 
         public IEnumerable<T> GetParams<T>() where T : StageParam

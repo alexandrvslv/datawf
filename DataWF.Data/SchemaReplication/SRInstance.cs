@@ -27,7 +27,8 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class SRInstance : IEquatable<SRInstance>
+    [InvokerGenerator]
+    public partial class SRInstance : IEquatable<SRInstance>
     {
         private IPEndPoint endPoint;
 

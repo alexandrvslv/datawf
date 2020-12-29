@@ -6,12 +6,9 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Common
 {
     [Table("dstats", "Reference Book"), InvokerGenerator]
-    public partial class Statistic : DBItem//, IComparable
+    public sealed partial class Statistic : DBItem//, IComparable
     {
         private Scheduler scheduler;
-
-        public Statistic()
-        { }
 
         public Statistic(DBTable table) : base(table)
         {
@@ -44,15 +41,15 @@ namespace DataWF.Module.Common
         [Column("scheduler_id")]
         public int? SchedulerId
         {
-            get => GetValue<int?>(StatisticTable.SchedulerKey);
-            set => SetValue(value, StatisticTable.SchedulerKey);
+            get => GetValue<int?>(StatisticTable.SchedulerIdKey);
+            set => SetValue(value, StatisticTable.SchedulerIdKey);
         }
 
         [Reference(nameof(SchedulerId))]
         public Scheduler Scheduler
         {
-            get => GetReference(StatisticTable.SchedulerKey, ref scheduler);
-            set => SetReference(scheduler = value, StatisticTable.SchedulerKey);
+            get => GetReference(StatisticTable.SchedulerIdKey, ref scheduler);
+            set => SetReference(scheduler = value, StatisticTable.SchedulerIdKey);
         }
 
         [Column("stat_result")]

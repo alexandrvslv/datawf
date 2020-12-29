@@ -29,8 +29,8 @@ namespace DataWF.Data
 {
     public class DBColumnList<T> : DBTableItemList<T> where T : DBColumn
     {
-        private bool isVirtual;
         private HashSet<DBColumn> toReplace = new HashSet<DBColumn>();
+
         public DBColumnList(DBTable table)
             : base(table)
         {
@@ -40,14 +40,12 @@ namespace DataWF.Data
             Indexes.Add(DBColumn.IsViewInvoker.Instance);
             Indexes.Add(DBColumn.IsReferenceInvoker.Instance);
             //Indexes.Add(DBColumn.ReferenceTableInvoker<T>.Instance);
-
-            isVirtual = Table is IDBVirtualTable;
         }
 
         protected override void OnPropertyChanged(string property)
         {
             base.OnPropertyChanged(property);
-            if (Table != null && Table.Schema != null)
+            if (Table != null && Schema != null)
             {
                 Table.ClearCache();
             }
@@ -131,7 +129,7 @@ namespace DataWF.Data
         public override DDLType GetInsertType(T item)
         {
             var isReplace = toReplace.Remove(item);
-            if (isVirtual)
+            if (Table.IsVirtual)
                 return DDLType.Default;
             return (item.ColumnType == DBColumnTypes.Default)
                 ? isReplace ? DDLType.Alter : DDLType.Create

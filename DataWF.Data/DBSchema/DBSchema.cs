@@ -346,7 +346,7 @@ namespace DataWF.Data
         {
             foreach (var table in Tables)
             {
-                if (table is IDBVirtualTable)
+                if (table.IsVirtual)
                     continue;
                 foreach (var constraint in table.Constraints)
                     yield return constraint;
@@ -357,7 +357,7 @@ namespace DataWF.Data
         {
             foreach (var table in Tables)
             {
-                if (table is IDBVirtualTable)
+                if (table.IsVirtual)
                     continue;
                 foreach (var constraint in table.Foreigns)
                     yield return constraint;
@@ -368,7 +368,7 @@ namespace DataWF.Data
         {
             foreach (var table in Tables)
             {
-                if (table is IDBVirtualTable)
+                if (table.IsVirtual)
                     continue;
                 foreach (var index in table.Indexes)
                     yield return index;
@@ -609,7 +609,7 @@ namespace DataWF.Data
             foreach (DBTable table in Tables)
             {
                 if (!(table is IDBLogTable)
-                    && !(table is IDBVirtualTable)
+                    && !table.IsVirtual
                     && table.IsLoging)
                 {
                     table.GenerateLogTable();

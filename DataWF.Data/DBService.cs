@@ -242,7 +242,7 @@ namespace DataWF.Data
                 return;
             if (item is IDBTableContent tabled)
             {
-                if (tabled.Table is IDBVirtualTable || !tabled.Table.Containers.Any())
+                if (tabled.Table.IsVirtual || !tabled.Table.Containers.Any())
                     return;
                 if (item is DBColumn column && column.ColumnType != DBColumnTypes.Default)
                     return;
@@ -322,9 +322,9 @@ namespace DataWF.Data
             var chages = Changes.Where(p => p.Item.Schema == schema).ToList();
             chages.Sort((a, b) =>
             {
-                if (a.Item is DBTable tableA && !(tableA is IDBVirtualTable))
+                if (a.Item is DBTable tableA && !tableA.IsVirtual)
                 {
-                    if (b.Item is DBTable tableB && !(tableB is IDBVirtualTable))
+                    if (b.Item is DBTable tableB && !tableB.IsVirtual)
                     {
                         return DBTableComparer.Instance.Compare(tableA, tableB, true);
                     }
@@ -333,7 +333,7 @@ namespace DataWF.Data
                         return -1;
                     }
                 }
-                else if (b.Item is DBTable table && !(table is IDBVirtualTable))
+                else if (b.Item is DBTable table && !table.IsVirtual)
                 {
                     return 1;
                 }

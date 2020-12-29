@@ -25,10 +25,12 @@ namespace DataWF.Data
     [AttributeUsage(AttributeTargets.Property)]
     public class CultureKeyAttribute : Attribute
     {
-        public CultureKeyAttribute()
-        { }
+        public CultureKeyAttribute(string propertyName)
+        {
+            PropertyName = propertyName;
+        }
 
-        public string Property { get; set; }
+        public string PropertyName { get; set; }
 
         public string CultureName { get; set; }
 

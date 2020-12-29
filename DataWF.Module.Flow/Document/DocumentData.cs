@@ -11,94 +11,18 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.Flow
 {
-    public class DocumentDataList : DBTableView<DocumentData>
+
+    [Table("ddocument_data", "Document", BlockSize = 400), InvokerGenerator]
+    public partial class DocumentData : DocumentItem
     {
-        readonly Document document;
-
-        public DocumentDataList()
-            : this("", DBViewKeys.None)
-        {
-        }
-
-        public DocumentDataList(Document document)
-            : this(DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)).Name + "=" + document.PrimaryId, DBViewKeys.Static)
-        {
-            this.document = document;
-        }
-
-        public DocumentDataList(string filter, DBViewKeys mode)
-            : base(filter, mode)
-        {
-        }
-
-        public override int AddInternal(DocumentData item)
-        {
-            if (document != null && item.Document == null)
-                item.Document = document;
-            return base.AddInternal(item);
-        }
-
-        public void FilterByDocument(Document document)
-        {
-            DefaultParam = new QParam(LogicType.And, DocumentData.DocumentKey, CompareType.Equal, document.PrimaryId);
-        }
-    }
-
-    public class ListDocumentData : SelectableList<DocumentData>
-    {
-        readonly Document document;
-
-        public ListDocumentData(Document document)
-            : base(DocumentData.DBTable.Select(
-                DocumentData.DocumentKey, CompareType.Equal, document.PrimaryId))
-        {
-            this.document = document;
-        }
-
-        public override int AddInternal(DocumentData item)
-        {
-            if (Contains(item))
-                return -1;
-            if (item.Document == null)
-                item.Document = document;
-            int index = base.AddInternal(item);
-            item.Attach();
-            return index;
-        }
-    }
-
-    [Table("ddocument_data", "Document", BlockSize = 400)]
-    public class DocumentData : DBItem, IDocumentDetail
-    {
-        public static readonly DBTable<DocumentData> DBTable = GetTable<DocumentData>();
-        public static readonly DBColumn<int?> TemplateDataKey = DBTable.ParseProperty<int?>(nameof(TemplateDataId));
-        public static readonly DBColumn<string> FileUrlKey = DBTable.ParseProperty<string>(nameof(FileUrl));
-        public static readonly DBColumn<string> FileNameKey = DBTable.ParseProperty<string>(nameof(FileName));
-        public static readonly DBColumn<DateTime?> FileLastWriteKey = DBTable.ParseProperty<DateTime?>(nameof(FileLastWrite));
-        public static readonly DBColumn<long?> DocumentKey = DBTable.ParseProperty<long?>(nameof(DocumentId));
-
         private byte[] buf;
         private User currentUser;
         private TemplateData template;
-        private Document document;
 
-        public DocumentData()
+        public DocumentData(DBTable table) : base(table)
         { }
 
-        [Browsable(false)]
-        [Column("document_id"), Index("ddocument_data_document_id")]
-        public virtual long? DocumentId
-        {
-            get => GetValue<long?>(DocumentKey);
-            set => SetValue(value, DocumentKey);
-        }
-
-        [Reference(nameof(DocumentId))]
-        public Document Document
-        {
-            get => GetReference(DocumentKey, ref document);
-            set => SetReference(document = value, DocumentKey);
-        }
+        public DocumentDataTable<DocumentData> DocumentDataTable => (DocumentDataTable<DocumentData>)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
@@ -106,6 +30,9 @@ namespace DataWF.Module.Flow
             get => GetValue<long?>(Table.PrimaryKey);
             set => SetValue(value, Table.PrimaryKey);
         }
+
+        [Index("ddocument_data_document_id")]
+        public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
 
         [Index("ddocument_data_item_type", false)]
         public override int ItemType
@@ -117,15 +44,15 @@ namespace DataWF.Module.Flow
         [Column("template_data_id")]
         public int? TemplateDataId
         {
-            get => GetValue<int?>(TemplateDataKey);
-            set => SetValue(value, TemplateDataKey);
+            get => GetValue<int?>(DocumentDataTable.TemplateDataIdKey);
+            set => SetValue(value, DocumentDataTable.TemplateDataIdKey);
         }
 
         [Reference(nameof(TemplateDataId))]
         public TemplateData TemplateData
         {
-            get => GetReference(TemplateDataKey, ref template);
-            set => SetReference(template = value, TemplateDataKey);
+            get => GetReference(DocumentDataTable.TemplateDataIdKey, ref template);
+            set => SetReference(template = value, DocumentDataTable.TemplateDataIdKey);
         }
 
         [Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]
@@ -138,29 +65,29 @@ namespace DataWF.Module.Flow
         [Column("file_url", 1024)]
         public string FileUrl
         {
-            get => GetValue<string>(FileUrlKey);
-            set => SetValue(value, FileUrlKey);
+            get => GetValue<string>(DocumentDataTable.FileUrlKey);
+            set => SetValue(value, DocumentDataTable.FileUrlKey);
         }
 
         [Column("file_last_write", Keys = DBColumnKeys.FileLastWrite)]
         public DateTime? FileLastWrite
         {
-            get => GetValue<DateTime?>(FileLastWriteKey) ?? Stamp;
-            set => SetValue(value, FileLastWriteKey);
+            get => GetValue<DateTime?>(DocumentDataTable.FileLastWriteKey) ?? Stamp;
+            set => SetValue(value, DocumentDataTable.FileLastWriteKey);
         }
 
         [Column("file_data", Keys = DBColumnKeys.File)]
         public virtual byte[] FileData
         {
-            get => buf ?? (buf = GetValue(Table.FileKey));
-            set => SetValue(value, Table.FileKey);
+            get => buf ?? (buf = GetValue(DocumentDataTable.FileDataKey));
+            set => SetValue(value, DocumentDataTable.FileDataKey);
         }
 
         [Column("file_lob", Keys = DBColumnKeys.FileOID)]
         public virtual long? FileLOB
         {
-            get => GetValue<long?>(Table.FileBLOBKey);
-            set => SetValue(value, Table.FileBLOBKey);
+            get => GetValue<long?>(DocumentDataTable.FileLOBKey);
+            set => SetValue(value, DocumentDataTable.FileLOBKey);
         }
 
         [Browsable(false)]
@@ -168,7 +95,7 @@ namespace DataWF.Module.Flow
         public int? CurrentUserId
         {
             get => currentUser?.Id;
-            set => CurrentUser = User.DBTable.LoadById(value);
+            set => CurrentUser = Schema.GetTable<User>().LoadById(value);
         }
 
         [Browsable(false)]
@@ -298,9 +225,9 @@ namespace DataWF.Module.Flow
                 {
                     FileName = RefreshName();
                 }
-
+                var templateFileTable = (TemplateFileTable<TemplateFile>)Schema.GetTable<TemplateFile>();
                 filePath = Helper.GetDocumentsFullPath(FileName, "ParserNew" + (Id ?? TemplateData.Id));
-                using (var stream = TemplateData.File.GetZipFileStream(TemplateFile.DBTable.FileKey, filePath, param.Transaction))
+                using (var stream = TemplateData.File.GetZipFileStream(templateFileTable.FileKey, filePath, param.Transaction))
                 {
                     filePath = Execute(param, stream);
                 }

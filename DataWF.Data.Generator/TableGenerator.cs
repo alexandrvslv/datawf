@@ -17,6 +17,7 @@ namespace DataWF.Data.Generator
         {
             // Register a syntax receiver that will be created for each generation pass
             context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+
         }
 
         public void Execute(GeneratorExecutionContext context)
@@ -27,83 +28,189 @@ namespace DataWF.Data.Generator
             // retreive the populated receiver 
             if (!(context.SyntaxReceiver is SyntaxReceiver receiver))
                 return;
-
+            //TODO Pass as argument
+            var cultures = new List<string>(new[] { "RU", "EN" });
             // we're going to create a new compilation that contains the attribute.
             // TODO: we should allow source generators to provide source during initialize, so that this step isn't required.
             CSharpParseOptions options = (context.Compilation as CSharpCompilation).SyntaxTrees[0].Options as CSharpParseOptions;
             //Compilation compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(attributeText, Encoding.UTF8), options));
-
-            // get the newly bound attributes
-            var attributes = new AttributesCache();
-            attributes.Column = context.Compilation.GetTypeByMetadataName("DataWF.Data.ColumnAttribute");
-            attributes.Table = context.Compilation.GetTypeByMetadataName("DataWF.Data.TableAttribute");
-            attributes.ItemType = context.Compilation.GetTypeByMetadataName("DataWF.Data.ItemTypeAttribute");
-            attributes.Culture = context.Compilation.GetTypeByMetadataName("DataWF.Data.CultureKeyAttribute");
-            attributes.Reference = context.Compilation.GetTypeByMetadataName("DataWF.Data.ReferenceAttribute");
-
-
-            // loop over the candidate fields, and keep the ones that are actually annotated
-            List<IPropertySymbol> propertySymbols = new List<IPropertySymbol>();
-            foreach (PropertyDeclarationSyntax property in receiver.CandidateFields)
+            try
             {
-                SemanticModel model = context.Compilation.GetSemanticModel(property.SyntaxTree);
-                IPropertySymbol propertySymbol = model.GetDeclaredSymbol(property);
-                propertySymbols.Add(propertySymbol);
-            }
+                // get the newly bound attributes
+                var attributes = new AttributesCache(context.Compilation);
 
-            // group the fields by class, and generate the source
-            foreach (IGrouping<INamedTypeSymbol, IPropertySymbol> group in propertySymbols.GroupBy(f => f.ContainingType))
-            {
-                string classSource = ProcessTable(group.Key, group.ToList(), attributes, context);
-                if (classSource != null)
+
+                // loop over the candidate fields, and keep the ones that are actually annotated
+                foreach (ClassDeclarationSyntax classSyntax in receiver.Candidates)
                 {
-                    context.AddSource($"{group.Key.Name}Table.cs", SourceText.From(classSource, Encoding.UTF8));
+                    SemanticModel model = context.Compilation.GetSemanticModel(classSyntax.SyntaxTree);
+                    var classSymbol = model.GetDeclaredSymbol(classSyntax);
+                    var properties = classSymbol.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsStatic).ToList();
+                    string classSource = ProcessTable(classSymbol, properties, attributes, context, cultures);
+                    if (classSource != null)
+                    {
+                        try
+                        {
+                            context.AddSource($"{classSymbol.Name}Table.cs", SourceText.From(classSource, Encoding.UTF8));
+                        }
+                        catch (Exception)
+                        {
+                            continue;
+                        }
+                    }
+
+                    string logClassSource = ProcessLogTable(classSymbol, properties, attributes, context, cultures);
+                    if (logClassSource != null)
+                    {
+                        var sourceText = SourceText.From(logClassSource, Encoding.UTF8);
+                        context.AddSource($"{classSymbol.Name}Log.cs", sourceText);
+
+                        var sourceSyntax = CSharpSyntaxTree.ParseText(sourceText, (CSharpParseOptions)context.ParseOptions);
+                        var compilation = context.Compilation.AddSyntaxTrees(sourceSyntax);
+                        var newAttributes = new AttributesCache(compilation);
+
+                        var unitSyntax = (CompilationUnitSyntax)sourceSyntax.GetRoot();
+                        var logClassSyntax = unitSyntax.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault()?.Members.OfType<ClassDeclarationSyntax>().FirstOrDefault();
+                        if (logClassSyntax == null)
+                        {
+                            continue;
+                        }
+                        model = compilation.GetSemanticModel(logClassSyntax.SyntaxTree);
+                        var logClassSymbol = model.GetDeclaredSymbol(logClassSyntax);
+                        if (logClassSymbol != null)
+                        {
+                            var invokerGeneratorAtribute = compilation.GetTypeByMetadataName("DataWF.Common.InvokerGeneratorAttribute");
+                            Common.Generator.InvokerGenerator.ProcessClass(logClassSymbol, invokerGeneratorAtribute, context);
+
+                            properties = logClassSymbol.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsStatic).ToList();
+                            classSource = ProcessTable(logClassSymbol, properties, newAttributes, context, cultures);
+                            if (classSource != null)
+                            {
+                                try
+                                {
+                                    context.AddSource($"{classSymbol.Name}LogTable.cs", SourceText.From(classSource, Encoding.UTF8));
+                                }
+                                catch (Exception)
+                                {
+                                    continue;
+                                }
+                            }
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
+#if DEBUG
+                if (!System.Diagnostics.Debugger.IsAttached)
+                {
+                    System.Diagnostics.Debugger.Launch();
+                }
+#endif
             }
         }
 
-        private string ProcessTable(INamedTypeSymbol classSymbol, List<IPropertySymbol> properties, AttributesCache attributes, GeneratorExecutionContext context)
+        private string ProcessLogTable(INamedTypeSymbol classSymbol, List<IPropertySymbol> properties, AttributesCache attributes, GeneratorExecutionContext context, List<string> cultures)
         {
-            if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
+            string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
+            string className = null;
+            string tableSqlName = null;
+            var tableAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.Table, SymbolEqualityComparer.Default));
+            if (tableAttribute != null)
             {
-                return null; //TODO: issue a diagnostic that it must be top level
+                var keys = tableAttribute.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, "Keys", StringComparison.Ordinal)).Value;
+                if (keys.IsNull || ((int)keys.Value & (1 << 0)) == 0)
+                {
+                    className = classSymbol.Name + "Log";
+                }
+                var name = tableAttribute.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, "TableName", StringComparison.Ordinal)).Value;
+                if (name.IsNull)
+                {
+                    name = tableAttribute.ConstructorArguments.FirstOrDefault();
+                }
+                tableSqlName = name.Value.ToString();
             }
 
-            string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
-
-            var tableAttribyte = classSymbol.GetAttributes().SingleOrDefault(p => p.AttributeClass.Equals(attributes.Table, SymbolEqualityComparer.Default));
-            if (tableAttribyte != null)
+            var abstractTableAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.AbstractTable, SymbolEqualityComparer.Default));
+            if (abstractTableAttribute != null)
             {
-
-                var className = classSymbol.Name + "Table";
-                var typeName = tableAttribyte.NamedArguments.SingleOrDefault(p => p.Key == "Type").Value;
-                if (!typeName.IsNull)
+                className = classSymbol.Name + "Log";
+                if (string.Equals(classSymbol.Name, "DBLogItem", StringComparison.Ordinal)
+                    || string.Equals(classSymbol.BaseType?.Name, "DBLogItem", StringComparison.Ordinal))
                 {
-                    //typeName = 
+                    return null;
+                }
+            }
+
+            var itemTypeAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.ItemType, SymbolEqualityComparer.Default));
+            if (itemTypeAttribute != null)
+            {
+                className = classSymbol.Name + "Log";
+            }
+
+            if (className != null)
+            {
+                var tableName = $"{className}Table";
+                var tableTypeName = $"I{className}Table";
+                string baseClassName = "DBLogItem";
+
+                if (classSymbol.BaseType.Name != "DBItem"
+                    && classSymbol.BaseType.Name != "DBGroupItem")
+                {
+                    var baseNamespace = classSymbol.BaseType.ContainingNamespace.ToDisplayString();
+                    baseClassName = classSymbol.BaseType.Name + "Log";
+
+                    if (baseNamespace != namespaceName)
+                    {
+                        baseClassName = $"{baseNamespace}.{classSymbol.BaseType.Name}Log";
+                    }
                 }
                 // begin building the generated source
-                StringBuilder source = new StringBuilder($@"
-using DataWF.Common;
-using DataWF.Data;
-using {namespaceName};
+                StringBuilder source = new StringBuilder($@"using DataWF.Common;
+{(namespaceName != "DataWF.Data" ? "using DataWF.Data;" : string.Empty)}
 ");
 
                 source.Append($@"
 namespace {namespaceName}
 {{
-    public partial class {className} : DBTable<{classSymbol.Name}>
-    {{
-");
+    ");
+                if (tableAttribute != null)
+                {
+                    source.Append($"[LogTable(typeof({classSymbol.Name}), \"{tableSqlName}_log\"), InvokerGenerator]");
+                }
+                else if (abstractTableAttribute != null)
+                {
+                    source.Append($"[AbstractTable, InvokerGenerator]");
+                }
+                else if (itemTypeAttribute != null)
+                {
+                    var itemType = itemTypeAttribute.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, "Id", StringComparison.Ordinal)).Value;
+                    if (itemType.IsNull)
+                    {
+                        itemType = itemTypeAttribute.ConstructorArguments.FirstOrDefault();
+                    }
+                    source.Append($"[LogItemType({itemType.Value}), InvokerGenerator]");
+                }
 
+                source.Append($@"
+    public {(classSymbol.IsSealed ? "sealed " : string.Empty)} {(classSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className} : {baseClassName}
+    {{        
+");
                 // create properties for each field 
                 foreach (IPropertySymbol propertySymbol in properties)
                 {
-                    ProcessColumnField(source, propertySymbol, attributes);
+                    ProcessLogField(source, propertySymbol, attributes);
                 }
-                source.Append("\n");
+                source.Append($@"
+        public {className}(DBTable table):base(table)
+        {{ }}
+
+        public {tableTypeName} {tableName} => ({tableTypeName}){(itemTypeAttribute != null ? "Typed" : string.Empty)}Table;
+");
                 foreach (IPropertySymbol propertySymbol in properties)
                 {
-                    ProcessColumnProperty(source, propertySymbol, attributes);
+                    ProcessLogProperty(source, propertySymbol, attributes, tableName, cultures);
                 }
                 source.Append(@"
     } 
@@ -113,60 +220,210 @@ namespace {namespaceName}
             return null;
         }
 
-//        private void ProcessInvokerClass(StringBuilder source, IPropertySymbol propertySymbol, string className)
-//        {
-//            // get the name and type of the field
-//            string propertyName = propertySymbol.Name;
-//            ITypeSymbol propertyType = propertySymbol.Type;
-//            source.Append($@"
-//        public class {propertyName}Invoker: Invoker<{propertySymbol.ContainingType.Name}, {propertyType}>
-//        {{
-//            public override string Name => nameof({propertySymbol.ContainingType.Name}.{propertyName});
-//            public override bool CanWrite => {(!propertySymbol.IsReadOnly ? "true" : "false")};
-//            public override {propertyType} GetValue({propertySymbol.ContainingType.Name} target) => target.{propertyName};
-//            public override void SetValue({propertySymbol.ContainingType.Name} target, {propertyType} value){(propertySymbol.IsReadOnly? "{}":$" => target.{propertyName} = value;")}
-//        }}
-//");
-
-//        }
-
-//        private void ProcessInvokerAttributes(StringBuilder source, IPropertySymbol propertySymbol, string className)
-//        {
-//            // get the name and type of the field
-//            string propertyName = propertySymbol.Name;
-//            ITypeSymbol propertyType = propertySymbol.Type;
-//            source.Append($@"
-//[assembly: Invoker(typeof({propertySymbol.ContainingType.Name}), nameof({propertySymbol.ContainingType.Name}.{propertyName}), typeof({className}.{propertyName}Invoker))]");
-//        }
-
-        private void ProcessColumnField(StringBuilder source, IPropertySymbol propertySymbol, AttributesCache attributes)
+        private void ProcessLogField(StringBuilder source, IPropertySymbol propertySymbol, AttributesCache attributes)
         {
-            // get the name and type of the field
-            string propertyName = propertySymbol.Name;
-            ITypeSymbol propertyType = propertySymbol.Type;
-            string keyFieldName = $"_{propertyName}Key";
-
-            // get the AutoNotify attribute from the field, and any associated data
-            var columnAttribute = propertySymbol.GetAttributes().SingleOrDefault(ad => ad.AttributeClass.Equals(attributes.Column, SymbolEqualityComparer.Default));
-            if (columnAttribute != null)
+            // get the attribute from the property, and any associated data
+            var referenceAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Reference, SymbolEqualityComparer.Default));
+            if (referenceAttribute != null)
             {
-                TypedConstant overridenPropertyType = columnAttribute.NamedArguments.SingleOrDefault(kvp => kvp.Key == "DataType").Value;
-                if (!overridenPropertyType.IsNull)
-                    propertyType = (ITypeSymbol)overridenPropertyType.Value;
+                string propertyName = propertySymbol.Name;
+                ITypeSymbol propertyType = propertySymbol.Type;
+                string keyFieldName = $"_{propertyName}";
 
                 source.Append($@"
-        private DBColumn<{propertyType}> {keyFieldName};");
-            }
-
-            var cultureAttribute = propertySymbol.GetAttributes().SingleOrDefault(ad => ad.AttributeClass.Equals(attributes.Culture, SymbolEqualityComparer.Default));
-            if (cultureAttribute != null)
-            {
-                source.Append($@"
-        private DBColumn<{propertyType}> {keyFieldName};");
+        private {propertyType} {keyFieldName};");
             }
         }
 
-        private void ProcessColumnProperty(StringBuilder source, IPropertySymbol propertySymbol, AttributesCache attributes)
+        private void ProcessLogProperty(StringBuilder source, IPropertySymbol propertySymbol, AttributesCache attributes, string tableName, List<string> cultures)
+        {
+            // get the name and type
+            string propertyName = propertySymbol.Name;
+            ITypeSymbol propertyType = propertySymbol.Type;
+
+
+            // get the attribute from the property, and any associated data
+            AttributeData columnAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Column, SymbolEqualityComparer.Default));
+            if (columnAttribute != null)
+            {
+                TypedConstant keys = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "Keys", StringComparison.Ordinal)).Value;
+                if (!keys.IsNull && ((int)keys.Value & (1 << 21)) != 0)
+                    return;
+
+                TypedConstant overridenPropertyType = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "DataType", StringComparison.Ordinal)).Value;
+                if (!overridenPropertyType.IsNull)
+                    propertyType = (ITypeSymbol)overridenPropertyType.Value;
+
+                TypedConstant sqlName = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "ColumnName", StringComparison.Ordinal)).Value;
+                if (sqlName.IsNull)
+                {
+                    sqlName = columnAttribute.ConstructorArguments.FirstOrDefault();
+                }
+                if (!keys.IsNull && ((int)keys.Value & (1 << 16)) != 0)
+                {
+                    foreach (var culture in cultures)
+                    {
+                        source.Append($@"
+        [LogColumn(""{sqlName.Value}_{culture.ToLowerInvariant()}"", ""{sqlName.Value}_{culture.ToLowerInvariant()}_log"")]
+        public {propertyType} {propertyName}{culture.ToUpperInvariant()}
+        {{
+            get => GetValue<{propertyType}>({tableName}.{propertyName}{culture.ToUpperInvariant()}Key);
+            set => SetValue(value, {tableName}.{propertyName}{culture.ToUpperInvariant()}Key);
+        }}
+");
+                    }
+                }
+                else
+                {
+                    source.Append($@"
+        [LogColumn(""{sqlName.Value}"", ""{sqlName.Value}_log"")]
+        public {propertyType} {propertyName}
+        {{
+            get => GetValue<{propertyType}>({tableName}.{propertyName}Key);
+            set => SetValue(value, {tableName}.{propertyName}Key);
+        }}
+");
+                }
+            }
+
+            AttributeData referenceAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Reference, SymbolEqualityComparer.Default));
+            if (referenceAttribute != null)
+            {
+                string keyFieldName = $"_{propertyName}";
+                TypedConstant refName = referenceAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "ColumnProperty", StringComparison.Ordinal)).Value;
+                if (refName.IsNull)
+                {
+                    refName = referenceAttribute.ConstructorArguments.FirstOrDefault();
+                }
+                source.Append($@"
+        [LogReference(nameof({refName.Value}))]
+        public {propertyType} {propertyName}
+        {{
+            get => GetReference<{propertyType}>({tableName}.{refName.Value}Key, ref {keyFieldName});
+            set => SetReference({keyFieldName} = value, {tableName}.{refName.Value}Key);
+        }}
+");
+            }
+        }
+
+        private string ProcessTable(INamedTypeSymbol classSymbol, List<IPropertySymbol> properties, AttributesCache attributes, GeneratorExecutionContext context, List<string> cultures)
+        {
+            if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
+            {
+                return null; //TODO: issue a diagnostic that it must be top level
+            }
+
+            string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
+            string className = null;
+            string whereName = null;
+            var baseClassName = "DBTable";
+
+            var tableAttribyte = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.Table, SymbolEqualityComparer.Default));
+            if (tableAttribyte != null)
+            {
+                var typeName = tableAttribyte.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, "Type", StringComparison.Ordinal)).Value;
+                if (!typeName.IsNull && typeName.Value is ITypeSymbol typeSymbol)
+                {
+                    className = typeSymbol.Name;
+                }
+                else
+                {
+                    className = classSymbol.Name + "Table";
+                }
+            }
+
+            var itemTypeAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.ItemType, SymbolEqualityComparer.Default));
+            if (itemTypeAttribute != null)
+            {
+                className = classSymbol.Name + "Table";
+            }
+
+            var logTableAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.LogTable, SymbolEqualityComparer.Default));
+            if (logTableAttribute != null)
+            {
+                className = classSymbol.Name + "Table";
+            }
+
+            var logItemTypeAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.LogItemType, SymbolEqualityComparer.Default));
+            if (logItemTypeAttribute != null)
+            {
+                className = classSymbol.Name + "Table";
+            }
+
+            var abstractAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.AbstractTable, SymbolEqualityComparer.Default));
+            if (abstractAttribute != null)
+            {
+                className = classSymbol.Name + "Table";
+            }
+
+
+            if (className != null)
+            {
+                var genericArg = classSymbol.Name;
+                var interfaceName = "I" + className;
+                if (!classSymbol.IsSealed)
+                {
+                    genericArg = "T";
+                    className += "<T>";
+                    whereName = $"where T: {classSymbol.Name}";
+                }
+                if (classSymbol.BaseType.Name == "DBLogItem")
+                {
+                    baseClassName = "DBLogTable";
+                }
+                else //&& classSymbol.BaseType.Name != "DBGroupItem"
+                if (classSymbol.BaseType.Name != "DBItem")
+                {
+                    var baseNamespace = classSymbol.BaseType.ContainingNamespace.ToDisplayString();
+                    if (baseNamespace == namespaceName
+                        || baseNamespace == "<global namespace>")
+                    {
+                        baseClassName = classSymbol.BaseType.Name + "Table";
+                    }
+                    else
+                    {
+                        baseClassName = $"{baseNamespace}.{classSymbol.BaseType.Name}Table";
+                    }
+                }
+                // begin building the generated source
+                StringBuilder source = new StringBuilder($@"using System.Text.Json.Serialization;
+using DataWF.Common;
+{(namespaceName != "DataWF.Data" ? "using DataWF.Data;" : string.Empty)}
+");
+
+                source.Append($@"
+namespace {namespaceName}
+{{
+    public {(classSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className} : {baseClassName}<{genericArg}>{(interfaceName != null ? $", {interfaceName}" : string.Empty)} {whereName}
+    {{");
+
+                // create properties for each field 
+                foreach (IPropertySymbol propertySymbol in properties)
+                {
+                    ProcessColumnProperty(source, propertySymbol, attributes, cultures);
+                }
+                source.Append(@"
+    }
+");
+                source.Append($@"
+    public interface {interfaceName}:IDBTable
+    {{");
+                foreach (IPropertySymbol propertySymbol in properties)
+                {
+                    ProcessColumnInterfaceProperty(source, propertySymbol, attributes, cultures);
+                }
+                source.Append(@"
+    }");
+                source.Append(@"
+}");
+                return source.ToString();
+            }
+
+
+            return null;
+        }
+
+        private void ProcessColumnProperty(StringBuilder source, IPropertySymbol propertySymbol, AttributesCache attributes, List<string> cultures)
         {
             // get the name and type of the field
             string propertyName = propertySymbol.Name;
@@ -174,26 +431,95 @@ namespace {namespaceName}
             string keyFieldName = $"_{propertyName}Key";
 
             // get the AutoNotify attribute from the field, and any associated data
-            AttributeData columnAttribute = propertySymbol.GetAttributes().SingleOrDefault(ad => ad.AttributeClass.Equals(attributes.Column, SymbolEqualityComparer.Default));
+            AttributeData columnAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Column, SymbolEqualityComparer.Default));
             if (columnAttribute != null)
             {
-                TypedConstant overridenPropertyType = columnAttribute.NamedArguments.SingleOrDefault(kvp => kvp.Key == "DataType").Value;
+                TypedConstant overridenPropertyType = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "DataType", StringComparison.Ordinal)).Value;
                 if (!overridenPropertyType.IsNull)
                     propertyType = (ITypeSymbol)overridenPropertyType.Value;
 
-                string keyProeprtyName = $"{(propertyName.EndsWith("Id") && propertyName.Length > 4 ? propertyName.Substring(0, propertyName.Length - 2) : propertyName) }Key";
-                source.Append($@"
-        public DBColumn<{propertyType}> {keyProeprtyName} => ParseProperty(nameof({propertySymbol.ContainingType.Name}.{propertyName}), ref {keyFieldName});
+                TypedConstant keys = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "Keys", StringComparison.Ordinal)).Value;
+                if (!keys.IsNull && ((int)keys.Value & (1 << 16)) != 0)
+                {
+                    foreach (var culture in cultures)
+                    {
+                        keyFieldName = $"_{propertyName}{culture}Key";
+                        string keyPropertyName = $"{propertyName}{culture}Key";
+                        source.Append($@"
+        private DBColumn<{propertyType}> {keyFieldName};
+        [JsonIgnore]
+        public {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => ParseProperty(nameof({propertySymbol.ContainingType.Name}.{propertyName}), ref {keyFieldName});
 ");
+                    }
+                }
+                else
+                {
+                    string keyPropertyName = $"{propertyName}Key";
+                    source.Append($@"
+        private DBColumn<{propertyType}> {keyFieldName};
+        [JsonIgnore]
+        public {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => ParseProperty(nameof({propertySymbol.ContainingType.Name}.{propertyName}), ref {keyFieldName});
+");
+                }
             }
 
-            var cultureAttribute = propertySymbol.GetAttributes().SingleOrDefault(ad => ad.AttributeClass.Equals(attributes.Culture, SymbolEqualityComparer.Default));
-            if (cultureAttribute != null)
+            var logColumnAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.LogColumn, SymbolEqualityComparer.Default));
+            if (logColumnAttribute != null)
             {
-                string keyProeprtyName = $"{propertyName}Key";
+                string keyPropertyName = $"{propertyName}Key";
                 source.Append($@"
-        public DBColumn<{propertyType}> {keyProeprtyName} => ParseProperty(nameof({propertySymbol.ContainingType.Name}.{propertyName}), ref {keyFieldName});
+        private DBColumn<{propertyType}> {keyFieldName};
+        [JsonIgnore]
+        public {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => ParseProperty(nameof({propertySymbol.ContainingType.Name}.{propertyName}), ref {keyFieldName});
 ");
+            }
+        }
+
+        private bool IsNew(string keyPropertyName)
+        {
+            return string.Equals(keyPropertyName, "CodeKey", StringComparison.Ordinal)
+                || string.Equals(keyPropertyName, "FileNameKey", StringComparison.Ordinal)
+                || string.Equals(keyPropertyName, "FileLastWriteKey", StringComparison.Ordinal);
+        }
+
+        private void ProcessColumnInterfaceProperty(StringBuilder source, IPropertySymbol propertySymbol, AttributesCache attributes, List<string> cultures)
+        {
+            // get the name and type of the field
+            string propertyName = propertySymbol.Name;
+            ITypeSymbol propertyType = propertySymbol.Type;
+
+            // get the AutoNotify attribute from the field, and any associated data
+            AttributeData columnAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Column, SymbolEqualityComparer.Default));
+            if (columnAttribute != null)
+            {
+                TypedConstant overridenPropertyType = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "DataType", StringComparison.Ordinal)).Value;
+                if (!overridenPropertyType.IsNull)
+                    propertyType = (ITypeSymbol)overridenPropertyType.Value;
+
+                TypedConstant keys = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "Keys", StringComparison.Ordinal)).Value;
+                if (!keys.IsNull && ((int)keys.Value & (1 << 16)) != 0)
+                {
+                    foreach (var culture in cultures)
+                    {
+                        string keyPropertyName = $"{propertyName}{culture}Key";
+                        source.Append($@"
+        {(keyPropertyName == "CodeKey" ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
+                    }
+                }
+                else
+                {
+                    string keyPropertyName = $"{propertyName}Key";
+                    source.Append($@"
+        {(keyPropertyName == "CodeKey" ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
+                }
+            }
+
+            var logColumnAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.LogColumn, SymbolEqualityComparer.Default));
+            if (logColumnAttribute != null)
+            {
+                string keyPropertyName = $"{propertyName}Key";
+                source.Append($@"
+        {(keyPropertyName == "CodeKey" ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
             }
         }
 
@@ -202,7 +528,7 @@ namespace {namespaceName}
         /// </summary>
         class SyntaxReceiver : ISyntaxReceiver
         {
-            public List<PropertyDeclarationSyntax> CandidateFields { get; } = new List<PropertyDeclarationSyntax>();
+            public List<ClassDeclarationSyntax> Candidates { get; } = new List<ClassDeclarationSyntax>();
 
             /// <summary>
             /// Called for every syntax node in the compilation, we can inspect the nodes and save any information useful for generation
@@ -210,22 +536,50 @@ namespace {namespaceName}
             public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
             {
                 // any field with at least one attribute is a candidate for property generation
-                if (syntaxNode is PropertyDeclarationSyntax fieldDeclarationSyntax
-                    && fieldDeclarationSyntax.AttributeLists.Count > 0)
+                if (syntaxNode is ClassDeclarationSyntax classDeclarationSyntax
+                    && classDeclarationSyntax.AttributeLists.Any(p => p.Attributes
+                    .Select(p => p.ToString())
+                    .Any(p => string.Equals(p, "Table", StringComparison.Ordinal)
+                    || string.Equals(p, "TableAttribute", StringComparison.Ordinal)
+                    || string.Equals(p, "AbstractTable", StringComparison.Ordinal)
+                    || string.Equals(p, "AbstractTableAttribute", StringComparison.Ordinal)
+                    || string.Equals(p, "VirtualTable", StringComparison.Ordinal)
+                    || string.Equals(p, "VirtualTableAttribute", StringComparison.Ordinal)
+                    || string.Equals(p, "ItemType", StringComparison.Ordinal)
+                    || string.Equals(p, "ItemTypeAttribute", StringComparison.Ordinal)
+                    || string.Equals(p, "LogTable", StringComparison.Ordinal)
+                    || string.Equals(p, "LogTableAttribute", StringComparison.Ordinal)
+                    )))
                 {
-                    CandidateFields.Add(fieldDeclarationSyntax);
+                    Candidates.Add(classDeclarationSyntax);
                 }
             }
         }
 
         class AttributesCache
         {
-            public INamedTypeSymbol Column;
             public INamedTypeSymbol Table;
             public INamedTypeSymbol ItemType;
             public INamedTypeSymbol Culture;
             public INamedTypeSymbol Reference;
+            public INamedTypeSymbol AbstractTable;
+            public INamedTypeSymbol LogTable;
+            public INamedTypeSymbol LogItemType;
+            public INamedTypeSymbol Column;
+            public INamedTypeSymbol LogColumn;
 
+            public AttributesCache(Compilation compilation)
+            {
+                Table = compilation.GetTypeByMetadataName("DataWF.Data.TableAttribute");
+                LogTable = compilation.GetTypeByMetadataName("DataWF.Data.LogTableAttribute");
+                AbstractTable = compilation.GetTypeByMetadataName("DataWF.Data.AbstractTableAttribute");
+                ItemType = compilation.GetTypeByMetadataName("DataWF.Data.ItemTypeAttribute");
+                LogItemType = compilation.GetTypeByMetadataName("DataWF.Data.LogItemTypeAttribute");
+                Column = compilation.GetTypeByMetadataName("DataWF.Data.ColumnAttribute");
+                LogColumn = compilation.GetTypeByMetadataName("DataWF.Data.LogColumnAttribute");
+                Culture = compilation.GetTypeByMetadataName("DataWF.Data.CultureKeyAttribute");
+                Reference = compilation.GetTypeByMetadataName("DataWF.Data.ReferenceAttribute");
+            }
         }
     }
 

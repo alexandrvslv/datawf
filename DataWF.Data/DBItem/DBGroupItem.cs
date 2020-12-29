@@ -31,10 +31,14 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [DataContract]
-    public class DBGroupItem : DBItem, IGroup
+    [AbstractTable]
+    [InvokerGenerator]
+    public partial class DBGroupItem : DBItem, IGroup
     {
         private DBItem group;
+
+        public DBGroupItem(DBTable table) : base(table)
+        { }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public object GroupId
@@ -121,7 +125,7 @@ namespace DataWF.Data
             group = null;
         }
 
-        public T GetGroupReference<T>(DBLoadParam loadParam = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBGroupItem, new()
+        public T GetGroupReference<T>(DBLoadParam loadParam = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBGroupItem
         {
             GetReference(Table.GroupKey, ref group, loadParam);
             //Check recursion
@@ -130,7 +134,7 @@ namespace DataWF.Data
             return (T)group;
         }
 
-        public void SetGroupReference<T>(T value) where T : DBGroupItem, new()
+        public void SetGroupReference<T>(T value) where T : DBGroupItem
         {
             if (value != null && value.GroupId != null && value.GroupId.Equals(PrimaryId))
             {
@@ -187,14 +191,14 @@ namespace DataWF.Data
         {
             if (table.PrimaryKey.IsEmpty(this))
                 return Enumerable.Empty<DBGroupItem>();
-            return GetReferencing(Table, Table.GroupKey, param).Cast<DBGroupItem>();
+            return GetReferencing(Table.GroupKey, param).Cast<DBGroupItem>();
         }
 
-        public IEnumerable<T> GetSubGroups<T>(DBLoadParam param) where T : DBGroupItem, new()
+        public IEnumerable<T> GetSubGroups<T>(DBLoadParam param) where T : DBGroupItem
         {
             if (table.PrimaryKey.IsEmpty(this))
                 return Enumerable.Empty<T>();
-            return GetReferencing<T>((DBTable<T>)Table, Table.GroupKey, param);
+            return GetReferencing<T>(Table.GroupKey, param);
         }
 
         public List<DBGroupItem> GetSubGroupFull(bool addCurrent = false)

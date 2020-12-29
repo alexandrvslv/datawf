@@ -10,12 +10,13 @@ namespace DataWF.Module.Common
 {
 
     [Table("rscheduler", "Reference Book", BlockSize = 20), InvokerGenerator]
-    public partial class Scheduler : DBItem//, IComparable
+    public sealed partial class Scheduler : DBItem//, IComparable
     {
         private Company company;
 
-        public Scheduler()
-        { }
+        public Scheduler(DBTable table) : base(table)
+        {
+        }
 
         public SchedulerTable SchedulerTable => (SchedulerTable)Table;
 
@@ -29,15 +30,15 @@ namespace DataWF.Module.Common
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(SchedulerTable.CompanyKey);
-            set => SetValue(value, SchedulerTable.CompanyKey);
+            get => GetValue<int?>(SchedulerTable.CompanyIdKey);
+            set => SetValue(value, SchedulerTable.CompanyIdKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(SchedulerTable.CompanyKey, ref company);
-            set => SetReference(company = value, SchedulerTable.CompanyKey);
+            get => GetReference(SchedulerTable.CompanyIdKey, ref company);
+            set => SetReference(company = value, SchedulerTable.CompanyIdKey);
         }
 
         [Column("code", Keys = DBColumnKeys.Code)]
@@ -54,14 +55,14 @@ namespace DataWF.Module.Common
             set => SetName(value);
         }
 
-        [CultureKey]
+        [CultureKey(nameof(Name))]
         public string NameEN
         {
             get => GetValue<string>(SchedulerTable.NameENKey);
             set => SetValue(value, SchedulerTable.NameENKey);
         }
 
-        [CultureKey]
+        [CultureKey(nameof(Name))]
         public string NameRU
         {
             get => GetValue<string>(SchedulerTable.NameRUKey);
@@ -183,38 +184,43 @@ namespace DataWF.Module.Common
 
             return info;
         }
+    }
+
+    public partial class SchedulerTable
+    {
+        SchedulerService Instance { get; set; }
 
         [ControllerMethod]
-        public static void Start()
+        public void Start()
         {
-            if (SchedulerService.Instance == null)
+            if (Instance == null)
                 throw new Exception($"{nameof(SchedulerService)} is not initialized!");
 
-            if (!SchedulerService.Instance.Running)
+            if (!Instance.Running)
             {
-                SchedulerService.Instance.Start();
+                Instance.Start();
             }
         }
 
         [ControllerMethod]
-        public static void Stop()
+        public void Stop()
         {
-            if (SchedulerService.Instance == null)
+            if (Instance == null)
                 throw new Exception($"{nameof(SchedulerService)} is not initialized!");
 
-            if (SchedulerService.Instance.Running)
+            if (Instance.Running)
             {
-                SchedulerService.Instance.Stop();
+                Instance.Stop();
             }
         }
 
         [ControllerMethod]
-        public static bool IsRunning()
+        public bool IsRunning()
         {
-            if (SchedulerService.Instance == null)
+            if (Instance == null)
                 throw new Exception($"{nameof(SchedulerService)} is not initialized!");
 
-            return SchedulerService.Instance.Running;
+            return Instance.Running;
         }
     }
 }

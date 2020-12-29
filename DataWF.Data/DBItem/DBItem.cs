@@ -36,17 +36,11 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-
-    [DataContract]
     [ElementSerializer(typeof(DBItemSerializer))]
-    public class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IDBTableContent, IPullHandler
+    [InvokerGenerator]
+    public partial class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IDBTableContent, IPullHandler
     {
-        public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
-
-        public static DBTable<T> GetTable<T>() where T : DBItem, new()
-        {
-            return DBService.GetTable<T>();
-        }
+        public static readonly DBItem EmptyItem = new DBItem(null) { cacheToString = "Loading" };
 
         internal PullHandler? oldHandler;
         internal PullHandler handler;
@@ -56,12 +50,12 @@ namespace DataWF.Data
         protected internal DBUpdateState update = DBUpdateState.Insert;
         private AccessValue access;
 
-        public DBItem()
-        {
-            var table = DBService.GetTable(GetType());
-            if (table != null)
-                Build(table);
-        }
+        //public DBItem()
+        //{
+        //    var table = DBService.GetTable(GetType());
+        //    if (table != null)
+        //        Build(table);
+        //}
 
         public DBItem(DBTable table)
         {
@@ -207,6 +201,12 @@ namespace DataWF.Data
         //}
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
+        public virtual DBSchema Schema
+        {
+            get => table.Schema;
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual DBTable Table
         {
             get => table;
@@ -214,11 +214,13 @@ namespace DataWF.Data
             {
                 if (table != value)
                 {
-                    table = value is IDBVirtualTable virtualTable ? virtualTable.BaseTable : value;
+                    table = value.IsVirtual ? value.BaseTable : value;
                     handler = table.GetNextHandler();
                 }
             }
         }
+
+        public DBTable TypedTable => Table.GetVirtualTable(GetType());
 
         public object this[int columnIndex]
         {
@@ -606,7 +608,7 @@ namespace DataWF.Data
             }
         }
 
-        public void SetReferencing<T>(IEnumerable<T> items, DBColumn column) where T : DBItem, new()
+        public void SetReferencing<T>(IEnumerable<T> items, DBColumn column) where T : DBItem
         {
             if (items == null)
             {
@@ -621,13 +623,13 @@ namespace DataWF.Data
             }
         }
 
-        public void SetReferencing<T>(IEnumerable<T> items, string property) where T : DBItem, new()
+        public void SetReferencing<T>(IEnumerable<T> items, string property) where T : DBItem
         {
-            var table = Table.Schema.GetTable<T>();
+            var table = Schema.GetTable<T>();
             SetReferencing<T>(items, table.ParseProperty(property));
         }
 
-        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, QQuery query, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, QQuery query, DBLoadParam param) where T : DBItem
         {
             //query.TypeFilter = typeof(T);
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
@@ -637,18 +639,18 @@ namespace DataWF.Data
             return table.Select(query);
         }
 
-        public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem
         {
-            var table = Table.Schema.GetTable<T>();
+            var table = Schema.GetTable<T>();
             return GetReferencing<T>(table, table.ParseProperty(property), param);
         }
 
-        public IEnumerable<T> GetReferencing<T>(DBColumn column, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(DBColumn column, DBLoadParam param) where T : DBItem
         {
-            return GetReferencing<T>(GetTable<T>(), column, param);
+            return GetReferencing<T>((DBTable<T>)column.Table.GetVirtualTable(typeof(T)), column, param);
         }
 
-        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, DBColumn column, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, DBColumn column, DBLoadParam param) where T : DBItem
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
@@ -664,15 +666,20 @@ namespace DataWF.Data
             }
         }
 
-        public IEnumerable<T> GetReferencing<T>(string tableCode, string columnCode, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(string tableCode, string columnCode, DBLoadParam param) where T : DBItem
         {
-            var table = (DBTable<T>)Table.Schema.ParseTable(tableCode);
+            var table = (DBTable<T>)Schema.ParseTable(tableCode);
             return table != null ? GetReferencing<T>(table, table.ParseColumn(columnCode), param) : null;
         }
 
-        public IEnumerable<T> GetReferencing<T>(DBForeignKey relation, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(DBForeignKey relation, DBLoadParam param) where T : DBItem
         {
             return GetReferencing<T>((DBTable<T>)relation.Table, relation.Column, param);
+        }
+
+        public IEnumerable<DBItem> GetReferencing(DBColumn column, DBLoadParam param)
+        {
+            return GetReferencing(column.Table, column, param);
         }
 
         public IEnumerable<DBItem> GetReferencing(DBTable table, DBColumn column, DBLoadParam param)
@@ -1211,7 +1218,7 @@ namespace DataWF.Data
             foreach (var relation in Table.GetChildRelations())
             {
                 if (relation.Table is IDBLogTable
-                    || relation.Table is IDBVirtualTable
+                    || relation.Table.IsVirtual
                     || relation.Table.Type != DBTableType.Table
                     || relation.Column.ColumnType != DBColumnTypes.Default)
                     continue;
@@ -1392,7 +1399,7 @@ namespace DataWF.Data
         {
             foreach (var relation in Table.GetChildRelations())
             {
-                if (relation.Table != Table && !(relation.Table is IDBVirtualTable))
+                if (relation.Table != Table && !relation.Table.IsVirtual)
                 {
                     var references = GetReferencing(relation, DBLoadParam.None);
                     foreach (DBItem reference in references)
@@ -1660,7 +1667,7 @@ namespace DataWF.Data
                 return null;
             if (transaction.Schema == null)
             {
-                transaction.Schema = Table.Schema;
+                transaction.Schema = Schema;
             }
             return Table.System.GetBlob(oid.Value, transaction, bufferSize);
         }

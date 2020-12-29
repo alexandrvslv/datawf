@@ -1,45 +1,29 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Data;
 
 namespace DataWF.Module.Flow
 {
-    [Table("rtemplate_property", "Template")]
-    public class TemplateProperty : DBItem
+    [Table("rtemplate_property", "Template"), InvokerGenerator]
+    public partial class TemplateProperty : TemplateItem
     {
-        public static readonly DBTable<TemplateProperty> DBTable = GetTable<TemplateProperty>();
-        public static readonly DBColumn TemplateKey = DBTable.ParseProperty(nameof(TemplateId));
-        public static readonly DBColumn PropertyNameKey = DBTable.ParseProperty(nameof(PropertyName));
 
-        private Template template;
-
-        public TemplateProperty()
+        public TemplateProperty(DBTable table) : base(table)
         { }
+
+        public TemplatePropertyTable<TemplateProperty> TemplatePropertyTable => (TemplatePropertyTable<TemplateProperty>)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
-        }
-
-        [Column("template_id"), Index("rtemplate_property_index", true)]
-        public int? TemplateId
-        {
-            get => GetValue<int?>(TemplateKey);
-            set => SetValue(value, TemplateKey);
-        }
-
-        [Reference(nameof(TemplateId))]
-        public Template Template
-        {
-            get => GetReference(TemplateKey, ref template);
-            set => SetReference(template = value, TemplateKey);
+            get => GetValue<int?>(TemplatePropertyTable.IdKey);
+            set => SetValue(value, TemplatePropertyTable.IdKey);
         }
 
         [Column("property_name", 1024), Index("rtemplate_property_index", true)]
         public string PropertyName
         {
-            get => GetValue<string>(PropertyNameKey);
-            set => SetValue(value, PropertyNameKey);
+            get => GetValue<string>(TemplatePropertyTable.PropertyNameKey);
+            set => SetValue(value, TemplatePropertyTable.PropertyNameKey);
         }
 
     }

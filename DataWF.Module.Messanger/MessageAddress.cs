@@ -1,4 +1,5 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Data;
 using DataWF.Module.Common;
 using System;
 using System.ComponentModel;
@@ -6,63 +7,42 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Messanger
 {
-    public class MessageAddressList : DBTableView<MessageAddress>
+
+    [DataContract, Table("dmessage_address", "Message", Keys = DBTableKeys.NoLogs), InvokerGenerator]
+    public partial class MessageAddress : MessageDetail
     {
-        public MessageAddressList(string filter)
-            : base(MessageAddress.DBTable, filter)
-        {
-            //_ApplySort(new DBRowComparer(FlowEnvir.Config.StageParameter.Table, FlowEnvir.Config.StageParameter.Table.PrimaryKey.Code, ListSortDirection.Ascending));
-        }
-
-        public MessageAddressList()
-            : this(string.Empty)
-        { }
-
-        public MessageAddressList(Message message)
-            : this(string.Format("({0} = {1}",
-                                 MessageAddress.DBTable.ParseProperty(nameof(MessageAddress.MessageId)).Name, message.PrimaryId))
-        { }
-    }
-
-    [DataContract, Table("dmessage_address", "Message", Keys = DBTableKeys.NoLogs)]
-    public class MessageAddress : MessageDetail
-    {
-        public static readonly DBTable<MessageAddress> DBTable = GetTable<MessageAddress>();
-        public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(UserId));
-        public static readonly DBColumn PositionKey = DBTable.ParseProperty(nameof(PositionId));
-        public static readonly DBColumn DepartmentKey = DBTable.ParseProperty(nameof(DepartmentId));
-        public static readonly DBColumn DateReadKey = DBTable.ParseProperty(nameof(DateRead));
-
         private User user;
         private Position position;
         private Department department;
 
-        public MessageAddress()
+        public MessageAddress(DBTable table) : base(table)
         {
         }
+
+        public MessageAddressTable<MessageAddress> MessageAddressTable => (MessageAddressTable<MessageAddress>)Table;
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(table.PrimaryKey); }
-            set { SetValue(value, table.PrimaryKey); }
+            get => GetValue<int?>(MessageAddressTable.IdKey);
+            set => SetValue(value, MessageAddressTable.IdKey);
         }
 
         [Browsable(false)]
         [DataMember, Column("user_id"), Index("dmessage_address_user_id")]
         public int? UserId
         {
-            get { return GetValue<int?>(UserKey); }
-            set { SetValue(value, UserKey); }
+            get => GetValue<int?>(MessageAddressTable.UserIdKey);
+            set => SetValue(value, MessageAddressTable.UserIdKey);
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetReference(UserKey, ref user); }
+            get => GetReference(MessageAddressTable.UserIdKey, ref user);
             set
             {
-                SetReference(user = value, UserKey);
+                SetReference(user = value, MessageAddressTable.UserIdKey);
                 Position = value?.Position;
             }
         }
@@ -71,17 +51,17 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("position_id", Keys = DBColumnKeys.View), Index("dmessage_address_position_id")]
         public int? PositionId
         {
-            get { return GetValue<int?>(PositionKey); }
-            set { SetValue(value, PositionKey); }
+            get => GetValue<int?>(MessageAddressTable.PositionIdKey);
+            set => SetValue(value, MessageAddressTable.PositionIdKey);
         }
 
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get { return GetReference(PositionKey, ref position); }
+            get => GetReference(MessageAddressTable.PositionIdKey, ref position);
             set
             {
-                SetReference(position = value, PositionKey);
+                SetReference(position = value, MessageAddressTable.PositionIdKey);
                 Department = value?.Department;
             }
         }
@@ -90,28 +70,28 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("department_id", Keys = DBColumnKeys.View), Index("dmessage_address_department_id")]
         public int? DepartmentId
         {
-            get { return GetValue<int?>(DepartmentKey); }
-            set { SetValue(value, DepartmentKey); }
+            get => GetValue<int?>(MessageAddressTable.DepartmentIdKey);
+            set => SetValue(value, MessageAddressTable.DepartmentIdKey);
         }
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetReference(DepartmentKey, ref department); }
-            set { SetReference(department = value, DepartmentKey); }
+            get => GetReference(MessageAddressTable.DepartmentIdKey, ref department);
+            set => SetReference(department = value, MessageAddressTable.DepartmentIdKey);
         }
 
         [DataMember, Column("date_read")]
         public DateTime? DateRead
         {
-            get { return GetValue<DateTime?>(DateReadKey); }
-            set { SetValue(value, DateReadKey); }
+            get => GetValue<DateTime?>(MessageAddressTable.DateReadKey);
+            set => SetValue(value, MessageAddressTable.DateReadKey);
         }
 
         [Browsable(false)]
         public DBItem Staff
         {
-            get { return (DBItem)User ?? (DBItem)Position ?? (DBItem)Department; }
+            get => (DBItem)User ?? (DBItem)Position ?? (DBItem)Department;
             set
             {
                 if (value is Department)

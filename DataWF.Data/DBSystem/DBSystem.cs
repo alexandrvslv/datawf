@@ -579,8 +579,8 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
         public virtual void Format(StringBuilder ddl, DBForeignKey constraint)
         {
             DBTable refer = constraint.ReferenceTable;
-            if (refer is IDBVirtualTable)
-                refer = ((IDBVirtualTable)refer).BaseTable;
+            if (refer.IsVirtual)
+                refer = refer.BaseTable;
             ddl.AppendFormat(" constraint {0} foreign key ({1}) references {2}({3})",
                              constraint.Name,
                              constraint.Column.SqlName,
@@ -612,14 +612,13 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
             return "create view " + name + " as";
         }
 
-        public virtual void Format(StringBuilder ddl, IDBVirtualTable virtualTable, DDLType ddlType)
+        public virtual void FormatView(StringBuilder ddl, DBTable virtualTable, DDLType ddlType)
         {
-            var table = virtualTable as DBTable;
             if (ddlType == DDLType.Create)
             {
-                ddl.AppendLine(FormatCreateView(table.Name));
+                ddl.AppendLine(FormatCreateView(virtualTable.Name));
                 ddl.Append("select ");
-                foreach (var column in table.Columns)
+                foreach (var column in virtualTable.Columns)
                 {
                     if (column.ColumnType == DBColumnTypes.Default)
                         ddl.Append($"a.{column.SqlName} as {column.SqlName}");
@@ -631,7 +630,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
                 }
                 ddl.Length -= 2;
                 ddl.AppendLine();
-                ddl.AppendLine($"from {table.SqlName} a where {table.Query};");
+                ddl.AppendLine($"from {virtualTable.BaseTable.SqlName} a where {virtualTable.Query};");
             }
         }
 
@@ -748,7 +747,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
         {
             foreach (var table in schema.Tables)
             {
-                if (table is IDBVirtualTable)
+                if (table.IsVirtual)
                     continue;
                 Format(ddl, table, DDLType.Create, schema.Connection.System == DBSystem.SQLite, false);
                 ddl.AppendLine("go");
@@ -758,7 +757,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
             {
                 foreach (var constraint in schema.GetConstraints())
                 {
-                    if (constraint.Table is IDBVirtualTable || constraint.Column.ColumnType != DBColumnTypes.Default)
+                    if (constraint.Table.IsVirtual || constraint.Column.ColumnType != DBColumnTypes.Default)
                         continue;
                     Format(ddl, constraint, DDLType.Create);
                     ddl.AppendLine("go");
@@ -766,7 +765,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
 
                 foreach (var foreign in schema.GetForeigns())
                 {
-                    if (foreign.Table is IDBVirtualTable || foreign.Column.ColumnType != DBColumnTypes.Default)
+                    if (foreign.Table.IsVirtual || foreign.Column.ColumnType != DBColumnTypes.Default)
                         continue;
                     Format(ddl, foreign, DDLType.Create);
                     ddl.AppendLine("go");
@@ -781,7 +780,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
 
             foreach (var index in schema.GetIndexes())
             {
-                if (index.Table is IDBVirtualTable)
+                if (index.Table.IsVirtual)
                     continue;
                 Format(ddl, index, DDLType.Create);
                 ddl.AppendLine("go");

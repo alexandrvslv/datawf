@@ -7,7 +7,8 @@
     <AssemblyName>DataWF.Module.Common</AssemblyName>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
-
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -36,9 +37,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
-    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj" />
     <ProjectReference Include="..\DataWF.WebClient.Common\DataWF.WebClient.Common.csproj" />
-    <ProjectReference Include="..\DataWF.Common.Generator\DataWF.Common.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
-    <ProjectReference Include="..\DataWF.Data.Generator\DataWF.Data.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    <ProjectReference Include="..\DataWF.Common.Generator\DataWF.Common.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\DataWF.Data.Generator\DataWF.Data.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>

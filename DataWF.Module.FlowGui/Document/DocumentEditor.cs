@@ -141,6 +141,8 @@ namespace DataWF.Module.FlowGui
             Localize();
         }
 
+        public DocumentTable<Document> Documents { get; set; }
+
         public Toolsbar Bar
         {
             get { return bar; }
@@ -614,7 +616,7 @@ namespace DataWF.Module.FlowGui
         public DockPage InitReference(DBItem owner, StageForeign param)
         {
             var foreign = param.Foreign;
-            if (foreign == null || foreign.ReferenceTable != Document.DBTable)
+            if (foreign == null || foreign.ReferenceTable != Documents)
                 return null;
 
             var name = foreign.Table.Name + " (" + foreign.Column.Name + ")";
@@ -720,7 +722,7 @@ namespace DataWF.Module.FlowGui
 
         private void ToolRefreshClick(object sender, EventArgs e)
         {
-            foreach (var relation in Document.DBTable.GetChildRelations())
+            foreach (var relation in Documents.GetChildRelations())
             {
                 foreach (DBItem row in document.GetReferencing(relation, DBLoadParam.None))
                     row.Reject(GuiEnvironment.User);
@@ -852,7 +854,7 @@ namespace DataWF.Module.FlowGui
 
                 XmlDeserialize(fileName);
 
-                Document = Document.DBTable.LoadById(documentid);
+                Document = Documents.LoadById(documentid);
             }
             else
             {

@@ -38,7 +38,6 @@
     <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
     <ProjectReference Include="..\DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj" />
-    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj" />
     <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj" />
     <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />
     <ProjectReference Include="..\DataWF.Module.MessangerGui\DataWF.Module.MessangerGui.csproj" />

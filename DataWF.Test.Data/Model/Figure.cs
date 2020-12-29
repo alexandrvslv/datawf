@@ -7,13 +7,14 @@ namespace DataWF.Test.Data
     [Table(TestORM.FigureTableName, "Geometry")]
     public class Figure : DBItem
     {
-        public static DBTable<Figure> DBTable => GetTable<Figure>();
+        public Figure(DBTable table) : base(table)
+        { }
 
         [Column("id", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(DBTable.PrimaryKey);
-            set => SetValue(value, DBTable.PrimaryKey);
+            get => GetValue<int>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Column("location", 16)]

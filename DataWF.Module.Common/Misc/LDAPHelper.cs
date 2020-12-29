@@ -42,11 +42,13 @@ namespace DataWF.Module.Common
             return false;
         }
 
-        public static async Task<List<User>> LoadADUsers(string userName, string password, DBTransaction transaction)
+        public static async Task<List<User>> LoadADUsers(DBSchema schema, string userName, string password, DBTransaction transaction)
         {
-            var users = new List<User>();
+            var userList = new List<User>();
             try
             {
+                var postions = (PositionTable)schema.GetTable<Position>();
+                var users = (UserTable)schema.GetTable<User>();
                 var domain = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName;
                 var domain1 = domain.Substring(0, domain.IndexOf('.'));
                 var domain2 = domain.Substring(domain.IndexOf('.') + 1);
@@ -75,20 +77,20 @@ namespace DataWF.Module.Common
                                 var positionName = resultRecord.GetAttribute("title")?.StringValue;
                                 if (!string.IsNullOrEmpty(positionName))
                                 {
-                                    position = Position.DBTable.LoadByCode(positionName);
+                                    position = postions.LoadByCode(positionName);
                                     if (position == null)
                                     {
-                                        position = new Position();
+                                        position = new Position(postions);
                                     }
                                     position.Code = positionName;
                                     position.Name = positionName;
                                     await position.Save(transaction);
                                 }
 
-                                var user = User.DBTable.LoadByCode(attribute.StringValue, User.LoginKey, DBLoadParam.None);
+                                var user = users.LoadByCode(attribute.StringValue, users.LoginKey, DBLoadParam.None);
                                 if (user == null)
                                 {
-                                    user = new User();
+                                    user = new User(users);
                                 }
                                 user.Position = position;
                                 user.Login = attribute.StringValue;
@@ -110,7 +112,7 @@ namespace DataWF.Module.Common
             {
                 Helper.OnException(ex);
             }
-            return users;
+            return userList;
         }
 
     }

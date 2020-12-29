@@ -39,6 +39,8 @@ namespace DataWF.Data
         protected readonly List<T> items = new List<T>();
         protected readonly List<T> insertItems = new List<T>();
         protected readonly List<IDBTableView> queryViews = new List<IDBTableView>(1);
+        private QQuery filterQuery;
+
 
         public DBTable() : this(null)
         { }
@@ -47,6 +49,25 @@ namespace DataWF.Data
         {
             DefaultComparer = DBItemDefaultComparer<T>.Instance;
             SetItemType(typeof(T));
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override QQuery FilterQuery
+        {
+            get
+            {
+                if (BaseTable == null)
+                    return null;
+                return filterQuery ??= new QQuery(query, BaseTable) { TypeFilter = typeof(T) };
+            }
+            set => filterQuery = value;
+        }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public override bool IsSynchronized
+        {
+            get => base.IsSynchronized || (IsVirtual && (BaseTable?.IsSynchronized ?? false));
+            set => base.IsSynchronized = value;
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
@@ -113,6 +134,20 @@ namespace DataWF.Data
 
         public virtual void Add(T item)
         {
+            if (IsVirtual)
+            {
+                if (!item.Attached)
+                {
+                    BaseTable.Add(item);
+                }
+                else
+                {
+                    items.Add(item);
+                    AddIndexes(item);
+                    CheckViews(item, NotifyCollectionChangedAction.Add);
+                }
+                return;
+            }
             if (item.Table != this)
             {
                 throw new ArgumentException("Wrong Table item!");
@@ -150,6 +185,23 @@ namespace DataWF.Data
 
         public virtual bool Remove(T item)
         {
+            if (IsVirtual)
+            {
+                if (item.Attached)
+                {
+                    return BaseTable.Remove(item);
+                }
+                else
+                {
+                    if (items.Remove(item))
+                    {
+                        CheckViews(item, NotifyCollectionChangedAction.Remove);
+                        RemoveIndexes(item);
+                        return true;
+                    }
+                    return false;
+                }
+            }
             if (!item.Attached)
             {
                 return false;
@@ -163,6 +215,13 @@ namespace DataWF.Data
 
         public override void Accept(DBItem item)
         {
+            if (IsVirtual)
+            {
+                if (item is not T tItem || tItem.GetType() != typeof(T))
+                {
+                    return;
+                }
+            }
             if (!item.Attached)
             {
                 Add(item);
@@ -180,6 +239,100 @@ namespace DataWF.Data
             }
         }
 
+        public override void OnBaseTableChanged(DBItem item, NotifyCollectionChangedAction type)
+        {
+            if (item is T view && view.GetType() == typeof(T))
+            {
+                switch (type)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        if (FilterQuery.CheckItem(item))
+                        {
+                            Add(view);
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        Remove(view);
+                        break;
+                }
+            }
+            else if (type == NotifyCollectionChangedAction.Reset)
+            {
+                Clear();
+                foreach (T sitem in BaseTable.SelectItems(FilterQuery))
+                {
+                    Add(sitem);
+                }
+            }
+        }
+
+        public override void RefreshVirtualTable(DBTable value)
+        {
+            BaseTable = value;
+            GroupName = value.GroupName;
+            BlockSize = value.BlockSize;
+            SequenceName = value.SequenceName;
+            Keys = value.Keys | DBTableKeys.Virtual;
+            FilterQuery = null;
+
+            if (Columns.Count > 0)
+                return;
+
+            var type = typeof(T);
+            foreach (DBColumn column in BaseTable.Columns)
+            {
+                var exist = Columns[column.Name];
+                if (exist == null)
+                {
+                    if (!(column.PropertyInvoker?.TargetType.IsAssignableFrom(type) ?? true))
+                        continue;
+                    Columns.Add(DBColumnFactory.CreateVirtual(column, this));
+                }
+                else
+                {
+                    exist.RefreshVirtualColumn(column);
+                }
+            }
+
+            foreach (DBForeignKey reference in BaseTable.Foreigns)
+            {
+                var existColumn = Columns[reference.Column.Name];
+                if (existColumn == null || reference.Reference == null)
+                    continue;
+                var exist = Foreigns.GetByColumns(existColumn, reference.Reference);
+                if (exist == null)
+                {
+                    exist = new DBForeignKey()
+                    {
+                        Column = existColumn,
+                        Reference = reference.Reference,
+                        Property = reference.Property
+                    };
+                    exist.GenerateName();
+                    Foreigns.Add(exist);
+                }
+            }
+
+            foreach (DBConstraint constraint in BaseTable.Constraints)
+            {
+                var existColumn = Columns[constraint.Column.Name];
+                if (existColumn == null)
+                    continue;
+                var exist = Constraints.GetByColumnAndType(existColumn, constraint.Type).FirstOrDefault();
+                if (exist == null)
+                {
+                    exist = new DBConstraint
+                    {
+                        Column = existColumn,
+                        Type = constraint.Type,
+                        Value = constraint.Value
+                    };
+                    exist.GenerateName();
+                    Constraints.Add(exist);
+                }
+            }
+        }
+
         public void CopyTo(T[] array, int arrayIndex)
         {
             items.CopyTo(array, arrayIndex);
@@ -192,6 +345,13 @@ namespace DataWF.Data
 
         public override void Clear()
         {
+            if (IsVirtual)
+            {
+                items.Clear();
+                ClearColumnsData(false);
+                CheckViews(null, NotifyCollectionChangedAction.Reset);
+                return;
+            }
             lock (Lock)
             {
                 Hash = -1;
@@ -251,6 +411,14 @@ namespace DataWF.Data
 
         public override void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
+            if (IsVirtual)
+            {
+                if (item.GetType() != typeof(T))
+                {
+                    return;
+                }
+                column = column == null ? null : (DBColumn<V>)Columns[column.Name];
+            }
             if (column.PullIndex is IPullInIndex<T, V> pullIndex)
                 pullIndex.Remove(item, value);
             foreach (var table in virtualTables)
@@ -268,6 +436,27 @@ namespace DataWF.Data
                 || string.Equals(property, nameof(DBItem.UpdateState), StringComparison.Ordinal))
             {
                 return;
+            }
+
+            if (IsVirtual)
+            {
+                if (item is T tItem && tItem.GetType() == typeof(T))
+                {
+                    if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(column?.Name) && !FilterQuery.CheckItem(tItem)))
+                    {
+                        if (items.Remove(tItem))
+                        {
+                            CheckViews(item, NotifyCollectionChangedAction.Remove);
+                            RemoveIndexes(tItem);
+                            return;
+                        }
+                    }
+                    column = column == null ? null : (DBColumn<V>)Columns[column.Name];
+                }
+                else
+                {
+                    return;
+                }
             }
 
             if (column?.PullIndex is IPullInIndex<T, V> pullIndex)
@@ -291,7 +480,7 @@ namespace DataWF.Data
         {
             foreach (var collection in virtualTables)
             {
-                collection.OnTableChanged(item, type);
+                collection.OnBaseTableChanged(item, type);
             }
             for (int i = 0; i < queryViews.Count; i++)
             {
@@ -1164,10 +1353,27 @@ namespace DataWF.Data
 
         public override void Dispose()
         {
+            if (IsVirtual)
+            {
+                BaseTable?.RemoveVirtual(this);
+                filterQuery?.Dispose();
+            }
             base.Dispose();
             Clear();
             queryViews.Clear();
             queryViews.TrimExcess();
+        }
+
+        public override DBItem NewItem(DBUpdateState state, bool def, int typeIndex)
+        {
+            if (IsVirtual)
+            {
+                if (typeIndex == 0)
+                    typeIndex = GetTypeIndex(typeof(T));
+                return BaseTable.NewItem(state, def, typeIndex);
+            }
+
+            return base.NewItem(state, def, typeIndex);
         }
 
         public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true)

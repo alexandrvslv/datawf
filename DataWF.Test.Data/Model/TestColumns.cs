@@ -6,7 +6,9 @@ namespace DataWF.Test.Data
     [Table(TestORM.TestColumnsTableName, "Default")]
     public class TestColumns : DBItem
     {
-        public static DBTable<TestColumns> DBTable => GetTable<TestColumns>();
+        public TestColumns(DBTable table) : base(table)
+        {
+        }
 
         [Column("int_value", Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull)]
         public int IntId { get => GetProperty<int>(); set => SetProperty(value); }

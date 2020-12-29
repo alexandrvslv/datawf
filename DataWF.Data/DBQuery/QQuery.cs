@@ -989,7 +989,7 @@ namespace DataWF.Data
 
         public QParam CreateParam(LogicType logic, DBColumn column, CompareType compare, object value)
         {
-            if (Table is IDBVirtualTable
+            if (Table.IsVirtual
                 && column?.Table != Table)
             {
                 column = column.GetVirtualColumn(Table);
@@ -1327,12 +1327,12 @@ namespace DataWF.Data
             var buf = new StringBuilder();
             //parameters._ApplySort("Order");
             if (command != null
-                && Table is IDBVirtualTable vtable
-                && vtable.FilterQuery.Parameters.Count > 0)
+                && Table.IsVirtual
+                && Table.FilterQuery.Parameters.Count > 0)
             {
                 if (wbuf.Length > 0)
                     buf.Append("(");
-                foreach (QParam param in vtable.FilterQuery.Parameters)
+                foreach (QParam param in Table.FilterQuery.Parameters)
                 {
                     if (Contains(param.LeftColumn))
                         continue;
@@ -1347,14 +1347,14 @@ namespace DataWF.Data
                     buf.Append(") and (");
             }
             buf.Append(wbuf);
-            if (Table is IDBVirtualTable && command != null && wbuf.Length > 0)
+            if (Table.IsVirtual && command != null && wbuf.Length > 0)
                 buf.Append(")");
             return buf.ToString();
         }
 
         public IDbCommand ToCommand(bool defcolumns = false)
         {
-            var command = Table.Schema.Connection.CreateCommand();
+            var command = Schema.Connection.CreateCommand();
             command.CommandText = FormatAll(command, defcolumns);
             return command;
         }

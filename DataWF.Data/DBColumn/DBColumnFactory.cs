@@ -164,10 +164,10 @@ namespace DataWF.Data
             return column;
         }
 
-        public static DBColumn CreateVirtual(DBColumn baseColumn, IDBVirtualTable table)
+        public static DBColumn CreateVirtual(DBColumn baseColumn, DBTable table)
         {
             var column = (DBColumn)EmitInvoker.CreateObject(baseColumn.GetType());
-            column.Table = (DBTable)table;
+            column.Table = table;
             column.RefreshVirtualColumn(baseColumn);
             return column;
         }

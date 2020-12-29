@@ -17,33 +17,31 @@ namespace DataWF.Module.Common
 
     public class SchedulerService : IDisposable
     {
-        public static SchedulerService Instance;
         private readonly ManualResetEventSlim delayEvent = new ManualResetEventSlim(false);
         private readonly ManualResetEventSlim stopEvent = new ManualResetEventSlim(true);
         private readonly ManualResetEventSlim pauseEvent = new ManualResetEventSlim(true);
         private Scheduler item;
-        private readonly SchedulerList items = new SchedulerList();
+        private readonly SchedulerList items;
         private bool running = false;
         private readonly int timer = 0;
         private readonly int startH = 8;
         private readonly int stoptH = 21;
 
-        public SchedulerService(int timer = 60000)
+        public SchedulerService(DBSchema schema, int timer = 60000)
         {
-            Instance = this;
+            Table = (SchedulerTable)schema.GetTable<Scheduler>();
+            items = new SchedulerList(Table);
             this.timer = timer;
             items.Table.LoadItems("", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
         }
 
-        public bool Running
-        {
-            get { return running; }
-        }
+        public SchedulerTable Table { get; private set; }
 
-        public Scheduler Current
-        {
-            get { return item; }
-        }
+        public SchedulerList Items => items;
+
+        public bool Running => running;
+
+        public Scheduler Current => item;
 
         public void Start()
         {
@@ -128,10 +126,6 @@ namespace DataWF.Module.Common
             return false;
         }
 
-        public SchedulerList Items
-        {
-            get { return items; }
-        }
 
         public void Dispose()
         {

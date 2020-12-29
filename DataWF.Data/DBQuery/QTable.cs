@@ -54,7 +54,7 @@ namespace DataWF.Data
 
         public JoinType Join
         {
-            get { return join; }
+            get => join;
             set
             {
                 if (join != value)
@@ -67,17 +67,12 @@ namespace DataWF.Data
 
         public DBTable BaseTable
         {
-            get => Table is IDBVirtualTable virtualTable ? virtualTable.BaseTable : Table;
+            get => Table.IsVirtual ? Table.BaseTable : Table;
         }
 
         public override DBTable Table
         {
-            get
-            {
-                if (table == null)
-                    table = DBService.Schems.ParseTable(tableName);
-                return table;
-            }
+            get => table ??= DBService.Schems.ParseTable(tableName);
             set
             {
                 if (Table != value)

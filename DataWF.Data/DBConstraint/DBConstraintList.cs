@@ -29,7 +29,7 @@ namespace DataWF.Data
 
         public DBConstraintList(DBTable table) : base(table)
         {
-            Indexes.Add(DBConstraint.ColumnNameInvoker<T>.Instance);
+            Indexes.Add(DBConstraint.ColumnNameInvoker.Instance);
         }
 
         public IEnumerable<T> GetByColumn(DBColumn column)
@@ -44,7 +44,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetByValue(string value)
         {
-            return Select(DBConstraint.ValueInvoker<T>.Instance, CompareType.Equal, value);
+            return Select(DBConstraint.ValueInvoker.Instance, CompareType.Equal, value);
         }
 
         public override DDLType GetInsertType(T item)

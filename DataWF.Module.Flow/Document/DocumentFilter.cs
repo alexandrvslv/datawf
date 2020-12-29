@@ -43,16 +43,18 @@ namespace DataWF.Module.Flow
         private QParam paramCustomer;
         private QParam paramReferencing;
 
-        public DocumentFilter()
+        public DocumentFilter(DBSchema schema)
             : base()
         {
-            QDoc = new QQuery(string.Empty, Document.DBTable);
-            QWork = new QQuery(string.Empty, DocumentWork.DBTable);
-            QWork.Columns.Add(new QColumn(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId))));
-            paramWork = new QParam(Document.DBTable.PrimaryKey, CompareType.In, QWork);
-            paramWorkId = new QParam(Document.DBTable.ParseProperty(nameof(Document.CurrentWorkId)), CompareType.IsNot, null);
+            DocumentTable = (DocumentTable<Document>)schema.GetTable<Document>();
+            QDoc = new QQuery(string.Empty, DocumentTable);
+            QWork = new QQuery(string.Empty, DocumentTable.WorkTable);
+            QWork.Columns.Add(new QColumn(DocumentTable.WorkTable.DocumentIdKey));
+            paramWork = new QParam(DocumentTable.IdKey, CompareType.In, QWork);
+            paramWorkId = new QParam(DocumentTable.CurrentWorkIdKey, CompareType.IsNot, null);
         }
 
+        public DocumentTable<Document> DocumentTable { get; set; }
         public DocumentSearchDate DateType
         {
             get => dtype;
@@ -88,10 +90,10 @@ namespace DataWF.Module.Flow
                     {
                         switch (DateType)
                         {
-                            case DocumentSearchDate.Document: paramDate.LeftColumn = Document.DBTable.ParseProperty(nameof(Document.DocumentDate)); break;
-                            case DocumentSearchDate.Create: paramDate.LeftColumn = Document.DBTable.ParseProperty(nameof(Document.DateCreate)); break;
-                            case DocumentSearchDate.WorkBegin: paramDate.LeftColumn = DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DateCreate)); break;
-                            case DocumentSearchDate.WorkEnd: paramDate.LeftColumn = DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DateComplete)); break;
+                            case DocumentSearchDate.Document: paramDate.LeftColumn = DocumentTable.DocumentDateKey; break;
+                            case DocumentSearchDate.Create: paramDate.LeftColumn = DocumentTable.DateKey; break;
+                            case DocumentSearchDate.WorkBegin: paramDate.LeftColumn = DocumentTable.WorkTable.DateKey; break;
+                            case DocumentSearchDate.WorkEnd: paramDate.LeftColumn = DocumentTable.WorkTable.DateCompleteKey; break;
                         }
                         paramDate.RightValue = Date;
                     }
@@ -110,7 +112,7 @@ namespace DataWF.Module.Flow
                 work = value;
                 if (paramCompleate == null)
                 {
-                    paramCompleate = new QParam(Document.DBTable.ParseProperty(nameof(Document.IsComplete)), CompareType.Equal, IsWork != CheckedState.Checked);
+                    paramCompleate = new QParam(DocumentTable.IsCompleteKey, CompareType.Equal, IsWork != CheckedState.Checked);
                     paramCompleate.IsDefault = true;
                 }
                 else
@@ -123,7 +125,7 @@ namespace DataWF.Module.Flow
 
         public Document Referencing
         {
-            get => referencingCache ?? (referencingCache = Document.DBTable.LoadById(referencing));
+            get => referencingCache ?? (referencingCache = DocumentTable.LoadById(referencing));
             set
             {
                 if (Referencing == value)
@@ -134,7 +136,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramReferencing == null)
                     {
-                        paramReferencing = Document.CreateRefsParam(value.Id);
+                        paramReferencing = DocumentTable.CreateRefsParam(value.Id);
                         paramReferencing.IsDefault = true;
                     }
                     else
@@ -166,7 +168,7 @@ namespace DataWF.Module.Flow
 
         public Customer Customer
         {
-            get => customerCache ?? (customerCache = Customer.DBTable.LoadById(customer));
+            get => customerCache ?? (customerCache = Customer.CustomerTable.LoadById(customer));
             set
             {
                 if (Customer == value)
@@ -179,7 +181,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramCustomer == null)
                     {
-                        paramCustomer = new QParam(Document.DBTable.ParseProperty(nameof(Document.Customer)), CompareType.Equal, value.Id);
+                        paramCustomer = new QParam(DocumentTable.CustomerIdKey, CompareType.Equal, value.Id);
                         paramCustomer.IsDefault = true;
                     }
                     else
@@ -203,7 +205,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramId == null)
                     {
-                        paramId = new QParam(Document.DBTable.PrimaryKey, Id);
+                        paramId = new QParam(DocumentTable.IdKey, Id);
                         paramId.IsDefault = true;
                     }
                     else
@@ -227,7 +229,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramNumber == null)
                     {
-                        paramNumber = new QParam(Document.DBTable.CodeKey, CompareType.Like, $"%{Number}%");
+                        paramNumber = new QParam(DocumentTable.CodeKey, CompareType.Like, $"%{Number}%");
                         paramNumber.IsDefault = true;
                     }
                     else
@@ -245,7 +247,7 @@ namespace DataWF.Module.Flow
 
         public Template Template
         {
-            get => templateCache ?? (templateCache = Template.DBTable?.LoadById(template));
+            get => templateCache ?? (templateCache = DocumentTable.TemplateTable.LoadById(template));
             set
             {
                 string id = value?.PrimaryId.ToString();
@@ -257,7 +259,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramTemplate == null)
                     {
-                        paramTemplate = new QParam(Document.DBTable.ParseProperty(nameof(Document.TemplateId)), CompareType.In, Template.GetSubGroupFull(true));
+                        paramTemplate = new QParam(DocumentTable.TemplateIdKey, CompareType.In, Template.GetSubGroupFull(true));
                         paramTemplate.IsDefault = true;
                     }
                     else
@@ -276,7 +278,7 @@ namespace DataWF.Module.Flow
                 if (stage == null)
                     return null;
                 int index = stage.IndexOf(':');
-                return cacheStage ?? (cacheStage = Work.DBTable.Schema.Tables[stage.Substring(0, index)].LoadItemById(stage.Substring(index + 1)));
+                return cacheStage ?? (cacheStage = DocumentTable.Schema.Tables[stage.Substring(0, index)].LoadItemById(stage.Substring(index + 1)));
             }
             set
             {
@@ -286,8 +288,8 @@ namespace DataWF.Module.Flow
                 stage = value == null ? null : $"{value.Table.Name}:{ value.PrimaryId}";
 
                 var column = Stage is Work
-                    ? DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.WorkId))
-                    : DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.StageId));
+                    ? DocumentTable.WorkTable.WorkIdKey
+                    : DocumentTable.WorkTable.StageIdKey;
                 if (value != null)
                 {
                     if (paramStage == null)
@@ -313,7 +315,7 @@ namespace DataWF.Module.Flow
                 if (staff == null)
                     return null;
                 int index = staff.IndexOf(':');
-                return cacheUser ?? (cacheUser = UserGroup.DBTable.Schema.Tables[staff.Substring(0, index)].LoadItemById(staff.Substring(index + 1)));
+                return cacheUser ?? (cacheUser = DocumentTable.Schema.Tables[staff.Substring(0, index)].LoadItemById(staff.Substring(index + 1)));
             }
             set
             {
@@ -322,10 +324,10 @@ namespace DataWF.Module.Flow
                 cacheUser = value;
                 staff = value == null ? null : $"{value.Table.Name}:{ value.PrimaryId}";
                 var column = Staff is Department
-                    ? DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DepartmentId))
+                    ? DocumentTable.WorkTable.DepartmentIdKey
                     : Staff is Position
-                    ? DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.PositionId))
-                    : DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.UserId));
+                    ? DocumentTable.WorkTable.PositionIdKey
+                    : DocumentTable.WorkTable.UserIdKey;
                 if (value != null)
                 {
                     if (paramStaff == null)

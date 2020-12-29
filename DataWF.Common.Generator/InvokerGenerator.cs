@@ -39,36 +39,36 @@ namespace DataWF.Common.Generator
             {
                 SemanticModel model = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
                 INamedTypeSymbol typeSymbol = model.GetDeclaredSymbol(classDeclaration);
-                var parameters = typeSymbol.GetMembers()
-                    .Where(p => p is IPropertySymbol symbol
-                    && !symbol.IsOverride
-                    && !symbol.IsIndexer
-                    && !symbol.IsStatic
-                    && !symbol.Name.Contains('.'))
-                    .Select(p => p as IPropertySymbol);
-                if (parameters.Count() > 0)
-                {
-                    var classSource = ProcessClass(typeSymbol, parameters, invokerGeneratorAtribute, context);
-                    if (classSource != null)
-                    {
-                        context.AddSource($"{typeSymbol.Name}Invokers.cs", SourceText.From(classSource, Encoding.UTF8));
-                    }
-                }
+                ProcessClass(typeSymbol, invokerGeneratorAtribute, context);
             }
         }
 
-        private string ProcessClass(INamedTypeSymbol classSymbol, IEnumerable<IPropertySymbol> properties, INamedTypeSymbol invokerGeneratorAtribute, GeneratorExecutionContext context)
+        public static void ProcessClass(INamedTypeSymbol classSymbol, INamedTypeSymbol invokerGeneratorAtribute, GeneratorExecutionContext context)
+        {
+            IEnumerable<IPropertySymbol> properties = classSymbol.GetMembers()
+                    .OfType<IPropertySymbol>()
+                    .Where(symbol => !symbol.IsOverride
+                            && !symbol.IsIndexer
+                            && !symbol.IsStatic
+                            && !symbol.Name.Contains('.'));
+            if (properties.Any())
+            {
+                ProcessClass(classSymbol, properties, invokerGeneratorAtribute, context);
+            }
+        }
+
+        public static void ProcessClass(INamedTypeSymbol classSymbol, IEnumerable<IPropertySymbol> properties, INamedTypeSymbol invokerGeneratorAtribute, GeneratorExecutionContext context)
         {
             if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
             {
-                return null; //TODO: issue a diagnostic that it must be top level
+                return; //TODO: issue a diagnostic that it must be top level
             }
 
             string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
             var className = classSymbol.Name;
 
-            var attributeData = classSymbol.GetAttributes().Single(p => p.AttributeClass.Equals(invokerGeneratorAtribute, SymbolEqualityComparer.Default));
-            var argInstance = attributeData.NamedArguments.SingleOrDefault(p => p.Key == "Instance").Value;
+            var attributeData = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(invokerGeneratorAtribute, SymbolEqualityComparer.Default));
+            var argInstance = attributeData?.NamedArguments.FirstOrDefault(p => p.Key == "Instance").Value ?? default(TypedConstant);
             var isInstance = !argInstance.IsNull && (bool)argInstance.Value;
             var genericArgs = classSymbol.IsGenericType ? $"<{string.Join(", ", classSymbol.TypeParameters.Select(p => p.Name))}>" : string.Empty;
             // begin building the generated source
@@ -93,10 +93,10 @@ namespace {namespaceName}
             }
             source.Append(@"}
 }");
-            return source.ToString();
+            context.AddSource($"{classSymbol.Name}Invokers.cs", SourceText.From(source.ToString(), Encoding.UTF8));
         }
 
-        private void ProcessInvokerClass(StringBuilder source, IPropertySymbol propertySymbol, INamedTypeSymbol classSymbol, string genericArgs, bool instance)
+        private static void ProcessInvokerClass(StringBuilder source, IPropertySymbol propertySymbol, INamedTypeSymbol classSymbol, string genericArgs, bool instance)
         {
             // get the name and type of the field
             string propertyName = propertySymbol.Name;
@@ -117,7 +117,7 @@ namespace {namespaceName}
 
         }
 
-        private void ProcessInvokerAttributes(StringBuilder source, IPropertySymbol propertySymbol, INamedTypeSymbol classSymbol)
+        private static void ProcessInvokerAttributes(StringBuilder source, IPropertySymbol propertySymbol, INamedTypeSymbol classSymbol)
         {
             // get the name and type of the field
             string propertyName = propertySymbol.Name;

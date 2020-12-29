@@ -75,9 +75,7 @@ namespace DataWF.Data
             table.Generator = TableGenerator;
             table.ItemTypeIndex = Attribute.Id;
             table.Schema = schema;
-            var virtualTable = (IDBVirtualTable)table;
-            virtualTable.BaseTable = baseTable;
-            virtualTable.Generate();
+            table.RefreshVirtualTable(baseTable);
             foreach (var columnGenerator in TableGenerator.Columns)
             {
                 var virtualColumn = table.Columns[columnGenerator.ColumnName];
@@ -86,7 +84,7 @@ namespace DataWF.Data
                     var baseColumn = baseTable.Columns[columnGenerator.ColumnName];
                     if (virtualColumn.DataType != columnGenerator.DataType)
                     {
-                        table.Columns.Add(DBColumnFactory.CreateVirtual(baseColumn, virtualTable));
+                        table.Columns.Add(DBColumnFactory.CreateVirtual(baseColumn, table));
                     }
                     virtualColumn.RefreshVirtualColumn(baseColumn);
                     if (columnGenerator.DefaultValues != null && columnGenerator.DefaultValues.TryGetValue(Type, out var defaultValue))
@@ -113,10 +111,12 @@ namespace DataWF.Data
             }
             Debug.WriteLine($"Generate {TableGenerator.Attribute.TableName} - {Type.Name}");
 
-            var table = (DBTable)EmitInvoker.CreateObject(Attribute?.TableType ?? typeof(DBVirtualTable<>).MakeGenericType(Type));
+            var typeOfTable = Attribute?.Type ?? TypeHelper.ParseType(Type.FullName + "Table") ?? typeof(DBTable<>).MakeGenericType(Type);
+
+            var table = (DBTable)EmitInvoker.CreateObject(typeOfTable);
             table.Name = Type.Name;
             table.Schema = schema;
-            ((IDBVirtualTable)table).BaseTable = baseTable;
+            table.BaseTable = baseTable;
             table.DisplayName = Type.Name;
 
             return table;

@@ -117,7 +117,7 @@ namespace DataWF.Data
             {
                 foreach (DBTable table in schema.Tables)
                 {
-                    if (table.Count > 0 && table.IsCaching && !(table is IDBVirtualTable))
+                    if (table.Count > 0 && table.IsCaching && !table.IsVirtual)
                     {
                         table.SaveFile();
                     }
@@ -131,7 +131,7 @@ namespace DataWF.Data
             {
                 foreach (DBTable table in schema.Tables)
                 {
-                    if (table.IsCaching && !(table is IDBVirtualTable))
+                    if (table.IsCaching && !table.IsVirtual)
                     {
                         table.LoadFile();
                     }

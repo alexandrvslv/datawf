@@ -30,13 +30,10 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [Table("rinstance", "General", BlockSize = 128, Keys = DBTableKeys.NoLogs | DBTableKeys.NoReplicate, Type = typeof(InstanceTable))]
-    public class Instance : DBItem, IInstance
+    [Table("rinstance", "General", BlockSize = 128, Keys = DBTableKeys.NoLogs | DBTableKeys.NoReplicate, Type = typeof(InstanceTable)), InvokerGenerator]
+    public sealed partial class Instance : DBItem, IInstance
     {
         private IPEndPoint ipEndPoint;
-
-        public Instance()
-        { }
 
         public Instance(DBTable table) : base(table)
         { }
@@ -46,8 +43,8 @@ namespace DataWF.Data
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(InstanceTable.PrimaryKey);
-            set => SetValue(value, InstanceTable.PrimaryKey);
+            get => GetValue<int>(InstanceTable.IdKey);
+            set => SetValue(value, InstanceTable.IdKey);
         }
 
         [Column("instance_host", Keys = DBColumnKeys.View)]
@@ -102,17 +99,8 @@ namespace DataWF.Data
         }
     }
 
-    public class InstanceTable : DBTable<Instance>
+    public partial class InstanceTable
     {
-        private DBColumn<string> hostKey;
-        private DBColumn<int?> portKey;
-        private DBColumn<bool?> activeKey;
-
-        public DBColumn<string> HostKey => ParseProperty(nameof(Instance.Host), ref hostKey);
-        public DBColumn<int?> PortKey => ParseProperty(nameof(Instance.Port), ref portKey);
-        public DBColumn<bool?> ActiveKey => ParseProperty(nameof(Instance.Active), ref activeKey);
-
-
         public async Task<Instance> GetByNetId(IPEndPoint endPoint, bool create, IUserIdentity user = null)
         {
             var query = new QQuery(this);

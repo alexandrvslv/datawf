@@ -96,8 +96,8 @@ namespace DataWF.Data
         {
             Debug.WriteLine($"Generate {Attribute.TableName} - {this.ItemType.Name}");
 
-            var type = Attribute?.Type ?? typeof(DBTable<>).MakeGenericType(ItemType);
-            // var logicType = ItemType.Assembly.ExportedTypes.FirstOrDefault(p => p.BaseType == type);
+            var type = Attribute?.Type ?? TypeHelper.ParseType(ItemType.FullName + "Table") ?? typeof(DBTable<>).MakeGenericType(ItemType);
+            
             var table = (DBTable)EmitInvoker.CreateObject(type);
             table.Name = Attribute.TableName;
             table.Schema = schema;
@@ -395,7 +395,6 @@ namespace DataWF.Data
                         else
                             yield return new ColumnGenerator(this, property, columnAttribute, culture);
                     }
-
                 }
                 else
                 {

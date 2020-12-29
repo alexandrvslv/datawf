@@ -7,13 +7,13 @@ namespace DataWF.Module.Flow
     {
         [NonSerialized()]
         private Document document;
-        private string id;
+        private long id;
         private DateTime date = DateTime.Now;
 
         public DocumentHandler()
         {
         }
-
+        DocumentTable<Document> DocumentTable { get; set; }
         public override string ToString()
         {
             return Document == null ? base.ToString() : Document.ToString();
@@ -31,7 +31,7 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public string Id
+        public long Id
         {
             get => id;
             set
@@ -48,13 +48,13 @@ namespace DataWF.Module.Flow
         {
             get
             {
-                if (document == null && id != null)
-                    document = Document.DBTable.LoadById(id);
+                if (document == null && id != 0)
+                    document = DocumentTable.LoadById(id);
                 return document;
             }
             set
             {
-                Id = value?.PrimaryId.ToString();
+                Id = value?.Id ?? 0;
                 document = value;
             }
         }

@@ -6,11 +6,9 @@ namespace DataWF.Test.Data
     [Table(TestORM.PositionTableName, "Default")]
     public class Position : DBItem
     {
-        public static DBTable<Position> DBTable => GetTable<Position>();
-
         private Position parent;
 
-        public Position()
+        public Position(DBTable table) : base(table)
         {
         }
 

@@ -4,19 +4,19 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [Table("rbook", "Reference Book", BlockSize = 100, Type = typeof(BookTable)), InvokerGenerator]
+    [Table("rbook", "Reference Book", BlockSize = 100, Type = typeof(BookTable<>)), InvokerGenerator]
     public partial class Book : DBGroupItem
     {
-        public Book()
+        public Book(DBTable table) : base(table)
         { }
 
-        public BookTable BookTable => (BookTable)Table;
+        public BookTable<Book> BookTable => (BookTable<Book>)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int>(BookTable.IdKey);
+            set => SetValue(value, BookTable.IdKey);
         }
 
         [Column("code", 512, Keys = DBColumnKeys.Code)]
@@ -47,14 +47,14 @@ namespace DataWF.Module.Common
             set => SetName(value);
         }
 
-        [CultureKey]
+        [CultureKey(nameof(Name))]
         public string NameEN
         {
             get => GetValue<string>(BookTable.NameENKey);
             set => SetValue(value, BookTable.NameENKey);
         }
 
-        [CultureKey]
+        [CultureKey(nameof(Name))]
         public string NameRU
         {
             get => GetValue<string>(BookTable.NameRUKey);
@@ -71,8 +71,8 @@ namespace DataWF.Module.Common
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(BookTable.ExternalKey);
-            set => SetValue(value, BookTable.ExternalKey);
+            get => GetValue<int?>(BookTable.ExternalIdKey);
+            set => SetValue(value, BookTable.ExternalIdKey);
         }
     }
 }

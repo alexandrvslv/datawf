@@ -29,7 +29,7 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public partial class DBLogTable<T> : DBTable<T>, IDBLogTable where T : DBLogItem, new()
+    public partial class DBLogTable<T> : DBTable<T>, IDBLogTable where T : DBLogItem
     {
         private DBTable baseTable;
         private DBColumn basekey = DBColumn.EmptyKey;
@@ -67,27 +67,25 @@ namespace DataWF.Data
             }
         }
 
-        public string BaseTableName { get; set; }
-
         [XmlIgnore, JsonIgnore]
-        public DBTable BaseTable
+        public override DBTable BaseTable
         {
             get
             {
-                return baseTable ?? (baseTable = Schema is DBLogSchema
-                              ? ((DBLogSchema)Schema).BaseSchema.Tables[BaseTableName]
+                return baseTable ??= (Schema is DBLogSchema logSchema
+                              ? logSchema.BaseSchema.Tables[BaseTableName]
                               : Schema?.Tables[BaseTableName]);
             }
             set
             {
-                baseTable = value ?? throw new ArgumentException("BaseTable set operation required not null value!");
-                BaseTableName = value.Name;
+                BaseTableName = value?.Name ?? throw new ArgumentException("BaseTable set operation required not null value!");
+                baseTable = value;
                 Name = value.Name + "_log";
                 Schema = value.Schema.LogSchema ?? value.Schema;
                 var seqName = value.SequenceName + "_log";
                 Sequence = Schema.Sequences[seqName] ?? new DBSequence() { Name = seqName };
-                DisplayName = value.DisplayName + " Log";               
-                
+                DisplayName = value.DisplayName + " Log";
+
 
                 foreach (var column in value.Columns)
                 {

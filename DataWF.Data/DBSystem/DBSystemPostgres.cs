@@ -488,7 +488,7 @@ namespace DataWF.Data
 
         //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)
         //{
-        //    var Conn = (NpgsqlConnection)CreateConnection(item.Table.Schema.Connection);
+        //    var Conn = (NpgsqlConnection)CreateConnection(item.Schema.Connection);
         //    // Retrieve a Large Object Manager for this connection
         //    var manager = new NpgsqlLargeObjectManager(Conn);
 

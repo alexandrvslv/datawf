@@ -17,23 +17,41 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
-using System.Xml.Serialization;
+
 using DataWF.Common;
 
 namespace DataWF.Data
 {
-    public abstract class DBUserReg : DBGroupItem, IUserReg
+    [AbstractTable, InvokerGenerator]
+    public abstract partial class DBUserReg : DBGroupItem, IUserReg
     {
+        private DBUser dbUser;
+
+        public DBUserReg(DBTable table) : base(table)
+        { }
+
+        public IDBUserRegTable DBUserRegTable => (IDBUserRegTable)Table;
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public abstract long Id { get; set; }
+        public long Id
+        {
+            get => GetValue<long>(DBUserRegTable.IdKey);
+            set => SetValue(value, DBUserRegTable.IdKey);
+        }
 
         [Column("user_id", Keys = DBColumnKeys.View)]
-        public abstract int? UserId { get; set; }
+        public int? UserId
+        {
+            get => GetValue<int?>(DBUserRegTable.UserIdKey);
+            set => SetValue(value, DBUserRegTable.UserIdKey);
+        }
 
-        [XmlIgnore, JsonIgnore]
-        public abstract DBUser DBUser { get; set; }
+        [Reference(nameof(UserId))]
+        public DBUser DBUser
+        {
+            get => GetReference(DBUserRegTable.UserIdKey, ref dbUser);
+            set => SetReference(dbUser = value, DBUserRegTable.UserIdKey);
+        }
 
         IUserIdentity IUserReg.UserIdentity => DBUser;
     }

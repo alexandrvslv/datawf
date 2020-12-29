@@ -18,17 +18,15 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 
+using DataWF.Common;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [Table("file_data", "General", Keys = DBTableKeys.NoLogs | DBTableKeys.Private, Type = typeof(FileDataTable))]
-    public class FileData : DBItem
+    [Table("file_data", "General", Keys = DBTableKeys.NoLogs | DBTableKeys.Private, Type = typeof(FileDataTable)), InvokerGenerator]
+    public sealed partial class FileData : DBItem
     {
-        public FileData()
-        { }
-
         public FileData(DBTable table) : base(table)
         { }
 
@@ -76,23 +74,5 @@ namespace DataWF.Data
             get => GetValue<string>(FileDataTable.PathKey);
             set => SetValue(value, FileDataTable.PathKey);
         }
-    }
-
-    public class FileDataTable : DBTable<FileData>
-    {
-        private DBColumn<long> idKey;
-        private DBColumn<byte[]> dataKey;
-        private DBColumn<int?> sizeKey;
-        private DBColumn<byte[]> hashKey;
-        private DBColumn<string> pathKey;
-        private DBColumn<FileStorage> storageKey;
-
-        public DBColumn<long> IdKey => ParseProperty(nameof(FileData.Id), ref idKey);
-        public DBColumn<byte[]> DataKey => ParseProperty(nameof(FileData.Data), ref dataKey);
-        public DBColumn<int?> SizeKey => ParseProperty(nameof(FileData.Size), ref sizeKey);
-        public DBColumn<byte[]> HashKey => ParseProperty(nameof(FileData.Hash), ref hashKey);
-        public DBColumn<string> PathKey => ParseProperty(nameof(FileData.Path), ref pathKey);
-        public DBColumn<FileStorage> StorageKey => ParseProperty(nameof(FileData.Storage), ref storageKey);
-
     }
 }

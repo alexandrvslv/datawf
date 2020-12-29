@@ -17,7 +17,6 @@
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
-    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj" />
     <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj" />
     <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
     <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />

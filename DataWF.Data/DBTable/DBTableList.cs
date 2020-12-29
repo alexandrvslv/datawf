@@ -50,9 +50,9 @@ namespace DataWF.Data
         {
             item.Schema = Schema;
             var index = base.AddInternal(item);
-            if (item is IDBVirtualTable virtualTable)
+            if (item.IsVirtual)
             {
-                virtualTable.BaseTable.AddVirtual(virtualTable);
+                item.BaseTable.AddVirtual(item);
             }
             return index;
         }

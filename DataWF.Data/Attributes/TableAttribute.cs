@@ -22,6 +22,7 @@ using System.ComponentModel;
 
 namespace DataWF.Data
 {
+
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TableAttribute : Attribute
     {

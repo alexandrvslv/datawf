@@ -24,7 +24,8 @@ using System.Text.Json.Serialization;
 
 namespace DataWF.Data
 {
-    public class SRSchema
+    [InvokerGenerator]
+    public partial class SRSchema
     {
         public SRSchema()
         {

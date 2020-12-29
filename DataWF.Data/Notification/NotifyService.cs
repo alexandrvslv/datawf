@@ -63,7 +63,7 @@ namespace DataWF.Data
             return list;
         }
 
-        private static readonly object loadLock = new object();
+        private readonly object loadLock = new object();
 
         private IInstance instance;
         private readonly ConcurrentQueue<NotifyDBItem> buffer = new ConcurrentQueue<NotifyDBItem>();
@@ -288,7 +288,7 @@ namespace DataWF.Data
             }
         }
 
-        public static void LoadNotify(List<NotifyDBTable> list)
+        protected void LoadNotify(List<NotifyDBTable> list)
         {
             lock (loadLock)
             {
@@ -309,23 +309,19 @@ namespace DataWF.Data
                                     primaryKey.LoadByKey(item.Id, DBLoadParam.Load, null, transaction);
                                     break;
                                 case DBLogType.Update:
+                                    var record = primaryKey.LoadByKey(item.Id, DBLoadParam.None);
+                                    if (record != null)
                                     {
-                                        var record = primaryKey.LoadByKey(item.Id, DBLoadParam.None);
-                                        if (record != null)
-                                        {
-                                            typeTable.Table.ReloadItem(item.Id, DBLoadParam.Load, transaction);
-                                        }
-                                        break;
+                                        typeTable.Table.ReloadItem(item.Id, DBLoadParam.Load, transaction);
                                     }
+                                    break;
                                 case DBLogType.Delete:
+                                    var toDelete = primaryKey.LoadByKey(item.Id, DBLoadParam.None);
+                                    if (item != null)
                                     {
-                                        var record = primaryKey.LoadByKey(item.Id, DBLoadParam.None);
-                                        if (item != null)
-                                        {
-                                            typeTable.Table.Remove(record);
-                                        }
-                                        break;
+                                        typeTable.Table.Remove(toDelete);
                                     }
+                                    break;
                             }
                         }
                     }

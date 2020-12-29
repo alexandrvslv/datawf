@@ -4,41 +4,40 @@ using System;
 namespace DataWF.Test.Data
 {
     [Table(TestORM.FileTableName, "Files")]
-    public class FileStore : DBItem
+    public sealed class FileStore : DBItem
     {
-        public static DBTable<FileStore> DBTable => GetTable<FileStore>();
-        public static readonly DBColumn IdKey = DBTable.ParseProperty(nameof(Id));
-        public static readonly DBColumn FileRefKey = DBTable.ParseProperty(nameof(FileRef));
-        public static readonly DBColumn FileNameKey = DBTable.ParseProperty(nameof(FileName));
-        public static readonly DBColumn FileLastWriteKey = DBTable.ParseProperty(nameof(FileLastWrite));
+        public FileStore(DBTable table) : base(table)
+        {
+        }
 
+        public FileStoreTable FileStoreTable => (FileStoreTable)Table;
 
         [Column("id", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(IdKey);
-            set => SetValue(value, IdKey);
+            get => GetValue<int>(FileStoreTable.IdKey);
+            set => SetValue(value, FileStoreTable.IdKey);
         }
 
         [Column("file_ref", Keys = DBColumnKeys.FileOID)]
         public long? FileRef
         {
-            get => GetValue<long?>(FileRefKey);
-            set => SetValue(value, FileRefKey);
+            get => GetValue<long?>(FileStoreTable.FileRefKey);
+            set => SetValue(value, FileStoreTable.FileRefKey);
         }
 
         [Column("file_name", 2048, Keys = DBColumnKeys.FileName)]
         public string FileName
         {
-            get => GetValue<string>(FileNameKey);
-            set => SetValue(value, FileNameKey);
+            get => GetValue<string>(FileStoreTable.FileNameKey);
+            set => SetValue(value, FileStoreTable.FileNameKey);
         }
 
         [Column("file_last_write", Keys = DBColumnKeys.FileLastWrite | DBColumnKeys.UtcDate)]
         public DateTime? FileLastWrite
         {
-            get => GetValue<DateTime?>(FileLastWriteKey);
-            set => SetValue(value, FileLastWriteKey);
+            get => GetValue<DateTime?>(FileStoreTable.FileLastWriteKey);
+            set => SetValue(value, FileStoreTable.FileLastWriteKey);
         }
     }
 }

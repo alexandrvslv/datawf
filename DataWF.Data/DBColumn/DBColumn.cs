@@ -33,7 +33,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBColumn), "ReferenceTableName", typeof(DBColumn.ReferenceTableNameInvoker))]
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
@@ -1039,18 +1038,6 @@ namespace DataWF.Data
 
         public abstract void Read<E>(ref Utf8JsonReader reader, E element, JsonSerializerOptions option = null);
 
-        public class ReferenceTableNameInvoker : Invoker<DBColumn, string>
-        {
-            public static readonly ReferenceTableNameInvoker Instance = new ReferenceTableNameInvoker();
-
-            public override string Name => "ReferenceTableName";
-
-            public override bool CanWrite => false;
-
-            public override string GetValue(DBColumn target) => target.ReferenceTable?.Name;
-
-            public override void SetValue(DBColumn target, string value) { }
-        }
-
+        
     }
 }

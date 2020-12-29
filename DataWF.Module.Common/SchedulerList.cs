@@ -6,15 +6,10 @@ namespace DataWF.Module.Common
 {
     public class SchedulerList : DBTableView<Scheduler>
     {
-        public SchedulerList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(Scheduler.DBTable, filter, mode, status)
+        public SchedulerList(SchedulerTable table, string filter = "", DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
+            : base(table, filter, mode, status)
         {
-            ApplySortInternal(new DBComparer<Scheduler, int?>(Scheduler.OrderKey, ListSortDirection.Ascending));
-        }
-
-        public SchedulerList()
-            : this(string.Empty)
-        {
+            ApplySortInternal(new DBComparer<Scheduler, int?>(table.OrderKey, ListSortDirection.Ascending));
         }
     }
 }

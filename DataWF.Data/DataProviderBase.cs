@@ -84,7 +84,7 @@ namespace DataWF.Data
 
             foreach (var initializer in Helper.ModuleInitializer)
             {
-                initializer.Initialize();
+                initializer.Initialize(new[] { Schema });
             }
         }
 

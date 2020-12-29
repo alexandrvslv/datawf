@@ -34,11 +34,13 @@ namespace DataWF.Test.Data
             schema.DropDatabase();
             schema.CreateDatabase();
 
-            new Position() { Id = 1, Code = "1", Name = "First Position" }.Attach();
-            new Position() { Id = 2, Code = "2", Name = "Second Position" }.Attach();
-            new Position() { Id = 3, Code = "3", Name = "Third Position" }.Attach();
-            new Position() { Id = 4, Code = "4", Name = "Sub Position", ParentId = 3 }.Attach();
-            await Position.DBTable.Save();
+            var positions = schema.GetTable<Position>();
+
+            new Position(positions) { Id = 1, Code = "1", Name = "First Position" }.Attach();
+            new Position(positions) { Id = 2, Code = "2", Name = "Second Position" }.Attach();
+            new Position(positions) { Id = 3, Code = "3", Name = "Third Position" }.Attach();
+            new Position(positions) { Id = 4, Code = "4", Name = "Sub Position", ParentId = 3 }.Attach();
+            await positions.Save();
 
             var random = new Random();
             for (var i = 1; i < 100; i++)

@@ -40,12 +40,12 @@ namespace DataWF.Module.Flow
 
         public static void OnDBRowChanged(DBItemEventArgs arg)
         {
-            if (arg.Item.Table == UserReg.DBTable) //|| arg.Row.Table == FlowEnvir.Config.Document.Table)
+            if (arg.Item.Table == Schema.GetTable<UserReg>()) //|| arg.Row.Table == FlowEnvir.Config.Document.Table)
                 return;
-
-            if (!(arg.Item.Table is IDBVirtualTable))
+            var documentTable = (DocumentTable<Document>)Schema.GetTable<Document>();
+            if (!(arg.Item.Table.IsVirtual))
             {
-                var cols = arg.Item.Table.Columns.GetByReference(Document.DBTable);
+                var cols = arg.Item.Table.Columns.GetByReference(documentTable);
 
                 foreach (DBColumn col in cols)
                 {
@@ -58,6 +58,7 @@ namespace DataWF.Module.Flow
 
         public static void LoadBooks(DBSchema schema)
         {
+            Schema = schema;
             Helper.Logs.Add(new StateInfo("Flow Synchronization", "Start", "", StatusType.Information));
             Stopwatch watch = new Stopwatch();
             watch.Start();
@@ -87,7 +88,8 @@ namespace DataWF.Module.Flow
 
             Helper.Logs.Add(new StateInfo("Flow Synchronization", "Complete", "in " + watch.ElapsedMilliseconds + " ms", StatusType.Information));
 
-            DocumentWork.DBTable.DefaultComparer = new DBComparer<DocumentWork, long>(DocumentWork.DBTable.PrimaryKey) { Hash = true };
+            var workTable = (DocumentWorkTable)schema.GetTable<DocumentWork>();
+            workTable.DefaultComparer = new DBComparer<DocumentWork, long>(workTable.IdKey) { Hash = true };
             //Logs.Add(new StateInfo("Flow Check", "Config Falil", "AccountInfo", StatusType.Warning));
         }
 
@@ -169,6 +171,7 @@ namespace DataWF.Module.Flow
             get => schemaCode;
             set => schemaCode = value;
         }
+        public static DBSchema Schema { get; private set; }
 
         //public DBSchema Schema
         //{

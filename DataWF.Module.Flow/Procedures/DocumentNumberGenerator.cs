@@ -10,11 +10,12 @@ namespace DataWF.Module.Flow
     {
         public virtual long GenerateIdentifier(string name, DBTransaction transaction)
         {
-            var sequence = Document.DBTable.Schema.Sequences[name];
+
+            var sequence = transaction.Schema.Sequences[name];
             if (sequence == null)
             {
                 sequence = new DBSequence(name) { };
-                Document.DBTable.Schema.Sequences.Add(sequence);
+                transaction.Schema.Sequences.Add(sequence);
                 try { DBService.CommitChanges(); }
                 catch (Exception ex)
                 {

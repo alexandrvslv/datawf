@@ -1,56 +1,39 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Data;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Messanger
 {
-    public class MessageDataList : DBTableView<MessageAddress>
+
+    [Table("dmessage_data", "Message", Keys = DBTableKeys.NoLogs), InvokerGenerator]
+    public partial class MessageData : MessageDetail
     {
-        public MessageDataList(string filter)
-            : base(MessageAddress.DBTable, filter)
-        {
-            //_ApplySort(new DBRowComparer(FlowEnvir.Config.StageParameter.Table, FlowEnvir.Config.StageParameter.Table.PrimaryKey.Code, ListSortDirection.Ascending));
-        }
-
-        public MessageDataList()
-            : this(string.Empty)
-        { }
-
-        public MessageDataList(Message message)
-            : this($"({MessageData.DBTable.ParseProperty(nameof(MessageData.MessageId)).Name} = {message.PrimaryId})")
-        { }
-    }
-
-    [DataContract, Table("dmessage_data", "Message", Keys = DBTableKeys.NoLogs)]
-    public class MessageData : MessageDetail
-    {
-        public static readonly DBTable<MessageData> DBTable = GetTable<MessageData>();
-        public static readonly DBColumn DataNameKey = DBTable.ParseProperty(nameof(DataName));
-        public static readonly DBColumn DataKey = DBTable.ParseProperty(nameof(Data));
-
-        public MessageData()
+        public MessageData(DBTable table) : base(table)
         {
         }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        public MessageDataTable<MessageData> MessageDataTable => (MessageDataTable<MessageData>)Table;
+
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get => GetValue<int?>(Table.PrimaryKey);
             set => SetValue(value, Table.PrimaryKey);
         }
 
-        [DataMember, Column("mdata_name")]
+        [Column("mdata_name", Keys = DBColumnKeys.FileName)]
         public string DataName
         {
-            get => GetValue<string>(DataNameKey);
-            set => SetValue(value, DataNameKey);
+            get => GetValue<string>(MessageDataTable.DataNameKey);
+            set => SetValue(value, MessageDataTable.DataNameKey);
         }
 
-        [DataMember, Column("mdata")]
+        [Column("mdata", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
-            get => GetValue<byte[]>(DataKey);
-            set => SetValue(value, DataKey);
+            get => GetValue<byte[]>(MessageDataTable.DataKey);
+            set => SetValue(value, MessageDataTable.DataKey);
         }
     }
 

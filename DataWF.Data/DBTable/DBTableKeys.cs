@@ -31,6 +31,7 @@ namespace DataWF.Data
         Caching = 1 << 1,
         ReadOnly = 1 << 2,
         Private = 1 << 3,
-        NoReplicate = 1 << 4
+        NoReplicate = 1 << 4,
+        Virtual = 1 << 5
     }
 }

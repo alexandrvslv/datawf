@@ -37,11 +37,12 @@ namespace DataWF.Data
         public static readonly string UserLogKeyName = "userlog_id";
 
         private DBItem baseItem;
+        private DBUserReg dbUserReg;
 
-        public DBLogItem()
+        public DBLogItem(DBTable table) : base(table)
         { }
 
-        public DBLogItem(DBItem item)
+        public DBLogItem(DBItem item) : base((DBTable)item.Table.LogTable)
         {
             BaseItem = item;
         }
@@ -65,6 +66,13 @@ namespace DataWF.Data
         {
             get => GetValue<long?>(LogTable.UserLogKey);
             set => SetValue(value, LogTable.UserLogKey);
+        }
+
+        [Reference(nameof(UserRegId))]
+        public DBUserReg DBUserReg
+        {
+            get => GetReference(LogTable.UserLogKey, ref dbUserReg);
+            set => SetReference(dbUserReg = value, LogTable.UserLogKey);
         }
 
         [LogColumn("item_type", "item_type_log", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0), DefaultValue(0)]

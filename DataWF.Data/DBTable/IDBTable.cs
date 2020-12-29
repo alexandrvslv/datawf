@@ -82,7 +82,7 @@ namespace DataWF.Data
         void Accept(DBItem item);
         void AcceptChanges(IUserIdentity user);
         void AddView(IDBTableView view);
-        void AddVirtual(IDBVirtualTable view);
+        void AddVirtual(DBTable view);
         string BuildQuery(string whereFilter, string alias, IEnumerable<DBColumn> cols, string function = null);
         DBColumn CheckColumn(string name, Type type, ref bool newCol);
         void CheckColumns(DBTransaction transaction);
@@ -147,7 +147,7 @@ namespace DataWF.Data
         void RejectChanges(IUserIdentity user);
         void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
         void RemoveView(IDBTableView view);
-        void RemoveVirtual(IDBVirtualTable view);
+        void RemoveVirtual(DBTable view);
         Task Save(IEnumerable<DBItem> rows = null);
         Task Save(DBTransaction transaction, IEnumerable<DBItem> rows = null);
         void SaveFile();
