@@ -68,7 +68,7 @@ namespace DataWF.Common.Generator
             var className = classSymbol.Name;
 
             var attributeData = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(invokerGeneratorAtribute, SymbolEqualityComparer.Default));
-            var argInstance = attributeData?.NamedArguments.FirstOrDefault(p => p.Key == "Instance").Value ?? default(TypedConstant);
+            var argInstance = attributeData?.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, "Instance", StringComparison.Ordinal)).Value ?? default(TypedConstant);
             var isInstance = !argInstance.IsNull && (bool)argInstance.Value;
             var genericArgs = classSymbol.IsGenericType ? $"<{string.Join(", ", classSymbol.TypeParameters.Select(p => p.Name))}>" : string.Empty;
             // begin building the generated source
@@ -89,7 +89,13 @@ namespace {namespaceName}
 
             foreach (IPropertySymbol propertySymbol in properties)
             {
-                ProcessInvokerClass(source, propertySymbol, classSymbol, genericArgs, isInstance);
+                attributeData = propertySymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(invokerGeneratorAtribute, SymbolEqualityComparer.Default));
+                var argIgnore = attributeData?.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, "Ignore", StringComparison.Ordinal)).Value ?? default(TypedConstant);
+                var isIgnore = !argIgnore.IsNull && (bool)argIgnore.Value;
+                if (!isIgnore)
+                {
+                    ProcessInvokerClass(source, propertySymbol, classSymbol, genericArgs, isInstance);
+                }
             }
             source.Append(@"}
 }");
@@ -144,7 +150,9 @@ namespace {namespaceName}
                 // any field with at least one attribute is a candidate for property generation
                 if (syntaxNode is ClassDeclarationSyntax classDeclarationSyntax)
                 {
-                    if (classDeclarationSyntax.AttributeLists.Any(p => p.Attributes.Any(p => p.Name.ToString() == "InvokerGenerator")))
+                    if (classDeclarationSyntax.AttributeLists.Any(p => p.Attributes.Select(p => p.Name.ToString())
+                    .Any(p => string.Equals(p, "InvokerGenerator", StringComparison.Ordinal)
+                    || string.Equals(p, "InvokerGeneratorAttribute", StringComparison.Ordinal))))
                         CandidateCalsses.Add(classDeclarationSyntax);
                 }
             }
