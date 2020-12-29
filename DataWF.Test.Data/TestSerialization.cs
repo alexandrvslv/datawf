@@ -12,6 +12,8 @@ namespace DataWF.Test.Data
     {
         public const string SchemaName = "test";
         private DBSchema schema;
+        private DBTable<Position> positionTable;
+        private DBTable<Employer> employerTable;
 
         [SetUp]
         public async Task Setup()
@@ -34,18 +36,19 @@ namespace DataWF.Test.Data
             schema.DropDatabase();
             schema.CreateDatabase();
 
-            var positions = schema.GetTable<Position>();
+            positionTable = schema.GetTable<Position>();
 
-            new Position(positions) { Id = 1, Code = "1", Name = "First Position" }.Attach();
-            new Position(positions) { Id = 2, Code = "2", Name = "Second Position" }.Attach();
-            new Position(positions) { Id = 3, Code = "3", Name = "Third Position" }.Attach();
-            new Position(positions) { Id = 4, Code = "4", Name = "Sub Position", ParentId = 3 }.Attach();
-            await positions.Save();
+            new Position(positionTable) { Id = 1, Code = "1", Name = "First Position" }.Attach();
+            new Position(positionTable) { Id = 2, Code = "2", Name = "Second Position" }.Attach();
+            new Position(positionTable) { Id = 3, Code = "3", Name = "Third Position" }.Attach();
+            new Position(positionTable) { Id = 4, Code = "4", Name = "Sub Position", ParentId = 3 }.Attach();
+            await positionTable.Save();
 
+            employerTable = schema.GetTable<Employer>();
             var random = new Random();
             for (var i = 1; i < 100; i++)
             {
-                new Employer()
+                new Employer(employerTable)
                 {
                     Id = i,
                     Identifier = $"{i,8:0}",
@@ -66,13 +69,13 @@ namespace DataWF.Test.Data
                 })
                 }.Attach();
             }
-            await Employer.DBTable.Save();
+            await employerTable.Save();
         }
 
         [Test]
         public void BinarySerializePoistions()
         {
-            var positions = ((IEnumerable<Position>)Position.DBTable).ToList();
+            var positions = ((IEnumerable<Position>)positionTable).ToList();
             var serializer = DBBinarySerializer.Instance;
             var buffer = serializer.Serialize(positions);
 
@@ -91,7 +94,7 @@ namespace DataWF.Test.Data
         [Test]
         public void BinarySerializeEmployers()
         {
-            var employers = ((IEnumerable<Employer>)Employer.DBTable).ToList();
+            var employers = ((IEnumerable<Employer>)employerTable).ToList();
             var serializer = DBBinarySerializer.Instance;
             var buffer = serializer.Serialize(employers);
 

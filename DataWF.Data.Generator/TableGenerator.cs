@@ -538,7 +538,7 @@ namespace {namespaceName}
                 // any field with at least one attribute is a candidate for property generation
                 if (syntaxNode is ClassDeclarationSyntax classDeclarationSyntax
                     && classDeclarationSyntax.AttributeLists.Any(p => p.Attributes
-                    .Select(p => p.ToString())
+                    .Select(p => p.Name.ToString())
                     .Any(p => string.Equals(p, "Table", StringComparison.Ordinal)
                     || string.Equals(p, "TableAttribute", StringComparison.Ordinal)
                     || string.Equals(p, "AbstractTable", StringComparison.Ordinal)
