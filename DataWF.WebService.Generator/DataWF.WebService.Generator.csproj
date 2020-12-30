@@ -2,12 +2,11 @@
 
   <PropertyGroup>
     <Description>Web Service Code Generation Tool</Description>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
-    <AssemblyName>dotnet-wscodegen</AssemblyName>
-    <PackAsTool>true</PackAsTool>
-    <ToolCommandName>wscodegen</ToolCommandName>
-    <VersionPrefix>1.8.12</VersionPrefix>
+    <OutputType>Library</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>DataWF.WebService.Generator</AssemblyName>
+    <VersionPrefix>1.8.13</VersionPrefix>
     <Authors>Alexandr</Authors>
     <PackageId>DataWF.WebService.Generator</PackageId>
     <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
@@ -17,18 +16,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="5.0.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.23.0" />
-    <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="13.9.4" />
-    <PackageReference Include="System.Text.Json" Version="5.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
-    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" />    
   </ItemGroup>
 
   <ItemGroup>

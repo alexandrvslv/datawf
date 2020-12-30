@@ -1531,9 +1531,9 @@ namespace DataWF.Data
 
         public async Task<Stream> GetStream(DBTransaction transaction, int bufferSize = 81920)
         {
-            if (Table.FileBLOBKey != null && GetValue(table.FileBLOBKey) != null)
+            if (Table.FileOIDKey != null && GetValue(table.FileOIDKey) != null)
             {
-                return await GetBlob(Table.FileBLOBKey, transaction);
+                return await GetBlob(Table.FileOIDKey, transaction);
             }
             else if (Table.FileKey != null)
             {
@@ -1642,7 +1642,7 @@ namespace DataWF.Data
 
         public Task<long> SetBlob(Stream value, DBTransaction transaction)
         {
-            return SetBlob(value, Table.FileBLOBKey, transaction);
+            return SetBlob(value, Table.FileOIDKey, transaction);
         }
 
         public async Task<long> SetBlob(Stream value, DBColumn<long?> column, DBTransaction transaction)
@@ -1656,7 +1656,7 @@ namespace DataWF.Data
 
         public Task<Stream> GetBlob(DBTransaction transaction, int bufferSize = 81920)
         {
-            return GetBlob(Table.FileBLOBKey, transaction, bufferSize);
+            return GetBlob(Table.FileOIDKey, transaction, bufferSize);
         }
 
         public virtual Task<Stream> GetBlob(DBColumn<long?> column, DBTransaction transaction, int bufferSize = 81920)

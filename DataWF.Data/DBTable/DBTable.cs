@@ -421,7 +421,7 @@ namespace DataWF.Data
         public DBColumn PrimaryKey => primaryKey == DBColumn.EmptyKey ? (primaryKey = Columns.GetByKey(DBColumnKeys.Primary)) : primaryKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn<long?> FileBLOBKey => fileBLOBKey == DBColumn<long?>.EmptyKey ? (fileBLOBKey = (DBColumn<long?>)Columns.GetByKey(DBColumnKeys.FileOID)) : fileBLOBKey;
+        public DBColumn<long?> FileOIDKey => fileBLOBKey == DBColumn<long?>.EmptyKey ? (fileBLOBKey = (DBColumn<long?>)Columns.GetByKey(DBColumnKeys.FileOID)) : fileBLOBKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBColumn<byte[]> FileKey => fileKey == DBColumn<byte[]>.EmptyKey ? (fileKey = (DBColumn<byte[]>)Columns.GetByKey(DBColumnKeys.File)) : fileKey;

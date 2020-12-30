@@ -3,6 +3,8 @@
   <PropertyGroup>    
     <TargetFramework>net5.0</TargetFramework>
     <OutputType>Exe</OutputType>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">    
@@ -20,14 +22,11 @@
     <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj" />
     <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
     <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />
+    <ProjectReference Include="..\DataWF.WebService.Generator\DataWF.WebService.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
  <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
-  <Target Name="CodeGenerator" BeforeTargets="PreBuildEvent">
-    <Exec Command="dotnet tool restore" />
-    <Exec Command="dotnet wscodegen -m Controllers, Logs, Invokers -p $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.1/ -o $(ProjectDir)Controllers" />
-  </Target>
   <Target Name="SwaggerToFile" AfterTargets="AfterBuild">
     <Exec Command="dotnet swagger tofile --output $(ProjectDir)wwwroot/swagger.json $(OutputPath)$(AssemblyName).dll v1" />
   </Target>

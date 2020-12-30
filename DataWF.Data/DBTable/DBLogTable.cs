@@ -150,15 +150,15 @@ namespace DataWF.Data
         public override async Task<bool> SaveItem(DBItem item, DBTransaction transaction)
         {
             if ((item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete
-                && item is DBLogItem logItem && FileBLOBKey != null
+                && item is DBLogItem logItem && FileOIDKey != null
                 && !transaction.Replication)
             {
-                var lob = item.GetValue(FileBLOBKey);
-                var current = logItem.BaseItem == DBItem.EmptyItem ? null : logItem.BaseItem.GetValue((DBColumn<long?>)FileBLOBKey.BaseColumn);
+                var lob = item.GetValue(FileOIDKey);
+                var current = logItem.BaseItem == DBItem.EmptyItem ? null : logItem.BaseItem.GetValue((DBColumn<long?>)FileOIDKey.BaseColumn);
                 if (lob != null && lob != current)
                 {
                     var qquery = new QQuery(this);
-                    qquery.BuildParam(FileBLOBKey, lob);
+                    qquery.BuildParam(FileOIDKey, lob);
                     if (!Load(qquery).Any(p => p != item))
                     {
                         try

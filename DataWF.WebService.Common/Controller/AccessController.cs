@@ -17,6 +17,15 @@ namespace DataWF.WebService.Common
     [LoggerAndFormatter]
     public class AccessController : ControllerBase
     {
+        public AccessController(DBSchema schema)
+        {
+            Schema = schema;
+        }
+
+        public IUserIdentity CurrentUser => User.GetCommonUser();
+
+        public DBSchema Schema { get; }
+
         private DBTable GetTable(string name)
         {
             return DBService.Schems.DefaultSchema.Tables.GetByTypeName(name);
@@ -27,8 +36,6 @@ namespace DataWF.WebService.Common
             //}
             //return DBTable.GetTable(type);
         }
-
-        public IUserIdentity CurrentUser => User.GetCommonUser();
 
         [HttpGet("Get/{name}")]
         public ActionResult<AccessValue> Get([FromRoute] string name)
@@ -116,7 +123,7 @@ namespace DataWF.WebService.Common
             {
                 return BadRequest($"Table {table} is not Accessable!");
             }
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(table, CurrentUser))
             {
                 try
                 {
@@ -164,7 +171,7 @@ namespace DataWF.WebService.Common
                 return BadRequest($"Table {table} is not Accessable!");
             }
             var temp = new AccessValue(accessPack.Items);
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(table, CurrentUser))
             {
                 try
                 {
@@ -210,7 +217,7 @@ namespace DataWF.WebService.Common
             {
                 return BadRequest($"Table {table} is not Accessable!");
             }
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(table, CurrentUser))
             {
                 try
                 {
@@ -252,7 +259,7 @@ namespace DataWF.WebService.Common
             {
                 return BadRequest($"Table {table} is not Accessable!");
             }
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(table, CurrentUser))
             {
                 try
                 {

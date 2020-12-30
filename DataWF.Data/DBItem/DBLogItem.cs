@@ -164,14 +164,14 @@ namespace DataWF.Data
         private async Task RedoFile(DBTransaction transaction)
         {
             if (Table.FileKey != null
-                  && BaseTable.FileBLOBKey != null
-                  && BaseItem.GetValue(BaseTable.FileBLOBKey) == null)
+                  && BaseTable.FileOIDKey != null
+                  && BaseItem.GetValue(BaseTable.FileOIDKey) == null)
             {
                 try
                 {
                     using (var stream = GetMemoryStream(Table.FileKey, transaction))
                     {
-                        await BaseItem.SetBlob(stream, BaseTable.FileBLOBKey, transaction);
+                        await BaseItem.SetBlob(stream, BaseTable.FileOIDKey, transaction);
                     }
                 }
                 catch { }
