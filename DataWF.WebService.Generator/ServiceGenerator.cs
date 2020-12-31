@@ -52,7 +52,7 @@ namespace DataWF.WebService.Generator
                     if (assembly is IAssemblySymbol assemblySymbol)
                     {
                         var moduleInitialize = assemblySymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(moduleInitializeAtributeType, SymbolEqualityComparer.Default));
-                        if (moduleInitialize != null)
+                        if (moduleInitialize != null || assemblySymbol.Name == "DataWF.Data")
                         {
                             foreach (var type in GetTypes(assemblySymbol.GlobalNamespace))
                             {
@@ -102,17 +102,31 @@ namespace DataWF.WebService.Generator
             Dictionary<string, string> usings = new Dictionary<string, string>();
 
             var controllerClassName = $"{type.Name}Controller";
-            string baseName = $"BaseController";
+
             if (type.BaseType.Name == "DBLogItem"
                 || type.Name == "DBItem"
                 || type.Name == "DBGroupItem")
             {
                 return;
             }
+            if (attribute.AttributeClass.Name == "TableAttribute")
+            {
+                var keysArg = attribute.NamedArguments.FirstOrDefault(p => p.Key == "Keys").Value;
+                if (!keysArg.IsNull && ((int)keysArg.Value & (1 << 3)) != 0)
+                    return;
+            }
+            string baseName = $"BaseController";
+            if (type.BaseType.Name != "DBItem" && type.BaseType.Name != "DBGroupItem")
+            {
+                baseName = $"{type.BaseType.Name}Controller";
+            }
             var typeNamespace = type.ContainingNamespace.ToDisplayString();
-            var logTypeName = $"{type.Name}Log";
-            var logType = context.Compilation.GetTypeByMetadataName($"{typeNamespace}.{logTypeName}")
+
+            var logType = context.Compilation.GetTypeByMetadataName($"{typeNamespace}.{type.Name}Log")
+                ?? context.Compilation.GetTypeByMetadataName($"{type.BaseType.ContainingNamespace}.{type.BaseType.Name}Log")
                 ?? context.Compilation.GetTypeByMetadataName("DataWF.Data.DBLogItem");
+            var logTypeName = logType.Name;
+
             var tableTypeName = $"{type.Name}Table";
             var tableType = context.Compilation.GetTypeByMetadataName($"{typeNamespace}.{tableTypeName}");
             var tableIsGeneric = false;
@@ -122,10 +136,8 @@ namespace DataWF.WebService.Generator
                 tableIsGeneric = true;
             }
             var tableDeclareType = $"{tableType.Name}{(tableIsGeneric ? "<T>" : string.Empty)}";
-            if (type.BaseType.Name != "DBItem" && type.BaseType.Name != "DBGroupItem")
-            {
-                baseName = $"{type.BaseType.Name}Controller";
-            }
+
+            var keyType = "K";
 
             var source = new StringBuilder($@"//Source generator for {type.Name}
 using DataWF.Common;
@@ -135,16 +147,32 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using {typeNamespace};
 
 namespace {nameSpace}
-{{
+{{");
+            if (!type.IsSealed)
+            {
+                source.Append($@"
     //Prototype Controller    
     public {(type.IsAbstract ? "abstract " : string.Empty)}partial class {controllerClassName}<T, K, L>: {baseName}<T, K, L> 
     where T:{type.Name}
-    where L:{logType.Name}
+    where L:{logType.Name}");
+            }
+            else
+            {
+                var primaryKey = GetPrimaryKey(type, attributeTypes);
+                keyType = primaryKey.Type.ToDisplayString();
+                source.Append($@"
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Route(""api/[controller]"")]
+    [ApiController]
+    public partial class {controllerClassName}: {baseName}<{type.Name}, {primaryKey.Type}, {logTypeName}>");
+            }
+            source.Append($@"
     {{
         public {controllerClassName}(DBSchema schema) :base(schema)
         {{ }}");
@@ -155,12 +183,12 @@ namespace {nameSpace}
         public new {tableDeclareType} Table => ({tableDeclareType})base.Table;");
             }
 
-            foreach (var method in type.GetMembers().OfType<IMethodSymbol>().Where(p=>p.MethodKind == MethodKind.Ordinary))
+            foreach (var method in type.GetMembers().OfType<IMethodSymbol>().Where(p => p.MethodKind == MethodKind.Ordinary))
             {
                 var controllerMethodAttribute = method.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributeTypes.ControllerMethod, SymbolEqualityComparer.Default));
                 if (controllerMethodAttribute != null)
                 {
-                    ProcessControllerMethod(source, method, controllerMethodAttribute, attributeTypes, true, context);
+                    ProcessControllerMethod(source, method, controllerMethodAttribute, attributeTypes, keyType, true, context);
                 }
             }
 
@@ -171,17 +199,17 @@ namespace {nameSpace}
                     var controllerMethodAttribute = method.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributeTypes.ControllerMethod, SymbolEqualityComparer.Default));
                     if (controllerMethodAttribute != null)
                     {
-                        ProcessControllerMethod(source, method, controllerMethodAttribute, attributeTypes, false, context);
+                        ProcessControllerMethod(source, method, controllerMethodAttribute, attributeTypes, keyType, false, context);
                     }
                 }
             }
             source.Append(@"
     }");
-            if (!type.IsAbstract)
+            if (!type.IsAbstract && !type.IsSealed)
             {
                 var primaryKey = GetPrimaryKey(type, attributeTypes);
                 source.Append($@"
-    [[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route(""api/[controller]"")]
     [ApiController]
     public partial class {controllerClassName}: {controllerClassName}<{type.Name}, {primaryKey.Type}, {logTypeName}>
@@ -195,7 +223,7 @@ namespace {nameSpace}
             context.AddSource($"{type.Name}Controller", SourceText.From(source.ToString(), Encoding.UTF8));
         }
 
-        private void ProcessControllerMethod(StringBuilder source, IMethodSymbol method, AttributeData controllerMethodAttribute, AttributeTypes attributeTypes, bool inLine, GeneratorExecutionContext context)
+        private void ProcessControllerMethod(StringBuilder source, IMethodSymbol method, AttributeData controllerMethodAttribute, AttributeTypes attributeTypes, string keyType, bool inLine, GeneratorExecutionContext context)
         {
             var isHtmlArg = controllerMethodAttribute.NamedArguments.FirstOrDefault(p => p.Key == "ReturnHtml").Value;
             var isHtml = !isHtmlArg.IsNull && (bool)isHtmlArg.Value;
@@ -205,7 +233,7 @@ namespace {nameSpace}
             var returnResultType = method.ReturnType;
             var isAsync = returnResultType?.Name == "Task";
 
-            var returnType = method.ReturnsVoid ? "void"
+            var returnType = method.ReturnsVoid ? "IActionResult"
                 : isHtml ? "IActionResult"
                 : $"ActionResult<{method.ReturnType}>";
             if (isAsync)
@@ -235,12 +263,12 @@ namespace {nameSpace}
             ProcessControllerMethodAttributes(source, method, parameters, inLine, isAnon);
             source.Append("]");
             source.Append($@"
-        public {(isAsync?"async ":string.Empty)}{returnType} {method.Name}(");
+        public {(isAsync ? "async " : string.Empty)}{returnType} {method.Name}(");
 
             var position = source.Length;
             if (inLine)
             {
-                source.Append($"[FromRoute] K id, ");
+                source.Append($"[FromRoute] {keyType} id, ");
             }
 
             foreach (var parameter in parameters)
@@ -249,7 +277,7 @@ namespace {nameSpace}
                 {
                     continue;
                 }
-                source.Append($"{(parameter.AttributeType != null ? $"[\"{parameter.AttributeType}\"]" : string.Empty)} {parameter.Type} {parameter.Info.Name}, ");
+                source.Append($"{(parameter.AttributeType != null ? $"[{parameter.AttributeType}]" : string.Empty)} {parameter.Type} {parameter.Info.Name}, ");
             }
 
             if (position < source.Length)
@@ -530,6 +558,8 @@ namespace {nameSpace}
 
         private static bool IsEnumerable(ITypeSymbol returnResultType)
         {
+            if (string.Equals(returnResultType.Name, "string", StringComparison.OrdinalIgnoreCase))
+                return false;
             return returnResultType.AllInterfaces.Any(p => p.Name == "IEnumerable" && p.TypeParameters.Length > 0);
         }
 

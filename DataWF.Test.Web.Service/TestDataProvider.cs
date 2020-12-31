@@ -45,16 +45,16 @@ namespace DataWF.Test.Web.Service
 
             foreach (var initializer in Helper.ModuleInitializer)
             {
-                initializer.Initialize();
+                initializer.Initialize(new[] { Schema });
             }
 
-            _ = new UserGroup
+            _ = new UserGroup(Schema.GetTable<UserGroup>())
             {
                 Id = 1,
-                NameEN = "admin",                
+                NameEN = "admin",
             }.SaveOrUpdate((IUserIdentity)null);
 
-            _ = new User
+            _ = new User(Schema.GetTable<User>())
             {
                 Id = 1,
                 Login = "admin",
@@ -85,9 +85,11 @@ namespace DataWF.Test.Web.Service
             return Task.CompletedTask;
         }
 
+        public UserTable Users => (UserTable)Schema.GetTable<User>();
+
         public override DBUser FindUser(string email)
         {
-            return User.GetByEmail(email);
+            return Users.GetByEmail(email);
         }
     }
     public class Class1
