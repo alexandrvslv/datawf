@@ -29,6 +29,118 @@ namespace DataWF.Data
 {
     public class TableGenerator
     {
+
+        private static readonly Type dbItemType = typeof(DBItem);
+        private static readonly Dictionary<Type, TableGenerator> cacheTableGenerators = new Dictionary<Type, TableGenerator>();
+        private static readonly Dictionary<Type, ItemTypeGenerator> cacheItemTypeGenerator = new Dictionary<Type, ItemTypeGenerator>();
+
+        public static void ClearGeneratorCache()
+        {
+            foreach (var generator in cacheTableGenerators.Values)
+            {
+                generator.ClearCache();
+            }
+            cacheTableGenerators.Clear();
+            foreach (var generator in cacheItemTypeGenerator.Values)
+            {
+                generator.ClearCache();
+            }
+            cacheItemTypeGenerator.Clear();
+        }
+
+        public static TableGenerator GetInherit(Type type)
+        {
+            var tableGenerator = Get(type);
+            while (tableGenerator == null && type != null)
+            {
+                type = type.BaseType;
+                tableGenerator = type == null ? null : Get(type);
+            }
+            return tableGenerator;
+        }
+
+        public static TableGenerator GetDerived(Type type)
+        {
+            var tableGenerator = Get(type);
+            if (tableGenerator != null)
+                return tableGenerator;
+            foreach (var entry in cacheTableGenerators)
+            {
+                if (entry.Key.BaseType == type)
+                {
+                    return entry.Value;
+                }
+            }
+            foreach (var entry in cacheItemTypeGenerator)
+            {
+                if (entry.Key.BaseType == type)
+                {
+                    return entry.Value.TableGenerator;
+                }
+            }
+            return tableGenerator;
+        }
+
+        public static TableGenerator Get<T>()
+        {
+            return Get(typeof(T));
+        }
+
+        public static TableGenerator Get(Type type)
+        {
+            if (!dbItemType.IsAssignableFrom(type))
+            {
+                return null;
+            }
+            if (!cacheTableGenerators.TryGetValue(type, out var tableGenerator))
+            {
+                var tableAttribute = type.GetCustomAttribute<TableAttribute>(false);
+                if (tableAttribute is LogTableAttribute)
+                {
+                    tableGenerator = new LogTableGenerator() { Attribute = tableAttribute };
+                    tableGenerator.Initialize(type);
+                }
+                else if (tableAttribute is TableAttribute)
+                {
+                    tableGenerator = new TableGenerator() { Attribute = tableAttribute };
+                    tableGenerator.Initialize(type);
+                }
+                cacheTableGenerators[type] = tableGenerator;
+            }
+            if (tableGenerator == null)
+            {
+                var itemType = GetItemType(type);
+                tableGenerator = itemType?.TableGenerator;
+            }
+            return tableGenerator;
+        }
+
+        public static ItemTypeGenerator GetItemType(Type type)
+        {
+            if (!dbItemType.IsAssignableFrom(type))
+            {
+                return null;
+            }
+            if (!cacheItemTypeGenerator.TryGetValue(type, out var itemTypeGenerator))
+            {
+                var itemTypeAttribute = type.GetCustomAttribute<ItemTypeAttribute>(false);
+                if (itemTypeAttribute is LogItemTypeAttribute)
+                {
+                    itemTypeGenerator = new LogItemTypeGenerator { Attribute = itemTypeAttribute };
+                    itemTypeGenerator.Initialize(type);
+                }
+                else if (itemTypeAttribute is ItemTypeAttribute)
+                {
+                    itemTypeGenerator = new ItemTypeGenerator { Attribute = itemTypeAttribute };
+                    itemTypeGenerator.Initialize(type);
+                }
+                cacheItemTypeGenerator[type] = itemTypeGenerator;
+            }
+            return itemTypeGenerator;
+        }
+
+
+
         protected SelectableList<ColumnGenerator> cacheColumns;
         protected SelectableList<ReferenceGenerator> cacheReferences;
         protected SelectableList<ReferencingGenerator> cacheReferencings;
@@ -96,8 +208,14 @@ namespace DataWF.Data
         {
             Debug.WriteLine($"Generate {Attribute.TableName} - {this.ItemType.Name}");
 
-            var type = Attribute?.Type ?? TypeHelper.ParseType(ItemType.FullName + "Table") ?? typeof(DBTable<>).MakeGenericType(ItemType);
-            
+            var type = Attribute?.Type
+                ?? TypeHelper.ParseType(ItemType.FullName + "Table")
+                ?? TypeHelper.ParseType(ItemType.FullName + "Table`1")
+                ?? typeof(DBTable<>);
+            if (type.IsGenericTypeDefinition)
+            {
+                type = type.MakeGenericType(ItemType);
+            }
             var table = (DBTable)EmitInvoker.CreateObject(type);
             table.Name = Attribute.TableName;
             table.Schema = schema;

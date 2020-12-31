@@ -28,6 +28,6 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <Target Name="SwaggerToFile" AfterTargets="AfterBuild">
-    <Exec Command="dotnet swagger tofile --output $(ProjectDir)wwwroot/swagger.json $(OutputPath)$(AssemblyName).dll v1" />
+    <!--<Exec Command="dotnet swagger tofile - -output $(ProjectDir)wwwroot/swagger.json $(OutputPath)$(AssemblyName).dll v1" />-->
   </Target>
 </Project>

@@ -34,7 +34,7 @@ namespace DataWF.Data
                 throw new InvalidOperationException($"{nameof(ReferencingAttribute)} Property type expect generic enumerable!");
             }
 
-            var referenceTable = DBTable.GetTableGeneratorInherit(property.PropertyType.GetGenericArguments()[0]);
+            var referenceTable = TableGenerator.GetInherit(property.PropertyType.GetGenericArguments()[0]);
             if (referenceTable == null)
             {
                 throw new InvalidOperationException($"{nameof(ReferencingAttribute)} Property type expect {nameof(TableAttribute)}!");

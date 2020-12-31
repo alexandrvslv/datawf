@@ -7,7 +7,7 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Flow
 {
     [Table("rtemplate_file", "Template", BlockSize = 100), InvokerGenerator]
-    public partial class TemplateFile : TemplateItem
+    public partial class TemplateFile : DBItem
     {
         public TemplateFile(DBTable table) : base(table)
         {

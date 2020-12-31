@@ -39,7 +39,7 @@ namespace DataWF.Data
         public virtual void Initialize(Type type)
         {
             Type = type;
-            TableGenerator = DBTable.GetTableGeneratorInherit(type.BaseType);
+            TableGenerator = TableGenerator.GetInherit(type.BaseType);
             if (TableGenerator == null)
             {
                 throw new Exception($"Class with {nameof(ItemTypeAttribute)} must have are {nameof(Type.BaseType)} with {nameof(Data.TableAttribute)}!");
@@ -111,7 +111,15 @@ namespace DataWF.Data
             }
             Debug.WriteLine($"Generate {TableGenerator.Attribute.TableName} - {Type.Name}");
 
-            var typeOfTable = Attribute?.Type ?? TypeHelper.ParseType(Type.FullName + "Table") ?? typeof(DBTable<>).MakeGenericType(Type);
+            var typeOfTable = Attribute?.Type 
+                ?? TypeHelper.ParseType(Type.FullName + "Table")
+                ?? TypeHelper.ParseType(Type.FullName + "Table`1")
+                ?? typeof(DBTable<>);
+
+            if (typeOfTable.IsGenericTypeDefinition)
+            {
+                typeOfTable = typeOfTable.MakeGenericType(Type);
+            }
 
             var table = (DBTable)EmitInvoker.CreateObject(typeOfTable);
             table.Name = Type.Name;

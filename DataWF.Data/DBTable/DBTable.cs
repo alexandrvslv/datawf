@@ -46,84 +46,7 @@ namespace DataWF.Data
     [InvokerGenerator(Instance = true)]
     public abstract partial class DBTable : DBSchemaItem, IComparable, IDBTable
     {
-        private static readonly Dictionary<Type, TableGenerator> cacheTableGenerators = new Dictionary<Type, TableGenerator>();
-        private static readonly Dictionary<Type, ItemTypeGenerator> cacheItemTypeGenerator = new Dictionary<Type, ItemTypeGenerator>();
         private static int tableIndex;
-
-        public static void ClearGeneratorCache()
-        {
-            foreach (var generator in cacheTableGenerators.Values)
-            {
-                generator.ClearCache();
-            }
-            cacheTableGenerators.Clear();
-            foreach (var generator in cacheItemTypeGenerator.Values)
-            {
-                generator.ClearCache();
-            }
-            cacheItemTypeGenerator.Clear();
-        }
-
-        public static TableGenerator GetTableGeneratorInherit(Type type)
-        {
-            var tableGenerator = GetTableGenerator(type);
-            while (tableGenerator == null && type != null)
-            {
-                type = type.BaseType;
-                tableGenerator = type == null ? null : GetTableGenerator(type);
-            }
-            return tableGenerator;
-        }
-
-        public static TableGenerator GetTableGenerator<T>()
-        {
-            return GetTableGenerator(typeof(T));
-        }
-
-        public static TableGenerator GetTableGenerator(Type type)
-        {
-            if (!cacheTableGenerators.TryGetValue(type, out var tableGenerator))
-            {
-                var tableAttribute = type.GetCustomAttribute<TableAttribute>(false);
-                if (tableAttribute is LogTableAttribute)
-                {
-                    tableGenerator = new LogTableGenerator() { Attribute = tableAttribute };
-                    tableGenerator.Initialize(type);
-                }
-                else if (tableAttribute is TableAttribute)
-                {
-                    tableGenerator = new TableGenerator() { Attribute = tableAttribute };
-                    tableGenerator.Initialize(type);
-                }
-                cacheTableGenerators[type] = tableGenerator;
-            }
-            if (tableGenerator == null)
-            {
-                var itemType = GetItemTypeGenerator(type);
-                tableGenerator = itemType?.TableGenerator;
-            }
-            return tableGenerator;
-        }
-
-        public static ItemTypeGenerator GetItemTypeGenerator(Type type)
-        {
-            if (!cacheItemTypeGenerator.TryGetValue(type, out var itemTypeGenerator))
-            {
-                var itemTypeAttribute = type.GetCustomAttribute<ItemTypeAttribute>(false);
-                if (itemTypeAttribute is LogItemTypeAttribute)
-                {
-                    itemTypeGenerator = new LogItemTypeGenerator { Attribute = itemTypeAttribute };
-                    itemTypeGenerator.Initialize(type);
-                }
-                else if (itemTypeAttribute is ItemTypeAttribute)
-                {
-                    itemTypeGenerator = new ItemTypeGenerator { Attribute = itemTypeAttribute };
-                    itemTypeGenerator.Initialize(type);
-                }
-                cacheItemTypeGenerator[type] = itemTypeGenerator;
-            }
-            return itemTypeGenerator;
-        }
 
         protected DBCommand dmlInsert;
         protected DBCommand dmlDelete;
@@ -633,6 +556,12 @@ namespace DataWF.Data
                 //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
                 && (column.Keys & DBColumnKeys.Password) != DBColumnKeys.Password
                 && (column.Keys & DBColumnKeys.File) != DBColumnKeys.File;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DBColumn<T> ParseColumn<T>(string property, ref DBColumn<T> cache)
+        {
+            return cache ??= (DBColumn<T>)Columns[property];
         }
 
         public DBColumn ParseColumnProperty(string property)
@@ -1558,7 +1487,7 @@ namespace DataWF.Data
             table.type = Type;
             table.groupName = GroupName;
             table.sequenceName = SequenceName;
-            table.schema = Schema;
+            table.Schema = Schema;
             foreach (var @group in ColumnGroups)
             {
                 var newCol = (DBColumnGroup)@group.Clone();

@@ -207,15 +207,18 @@ namespace DataWF.Common
                 {
                     var index = value.LastIndexOf(',');
                     var code = index >= 0 ? value.Substring(0, index) : value;
-                    type = Type.GetType(code);
-
+                    if (index > -1)
+                    {
+                        type = Type.GetType(code);
+                        if (type != null)
+                            return cacheTypes[value] = type;
+                    }
                     foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                     {
                         if (assembly.IsDynamic)
                         {
                             continue;
                         }
-
                         try
                         {
                             type = ParseType(code, assembly);

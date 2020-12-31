@@ -61,8 +61,16 @@ namespace DataWF.Data
             }
         }
 
-        public DBTable CheckReference(DBSchema schema)
-        {            
+        public virtual DBTable CheckReference(DBSchema schema)
+        {
+            if (ReferenceType.IsAbstract)
+            {
+                var derivedGenerator = TableGenerator.GetDerived(ReferenceType);
+                if (derivedGenerator != null)
+                {
+                    return derivedGenerator.Generate(schema);
+                }
+            }
             var referenceTable = schema.GetTable(ReferenceType, true);
             if (referenceTable == null)
             {

@@ -20,7 +20,7 @@ namespace DataWF.Test.Data
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             DBService.Schems.Clear();
-            DBTable.ClearGeneratorCache();
+            TableGenerator.ClearGeneratorCache();
 
             if (DBService.Connections.Count == 0)
                 Serialization.Deserialize("connections.xml", DBService.Connections);

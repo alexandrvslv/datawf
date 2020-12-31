@@ -195,13 +195,7 @@ namespace {namespaceName}
 
                 source.Append($@"
     public {(classSymbol.IsSealed ? "sealed " : string.Empty)} {(classSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className} : {baseClassName}
-    {{        
-");
-                // create properties for each field 
-                foreach (IPropertySymbol propertySymbol in properties)
-                {
-                    ProcessLogField(source, propertySymbol, attributes);
-                }
+    {{");
                 source.Append($@"
         public {className}(DBTable table):base(table)
         {{ }}
@@ -220,21 +214,6 @@ namespace {namespaceName}
             return null;
         }
 
-        private void ProcessLogField(StringBuilder source, IPropertySymbol propertySymbol, AttributesCache attributes)
-        {
-            // get the attribute from the property, and any associated data
-            var referenceAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Reference, SymbolEqualityComparer.Default));
-            if (referenceAttribute != null)
-            {
-                string propertyName = propertySymbol.Name;
-                ITypeSymbol propertyType = propertySymbol.Type;
-                string keyFieldName = $"_{propertyName}";
-
-                source.Append($@"
-        private {propertyType} {keyFieldName};");
-            }
-        }
-
         private void ProcessLogProperty(StringBuilder source, IPropertySymbol propertySymbol, AttributesCache attributes, string tableName, List<string> cultures)
         {
             // get the name and type
@@ -246,6 +225,10 @@ namespace {namespaceName}
             AttributeData columnAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Column, SymbolEqualityComparer.Default));
             if (columnAttribute != null)
             {
+                TypedConstant columnType = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "ColumnType", StringComparison.Ordinal)).Value;
+                if (!columnType.IsNull && (int)columnType.Value != 0)
+                    return;
+
                 TypedConstant keys = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "Keys", StringComparison.Ordinal)).Value;
                 if (!keys.IsNull && ((int)keys.Value & (1 << 21)) != 0)
                     return;
@@ -295,12 +278,31 @@ namespace {namespaceName}
                 {
                     refName = referenceAttribute.ConstructorArguments.FirstOrDefault();
                 }
+                var columnPropertyName = (string)refName.Value;
+                var columnProperty = propertySymbol.ContainingType.GetMembers(columnPropertyName).FirstOrDefault() as IPropertySymbol;
+                if (columnProperty != null)
+                {
+                    columnAttribute = columnProperty.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Column, SymbolEqualityComparer.Default));
+                    if (columnAttribute != null)
+                    {
+                        TypedConstant columnType = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "ColumnType", StringComparison.Ordinal)).Value;
+                        if (!columnType.IsNull && (int)columnType.Value != 0)
+                            return;
+
+                        TypedConstant keys = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "Keys", StringComparison.Ordinal)).Value;
+                        if (!keys.IsNull && ((int)keys.Value & (1 << 21)) != 0)
+                            return;
+                    }
+                }
+
                 source.Append($@"
-        [LogReference(nameof({refName.Value}))]
+        private {propertyType} {keyFieldName};");
+                source.Append($@"
+        [LogReference(nameof({columnPropertyName}))]
         public {propertyType} {propertyName}
         {{
-            get => GetReference<{propertyType}>({tableName}.{refName.Value}Key, ref {keyFieldName});
-            set => SetReference({keyFieldName} = value, {tableName}.{refName.Value}Key);
+            get => GetReference<{propertyType}>({tableName}.{columnPropertyName}Key, ref {keyFieldName});
+            set => SetReference({keyFieldName} = value, {tableName}.{columnPropertyName}Key);
         }}
 ");
             }
@@ -434,9 +436,15 @@ namespace {namespaceName}
             AttributeData columnAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Column, SymbolEqualityComparer.Default));
             if (columnAttribute != null)
             {
-                TypedConstant overridenPropertyType = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "DataType", StringComparison.Ordinal)).Value;
+                var overridenPropertyType = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "DataType", StringComparison.Ordinal)).Value;
                 if (!overridenPropertyType.IsNull)
                     propertyType = (ITypeSymbol)overridenPropertyType.Value;
+
+                TypedConstant sqlName = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "ColumnName", StringComparison.Ordinal)).Value;
+                if (sqlName.IsNull)
+                {
+                    sqlName = columnAttribute.ConstructorArguments.FirstOrDefault();
+                }
 
                 TypedConstant keys = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "Keys", StringComparison.Ordinal)).Value;
                 if (!keys.IsNull && ((int)keys.Value & (1 << 16)) != 0)
@@ -448,7 +456,7 @@ namespace {namespaceName}
                         source.Append($@"
         private DBColumn<{propertyType}> {keyFieldName};
         [JsonIgnore]
-        public {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => ParseProperty(nameof({propertySymbol.ContainingType.Name}.{propertyName}), ref {keyFieldName});
+        public {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => ParseColumn(""{sqlName.Value}_{culture.ToLowerInvariant()}"", ref {keyFieldName});
 ");
                     }
                 }
@@ -492,6 +500,7 @@ namespace {namespaceName}
             AttributeData columnAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Column, SymbolEqualityComparer.Default));
             if (columnAttribute != null)
             {
+
                 TypedConstant overridenPropertyType = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "DataType", StringComparison.Ordinal)).Value;
                 if (!overridenPropertyType.IsNull)
                     propertyType = (ITypeSymbol)overridenPropertyType.Value;
@@ -503,14 +512,14 @@ namespace {namespaceName}
                     {
                         string keyPropertyName = $"{propertyName}{culture}Key";
                         source.Append($@"
-        {(keyPropertyName == "CodeKey" ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
+        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
                     }
                 }
                 else
                 {
                     string keyPropertyName = $"{propertyName}Key";
                     source.Append($@"
-        {(keyPropertyName == "CodeKey" ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
+        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
                 }
             }
 
@@ -519,7 +528,7 @@ namespace {namespaceName}
             {
                 string keyPropertyName = $"{propertyName}Key";
                 source.Append($@"
-        {(keyPropertyName == "CodeKey" ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
+        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
             }
         }
 

@@ -33,7 +33,7 @@ namespace DataWF.WebService.Common
 
                 if (TypeHelper.IsBaseType(context.Type, typeof(DBItem)))
                 {
-                    var table = DBTable.GetTableGeneratorInherit(context.Type);
+                    var table = TableGenerator.GetInherit(context.Type);
                     if (table != null)
                     {
                         ApplyTable(schema, context, table);
@@ -165,14 +165,14 @@ namespace DataWF.WebService.Common
 
             if (!context.Type.IsAbstract)
             {
-                var itemType = DBTable.GetItemTypeGenerator(context.Type);
+                var itemType = TableGenerator.GetItemType(context.Type);
                 schema.Extensions.Add("x-type-id", new OpenApiInteger(itemType?.Attribute.Id ?? 0));
                 if (context.Type == table.ItemType)
                 {
                     var mapping = new Dictionary<string, string>();
                     foreach (var type in table.Types)
                     {
-                        var itemTypeAttribute = DBTable.GetItemTypeGenerator(type);
+                        var itemTypeAttribute = TableGenerator.GetItemType(type);
                         if (itemTypeAttribute != null)
                         {
                             var itemTypeSchema = context.SchemaGenerator.GenerateSchema(type, context.SchemaRepository);

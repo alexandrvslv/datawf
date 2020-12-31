@@ -37,6 +37,7 @@ namespace DataWF.Data
         DBColumn<byte[]> FileKey { get; }
         DBColumn<long?> FileOIDKey { get; }
         DBColumn<string> FileNameKey { get; }
+        DBColumn<DateTime?> FileLastWriteKey { get; }
         DBColumn GroupKey { get; }
         DBColumn<byte[]> ImageKey { get; }
         DBColumn<int> ItemTypeKey { get; }

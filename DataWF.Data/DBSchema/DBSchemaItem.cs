@@ -34,7 +34,7 @@ namespace DataWF.Data
     {
         protected string name;
         protected string oldname;
-        protected DBSchema schema;
+        private DBSchema schema;
         protected LocaleItem litem;
         protected AccessValue access;
         private bool isSynchronized;

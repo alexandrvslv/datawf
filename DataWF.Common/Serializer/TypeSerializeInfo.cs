@@ -84,14 +84,14 @@ namespace DataWF.Common
                 }
                 chackedProperties.Add(property);
             }
-
-            Properties = new NamedList<IPropertySerializeInfo>(6, (ListIndex<IPropertySerializeInfo, string>)PropertySerializeInfo.NameInvoker.Instance.CreateIndex(false));
+            var index = new ListIndex<IPropertySerializeInfo, string>(PropertySerializeInfoName.Instance, "[null]", StringComparer.Ordinal, false);
+            Properties = new NamedList<IPropertySerializeInfo>(6, index);
             Properties.Indexes.Add(PropertySerializeInfo.IsAttributeInvoker.Instance);
             foreach (var property in chackedProperties)
             {
                 Properties.Add(CreateProperty(property, ++order));
             }
-            Properties.ApplySortInternal(PropertySerializeInfo.OrderInvoker.Instance.CreateComparer<IPropertySerializeInfo>());
+            Properties.ApplySortInternal(OrderPropertiesComparer.Instance);
 
             XmlProperties = new SelectableListView<IPropertySerializeInfo>(Properties);
             XmlProperties.ApplySortInternal(XmlPropertiesComparer.Instance);
@@ -171,6 +171,28 @@ namespace DataWF.Common
             result = result == 0 ? x.Order.CompareTo(y.Order) : result;
             return result;
         }
+    }
+
+    public class OrderPropertiesComparer : IComparer<IPropertySerializeInfo>
+    {
+        public static readonly OrderPropertiesComparer Instance = new OrderPropertiesComparer();
+        public int Compare(IPropertySerializeInfo x, IPropertySerializeInfo y)
+        {
+            return x.Order.CompareTo(y.Order);
+        }
+    }
+
+    public class PropertySerializeInfoName : Invoker<IPropertySerializeInfo, string>
+    {
+        public static readonly PropertySerializeInfoName Instance = new PropertySerializeInfoName();
+
+        public override string Name => "Name";
+
+        public override bool CanWrite => false;
+
+        public override string GetValue(IPropertySerializeInfo target) => target.Name;
+
+        public override void SetValue(IPropertySerializeInfo target, string value) { }
     }
 
     [Flags]

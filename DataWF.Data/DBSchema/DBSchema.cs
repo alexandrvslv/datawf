@@ -541,11 +541,11 @@ namespace DataWF.Data
                 return null;
             if (!cacheTables.TryGetValue(type, out var table))
             {
-                var itemGenerator = DBTable.GetItemTypeGenerator(type);
+                var itemGenerator = TableGenerator.GetItemType(type);
                 if (itemGenerator != null)
                 {
                     if (!itemGenerator.IsGenerated(this, out table) && generate)
-                        table = itemGenerator.Generate(schema);
+                        table = itemGenerator.Generate(this);
                     else if (!generate)
                         table = Tables[itemGenerator.Type.Name];
 
@@ -554,13 +554,13 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    var tableGenerator = DBTable.GetTableGenerator(type);
+                    var tableGenerator = TableGenerator.Get(type);
                     if (tableGenerator != null && tableGenerator.ItemType == type)
                     {
                         if (!tableGenerator.IsGenerated(this, out table) && generate)
-                            table = tableGenerator.Generate(schema);
+                            table = tableGenerator.Generate(this);
                         else if (!generate)
-                            table = Tables[itemGenerator.Type.Name];
+                            table = Tables[tableGenerator.Attribute.TableName];
 
                         if (table != null)
                             return cacheTables[type] = table;
@@ -578,13 +578,21 @@ namespace DataWF.Data
         {
             var logSchema = GenerateLogSchema();
             Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Schema"));
-            var attributes = new HashSet<TableGenerator>();
+            var tableGenerators = new HashSet<TableGenerator>();
+            var logTableGenerators = new HashSet<LogTableGenerator>();
             foreach (var type in types)
             {
-                var tableGenerator = DBTable.GetTableGenerator(type);
+                var tableGenerator = TableGenerator.Get(type);
                 if (tableGenerator != null)
                 {
-                    attributes.Add(tableGenerator);
+                    if (tableGenerator is LogTableGenerator logTableGenerator)
+                    {
+                        logTableGenerators.Add(logTableGenerator);
+                    }
+                    else
+                    {
+                        tableGenerators.Add(tableGenerator);
+                    }
                 }
                 else if (TypeHelper.IsInterface(type, typeof(IExecutable)))
                 {
@@ -592,17 +600,15 @@ namespace DataWF.Data
                 }
             }
 
-            foreach (var tableGenerator in attributes)
+            foreach (var tableGenerator in tableGenerators)
             {
-                var table = (DBTable)null;
-                if (tableGenerator is LogTableGenerator)
-                {
-                    table = tableGenerator.Generate(logSchema);
-                }
-                else
-                {
-                    table = tableGenerator.Generate(this);
-                }
+                var table = tableGenerator.Generate(this);
+                table.RemoveDeletedColumns();
+            }
+
+            foreach (var logTableGenerator in logTableGenerators)
+            {
+                var table = logTableGenerator.Generate(logSchema);
                 table.RemoveDeletedColumns();
             }
 

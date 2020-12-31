@@ -32,7 +32,7 @@ namespace DataWF.Data
 
         public TableGenerator BaseTableGenerator
         {
-            get => baseTable ?? (baseTable = DBTable.GetTableGenerator(LogAttribute.BaseType));
+            get => baseTable ?? (baseTable = TableGenerator.Get(LogAttribute.BaseType));
             set => baseTable = value;
         }
 
@@ -40,10 +40,19 @@ namespace DataWF.Data
         {
             Debug.WriteLine($"Generate Log Table {Attribute.TableName} - {this.ItemType.Name}");
 
-            var type = Attribute.Type ?? typeof(DBLogTable<>).MakeGenericType(ItemType);
+            var type = Attribute.Type
+                ?? TypeHelper.ParseType(ItemType.FullName + "Table")
+                ?? TypeHelper.ParseType(ItemType.FullName + "Table`1")
+                ?? typeof(DBLogTable<>);
+            if (type.IsGenericTypeDefinition)
+            {
+                type = type.MakeGenericType(ItemType);
+            }
             var table = (DBTable)EmitInvoker.CreateObject(type);
             table.Name = Attribute.TableName;
             table.Schema = schema;
+            var baseSchema = schema is DBLogSchema logSchema ? logSchema.BaseSchema : schema;
+            table.BaseTable = baseSchema.GetTable(LogAttribute.BaseType);
             return table;
         }
 
