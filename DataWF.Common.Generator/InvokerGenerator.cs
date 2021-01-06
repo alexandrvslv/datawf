@@ -27,19 +27,27 @@ namespace DataWF.Common.Generator
             // retreive the populated receiver 
             if (!(context.SyntaxReceiver is SyntaxReceiver receiver))
                 return;
-
-            // we're going to create a new compilation that contains the attribute.
-            // TODO: we should allow source generators to provide source during initialize, so that this step isn't required.
-            CSharpParseOptions options = (context.Compilation as CSharpCompilation).SyntaxTrees[0].Options as CSharpParseOptions;
-            //Compilation compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(attributeText, Encoding.UTF8), options));
-            var invokerGeneratorAtribute = context.Compilation.GetTypeByMetadataName("DataWF.Common.InvokerGeneratorAttribute");
-
-            // loop over the candidate fields, and keep the ones that are actually annotated
-            foreach (ClassDeclarationSyntax classDeclaration in receiver.CandidateCalsses)
+            try
             {
-                SemanticModel model = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
-                INamedTypeSymbol typeSymbol = model.GetDeclaredSymbol(classDeclaration);
-                ProcessClass(typeSymbol, invokerGeneratorAtribute, context);
+                // we're going to create a new compilation that contains the attribute.
+                // TODO: we should allow source generators to provide source during initialize, so that this step isn't required.
+                CSharpParseOptions options = (context.Compilation as CSharpCompilation).SyntaxTrees[0].Options as CSharpParseOptions;
+                //Compilation compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(attributeText, Encoding.UTF8), options));
+                var invokerGeneratorAtribute = context.Compilation.GetTypeByMetadataName("DataWF.Common.InvokerGeneratorAttribute");
+
+                // loop over the candidate fields, and keep the ones that are actually annotated
+                foreach (ClassDeclarationSyntax classDeclaration in receiver.CandidateCalsses)
+                {
+                    SemanticModel model = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
+                    INamedTypeSymbol typeSymbol = model.GetDeclaredSymbol(classDeclaration);
+                    ProcessClass(typeSymbol, invokerGeneratorAtribute, context);
+                }
+            }
+            catch (Exception)
+            {
+#if DEBUG
+                System.Diagnostics.Debugger.Launch();
+#endif
             }
         }
 

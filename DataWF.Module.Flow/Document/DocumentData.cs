@@ -22,13 +22,13 @@ namespace DataWF.Module.Flow
         public DocumentData(DBTable table) : base(table)
         { }
 
-        public DocumentDataTable<DocumentData> DocumentDataTable => (DocumentDataTable<DocumentData>)Table;
+        public IDocumentDataTable DocumentDataTable => (IDocumentDataTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get => GetValue<long?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<long?>(DocumentDataTable.IdKey);
+            set => SetValue(value, DocumentDataTable.IdKey);
         }
 
         [Index("ddocument_data_document_id")]
@@ -196,9 +196,8 @@ namespace DataWF.Module.Flow
 
         public Task<string> Parse(DBTransaction transaction, bool fromTemplate = false)
         {
-            return Parse(new DocumentExecuteArgs
+            return Parse(new DocumentExecuteArgs(document)
             {
-                Document = Document,
                 Transaction = transaction
             }, fromTemplate);
         }

@@ -59,7 +59,7 @@ namespace DataWF.Module.Common
             get => GetReference(UserTable.CompanyIdKey, ref company);
             set => SetReference(company = value, UserTable.CompanyIdKey);
         }
-        
+
         [Column("abbreviation", 4, Keys = DBColumnKeys.Indexing), Index("ruser_abbreviation", true)]
         public string Abbreviation
         {
@@ -186,6 +186,9 @@ namespace DataWF.Module.Common
         }
 
         public override bool IsAuthenticated => string.IsNullOrEmpty(AccessToken);
+
+        [Column("name", size: 1024, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
+        public override string Name { get => GetName(); set => SetName(value); }
 
         [CultureKey(nameof(Name))]
         public string NameRU

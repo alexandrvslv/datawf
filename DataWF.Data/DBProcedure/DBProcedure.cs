@@ -537,7 +537,7 @@ namespace DataWF.Data
 
         public TaskExecutor GetExecutor(DBItem document, DBTransaction transaction, bool autoCommit = false)
         {
-            var args = new ExecuteArgs(document)
+            var args = new ExecuteArgs(Schema, document)
             {
                 Transaction = transaction,
                 AutoCommit = autoCommit
@@ -836,6 +836,6 @@ namespace DataWF.Data
             return result;
         }
 
-        
+
     }
 }

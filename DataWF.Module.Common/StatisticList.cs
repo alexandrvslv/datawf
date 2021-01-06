@@ -9,7 +9,7 @@ namespace DataWF.Module.Common
         public StatisticList(StatisticTable table, string filter, DBViewKeys mode = DBViewKeys.None)
             : base(table, filter, mode)
         {
-            ApplySortInternal(new DBComparer<Statistic, DateTime?>(table.DateKey, ListSortDirection.Ascending));
+            ApplySortInternal(new DBComparer<Statistic, DateTime?>(table.DateCreateKey, ListSortDirection.Ascending));
         }
     }
 }

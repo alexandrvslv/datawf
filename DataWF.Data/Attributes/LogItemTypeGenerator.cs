@@ -37,12 +37,12 @@ namespace DataWF.Data
 
         public override DBTable CreateTable(DBSchema schema, DBTable baseTable)
         {
-            return null;
+            return base.CreateTable(schema, baseTable);
         }
 
         public override DBTable Generate(DBSchema schema)
         {
-            return null;
+            return base.Generate(schema);
         }
     }
 }

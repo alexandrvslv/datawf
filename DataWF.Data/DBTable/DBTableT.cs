@@ -148,10 +148,10 @@ namespace DataWF.Data
                 }
                 return;
             }
-            if (item.Table != this)
-            {
-                throw new ArgumentException("Wrong Table item!");
-            }
+            //if (item.Table != this)
+            //{
+            //    throw new ArgumentException("Wrong Table item!");
+            //}
             if (item.Attached)
             {
                 return;

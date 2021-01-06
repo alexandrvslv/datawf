@@ -17,7 +17,7 @@ namespace DataWF.Module.Flow
         public StageParam(DBTable table) : base(table)
         { }
 
-        public StageParamTable<StageParam> StageParamTable => (StageParamTable<StageParam>)Table;
+        public IStageParamTable StageParamTable => (IStageParamTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
@@ -123,7 +123,7 @@ namespace DataWF.Module.Flow
         {
             ItemType = (int)StageParamType.Reference;
         }
-        public StageReferenceTable StageReferenceTable => (StageReferenceTable)TypedTable;
+        public StageReferenceTable StageReferenceTable => (StageReferenceTable)Table;
 
         public Stage ReferenceStage
         {

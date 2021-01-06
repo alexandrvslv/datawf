@@ -362,7 +362,7 @@ namespace DataWF.Data
         public DBColumn<DateTime> StampKey => stampKey == DBColumn<DateTime>.EmptyKey ? (stampKey = (DBColumn<DateTime>)Columns.GetByKey(DBColumnKeys.Stamp)) : stampKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBColumn<DateTime> DateKey => dateKey == DBColumn<DateTime>.EmptyKey ? (dateKey = (DBColumn<DateTime>)Columns.GetByKey(DBColumnKeys.Date)) : dateKey;
+        public DBColumn<DateTime> DateCreateKey => dateKey == DBColumn<DateTime>.EmptyKey ? (dateKey = (DBColumn<DateTime>)Columns.GetByKey(DBColumnKeys.Date)) : dateKey;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBColumn GroupKey => groupKey == DBColumn.EmptyKey ? (groupKey = Columns.GetByKey(DBColumnKeys.Group)) : groupKey;
@@ -616,11 +616,18 @@ namespace DataWF.Data
             return virtualTables.FirstOrDefault(p => p.ItemTypeIndex == itemType) as DBTable;
         }
 
-        public DBTable GetVirtualTable(Type itemType)
+        public DBTable<T> GetVirtualTable<T>() where T : DBItem
         {
-            if (itemType == GetType())
+            return (DBTable<T>)GetVirtualTable(typeof(T));
+        }
+
+        public DBTable GetVirtualTable(Type type)
+        {
+            if (type == ItemType.Type)
                 return this;
-            return virtualTables.FirstOrDefault(p => p.ItemType.Type == itemType) as DBTable;
+            if (IsVirtual)
+                return BaseTable.GetVirtualTable(type);
+            return virtualTables.FirstOrDefault(p => p.ItemType.Type == type) ?? this;
         }
 
         public void RefreshSequence(bool truncate = false)
@@ -923,7 +930,7 @@ namespace DataWF.Data
                 {
                     if (StampKey != null)
                         item.Stamp = DateTime.UtcNow;
-                    if (DateKey != null)
+                    if (DateCreateKey != null)
                         item.DateCreate = DateTime.UtcNow;
                     if (IsLoging && StatusKey != null && !item.Changed(StatusKey))
                         item.Status = DBStatus.New;
@@ -1119,6 +1126,11 @@ namespace DataWF.Data
             return type != null
                 ? NewItem(state, def, typeIndex, type.Type)
                 : NewItem(state, def);
+        }
+
+        public T NewItem<T>(DBUpdateState state = DBUpdateState.Insert, bool def = true) where T : DBItem
+        {
+            return (T)NewItem(state, def, typeof(T));
         }
 
         public DBItem NewItem(DBUpdateState state, bool def, Type type)

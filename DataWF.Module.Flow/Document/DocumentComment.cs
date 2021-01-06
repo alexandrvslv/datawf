@@ -15,7 +15,7 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public DocumentCommentTable<DocumentComment> DocumentCommentTable => (DocumentCommentTable<DocumentComment>)Table;
+        public IDocumentCommentTable DocumentCommentTable => (IDocumentCommentTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id

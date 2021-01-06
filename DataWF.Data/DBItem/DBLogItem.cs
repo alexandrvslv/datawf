@@ -33,7 +33,7 @@ namespace DataWF.Data
     [InvokerGenerator(Instance = true)]
     public partial class DBLogItem : DBItem
     {
-        public static DBTable UserLogTable { get; set; }
+        public static DBTable UserRegTable { get; set; }
         public static readonly string UserLogKeyName = "userlog_id";
 
         private DBItem baseItem;
@@ -131,7 +131,7 @@ namespace DataWF.Data
 
         public virtual DBUser GetUser()
         {
-            var reg = (DBUserReg)UserLogTable?.LoadItemById(UserRegId);
+            var reg = (DBUserReg)UserRegTable?.LoadItemById(UserRegId);
             return reg?.DBUser;
         }
 

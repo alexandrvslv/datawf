@@ -9,8 +9,8 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Flow
 {
 
-    [Table("rstage", "Template", BlockSize = 100)]
-    public class Stage : DBItem, IDisposable
+    [Table("rstage", "Template", BlockSize = 100), InvokerGenerator]
+    public sealed partial class Stage : DBItem, IDisposable
     {
         private Work work;
 
@@ -18,7 +18,7 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public StageTable<Stage> StageTable => (StageTable<Stage>)Table;
+        public StageTable StageTable => (StageTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id

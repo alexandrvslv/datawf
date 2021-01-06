@@ -139,8 +139,6 @@ namespace DataWF.Data
             return itemTypeGenerator;
         }
 
-
-
         protected SelectableList<ColumnGenerator> cacheColumns;
         protected SelectableList<ReferenceGenerator> cacheReferences;
         protected SelectableList<ReferencingGenerator> cacheReferencings;

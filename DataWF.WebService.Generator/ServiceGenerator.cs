@@ -165,6 +165,10 @@ namespace {nameSpace}
             else
             {
                 var primaryKey = GetPrimaryKey(type, attributeTypes);
+                if (primaryKey == null)
+                {
+                    return;
+                }
                 keyType = primaryKey.Type.ToDisplayString();
                 source.Append($@"
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -208,7 +212,9 @@ namespace {nameSpace}
             if (!type.IsAbstract && !type.IsSealed)
             {
                 var primaryKey = GetPrimaryKey(type, attributeTypes);
-                source.Append($@"
+                if (primaryKey != null)
+                {
+                    source.Append($@"
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route(""api/[controller]"")]
     [ApiController]
@@ -217,6 +223,7 @@ namespace {nameSpace}
         public {controllerClassName}(DBSchema schema) :base(schema)
         {{ }}
     }}");
+                }
             }
             source.Append(@"
 }");

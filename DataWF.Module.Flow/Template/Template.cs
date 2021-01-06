@@ -17,48 +17,6 @@ namespace DataWF.Module.Flow
         OfficeExcel
     }
 
-    public class TemplateList : DBTableView<Template>
-    {
-        TemplateList _cacheAllTemplates;
-
-        public TemplateList(TemplateTable<Template> table, string filter = "", DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(table, filter, mode, status)
-        {
-            ApplySortInternal(new DBComparer<Template, string>(table.CodeKey, ListSortDirection.Ascending));
-        }
-
-        public TemplateList(TemplateTable<Template> table, Work flow)
-            : this(table, table.WorkIdKey.Name + "=" + flow.PrimaryId)
-        {
-        }
-
-        public TemplateList(TemplateTable<Template> table, Template template)
-            : this(table, table.GroupKey.Name + "=" + template.PrimaryId)
-        {
-        }
-
-        public TemplateList AllTemplates(TemplateTable<Template> table, Template template)
-        {
-            if (_cacheAllTemplates == null)
-            {
-                _cacheAllTemplates = new TemplateList(table);
-                _cacheAllTemplates.Query.BuildParam(table.ParseProperty(nameof(Template.ParentId)), template.GetSubGroupFullIds());
-            }
-            return _cacheAllTemplates;
-        }
-    }
-
-    public partial class TemplateTable<T>
-    {
-        private TemplateDataTable<TemplateData> dataTable;
-        private TemplateReferenceTable<TemplateReference> referenceTable;
-        private TemplatePropertyTable<TemplateProperty> propertyTable;
-
-        public TemplateDataTable<TemplateData> DataTable => dataTable ??= (TemplateDataTable<TemplateData>)Schema.GetTable<TemplateData>();
-        public TemplateReferenceTable<TemplateReference> ReferenceTable => referenceTable ??= (TemplateReferenceTable<TemplateReference>)Schema.GetTable<TemplateReference>();
-        public TemplatePropertyTable<TemplateProperty> PropertyTable => propertyTable ??= (TemplatePropertyTable<TemplateProperty>)Schema.GetTable<TemplateProperty>();
-    }
-
     [Table("rtemplate", "Template", BlockSize = 100), InvokerGenerator]
     public partial class Template : DBGroupItem, IDisposable
     {
@@ -69,7 +27,7 @@ namespace DataWF.Module.Flow
         }
 
         [JsonIgnore]
-        public TemplateTable<Template> TemplateTable => (TemplateTable<Template>)Table;
+        public ITemplateTable TemplateTable => (ITemplateTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -198,22 +156,22 @@ namespace DataWF.Module.Flow
         [Referencing(nameof(TemplateData.TemplateId))]
         public IEnumerable<TemplateData> Datas
         {
-            get => GetReferencing<TemplateData>(TemplateTable.DataTable.TemplateIdKey, DBLoadParam.None);
-            set => SetReferencing(value, TemplateTable.DataTable.TemplateIdKey);
+            get => GetReferencing<TemplateData>(TemplateTable.TemplateDataTable.TemplateIdKey, DBLoadParam.None);
+            set => SetReferencing(value, TemplateTable.TemplateDataTable.TemplateIdKey);
         }
 
         [Referencing(nameof(TemplateReference.TemplateId))]
         public IEnumerable<TemplateReference> References
         {
-            get => GetReferencing<TemplateReference>(TemplateTable.ReferenceTable.TemplateIdKey, DBLoadParam.None);
-            set => SetReferencing(value, TemplateTable.ReferenceTable.TemplateIdKey);
+            get => GetReferencing<TemplateReference>(TemplateTable.TemplateReferenceTable.TemplateIdKey, DBLoadParam.None);
+            set => SetReferencing(value, TemplateTable.TemplateReferenceTable.TemplateIdKey);
         }
 
         [Referencing(nameof(TemplateProperty.TemplateId))]
         public IEnumerable<TemplateProperty> Properties
         {
-            get => GetReferencing<TemplateProperty>(TemplateTable.PropertyTable.TemplateIdKey, DBLoadParam.None);
-            set => SetReferencing(value, TemplateTable.PropertyTable.TemplateIdKey);
+            get => GetReferencing<TemplateProperty>(TemplateTable.TemplatePropertyTable.TemplateIdKey, DBLoadParam.None);
+            set => SetReferencing(value, TemplateTable.TemplatePropertyTable.TemplateIdKey);
         }
 
         //[Browsable(false)]
@@ -269,22 +227,22 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public TemplateReference GetTemplateReference(int referenceId)
         {
-            using (var query = new QQuery(TemplateTable.ReferenceTable))
+            using (var query = new QQuery(TemplateTable.TemplateReferenceTable))
             {
-                query.BuildParam(TemplateTable.ReferenceTable.TemplateIdKey, Id);
-                query.BuildParam(TemplateTable.ReferenceTable.ReferenceIdKey, referenceId);
-                return TemplateTable.ReferenceTable.Select(query).FirstOrDefault();
+                query.BuildParam(TemplateTable.TemplateReferenceTable.TemplateIdKey, Id);
+                query.BuildParam(TemplateTable.TemplateReferenceTable.ReferenceIdKey, referenceId);
+                return TemplateTable.TemplateReferenceTable.Select(query).FirstOrDefault();
             }
         }
 
         [ControllerMethod]
         public TemplateProperty GetTemplateProperty(string propertyName)
         {
-            using (var query = new QQuery(TemplateTable.PropertyTable))
+            using (var query = new QQuery(TemplateTable.TemplatePropertyTable))
             {
-                query.BuildParam(TemplateTable.PropertyTable.TemplateIdKey, Id);
-                query.BuildParam(TemplateTable.PropertyTable.PropertyNameKey, propertyName);
-                return TemplateTable.PropertyTable.Select(query).FirstOrDefault();
+                query.BuildParam(TemplateTable.TemplatePropertyTable.TemplateIdKey, Id);
+                query.BuildParam(TemplateTable.TemplatePropertyTable.PropertyNameKey, propertyName);
+                return TemplateTable.TemplatePropertyTable.Select(query).FirstOrDefault();
             }
         }
 

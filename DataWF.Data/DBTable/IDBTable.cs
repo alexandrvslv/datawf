@@ -32,7 +32,7 @@ namespace DataWF.Data
         DBItem this[int index] { get; }
         DBColumn<byte[]> AccessKey { get; }
         DBColumn<string> CodeKey { get; }
-        DBColumn<DateTime> DateKey { get; }
+        DBColumn<DateTime> DateCreateKey { get; }
         DBColumn ElementTypeKey { get; }
         DBColumn<byte[]> FileKey { get; }
         DBColumn<long?> FileOIDKey { get; }
@@ -131,6 +131,7 @@ namespace DataWF.Data
         IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
         void LoadReferenceBlock(IDbCommand command, DBTransaction transaction);
         void LoadReferencingBlock(IDbCommand command, DBTransaction transaction);
+        T NewItem<T>(DBUpdateState state = DBUpdateState.Insert, bool def = true) where T : DBItem;
         DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true);
         DBItem NewItem(DBUpdateState state, bool def, int typeIndex);
         int NextHash();

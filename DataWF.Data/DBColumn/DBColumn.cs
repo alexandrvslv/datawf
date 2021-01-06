@@ -96,7 +96,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn BaseColumn
         {
-            get { return baseColumn == DBColumn.EmptyKey ? (baseColumn = (Table as IDBDependTable)?.BaseTable?.Columns[BaseName]) : baseColumn; }
+            get { return baseColumn == DBColumn.EmptyKey ? (baseColumn = Table.BaseTable?.Columns[BaseName]) : baseColumn; }
             set
             {
                 baseColumn = value;
@@ -1038,6 +1038,6 @@ namespace DataWF.Data
 
         public abstract void Read<E>(ref Utf8JsonReader reader, E element, JsonSerializerOptions option = null);
 
-        
+
     }
 }

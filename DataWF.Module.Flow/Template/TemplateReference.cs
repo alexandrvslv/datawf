@@ -12,7 +12,7 @@ namespace DataWF.Module.Flow
         public TemplateReference(DBTable table) : base(table)
         { }
 
-        public TemplateReferenceTable<TemplateReference> TemplateReferenceTable => (TemplateReferenceTable<TemplateReference>)Table;
+        public ITemplateReferenceTable TemplateReferenceTable => (ITemplateReferenceTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id

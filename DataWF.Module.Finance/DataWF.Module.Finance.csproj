@@ -6,6 +6,7 @@
     <RootNamespace>DataWF.Module.Finance</RootNamespace>
     <AssemblyName>DataWF.Module.Finance</AssemblyName>
     <TargetFrameworks>netstandard2.0;netstandard2.1;</TargetFrameworks>
+    <LangVersion>9.0</LangVersion>
     <Platforms>AnyCPU</Platforms>
     
   </PropertyGroup>

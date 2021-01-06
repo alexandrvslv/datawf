@@ -14,113 +14,12 @@ namespace DataWF.Module.Flow
 {
     public class DocumentExecuteArgs : ExecuteArgs
     {
+        public DocumentExecuteArgs(Document document) : base(document.Schema, document)
+        { }
+
         public DocumentWork Work { get; set; }
         public Stage Stage { get; set; }
         public StageProcedure StageProcedure { get; set; }
-    }
-
-    public partial class DocumentTable<T>
-    {
-        internal readonly List<Document> saving = new List<Document>();
-        private DocumentWorkTable workTable;
-        private DocumentDataTable<DocumentData> dataTable;
-        private DocumentCustomerTable<DocumentCustomer> customerTable;
-        private DocumentCommentTable<DocumentComment> commentTable;
-        private DocumentReferenceTable<DocumentReference> referenceTable;
-        private TemplateTable<Template> templateTable;
-
-        [JsonIgnore]
-        public DocumentWorkTable WorkTable => workTable ??= (DocumentWorkTable)Schema.GetTable<DocumentWork>();
-
-        [JsonIgnore]
-        public DocumentDataTable<DocumentData> DataTable => dataTable ??= (DocumentDataTable<DocumentData>)Schema.GetTable<DocumentData>();
-
-        [JsonIgnore]
-        public DocumentCustomerTable<DocumentCustomer> CustomerTable => customerTable ??= (DocumentCustomerTable<DocumentCustomer>)Schema.GetTable<DocumentCustomer>();
-
-        [JsonIgnore]
-        public DocumentCommentTable<DocumentComment> CommentTable => commentTable ??= (DocumentCommentTable<DocumentComment>)Schema.GetTable<DocumentComment>();
-
-        [JsonIgnore]
-        public DocumentReferenceTable<DocumentReference> ReferenceTable => referenceTable ??= (DocumentReferenceTable<DocumentReference>)Schema.GetTable<DocumentReference>();
-
-        [JsonIgnore]
-        public TemplateTable<Template> TemplateTable => templateTable ??= (TemplateTable<Template>)Schema.GetTable<Template>();
-
-
-        public Document FindDocument(Template template, object p)
-        {
-            if (template == null)
-                return null;
-            string filter = $"{TemplateIdKey.Name}={template.Id} and {CustomerIdKey.Name}={p}";
-            return Load(filter, DBLoadParam.Load).FirstOrDefault();
-        }
-
-
-        public object ExecuteProcedures(DocumentExecuteArgs param, IEnumerable<StageProcedure> enumer)
-        {
-            object result = null;
-            foreach (var item in enumer)
-            {
-                if (item.Procedure == null)
-                {
-                    throw new ArgumentNullException($"{nameof(StageProcedure)}.{nameof(StageProcedure.Procedure)} not defined!");
-                }
-                param.StageProcedure = item;
-                result = item.Procedure.Execute(param);
-            }
-
-            return result;
-        }
-
-        public QQuery CreateRefsFilter(object id)
-        {
-            var query = new QQuery("", ReferenceTable);
-            query.Parameters.Add(CreateRefsParam(id));
-            return query;
-        }
-
-        public QParam CreateRefsParam(object id)
-        {
-            var documentReferenceTable = (DocumentReferenceTable<DocumentReference>)Schema.GetTable<DocumentReference>();
-            var qrefing = new QQuery(string.Format("select {0} from {1} where {2} = {3}",
-                                                   documentReferenceTable.DocumentIdKey.Name,
-                                                   documentReferenceTable.Name,
-                                                   documentReferenceTable.ReferenceIdKey.Name,
-                                                   id));
-            var qrefed = new QQuery(string.Format("select {2} from {1} where {0} = {3}",
-                                                  documentReferenceTable.DocumentIdKey.Name,
-                                                  documentReferenceTable.Name,
-                                                  documentReferenceTable.ReferenceIdKey.Name,
-                                                  id));
-
-            var param = new QParam();
-            param.Parameters.Add(new QParam(LogicType.And, IdKey, CompareType.In, qrefed));
-            param.Parameters.Add(new QParam(LogicType.Or, IdKey, CompareType.In, qrefing));
-            return param;
-        }
-
-        public void LoadDocuments(User user)
-        {
-            var worksTable = (DocumentWorkTable)Schema.GetTable<DocumentWork>();
-            var qWork = new QQuery(string.Empty, worksTable);
-            qWork.Columns.Add(new QColumn(worksTable.DocumentIdKey));
-            qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, user);
-
-            var qDocs = new QQuery(string.Empty, this);
-            qDocs.BuildParam(IdKey, CompareType.In, qWork);
-
-            Load(qDocs, DBLoadParam.Synchronize);
-            worksTable.Load(qWork, DBLoadParam.Synchronize);
-        }
-
-        public static event DocumentSaveDelegate Saved;
-
-        internal void OnSaved(Document document, DocumentEventArgs documentEventArgs)
-        {
-            Saved?.Invoke(document, documentEventArgs);
-        }
     }
 
     [Table("ddocument", "Document", BlockSize = 200)]
@@ -439,44 +338,44 @@ namespace DataWF.Module.Flow
         [Referencing(nameof(DocumentWork.DocumentId))]
         public IEnumerable<DocumentWork> Works
         {
-            get => GetReferencing<DocumentWork>(DocumentTable.WorkTable.DocumentIdKey, DBLoadParam.None).
+            get => GetReferencing<DocumentWork>(DocumentTable.DocumentWorkTable.DocumentIdKey, DBLoadParam.None).
               OrderByDescending(p => p.DateCreate);
-            set => SetReferencing(value, DocumentTable.WorkTable.DocumentIdKey);
+            set => SetReferencing(value, DocumentTable.DocumentWorkTable.DocumentIdKey);
         }
 
         [Referencing(nameof(DocumentData.DocumentId))]
         public IEnumerable<DocumentData> Datas
         {
-            get => GetReferencing<DocumentData>(DocumentTable.DataTable.DocumentIdKey, DBLoadParam.None);
-            set => SetReferencing(value, DocumentTable.DataTable.DocumentIdKey);
+            get => GetReferencing<DocumentData>(DocumentTable.DocumentDataTable.DocumentIdKey, DBLoadParam.None);
+            set => SetReferencing(value, DocumentTable.DocumentDataTable.DocumentIdKey);
         }
 
         [Referencing(nameof(DocumentCustomer.DocumentId))]
         public IEnumerable<DocumentCustomer> Customers
         {
-            get => GetReferencing<DocumentCustomer>(DocumentTable.CustomerTable.DocumentIdKey, DBLoadParam.None);
-            set => SetReferencing(value, DocumentTable.CustomerTable.DocumentIdKey);
+            get => GetReferencing<DocumentCustomer>(DocumentTable.DocumentCustomerTable.DocumentIdKey, DBLoadParam.None);
+            set => SetReferencing(value, DocumentTable.DocumentCustomerTable.DocumentIdKey);
         }
 
         [Referencing(nameof(DocumentComment.DocumentId))]
         public IEnumerable<DocumentComment> Comments
         {
-            get => GetReferencing<DocumentComment>(DocumentTable.CommentTable.DocumentIdKey, DBLoadParam.None);
-            set => SetReferencing(value, DocumentTable.CommentTable.DocumentIdKey);
+            get => GetReferencing<DocumentComment>(DocumentTable.DocumentCommentTable.DocumentIdKey, DBLoadParam.None);
+            set => SetReferencing(value, DocumentTable.DocumentCommentTable.DocumentIdKey);
         }
 
         [Referencing(nameof(DocumentReference.ReferenceId))]
         public IEnumerable<DocumentReference> Referencing
         {
-            get => GetReferencing<DocumentReference>(DocumentTable.ReferenceTable.ReferenceIdKey, DBLoadParam.None);
-            set => SetReferencing(value, DocumentTable.ReferenceTable.ReferenceIdKey);
+            get => GetReferencing<DocumentReference>(DocumentTable.DocumentReferenceTable.ReferenceIdKey, DBLoadParam.None);
+            set => SetReferencing(value, DocumentTable.DocumentReferenceTable.ReferenceIdKey);
         }
 
         [Referencing(nameof(DocumentReference.DocumentId))]
         public IEnumerable<DocumentReference> Referenced
         {
-            get => GetReferencing<DocumentReference>(DocumentTable.ReferenceTable.DocumentIdKey, DBLoadParam.None);
-            set => SetReferencing(value, DocumentTable.ReferenceTable.DocumentIdKey);
+            get => GetReferencing<DocumentReference>(DocumentTable.DocumentReferenceTable.DocumentIdKey, DBLoadParam.None);
+            set => SetReferencing(value, DocumentTable.DocumentReferenceTable.DocumentIdKey);
         }
 
         [Browsable(false)]
@@ -609,7 +508,7 @@ namespace DataWF.Module.Flow
             if (document == null)
                 return null;
 
-            var reference = new DocumentReference(DocumentTable.ReferenceTable) { Document = this, Reference = document };
+            var reference = new DocumentReference(DocumentTable.DocumentReferenceTable) { Document = this, Reference = document };
             reference.GenerateId(transaction);
             reference.Attach();
             return reference;
@@ -699,9 +598,8 @@ namespace DataWF.Module.Flow
             {
                 GenerateId();
                 Attach();
-                var param = new DocumentExecuteArgs()
+                var param = new DocumentExecuteArgs(this)
                 {
-                    Document = this,
                     Transaction = transaction
                 };
                 var works = Works.ToList();
@@ -806,9 +704,8 @@ namespace DataWF.Module.Flow
         {
             if (work?.Stage == null)
                 throw new ArgumentNullException();
-            var param = new DocumentExecuteArgs
+            var param = new DocumentExecuteArgs(this)
             {
-                Document = this,
                 Work = work,
                 Stage = work.Stage,
                 Transaction = transaction
@@ -818,7 +715,7 @@ namespace DataWF.Module.Flow
 
         public object ExecuteProceduresByStage(Stage stage, StageParamProcudureType type, DBTransaction transaction)
         {
-            var param = new DocumentExecuteArgs { Document = this, Stage = stage, Transaction = transaction };
+            var param = new DocumentExecuteArgs(this) { Stage = stage, Transaction = transaction };
             return DocumentTable.ExecuteProcedures(param, stage.GetProceduresByType(type));
         }
 

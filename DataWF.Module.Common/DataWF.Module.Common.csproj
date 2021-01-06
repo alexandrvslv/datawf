@@ -6,6 +6,7 @@
     <RootNamespace>DataWF.Module.Common</RootNamespace>
     <AssemblyName>DataWF.Module.Common</AssemblyName>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <LangVersion>9.0</LangVersion>
     <Platforms>AnyCPU</Platforms>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>

@@ -5,6 +5,7 @@
     <RootNamespace>DataWF.Module.Messanger</RootNamespace>
     <AssemblyName>DataWF.Module.Messanger</AssemblyName>
     <TargetFrameworks>netstandard2.0;netstandard2.1;</TargetFrameworks>
+    <LangVersion>9.0</LangVersion>
     <Platforms>AnyCPU</Platforms>
     
   </PropertyGroup>

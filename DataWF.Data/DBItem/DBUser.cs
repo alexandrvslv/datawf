@@ -54,13 +54,6 @@ namespace DataWF.Data
             set => SetValue(value, DBUserTable.EMailKey);
         }
 
-        [Column("name", 1024, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
-        public string Name
-        {
-            get => GetName(nameof(Name));
-            set => SetName(value, nameof(Name));
-        }
-
         [JsonIgnore, XmlIgnore]
         public abstract IEnumerable<IAccessIdentity> Groups { get; }
 
@@ -69,6 +62,7 @@ namespace DataWF.Data
 
         [JsonIgnore, XmlIgnore]
         public abstract bool IsAuthenticated { get; }
+        public abstract string Name { get; set; }
 
         string IIdentity.Name => EMail;
     }

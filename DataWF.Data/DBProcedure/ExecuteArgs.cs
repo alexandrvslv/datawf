@@ -34,10 +34,13 @@ namespace DataWF.Data
         private Dictionary<string, object> parameters;
         private DBItem document;
 
-        public ExecuteArgs(DBItem document = null)
+        public ExecuteArgs(DBSchema schema, DBItem document = null)
         {
+            Schema = schema;
             Document = document;
         }
+
+        public DBSchema Schema { get; }
 
         public DBItem Document
         {

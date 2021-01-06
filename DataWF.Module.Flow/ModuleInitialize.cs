@@ -16,7 +16,7 @@ namespace DataWF.Module.Flow
             workTable.DefaultComparer = new DBComparer<Work, string>(workTable.CodeKey) { Hash = true };
             workTable.Load();
 
-            var stageTable = (StageTable<Stage>)schema.GetTable<Stage>();
+            var stageTable = (StageTable)schema.GetTable<Stage>();
             stageTable.Load();
 
             var stageparamTable = (StageParamTable<StageParam>)schema.GetTable<StageParam>();

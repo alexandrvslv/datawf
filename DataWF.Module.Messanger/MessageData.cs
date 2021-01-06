@@ -10,10 +10,9 @@ namespace DataWF.Module.Messanger
     public partial class MessageData : MessageDetail
     {
         public MessageData(DBTable table) : base(table)
-        {
-        }
+        { }
 
-        public MessageDataTable<MessageData> MessageDataTable => (MessageDataTable<MessageData>)Table;
+        public IMessageDataTable MessageDataTable => (IMessageDataTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id

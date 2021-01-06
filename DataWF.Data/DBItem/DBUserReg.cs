@@ -47,7 +47,7 @@ namespace DataWF.Data
         }
 
         [Reference(nameof(UserId))]
-        public DBUser DBUser
+        public virtual DBUser DBUser
         {
             get => GetReference(DBUserRegTable.UserIdKey, ref dbUser);
             set => SetReference(dbUser = value, DBUserRegTable.UserIdKey);

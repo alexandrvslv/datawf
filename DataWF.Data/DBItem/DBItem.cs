@@ -113,7 +113,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public byte[] Image
         {
-            get => GetValue(Table.ImageKey);
+            get => Table.ImageKey == null ? null : GetValue(Table.ImageKey);
             set
             {
                 if (Table.ImageKey == null)
@@ -154,8 +154,8 @@ namespace DataWF.Data
         [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 1001)]
         public virtual DateTime DateCreate
         {
-            get => GetValue(Table.DateKey);
-            set => SetValue(value, Table.DateKey);
+            get => GetValue(Table.DateCreateKey);
+            set => SetValue(value, Table.DateCreateKey);
         }
 
         [Browsable(false)]
@@ -214,13 +214,11 @@ namespace DataWF.Data
             {
                 if (table != value)
                 {
-                    table = value.IsVirtual ? value.BaseTable : value;
+                    table = value.GetVirtualTable(GetType());
                     handler = table.GetNextHandler();
                 }
             }
         }
-
-        public DBTable TypedTable => Table.GetVirtualTable(GetType());
 
         public object this[int columnIndex]
         {

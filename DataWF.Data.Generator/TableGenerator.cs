@@ -129,6 +129,10 @@ namespace DataWF.Data.Generator
                 {
                     name = tableAttribute.ConstructorArguments.FirstOrDefault();
                 }
+                if (name.IsNull)
+                {
+                    return null;
+                }
                 tableSqlName = name.Value.ToString();
             }
 
@@ -200,8 +204,9 @@ namespace {namespaceName}
         public {className}(DBTable table):base(table)
         {{ }}
 
-        public {tableTypeName} {tableName} => ({tableTypeName}){(itemTypeAttribute != null ? "Typed" : string.Empty)}Table;
+        public {tableTypeName} {tableName} => ({tableTypeName})Table;
 ");
+                //{(itemTypeAttribute != null ? "Typed" : string.Empty)}
                 foreach (IPropertySymbol propertySymbol in properties)
                 {
                     ProcessLogProperty(source, propertySymbol, attributes, tableName, cultures);
@@ -278,6 +283,10 @@ namespace {namespaceName}
                 {
                     refName = referenceAttribute.ConstructorArguments.FirstOrDefault();
                 }
+                if (refName.IsNull)
+                {
+                    return;
+                }
                 var columnPropertyName = (string)refName.Value;
                 var columnProperty = propertySymbol.ContainingType.GetMembers(columnPropertyName).FirstOrDefault() as IPropertySymbol;
                 if (columnProperty != null)
@@ -319,7 +328,78 @@ namespace {namespaceName}
             string className = null;
             string whereName = null;
             var baseClassName = "DBTable";
+            className = GetTableClassName(classSymbol, attributes);
 
+            if (className != null)
+            {
+                var genericArg = classSymbol.Name;
+                var interfaceName = "I" + className;
+                var baseInterfaceName = "IDBTable";
+                if (!classSymbol.IsSealed)
+                {
+                    genericArg = "T";
+                    className += "<T>";
+                    whereName = $"where T: {classSymbol.Name}";
+                }
+                if (classSymbol.BaseType.Name == "DBLogItem")
+                {
+                    baseClassName = "DBLogTable";
+                    baseInterfaceName = "IDBLogTable";
+                }
+                else //&& classSymbol.BaseType.Name != "DBGroupItem"
+                if (classSymbol.BaseType.Name != "DBItem")
+                {
+                    var baseNamespace = classSymbol.BaseType.ContainingNamespace.ToDisplayString();
+                    if (baseNamespace == namespaceName
+                        || baseNamespace == "<global namespace>")
+                    {
+                        baseClassName = classSymbol.BaseType.Name + "Table";
+                        baseInterfaceName = "I" + baseClassName;
+                    }
+                    else
+                    {
+                        baseClassName = $"{baseNamespace}.{classSymbol.BaseType.Name}Table";
+                        baseInterfaceName = $"{baseNamespace}.I{classSymbol.BaseType.Name}Table";
+                    }
+                }
+                // begin building the generated source
+                var source = new StringBuilder($@"using System.Text.Json.Serialization;
+using DataWF.Common;
+{(namespaceName != "DataWF.Data" ? "using DataWF.Data;" : string.Empty)}
+");
+
+                source.Append($@"
+namespace {namespaceName}
+{{
+    public {(classSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className}: {baseClassName}<{genericArg}>{(interfaceName != null ? $", {interfaceName}" : string.Empty)} {whereName}
+    {{");
+                var interfaceSource = new StringBuilder($@"
+    public partial interface {interfaceName}: {baseInterfaceName}
+    {{");
+
+                // create properties for each field 
+                foreach (IPropertySymbol propertySymbol in properties)
+                {
+                    ProcessColumnProperty(source, interfaceSource, propertySymbol, attributes, cultures);
+                }
+                source.Append(@"
+    }
+");
+                interfaceSource.Append(@"
+    }");
+                source.Append(interfaceSource);
+                source.Append(@"
+}");
+                return source.ToString();
+            }
+
+
+            return null;
+        }
+
+        private static string GetTableClassName(INamedTypeSymbol classSymbol, AttributesCache attributes)
+        {
+            string className = null;
             var tableAttribyte = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.Table, SymbolEqualityComparer.Default));
             if (tableAttribyte != null)
             {
@@ -358,74 +438,10 @@ namespace {namespaceName}
                 className = classSymbol.Name + "Table";
             }
 
-
-            if (className != null)
-            {
-                var genericArg = classSymbol.Name;
-                var interfaceName = "I" + className;
-                if (!classSymbol.IsSealed)
-                {
-                    genericArg = "T";
-                    className += "<T>";
-                    whereName = $"where T: {classSymbol.Name}";
-                }
-                if (classSymbol.BaseType.Name == "DBLogItem")
-                {
-                    baseClassName = "DBLogTable";
-                }
-                else //&& classSymbol.BaseType.Name != "DBGroupItem"
-                if (classSymbol.BaseType.Name != "DBItem")
-                {
-                    var baseNamespace = classSymbol.BaseType.ContainingNamespace.ToDisplayString();
-                    if (baseNamespace == namespaceName
-                        || baseNamespace == "<global namespace>")
-                    {
-                        baseClassName = classSymbol.BaseType.Name + "Table";
-                    }
-                    else
-                    {
-                        baseClassName = $"{baseNamespace}.{classSymbol.BaseType.Name}Table";
-                    }
-                }
-                // begin building the generated source
-                StringBuilder source = new StringBuilder($@"using System.Text.Json.Serialization;
-using DataWF.Common;
-{(namespaceName != "DataWF.Data" ? "using DataWF.Data;" : string.Empty)}
-");
-
-                source.Append($@"
-namespace {namespaceName}
-{{
-    public {(classSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className} : {baseClassName}<{genericArg}>{(interfaceName != null ? $", {interfaceName}" : string.Empty)} {whereName}
-    {{");
-
-                // create properties for each field 
-                foreach (IPropertySymbol propertySymbol in properties)
-                {
-                    ProcessColumnProperty(source, propertySymbol, attributes, cultures);
-                }
-                source.Append(@"
-    }
-");
-                source.Append($@"
-    public interface {interfaceName}:IDBTable
-    {{");
-                foreach (IPropertySymbol propertySymbol in properties)
-                {
-                    ProcessColumnInterfaceProperty(source, propertySymbol, attributes, cultures);
-                }
-                source.Append(@"
-    }");
-                source.Append(@"
-}");
-                return source.ToString();
-            }
-
-
-            return null;
+            return className;
         }
 
-        private void ProcessColumnProperty(StringBuilder source, IPropertySymbol propertySymbol, AttributesCache attributes, List<string> cultures)
+        private void ProcessColumnProperty(StringBuilder source, StringBuilder interfaceSource, IPropertySymbol propertySymbol, AttributesCache attributes, List<string> cultures)
         {
             // get the name and type of the field
             string propertyName = propertySymbol.Name;
@@ -458,6 +474,8 @@ namespace {namespaceName}
         [JsonIgnore]
         public {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => ParseColumn(""{sqlName.Value}_{culture.ToLowerInvariant()}"", ref {keyFieldName});
 ");
+                        interfaceSource.Append($@"
+        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
                     }
                 }
                 else
@@ -468,6 +486,8 @@ namespace {namespaceName}
         [JsonIgnore]
         public {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => ParseProperty(nameof({propertySymbol.ContainingType.Name}.{propertyName}), ref {keyFieldName});
 ");
+                    interfaceSource.Append($@"
+        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
                 }
             }
 
@@ -480,6 +500,67 @@ namespace {namespaceName}
         [JsonIgnore]
         public {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => ParseProperty(nameof({propertySymbol.ContainingType.Name}.{propertyName}), ref {keyFieldName});
 ");
+                interfaceSource.Append($@"
+        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
+            }
+            var referenceAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Reference, SymbolEqualityComparer.Default));
+            if (referenceAttribute != null)
+            {
+                if (propertyType is INamedTypeSymbol refItemType)
+                {
+                    var refTableName = GetTableClassName(refItemType, attributes);
+                    if (refTableName != null && interfaceSource.ToString().IndexOf(refTableName, StringComparison.Ordinal) < 0)
+                    {
+                        var refTableClassName = refTableName;
+                        if (!refItemType.IsAbstract)
+                        {
+                            var typeName = refItemType.Name;
+                            var refNamespace = refItemType.ContainingNamespace.ToDisplayString();
+                            if (refNamespace != propertySymbol.ContainingType.ContainingNamespace.ToDisplayString())
+                            {
+                                typeName = refItemType.ToString();
+                                refTableClassName = $"{refNamespace}.{refTableName}";
+                            }
+                            if (!refItemType.IsSealed)
+                            {
+                                refTableClassName += $"<{typeName}>";
+                            }
+
+                            source.Append($@"
+        private {refTableClassName} _{refTableName};
+        [JsonIgnore]
+        public {refTableClassName} {refTableName} => _{refTableName} ??= ({refTableClassName})Schema.GetTable<{typeName}>();
+");
+                            interfaceSource.Append($@"
+        {refTableClassName} {refTableName} {{ get; }}");
+                        }
+                    }
+                }
+            }
+            var referencingAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Referencing, SymbolEqualityComparer.Default));
+            if (referencingAttribute != null)
+            {
+                if (propertyType is INamedTypeSymbol named
+                    && named.TypeArguments.Length > 0
+                    && named.TypeArguments.First() is INamedTypeSymbol refItemType)
+                {
+                    var refTableName = GetTableClassName(refItemType, attributes);
+                    if (refTableName != null && interfaceSource.ToString().IndexOf(refTableName, StringComparison.Ordinal) < 0)
+                    {
+                        var refTableClassName = refTableName;
+                        if (!refItemType.IsSealed)
+                        {
+                            refTableClassName += $"<{refItemType.Name}>";
+                        }
+                        source.Append($@"
+        private {refTableClassName} _{refTableName};
+        [JsonIgnore]
+        public {refTableClassName} {refTableName} => _{refTableName} ??= ({refTableClassName})Schema.GetTable<{refItemType.Name}>();
+");
+                        interfaceSource.Append($@"
+        {refTableClassName} {refTableName} {{ get; }}");
+                    }
+                }
             }
         }
 
@@ -488,48 +569,6 @@ namespace {namespaceName}
             return string.Equals(keyPropertyName, "CodeKey", StringComparison.Ordinal)
                 || string.Equals(keyPropertyName, "FileNameKey", StringComparison.Ordinal)
                 || string.Equals(keyPropertyName, "FileLastWriteKey", StringComparison.Ordinal);
-        }
-
-        private void ProcessColumnInterfaceProperty(StringBuilder source, IPropertySymbol propertySymbol, AttributesCache attributes, List<string> cultures)
-        {
-            // get the name and type of the field
-            string propertyName = propertySymbol.Name;
-            ITypeSymbol propertyType = propertySymbol.Type;
-
-            // get the AutoNotify attribute from the field, and any associated data
-            AttributeData columnAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.Column, SymbolEqualityComparer.Default));
-            if (columnAttribute != null)
-            {
-
-                TypedConstant overridenPropertyType = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "DataType", StringComparison.Ordinal)).Value;
-                if (!overridenPropertyType.IsNull)
-                    propertyType = (ITypeSymbol)overridenPropertyType.Value;
-
-                TypedConstant keys = columnAttribute.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, "Keys", StringComparison.Ordinal)).Value;
-                if (!keys.IsNull && ((int)keys.Value & (1 << 16)) != 0)
-                {
-                    foreach (var culture in cultures)
-                    {
-                        string keyPropertyName = $"{propertyName}{culture}Key";
-                        source.Append($@"
-        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
-                    }
-                }
-                else
-                {
-                    string keyPropertyName = $"{propertyName}Key";
-                    source.Append($@"
-        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
-                }
-            }
-
-            var logColumnAttribute = propertySymbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.Equals(attributes.LogColumn, SymbolEqualityComparer.Default));
-            if (logColumnAttribute != null)
-            {
-                string keyPropertyName = $"{propertyName}Key";
-                source.Append($@"
-        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
-            }
         }
 
         /// <summary>
@@ -571,6 +610,7 @@ namespace {namespaceName}
             public INamedTypeSymbol ItemType;
             public INamedTypeSymbol Culture;
             public INamedTypeSymbol Reference;
+            public INamedTypeSymbol Referencing;
             public INamedTypeSymbol AbstractTable;
             public INamedTypeSymbol LogTable;
             public INamedTypeSymbol LogItemType;
@@ -588,6 +628,7 @@ namespace {namespaceName}
                 LogColumn = compilation.GetTypeByMetadataName("DataWF.Data.LogColumnAttribute");
                 Culture = compilation.GetTypeByMetadataName("DataWF.Data.CultureKeyAttribute");
                 Reference = compilation.GetTypeByMetadataName("DataWF.Data.ReferenceAttribute");
+                Referencing = compilation.GetTypeByMetadataName("DataWF.Data.ReferencingAttribute");
             }
         }
     }

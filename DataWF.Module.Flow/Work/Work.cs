@@ -63,7 +63,7 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public IEnumerable<Stage> GetStages()
         {
-            var stageTable = (StageTable<Stage>)Schema.GetTable<Stage>();
+            var stageTable = (StageTable)Schema.GetTable<Stage>();
             return GetReferencing<Stage>(stageTable.WorkIdKey, DBLoadParam.None)
             .OrderBy(p => p.Code);
         }

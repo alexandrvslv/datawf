@@ -48,8 +48,8 @@ namespace DataWF.Module.Flow
         {
             DocumentTable = (DocumentTable<Document>)schema.GetTable<Document>();
             QDoc = new QQuery(string.Empty, DocumentTable);
-            QWork = new QQuery(string.Empty, DocumentTable.WorkTable);
-            QWork.Columns.Add(new QColumn(DocumentTable.WorkTable.DocumentIdKey));
+            QWork = new QQuery(string.Empty, DocumentTable.DocumentWorkTable);
+            QWork.Columns.Add(new QColumn(DocumentTable.DocumentWorkTable.DocumentIdKey));
             paramWork = new QParam(DocumentTable.IdKey, CompareType.In, QWork);
             paramWorkId = new QParam(DocumentTable.CurrentWorkIdKey, CompareType.IsNot, null);
         }
@@ -91,9 +91,9 @@ namespace DataWF.Module.Flow
                         switch (DateType)
                         {
                             case DocumentSearchDate.Document: paramDate.LeftColumn = DocumentTable.DocumentDateKey; break;
-                            case DocumentSearchDate.Create: paramDate.LeftColumn = DocumentTable.DateKey; break;
-                            case DocumentSearchDate.WorkBegin: paramDate.LeftColumn = DocumentTable.WorkTable.DateKey; break;
-                            case DocumentSearchDate.WorkEnd: paramDate.LeftColumn = DocumentTable.WorkTable.DateCompleteKey; break;
+                            case DocumentSearchDate.Create: paramDate.LeftColumn = DocumentTable.DocumentDateKey; break;
+                            case DocumentSearchDate.WorkBegin: paramDate.LeftColumn = DocumentTable.DocumentWorkTable.DateCreateKey; break;
+                            case DocumentSearchDate.WorkEnd: paramDate.LeftColumn = DocumentTable.DocumentWorkTable.DateCompleteKey; break;
                         }
                         paramDate.RightValue = Date;
                     }
@@ -288,8 +288,8 @@ namespace DataWF.Module.Flow
                 stage = value == null ? null : $"{value.Table.Name}:{ value.PrimaryId}";
 
                 var column = Stage is Work
-                    ? DocumentTable.WorkTable.WorkIdKey
-                    : DocumentTable.WorkTable.StageIdKey;
+                    ? DocumentTable.DocumentWorkTable.WorkIdKey
+                    : DocumentTable.DocumentWorkTable.StageIdKey;
                 if (value != null)
                 {
                     if (paramStage == null)
@@ -324,10 +324,10 @@ namespace DataWF.Module.Flow
                 cacheUser = value;
                 staff = value == null ? null : $"{value.Table.Name}:{ value.PrimaryId}";
                 var column = Staff is Department
-                    ? DocumentTable.WorkTable.DepartmentIdKey
+                    ? DocumentTable.DocumentWorkTable.DepartmentIdKey
                     : Staff is Position
-                    ? DocumentTable.WorkTable.PositionIdKey
-                    : DocumentTable.WorkTable.UserIdKey;
+                    ? DocumentTable.DocumentWorkTable.PositionIdKey
+                    : DocumentTable.DocumentWorkTable.UserIdKey;
                 if (value != null)
                 {
                     if (paramStaff == null)
