@@ -13,6 +13,29 @@ namespace DataWF.Common
     {
         public static IIdCollection<IGroupIdentity> Groups = new IdCollection<IGroupIdentity>();
         public static IIdCollection<IUserIdentity> Users = new IdCollection<IUserIdentity>();
+        public static IIdCollection<IProjectIdentity> Projects = new IdCollection<IProjectIdentity>();
+        public static IIdCollection<ICompanyIdentity> Companies = new IdCollection<ICompanyIdentity>();
+        private IAccessable owner;
+        private string accessOwnerName;
+
+        public static Func<int, IdentityType, IAccessIdentity> GetAccessIdentityFunc;
+
+        public static IAccessIdentity GetAccessIdentity(int identityId, IdentityType identityType)
+        {
+            switch (identityType)
+            {
+                case IdentityType.Group:
+                    return AccessValue.Groups.GetById(identityId);
+                case IdentityType.User:
+                    return AccessValue.Users.GetById(identityId);
+                case IdentityType.Company:
+                    return AccessValue.Companies.GetById(identityId);
+                case IdentityType.Project:
+                    return AccessValue.Projects.GetById((long)identityId);
+                default:
+                    return null;
+            }
+        }
 
         public static implicit operator AccessValue(byte[] value)
         {
@@ -99,13 +122,29 @@ namespace DataWF.Common
         }
 
         [XmlIgnore, JsonIgnore]
-        public IAccessable Owner { get; set; }
+        public IAccessable Owner
+        {
+            get => owner;
+            set
+            {
+                if (value is IGroupIdentity groupIdentity && groupIdentity.Required)
+                {
+                    CheckRequired();
+                }
+                owner = value;
+            }
+        }
+
+        private void CheckRequired()
+        {
+        }
 
         public IEnumerable<AccessItem> Items
         {
             get => items.Values;
             set => Add(value);
         }
+        public string AccessOwnerName { get => accessOwnerName; set => accessOwnerName = value; }
 
         public AccessType GetFlags(IUserIdentity user)
         {
@@ -123,6 +162,11 @@ namespace DataWF.Common
 
         public bool GetFlag(AccessType type, IUserIdentity user)
         {
+            if (Owner is IProjectItem projectItem)
+            {
+                AccessOwnerName = Owner.AccessorName;
+                return user.Groups.Contains(projectItem.ProjectIdentity);
+            }
             foreach (IAccessIdentity group in user.Groups)
             {
                 var item = Get(group);
