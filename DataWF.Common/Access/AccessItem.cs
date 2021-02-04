@@ -10,7 +10,6 @@ namespace DataWF.Common
     public struct AccessItem : IAccessItem, IByteSerializable, IEquatable<AccessItem>
     {
         public static readonly AccessItem Empty = new AccessItem(null);
-        public static readonly Func<IAccessIdentity> IdentityFunc;
         private IAccessIdentity identity;
         private int identityId;
 
@@ -43,34 +42,26 @@ namespace DataWF.Common
         {
             get
             {
-                if (AccessValue.GetAccessIdentityFunc == null)
-                {
-                    AccessValue.GetAccessIdentityFunc = AccessValue.GetAccessIdentity;
-                }
-                return AccessValue.GetAccessIdentityFunc(IdentityId, IdentityType);
+                return identity ?? (identity = AccessValue.GetAccessIdentityFunc(IdentityId, IdentityType));
             }
             set
             {
                 identityId = value?.Id ?? -1;
                 identity = value;
-                if (value is IProjectIdentity)
+                switch (value)
                 {
-                    IdentityType = IdentityType.Project;
-                }
-                else
-                if (value is ICompanyIdentity)
-                {
-                    IdentityType = IdentityType.Company;
-                }
-                else
-                if (value is IGroupIdentity)
-                {
-                    IdentityType = IdentityType.Group;
-                }
-                else
-                if (value is IUserIdentity)
-                {
-                    IdentityType = IdentityType.User;
+                    case IProjectIdentity project:
+                        IdentityType = IdentityType.Project;
+                        break;
+                    case ICompanyIdentity company:
+                        IdentityType = IdentityType.Company;
+                        break;
+                    case IGroupIdentity group:
+                        IdentityType = IdentityType.Group;
+                        break;
+                    case IUserIdentity user:
+                        IdentityType = IdentityType.User;
+                        break;
                 }
             }
         }
