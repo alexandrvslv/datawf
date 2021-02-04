@@ -23,9 +23,9 @@ namespace DataWF.Common
             return !a.Equals(b);
         }
 
-        public AccessItem(bool isUser, int identityId, AccessType data)
+        public AccessItem(IdentityType identityType, int identityId, AccessType data)
         {
-            IsUser = isUser;
+            IdentityType = identityType;
             Access = data;
             this.identityId = identityId;
             this.identity = null;
@@ -40,14 +40,29 @@ namespace DataWF.Common
         [XmlIgnore, JsonIgnore]
         public IAccessIdentity Identity
         {
-            get => identity ?? (identity = IsUser
-                ? (IAccessIdentity)AccessValue.Users.GetById(identityId)
-                : (IAccessIdentity)AccessValue.Groups.GetById(identityId));
-            private set
+            get
+            {
+                return identity ?? (identity = AccessValue.GetAccessIdentityFunc(IdentityId, IdentityType));
+            }
+            set
             {
                 identityId = value?.Id ?? -1;
                 identity = value;
-                IsUser = value is IUserIdentity;
+                switch (value)
+                {
+                    case IProjectIdentity project:
+                        IdentityType = IdentityType.Project;
+                        break;
+                    case ICompanyIdentity company:
+                        IdentityType = IdentityType.Company;
+                        break;
+                    case IGroupIdentity group:
+                        IdentityType = IdentityType.Group;
+                        break;
+                    case IUserIdentity user:
+                        IdentityType = IdentityType.User;
+                        break;
+                }
             }
         }
 
@@ -61,7 +76,7 @@ namespace DataWF.Common
             }
         }
 
-        public bool IsUser { get; set; }
+        public IdentityType IdentityType { get; set; }
 
         [DefaultValue(AccessType.None)]
         public AccessType Access { get; set; }
@@ -204,7 +219,7 @@ namespace DataWF.Common
 
         public bool Equals(AccessItem item)
         {
-            return IsUser == item.IsUser
+            return IdentityType == item.IdentityType
                    && IdentityId == item.IdentityId
                    && Access == item.Access;
         }
@@ -212,7 +227,7 @@ namespace DataWF.Common
         public byte[] Serialize()
         {
             var buffer = new byte[9];
-            Array.Copy(BitConverter.GetBytes(IsUser), 0, buffer, 0, 1);
+            Array.Copy(BitConverter.GetBytes((byte)IdentityType), 0, buffer, 0, 1);
             Array.Copy(BitConverter.GetBytes(IdentityId), 0, buffer, 1, 4);
             Array.Copy(BitConverter.GetBytes((int)Access), 0, buffer, 5, 4);
             return buffer;
@@ -220,35 +235,35 @@ namespace DataWF.Common
 
         public void Serialize(BinaryWriter writer)
         {
-            writer.Write(IsUser);
+            writer.Write((byte)IdentityType);
             writer.Write(IdentityId);
             writer.Write((int)Access);
         }
 
         public void Deserialize(byte[] buffer)
         {
-            IsUser = BitConverter.ToBoolean(buffer, 0);
+            IdentityType = (IdentityType)buffer[0];
             IdentityId = BitConverter.ToInt32(buffer, 1);
             Access = (AccessType)BitConverter.ToInt32(buffer, 5);
         }
 
         public void Deserialize(BinaryReader reader)
         {
-            IsUser = reader.ReadBoolean();
+            IdentityType = (IdentityType)reader.ReadByte();
             IdentityId = reader.ReadInt32();
             Access = (AccessType)reader.ReadInt32();
         }
 
         public static AccessItem Deserialize(BinaryReader reader, bool user)
         {
-            return new AccessItem(user ? reader.ReadBoolean() : false, reader.ReadInt32(), (AccessType)reader.ReadInt32());
+            return new AccessItem(user ? (IdentityType)reader.ReadByte() : IdentityType.Group, reader.ReadInt32(), (AccessType)reader.ReadInt32());
         }
 
         public override int GetHashCode()
         {
             int hashCode = 1380532211;
             hashCode = hashCode * -1521134295 + IdentityId.GetHashCode();
-            hashCode = hashCode * -1521134295 + IsUser.GetHashCode();
+            hashCode = hashCode * -1521134295 + IdentityType.GetHashCode();
             hashCode = hashCode * -1521134295 + Access.GetHashCode();
             return hashCode;
         }
