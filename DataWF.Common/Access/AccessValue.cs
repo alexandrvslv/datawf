@@ -18,7 +18,7 @@ namespace DataWF.Common
         private IAccessable owner;
         private string accessOwnerName;
 
-        public static Func<int, IdentityType, IAccessIdentity> GetAccessIdentityFunc = GetAccessIdentity;
+        public static Func<int, IdentityType, IAccessIdentity> GetAccessIdentityFunc;
 
         public static IAccessIdentity GetAccessIdentity(int identityId, IdentityType identityType)
         {
