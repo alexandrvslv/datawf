@@ -16,11 +16,9 @@ namespace DataWF.Common
         Full = Download | Accept | Admin | Delete | Update | Create | Read
     }
 
-    public enum IdentityType : byte
+    public enum IdentityType
     {
-        Group = 0,
-        User = 1,
-        Company = 2,
-        Project = 3
+        Group,
+        User
     }
 }

@@ -10,7 +10,6 @@ namespace DataWF.Common
     public struct AccessItem : IAccessItem, IByteSerializable, IEquatable<AccessItem>
     {
         public static readonly AccessItem Empty = new AccessItem(null);
-        public static readonly Func<IAccessIdentity> IdentityFunc;
         private IAccessIdentity identity;
         private int identityId;
 
@@ -24,9 +23,9 @@ namespace DataWF.Common
             return !a.Equals(b);
         }
 
-        public AccessItem(IdentityType identityType, int identityId, AccessType data)
+        public AccessItem(bool isUser, int identityId, AccessType data)
         {
-            IdentityType = identityType;
+            IsUser = isUser;
             Access = data;
             this.identityId = identityId;
             this.identity = null;
@@ -41,37 +40,14 @@ namespace DataWF.Common
         [XmlIgnore, JsonIgnore]
         public IAccessIdentity Identity
         {
-            get
-            {
-                if (AccessValue.GetAccessIdentityFunc == null)
-                {
-                    AccessValue.GetAccessIdentityFunc = AccessValue.GetAccessIdentity;
-                }
-                return AccessValue.GetAccessIdentityFunc(IdentityId, IdentityType);
-            }
-            set
+            get => identity ?? (identity = IsUser
+                ? (IAccessIdentity)AccessValue.Users.GetById(identityId)
+                : (IAccessIdentity)AccessValue.Groups.GetById(identityId));
+            private set
             {
                 identityId = value?.Id ?? -1;
                 identity = value;
-                if (value is IProjectIdentity)
-                {
-                    IdentityType = IdentityType.Project;
-                }
-                else
-                if (value is ICompanyIdentity)
-                {
-                    IdentityType = IdentityType.Company;
-                }
-                else
-                if (value is IGroupIdentity)
-                {
-                    IdentityType = IdentityType.Group;
-                }
-                else
-                if (value is IUserIdentity)
-                {
-                    IdentityType = IdentityType.User;
-                }
+                IsUser = value is IUserIdentity;
             }
         }
 
@@ -85,7 +61,7 @@ namespace DataWF.Common
             }
         }
 
-        public IdentityType IdentityType { get; set; }
+        public bool IsUser { get; set; }
 
         [DefaultValue(AccessType.None)]
         public AccessType Access { get; set; }
@@ -228,7 +204,7 @@ namespace DataWF.Common
 
         public bool Equals(AccessItem item)
         {
-            return IdentityType == item.IdentityType
+            return IsUser == item.IsUser
                    && IdentityId == item.IdentityId
                    && Access == item.Access;
         }
@@ -236,7 +212,7 @@ namespace DataWF.Common
         public byte[] Serialize()
         {
             var buffer = new byte[9];
-            Array.Copy(BitConverter.GetBytes((byte)IdentityType), 0, buffer, 0, 1);
+            Array.Copy(BitConverter.GetBytes(IsUser), 0, buffer, 0, 1);
             Array.Copy(BitConverter.GetBytes(IdentityId), 0, buffer, 1, 4);
             Array.Copy(BitConverter.GetBytes((int)Access), 0, buffer, 5, 4);
             return buffer;
@@ -244,35 +220,35 @@ namespace DataWF.Common
 
         public void Serialize(BinaryWriter writer)
         {
-            writer.Write((byte)IdentityType);
+            writer.Write(IsUser);
             writer.Write(IdentityId);
             writer.Write((int)Access);
         }
 
         public void Deserialize(byte[] buffer)
         {
-            IdentityType = (IdentityType)buffer[0];
+            IsUser = BitConverter.ToBoolean(buffer, 0);
             IdentityId = BitConverter.ToInt32(buffer, 1);
             Access = (AccessType)BitConverter.ToInt32(buffer, 5);
         }
 
         public void Deserialize(BinaryReader reader)
         {
-            IdentityType = (IdentityType)reader.ReadByte();
+            IsUser = reader.ReadBoolean();
             IdentityId = reader.ReadInt32();
             Access = (AccessType)reader.ReadInt32();
         }
 
         public static AccessItem Deserialize(BinaryReader reader, bool user)
         {
-            return new AccessItem(user ? (IdentityType)reader.ReadByte() : IdentityType.Group, reader.ReadInt32(), (AccessType)reader.ReadInt32());
+            return new AccessItem(user ? reader.ReadBoolean() : false, reader.ReadInt32(), (AccessType)reader.ReadInt32());
         }
 
         public override int GetHashCode()
         {
             int hashCode = 1380532211;
             hashCode = hashCode * -1521134295 + IdentityId.GetHashCode();
-            hashCode = hashCode * -1521134295 + IdentityType.GetHashCode();
+            hashCode = hashCode * -1521134295 + IsUser.GetHashCode();
             hashCode = hashCode * -1521134295 + Access.GetHashCode();
             return hashCode;
         }
