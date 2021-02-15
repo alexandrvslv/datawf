@@ -22,8 +22,6 @@ namespace DataWF.Module.Counterpart
         {
         }
 
-        public ICustomerAddressTable CustomerAddressTable => (ICustomerAddressTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

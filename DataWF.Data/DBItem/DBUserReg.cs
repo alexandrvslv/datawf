@@ -30,8 +30,6 @@ namespace DataWF.Data
         public DBUserReg(DBTable table) : base(table)
         { }
 
-        public IDBUserRegTable DBUserRegTable => (IDBUserRegTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {

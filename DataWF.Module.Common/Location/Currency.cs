@@ -4,8 +4,8 @@ using DataWF.Common;
 
 namespace DataWF.Module.Counterpart
 {
-    [ItemType((int)Counterpart.LocationType.Currency)]
-    public sealed class Currency : Location
+    [ItemType((int)Counterpart.LocationType.Currency), InvokerGenerator]
+    public sealed partial class Currency : Location
     {
         public Currency(DBTable table) : base(table)
         {

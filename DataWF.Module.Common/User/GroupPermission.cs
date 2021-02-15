@@ -19,8 +19,6 @@ namespace DataWF.Module.Common
         {
         }
 
-        public GroupPermissionTable GroupPermissionTable => (GroupPermissionTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

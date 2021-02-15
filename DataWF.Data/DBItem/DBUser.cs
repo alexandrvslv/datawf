@@ -31,8 +31,6 @@ namespace DataWF.Data
         public DBUser(DBTable table) : base(table)
         { }
 
-        public IDBUserTable DBUserTable => (IDBUserTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {

@@ -51,6 +51,10 @@ namespace DataWF.Data
         {
             order = 0;
         }
+        public QQuery(IDBTable table) : this()
+        {
+            Table = (DBTable)table;
+        }
 
         public QQuery(DBTable table) : this()
         {

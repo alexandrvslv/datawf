@@ -6,14 +6,12 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Counterpart
 {
     [Table("daddress", "Address", BlockSize = 100)]
-    public sealed class Address : DBItem
+    public sealed partial class Address : DBItem
     {
         private Location location;
 
         public Address(DBTable table) : base(table)
         { }
-
-        public IAddressTable AddressTable => (IAddressTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id

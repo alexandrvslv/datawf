@@ -203,8 +203,6 @@ namespace {namespaceName}
                 source.Append($@"
         public {className}(DBTable table):base(table)
         {{ }}
-
-        public {tableTypeName} {tableName} => ({tableTypeName})Table;
 ");
                 //{(itemTypeAttribute != null ? "Typed" : string.Empty)}
                 foreach (IPropertySymbol propertySymbol in properties)
@@ -376,7 +374,6 @@ namespace {namespaceName}
                 var interfaceSource = new StringBuilder($@"
     public partial interface {interfaceName}: {baseInterfaceName}
     {{");
-
                 // create properties for each field 
                 foreach (IPropertySymbol propertySymbol in properties)
                 {
@@ -386,8 +383,16 @@ namespace {namespaceName}
     }
 ");
                 interfaceSource.Append(@"
-    }");
+    }
+");
                 source.Append(interfaceSource);
+                source.Append($@"
+    public partial class {classSymbol.Name}
+    {{
+        [JsonIgnore]
+        public {(classSymbol.IsSealed ? className : interfaceName)} {GetTableClassName(classSymbol, attributes)} => ({(classSymbol.IsSealed ? className : interfaceName)})Table;
+    }}
+");
                 source.Append(@"
 }");
                 return source.ToString();

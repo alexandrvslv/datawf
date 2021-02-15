@@ -17,8 +17,6 @@ namespace DataWF.Module.Common
         public Department(DBTable table) : base(table)
         { }
 
-        public DepartmentTable DepartmentTable => (DepartmentTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

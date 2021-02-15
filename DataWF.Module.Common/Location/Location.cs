@@ -18,8 +18,6 @@ namespace DataWF.Module.Counterpart
         {
         }
 
-        public ILocationTable LocationTable => (ILocationTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

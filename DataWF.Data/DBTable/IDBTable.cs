@@ -129,6 +129,7 @@ namespace DataWF.Data
         IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
         IEnumerable<DBItem> LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
         IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
+        IEnumerable<DBItem> LoadItemsCache(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null);
         void LoadReferenceBlock(IDbCommand command, DBTransaction transaction);
         void LoadReferencingBlock(IDbCommand command, DBTransaction transaction);
         T NewItem<T>(DBUpdateState state = DBUpdateState.Insert, bool def = true) where T : DBItem;

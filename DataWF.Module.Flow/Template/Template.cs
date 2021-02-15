@@ -26,9 +26,6 @@ namespace DataWF.Module.Flow
         {
         }
 
-        [JsonIgnore]
-        public ITemplateTable TemplateTable => (ITemplateTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

@@ -14,8 +14,7 @@ namespace DataWF.Module.Counterpart
         public CustomerReference(DBTable table) : base(table)
         {
         }
-        public ICustomerReferenceTable CustomerReferenceTable => (ICustomerReferenceTable)Table;
-
+        
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

@@ -30,9 +30,6 @@ namespace DataWF.Data
         public FileData(DBTable table) : base(table)
         { }
 
-        [XmlIgnore, JsonIgnore]
-        public FileDataTable FileDataTable => (FileDataTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {

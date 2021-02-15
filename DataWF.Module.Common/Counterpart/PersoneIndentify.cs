@@ -8,16 +8,14 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Counterpart
 {
-    [Table("dpersone_indentify", "Customer", BlockSize = 100)]
-    public sealed class PersoneIdentify : DBItem
+    [Table("dpersone_indentify", "Customer", BlockSize = 100), InvokerGenerator]
+    public sealed partial class PersoneIdentify : DBItem
     {
         private Persone persone;
 
         public PersoneIdentify(DBTable<PersoneIdentify> table) : base(table)
         {
         }
-
-        public IPersoneIdentifyTable PersoneIdentifyTable => (IPersoneIdentifyTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id

@@ -3,7 +3,7 @@
 namespace DataWF.Module.Counterpart
 {
     [ItemType((int)Counterpart.LocationType.City)]
-    public sealed class City : Location
+    public sealed partial class City : Location
     {
         public City(DBTable table) : base(table)
         {

@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Counterpart
 {
     [ItemType((int)CustomerType.Company)]
-    public sealed class Company : Customer, IDisposable
+    public sealed partial class Company : Customer, IDisposable
     {
         public Company(DBTable table) : base(table)
         {

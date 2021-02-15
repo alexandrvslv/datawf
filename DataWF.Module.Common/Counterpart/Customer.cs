@@ -28,8 +28,6 @@ namespace DataWF.Module.Counterpart
         public Customer(DBTable table) : base(table)
         { }
 
-        public CustomerTable<Customer> CustomerTable => (CustomerTable<Customer>)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

@@ -38,8 +38,6 @@ namespace DataWF.Data
         public Instance(DBTable table) : base(table)
         { }
 
-        public InstanceTable InstanceTable => (InstanceTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
