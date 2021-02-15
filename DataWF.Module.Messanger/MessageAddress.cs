@@ -19,8 +19,6 @@ namespace DataWF.Module.Messanger
         {
         }
 
-        public IMessageAddressTable MessageAddressTable => (IMessageAddressTable)Table;
-
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

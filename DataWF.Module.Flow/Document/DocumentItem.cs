@@ -13,8 +13,6 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public IDocumentItemTable DocumentItemTable => (IDocumentItemTable)Table;
-
         [Browsable(false)]
         [Column("document_id")]
         public virtual long? DocumentId

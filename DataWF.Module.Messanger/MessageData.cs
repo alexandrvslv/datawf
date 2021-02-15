@@ -12,8 +12,6 @@ namespace DataWF.Module.Messanger
         public MessageData(DBTable table) : base(table)
         { }
 
-        public IMessageDataTable MessageDataTable => (IMessageDataTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

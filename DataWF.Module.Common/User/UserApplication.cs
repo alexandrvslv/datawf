@@ -20,8 +20,6 @@ namespace DataWF.Module.Common
         public UserApplication(DBTable table) : base(table)
         { }
 
-        public UserApplicationTable<UserApplication> UserApplicationTable => (UserApplicationTable<UserApplication>)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

@@ -9,7 +9,7 @@ namespace DataWF.Module.Common
 {
     public partial class GroupPermissionTable
     {
-        public PermissionType GetPermissionType(object value, out string key, out string name)
+        public PermissionType GetPermission(object value, out string key, out string name)
         {
             key = null;
             name = string.Empty;
@@ -88,7 +88,7 @@ namespace DataWF.Module.Common
             return permission;
         }
 
-        public async Task CachePermissionTableGroup(GroupPermission parent, DBTableGroup group)
+        public async Task CachePermission(GroupPermission parent, DBTableGroup group)
         {
             var permission = await Get(parent, group);
 
@@ -103,7 +103,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        public async Task CachePermissionTable(GroupPermission parent, DBTable table)
+        public async Task CachePermission(GroupPermission parent, DBTable table)
         {
             if (table is IDBLogTable)
                 return;
@@ -143,12 +143,12 @@ namespace DataWF.Module.Common
 
                 foreach (DBTableGroup group in groups)
                 {
-                    await CachePermissionTableGroup(permission, group);
+                    await CachePermission(permission, group);
                 }
                 foreach (DBTable table in schema.Tables)
                 {
                     if (table.Group == null)
-                        await CachePermissionTable(permission, table);
+                        await CachePermission(permission, table);
                 }
             }
             await Save(transaction);
@@ -156,7 +156,7 @@ namespace DataWF.Module.Common
 
         public GroupPermission Find(GroupPermission parent, object obj, bool generate)
         {
-            var type = GetPermissionType(obj, out string code, out string name);
+            var type = GetPermission(obj, out string code, out string name);
 
             string filter = $"{ CodeKey.SqlName}='{code}' and {ElementTypeKey.SqlName}={type}";
 

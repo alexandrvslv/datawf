@@ -18,8 +18,6 @@ namespace DataWF.Module.Common
         {
         }
 
-        public SchedulerTable SchedulerTable => (SchedulerTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

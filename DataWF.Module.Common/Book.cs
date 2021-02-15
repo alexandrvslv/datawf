@@ -10,8 +10,6 @@ namespace DataWF.Module.Common
         public Book(DBTable table) : base(table)
         { }
 
-        public BookTable<Book> BookTable => (BookTable<Book>)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {

@@ -123,7 +123,6 @@ namespace DataWF.Module.Flow
         {
             ItemType = (int)StageParamType.Reference;
         }
-        public StageReferenceTable StageReferenceTable => (StageReferenceTable)Table;
 
         public Stage ReferenceStage
         {

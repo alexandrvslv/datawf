@@ -13,8 +13,6 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public ITemplateFileTable TemplateFileTable => (ITemplateFileTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {

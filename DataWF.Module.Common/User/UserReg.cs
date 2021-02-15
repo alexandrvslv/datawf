@@ -109,8 +109,6 @@ namespace DataWF.Module.Common
         public UserReg(DBTable table) : base(table)
         { }
 
-        public UserRegTable UserRegTable => (UserRegTable)Table;
-
         [Reference(nameof(UserId))]
         public User User
         {

@@ -19,15 +19,24 @@ namespace DataWF.Test.Module.Common
             schema.Generate(new[] {
                 typeof(Customer).Assembly,
                 typeof(User).Assembly });
-            DBService.Schems.Add(schema);
             Assert.IsNotNull(schema);
-            Assert.IsNotNull(Book.DBTable);
-            Assert.IsNotNull(UserGroup.DBTable);
-            Assert.IsNotNull(GroupPermission.DBTable);
-            Assert.IsNotNull(User.DBTable);
-            Assert.IsNotNull(Position.DBTable);
-            Assert.IsNotNull(UserReg.DBTable);
-            Assert.IsNotNull(Company.DBTable);
+            DBService.Schems.Add(schema);
+
+            var bookTable = schema.GetTable<Book>();
+            var userGroupTable = (UserGroupTable)schema.GetTable<UserGroup>();
+            var groupPermissionTable = (GroupPermissionTable)schema.GetTable<GroupPermission>();
+            var userTable = (UserTable)schema.GetTable<User>();
+            var positionTable = (PositionTable)schema.GetTable<Position>();
+            var userRegTable = (UserRegTable)schema.GetTable<UserReg>();
+            var companyTable = (CompanyTable)schema.GetTable<Company>();
+
+            Assert.IsNotNull(bookTable);
+            Assert.IsNotNull(userGroupTable);
+            Assert.IsNotNull(groupPermissionTable);
+            Assert.IsNotNull(userTable);
+            Assert.IsNotNull(positionTable);
+            Assert.IsNotNull(userRegTable);
+            Assert.IsNotNull(companyTable);
             DBService.Save();
             schema.Connection = new DBConnection
             {
@@ -38,20 +47,20 @@ namespace DataWF.Test.Module.Common
             schema.DropDatabase();
             schema.CreateDatabase();
 
-            var group = new UserGroup()
+            var group = new UserGroup(userGroupTable)
             {
                 Number = "GP1",
                 Name = "Group1"
             };
             await group.Save();
 
-            var position = new Position()
+            var position = new Position(positionTable)
             {
                 Code = "PS1",
                 Name = "Position"
             };
 
-            var user = new User()
+            var user = new User(userTable)
             {
                 Login = "test",
                 Name = "Test User",
@@ -62,9 +71,9 @@ namespace DataWF.Test.Module.Common
             };
             await user.Save();
 
-            await User.StartSession("test", "UserCommon1!");
+            await userTable.StartSession("test", "UserCommon1!");
 
-            await GroupPermission.CachePermission();
+            await groupPermissionTable.CachePermission();
 
         }
     }

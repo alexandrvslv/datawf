@@ -15,13 +15,11 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public IDocumentCommentTable DocumentCommentTable => (IDocumentCommentTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
             get => GetValue<long>(DocumentCommentTable.IdKey);
-            set => SetValue(value, Table.PrimaryKey);
+            set => SetValue(value, DocumentCommentTable.IdKey);
         }
 
         [Browsable(false)]

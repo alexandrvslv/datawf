@@ -30,8 +30,6 @@ namespace DataWF.Module.Common
         public UserGroup(DBTable table) : base(table)
         { }
 
-        public UserGroupTable UserGroupTable => (UserGroupTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {

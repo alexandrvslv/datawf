@@ -21,8 +21,6 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public DocumentWorkTable DocumentWorkTable => (DocumentWorkTable)Table;
-
         [Index("ddocument_work_document_id")]
         public override long? DocumentId
         {

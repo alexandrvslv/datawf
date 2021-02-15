@@ -36,9 +36,6 @@ namespace DataWF.Module.Common
         [JsonIgnore]
         public UserReg LogStart { get; set; }
 
-        [JsonIgnore]
-        public UserTable UserTable => (UserTable)Table;
-
         [Column("ext_id")]
         public int? ExternalId
         {

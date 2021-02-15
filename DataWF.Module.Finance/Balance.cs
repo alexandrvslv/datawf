@@ -27,8 +27,6 @@ namespace DataWF.Module.Finance
         {
         }
 
-        public BalanceTable<Balance> BalanceTable => (BalanceTable<Balance>)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

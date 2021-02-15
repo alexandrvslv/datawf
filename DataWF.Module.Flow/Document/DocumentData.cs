@@ -22,8 +22,6 @@ namespace DataWF.Module.Flow
         public DocumentData(DBTable table) : base(table)
         { }
 
-        public IDocumentDataTable DocumentDataTable => (IDocumentDataTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {

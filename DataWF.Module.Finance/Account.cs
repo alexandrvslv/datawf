@@ -31,8 +31,6 @@ namespace DataWF.Module.Finance
         {
         }
 
-        public AccountTable<Account> AccountTable => (AccountTable<Account>)Table;
-
         public decimal Amount
         {
             get => amount;

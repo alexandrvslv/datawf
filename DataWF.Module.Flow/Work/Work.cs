@@ -15,8 +15,6 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public WorkTable WorkTable => (WorkTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

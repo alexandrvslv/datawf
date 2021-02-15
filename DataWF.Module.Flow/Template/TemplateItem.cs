@@ -16,8 +16,6 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public ITemplateItemTable TemplateItemTable => (ITemplateItemTable)Table;
-
         [Column("template_id"), Index("rtemplate_data_index", true), Browsable(false)]
         public int? TemplateId
         {

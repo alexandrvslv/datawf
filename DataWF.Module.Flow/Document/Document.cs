@@ -74,8 +74,6 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public DocumentTable<Document> DocumentTable => (DocumentTable<Document>)Table;
-
         public override string ParametersCategory
         {
             get => Template?.Code ?? base.ParametersCategory;
@@ -85,8 +83,8 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get => GetValue<long?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<long?>(DocumentTable.IdKey);
+            set => SetValue(value, DocumentTable.IdKey);
         }
 
         [Index("ddocument_item_type", false)]

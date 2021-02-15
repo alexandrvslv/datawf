@@ -14,8 +14,6 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public DocumentReferenceTable<DocumentReference> DocumentReferenceTable => (DocumentReferenceTable<DocumentReference>)Table;
-
         [Browsable(false)]
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id

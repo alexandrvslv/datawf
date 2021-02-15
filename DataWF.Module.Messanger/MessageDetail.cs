@@ -13,8 +13,6 @@ namespace DataWF.Module.Messanger
         public MessageDetail(DBTable table) : base(table)
         { }
 
-        public IMessageDetailTable MessageDetailTable => (IMessageDetailTable)Table;
-
         [Browsable(false)]
         [DataMember, Column("message_id")]
         public long? MessageId

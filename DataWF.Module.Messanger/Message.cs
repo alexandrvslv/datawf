@@ -21,8 +21,6 @@ namespace DataWF.Module.Messanger
         {
         }
 
-        public MessageTable MessageTable => (MessageTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {

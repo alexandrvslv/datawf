@@ -14,8 +14,6 @@ namespace DataWF.Module.Common
         {
         }
 
-        public StatisticTable StatisticTable => (StatisticTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

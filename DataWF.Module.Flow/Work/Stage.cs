@@ -18,8 +18,6 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public StageTable StageTable => (StageTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

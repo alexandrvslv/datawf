@@ -30,8 +30,6 @@ namespace DataWF.Module.Finance
         {
         }
 
-        public PaymentTable<Payment> PaymentTable => (PaymentTable<Payment>)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

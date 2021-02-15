@@ -15,8 +15,6 @@ namespace DataWF.Module.Flow
         public DocumentCustomer(DBTable table) : base(table)
         { }
 
-        public DocumentCustomerTable<DocumentCustomer> DocumentCustomerTable => (DocumentCustomerTable<DocumentCustomer>)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {

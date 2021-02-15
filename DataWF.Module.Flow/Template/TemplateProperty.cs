@@ -10,8 +10,6 @@ namespace DataWF.Module.Flow
         public TemplateProperty(DBTable table) : base(table)
         { }
 
-        public ITemplatePropertyTable TemplatePropertyTable => (ITemplatePropertyTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

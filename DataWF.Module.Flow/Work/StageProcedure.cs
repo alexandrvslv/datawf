@@ -11,7 +11,6 @@ namespace DataWF.Module.Flow
             ItemType = (int)StageParamType.Procedure;
         }
 
-        public StageProcedureTable StageProcedureTable => (StageProcedureTable)Table;
         public DBProcedure Procedure
         {
             get => Param as DBProcedure;

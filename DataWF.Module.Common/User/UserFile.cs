@@ -14,8 +14,6 @@ namespace DataWF.Module.Common
         public UserFile(DBTable table) : base(table)
         { }
 
-        public UserFileTable UserFileTable => (UserFileTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
