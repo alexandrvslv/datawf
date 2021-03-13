@@ -5,6 +5,303 @@
     "version": "v1"
   },
   "paths": {
+    "/api/Access/Get/{name}": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessValue"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/GetProperty/{name}/{property}": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "GetProperty",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "property",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessValue"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/GetItems/{name}/{id}": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/SetItems/{name}/{id}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Set",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AccessItem"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/SetItems/{name}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Set",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessUpdatePackage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/ClearAccess/{name}/{id}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Clear",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/ClearAccess/{name}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Clear",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Address/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -6801,6 +7098,32 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/Diagnostics/collect": {
+      "get": {
+        "tags": [
+          "Diagnostics"
+        ],
+        "operationId": "GetCollect",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Diagnostics/diagnostics": {
+      "get": {
+        "tags": [
+          "Diagnostics"
+        ],
+        "operationId": "GetDiagnostics",
+        "responses": {
+          "200": {
+            "description": "Success"
           }
         }
       }
@@ -16092,6 +16415,56 @@
                     "type": "integer",
                     "format": "int32"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Procedures": {
+      "get": {
+        "tags": [
+          "Procedures"
+        ],
+        "operationId": "Get",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DBProcedure"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Procedures"
+        ],
+        "operationId": "Put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DBProcedure"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DBProcedure"
                 }
               }
             }
@@ -27943,6 +28316,65 @@
         }
       }
     },
+    "/api/WebNotify": {
+      "get": {
+        "tags": [
+          "WebNotify"
+        ],
+        "operationId": "Get",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/WebNotify/Connections": {
+      "get": {
+        "tags": [
+          "WebNotify"
+        ],
+        "operationId": "GetConnections",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WebNotifyConnection"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/WebNotify/Logs": {
+      "get": {
+        "tags": [
+          "WebNotify"
+        ],
+        "operationId": "GetLogs",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StateInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Work/GetTemplates/{id}": {
       "get": {
         "tags": [
@@ -28688,6 +29120,121 @@
   },
   "components": {
     "schemas": {
+      "IdentityType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Group",
+          "User",
+          "Company",
+          "Project"
+        ],
+        "x-enumMembers": [
+          "Group",
+          "User",
+          "Company",
+          "Project"
+        ]
+      },
+      "AccessType": {
+        "enum": [
+          0,
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          64,
+          127
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "None",
+          "Read",
+          "Create",
+          "Update",
+          "Delete",
+          "Admin",
+          "Accept",
+          "Download",
+          "Full"
+        ],
+        "x-enumMembers": [
+          "None",
+          "Read",
+          "Create",
+          "Update",
+          "Delete",
+          "Admin",
+          "Accept",
+          "Download",
+          "Full"
+        ],
+        "x-flags": 0
+      },
+      "AccessItem": {
+        "type": "object",
+        "properties": {
+          "IdentityId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "IdentityType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IdentityType"
+              }
+            ]
+          },
+          "Access": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AccessType"
+              }
+            ],
+            "default": "None"
+          }
+        }
+      },
+      "AccessValue": {
+        "type": "object",
+        "properties": {
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccessItem"
+            }
+          },
+          "AccessOwnerName": {
+            "type": "string"
+          }
+        }
+      },
+      "AccessUpdatePackage": {
+        "type": "object",
+        "properties": {
+          "Ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccessItem"
+            }
+          }
+        }
+      },
       "DBStatus": {
         "enum": [
           0,
@@ -28740,75 +29287,6 @@
           "Update",
           "Delete"
         ]
-      },
-      "AccessType": {
-        "enum": [
-          0,
-          1,
-          2,
-          4,
-          8,
-          16,
-          32,
-          64,
-          127
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "None",
-          "Read",
-          "Create",
-          "Update",
-          "Delete",
-          "Admin",
-          "Accept",
-          "Download",
-          "Full"
-        ],
-        "x-enumMembers": [
-          "None",
-          "Read",
-          "Create",
-          "Update",
-          "Delete",
-          "Admin",
-          "Accept",
-          "Download",
-          "Full"
-        ],
-        "x-flags": 0
-      },
-      "AccessItem": {
-        "type": "object",
-        "properties": {
-          "IdentityId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "IsUser": {
-            "type": "boolean"
-          },
-          "Access": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/AccessType"
-              }
-            ],
-            "default": "None"
-          }
-        }
-      },
-      "AccessValue": {
-        "type": "object",
-        "properties": {
-          "Items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AccessItem"
-            }
-          }
-        }
       },
       "LocationType": {
         "enum": [
@@ -28904,6 +29382,15 @@
         ],
         "x-type-id": 1
       },
+      "Country": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Location"
+          }
+        ],
+        "x-type-id": 2
+      },
       "Currency": {
         "type": "object",
         "allOf": [
@@ -28976,14 +29463,81 @@
         "x-id": "Id",
         "x-type-id": 0
       },
-      "Country": {
+      "DBLogItem": {
+        "required": [
+          "LogId"
+        ],
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/Location"
+            "$ref": "#/components/schemas/DBItem"
           }
         ],
-        "x-type-id": 2
+        "properties": {
+          "LogId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "LogType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DBLogType"
+              }
+            ]
+          },
+          "UserRegId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "BaseId": {
+            "type": "string",
+            "readOnly": true
+          }
+        },
+        "x-id": "LogId"
+      },
+      "AddressLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBLogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "LocationId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Location": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              }
+            ],
+            "x-id": "LocationId"
+          },
+          "PostIndex": {
+            "type": "string"
+          },
+          "StreetRU": {
+            "type": "string"
+          },
+          "StreetEN": {
+            "type": "string"
+          },
+          "Floor": {
+            "type": "string"
+          },
+          "ExternalId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "x-type-id": 0
       },
       "Address": {
         "required": [
@@ -29036,6 +29590,92 @@
         },
         "x-id": "Id",
         "x-type-id": 0
+      },
+      "HttpPageMode": {
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "List",
+          "Page"
+        ],
+        "x-enumMembers": [
+          "List",
+          "Page"
+        ]
+      },
+      "HttpPageSettings": {
+        "type": "object",
+        "properties": {
+          "ListFrom": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ListTo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "BufferLength": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "ListCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "PageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "PageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "PageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageMode"
+              }
+            ]
+          }
+        }
+      },
+      "AddressPageContent": {
+        "type": "object",
+        "properties": {
+          "Info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HttpPageSettings"
+              }
+            ]
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Address"
+            }
+          }
+        }
+      },
+      "LinkModel": {
+        "type": "object",
+        "properties": {
+          "ProtocolLink": {
+            "type": "string"
+          },
+          "WebLink": {
+            "type": "string"
+          }
+        }
       },
       "Persone": {
         "type": "object",
@@ -29454,39 +30094,6 @@
           "Reject"
         ]
       },
-      "DBLogItem": {
-        "required": [
-          "LogId"
-        ],
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBItem"
-          }
-        ],
-        "properties": {
-          "LogId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "LogType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/DBLogType"
-              }
-            ]
-          },
-          "UserRegId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "BaseId": {
-            "type": "string",
-            "readOnly": true
-          }
-        },
-        "x-id": "LogId"
-      },
       "UserRegItem": {
         "type": "object",
         "properties": {
@@ -29584,165 +30191,6 @@
         },
         "x-type-id": 0
       },
-      "LogItem": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/DBLogItem"
-          }
-        ],
-        "properties": {
-          "UserReg": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/UserReg"
-              }
-            ],
-            "x-id": "UserRegId"
-          },
-          "LogUserId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "LogUser": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/User"
-              }
-            ],
-            "x-id": "LogUserId"
-          }
-        }
-      },
-      "AddressLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LogItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "LocationId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Location": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Location"
-              }
-            ],
-            "x-id": "LocationId"
-          },
-          "PostIndex": {
-            "type": "string"
-          },
-          "StreetRU": {
-            "type": "string"
-          },
-          "StreetEN": {
-            "type": "string"
-          },
-          "Floor": {
-            "type": "string"
-          },
-          "ExternalId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "x-type-id": 0
-      },
-      "HttpPageMode": {
-        "enum": [
-          0,
-          1
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "List",
-          "Page"
-        ],
-        "x-enumMembers": [
-          "List",
-          "Page"
-        ]
-      },
-      "HttpPageSettings": {
-        "type": "object",
-        "properties": {
-          "ListFrom": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "ListTo": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "BufferLength": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "ListCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "PageIndex": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "PageSize": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "PageCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Mode": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/HttpPageMode"
-              }
-            ]
-          }
-        }
-      },
-      "AddressPageContent": {
-        "type": "object",
-        "properties": {
-          "Info": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/HttpPageSettings"
-              }
-            ]
-          },
-          "Items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Address"
-            }
-          }
-        }
-      },
-      "LinkModel": {
-        "type": "object",
-        "properties": {
-          "ProtocolLink": {
-            "type": "string"
-          },
-          "WebLink": {
-            "type": "string"
-          }
-        }
-      },
       "Book": {
         "required": [
           "Id"
@@ -29794,6 +30242,36 @@
         },
         "x-id": "Id",
         "x-type-id": 0
+      },
+      "LogItem": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DBLogItem"
+          }
+        ],
+        "properties": {
+          "UserReg": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserReg"
+              }
+            ],
+            "x-id": "UserRegId"
+          },
+          "LogUserId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "LogUser": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "x-id": "LogUserId"
+          }
+        }
       },
       "BookLog": {
         "type": "object",
@@ -29860,7 +30338,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -29930,7 +30408,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -30126,7 +30604,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -30226,7 +30704,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -31459,7 +31937,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -31569,7 +32047,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -31766,7 +32244,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -31841,7 +32319,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -31898,7 +32376,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -32181,7 +32659,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -32378,7 +32856,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -32561,135 +33039,6 @@
           }
         }
       },
-      "StatusType": {
-        "enum": [
-          0,
-          1,
-          2
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Information",
-          "Warning",
-          "Error"
-        ],
-        "x-enumMembers": [
-          "Information",
-          "Warning",
-          "Error"
-        ]
-      },
-      "StateInfo": {
-        "type": "object",
-        "properties": {
-          "User": {
-            "type": "string"
-          },
-          "Date": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "Module": {
-            "type": "string"
-          },
-          "Message": {
-            "type": "string"
-          },
-          "Description": {
-            "type": "string"
-          },
-          "Stack": {
-            "type": "string"
-          },
-          "Type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/StatusType"
-              }
-            ]
-          }
-        }
-      },
-      "SchedulerType": {
-        "enum": [
-          0,
-          1,
-          2,
-          3
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Interval",
-          "DayTime",
-          "WeekDay",
-          "Manual"
-        ],
-        "x-enumMembers": [
-          "Interval",
-          "DayTime",
-          "WeekDay",
-          "Manual"
-        ]
-      },
-      "SchedulerLog": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/LogItem"
-          }
-        ],
-        "properties": {
-          "Id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "CompanyId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Company": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Company"
-              }
-            ],
-            "x-id": "CompanyId"
-          },
-          "Code": {
-            "type": "string"
-          },
-          "NameRU": {
-            "type": "string"
-          },
-          "NameEN": {
-            "type": "string"
-          },
-          "Order": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "Type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/SchedulerType"
-              }
-            ]
-          },
-          "Interval": {
-            "type": "string"
-          },
-          "ProcedureName": {
-            "type": "string"
-          },
-          "DateExecute": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "x-type-id": 0
-      },
       "ParameterDirection": {
         "enum": [
           1,
@@ -32830,6 +33179,135 @@
             ]
           }
         }
+      },
+      "StatusType": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Information",
+          "Warning",
+          "Error"
+        ],
+        "x-enumMembers": [
+          "Information",
+          "Warning",
+          "Error"
+        ]
+      },
+      "StateInfo": {
+        "type": "object",
+        "properties": {
+          "User": {
+            "type": "string"
+          },
+          "Date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Module": {
+            "type": "string"
+          },
+          "Message": {
+            "type": "string"
+          },
+          "Description": {
+            "type": "string"
+          },
+          "Stack": {
+            "type": "string"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatusType"
+              }
+            ]
+          }
+        }
+      },
+      "SchedulerType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "Interval",
+          "DayTime",
+          "WeekDay",
+          "Manual"
+        ],
+        "x-enumMembers": [
+          "Interval",
+          "DayTime",
+          "WeekDay",
+          "Manual"
+        ]
+      },
+      "SchedulerLog": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LogItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CompanyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Company": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Company"
+              }
+            ],
+            "x-id": "CompanyId"
+          },
+          "Code": {
+            "type": "string"
+          },
+          "NameRU": {
+            "type": "string"
+          },
+          "NameEN": {
+            "type": "string"
+          },
+          "Order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SchedulerType"
+              }
+            ]
+          },
+          "Interval": {
+            "type": "string"
+          },
+          "ProcedureName": {
+            "type": "string"
+          },
+          "DateExecute": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "x-type-id": 0
       },
       "Scheduler": {
         "required": [
@@ -33040,7 +33518,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -33107,7 +33585,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -33364,7 +33842,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -33446,7 +33924,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -33506,7 +33984,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -33550,7 +34028,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -33598,7 +34076,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {
@@ -34322,11 +34800,115 @@
           }
         }
       },
+      "WebSocketState": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "None",
+          "Connecting",
+          "Open",
+          "CloseSent",
+          "CloseReceived",
+          "Closed",
+          "Aborted"
+        ],
+        "x-enumMembers": [
+          "None",
+          "Connecting",
+          "Open",
+          "CloseSent",
+          "CloseReceived",
+          "Closed",
+          "Aborted"
+        ]
+      },
+      "WebNotifyConnection": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DefaultItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Date": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "UserEmail": {
+            "type": "string",
+            "readOnly": true
+          },
+          "State": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebSocketState"
+              }
+            ],
+            "readOnly": true
+          },
+          "Address": {
+            "type": "string"
+          },
+          "Action": {
+            "type": "string"
+          },
+          "Platform": {
+            "type": "string"
+          },
+          "Application": {
+            "type": "string"
+          },
+          "Version": {
+            "type": "string"
+          },
+          "ReceiveCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ReceiveLength": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "SendCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SendLength": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "SendErrors": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SendError": {
+            "type": "string"
+          },
+          "SendingCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "WorkLog": {
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/LogItem"
+            "$ref": "#/components/schemas/DBLogItem"
           }
         ],
         "properties": {

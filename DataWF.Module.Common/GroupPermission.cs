@@ -152,9 +152,6 @@ namespace DataWF.Module.Common
 
         public static async Task CachePermission(DBTransaction transaction)
         {
-            if (AccessValue.Groups == null || AccessValue.Groups.Count() == 0)
-                return;
-
             foreach (DBSchema schema in DBService.Schems)
             {
                 var permission = await Get(null, schema);

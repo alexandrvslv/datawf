@@ -11,31 +11,7 @@ namespace DataWF.Common
 {
     public class AccessValue : IAccessValue, IByteSerializable//, IEnumerable<AccessItem>
     {
-        public static IIdCollection<IGroupIdentity> Groups = new IdCollection<IGroupIdentity>();
-        public static IIdCollection<IUserIdentity> Users = new IdCollection<IUserIdentity>();
-        public static IIdCollection<IProjectIdentity> Projects = new IdCollection<IProjectIdentity>();
-        public static IIdCollection<ICompanyIdentity> Companies = new IdCollection<ICompanyIdentity>();
-        private IAccessable owner;
-        private string accessOwnerName;
-
-        public static Func<int, IdentityType, IAccessIdentity> GetAccessIdentityFunc = GetAccessIdentity;
-
-        public static IAccessIdentity GetAccessIdentity(int identityId, IdentityType identityType)
-        {
-            switch (identityType)
-            {
-                case IdentityType.Group:
-                    return AccessValue.Groups.GetById(identityId);
-                case IdentityType.User:
-                    return AccessValue.Users.GetById(identityId);
-                case IdentityType.Company:
-                    return AccessValue.Companies.GetById(identityId);
-                case IdentityType.Project:
-                    return AccessValue.Projects.GetById((long)identityId);
-                default:
-                    return null;
-            }
-        }
+        public static IAccessProvider Provider = new AccessProviderStub { Groups = new IdCollection<IGroupIdentity>() };
 
         public static implicit operator AccessValue(byte[] value)
         {
@@ -90,6 +66,9 @@ namespace DataWF.Common
         }
 
         private readonly Dictionary<IAccessIdentity, AccessItem> items = new Dictionary<IAccessIdentity, AccessItem>(1);
+        private IAccessable owner;
+        private string ownerName;
+
 
         public AccessValue()
         { }
@@ -125,18 +104,13 @@ namespace DataWF.Common
         public IAccessable Owner
         {
             get => owner;
-            set
-            {
-                if (value is IGroupIdentity groupIdentity && groupIdentity.Required)
-                {
-                    CheckRequired();
-                }
-                owner = value;
-            }
+            set => owner = value;
         }
 
-        private void CheckRequired()
+        public string OwnerName
         {
+            get => ownerName ?? Owner?.AccessorName ?? "Catalog";
+            set => ownerName = value;
         }
 
         public IEnumerable<AccessItem> Items
@@ -144,34 +118,39 @@ namespace DataWF.Common
             get => items.Values;
             set => Add(value);
         }
-        public string AccessOwnerName { get => accessOwnerName; set => accessOwnerName = value; }
+
+        private bool IsFailRequired(IUserIdentity user)
+        {
+            return Owner is IProjectItem projectItem
+                && (projectItem.ProjectIdentity?.AccessByProject).GetValueOrDefault()
+                && !user.Groups.Contains(projectItem.ProjectIdentity);
+        }
 
         public AccessType GetFlags(IUserIdentity user)
         {
-            var data = AccessType.None;
-            if (user != null)
+            var roles = AccessType.None;
+            if (user != null &&
+                !IsFailRequired(user))
             {
                 foreach (IAccessIdentity identity in user.Groups)
                 {
                     var item = Get(identity);
-                    data |= item.Access;
+                    roles |= item.Access;
                 }
             }
-            return data;
+            return roles;
         }
 
         public bool GetFlag(AccessType type, IUserIdentity user)
         {
-            if (Owner is IProjectItem projectItem)
+            if (!IsFailRequired(user))
             {
-                AccessOwnerName = Owner.AccessorName;
-                return user.Groups.Contains(projectItem.ProjectIdentity);
-            }
-            foreach (IAccessIdentity group in user.Groups)
-            {
-                var item = Get(group);
-                if ((item.Access & type) == type)
-                    return true;
+                foreach (IAccessIdentity group in user.Groups)
+                {
+                    var item = Get(group);
+                    if ((item.Access & type) == type)
+                        return true;
+                }
             }
             return false;
         }
@@ -218,15 +197,21 @@ namespace DataWF.Common
             var capacity = reader.ReadInt32();
             if (capacity > 0)
             {
-                var itemSize = (reader.BaseStream.Length - 4) / capacity;
-                var IsUser = itemSize > 8;
-                while (reader.BaseStream.Position < reader.BaseStream.Length)
+                var isTyped = true;
+                if (reader.BaseStream.CanSeek)
                 {
-                    var item = AccessItem.Deserialize(reader, IsUser);
+                    var itemSize = (reader.BaseStream.Length - 4) / capacity;
+                    isTyped = itemSize > 8;
+                }
+                int index = 0;
+                while (index < capacity)
+                {
+                    var item = AccessItem.Deserialize(reader, isTyped);
                     if (!item.IsEmpty)
                     {
                         items[item.Identity] = item;
                     }
+                    index++;
                 }
             }
         }
@@ -255,6 +240,21 @@ namespace DataWF.Common
                 if (item.Access == AccessType.None)
                 {
                     items.Remove(item.Identity);
+                    flag = true;
+                }
+            }
+            return flag;
+        }
+
+        public bool DeleteVirtualGroup()
+        {
+            var flag = false;
+            foreach (var identity in items.Keys.ToList())
+            {
+                if (identity is IProjectIdentity
+                    || identity is ICompanyIdentity)
+                {
+                    items.Remove(identity);
                     flag = true;
                 }
             }
@@ -311,7 +311,7 @@ namespace DataWF.Common
 
         public void Fill()
         {
-            foreach (IAccessIdentity group in Groups)
+            foreach (IAccessIdentity group in Provider.GetGroups())
             {
                 GetOrAdd(group);
             }
@@ -343,6 +343,5 @@ namespace DataWF.Common
         {
             return items.Values.GetEnumerator();
         }
-
     }
 }

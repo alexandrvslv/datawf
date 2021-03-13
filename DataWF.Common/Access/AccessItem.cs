@@ -42,7 +42,7 @@ namespace DataWF.Common
         {
             get
             {
-                return identity ?? (identity = AccessValue.GetAccessIdentityFunc(IdentityId, IdentityType));
+                return identity ?? (identity = AccessValue.Provider.GetAccessIdentity(IdentityId, IdentityType));
             }
             set
             {

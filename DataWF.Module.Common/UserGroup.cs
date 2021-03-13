@@ -19,11 +19,6 @@ namespace DataWF.Module.Common
 
         private Company company;
 
-        internal static void SetCurrent()
-        {
-            AccessValue.Groups = new IdCollectionView<IGroupIdentity, UserGroup>(UserGroup.DBTable);
-        }
-
         //[NonSerialized()]
         //private GroupPermissionList _permission;
         //[NonSerialized()]
