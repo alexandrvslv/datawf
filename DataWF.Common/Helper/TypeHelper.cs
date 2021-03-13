@@ -969,7 +969,7 @@ namespace DataWF.Common
 
         public int? Id => null;
 
-        public IEnumerable<IAccessIdentity> Groups => Enumerable.Empty<IAccessIdentity>();
+        public HashSet<IAccessIdentity> Groups => null;
 
         public string AuthenticationType => string.Empty;
 
