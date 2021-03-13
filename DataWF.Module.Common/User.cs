@@ -296,7 +296,7 @@ namespace DataWF.Module.Common
         private Company company;
         private Department department;
         private Position position;
-        private List<IAccessIdentity> identities;
+        private HashSet<IAccessIdentity> identities;
         private AccessValue cacheAccess;
         private Address address;
 
@@ -504,7 +504,7 @@ namespace DataWF.Module.Common
         }
         public override string AuthenticationType => AuthType?.ToString();
 
-        public override IEnumerable<IAccessIdentity> Groups
+        public override HashSet<IAccessIdentity> Groups
         {
             get
             {
@@ -512,7 +512,7 @@ namespace DataWF.Module.Common
                 if (identities == null)
                 {
                     cacheAccess = access;
-                    identities = new List<IAccessIdentity>(Super ?? false
+                    identities = new HashSet<IAccessIdentity>(Super ?? false
                             ? (IEnumerable<IAccessIdentity>)UserGroup.DBTable
                             : access.Items.Where(p => p.Create).Select(p => p.Identity));
                     identities.Add(this);
@@ -522,9 +522,12 @@ namespace DataWF.Module.Common
                     cacheAccess = access;
                     identities.Clear();
                     identities.Add(this);
-                    identities.AddRange(Super ?? false
+                    foreach (var identity in Super ?? false
                         ? (IEnumerable<IAccessIdentity>)UserGroup.DBTable
-                        : access.Items.Where(p => p.Create).Select(p => p.Identity));
+                        : access.Items.Where(p => p.Create).Select(p => p.Identity))
+                    {
+                        identities.Add(identity);
+                    }
                 }
                 return identities;
             }
