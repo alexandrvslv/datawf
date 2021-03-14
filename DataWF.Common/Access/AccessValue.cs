@@ -122,7 +122,7 @@ namespace DataWF.Common
         private bool IsFailRequired(IUserIdentity user)
         {
             return Owner is IProjectItem projectItem
-                && (projectItem.ProjectIdentity?.AccessByProject).GetValueOrDefault()
+                && (projectItem.ProjectIdentity?.Required).GetValueOrDefault()
                 && !user.Groups.Contains(projectItem.ProjectIdentity);
         }
 

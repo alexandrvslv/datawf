@@ -11,7 +11,6 @@
     }
     public interface IProjectIdentity : IGroupIdentity
     {
-        bool? AccessByProject { get; set; }
     }
     public interface ICompanyIdentity : IGroupIdentity
     {
