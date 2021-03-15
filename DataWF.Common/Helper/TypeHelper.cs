@@ -1,6 +1,7 @@
 ﻿using Portable.Xaml.Markup;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -33,7 +34,7 @@ namespace DataWF.Common
         private static readonly Dictionary<Type, PropertyInfo[]> cacheTypeProperties = new Dictionary<Type, PropertyInfo[]>(200);
         private static readonly Dictionary<MetadataToken, bool> cacheIsXmlAttribute = new Dictionary<MetadataToken, bool>(200);
         private static readonly Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(200);
-        private static readonly Dictionary<MetadataToken, bool> cacheIsXmlSerialize = new Dictionary<MetadataToken, bool>(200);
+        private static readonly ConcurrentDictionary<MetadataToken, bool> cacheIsXmlSerialize = new ConcurrentDictionary<MetadataToken, bool>(2, 200);
         private static readonly Dictionary<MetadataToken, object> cacheDefault = new Dictionary<MetadataToken, object>(200);
         private static readonly Dictionary<Type, object> cacheTypeDefault = new Dictionary<Type, object>(200);
         private static readonly Dictionary<Type, string> codeTypes = new Dictionary<Type, string>
