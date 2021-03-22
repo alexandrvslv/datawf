@@ -530,6 +530,12 @@ namespace DataWF.Data
             Generate(types);
         }
 
+        public IDBTable GetVirtualTable<T>(int itemType) where T : DBItem
+        {
+            var table = GetTable<T>();
+            return table.GetVirtualTable(itemType);
+        }
+
         public DBTable<T> GetTable<T>(bool generate = false) where T : DBItem
         {
             return (DBTable<T>)GetTable(typeof(T), generate);
