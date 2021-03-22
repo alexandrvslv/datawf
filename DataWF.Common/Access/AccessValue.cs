@@ -11,8 +11,7 @@ namespace DataWF.Common
 {
     public class AccessValue : IAccessValue, IByteSerializable//, IEnumerable<AccessItem>
     {
-        public static IIdCollection<IGroupIdentity> Groups = new IdCollection<IGroupIdentity>();
-        public static IIdCollection<IUserIdentity> Users = new IdCollection<IUserIdentity>();
+        public static IAccessProvider Provider = new AccessProviderStub { Groups = new IdCollection<IGroupIdentity>() };
 
         public static implicit operator AccessValue(byte[] value)
         {
@@ -67,6 +66,9 @@ namespace DataWF.Common
         }
 
         private readonly Dictionary<IAccessIdentity, AccessItem> items = new Dictionary<IAccessIdentity, AccessItem>(1);
+        private IAccessable owner;
+        private string ownerName;
+
 
         public AccessValue()
         { }
@@ -99,7 +101,17 @@ namespace DataWF.Common
         }
 
         [XmlIgnore, JsonIgnore]
-        public IAccessable Owner { get; set; }
+        public IAccessable Owner
+        {
+            get => owner;
+            set => owner = value;
+        }
+
+        public string OwnerName
+        {
+            get => ownerName ?? Owner?.AccessorName ?? "Catalog";
+            set => ownerName = value;
+        }
 
         public IEnumerable<AccessItem> Items
         {
@@ -107,27 +119,38 @@ namespace DataWF.Common
             set => Add(value);
         }
 
+        private bool IsFailRequired(IUserIdentity user)
+        {
+            return Owner is IProjectItem projectItem
+                && (projectItem.ProjectIdentity?.Required).GetValueOrDefault()
+                && !user.Groups.Contains(projectItem.ProjectIdentity);
+        }
+
         public AccessType GetFlags(IUserIdentity user)
         {
-            var data = AccessType.None;
-            if (user != null)
+            var roles = AccessType.None;
+            if (user != null &&
+                !IsFailRequired(user))
             {
                 foreach (IAccessIdentity identity in user.Groups)
                 {
                     var item = Get(identity);
-                    data |= item.Access;
+                    roles |= item.Access;
                 }
             }
-            return data;
+            return roles;
         }
 
         public bool GetFlag(AccessType type, IUserIdentity user)
         {
-            foreach (IAccessIdentity group in user.Groups)
+            if (!IsFailRequired(user))
             {
-                var item = Get(group);
-                if ((item.Access & type) == type)
-                    return true;
+                foreach (IAccessIdentity group in user.Groups)
+                {
+                    var item = Get(group);
+                    if ((item.Access & type) == type)
+                        return true;
+                }
             }
             return false;
         }
@@ -174,15 +197,21 @@ namespace DataWF.Common
             var capacity = reader.ReadInt32();
             if (capacity > 0)
             {
-                var itemSize = (reader.BaseStream.Length - 4) / capacity;
-                var IsUser = itemSize > 8;
-                while (reader.BaseStream.Position < reader.BaseStream.Length)
+                var isTyped = true;
+                if (reader.BaseStream.CanSeek)
                 {
-                    var item = AccessItem.Deserialize(reader, IsUser);
+                    var itemSize = (reader.BaseStream.Length - 4) / capacity;
+                    isTyped = itemSize > 8;
+                }
+                int index = 0;
+                while (index < capacity)
+                {
+                    var item = AccessItem.Deserialize(reader, isTyped);
                     if (!item.IsEmpty)
                     {
                         items[item.Identity] = item;
                     }
+                    index++;
                 }
             }
         }
@@ -211,6 +240,21 @@ namespace DataWF.Common
                 if (item.Access == AccessType.None)
                 {
                     items.Remove(item.Identity);
+                    flag = true;
+                }
+            }
+            return flag;
+        }
+
+        public bool DeleteVirtualGroup()
+        {
+            var flag = false;
+            foreach (var identity in items.Keys.ToList())
+            {
+                if (identity is IProjectIdentity
+                    || identity is ICompanyIdentity)
+                {
+                    items.Remove(identity);
                     flag = true;
                 }
             }
@@ -267,7 +311,7 @@ namespace DataWF.Common
 
         public void Fill()
         {
-            foreach (IAccessIdentity group in Groups)
+            foreach (IAccessIdentity group in Provider.GetGroups())
             {
                 GetOrAdd(group);
             }
@@ -299,6 +343,5 @@ namespace DataWF.Common
         {
             return items.Values.GetEnumerator();
         }
-
     }
 }

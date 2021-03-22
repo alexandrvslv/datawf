@@ -19,11 +19,6 @@ namespace DataWF.Module.Common
 
         private Company company;
 
-        internal static void SetCurrent()
-        {
-            AccessValue.Groups = new IdCollectionView<IGroupIdentity, UserGroup>(UserGroup.DBTable);
-        }
-
         //[NonSerialized()]
         //private GroupPermissionList _permission;
         //[NonSerialized()]
@@ -96,6 +91,8 @@ namespace DataWF.Module.Common
         string IIdentity.AuthenticationType => NameEN;
 
         bool IIdentity.IsAuthenticated => true;
+
+        bool IGroupIdentity.Required => true;
 
         [ControllerMethod]
         public IEnumerable<User> GetUsers(DBTransaction transaction)

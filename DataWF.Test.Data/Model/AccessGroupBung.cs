@@ -23,6 +23,8 @@ namespace DataWF.Test.Data
 
         public object PrimaryKey { get => Id; set => Id = (int)value; }
 
+        public bool Required => true;
+
         public int CompareTo(object obj)
         {
             throw new NotImplementedException();

@@ -16,6 +16,7 @@ namespace DataWF.Test.Data
         public const string PositionTableName = "tb_position";
         public const string FigureTableName = "tb_figure";
         private DBSchema schema;
+        private IdCollection<IGroupIdentity> groups;
 
         [SetUp]
         public void Setup()
@@ -27,10 +28,14 @@ namespace DataWF.Test.Data
             if (DBService.Connections.Count == 0)
                 Serialization.Deserialize("connections.xml", DBService.Connections);
 
-            AccessValue.Groups = new IdCollection<IGroupIdentity> {
-                new AccessGroupBung() { Id = 1, Name = "Group1"},
-                new AccessGroupBung() { Id = 2, Name = "Group2"},
-                new AccessGroupBung() { Id = 3, Name = "Group3"}
+            AccessValue.Provider = new AccessProviderStub
+            {
+                Groups = new IdCollection<IGroupIdentity>
+                {
+                    new AccessGroupBung() { Id = 1, Name = "Group1"},
+                    new AccessGroupBung() { Id = 2, Name = "Group2"},
+                    new AccessGroupBung() { Id = 3, Name = "Group3"}
+                }
             };
         }
 
@@ -123,9 +128,9 @@ namespace DataWF.Test.Data
                 Name = "Ivan",
                 Access = new AccessValue(new[]
                 {
-                    new AccessItem(AccessValue.Groups.First(i => i.Id == 1), AccessType.Read),
-                    new AccessItem(AccessValue.Groups.First(i => i.Id == 2), AccessType.Admin),
-                    new AccessItem(AccessValue.Groups.First(i => i.Id == 3), AccessType.Create)
+                    new AccessItem(groups.First(i => i.Id == 1), AccessType.Read),
+                    new AccessItem(groups.First(i => i.Id == 2), AccessType.Admin),
+                    new AccessItem(groups.First(i => i.Id == 3), AccessType.Create)
                 })
             };
             Assert.AreEqual(employer.Type, EmployerType.Type2, "Default Value & Enum");

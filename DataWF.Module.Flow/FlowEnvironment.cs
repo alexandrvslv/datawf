@@ -66,8 +66,6 @@ namespace DataWF.Module.Flow
                 Book.DBTable.Load();
                 //cache groups
                 UserGroup.DBTable.Load();
-                AccessValue.Groups = new IdCollectionView<IGroupIdentity, UserGroup>(UserGroup.DBTable);
-                AccessValue.Users = new IdCollectionView<IUserIdentity, User>(User.DBTable);
                 Location.DBTable.Load();
                 User.DBTable.Load();
                 Template.DBTable.Load();

@@ -552,10 +552,10 @@ namespace DataWF.Data
                     cell.DataType = Excel.CellValues.Number;
                     cell.CellValue = new Excel.CellValue(value.ToString());
                 }
-                else if (value.GetType() == typeof(decimal) || value.GetType() == typeof(float) || value.GetType() == typeof(double))
+                else if (type == typeof(decimal) || type == typeof(float) || type == typeof(double))
                 {
                     cell.DataType = Excel.CellValues.Number;
-                    cell.CellValue = new Excel.CellValue(((decimal)value).ToString(".00", CultureInfo.InvariantCulture.NumberFormat));
+                    cell.CellValue = new Excel.CellValue(((IFormattable)value).ToString(".00", CultureInfo.InvariantCulture.NumberFormat));
                 }
                 else
                 {

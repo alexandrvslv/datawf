@@ -5,8 +5,9 @@ namespace DataWF.Common
 {
     public interface IUserIdentity : IAccessIdentity
     {
-        IEnumerable<IAccessIdentity> Groups { get; }
+        HashSet<IAccessIdentity> Groups { get; }
     }
+
 
     public interface IUserReg
     {
