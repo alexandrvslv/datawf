@@ -74,6 +74,42 @@ namespace DataWF.WebService.Common
             }
         }
 
+        [HttpGet("GetOwnerName/{name}/{id}")]
+        public ActionResult<string> GetOwnerName([FromRoute] string name, [FromRoute] string id)
+        {
+            var table = GetTable(name);
+            if (table == null)
+            {
+                return NotFound();
+            }
+            var column = table.AccessKey;
+            if (column == null)
+            {
+                return BadRequest($"Table {table} is not Accessable!");
+            }
+            try
+            {
+                var value = table.LoadItemById(id, DBLoadParam.Load | DBLoadParam.Referencing);
+                if (value == null)
+                {
+                    return NotFound();
+                }
+
+                if (!column.Access.GetFlag(AccessType.Read, CurrentUser)
+                    && !value.Access.GetFlag(AccessType.Read, CurrentUser)
+                    && !table.Access.GetFlag(AccessType.Read, CurrentUser))
+                {
+                    return Forbid();
+                }
+
+                return new ActionResult<string>(value.Access.OwnerName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
         [HttpGet("GetItems/{name}/{id}")]
         public ActionResult<IEnumerable<AccessItem>> Get([FromRoute] string name, [FromRoute] string id)
         {

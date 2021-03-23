@@ -81,8 +81,8 @@ namespace DataWF.Data
         [Browsable(false), Category("Policy"), XmlIgnore, JsonIgnore]
         public virtual AccessValue Access
         {
-            get => access ?? (access = new AccessValue(AccessValue.Groups));
-            set => access = value;
+            get { return access ?? (access = new AccessValue(AccessValue.Provider.GetGroups())); }
+            set { access = value; }
         }
 
         [Browsable(false), Category("Naming"), XmlIgnore, JsonIgnore]

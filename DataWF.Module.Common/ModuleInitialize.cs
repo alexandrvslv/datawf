@@ -6,14 +6,18 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
-[assembly: ModuleInitialize(typeof(ModuleInitialize))]
+[assembly: ModuleInitialize(typeof(DataWF.Module.Common.ModuleInitialize))]
 namespace DataWF.Module.Common
 {
     public class ModuleInitialize : IModuleInitialize
     {
         public Task Initialize(object[] args)
-        {
+        {            
             var schema = args.FirstOrDefault() as DBSchema;
+            if (AccessValue.Provider is AccessProviderStub)
+            {
+                AccessValue.Provider = new CommonAccessProvider(schema);
+            }
 
             schema.GetTable<Book>().Load();
 

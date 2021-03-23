@@ -101,9 +101,9 @@ namespace DataWF.WebService.Common
             return connections.Select(WebNotifyConnection.UserInvoker.Instance, CompareType.Equal, user);
         }
 
-        public void SetCurrentAction(ActionExecutingContext context)
+        public virtual void SetCurrentAction(ActionExecutingContext context)
         {
-            var user = context.HttpContext.User?.GetCommonUser();
+            var user = context.HttpContext.User?.GetCommonUser();            
             SetCurrentAction(user, context);
         }
 

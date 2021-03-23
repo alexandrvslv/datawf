@@ -53,7 +53,7 @@ namespace DataWF.Data
         }
 
         [JsonIgnore, XmlIgnore]
-        public abstract IEnumerable<IAccessIdentity> Groups { get; }
+        public abstract HashSet<IAccessIdentity> Groups { get; }
 
         [JsonIgnore, XmlIgnore]
         public abstract string AuthenticationType { get; }

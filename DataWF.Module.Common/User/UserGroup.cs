@@ -97,6 +97,8 @@ namespace DataWF.Module.Common
 
         bool IIdentity.IsAuthenticated => true;
 
+        bool IGroupIdentity.Required => true;
+
         [ControllerMethod]
         public IEnumerable<User> GetUsers(DBTransaction transaction)
         {
