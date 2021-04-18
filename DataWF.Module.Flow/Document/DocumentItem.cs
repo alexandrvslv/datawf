@@ -17,15 +17,15 @@ namespace DataWF.Module.Flow
         [Column("document_id")]
         public virtual long? DocumentId
         {
-            get => GetValue<long?>(DocumentItemTable.DocumentIdKey);
-            set => SetValue(value, DocumentItemTable.DocumentIdKey);
+            get => GetValue<long?>(Table.DocumentIdKey);
+            set => SetValue(value, Table.DocumentIdKey);
         }
 
         [Reference(nameof(DocumentId))]
         public Document Document
         {
-            get => GetReference(DocumentItemTable.DocumentIdKey, ref document);
-            set => SetReference(document = value, DocumentItemTable.DocumentIdKey);
+            get => GetReference(Table.DocumentIdKey, ref document);
+            set => SetReference(document = value, Table.DocumentIdKey);
         }
 
 

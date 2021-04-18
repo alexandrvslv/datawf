@@ -19,15 +19,15 @@ namespace DataWF.Module.Flow
         [Column("template_id"), Index("rtemplate_data_index", true), Browsable(false)]
         public int? TemplateId
         {
-            get => GetValue<int?>(TemplateItemTable.TemplateIdKey);
-            set => SetValue(value, TemplateItemTable.TemplateIdKey);
+            get => GetValue<int?>(Table.TemplateIdKey);
+            set => SetValue(value, Table.TemplateIdKey);
         }
 
         [Reference(nameof(TemplateId))]
         public Template Template
         {
-            get => GetReference(TemplateItemTable.TemplateIdKey, ref template);
-            set => SetReference(template = value, TemplateItemTable.TemplateIdKey);
+            get => GetReference(Table.TemplateIdKey, ref template);
+            set => SetReference(template = value, Table.TemplateIdKey);
         }
     }
 }

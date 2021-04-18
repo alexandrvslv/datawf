@@ -30,23 +30,23 @@ namespace DataWF.Module.Finance
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(BalanceTable.IdKey);
-            set => SetValue(value, BalanceTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [Column("typeid", Keys = DBColumnKeys.ElementType), Index("daccountbalance_typeid")]
         public int? TypeId
         {
-            get => GetValue<int?>(BalanceTable.TypeIdKey);
-            set => SetValue(value, BalanceTable.TypeIdKey);
+            get => GetValue<int?>(Table.TypeIdKey);
+            set => SetValue(value, Table.TypeIdKey);
         }
 
         [Reference(nameof(TypeId))]
         public BalanceType Type
         {
-            get => GetReference(BalanceTable.TypeIdKey, ref balanceType);
-            set => SetReference(balanceType = value, BalanceTable.TypeIdKey);
+            get => GetReference(Table.TypeIdKey, ref balanceType);
+            set => SetReference(balanceType = value, Table.TypeIdKey);
         }
 
         [Browsable(false)]
@@ -54,57 +54,57 @@ namespace DataWF.Module.Finance
         [Index("daccountbalance_parentid")]
         public int? ParentId
         {
-            get => GetValue<int?>(BalanceTable.ParentIdKey);
-            set => SetValue(value, BalanceTable.ParentIdKey);
+            get => GetValue<int?>(Table.ParentIdKey);
+            set => SetValue(value, Table.ParentIdKey);
         }
 
         [Reference(nameof(ParentId))]
         public Balance Parent
         {
-            get => GetReference<Balance>(BalanceTable.ParentIdKey, ref parent);
-            set => SetReference(parent = value, BalanceTable.ParentIdKey);
+            get => GetReference<Balance>(Table.ParentIdKey, ref parent);
+            set => SetReference(parent = value, Table.ParentIdKey);
         }
 
         [Column("balancedate"), Index("daccountbalance_balancedate")]
         public DateTime? BalanceDate
         {
-            get => GetValue<DateTime?>(BalanceTable.BalanceDateKey);
-            set => SetValue(value, BalanceTable.BalanceDateKey);
+            get => GetValue<DateTime?>(Table.BalanceDateKey);
+            set => SetValue(value, Table.BalanceDateKey);
         }
 
         [Column("accountid"), Index("daccountbalance_accountid")]
         public int? AccountId
         {
-            get => GetValue<int?>(BalanceTable.AccountIdKey);
-            set => SetValue(value, BalanceTable.AccountIdKey);
+            get => GetValue<int?>(Table.AccountIdKey);
+            set => SetValue(value, Table.AccountIdKey);
         }
 
         [Reference("AccountId")]
         public Account Account
         {
-            get => GetReference(BalanceTable.AccountIdKey, ref account);
-            set => SetReference(account = value, BalanceTable.AccountIdKey);
+            get => GetReference(Table.AccountIdKey, ref account);
+            set => SetReference(account = value, Table.AccountIdKey);
         }
 
         [Column("amount")]
         public decimal? Amount
         {
-            get => GetValue<decimal?>(BalanceTable.AmountKey);
-            set => SetValue(value, BalanceTable.AmountKey);
+            get => GetValue<decimal?>(Table.AmountKey);
+            set => SetValue(value, Table.AmountKey);
         }
 
         [Column("currencyid"), Index("daccountbalance_currencyid")]
         public int? CurrencyId
         {
-            get => GetValue<int?>(BalanceTable.CurrencyIdKey);
-            set => SetValue(value, BalanceTable.CurrencyIdKey);
+            get => GetValue<int?>(Table.CurrencyIdKey);
+            set => SetValue(value, Table.CurrencyIdKey);
         }
 
         [Reference(nameof(CurrencyId))]
         public Currency Currency
         {
-            get => GetReference(BalanceTable.CurrencyIdKey, ref currency);
-            set => SetReference(currency = value, BalanceTable.CurrencyIdKey);
+            get => GetReference(Table.CurrencyIdKey, ref currency);
+            set => SetReference(currency = value, Table.CurrencyIdKey);
         }
     }
 }

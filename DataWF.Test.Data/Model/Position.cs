@@ -4,7 +4,7 @@ using System;
 namespace DataWF.Test.Data
 {
     [Table(TestORM.PositionTableName, "Default")]
-    public class Position : DBItem
+    public partial class Position : DBItem
     {
         private Position parent;
 
@@ -15,8 +15,8 @@ namespace DataWF.Test.Data
         [Column("id", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("code", 20, Keys = DBColumnKeys.Code | DBColumnKeys.Unique | DBColumnKeys.Indexing)]
@@ -30,15 +30,15 @@ namespace DataWF.Test.Data
         [Column("parentid", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
-            get => GetProperty<int?>();
-            set => SetProperty(value);
+            get => GetValue<int?>(Table.ParentIdKey);
+            set => SetValue(value, Table.ParentIdKey);
         }
 
         [Reference(nameof(ParentId))]
         public Position Parent
         {
-            get => GetPropertyReference<Position>(ref parent);
-            set => parent = SetPropertyReference(value);
+            get => GetReference<Position>(Table.ParentIdKey, ref parent);
+            set => parent = SetReference(value, Table.ParentIdKey);
         }
 
         [Column("name", 200, Keys = DBColumnKeys.Culture)]

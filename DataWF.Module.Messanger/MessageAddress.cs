@@ -8,7 +8,7 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Messanger
 {
 
-    [DataContract, Table("dmessage_address", "Message", Keys = DBTableKeys.NoLogs), InvokerGenerator]
+    [DataContract, Table("dmessage_address", "Message", Keys = DBTableKeys.NoLogs)]
     public partial class MessageAddress : MessageDetail
     {
         private User user;
@@ -22,25 +22,25 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(MessageAddressTable.IdKey);
-            set => SetValue(value, MessageAddressTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [DataMember, Column("user_id"), Index("dmessage_address_user_id")]
         public int? UserId
         {
-            get => GetValue<int?>(MessageAddressTable.UserIdKey);
-            set => SetValue(value, MessageAddressTable.UserIdKey);
+            get => GetValue<int?>(Table.UserIdKey);
+            set => SetValue(value, Table.UserIdKey);
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get => GetReference(MessageAddressTable.UserIdKey, ref user);
+            get => GetReference(Table.UserIdKey, ref user);
             set
             {
-                SetReference(user = value, MessageAddressTable.UserIdKey);
+                SetReference(user = value, Table.UserIdKey);
                 Position = value?.Position;
             }
         }
@@ -49,17 +49,17 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("position_id", Keys = DBColumnKeys.View), Index("dmessage_address_position_id")]
         public int? PositionId
         {
-            get => GetValue<int?>(MessageAddressTable.PositionIdKey);
-            set => SetValue(value, MessageAddressTable.PositionIdKey);
+            get => GetValue<int?>(Table.PositionIdKey);
+            set => SetValue(value, Table.PositionIdKey);
         }
 
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get => GetReference(MessageAddressTable.PositionIdKey, ref position);
+            get => GetReference(Table.PositionIdKey, ref position);
             set
             {
-                SetReference(position = value, MessageAddressTable.PositionIdKey);
+                SetReference(position = value, Table.PositionIdKey);
                 Department = value?.Department;
             }
         }
@@ -68,22 +68,22 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("department_id", Keys = DBColumnKeys.View), Index("dmessage_address_department_id")]
         public int? DepartmentId
         {
-            get => GetValue<int?>(MessageAddressTable.DepartmentIdKey);
-            set => SetValue(value, MessageAddressTable.DepartmentIdKey);
+            get => GetValue<int?>(Table.DepartmentIdKey);
+            set => SetValue(value, Table.DepartmentIdKey);
         }
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get => GetReference(MessageAddressTable.DepartmentIdKey, ref department);
-            set => SetReference(department = value, MessageAddressTable.DepartmentIdKey);
+            get => GetReference(Table.DepartmentIdKey, ref department);
+            set => SetReference(department = value, Table.DepartmentIdKey);
         }
 
         [DataMember, Column("date_read")]
         public DateTime? DateRead
         {
-            get => GetValue<DateTime?>(MessageAddressTable.DateReadKey);
-            set => SetValue(value, MessageAddressTable.DateReadKey);
+            get => GetValue<DateTime?>(Table.DateReadKey);
+            set => SetValue(value, Table.DateReadKey);
         }
 
         [Browsable(false)]

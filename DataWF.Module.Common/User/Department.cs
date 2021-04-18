@@ -9,7 +9,7 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Common
 {
 
-    [Table("rdepartment", "User", BlockSize = 100), InvokerGenerator]
+    [Table("rdepartment", "User", BlockSize = 100)]
     public sealed partial class Department : DBGroupItem, IComparable, IDisposable
     {
         private Company company;
@@ -20,22 +20,22 @@ namespace DataWF.Module.Common
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(DepartmentTable.IdKey);
-            set => SetValue(value, DepartmentTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(DepartmentTable.CompanyIdKey);
-            set => SetValue(value, DepartmentTable.CompanyIdKey);
+            get => GetValue<int?>(Table.CompanyIdKey);
+            set => SetValue(value, Table.CompanyIdKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(DepartmentTable.CompanyIdKey, ref company);
-            set => SetReference(company = value, DepartmentTable.CompanyIdKey);
+            get => GetReference(Table.CompanyIdKey, ref company);
+            set => SetReference(company = value, Table.CompanyIdKey);
         }
 
         [Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]
@@ -55,15 +55,15 @@ namespace DataWF.Module.Common
         [Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rdepartment_code", false)]
         public string Code
         {
-            get => GetValue<string>(DepartmentTable.CodeKey);
-            set => SetValue(value, DepartmentTable.CodeKey);
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(DepartmentTable.ExternalIdKey);
-            set => SetValue(value, DepartmentTable.ExternalIdKey);
+            get => GetValue<int?>(Table.ExternalIdKey);
+            set => SetValue(value, Table.ExternalIdKey);
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
@@ -76,15 +76,15 @@ namespace DataWF.Module.Common
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(DepartmentTable.NameENKey);
-            set => SetValue(value, DepartmentTable.NameENKey);
+            get => GetValue<string>(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(DepartmentTable.NameRUKey);
-            set => SetValue(value, DepartmentTable.NameRUKey);
+            get => GetValue<string>(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         public override AccessValue Access

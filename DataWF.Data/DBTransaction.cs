@@ -45,7 +45,7 @@ namespace DataWF.Data
             : this(DBService.Schems.DefaultSchema, caller)
         { }
 
-        public DBTransaction(DBSchemaItem schemaItem, IUserIdentity caller = null, bool noTransaction = false)
+        public DBTransaction(IDBSchemaItem schemaItem, IUserIdentity caller = null, bool noTransaction = false)
             : this(schemaItem.Schema, caller, noTransaction)
         {
         }

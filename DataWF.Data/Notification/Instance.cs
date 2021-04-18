@@ -41,29 +41,29 @@ namespace DataWF.Data
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(InstanceTable.IdKey);
-            set => SetValue(value, InstanceTable.IdKey);
+            get => GetValue<int>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("instance_host", Keys = DBColumnKeys.View)]
         public string Host
         {
-            get => GetValue<string>(InstanceTable.HostKey);
-            set => SetValue(value, InstanceTable.HostKey);
+            get => GetValue<string>(Table.HostKey);
+            set => SetValue(value, Table.HostKey);
         }
 
         [Column("instance_port", Keys = DBColumnKeys.View)]
         public int? Port
         {
-            get => GetValue<int?>(InstanceTable.PortKey);
-            set => SetValue(value, InstanceTable.PortKey);
+            get => GetValue<int?>(Table.PortKey);
+            set => SetValue(value, Table.PortKey);
         }
 
         [Column("instance_active")]
         public bool? Active
         {
-            get => GetValue<bool?>(InstanceTable.ActiveKey);
-            set => SetValue(value, InstanceTable.ActiveKey);
+            get => GetValue<bool?>(Table.ActiveKey);
+            set => SetValue(value, Table.ActiveKey);
         }
 
         [JsonIgnore, XmlIgnore]

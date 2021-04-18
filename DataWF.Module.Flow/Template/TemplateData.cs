@@ -18,30 +18,30 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(TemplateDataTable.IdKey);
-            set => SetValue(value, TemplateDataTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [Column("file_id", Keys = DBColumnKeys.View), Index("rtemplate_data_index", true)]
         public int? FileId
         {
-            get => GetValue<int?>(TemplateDataTable.FileIdKey);
-            set => SetValue(value, TemplateDataTable.FileIdKey);
+            get => GetValue<int?>(Table.FileIdKey);
+            set => SetValue(value, Table.FileIdKey);
         }
 
         [Reference(nameof(FileId))]
         public TemplateFile File
         {
-            get => GetReference(TemplateDataTable.FileIdKey, ref templateFile);
-            set => SetReference(templateFile = value, TemplateDataTable.FileIdKey);
+            get => GetReference(Table.FileIdKey, ref templateFile);
+            set => SetReference(templateFile = value, Table.FileIdKey);
         }
 
         [Column("auto_generate")]
         public bool? AutoGenerate
         {
-            get => GetValue<bool?>(TemplateDataTable.AutoGenerateKey);
-            set => SetValue(value, TemplateDataTable.AutoGenerateKey);
+            get => GetValue<bool?>(Table.AutoGenerateKey);
+            set => SetValue(value, Table.AutoGenerateKey);
         }
     }
 }

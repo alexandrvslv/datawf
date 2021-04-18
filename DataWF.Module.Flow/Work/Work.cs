@@ -18,15 +18,15 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(WorkTable.IdKey);
-            set => SetValue(value, WorkTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get => GetValue<string>(WorkTable.CodeKey);
-            set => SetValue(value, WorkTable.CodeKey);
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
@@ -39,15 +39,15 @@ namespace DataWF.Module.Flow
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(WorkTable.NameENKey);
-            set => SetValue(value, WorkTable.NameENKey);
+            get => GetValue<string>(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(WorkTable.NameRUKey);
-            set => SetValue(value, WorkTable.NameRUKey);
+            get => GetValue<string>(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         [ControllerMethod]

@@ -30,10 +30,10 @@ namespace DataWF.Data
     [InvokerGenerator(Instance = true)]
     public partial class NotifyDBTable : IComparable<NotifyDBTable>
     {
-        private DBTable table;
+        private IDBTable table;
 
         [XmlIgnore, JsonIgnore]
-        public DBTable Table
+        public IDBTable Table
         {
             get => table ?? (table = DBService.GetTable(Type));
             set => table = value;
@@ -46,7 +46,7 @@ namespace DataWF.Data
 
         public int CompareTo(NotifyDBTable other)
         {
-            return Table.CompareTo(other.Table);
+            return ((DBTable)Table).CompareTo((DBTable)other.Table);
         }
     }
 }

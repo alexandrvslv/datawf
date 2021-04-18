@@ -17,8 +17,8 @@ namespace DataWF.Module.Common
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(StatisticTable.IdKey);
-            set => SetValue(value, StatisticTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         //[Column("code", Keys = DBColumnKeys.Code)]
@@ -39,22 +39,22 @@ namespace DataWF.Module.Common
         [Column("scheduler_id")]
         public int? SchedulerId
         {
-            get => GetValue<int?>(StatisticTable.SchedulerIdKey);
-            set => SetValue(value, StatisticTable.SchedulerIdKey);
+            get => GetValue<int?>(Table.SchedulerIdKey);
+            set => SetValue(value, Table.SchedulerIdKey);
         }
 
         [Reference(nameof(SchedulerId))]
         public Scheduler Scheduler
         {
-            get => GetReference(StatisticTable.SchedulerIdKey, ref scheduler);
-            set => SetReference(scheduler = value, StatisticTable.SchedulerIdKey);
+            get => GetReference(Table.SchedulerIdKey, ref scheduler);
+            set => SetReference(scheduler = value, Table.SchedulerIdKey);
         }
 
         [Column("stat_result")]
         public decimal? Result
         {
-            get => GetValue<decimal?>(StatisticTable.ResultKey);
-            set => SetValue(value, StatisticTable.ResultKey);
+            get => GetValue<decimal?>(Table.ResultKey);
+            set => SetValue(value, Table.ResultKey);
         }
     }
 }

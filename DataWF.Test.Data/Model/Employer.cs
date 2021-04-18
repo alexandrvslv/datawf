@@ -6,7 +6,7 @@ namespace DataWF.Test.Data
 {
 
     [Table(TestORM.EmployerTableName, "Default")]
-    public class Employer : DBItem
+    public partial class Employer : DBItem
     {
         private Position position;
 
@@ -42,17 +42,10 @@ namespace DataWF.Test.Data
             set => SetPropertyReference(position = value);
         }
 
-        [Column("typeid", Keys = DBColumnKeys.ElementType), DefaultValue(EmployerIntType.Type2)]
-        public EmployerIntType? Type
+        [Column("typeid", Keys = DBColumnKeys.ElementType), DefaultValue(EmployerType.Type2)]
+        public EmployerType? Type
         {
-            get => GetProperty<EmployerIntType?>();
-            set => SetProperty(value);
-        }
-
-        [Column("subtypeid")]
-        public EmployerByteType SubType
-        {
-            get => GetProperty<EmployerByteType>();
+            get => GetProperty<EmployerType?>();
             set => SetProperty(value);
         }
 
@@ -63,28 +56,7 @@ namespace DataWF.Test.Data
             set => SetProperty(value);
         }
 
-        [Column("height")]
-        public short? Days
-        {
-            get => GetProperty<short?>();
-            set => SetProperty(value);
-        }
-
-        [Column("weight")]
-        public float Weight
-        {
-            get => GetProperty<float>();
-            set => SetProperty(value);
-        }
-
-        [Column("dweight")]
-        public double DWeight
-        {
-            get => GetProperty<double>();
-            set => SetProperty(value);
-        }
-
-        [Column("salary", 23, 3)]
+       [Column("salary", 23, 3)]
         public decimal? Salary
         {
             get => GetProperty<decimal?>();

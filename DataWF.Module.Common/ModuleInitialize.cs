@@ -26,7 +26,6 @@ namespace DataWF.Module.Common
 
             var userGoups = (UserGroupTable)schema.GetTable<UserGroup>();
             userGoups.Load();
-            userGoups.SetCurrent();
 
             var users = (UserTable)schema.GetTable<User>();
             users.DefaultComparer = new DBComparer<User, string>(users.LoginKey) { Hash = true };

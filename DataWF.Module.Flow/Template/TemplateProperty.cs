@@ -13,15 +13,15 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(TemplatePropertyTable.IdKey);
-            set => SetValue(value, TemplatePropertyTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("property_name", 1024), Index("rtemplate_property_index", true)]
         public string PropertyName
         {
-            get => GetValue<string>(TemplatePropertyTable.PropertyNameKey);
-            set => SetValue(value, TemplatePropertyTable.PropertyNameKey);
+            get => GetValue<string>(Table.PropertyNameKey);
+            set => SetValue(value, Table.PropertyNameKey);
         }
 
     }

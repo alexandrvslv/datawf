@@ -11,7 +11,7 @@ namespace DataWF.Module.Counterpart
         { }
     }
 
-    [Table("rlocation", "Address", BlockSize = 100, Type = typeof(LocationTable<>)), InvokerGenerator]
+    [Table("rlocation", "Address", BlockSize = 100, Type = typeof(LocationTable<>))]
     public partial class Location : DBGroupItem
     {
         public Location(DBTable table) : base(table)
@@ -21,8 +21,8 @@ namespace DataWF.Module.Counterpart
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(LocationTable.IdKey);
-            set => SetValue(value, LocationTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         public LocationType LocationType
@@ -33,16 +33,16 @@ namespace DataWF.Module.Counterpart
         [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rlocation_typeid_code", false)]
         public string Code
         {
-            get => GetValue<string>(LocationTable.CodeKey);
-            set => SetValue(value, LocationTable.CodeKey);
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Column("codei", 40)]
         [Index("rlocation_codei")]
         public string CodeI
         {
-            get => GetValue<string>(LocationTable.CodeIKey);
-            set => SetValue(value, LocationTable.CodeIKey);
+            get => GetValue<string>(Table.CodeIKey);
+            set => SetValue(value, Table.CodeIKey);
         }
 
         [Browsable(false)]
@@ -70,22 +70,22 @@ namespace DataWF.Module.Counterpart
         [CultureKey(nameof(Name), CultureName = "ru_RU")]
         public string NameRU
         {
-            get => GetValue<string>(LocationTable.NameRUKey);
-            set => SetValue(value, LocationTable.NameRUKey);
+            get => GetValue<string>(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         [CultureKey(nameof(Name), CultureName = "en_US")]
         public string NameEN
         {
-            get => GetValue<string>(LocationTable.NameENKey);
-            set => SetValue(value, LocationTable.NameENKey);
+            get => GetValue<string>(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(LocationTable.ExternalIdKey);
-            set => SetValue(value, LocationTable.ExternalIdKey);
+            get => GetValue<int?>(Table.ExternalIdKey);
+            set => SetValue(value, Table.ExternalIdKey);
         }
 
         public Location GetParent(LocationType parenttype)

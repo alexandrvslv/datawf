@@ -11,13 +11,9 @@ namespace DataWF.Module.Common
 {
     public partial class UserGroupTable
     {
-        internal void SetCurrent()
-        {
-            AccessValue.Groups = new IdCollectionView<IGroupIdentity, UserGroup>(this);
-        }
     }
 
-    [Table("rgroup", "User", BlockSize = 10), InvokerGenerator]
+    [Table("rgroup", "User", BlockSize = 10)]
     public sealed partial class UserGroup : DBGroupItem, IDisposable, IGroupIdentity
     {
         private Company company;
@@ -33,15 +29,15 @@ namespace DataWF.Module.Common
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(UserGroupTable.IdKey);
-            set => SetValue(value, UserGroupTable.IdKey);
+            get => GetValue<int>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("parent_id", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
-            get => GetValue<int?>(UserGroupTable.ParentIdKey);
-            set => SetValue<int?>(value, UserGroupTable.ParentIdKey);
+            get => GetValue<int?>(Table.ParentIdKey);
+            set => SetValue<int?>(value, Table.ParentIdKey);
         }
 
         [Reference(nameof(ParentId))]
@@ -54,22 +50,22 @@ namespace DataWF.Module.Common
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(UserGroupTable.CompanyIdKey);
-            set => SetValue(value, UserGroupTable.CompanyIdKey);
+            get => GetValue<int?>(Table.CompanyIdKey);
+            set => SetValue(value, Table.CompanyIdKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(UserGroupTable.CompanyIdKey, ref company);
-            set => SetReference(company = value, UserGroupTable.CompanyIdKey);
+            get => GetReference(Table.CompanyIdKey, ref company);
+            set => SetReference(company = value, Table.CompanyIdKey);
         }
 
         [Column("group_number", 512, Keys = DBColumnKeys.Code), Index("rgroup_group_number")]
         public string Number
         {
-            get => GetValue<string>(UserGroupTable.CodeKey);
-            set => SetValue(value, UserGroupTable.CodeKey);
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
@@ -82,15 +78,15 @@ namespace DataWF.Module.Common
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(UserGroupTable.NameENKey);
-            set => SetValue(value, UserGroupTable.NameENKey);
+            get => GetValue<string>(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(UserGroupTable.NameRUKey);
-            set => SetValue(value, UserGroupTable.NameRUKey);
+            get => GetValue<string>(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         string IIdentity.AuthenticationType => NameEN;

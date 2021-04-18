@@ -25,7 +25,7 @@ using DataWF.Common;
 
 namespace DataWF.Data
 {
-    [AbstractTable, InvokerGenerator]
+    [AbstractTable]
     public abstract partial class DBUser : DBItem, IUserIdentity
     {
         public DBUser(DBTable table) : base(table)
@@ -34,22 +34,22 @@ namespace DataWF.Data
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(DBUserTable.IdKey);
-            set => SetValue<int>(value, DBUserTable.IdKey);
+            get => GetValue<int>(Table.IdKey);
+            set => SetValue<int>(value, Table.IdKey);
         }
 
         [Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
         public string Login
         {
-            get => GetValue<string>(DBUserTable.LoginKey);
-            set => SetValue(value, DBUserTable.LoginKey);
+            get => GetValue<string>(Table.LoginKey);
+            set => SetValue(value, Table.LoginKey);
         }
 
         [Column("email", 1024, Keys = DBColumnKeys.Indexing), Index("ruser_email", true)]
         public string EMail
         {
-            get => GetValue<string>(DBUserTable.EMailKey);
-            set => SetValue(value, DBUserTable.EMailKey);
+            get => GetValue<string>(Table.EMailKey);
+            set => SetValue(value, Table.EMailKey);
         }
 
         [JsonIgnore, XmlIgnore]

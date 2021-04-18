@@ -18,23 +18,23 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(DocumentCommentTable.IdKey);
-            set => SetValue(value, DocumentCommentTable.IdKey);
+            get => GetValue<long>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [Column("message_id")]
         public long? MessageId
         {
-            get => GetValue<long?>(DocumentCommentTable.MessageIdKey);
-            set => SetValue(value, DocumentCommentTable.MessageIdKey);
+            get => GetValue<long?>(Table.MessageIdKey);
+            set => SetValue(value, Table.MessageIdKey);
         }
 
         [Reference(nameof(MessageId))]
         public Message Message
         {
-            get => GetReference(DocumentCommentTable.MessageIdKey, ref message);
-            set => SetReference(message = value, DocumentCommentTable.MessageIdKey);
+            get => GetReference(Table.MessageIdKey, ref message);
+            set => SetReference(message = value, Table.MessageIdKey);
         }
 
         protected override void RaisePropertyChanged(string property)

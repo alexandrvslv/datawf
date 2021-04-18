@@ -4,6 +4,7 @@ using DataWF.Geometry;
 using DocumentFormat.OpenXml.Bibliography;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -21,15 +22,13 @@ namespace DataWF.Test.Data
         public const string PositionTableName = "tb_position";
         public const string FigureTableName = "tb_figure";
         public const string FileTableName = "tb_file";
-        private DBSchema schema;
-        private IdCollection<IGroupIdentity> groups;
+        private TestSchema schema;
 
         [SetUp]
         public void Setup()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            DBService.Schems.Clear();
-            DBTable.ClearGeneratorCache();
+            schema = new TestSchema();
 
             if (DBService.Connections.Count == 0)
                 Serialization.Deserialize("connections.xml", DBService.Connections);
@@ -88,22 +87,79 @@ namespace DataWF.Test.Data
         }
 
         [Test]
+        public void SchemaReplicate()
+        {
+            var schema1 = new TestSchema()
+            {
+                Name = "test_schema1",
+                Connection = new DBConnection
+                {
+                    System = DBSystem.SQLite,
+                    DataBase = "replicant1",
+                    DataBaseId = 1
+                }
+
+            };
+            schema1.Generate("test_schema1");
+
+            var rService1 = new ReplicationService(new ReplicationSettings
+            {
+                Instance = new SRInstance
+                {
+                    Host = "localhost",
+                    Port = 51001
+                },
+                Schems = new List<SRSchema>(new[] { new SRSchema { SchemaName = schema1.Name } })
+            });
+
+            var schema2 = new TestSchema()
+            {
+                Name = "test_schema2",
+                Connection = new DBConnection
+                {
+                    System = DBSystem.SQLite,
+                    DataBase = "replicant2",
+                    DataBaseId = 2
+                }
+            };
+            schema2.Generate("test_schema2");
+
+
+            var rService2 = new ReplicationService(new ReplicationSettings
+            {
+                Instance = new SRInstance
+                {
+                    Host = "localhost",
+                    Port = 51002
+                },
+                Schems = new List<SRSchema>(new[] { new SRSchema { SchemaName = schema2.Name } })
+            });
+
+        }
+
+        [Test]
         public void SchemaSerialization()
         {
-            var schem = DBSchema.Generate(SchemaName, GetType().Assembly);
+            DBService.Schems.Clear();
+            DBService.Schems.Add(schema);
+            DBService.Schems.Add(schema.LogSchema);
 
             var buffer = Serialization.Instance.Serialize(DBService.Schems);
             PrintBuffer(buffer);
 
             DBService.Schems.Clear();
             Serialization.Instance.Deserialize(buffer, DBService.Schems);
-            Assert.AreEqual(2, DBService.Schems.Count);
 
-            Assert.AreEqual(5, schem.Tables.Count);
-            var table = schem.Tables[EmployerTableName];
+            Assert.AreEqual(2, DBService.Schems.Count);
+            Assert.AreEqual(6, schema.Tables.Count);
+
+            var table = schema.Tables[EmployerTableName];
+
             Assert.IsNotNull(table);
             Assert.IsInstanceOf<DBTable<Employer>>(table);
+
             var column = table.Columns["id"];
+
             Assert.IsNotNull(column);
             Assert.AreEqual(typeof(int?), column.DataType);
 
@@ -122,22 +178,19 @@ namespace DataWF.Test.Data
                     }
                 }
             }
-
-
         }
 
         public async Task Generate(DBConnection connection)
         {
             Assert.AreEqual(true, connection.CheckConnection(true), $"Connection Fail!");
-            schema = DBSchema.Generate(SchemaName, typeof(FileData), typeof(FileStore), typeof(Employer), typeof(Position), typeof(Figure), typeof(TestColumns));
+            schema.Generate(null);
 
-            var employerTable = schema.GetTable<Employer>();
-            var positionTable = schema.GetTable<Position>();
-            var figureTable = schema.GetTable<Figure>();
-            var fileDataTable = schema.GetTable<FileData>();
-            var fileStoreTable = schema.GetTable<FileStore>();
-            var testColumnsTable = schema.GetTable<TestColumns>();
-            Assert.IsNotNull(schema, "Attribute Generator Fail. On Schema");
+            var employerTable = schema.Employer;
+            var positionTable = schema.Position;
+            var figureTable = schema.Figure;
+            var fileDataTable = schema.FileData;
+            var fileStoreTable = schema.FileStore;
+            var testColumnsTable = schema.TestColumns;
             Assert.IsNotNull(employerTable, "Attribute Generator Fail. On Employer Table");
             Assert.IsNotNull(positionTable, "Attribute Generator Fail. On Position Table");
             Assert.IsNotNull(figureTable, "Attribute Generator Fail. On Figure Table");
@@ -294,21 +347,17 @@ namespace DataWF.Test.Data
                 Identifier = $"{1:8}",
                 IsActive = true,
                 Age = 40,
-                Days = 180,
                 LongId = 120321312321L,
-                Weight = 123.12333F,
-                DWeight = 123.1233433424434D,
                 Salary = 231323.32M,
                 Name = "Ivan",
-                SubType = EmployerByteType.Type3,
                 Access = new AccessValue(new[]
                 {
-                    new AccessItem(groups.First(i => i.Id == 1), AccessType.Read),
-                    new AccessItem(groups.First(i => i.Id == 2), AccessType.Admin),
-                    new AccessItem(groups.First(i => i.Id == 3), AccessType.Create)
+                    new AccessItem(AccessValue.Provider.GetAccessIdentity(1, IdentityType.Group), AccessType.Read),
+                    new AccessItem(AccessValue.Provider.GetAccessIdentity(2, IdentityType.Group), AccessType.Admin),
+                    new AccessItem(AccessValue.Provider.GetAccessIdentity(3, IdentityType.Group), AccessType.Create)
                 })
             };
-            Assert.AreEqual(employer.Type, EmployerIntType.Type2, "Default Value & Enum");
+            Assert.AreEqual(employer.Type, EmployerType.Type2, "Default Value & Enum");
 
             employer.GenerateId();
             Assert.NotNull(employer.Id, "Id Generator Fail");
@@ -320,13 +369,7 @@ namespace DataWF.Test.Data
             Assert.AreEqual(employer.Identifier, qresult.Get(0, "identifier"), "Insert sql Fail String");
             Assert.AreEqual((int?)employer.Type, qresult.Get(0, "typeid"), "Insert sql Fail Enum");
             Assert.AreEqual(employer.Age, qresult.Get(0, "age"), "Insert sql Fail Byte");
-            Assert.AreEqual(employer.Days, qresult.Get(0, "height"), "Insert sql Fail Short");
             Assert.AreEqual(employer.LongId, qresult.Get(0, "longid"), "Insert sql Fail Long");
-            if (connection.System != DBSystem.MySql)
-            {
-                Assert.AreEqual(employer.Weight, qresult.Get(0, "weight"), "Insert sql Fail Float");
-            }
-            Assert.AreEqual(employer.DWeight, qresult.Get(0, "dweight"), "Insert sql Fail Double");
             Assert.AreEqual(employer.Salary, employerTable.ParseProperty(nameof(Employer.Salary)).ParseValue(qresult.Get(0, "salary")), "Insert sql Fail Decimal");
 
             var lodar = qresult.Get(0, "is_active").ToString();
@@ -343,17 +386,7 @@ namespace DataWF.Test.Data
             Assert.AreEqual(0, employerTable.Count, "Clear table Fail");
 
             //Insert Several
-            positionTable.Add(new Position(positionTable) { Code = "1", Name = "First Position" });
-            positionTable.Add(new Position(positionTable) { Code = "2", Name = "Second Position" });
-            var position = new Position(positionTable) { Id = 0, Code = "3", Name = "Group Position" };
-            position.Attach();
-            var sposition = new Position(positionTable) { Code = "4", Parent = position, Name = "Sub Group Position" };
-            sposition.Attach();
-
-            //Select from internal Index
-            positionTable.Add(new Position(positionTable) { Code = "t1", Name = "Null Index" });
-            positionTable.Add(new Position(positionTable) { Code = "t2", Name = "Null Index" });
-            positionTable.Add(new Position(positionTable) { Code = "t3", Name = "Null Index" });
+            Position position = GeneratePositions(positionTable);
             var nullIds = positionTable.Select(positionTable.PrimaryKey, CompareType.Is, (object)null).ToList();
             Assert.AreEqual(6, nullIds.Count, "Select by null Fail");
 
@@ -463,8 +496,20 @@ namespace DataWF.Test.Data
             Assert.AreEqual(1000, table.Count, "Read/Write Geometry Rectangle Fail!");
         }
 
-        public class EmployerTable : DBTable<Employer>
+        private static Position GeneratePositions(PositionTable<Position> positionTable)
         {
+            positionTable.Add(new Position(positionTable) { Code = "1", Name = "First Position" });
+            positionTable.Add(new Position(positionTable) { Code = "2", Name = "Second Position" });
+            var position = new Position(positionTable) { Id = 0, Code = "3", Name = "Group Position" };
+            position.Attach();
+            var sposition = new Position(positionTable) { Code = "4", Parent = position, Name = "Sub Group Position" };
+            sposition.Attach();
+
+            //Select from internal Index
+            positionTable.Add(new Position(positionTable) { Code = "t1", Name = "Null Index" });
+            positionTable.Add(new Position(positionTable) { Code = "t2", Name = "Null Index" });
+            positionTable.Add(new Position(positionTable) { Code = "t3", Name = "Null Index" });
+            return position;
         }
     }
 }

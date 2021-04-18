@@ -15,22 +15,22 @@ namespace DataWF.Module.Messanger
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("mdata_name", Keys = DBColumnKeys.FileName)]
         public string DataName
         {
-            get => GetValue<string>(MessageDataTable.DataNameKey);
-            set => SetValue(value, MessageDataTable.DataNameKey);
+            get => GetValue<string>(Table.DataNameKey);
+            set => SetValue(value, Table.DataNameKey);
         }
 
         [Column("mdata", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
-            get => GetValue<byte[]>(MessageDataTable.DataKey);
-            set => SetValue(value, MessageDataTable.DataKey);
+            get => GetValue<byte[]>(Table.DataKey);
+            set => SetValue(value, Table.DataKey);
         }
     }
 

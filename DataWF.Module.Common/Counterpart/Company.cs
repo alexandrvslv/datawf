@@ -16,7 +16,7 @@ namespace DataWF.Module.Counterpart
 
         public bool ContainsIdentity(IUserIdentity user)
         {
-            throw NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public bool Required => false;
@@ -24,6 +24,7 @@ namespace DataWF.Module.Counterpart
         public string AuthenticationType => string.Empty;
 
         public bool IsAuthenticated => true;
+
     }
 
 }

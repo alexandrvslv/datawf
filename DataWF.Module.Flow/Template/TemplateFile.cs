@@ -16,29 +16,29 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(TemplateFileTable.IdKey);
-            set => SetValue(value, TemplateFileTable.IdKey);
+            get => GetValue<int>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("template_file", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
-            get => GetValue<byte[]>(TemplateFileTable.DataKey);
-            set => SetValue(value, TemplateFileTable.DataKey);
+            get => GetValue<byte[]>(Table.DataKey);
+            set => SetValue(value, Table.DataKey);
         }
 
         [Column("template_file_name", 1024, Keys = DBColumnKeys.FileName | DBColumnKeys.View | DBColumnKeys.Code)]
         public string DataName
         {
-            get => GetValue<string>(TemplateFileTable.DataNameKey);
-            set => SetValue(value, TemplateFileTable.DataNameKey);
+            get => GetValue<string>(Table.DataNameKey);
+            set => SetValue(value, Table.DataNameKey);
         }
 
         [Column("template_last_write", Keys = DBColumnKeys.FileLastWrite)]
         public DateTime? DataLastWrite
         {
-            get => GetValue<DateTime?>(TemplateFileTable.DataLastWriteKey) ?? Stamp;
-            set => SetValue(value, TemplateFileTable.DataLastWriteKey);
+            get => GetValue<DateTime?>(Table.DataLastWriteKey) ?? Stamp;
+            set => SetValue(value, Table.DataLastWriteKey);
         }
 
         public string FileType => Path.GetExtension(DataName);

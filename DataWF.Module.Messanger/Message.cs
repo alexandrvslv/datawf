@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace DataWF.Module.Messanger
 {
 
-    [DataContract, Table("dmessage", "Message", Keys = DBTableKeys.NoLogs), InvokerGenerator]
+    [DataContract, Table("dmessage", "Message", Keys = DBTableKeys.NoLogs)]
     public sealed partial class Message : DBItem, IDisposable
     {
 
@@ -24,29 +24,29 @@ namespace DataWF.Module.Messanger
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get => GetValue<long?>(MessageTable.IdKey);
-            set => SetValue(value, MessageTable.IdKey);
+            get => GetValue<long?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false), Column("user_id", Keys = DBColumnKeys.View)]
         public int? UserId
         {
-            get => GetValue<int?>(MessageTable.UserIdKey);
-            set => SetValue(value, MessageTable.UserIdKey);
+            get => GetValue<int?>(Table.UserIdKey);
+            set => SetValue(value, Table.UserIdKey);
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get => GetReference(MessageTable.UserIdKey, ref user);
-            set => SetReference(user = value, MessageTable.UserIdKey);
+            get => GetReference(Table.UserIdKey, ref user);
+            set => SetReference(user = value, Table.UserIdKey);
         }
 
         [Column("text_data")]
         public string Data
         {
-            get => GetValue<string>(MessageTable.DataKey);
-            set => SetValue(value, MessageTable.DataKey);
+            get => GetValue<string>(Table.DataKey);
+            set => SetValue(value, Table.DataKey);
         }
 
         public MessageAddressList Addresses

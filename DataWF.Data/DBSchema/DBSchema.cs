@@ -155,6 +155,10 @@ namespace DataWF.Data
                 base.Name = value;
                 if (DataBase == null)
                     DataBase = value;
+                if (LogSchema != null)
+                {
+                    LogSchema.Name = Name + "_log";
+                }
             }
         }
 
@@ -578,6 +582,11 @@ namespace DataWF.Data
                 }
             }
             return table;
+        }
+
+        public virtual void Generate(string name)
+        {
+            Name = name;
         }
 
         public void Generate(IEnumerable<Type> types)

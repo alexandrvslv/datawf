@@ -25,8 +25,8 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get => GetValue<long?>(DocumentDataTable.IdKey);
-            set => SetValue(value, DocumentDataTable.IdKey);
+            get => GetValue<long?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Index("ddocument_data_document_id")]
@@ -42,8 +42,8 @@ namespace DataWF.Module.Flow
         [Column("template_data_id")]
         public int? TemplateDataId
         {
-            get => GetValue<int?>(DocumentDataTable.TemplateDataIdKey);
-            set => SetValue(value, DocumentDataTable.TemplateDataIdKey);
+            get => GetValue<int?>(Table.TemplateDataIdKey);
+            set => SetValue(value, Table.TemplateDataIdKey);
         }
 
         [Reference(nameof(TemplateDataId))]

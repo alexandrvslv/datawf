@@ -44,7 +44,7 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public abstract partial class DBTable : DBSchemaItem, IComparable, IDBTable
+    public abstract partial class DBTable : DBSchemaItem, IComparable, IDBTable, IAccessable
     {
         private static int tableIndex;
 
@@ -562,6 +562,11 @@ namespace DataWF.Data
         public DBColumn<T> ParseColumn<T>(string property, ref DBColumn<T> cache)
         {
             return cache ??= (DBColumn<T>)Columns[property];
+        }
+
+        public DBColumn<T> ParseColumn<T>(string property)
+        {
+            return (DBColumn<T>)Columns[property];
         }
 
         public DBColumn ParseColumnProperty(string property)

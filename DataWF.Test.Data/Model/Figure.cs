@@ -5,7 +5,7 @@ using DataWF.Geometry;
 namespace DataWF.Test.Data
 {
     [Table(TestORM.FigureTableName, "Geometry")]
-    public class Figure : DBItem
+    public partial class Figure : DBItem
     {
         public Figure(DBTable table) : base(table)
         { }
@@ -13,7 +13,7 @@ namespace DataWF.Test.Data
         [Column("id", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.PrimaryKey);
+            get => GetValue<int>(Table.IdKey);
             set => SetValue(value, Table.PrimaryKey);
         }
 

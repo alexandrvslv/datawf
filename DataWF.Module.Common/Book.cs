@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [Table("rbook", "Reference Book", BlockSize = 100, Type = typeof(BookTable<>)), InvokerGenerator]
+    [Table("rbook", "Reference Book", BlockSize = 100, Type = typeof(BookTable<>))]
     public partial class Book : DBGroupItem
     {
         public Book(DBTable table) : base(table)
@@ -13,8 +13,8 @@ namespace DataWF.Module.Common
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(BookTable.IdKey);
-            set => SetValue(value, BookTable.IdKey);
+            get => GetValue<int>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("code", 512, Keys = DBColumnKeys.Code)]
@@ -48,29 +48,29 @@ namespace DataWF.Module.Common
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(BookTable.NameENKey);
-            set => SetValue(value, BookTable.NameENKey);
+            get => GetValue<string>(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(BookTable.NameRUKey);
-            set => SetValue(value, BookTable.NameRUKey);
+            get => GetValue<string>(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         [Column("book_value")]
         public string Value
         {
-            get => GetValue<string>(BookTable.ValueKey);
-            set => SetValue(value, BookTable.ValueKey);
+            get => GetValue<string>(Table.ValueKey);
+            set => SetValue(value, Table.ValueKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(BookTable.ExternalIdKey);
-            set => SetValue(value, BookTable.ExternalIdKey);
+            get => GetValue<int?>(Table.ExternalIdKey);
+            set => SetValue(value, Table.ExternalIdKey);
         }
     }
 }

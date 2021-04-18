@@ -22,8 +22,8 @@ namespace DataWF.Module.Common
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(GroupPermissionTable.IdKey);
-            set => SetValue(value, GroupPermissionTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("parent_id", Keys = DBColumnKeys.Group), Index("rgroup_permission_parent_id"), Browsable(false)]
@@ -43,23 +43,23 @@ namespace DataWF.Module.Common
         [DefaultValue(PermissionType.GTable), Column("type_id", Keys = DBColumnKeys.ElementType)]
         public PermissionType? Type
         {
-            get => GetValue<PermissionType?>(GroupPermissionTable.TypeKey);
-            set => SetValue(value, GroupPermissionTable.TypeKey);
+            get => GetValue<PermissionType?>(Table.TypeKey);
+            set => SetValue(value, Table.TypeKey);
         }
 
         [Column("code", 512, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
         [Index("rgroup_permission_code", true)]
         public string Code
         {
-            get => GetValue<string>(GroupPermissionTable.CodeKey);
-            set => SetValue(value, GroupPermissionTable.CodeKey);
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Column("object_name", 1024, Keys = DBColumnKeys.Indexing)]
         public string ObjectName
         {
-            get => GetValue<string>(GroupPermissionTable.ObjectNameKey);
-            set => SetValue(value, GroupPermissionTable.ObjectNameKey);
+            get => GetValue<string>(Table.ObjectNameKey);
+            set => SetValue(value, Table.ObjectNameKey);
         }
 
         public object Target
@@ -88,7 +88,7 @@ namespace DataWF.Module.Common
             }
             set
             {
-                Type = GroupPermissionTable.GetPermissionType(value, out var code, out var name);
+                Type = Table.GetPermission(value, out var code, out var name);
                 PrimaryCode = code;
                 ObjectName = name;
             }

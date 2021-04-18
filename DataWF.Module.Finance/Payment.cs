@@ -15,7 +15,7 @@ namespace DataWF.Module.Finance
         }
     }
 
-    [DataContract, Table("dpayment", "Finance", BlockSize = 5000), InvokerGenerator]
+    [DataContract, Table("dpayment", "Finance", BlockSize = 5000)]
     public partial class Payment : DBItem
     {
         private Account debit;
@@ -33,62 +33,62 @@ namespace DataWF.Module.Finance
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(PaymentTable.IdKey);
-            set => SetValue(value, PaymentTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [Column("typeid", Keys = DBColumnKeys.ElementType)]
         public int? TypeId
         {
-            get => GetValue<int?>(PaymentTable.TypeIdKey);
-            set => SetValue(value, PaymentTable.TypeIdKey);
+            get => GetValue<int?>(Table.TypeIdKey);
+            set => SetValue(value, Table.TypeIdKey);
         }
 
         [Reference(nameof(TypeId))]
         public PaymentType Type
         {
-            get => GetReference(PaymentTable.TypeIdKey, ref type);
-            set => SetReference(type = value, PaymentTable.TypeIdKey);
+            get => GetReference(Table.TypeIdKey, ref type);
+            set => SetReference(type = value, Table.TypeIdKey);
         }
 
         [Browsable(false)]
         [Column("parentid", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
-            get => GetValue<int?>(PaymentTable.ParentIdKey);
-            set => SetValue(value, PaymentTable.ParentIdKey);
+            get => GetValue<int?>(Table.ParentIdKey);
+            set => SetValue(value, Table.ParentIdKey);
         }
 
         [Reference(nameof(ParentId))]
         public Payment Parent
         {
-            get => GetReference<Payment>(PaymentTable.ParentIdKey, ref parent);
-            set => SetReference(parent = value, PaymentTable.ParentIdKey);
+            get => GetReference<Payment>(Table.ParentIdKey, ref parent);
+            set => SetReference(parent = value, Table.ParentIdKey);
         }
 
         [Column("paymentdate")]
         public DateTime? PaymentDate
         {
-            get => GetValue<DateTime?>(PaymentTable.PaymentDateKey);
-            set => SetValue(value, PaymentTable.PaymentDateKey);
+            get => GetValue<DateTime?>(Table.PaymentDateKey);
+            set => SetValue(value, Table.PaymentDateKey);
         }
 
         [Browsable(false)]
         [Column("debitid")]
         public int? DebitId
         {
-            get => GetValue<int?>(PaymentTable.DebitIdKey);
-            set => SetValue(value, PaymentTable.DebitIdKey);
+            get => GetValue<int?>(Table.DebitIdKey);
+            set => SetValue(value, Table.DebitIdKey);
         }
 
         [Reference(nameof(DebitId))]
         public Account Debit
         {
-            get => GetReference<Account>(PaymentTable.DebitIdKey, ref debit);
+            get => GetReference<Account>(Table.DebitIdKey, ref debit);
             set
             {
-                SetReference(debit = value, PaymentTable.DebitIdKey);
+                SetReference(debit = value, Table.DebitIdKey);
                 if (value != null)
                     DebitCurrency = value.Currency;
             }
@@ -98,17 +98,17 @@ namespace DataWF.Module.Finance
         [Column("creditid")]
         public int? CreditId
         {
-            get => GetValue<int?>(PaymentTable.CreditIdKey);
-            set => SetValue(value, PaymentTable.CreditIdKey);
+            get => GetValue<int?>(Table.CreditIdKey);
+            set => SetValue(value, Table.CreditIdKey);
         }
 
         [Reference(nameof(CreditId))]
         public Account Credit
         {
-            get => GetReference<Account>(PaymentTable.CreditIdKey, ref credit);
+            get => GetReference<Account>(Table.CreditIdKey, ref credit);
             set
             {
-                SetReference(credit = value, PaymentTable.CreditIdKey);
+                SetReference(credit = value, Table.CreditIdKey);
                 if (value != null)
                     CreditCurrency = value.Currency;
             }
@@ -117,88 +117,88 @@ namespace DataWF.Module.Finance
         [Column("amount")]
         public decimal? Amount
         {
-            get => GetValue<decimal?>(PaymentTable.AmountKey);
-            set => SetValue(value, PaymentTable.AmountKey);
+            get => GetValue<decimal?>(Table.AmountKey);
+            set => SetValue(value, Table.AmountKey);
         }
 
         [Browsable(false)]
         [Column("currencyid")]
         public int? CurrencyId
         {
-            get => GetValue<int?>(PaymentTable.CurrencyIdKey);
-            set => SetValue(value, PaymentTable.CurrencyIdKey);
+            get => GetValue<int?>(Table.CurrencyIdKey);
+            set => SetValue(value, Table.CurrencyIdKey);
         }
 
         [Reference(nameof(CurrencyId))]
         public Currency Currency
         {
-            get => GetReference<Currency>(PaymentTable.CurrencyIdKey, ref currency);
-            set => currency = SetReference(value, PaymentTable.CurrencyIdKey);
+            get => GetReference<Currency>(Table.CurrencyIdKey, ref currency);
+            set => currency = SetReference(value, Table.CurrencyIdKey);
         }
 
         [Column("debitrate")]
         public decimal? DebitRate
         {
-            get => GetValue<decimal?>(PaymentTable.DebitRateKey);
-            set => SetValue(value, PaymentTable.DebitRateKey);
+            get => GetValue<decimal?>(Table.DebitRateKey);
+            set => SetValue(value, Table.DebitRateKey);
         }
 
         [Column("debitamount")]
         public decimal? DebitAmount
         {
-            get => GetValue<decimal?>(PaymentTable.DebitAmountKey);
-            set => SetValue(value, PaymentTable.DebitAmountKey);
+            get => GetValue<decimal?>(Table.DebitAmountKey);
+            set => SetValue(value, Table.DebitAmountKey);
         }
 
         [Browsable(false)]
         [Column("debitcurrencyid")]
         public int? DebitCurrencyId
         {
-            get => GetValue<int?>(PaymentTable.DebitCurrencyIdKey);
-            set => SetValue(value, PaymentTable.DebitCurrencyIdKey);
+            get => GetValue<int?>(Table.DebitCurrencyIdKey);
+            set => SetValue(value, Table.DebitCurrencyIdKey);
         }
 
         [Reference(nameof(DebitCurrencyId))]
         public Currency DebitCurrency
         {
-            get => GetReference<Currency>(PaymentTable.DebitCurrencyIdKey, ref debitCurrency);
-            set => SetReference(debitCurrency = value, PaymentTable.DebitCurrencyIdKey);
+            get => GetReference<Currency>(Table.DebitCurrencyIdKey, ref debitCurrency);
+            set => SetReference(debitCurrency = value, Table.DebitCurrencyIdKey);
         }
 
         [Column("creditrate")]
         public decimal? CreditRate
         {
-            get => GetValue<decimal?>(PaymentTable.CreditRateKey);
-            set => SetValue(value, PaymentTable.CreditRateKey);
+            get => GetValue<decimal?>(Table.CreditRateKey);
+            set => SetValue(value, Table.CreditRateKey);
         }
 
         [Column("creditamount")]
         public decimal? CreditAmount
         {
-            get => GetValue<decimal?>(PaymentTable.CreditAmountKey);
-            set => SetValue(value, PaymentTable.CreditAmountKey);
+            get => GetValue<decimal?>(Table.CreditAmountKey);
+            set => SetValue(value, Table.CreditAmountKey);
         }
 
         [Browsable(false)]
         [Column("creditcurrencyid")]
         public int? CreditCurrencyId
         {
-            get => GetValue<int?>(PaymentTable.CreditCurrencyIdKey);
-            set => SetValue(value, PaymentTable.CreditCurrencyIdKey);
+            get => GetValue<int?>(Table.CreditCurrencyIdKey);
+            set => SetValue(value, Table.CreditCurrencyIdKey);
         }
 
         [Reference(nameof(DebitCurrencyId))]
         public Currency CreditCurrency
         {
-            get => GetReference<Currency>(PaymentTable.CreditCurrencyIdKey, ref creditCurrency);
-            set => SetReference(creditCurrency = value, PaymentTable.CreditCurrencyIdKey);
+            get => GetReference<Currency>(Table.CreditCurrencyIdKey, ref creditCurrency);
+            set => SetReference(creditCurrency = value, Table.CreditCurrencyIdKey);
         }
 
         [Column("description")]
         public string Description
         {
-            get => GetValue<string>(PaymentTable.DescriptionKey);
-            set => SetValue(value, PaymentTable.DescriptionKey);
+            get => GetValue<string>(Table.DescriptionKey);
+            set => SetValue(value, Table.DescriptionKey);
         }
     }
 }

@@ -88,7 +88,7 @@ namespace DataWF.Data
             {
                 row = value;
                 if (row != null)
-                    table = row.Table;
+                    table = (DBTable)row.Table;
                 RefreshLogs();
             }
         }

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace DataWF.Module.Common
 {
 
-    [Table("rscheduler", "Reference Book", BlockSize = 20), InvokerGenerator]
+    [Table("rscheduler", "Reference Book", BlockSize = 20)]
     public sealed partial class Scheduler : DBItem//, IComparable
     {
         private Company company;
@@ -21,29 +21,29 @@ namespace DataWF.Module.Common
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(SchedulerTable.IdKey);
-            set => SetValue(value, SchedulerTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(SchedulerTable.CompanyIdKey);
-            set => SetValue(value, SchedulerTable.CompanyIdKey);
+            get => GetValue<int?>(Table.CompanyIdKey);
+            set => SetValue(value, Table.CompanyIdKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(SchedulerTable.CompanyIdKey, ref company);
-            set => SetReference(company = value, SchedulerTable.CompanyIdKey);
+            get => GetReference(Table.CompanyIdKey, ref company);
+            set => SetReference(company = value, Table.CompanyIdKey);
         }
 
         [Column("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get => GetValue<string>(SchedulerTable.CodeKey);
-            set => SetValue(value, SchedulerTable.CodeKey);
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
@@ -56,22 +56,22 @@ namespace DataWF.Module.Common
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(SchedulerTable.NameENKey);
-            set => SetValue(value, SchedulerTable.NameENKey);
+            get => GetValue<string>(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(SchedulerTable.NameRUKey);
-            set => SetValue(value, SchedulerTable.NameRUKey);
+            get => GetValue<string>(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         [Column("orderid")]
         public int? Order
         {
-            get => GetValue<int?>(SchedulerTable.OrderKey);
-            set => SetValue(value, SchedulerTable.OrderKey);
+            get => GetValue<int?>(Table.OrderKey);
+            set => SetValue(value, Table.OrderKey);
         }
 
         [DefaultValue(SchedulerType.Interval), Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.Notnull)]
@@ -84,16 +84,16 @@ namespace DataWF.Module.Common
         [Column("run_interval", Keys = DBColumnKeys.Notnull)]
         public TimeSpan? Interval
         {
-            get => GetValue<TimeSpan?>(SchedulerTable.IntervalKey);
-            set => SetValue(value, SchedulerTable.IntervalKey);
+            get => GetValue<TimeSpan?>(Table.IntervalKey);
+            set => SetValue(value, Table.IntervalKey);
         }
 
         [Browsable(false)]
         [Column("procedure_name")]
         public string ProcedureName
         {
-            get => GetValue<string>(SchedulerTable.ProcedureNameKey);
-            set => SetValue(value, SchedulerTable.ProcedureNameKey);
+            get => GetValue<string>(Table.ProcedureNameKey);
+            set => SetValue(value, Table.ProcedureNameKey);
         }
 
         public DBProcedure Procedure
@@ -105,8 +105,8 @@ namespace DataWF.Module.Common
         [Column("date_execute")]
         public DateTime? DateExecute
         {
-            get => GetValue<DateTime?>(SchedulerTable.DateExecuteKey);
-            set => SetValue(value, SchedulerTable.DateExecuteKey);
+            get => GetValue<DateTime?>(Table.DateExecuteKey);
+            set => SetValue(value, Table.DateExecuteKey);
         }
 
         public async Task<StateInfo> Execute()
@@ -181,44 +181,6 @@ namespace DataWF.Module.Common
             }
 
             return info;
-        }
-    }
-
-    public partial class SchedulerTable
-    {
-        SchedulerService Instance { get; set; }
-
-        [ControllerMethod]
-        public void Start()
-        {
-            if (Instance == null)
-                throw new Exception($"{nameof(SchedulerService)} is not initialized!");
-
-            if (!Instance.Running)
-            {
-                Instance.Start();
-            }
-        }
-
-        [ControllerMethod]
-        public void Stop()
-        {
-            if (Instance == null)
-                throw new Exception($"{nameof(SchedulerService)} is not initialized!");
-
-            if (Instance.Running)
-            {
-                Instance.Stop();
-            }
-        }
-
-        [ControllerMethod]
-        public bool IsRunning()
-        {
-            if (Instance == null)
-                throw new Exception($"{nameof(SchedulerService)} is not initialized!");
-
-            return Instance.Running;
         }
     }
 }

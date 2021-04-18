@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
-    [Table("duser_application", "User"), InvokerGenerator]
+    [Table("duser_application", "User")]
     public partial class UserApplication : DBItem
     {
         public static Func<UserApplication, Task> Registered;
@@ -23,113 +23,113 @@ namespace DataWF.Module.Common
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(UserApplicationTable.IdKey);
-            set => SetValue(value, UserApplicationTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("app_type", 1024, Keys = DBColumnKeys.ElementType | DBColumnKeys.Notnull)]
         public UserApplicationType? Type
         {
-            get => GetValue<UserApplicationType?>(UserApplicationTable.TypeKey);
-            set => SetValue(value, UserApplicationTable.TypeKey);
+            get => GetValue<UserApplicationType?>(Table.TypeKey);
+            set => SetValue(value, Table.TypeKey);
         }
 
         [Column("email", 1024, Keys = DBColumnKeys.Code | DBColumnKeys.Notnull)]//Index("duser_request_email", true)
         public string EMail
         {
-            get => GetValue<string>(UserApplicationTable.EMailKey);
-            set => SetValue(value?.Trim(), UserApplicationTable.EMailKey);
+            get => GetValue<string>(Table.EMailKey);
+            set => SetValue(value?.Trim(), Table.EMailKey);
         }
 
         [Column("password", Keys = DBColumnKeys.Notnull)]//Index("duser_request_email", true)
         public string Password
         {
-            get => GetValue<string>(UserApplicationTable.PasswordKey);
-            set => SetValue(value, UserApplicationTable.PasswordKey);
+            get => GetValue<string>(Table.PasswordKey);
+            set => SetValue(value, Table.PasswordKey);
         }
 
         [Column("temp_password")]//Index("duser_request_email", true)
         public string TemporaryPassword
         {
-            get => GetValue<string>(UserApplicationTable.TemporaryPasswordKey);
-            set => SetValue(value, UserApplicationTable.TemporaryPasswordKey);
+            get => GetValue<string>(Table.TemporaryPasswordKey);
+            set => SetValue(value, Table.TemporaryPasswordKey);
         }
 
         [Column("email_verified", Keys = DBColumnKeys.System), DefaultValue(false)]
         public bool? EmailVerified
         {
-            get => GetValue<bool?>(UserApplicationTable.EmailVerifiedKey);
-            set => SetValue(value, UserApplicationTable.EmailVerifiedKey);
+            get => GetValue<bool?>(Table.EmailVerifiedKey);
+            set => SetValue(value, Table.EmailVerifiedKey);
         }
 
         [Column("phone", 30)]
         public string Phone
         {
-            get => GetValue<string>(UserApplicationTable.PhoneKey);
-            set => SetValue(value?.Trim(), UserApplicationTable.PhoneKey);
+            get => GetValue<string>(Table.PhoneKey);
+            set => SetValue(value?.Trim(), Table.PhoneKey);
         }
 
         [Column("phone_verified", Keys = DBColumnKeys.System), DefaultValue(false)]
         public bool? PhoneVerified
         {
-            get => GetValue<bool?>(UserApplicationTable.PhoneVerifiedKey);
-            set => SetValue(value, UserApplicationTable.PhoneVerifiedKey);
+            get => GetValue<bool?>(Table.PhoneVerifiedKey);
+            set => SetValue(value, Table.PhoneVerifiedKey);
         }
 
         [Column("name_first", 50, Keys = DBColumnKeys.Notnull)]
         public string FirstName
         {
-            get => GetValue<string>(UserApplicationTable.FirstNameKey);
-            set => SetValue(value?.Trim(), UserApplicationTable.FirstNameKey);
+            get => GetValue<string>(Table.FirstNameKey);
+            set => SetValue(value?.Trim(), Table.FirstNameKey);
         }
 
         [Column("name_last", 50, Keys = DBColumnKeys.Notnull)]
         public string LastName
         {
-            get => GetValue<string>(UserApplicationTable.LastNameKey);
-            set => SetValue(value?.Trim(), UserApplicationTable.LastNameKey);
+            get => GetValue<string>(Table.LastNameKey);
+            set => SetValue(value?.Trim(), Table.LastNameKey);
         }
 
         [Column("name_middle", 50)]
         public string MiddleName
         {
-            get => GetValue<string>(UserApplicationTable.MiddleNameKey);
-            set => SetValue(value?.Trim(), UserApplicationTable.MiddleNameKey);
+            get => GetValue<string>(Table.MiddleNameKey);
+            set => SetValue(value?.Trim(), Table.MiddleNameKey);
         }
 
         [Column("company", 100, Keys = DBColumnKeys.Notnull)]
         public string Company
         {
-            get => GetValue<string>(UserApplicationTable.CompanyKey);
-            set => SetValue(value?.Trim(), UserApplicationTable.CompanyKey);
+            get => GetValue<string>(Table.CompanyKey);
+            set => SetValue(value?.Trim(), Table.CompanyKey);
         }
 
         [Column("department", 100, Keys = DBColumnKeys.Notnull)]
         public string Department
         {
-            get => GetValue<string>(UserApplicationTable.DepartmentKey);
-            set => SetValue(value?.Trim(), UserApplicationTable.DepartmentKey);
+            get => GetValue<string>(Table.DepartmentKey);
+            set => SetValue(value?.Trim(), Table.DepartmentKey);
         }
 
         [Column("position", 100, Keys = DBColumnKeys.Notnull)]
         public string Position
         {
-            get => GetValue<string>(UserApplicationTable.PositionKey);
-            set => SetValue(value?.Trim(), UserApplicationTable.PositionKey);
+            get => GetValue<string>(Table.PositionKey);
+            set => SetValue(value?.Trim(), Table.PositionKey);
         }
 
         [Column("user_id", Keys = DBColumnKeys.System)]
         public int? UserId
         {
-            get => GetValue<int?>(UserApplicationTable.UserIdKey);
-            set => SetValue(value, UserApplicationTable.UserIdKey);
+            get => GetValue<int?>(Table.UserIdKey);
+            set => SetValue(value, Table.UserIdKey);
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get => GetReference(UserApplicationTable.UserIdKey, ref user);
-            set => SetReference(user = value, UserApplicationTable.UserIdKey);
+            get => GetReference(Table.UserIdKey, ref user);
+            set => SetReference(user = value, Table.UserIdKey);
         }
 
         [ControllerMethod]
@@ -337,34 +337,6 @@ namespace DataWF.Module.Common
                 throw new ArgumentException($"Position with specified name: {Position} not found!", nameof(Position));
             }
             return (company, department, position);
-        }
-    }
-
-    public partial class UserApplicationTable<T>
-    {
-        [ControllerMethod(Anonymous = true)]
-        public async Task<UserApplication> Register([ControllerParameter(ControllerParameterType.Body)] UserApplication application)
-        {
-            var users = (UserTable)Schema.GetTable<User>();
-            if (users.GetByEmail(application.EMail) != null)
-            {
-                throw new ArgumentException($"User with specified email: {application.EMail} already exist!", nameof(UserApplication.EMail));
-            }
-
-            using (var query = new QQuery(this))
-            {
-                query.BuildParam(EMailKey, application.EMail);
-                query.BuildParam(TypeKey, application.Type);
-                query.BuildParam(StatusKey, CompareType.In, new[] { DBStatus.Actual, DBStatus.New });
-                var exist = Load(query);
-                if (exist.Count() > 0)
-                {
-                    throw new ArgumentException($"Application with specified email: {application.EMail} already in process!", nameof(UserApplication.EMail));
-                }
-            }
-            await application.Save((IUserIdentity)null);
-            _ = application.OnRegistered();
-            return application;
         }
     }
 

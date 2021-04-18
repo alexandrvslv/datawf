@@ -18,7 +18,7 @@ namespace DataWF.Module.Finance
         }
     }
 
-    [Table("daccount", "Finance", BlockSize = 5000), InvokerGenerator]
+    [Table("daccount", "Finance", BlockSize = 5000)]
     public partial class Account : DBItem
     {
         [NonSerialized()]
@@ -40,30 +40,30 @@ namespace DataWF.Module.Finance
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(AccountTable.IdKey);
-            set => SetValue(value, AccountTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("accountnumber", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View), Index("daccount_numbertypeid", true)]
         public string Number
         {
-            get => GetValue<string>(AccountTable.NumberKey);
-            set => SetValue(value, AccountTable.NumberKey);
+            get => GetValue<string>(Table.NumberKey);
+            set => SetValue(value, Table.NumberKey);
         }
 
         [Browsable(false)]
         [Column("typeid", Keys = DBColumnKeys.ElementType), Index("daccount_numbertypeid", true)]
         public int? TypeId
         {
-            get => GetValue<int?>(AccountTable.TypeIdKey);
-            set => SetValue(value, AccountTable.TypeIdKey);
+            get => GetValue<int?>(Table.TypeIdKey);
+            set => SetValue(value, Table.TypeIdKey);
         }
 
         [Reference(nameof(TypeId))]
         public AccountType Type
         {
-            get => GetReference<AccountType>(AccountTable.TypeIdKey);
-            set => SetReference(value, AccountTable.TypeIdKey);
+            get => GetReference<AccountType>(Table.TypeIdKey);
+            set => SetReference(value, Table.TypeIdKey);
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
@@ -78,45 +78,45 @@ namespace DataWF.Module.Finance
         [Index("daccount_parentid")]
         public int? ParentId
         {
-            get => GetValue<int?>(AccountTable.ParentIdKey);
-            set => SetValue(value, AccountTable.ParentIdKey);
+            get => GetValue<int?>(Table.ParentIdKey);
+            set => SetValue(value, Table.ParentIdKey);
         }
 
         [Reference(nameof(ParentId))]
         public Account Parent
         {
-            get => GetReference<Account>(AccountTable.ParentIdKey);
-            set => SetReference(value, AccountTable.ParentIdKey);
+            get => GetReference<Account>(Table.ParentIdKey);
+            set => SetReference(value, Table.ParentIdKey);
         }
 
         [Browsable(false)]
         [Column("customerid"), Index("daccount_customerid")]
         public int? CustomerId
         {
-            get => GetValue<int?>(AccountTable.CustomerIdKey);
-            set => SetValue(value, AccountTable.CustomerIdKey);
+            get => GetValue<int?>(Table.CustomerIdKey);
+            set => SetValue(value, Table.CustomerIdKey);
         }
 
         [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get => GetReference<Customer>(AccountTable.CustomerIdKey, ref customer);
-            set => SetReference(customer = value, AccountTable.CustomerIdKey);
+            get => GetReference<Customer>(Table.CustomerIdKey, ref customer);
+            set => SetReference(customer = value, Table.CustomerIdKey);
         }
 
         [Browsable(false)]
         [Column("currencyid"), Index("daccount_currencyid")]
         public int? CurrencyId
         {
-            get => GetValue<int?>(AccountTable.CurrencyIdKey);
-            set => SetValue(value, AccountTable.CurrencyIdKey);
+            get => GetValue<int?>(Table.CurrencyIdKey);
+            set => SetValue(value, Table.CurrencyIdKey);
         }
 
         [Reference(nameof(CurrencyId))]
         public Currency Currency
         {
-            get => GetReference(AccountTable.CurrencyIdKey, ref currency);
-            set => SetReference(currency = value, AccountTable.CurrencyIdKey);
+            get => GetReference(Table.CurrencyIdKey, ref currency);
+            set => SetReference(currency = value, Table.CurrencyIdKey);
         }
 
         [Browsable(false)]
@@ -130,8 +130,8 @@ namespace DataWF.Module.Finance
         [Reference(nameof(BankId))]
         public Customer Bank
         {
-            get => GetReference<Customer>(AccountTable.BankIdKey, ref bank);
-            set => bank = SetReference(value, AccountTable.BankIdKey);
+            get => GetReference<Customer>(Table.BankIdKey, ref bank);
+            set => bank = SetReference(value, Table.BankIdKey);
         }
 
         public Balance GetBalance(BalanceType type)

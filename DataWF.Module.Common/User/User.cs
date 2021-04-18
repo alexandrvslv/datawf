@@ -19,14 +19,14 @@ using System.Threading.Tasks;
 namespace DataWF.Module.Common
 {
 
-    [Table("ruser", "User", BlockSize = 100, Type = typeof(UserTable)), InvokerGenerator]
+    [Table("ruser", "User", BlockSize = 100, Type = typeof(UserTable))]
     public sealed partial class User : DBUser, IComparable, IDisposable
     {
         private bool online = false;
         private Company company;
         private Department department;
         private Position position;
-        private List<IAccessIdentity> identities;
+        private HashSet<IAccessIdentity> identities;
         private AccessValue cacheAccess;
         private Address address;
 
@@ -39,59 +39,59 @@ namespace DataWF.Module.Common
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(UserTable.ExternalIdKey);
-            set => SetValue(value, UserTable.ExternalIdKey);
+            get => GetValue<int?>(Table.ExternalIdKey);
+            set => SetValue(value, Table.ExternalIdKey);
         }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(UserTable.CompanyIdKey);
-            set => SetValue(value, UserTable.CompanyIdKey);
+            get => GetValue<int?>(Table.CompanyIdKey);
+            set => SetValue(value, Table.CompanyIdKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(UserTable.CompanyIdKey, ref company);
-            set => SetReference(company = value, UserTable.CompanyIdKey);
+            get => GetReference(Table.CompanyIdKey, ref company);
+            set => SetReference(company = value, Table.CompanyIdKey);
         }
 
         [Column("abbreviation", 4, Keys = DBColumnKeys.Indexing), Index("ruser_abbreviation", true)]
         public string Abbreviation
         {
-            get => GetValue<string>(UserTable.AbbreviationKey);
-            set => SetValue(value, UserTable.AbbreviationKey);
+            get => GetValue<string>(Table.AbbreviationKey);
+            set => SetValue(value, Table.AbbreviationKey);
         }
 
         [Column("department_id"), Browsable(false)]
         public int? DepartmentId
         {
-            get => GetValue<int?>(UserTable.DepartmentIdKey);
-            set => SetValue(value, UserTable.DepartmentIdKey);
+            get => GetValue<int?>(Table.DepartmentIdKey);
+            set => SetValue(value, Table.DepartmentIdKey);
         }
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get => GetReference(UserTable.DepartmentIdKey, ref department);
-            set => SetReference(department = value, UserTable.DepartmentIdKey);
+            get => GetReference(Table.DepartmentIdKey, ref department);
+            set => SetReference(department = value, Table.DepartmentIdKey);
         }
 
         [Column("position_id"), Browsable(false)]
         public int? PositionId
         {
-            get => GetValue<int?>(UserTable.PositionIdKey);
-            set => SetValue(value, UserTable.PositionIdKey);
+            get => GetValue<int?>(Table.PositionIdKey);
+            set => SetValue(value, Table.PositionIdKey);
         }
 
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get => GetReference<Position>(UserTable.PositionIdKey, ref position);
+            get => GetReference<Position>(Table.PositionIdKey, ref position);
             set
             {
-                SetReference(position = value, UserTable.PositionIdKey);
+                SetReference(position = value, Table.PositionIdKey);
                 Department = value?.Department;
             }
         }
@@ -100,8 +100,8 @@ namespace DataWF.Module.Common
         [DefaultValue(false), Column("super")]
         public bool? Super
         {
-            get => GetValue<bool?>(UserTable.SuperKey);
-            set => SetValue(value, UserTable.SuperKey);
+            get => GetValue<bool?>(Table.SuperKey);
+            set => SetValue(value, Table.SuperKey);
         }
 
         [Browsable(false)]
@@ -120,8 +120,8 @@ namespace DataWF.Module.Common
         [Column("phone", 1024), Index("ruser_phone", false)]
         public string Phone
         {
-            get => GetValue<string>(UserTable.PhoneKey);
-            set => SetValue(value, UserTable.PhoneKey);
+            get => GetValue<string>(Table.PhoneKey);
+            set => SetValue(value, Table.PhoneKey);
         }
 
         public bool IsBlock
@@ -133,28 +133,28 @@ namespace DataWF.Module.Common
         [Column("is_temp_pass")]
         public bool? IsTempPassword
         {
-            get => GetValue<bool?>(UserTable.IsTempPasswordKey);
-            set => SetValue(value, UserTable.IsTempPasswordKey);
+            get => GetValue<bool?>(Table.IsTempPasswordKey);
+            set => SetValue(value, Table.IsTempPasswordKey);
         }
 
         [Column("password", 512, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
         public string Password
         {
-            get => GetValue<string>(UserTable.PasswordKey);
+            get => GetValue<string>(Table.PasswordKey);
             set
             {
                 if (value == null)
                 {
-                    SetValue(value, UserTable.PasswordKey);
+                    SetValue(value, Table.PasswordKey);
                     return;
                 }
-                var rez = UserTable.ValidateText(this, value);
+                var rez = Table.ValidateText(this, value);
                 if (!string.IsNullOrEmpty(rez))
                 {
                     throw new ArgumentException(rez);
                 }
                 IsTempPassword = false;
-                SetValue(Helper.GetSha512(value), UserTable.PasswordKey);
+                SetValue(Helper.GetSha512(value), Table.PasswordKey);
             }
         }
 
@@ -171,15 +171,15 @@ namespace DataWF.Module.Common
         [Browsable(false), Column("token_refresh", 2048, Keys = DBColumnKeys.Password | DBColumnKeys.NoLog)]
         public string RefreshToken
         {
-            get => GetValue<string>(UserTable.RefreshTokenKey);
-            set => SetValue(value, UserTable.RefreshTokenKey);
+            get => GetValue<string>(Table.RefreshTokenKey);
+            set => SetValue(value, Table.RefreshTokenKey);
         }
 
         [Column("auth_type")]
         public UserAuthType? AuthType
         {
-            get => GetValue<UserAuthType?>(UserTable.AuthTypeKey) ?? UserAuthType.SMTP;
-            set => SetValue(value, UserTable.AuthTypeKey);
+            get => GetValue<UserAuthType?>(Table.AuthTypeKey) ?? UserAuthType.SMTP;
+            set => SetValue(value, Table.AuthTypeKey);
         }
 
         public override bool IsAuthenticated => string.IsNullOrEmpty(AccessToken);
@@ -190,33 +190,33 @@ namespace DataWF.Module.Common
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(UserTable.NameRUKey);
-            set => SetValue(value, UserTable.NameRUKey);
+            get => GetValue<string>(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(UserTable.NameENKey);
-            set => SetValue(value, UserTable.NameENKey);
+            get => GetValue<string>(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
         [Column("address_id"), Browsable(false)]
         public int? AddressId
         {
-            get => GetValue<int?>(UserTable.AddressIdKey);
-            set => SetValue(value, UserTable.AddressIdKey);
+            get => GetValue<int?>(Table.AddressIdKey);
+            set => SetValue(value, Table.AddressIdKey);
         }
 
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get => GetReference(UserTable.AddressIdKey, ref address);
-            set => SetReference(address = value, UserTable.AddressIdKey);
+            get => GetReference(Table.AddressIdKey, ref address);
+            set => SetReference(address = value, Table.AddressIdKey);
         }
         public override string AuthenticationType => AuthType?.ToString();
 
-        public override IEnumerable<IAccessIdentity> Groups
+        public override HashSet<IAccessIdentity> Groups
         {
             get
             {
@@ -224,7 +224,7 @@ namespace DataWF.Module.Common
                 if (identities == null)
                 {
                     cacheAccess = access;
-                    identities = new List<IAccessIdentity>(Super ?? false
+                    identities = new HashSet<IAccessIdentity>(Super ?? false
                             ? (IEnumerable<IAccessIdentity>)Schema.GetTable<UserGroup>()
                             : access.Items.Where(p => p.Create).Select(p => p.Identity));
                     identities.Add(this);
@@ -232,16 +232,22 @@ namespace DataWF.Module.Common
                 else if (access != cacheAccess)
                 {
                     cacheAccess = access;
-                    identities.Clear();
-                    identities.Add(this);
-                    identities.AddRange(Super ?? false
-                        ? (IEnumerable<IAccessIdentity>)Schema.GetTable<UserGroup>()
-                        : access.Items.Where(p => p.Create).Select(p => p.Identity));
+                    FillCache();
                 }
                 return identities;
             }
         }
-
+        private void FillCache()
+        {
+            identities.Clear();
+            identities.Add(this);
+            foreach (var group in Super ?? false
+                ? (IEnumerable<IAccessIdentity>)Schema.GetTable<UserGroup>()
+                : cacheAccess.Items.Where(p => p.Create).Select(p => p.Identity))
+            {
+                identities.Add(group);
+            }
+        }
         public override void Dispose()
         {
             base.Dispose();

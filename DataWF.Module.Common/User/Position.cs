@@ -8,7 +8,7 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Common
 {
 
-    [Table("rposition", "User"), InvokerGenerator]
+    [Table("rposition", "User")]
     public sealed partial class Position : DBGroupItem
     {
         private Department department;
@@ -22,36 +22,36 @@ namespace DataWF.Module.Common
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(PositionTable.IdKey);
-            set => SetValue(value, PositionTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(PositionTable.CompanyIdKey);
-            set => SetValue(value, PositionTable.CompanyIdKey);
+            get => GetValue<int?>(Table.CompanyIdKey);
+            set => SetValue(value, Table.CompanyIdKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(PositionTable.CompanyIdKey, ref company);
-            set => SetReference(company = value, PositionTable.CompanyIdKey);
+            get => GetReference(Table.CompanyIdKey, ref company);
+            set => SetReference(company = value, Table.CompanyIdKey);
         }
 
         [Column("department_id"), Index("rposition_department_id"), Browsable(false)]
         public int? DepartmentId
         {
-            get => GetValue<int?>(PositionTable.DepartmentIdKey);
-            set => SetValue(value, PositionTable.DepartmentIdKey);
+            get => GetValue<int?>(Table.DepartmentIdKey);
+            set => SetValue(value, Table.DepartmentIdKey);
         }
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get => GetReference(PositionTable.DepartmentIdKey, ref department);
-            set => SetReference(department = value, PositionTable.DepartmentIdKey);
+            get => GetReference(Table.DepartmentIdKey, ref department);
+            set => SetReference(department = value, Table.DepartmentIdKey);
         }
 
         [Column("parent_id", Keys = DBColumnKeys.Group), Index("rposition_parent_id"), Browsable(false)]
@@ -72,15 +72,15 @@ namespace DataWF.Module.Common
         [Index("rposition_code", true)]
         public string Code
         {
-            get => GetValue<string>(PositionTable.CodeKey);
-            set => SetValue(value, PositionTable.CodeKey);
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(PositionTable.ExternalIdKey);
-            set => SetValue(value, PositionTable.ExternalIdKey);
+            get => GetValue<int?>(Table.ExternalIdKey);
+            set => SetValue(value, Table.ExternalIdKey);
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
@@ -93,15 +93,15 @@ namespace DataWF.Module.Common
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(PositionTable.NameENKey);
-            set => SetValue(value, PositionTable.NameENKey);
+            get => GetValue<string>(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(PositionTable.NameRUKey);
-            set => SetValue(value, PositionTable.NameRUKey);
+            get => GetValue<string>(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         public override AccessValue Access

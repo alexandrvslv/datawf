@@ -22,7 +22,7 @@ using DataWF.Common;
 
 namespace DataWF.Data
 {
-    [AbstractTable, InvokerGenerator]
+    [AbstractTable]
     public abstract partial class DBUserReg : DBGroupItem, IUserReg
     {
         private DBUser dbUser;
@@ -33,22 +33,22 @@ namespace DataWF.Data
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(DBUserRegTable.IdKey);
-            set => SetValue(value, DBUserRegTable.IdKey);
+            get => GetValue<long>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("user_id", Keys = DBColumnKeys.View)]
         public int? UserId
         {
-            get => GetValue<int?>(DBUserRegTable.UserIdKey);
-            set => SetValue(value, DBUserRegTable.UserIdKey);
+            get => GetValue<int?>(Table.UserIdKey);
+            set => SetValue(value, Table.UserIdKey);
         }
 
         [Reference(nameof(UserId))]
         public virtual DBUser DBUser
         {
-            get => GetReference(DBUserRegTable.UserIdKey, ref dbUser);
-            set => SetReference(dbUser = value, DBUserRegTable.UserIdKey);
+            get => GetReference(Table.UserIdKey, ref dbUser);
+            set => SetReference(dbUser = value, Table.UserIdKey);
         }
 
         IUserIdentity IUserReg.UserIdentity => DBUser;

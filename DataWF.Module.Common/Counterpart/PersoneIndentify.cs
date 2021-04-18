@@ -20,51 +20,51 @@ namespace DataWF.Module.Counterpart
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(PersoneIdentifyTable.IdKey);
-            set => SetValue(value, PersoneIdentifyTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [Column("persone_id")]
         public int? PersoneId
         {
-            get => GetValue<int?>(PersoneIdentifyTable.PersoneIdKey);
-            set => SetValue(value, PersoneIdentifyTable.PersoneIdKey);
+            get => GetValue<int?>(Table.PersoneIdKey);
+            set => SetValue(value, Table.PersoneIdKey);
         }
 
         [Reference(nameof(PersoneId))]
         public Persone Persone
         {
-            get => GetReference(PersoneIdentifyTable.PersoneIdKey, ref persone);
-            set => SetReference(persone = value, PersoneIdentifyTable.PersoneIdKey);
+            get => GetReference(Table.PersoneIdKey, ref persone);
+            set => SetReference(persone = value, Table.PersoneIdKey);
         }
 
         [Column("identify_number", 30)]
         public string Number
         {
-            get => GetValue<string>(PersoneIdentifyTable.NumberKey);
-            set => SetValue(value, PersoneIdentifyTable.NumberKey);
+            get => GetValue<string>(Table.NumberKey);
+            set => SetValue(value, Table.NumberKey);
         }
 
         [Column("date_issue")]
         public DateTime? DateIssue
         {
-            get => GetValue<DateTime?>(PersoneIdentifyTable.DateIssueKey);
-            set => SetValue(value, PersoneIdentifyTable.DateIssueKey);
+            get => GetValue<DateTime?>(Table.DateIssueKey);
+            set => SetValue(value, Table.DateIssueKey);
         }
 
         [Column("date_expire")]
         public DateTime? DateExpire
         {
-            get => GetValue<DateTime?>(PersoneIdentifyTable.DateExpireKey);
-            set => SetValue(value, PersoneIdentifyTable.DateExpireKey);
+            get => GetValue<DateTime?>(Table.DateExpireKey);
+            set => SetValue(value, Table.DateExpireKey);
         }
 
         [Column("issued_by")]
         public string IssuedBy
         {
-            get => GetValue<string>(PersoneIdentifyTable.IssuedByKey);
-            set => SetValue(value, PersoneIdentifyTable.IssuedByKey);
+            get => GetValue<string>(Table.IssuedByKey);
+            set => SetValue(value, Table.IssuedByKey);
         }
     }
 

@@ -20,8 +20,8 @@ namespace DataWF.Module.Flow
         [Column("procedure_type")]
         public StageParamProcudureType? ProcedureType
         {
-            get => GetValue<StageParamProcudureType?>(StageProcedureTable.ProcedureTypeKey);
-            set => SetValue(value, StageProcedureTable.ProcedureTypeKey);
+            get => GetValue<StageParamProcudureType?>(Table.ProcedureTypeKey);
+            set => SetValue(value, Table.ProcedureTypeKey);
         }
     }
 }

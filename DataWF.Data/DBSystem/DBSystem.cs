@@ -804,7 +804,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
             return command.ToString();
         }
 
-        public virtual void FormatInsert(StringBuilder command, DBTable table, DBItem row = null)
+        public virtual void FormatInsert(StringBuilder command, IDBTable table, DBItem row = null)
         {
             var id = $"{ParameterPrefix}{table.PrimaryKey?.SqlName}";
             if (table.PrimaryKey != null && row != null && row.UpdateState == DBUpdateState.Insert && table.PrimaryKey.IsEmpty(row))
@@ -814,7 +814,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
             FormatInsert(command, table, id, row);
         }
 
-        public virtual void FormatInsert(StringBuilder command, DBTable table, string id, DBItem row = null)
+        public virtual void FormatInsert(StringBuilder command, IDBTable table, string id, DBItem row = null)
         {
             command.AppendFormat("insert into {0}(", table.SqlName);
             foreach (var column in table.Columns)

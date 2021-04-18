@@ -22,37 +22,37 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(StageParamTable.IdKey);
-            set => SetValue(value, StageParamTable.IdKey);
+            get => GetValue<int>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [Column("stage_id")]
         public int? StageId
         {
-            get => GetValue<int?>(StageParamTable.StageIdKey);
-            set => SetValue(value, StageParamTable.StageIdKey);
+            get => GetValue<int?>(Table.StageIdKey);
+            set => SetValue(value, Table.StageIdKey);
         }
 
         [Reference(nameof(StageId))]
         public Stage Stage
         {
-            get => GetReference(StageParamTable.StageIdKey, ref stage);
-            set => SetReference(stage = value, StageParamTable.StageIdKey);
+            get => GetReference(Table.StageIdKey, ref stage);
+            set => SetReference(stage = value, Table.StageIdKey);
         }
 
         [Column("code", 1024)]
         public string ParamCode
         {
-            get => GetValue<string>(StageParamTable.ParamCodeKey);
-            set => SetValue(value, StageParamTable.ParamCodeKey);
+            get => GetValue<string>(Table.ParamCodeKey);
+            set => SetValue(value, Table.ParamCodeKey);
         }
 
         [Column("name", 1024)]
         public string Name
         {
-            get => GetValue<string>(StageParamTable.NameKey);
-            set => SetValue(value, StageParamTable.NameKey);
+            get => GetValue<string>(Table.NameKey);
+            set => SetValue(value, Table.NameKey);
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -133,8 +133,8 @@ namespace DataWF.Module.Flow
         [Column("is_next")]
         public bool? Next
         {
-            get => GetValue<bool?>(StageReferenceTable.NextKey);
-            set => SetValue(value, StageReferenceTable.NextKey);
+            get => GetValue<bool?>(Table.NextKey);
+            set => SetValue(value, Table.NextKey);
         }
     }
 

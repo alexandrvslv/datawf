@@ -17,15 +17,15 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("message_id")]
         public long? MessageId
         {
-            get => GetValue<long?>(MessageDetailTable.MessageIdKey);
-            set => SetValue(value, MessageDetailTable.MessageIdKey);
+            get => GetValue<long?>(Table.MessageIdKey);
+            set => SetValue(value, Table.MessageIdKey);
         }
 
         [Reference(nameof(MessageId))]
         public Message Message
         {
-            get { return GetReference(MessageDetailTable.MessageIdKey, ref message); }
-            set { SetReference((message = value), MessageDetailTable.MessageIdKey); }
+            get => GetReference(Table.MessageIdKey, ref message);
+            set => SetReference((message = value), Table.MessageIdKey);
         }
     }
 }

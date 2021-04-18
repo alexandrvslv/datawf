@@ -9,14 +9,14 @@ namespace DataWF.Module.Common
     public class UserRegItem
     {
         private DBLogItem cacheLogItem;
-        private DBTable cacheTargetTable;
+        private IDBTable cacheTargetTable;
         private DBItem cacheTarget;
 
         [Browsable(false)]
         public string TableName { get; set; }
 
         [XmlIgnore]
-        public DBTable Table
+        public IDBTable Table
         {
             get => cacheTargetTable ?? (cacheTargetTable = DBService.Schems.ParseTable(TableName));
             set

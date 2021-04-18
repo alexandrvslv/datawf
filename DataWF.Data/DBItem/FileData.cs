@@ -33,43 +33,43 @@ namespace DataWF.Data
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(FileDataTable.IdKey);
-            set => SetValue(value, FileDataTable.IdKey);
+            get => GetValue<long>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("file_data", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
-            get => GetValue<byte[]>(FileDataTable.DataKey);
-            set => SetValue(value, FileDataTable.DataKey);
+            get => GetValue<byte[]>(Table.DataKey);
+            set => SetValue(value, Table.DataKey);
         }
 
         [Column("file_size")]
         public int? Size
         {
-            get => GetValue<int?>(FileDataTable.SizeKey);
-            set => SetValue(value, FileDataTable.SizeKey);
+            get => GetValue<int?>(Table.SizeKey);
+            set => SetValue(value, Table.SizeKey);
         }
 
         [Column("file_hash", size: 256)]
         public byte[] Hash
         {
-            get => GetValue<byte[]>(FileDataTable.HashKey);
-            set => SetValue(value, FileDataTable.HashKey);
+            get => GetValue<byte[]>(Table.HashKey);
+            set => SetValue(value, Table.HashKey);
         }
 
         [Column("file_storage")]
         public FileStorage Storage
         {
-            get => GetValue<FileStorage>(FileDataTable.StorageKey);
-            set => SetValue(value, FileDataTable.StorageKey);
+            get => GetValue<FileStorage>(Table.StorageKey);
+            set => SetValue(value, Table.StorageKey);
         }
 
         [Column("file_path", size: 2048)]
         public string Path
         {
-            get => GetValue<string>(FileDataTable.PathKey);
-            set => SetValue(value, FileDataTable.PathKey);
+            get => GetValue<string>(Table.PathKey);
+            set => SetValue(value, Table.PathKey);
         }
     }
 }

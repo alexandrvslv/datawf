@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Counterpart
 {
-    [Table("dcustomer_reference", "Customer", Type = typeof(CustomerReferenceTable)), InvokerGenerator]
+    [Table("dcustomer_reference", "Customer", Type = typeof(CustomerReferenceTable))]
     public sealed partial class CustomerReference : DBItem
     {
         private Company company;
@@ -18,40 +18,40 @@ namespace DataWF.Module.Counterpart
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(CustomerReferenceTable.IdKey);
-            set => SetValue(value, CustomerReferenceTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [Column("company_id")]
         public int? CompanyId
         {
-            get => GetValue<int?>(CustomerReferenceTable.CompanyIdKey);
-            set => SetValue(value, CustomerReferenceTable.CompanyIdKey);
+            get => GetValue<int?>(Table.CompanyIdKey);
+            set => SetValue(value, Table.CompanyIdKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(CustomerReferenceTable.CompanyIdKey, ref company);
-            set => SetReference(company = value, CustomerReferenceTable.CompanyIdKey);
+            get => GetReference(Table.CompanyIdKey, ref company);
+            set => SetReference(company = value, Table.CompanyIdKey);
         }
 
         [Browsable(false)]
         [Column("persone_id")]
         public int? PersoneId
         {
-            get => GetValue<int?>(CustomerReferenceTable.PersoneIdKey);
-            set => SetValue(value, CustomerReferenceTable.PersoneIdKey);
+            get => GetValue<int?>(Table.PersoneIdKey);
+            set => SetValue(value, Table.PersoneIdKey);
         }
 
         [Reference(nameof(PersoneId))]
         public Persone Persone
         {
-            get => GetReference(CustomerReferenceTable.PersoneIdKey, ref persone);
+            get => GetReference(Table.PersoneIdKey, ref persone);
             set
             {
-                SetReference(persone = value, CustomerReferenceTable.PersoneIdKey);
+                SetReference(persone = value, Table.PersoneIdKey);
                 if (EMail == null)
                 {
                     EMail = Persone.EMail;
@@ -63,22 +63,22 @@ namespace DataWF.Module.Counterpart
         [Column("email", 1024)]
         public string EMail
         {
-            get => GetValue<string>(CustomerReferenceTable.EMailKey);
-            set => SetValue(value, CustomerReferenceTable.EMailKey);
+            get => GetValue<string>(Table.EMailKey);
+            set => SetValue(value, Table.EMailKey);
         }
 
         [Column("phone", 1024)]
         public string Phone
         {
-            get => GetValue<string>(CustomerReferenceTable.PhoneKey);
-            set => SetValue(value, CustomerReferenceTable.PhoneKey);
+            get => GetValue<string>(Table.PhoneKey);
+            set => SetValue(value, Table.PhoneKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(CustomerReferenceTable.ExternalIdKey);
-            set => SetValue(value, CustomerReferenceTable.ExternalIdKey);
+            get => GetValue<int?>(Table.ExternalIdKey);
+            set => SetValue(value, Table.ExternalIdKey);
         }
     }
 

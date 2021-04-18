@@ -4,7 +4,7 @@ using System;
 namespace DataWF.Test.Data
 {
     [Table(TestORM.TestColumnsTableName, "Default")]
-    public class TestColumns : DBItem
+    public partial class TestColumns : DBItem
     {
         public TestColumns(DBTable table) : base(table)
         {

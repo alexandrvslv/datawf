@@ -4,7 +4,7 @@ using DataWF.Common;
 
 namespace DataWF.Module.Counterpart
 {
-    [ItemType((int)Counterpart.LocationType.Country), InvokerGenerator]
+    [ItemType((int)Counterpart.LocationType.Country)]
     public sealed partial class Country : Location
     {
         public Country(DBTable table) : base(table)

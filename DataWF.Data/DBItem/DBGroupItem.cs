@@ -189,14 +189,14 @@ namespace DataWF.Data
 
         public IEnumerable<DBGroupItem> GetSubGroups(DBLoadParam param)
         {
-            if (table.PrimaryKey.IsEmpty(this))
+            if (Table.PrimaryKey.IsEmpty(this))
                 return Enumerable.Empty<DBGroupItem>();
             return GetReferencing(Table.GroupKey, param).Cast<DBGroupItem>();
         }
 
         public IEnumerable<T> GetSubGroups<T>(DBLoadParam param) where T : DBGroupItem
         {
-            if (table.PrimaryKey.IsEmpty(this))
+            if (Table.PrimaryKey.IsEmpty(this))
                 return Enumerable.Empty<T>();
             return GetReferencing<T>(Table.GroupKey, param);
         }

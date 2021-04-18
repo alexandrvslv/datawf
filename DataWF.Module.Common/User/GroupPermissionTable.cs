@@ -55,7 +55,7 @@ namespace DataWF.Module.Common
 
         public async Task<GroupPermission> Get(GroupPermission group, DBSchemaItem item)
         {
-            PermissionType type = GetPermissionType(item, out string code, out string name);
+            PermissionType type = GetPermission(item, out string code, out string name);
 
             var list = Select(CodeKey, CompareType.Equal, code).ToList();
 
@@ -94,12 +94,12 @@ namespace DataWF.Module.Common
 
             foreach (var subGroup in group.GetChilds())
             {
-                await CachePermissionTableGroup(permission, subGroup);
+                await CachePermission(permission, subGroup);
             }
             var tables = group.GetTables();
             foreach (DBTable table in tables)
             {
-                await CachePermissionTable(permission, table);
+                await CachePermission(permission, table);
             }
         }
 
@@ -133,7 +133,7 @@ namespace DataWF.Module.Common
 
         public async Task CachePermission(DBTransaction transaction)
         {
-            if (AccessValue.Groups == null || AccessValue.Groups.Count() == 0)
+            if (AccessValue.Provider == null || !AccessValue.Provider.GetGroups().Any())
                 return;
 
             foreach (DBSchema schema in DBService.Schems)

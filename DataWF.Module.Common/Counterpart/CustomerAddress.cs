@@ -13,7 +13,7 @@ namespace DataWF.Module.Counterpart
     }
 
     [Table("dcustomer_address", "Customer", BlockSize = 100, Type = typeof(CustomerAddressTable))]
-    public sealed class CustomerAddress : DBItem
+    public sealed partial class CustomerAddress : DBItem
     {
         private Address address;
         private Customer customer;
@@ -25,38 +25,38 @@ namespace DataWF.Module.Counterpart
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(CustomerAddressTable.IdKey);
-            set => SetValue(value, CustomerAddressTable.IdKey);
+            get => GetValue<int?>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [Column("customer_id")]
         public int? CustomerId
         {
-            get => GetValue<int?>(CustomerAddressTable.CustomerIdKey);
-            set => SetValue(value, CustomerAddressTable.CustomerIdKey);
+            get => GetValue<int?>(Table.CustomerIdKey);
+            set => SetValue(value, Table.CustomerIdKey);
         }
 
         [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get => GetReference(CustomerAddressTable.CustomerIdKey, ref customer);
-            set => SetReference(customer = value, CustomerAddressTable.CustomerIdKey);
+            get => GetReference(Table.CustomerIdKey, ref customer);
+            set => SetReference(customer = value, Table.CustomerIdKey);
         }
 
         [Browsable(false)]
         [Column("address_id")]
         public int? AddressId
         {
-            get => GetValue<int?>(CustomerAddressTable.AddressIdKey);
-            set => SetValue(value, CustomerAddressTable.AddressIdKey);
+            get => GetValue<int?>(Table.AddressIdKey);
+            set => SetValue(value, Table.AddressIdKey);
         }
 
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get => GetReference(CustomerAddressTable.AddressIdKey, ref address);
-            set => SetReference(address = value, CustomerAddressTable.AddressIdKey);
+            get => GetReference(Table.AddressIdKey, ref address);
+            set => SetReference(address = value, Table.AddressIdKey);
         }
     }
 }

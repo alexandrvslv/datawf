@@ -18,22 +18,22 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(DocumentCustomerTable.IdKey);
-            set => SetValue(value, DocumentCustomerTable.IdKey);
+            get => GetValue<long>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [Column("customer_id", Keys = DBColumnKeys.View)]
         public int? CustomerId
         {
-            get => GetValue<int?>(DocumentCustomerTable.CustomerIdKey);
-            set => SetValue(value, DocumentCustomerTable.CustomerIdKey);
+            get => GetValue<int?>(Table.CustomerIdKey);
+            set => SetValue(value, Table.CustomerIdKey);
         }
 
         [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get => GetReference(DocumentCustomerTable.CustomerIdKey, ref customer);
+            get => GetReference(Table.CustomerIdKey, ref customer);
             set
             {
                 SetReference(customer = value, DocumentCustomerTable.CustomerIdKey);
@@ -47,29 +47,29 @@ namespace DataWF.Module.Flow
         [Column("address_id")]
         public int? AddressId
         {
-            get => GetValue<int?>(DocumentCustomerTable.AddressIdKey);
-            set => SetValue(value, DocumentCustomerTable.AddressIdKey);
+            get => GetValue<int?>(Table.AddressIdKey);
+            set => SetValue(value, Table.AddressIdKey);
         }
 
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get => GetReference(DocumentCustomerTable.AddressIdKey, ref address);
-            set => SetReference(address = value, DocumentCustomerTable.AddressIdKey);
+            get => GetReference(Table.AddressIdKey, ref address);
+            set => SetReference(address = value, Table.AddressIdKey);
         }
 
         [Column("email", 1024)]
         public string EMail
         {
-            get => GetValue<string>(DocumentCustomerTable.EMailKey);
-            set => SetValue(value, DocumentCustomerTable.EMailKey);
+            get => GetValue<string>(Table.EMailKey);
+            set => SetValue(value, Table.EMailKey);
         }
 
         [Column("phone", 1024)]
         public string Phone
         {
-            get => GetValue<string>(DocumentCustomerTable.PhoneKey);
-            set => SetValue(value, DocumentCustomerTable.PhoneKey);
+            get => GetValue<string>(Table.PhoneKey);
+            set => SetValue(value, Table.PhoneKey);
         }
 
         protected override void RaisePropertyChanged(string property)

@@ -38,7 +38,7 @@ namespace DataWF.Data
 {
     [ElementSerializer(typeof(DBItemSerializer))]
     [InvokerGenerator]
-    public partial class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IDBTableContent, IPullHandler
+    public partial class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IPullHandler
     {
         public static readonly DBItem EmptyItem = new DBItem(null) { cacheToString = "Loading" };
 
@@ -203,18 +203,18 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual DBSchema Schema
         {
-            get => table.Schema;
+            get => Table.Schema;
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual DBTable Table
+        public IDBTable Table
         {
             get => table;
             set
             {
                 if (table != value)
                 {
-                    table = value.GetVirtualTable(GetType());
+                    table = (DBTable)value.GetVirtualTable(GetType());
                     handler = table.GetNextHandler();
                 }
             }
@@ -1019,7 +1019,7 @@ namespace DataWF.Data
                 if (column.Pull != null)
                     column.Clear(handler);
             }
-            Table.FreeHandlers.Enqueue(handler);
+            table.FreeHandlers.Enqueue(handler);
         }
 
         public Task Save()
@@ -1090,9 +1090,9 @@ namespace DataWF.Data
         {
             var rez = new StringBuilder();
             rez.AppendLine($"if exists(select * from {Table.Name} where {Table.PrimaryKey.SqlName}={Table.PrimaryKey.FormatQuery(this)})");
-            rez.AppendLine("    " + Table.System.FormatCommand(Table, DBCommandTypes.Update, this) + ";");
+            rez.AppendLine("    " + Table.System.FormatCommand(table, DBCommandTypes.Update, this) + ";");
             rez.AppendLine("else");
-            rez.AppendLine("    " + Table.System.FormatCommand(Table, DBCommandTypes.Insert, this) + ";");
+            rez.AppendLine("    " + Table.System.FormatCommand(table, DBCommandTypes.Insert, this) + ";");
             rez.AppendLine();
             return rez.ToString();
         }
@@ -1529,7 +1529,7 @@ namespace DataWF.Data
 
         public async Task<Stream> GetStream(DBTransaction transaction, int bufferSize = 81920)
         {
-            if (Table.FileOIDKey != null && GetValue(table.FileOIDKey) != null)
+            if (!(Table.FileOIDKey?.IsEmpty(this) ?? true))
             {
                 return await GetBlob(Table.FileOIDKey, transaction);
             }

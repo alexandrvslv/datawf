@@ -4,40 +4,39 @@ using System;
 namespace DataWF.Test.Data
 {
     [Table(TestORM.FileTableName, "Files")]
-    public sealed class FileStore : DBItem
+    public sealed partial class FileStore : DBItem
     {
         public FileStore(DBTable table) : base(table)
         {
         }
 
-        public FileStoreTable FileStoreTable => (FileStoreTable)Table;
 
         [Column("id", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(FileStoreTable.IdKey);
-            set => SetValue(value, FileStoreTable.IdKey);
+            get => GetValue<int>(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Column("file_ref", Keys = DBColumnKeys.FileOID)]
         public long? FileRef
         {
-            get => GetValue<long?>(FileStoreTable.FileRefKey);
-            set => SetValue(value, FileStoreTable.FileRefKey);
+            get => GetValue<long?>(Table.FileRefKey);
+            set => SetValue(value, Table.FileRefKey);
         }
 
         [Column("file_name", 2048, Keys = DBColumnKeys.FileName)]
         public string FileName
         {
-            get => GetValue<string>(FileStoreTable.FileNameKey);
-            set => SetValue(value, FileStoreTable.FileNameKey);
+            get => GetValue<string>(Table.FileNameKey);
+            set => SetValue(value, Table.FileNameKey);
         }
 
         [Column("file_last_write", Keys = DBColumnKeys.FileLastWrite | DBColumnKeys.UtcDate)]
         public DateTime? FileLastWrite
         {
-            get => GetValue<DateTime?>(FileStoreTable.FileLastWriteKey);
-            set => SetValue(value, FileStoreTable.FileLastWriteKey);
+            get => GetValue<DateTime?>(Table.FileLastWriteKey);
+            set => SetValue(value, Table.FileLastWriteKey);
         }
     }
 }

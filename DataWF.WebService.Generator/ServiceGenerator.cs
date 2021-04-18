@@ -135,6 +135,10 @@ namespace DataWF.WebService.Generator
                 tableType = context.Compilation.GetTypeByMetadataName($"{typeNamespace}.{tableTypeName}`1");
                 tableIsGeneric = true;
             }
+            if (tableType == null)
+            {
+                return;
+            }
             var tableDeclareType = $"{tableType.Name}{(tableIsGeneric ? "<T>" : string.Empty)}";
 
             var keyType = "K";

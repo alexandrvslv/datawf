@@ -71,7 +71,7 @@ namespace DataWF.Data
             }
         }
 
-        public SRTable GetSRTable(DBTable table) => Tables.SelectOne(nameof(SRTable.Table), table);
+        public SRTable GetSRTable(IDBTable table) => Tables.SelectOne(nameof(SRTable.Table), (DBTable)table);
         
     }
 

@@ -43,6 +43,7 @@ namespace DataWF.Data
         DBColumn<int> ItemTypeKey { get; }
         DBColumn PrimaryKey { get; }
         DBColumn<DateTime> StampKey { get; }
+        DBColumn<DateTime?> ReplicateStampKey { get; }
         DBColumn<DBStatus> StatusKey { get; }
         DBSystem System { get; }
         int BlockSize { get; set; }
@@ -87,6 +88,11 @@ namespace DataWF.Data
         string BuildQuery(string whereFilter, string alias, IEnumerable<DBColumn> cols, string function = null);
         DBColumn CheckColumn(string name, Type type, ref bool newCol);
         void CheckColumns(DBTransaction transaction);
+
+        IEnumerable<DBColumn> GetTypeColumns<T>();
+        IEnumerable<DBColumn> GetTypeColumns(Type t);
+        IEnumerable<DBColumn> GetRefColumns();
+        IEnumerable<DBReferencing> GetPropertyReferencing(Type type);
         IDbCommand CreatePrimaryKeyCommmand(object id, IEnumerable<DBColumn> cols = null);
         IDBTableView CreateItemsView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
         string CreateQuery(string whereText, string alias, IEnumerable<DBColumn> cols = null);
@@ -97,6 +103,8 @@ namespace DataWF.Data
         void GenerateDefaultColumns();
         IDBLogTable GenerateLogTable();
         DBSequence GenerateSequence(string sequenceName = null);
+        long GenerateId(DBTransaction transaction);
+        DBTable GetVirtualTable(Type type);
         void GetAllChildTables(List<DBTable> parents);
         void GetAllParentTables(List<DBTable> parents);
         IEnumerable<DBItem> GetChangedItems();
@@ -122,6 +130,7 @@ namespace DataWF.Data
         void LoadFile(string fileName);
         DBItem LoadItemByCode(string code, DBColumn<string> column, DBLoadParam param, DBTransaction transaction = null);
         DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
+        List<DBItem> LoadItemsById(List<string> ids, DBTransaction transaction);
         DBItem LoadItemById<K>(K? id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null) where K : struct;
         DBItem LoadItemByKey(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
         DBItem LoadItemByKey<K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
@@ -140,6 +149,7 @@ namespace DataWF.Data
         void OnItemChanging<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
         void OnUpdated(DBItemEventArgs e);
         bool OnUpdating(DBItemEventArgs e);
+        bool IsSerializeableColumn(DBColumn column, Type type);
         DBColumn ParseColumn(string name);
         DBColumn ParseColumnProperty(string property);
         IEnumerable<DBColumn> ParseColumns(ICollection<string> columns);

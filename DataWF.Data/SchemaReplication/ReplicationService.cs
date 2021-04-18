@@ -81,20 +81,9 @@ namespace DataWF.Data
             }, false);
         }
 
-        private async Task Synch()
+        public async Task Synch()
         {
-            if (!(Settings.Instance.Active ?? false))
-            {
-                loginEvent.Reset();
-                await Broadcast(new SMRequest
-                {
-                    Id = SMBase.NewId(),
-                    EndPoint = Point,
-                    RequestType = SMRequestType.Login,
-                    Data = "Hi"
-                }, true);
-                loginEvent.Wait();
-            }
+            await SignIn();
             foreach (var schema in Settings.Schems)
             {
                 schema.Initialize();
@@ -105,6 +94,22 @@ namespace DataWF.Data
                 {
                     await Synch(instance);
                 }
+            }
+        }
+
+        public async Task SignIn()
+        {
+            if (Settings.Instance.Active == false)
+            {
+                loginEvent.Reset();
+                await Broadcast(new SMRequest
+                {
+                    Id = SMBase.NewId(),
+                    EndPoint = Point,
+                    RequestType = SMRequestType.Login,
+                    Data = "Hi"
+                }, true);
+                loginEvent.Wait();
             }
         }
 
@@ -153,7 +158,7 @@ namespace DataWF.Data
             return default(ValueTask);
         }
 
-        private bool CheckTable(DBTable table)
+        private bool CheckTable(IDBTable table)
         {
             var srSchema = Settings.GetSchema(table.Schema);
             if (srSchema == null)
