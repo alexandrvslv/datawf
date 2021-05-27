@@ -30,15 +30,20 @@ namespace DataWF.Data
     public class DBColumnList<T> : DBTableItemList<T> where T : DBColumn
     {
         private HashSet<DBColumn> toReplace = new HashSet<DBColumn>();
+        private IListIndex<T, string> groupNameIndex;
+        private IListIndex<T, string> propertyNameIndex;
+        private IListIndex<T, string> refPropertyNameIndex;
+        private IListIndex<T, bool> isViewIndex;
+        private IListIndex<T, bool> isReferenceIndex;
 
         public DBColumnList(DBTable table)
             : base(table)
         {
-            Indexes.Add(DBColumn.GroupNameInvoker.Instance);
-            Indexes.Add(DBColumn.PropertyNameInvoker.Instance);
-            Indexes.Add(DBColumn.ReferencePropertyNameInvoker.Instance);
-            Indexes.Add(DBColumn.IsViewInvoker.Instance);
-            Indexes.Add(DBColumn.IsReferenceInvoker.Instance);
+            groupNameIndex = Indexes.Add(DBColumn.GroupNameInvoker.Instance);
+            propertyNameIndex = Indexes.Add(DBColumn.PropertyNameInvoker.Instance);
+            refPropertyNameIndex = Indexes.Add(DBColumn.ReferencePropertyNameInvoker.Instance);
+            isViewIndex = Indexes.Add(DBColumn.IsViewInvoker.Instance);
+            isReferenceIndex = Indexes.Add(DBColumn.IsReferenceInvoker.Instance);
             //Indexes.Add(DBColumn.ReferenceTableInvoker<T>.Instance);
         }
 
@@ -169,7 +174,7 @@ namespace DataWF.Data
 
         public IEnumerable<DBColumn> GetByGroup(string groupName)
         {
-            return string.IsNullOrEmpty(groupName) ? null : Select(DBColumn.GroupNameInvoker.Instance, CompareType.Equal, groupName);
+            return string.IsNullOrEmpty(groupName) ? null : groupNameIndex.Scan(CompareType.Equal, groupName);
         }
 
         public IEnumerable<DBColumn> GetByReference(DBTable table)
@@ -179,17 +184,17 @@ namespace DataWF.Data
 
         public IEnumerable<DBColumn> GetIsReference()
         {
-            return Select(DBColumn.IsReferenceInvoker.Instance, CompareType.Equal, true);
+            return isReferenceIndex.Scan(CompareType.Equal, true);
         }
 
         public IEnumerable<DBColumn> GetIsView()
         {
-            return Select(DBColumn.IsViewInvoker.Instance, CompareType.Equal, true);
+            return isViewIndex.Scan(CompareType.Equal, true);
         }
 
         public DBColumn GetByProperty(string property)
         {
-            var columns = Select(DBColumn.PropertyNameInvoker.Instance, CompareType.Equal, property);
+            var columns = propertyNameIndex.Scan(CompareType.Equal, property);
             return columns.FirstOrDefault(p => p.Culture == null
                                             || !string.Equals(property, p.GroupName, StringComparison.Ordinal)
                                             || p.Culture == Locale.Instance.Culture);
@@ -197,7 +202,7 @@ namespace DataWF.Data
 
         public DBColumn GetByReferenceProperty(string property)
         {
-            return Select(DBColumn.ReferencePropertyNameInvoker.Instance, CompareType.Equal, property).FirstOrDefault();
+            return refPropertyNameIndex.SelectOne(property);
         }
 
         public DBColumn GetByKey(DBColumnKeys key)

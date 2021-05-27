@@ -19,37 +19,41 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Data
 {
     public class DBForeignList : DBConstraintList<DBForeignKey>
     {
+        private IListIndex<DBForeignKey, string> propertyIndex;
+        private IListIndex<DBForeignKey, string> referenceNameIndex;
+        private IListIndex<DBForeignKey, string> referenceTableNameIndex;
 
         public DBForeignList(DBTable table) : base(table)
         {
-            Indexes.Add(DBForeignKey.ReferenceNameInvoker.Instance);
-            Indexes.Add(DBForeignKey.ReferenceTableNameInvoker.Instance);
-            Indexes.Add(DBForeignKey.PropertyInvoker.Instance);
+            referenceNameIndex = Indexes.Add(DBForeignKey.ReferenceNameInvoker.Instance);
+            referenceTableNameIndex = Indexes.Add(DBForeignKey.ReferenceTableNameInvoker.Instance);
+            propertyIndex = Indexes.Add(DBForeignKey.PropertyInvoker.Instance);
         }
 
         public DBForeignKey GetForeignByColumn(DBColumn column)
         {
-            return SelectOne(nameof(DBForeignKey.ColumnName), CompareType.Equal, column.FullName);
+            return columnNameIndex.SelectOne(column);
         }
 
         public DBForeignKey GetByProperty(string property)
         {
-            return SelectOne(nameof(DBForeignKey.Property), CompareType.Equal, property);
+            return propertyIndex.SelectOne(property);
         }
 
         public IEnumerable<DBForeignKey> GetByReference(DBColumn reference)
         {
-            return Select(DBForeignKey.ReferenceNameInvoker.Instance, CompareType.Equal, reference.FullName);
+            return referenceNameIndex.Scan(CompareType.Equal, reference.FullName);
         }
 
         public IEnumerable<DBForeignKey> GetByReference(DBTable reference)
         {
-            return Select(DBForeignKey.ReferenceTableNameInvoker.Instance, CompareType.Equal, reference.FullName);
+            return referenceTableNameIndex.Scan(CompareType.Equal, reference.FullName);
         }
 
         public DBForeignKey GetByColumns(DBColumn column, DBColumn reference)

@@ -26,20 +26,21 @@ namespace DataWF.Data
 {
     public class DBConstraintList<T> : DBTableItemList<T> where T : DBConstraint, new()
     {
+        protected IListIndex<T, string> columnNameIndex;
 
         public DBConstraintList(DBTable table) : base(table)
         {
-            Indexes.Add(DBConstraint.ColumnNameInvoker.Instance);
+            columnNameIndex = Indexes.Add(DBConstraint.ColumnNameInvoker.Instance);
         }
 
         public IEnumerable<T> GetByColumn(DBColumn column)
         {
-            return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName);
+            return columnNameIndex.Scan(CompareType.Equal, column.FullName);
         }
 
         public IEnumerable<T> GetByColumnAndType(DBColumn column, DBConstraintType type)
         {
-            return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName).Where(p => p.Type == type);
+            return columnNameIndex.Scan(CompareType.Equal, column.FullName).Where(p => p.Type == type);
         }
 
         public IEnumerable<T> GetByValue(string value)

@@ -25,6 +25,7 @@ namespace DataWF.Data
 {
     public class DBTableList : DBSchemaItemList<DBTable>
     {
+        private IListIndex<DBTable, string> itemTypeNameIndex;
 
         public DBTableList() : this(null)
         { }
@@ -32,7 +33,7 @@ namespace DataWF.Data
         public DBTableList(DBSchema schema) : base(schema)
         {
             Indexes.Add(DBTable.GroupNameInvoker.Instance);
-            Indexes.Add(DBTable.ItemTypeNameInvoker.Instance);
+            itemTypeNameIndex = Indexes.Add(DBTable.ItemTypeNameInvoker.Instance);
             ApplyDefaultSort();
         }
 
@@ -43,7 +44,7 @@ namespace DataWF.Data
 
         public DBTable GetByTypeName(string name)
         {
-            return SelectOne(nameof(DBTable.ItemTypeName), CompareType.Equal, name);
+            return itemTypeNameIndex.SelectOne(name);
         }
 
         public override int AddInternal(DBTable item)

@@ -266,7 +266,8 @@ namespace DataWF.Common
                         {
                             if (index.TryGetValue(CheckNull(inItem), out var value))
                             {
-
+                                foreach (T item in value)
+                                    yield return item;
                             }
                         }
                     }

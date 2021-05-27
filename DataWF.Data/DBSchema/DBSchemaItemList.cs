@@ -30,6 +30,8 @@ namespace DataWF.Data
 {
     public class DBSchemaItemList<T> : SelectableList<T> where T : DBSchemaItem
     {
+        private IListIndex<T, string> nameIndex;
+
         public DBSchemaItemList()
             : this(null)
         { }
@@ -37,7 +39,7 @@ namespace DataWF.Data
         public DBSchemaItemList(DBSchema schema)
             : base()
         {
-            Indexes.Add(DBSchemaItem.NameInvoker.Instance);
+            nameIndex = Indexes.Add(DBSchemaItem.NameInvoker.Instance);
             Schema = schema;
         }
 
@@ -46,7 +48,7 @@ namespace DataWF.Data
 
         public virtual T this[string name]
         {
-            get { return SelectOne(nameof(DBSchemaItem.Name), CompareType.Equal, name); }
+            get => nameIndex.SelectOne(name);
             set
             {
                 int i = GetIndexByName(name);
@@ -64,7 +66,7 @@ namespace DataWF.Data
 
         protected int GetIndexByName(string name)
         {
-            var item = SelectOne(nameof(DBSchemaItem.Name), CompareType.Equal, name);
+            var item = this[name];
             return item == null ? -1 : IndexOf(item);
         }
 

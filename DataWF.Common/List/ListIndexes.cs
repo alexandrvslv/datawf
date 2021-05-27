@@ -16,7 +16,17 @@ namespace DataWF.Common
             indexes[name] = index;
         }
 
-        public IListIndex Add(IInvoker invoker)
+        IListIndex IListIndexes.Add(IInvoker invoker)
+        {
+            return Add(invoker);
+        }
+
+        public IListIndex<T, V> Add<V>(IInvoker<T, V> invoker)
+        {
+            return (IListIndex<T, V>)Add((IInvoker)invoker);
+        }
+
+        public IListIndex<T> Add(IInvoker invoker)
         {
             if (!indexes.TryGetValue(invoker.Name, out var index)
                 && invoker is IInvokerExtension invokerExtension)
@@ -70,5 +80,7 @@ namespace DataWF.Common
         {
             RemoveItem((T)item);
         }
+
+
     }
 }
