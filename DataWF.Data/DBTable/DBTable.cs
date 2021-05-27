@@ -497,11 +497,11 @@ namespace DataWF.Data
             {
                 if (!value)
                 {
-                    Keys &= ~DBTableKeys.NoLogs;
+                    Keys &= ~DBTableKeys.Virtual;
                 }
                 else
                 {
-                    Keys |= DBTableKeys.NoLogs;
+                    Keys |= DBTableKeys.Virtual;
                 }
             }
         }

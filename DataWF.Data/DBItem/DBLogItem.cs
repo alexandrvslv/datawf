@@ -42,7 +42,7 @@ namespace DataWF.Data
         public DBLogItem(DBTable table) : base(table)
         { }
 
-        public DBLogItem(DBItem item) : base((DBTable)item.Table.LogTable)
+        public DBLogItem(DBItem item) : this((DBTable)item.Table.LogTable)
         {
             BaseItem = item;
         }

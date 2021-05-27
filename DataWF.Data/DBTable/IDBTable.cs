@@ -63,6 +63,7 @@ namespace DataWF.Data
         bool IsCaching { get; set; }
         bool IsEdited { get; }
         bool IsLoging { get; set; }
+        bool IsVirtual { get; }
         DBItemType ItemType { get; }
         int ItemTypeIndex { get; set; }
         Dictionary<int, DBItemType> ItemTypes { get; set; }

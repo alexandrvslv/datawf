@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Linq;
 using System.Reflection;
 
 namespace DataWF.Data
@@ -65,10 +66,14 @@ namespace DataWF.Data
         {
             if (ReferenceType.IsAbstract)
             {
-                var derivedGenerator = TableGenerator.GetDerived(ReferenceType);
+                var derivedGenerator = TableGenerator.GetDerived(ReferenceType).FirstOrDefault();
                 if (derivedGenerator != null)
                 {
                     return derivedGenerator.Generate(schema);
+                }
+                else
+                {
+                    return null;
                 }
             }
             var referenceTable = schema.GetTable(ReferenceType, true);
@@ -93,6 +98,10 @@ namespace DataWF.Data
             }
 
             var referenceTable = CheckReference(table.Schema);
+            if (referenceTable == null)
+            {
+                return null;
+            }
             var foreignKey = table?.Foreigns[Attribute.Name];
             var column = table.Columns[ColumnGenerator.ColumnName];
             if (foreignKey == null)

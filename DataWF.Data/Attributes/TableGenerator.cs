@@ -59,26 +59,44 @@ namespace DataWF.Data
             return tableGenerator;
         }
 
-        public static TableGenerator GetDerived(Type type)
+        public static IEnumerable<TableGenerator> GetDerived(Type type)
         {
             var tableGenerator = Get(type);
             if (tableGenerator != null)
-                return tableGenerator;
+            {
+                yield return tableGenerator;
+                yield break;
+            }
             foreach (var entry in cacheTableGenerators)
             {
                 if (entry.Key.BaseType == type)
                 {
-                    return entry.Value;
+                    if (entry.Key.IsAbstract)
+                    {
+                        foreach (var item in GetDerived(entry.Key))
+                            yield return item;
+                    }
+                    else
+                    {
+                        yield return entry.Value;
+                    }
                 }
             }
             foreach (var entry in cacheItemTypeGenerator)
             {
                 if (entry.Key.BaseType == type)
                 {
-                    return entry.Value.TableGenerator;
+                    if (entry.Key.IsAbstract)
+                    {
+                        foreach (var item in GetDerived(entry.Key))
+                            yield return item;
+                    }
+                    else
+                    {
+                        yield return entry.Value.TableGenerator;
+                    }
                 }
             }
-            return tableGenerator;
         }
 
         public static TableGenerator Get<T>()

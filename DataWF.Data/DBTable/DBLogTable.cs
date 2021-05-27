@@ -115,7 +115,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public override AccessValue Access
         {
-            get { return BaseTable.Access; }
+            get { return access ?? BaseTable.Access; }
             set { base.Access = value; }
         }
 
