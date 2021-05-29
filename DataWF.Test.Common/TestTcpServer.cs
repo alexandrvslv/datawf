@@ -21,7 +21,7 @@ namespace DataWF.Test.Common
         public async Task TestPipeStream(
             [Values(1, 100, 1000)] int packageCount,
             [Values(1, 100, 10000)] int itemsCount,
-            [Values(TcpServerCompressionMode.None, TcpServerCompressionMode.Brotli, TcpServerCompressionMode.GZip)] TcpServerCompressionMode compressionMode)
+            [Values(SocketCompressionMode.None, SocketCompressionMode.Brotli, SocketCompressionMode.GZip)] SocketCompressionMode compressionMode)
         {
             var serializer = new BinarySerializer();
             var testList = TestSerialize.GenerateList(itemsCount);

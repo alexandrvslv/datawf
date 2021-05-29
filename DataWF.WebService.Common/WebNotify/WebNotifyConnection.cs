@@ -12,11 +12,10 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-[assembly: Invoker(typeof(WebNotifyConnection), nameof(WebNotifyConnection.Socket), typeof(WebNotifyConnection.SocketInvoker))]
-[assembly: Invoker(typeof(WebNotifyConnection), nameof(WebNotifyConnection.User), typeof(WebNotifyConnection.UserInvoker))]
 namespace DataWF.WebService.Common
 {
-    public class WebNotifyConnection : DefaultItem, IDisposable
+    [InvokerGenerator]
+    public partial class WebNotifyConnection : DefaultItem, IDisposable
     {
         private static uint IdSequence = 0;
 
@@ -94,7 +93,7 @@ namespace DataWF.WebService.Common
                             , timeout.Token);
                         if (timeout.IsCancellationRequested)
                         {
-                            throw new TimeoutException($"Timeout of sending message {Helper.LenghtFormat(stream.Length)}");
+                            throw new TimeoutException($"Timeout of sending message {Helper.SizeFormat(stream.Length)}");
                         }
                         timeout.CancelAfter(5000);
                     }
@@ -122,7 +121,7 @@ namespace DataWF.WebService.Common
             }
         }
 
-        public async Task SendText(WebNotifyConnection connection, string text)
+        public async Task SendText(string text)
         {
             var buffer = Encoding.UTF8.GetBytes(text);
             using (var stream = new MemoryStream(buffer))

@@ -36,7 +36,7 @@ namespace DataWF.Test.Data
             };
 
             schema = new TestSchema();
-            schema.Generate(null);
+            schema.Generate("");
             schema.Connection = DBService.Connections["TestSqlLite"];
             schema.DropDatabase();
             schema.CreateDatabase();

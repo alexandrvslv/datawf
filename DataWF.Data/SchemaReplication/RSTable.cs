@@ -17,29 +17,37 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-
 using DataWF.Common;
 using DataWF.Data;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text.Json.Serialization;
-using System.Xml.Serialization;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
-    [InvokerGenerator(Instance = false)]
-    public partial class SRItem
+    [InvokerGenerator(Instance = true)]
+    public partial class RSTable
     {
-        public DBLogType Command { get; set; }
+        [JsonIgnore]
+        public RSSchema Schema { get; set; }
 
-        public int UserId { get; set; }
-        
-        [ElementSerializer(typeof(DBItemSRSerializer<DBItem>))]
-        public DBItem Value { get; set; }
+        public string TableName { get; set; }
 
-        [XmlIgnore, JsonIgnore]
-        public List<DBColumn> Columns { get; set; }
-        
+        [JsonIgnore]
+        public DBTable Table { get; set; }
+
+        public void Initialize(RSSchema schema)
+        {
+            Schema = schema;
+            Table = schema.Schema.Tables[TableName];
+            if (Table == null)
+                throw new Exception($"Table with name {TableName} not found on schema {schema.SchemaName}");
+        }
+
+        internal Task Synch(RSInstance instance)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -86,56 +86,7 @@ namespace DataWF.Test.Data
             await Generate(DBService.Connections["TestMSSql"]);
         }
 
-        [Test]
-        public void SchemaReplicate()
-        {
-            var schema1 = new TestSchema()
-            {
-                Name = "test_schema1",
-                Connection = new DBConnection
-                {
-                    System = DBSystem.SQLite,
-                    DataBase = "replicant1",
-                    DataBaseId = 1
-                }
-
-            };
-            schema1.Generate("test_schema1");
-
-            var rService1 = new ReplicationService(new ReplicationSettings
-            {
-                Instance = new SRInstance
-                {
-                    Host = "localhost",
-                    Port = 51001
-                },
-                Schems = new List<SRSchema>(new[] { new SRSchema { SchemaName = schema1.Name } })
-            });
-
-            var schema2 = new TestSchema()
-            {
-                Name = "test_schema2",
-                Connection = new DBConnection
-                {
-                    System = DBSystem.SQLite,
-                    DataBase = "replicant2",
-                    DataBaseId = 2
-                }
-            };
-            schema2.Generate("test_schema2");
-
-
-            var rService2 = new ReplicationService(new ReplicationSettings
-            {
-                Instance = new SRInstance
-                {
-                    Host = "localhost",
-                    Port = 51002
-                },
-                Schems = new List<SRSchema>(new[] { new SRSchema { SchemaName = schema2.Name } })
-            });
-
-        }
+       
 
         [Test]
         public void SchemaSerialization()
@@ -183,7 +134,7 @@ namespace DataWF.Test.Data
         public async Task Generate(DBConnection connection)
         {
             Assert.AreEqual(true, connection.CheckConnection(true), $"Connection Fail!");
-            schema.Generate(null);
+            schema.Generate(SchemaName);
 
             var employerTable = schema.Employer;
             var positionTable = schema.Position;
@@ -386,7 +337,7 @@ namespace DataWF.Test.Data
             Assert.AreEqual(0, employerTable.Count, "Clear table Fail");
 
             //Insert Several
-            Position position = GeneratePositions(positionTable);
+            Position position = positionTable.GeneratePositions();
             var nullIds = positionTable.Select(positionTable.PrimaryKey, CompareType.Is, (object)null).ToList();
             Assert.AreEqual(6, nullIds.Count, "Select by null Fail");
 
@@ -496,20 +447,6 @@ namespace DataWF.Test.Data
             Assert.AreEqual(1000, table.Count, "Read/Write Geometry Rectangle Fail!");
         }
 
-        private static Position GeneratePositions(PositionTable<Position> positionTable)
-        {
-            positionTable.Add(new Position(positionTable) { Code = "1", Name = "First Position" });
-            positionTable.Add(new Position(positionTable) { Code = "2", Name = "Second Position" });
-            var position = new Position(positionTable) { Id = 0, Code = "3", Name = "Group Position" };
-            position.Attach();
-            var sposition = new Position(positionTable) { Code = "4", Parent = position, Name = "Sub Group Position" };
-            sposition.Attach();
-
-            //Select from internal Index
-            positionTable.Add(new Position(positionTable) { Code = "t1", Name = "Null Index" });
-            positionTable.Add(new Position(positionTable) { Code = "t2", Name = "Null Index" });
-            positionTable.Add(new Position(positionTable) { Code = "t3", Name = "Null Index" });
-            return position;
-        }
+       
     }
 }

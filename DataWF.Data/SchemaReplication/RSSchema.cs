@@ -21,27 +21,30 @@ using DataWF.Common;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
     [InvokerGenerator]
-    public partial class SRSchema
+    public partial class RSSchema
     {
-        public SRSchema()
+        private readonly IListIndex<RSTable> tableNameIndex;
+
+        public RSSchema()
         {
-            Tables.Indexes.Add(SRTable.TableInvoker.Instance);
+            tableNameIndex = Tables.Indexes.Add(RSTable.TableNameInvoker.Instance);
         }
 
         public string SchemaName { get; set; }
         [JsonIgnore]
         public DBSchema Schema { get; set; }
 
-        public List<SRTable> IncludeTables { get; set; }
+        public List<RSTable> IncludeTables { get; set; }
 
-        public List<SRTable> ExcludeTables { get; set; }
+        public List<RSTable> ExcludeTables { get; set; }
 
         [JsonIgnore]
-        public SelectableList<SRTable> Tables { get; set; } = new SelectableList<SRTable>();
+        public SelectableList<RSTable> Tables { get; set; } = new SelectableList<RSTable>();
 
         public void Initialize()
         {
@@ -64,18 +67,25 @@ namespace DataWF.Data
                     if (dbTable.Type != DBTableType.Table
                         || (dbTable.Keys & DBTableKeys.NoReplicate) == DBTableKeys.NoReplicate)
                         continue;
-                    var srTable = new SRTable { TableName = dbTable.Name, Table = dbTable };
+                    var srTable = new RSTable { TableName = dbTable.Name, Table = dbTable };
                     srTable.Initialize(this);
                     Tables.Add(srTable);
                 }
             }
         }
 
-        public SRTable GetSRTable(IDBTable table) => Tables.SelectOne(nameof(SRTable.Table), (DBTable)table);
-        
+        public RSTable GetRSTable(IDBTable table) => tableNameIndex.SelectOne(table.Name);
+
+        public async Task Synch(RSInstance instance)
+        {
+            foreach (var table in Tables)
+            {
+                await table.Synch(instance);
+            }
+        }
     }
 
-    public enum SRQueryType
+    public enum RSQueryType
     {
         SchemaInfo,
         SynchTable,
@@ -83,22 +93,14 @@ namespace DataWF.Data
         SynchFile
     }
 
-    public class SRQuery
+    public class RSResult
     {
-        public SRQueryType Type { get; set; }
-        public DateTime? Stamp { get; set; }
-        public string SchemaName { get; set; }
-        public string ObjectId { get; set; }
-    }
-
-    public class SRResult
-    {
-        public SRQueryType Type { get; set; }
+        public RSQueryType Type { get; set; }
         public object Data { get; set; }
 
     }
 
-    public class SRSchemaInfo
+    public class RSSchemaInfo
     {
         public string SchemaName { get; set; }
         public DateTime? Stamp { get; set; }

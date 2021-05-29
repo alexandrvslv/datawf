@@ -93,7 +93,7 @@ namespace DataWF.Data
 
         public override string ToString()
         {
-            return $"{EndPoint} Sent: {SendCount}({Helper.LenghtFormat(SendLength)}) Receive: {ReceiveCount}({ReceiveLength})";
+            return $"{EndPoint} Sent: {SendCount}({Helper.SizeFormat(SendLength)}) Receive: {ReceiveCount}({ReceiveLength})";
         }
     }
 

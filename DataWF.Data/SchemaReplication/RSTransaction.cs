@@ -23,11 +23,11 @@ using System.Collections.Generic;
 namespace DataWF.Data
 {
     [InvokerGenerator]
-    public partial class SRTransaction
+    public partial class RSTransaction
     {
         public string Connection { get; set; }
 
-        public List<SRItem> Items { get; set; }
+        public List<RSItem> Items { get; set; }
 
         //blic class 
     }

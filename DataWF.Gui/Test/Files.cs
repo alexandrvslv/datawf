@@ -194,8 +194,8 @@ namespace DataWF.TestGui
                     {
                         var drive = current.Group == null ? current.Drive : null;
                         var text = drive == null ? current.File.Info.FullName : string.Format("{0} free {1} of {2}", current.File.Info.FullName,
-                                       Helper.LenghtFormat(drive.TotalFreeSpace),
-                                       Helper.LenghtFormat(drive.TotalSize));
+                                       Helper.SizeFormat(drive.TotalFreeSpace),
+                                       Helper.SizeFormat(drive.TotalSize));
                         statusLablel.Text = text;
 
                         CheckSubDirectory(current);

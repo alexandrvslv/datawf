@@ -1035,7 +1035,7 @@ namespace DataWF.Common
             }
             else if (string.Equals(format, "size", StringComparison.OrdinalIgnoreCase))
             {
-                result = LenghtFormat(value);
+                result = SizeFormat(value);
             }
             else if (value is CultureInfo cultureInfo)
             {
@@ -1051,7 +1051,7 @@ namespace DataWF.Common
             }
             else if (value is byte[] byteArray)
             {
-                result = LenghtFormat(byteArray.LongLength);
+                result = SizeFormat(byteArray.LongLength);
             }
             else if (value is DateTime dateValue)
             {
@@ -1106,22 +1106,22 @@ namespace DataWF.Common
             }
         }
 
-        public static string LenghtFormat(ulong l)
+        public static string SizeFormat(ulong l)
         {
-            return LenghtFormat((decimal)l);
+            return SizeFormat((decimal)l);
         }
 
-        public static string LenghtFormat(long l)
+        public static string SizeFormat(long l)
         {
-            return LenghtFormat((decimal)l);
+            return SizeFormat((decimal)l);
         }
 
-        public static string LenghtFormat(int l)
+        public static string SizeFormat(int l)
         {
-            return LenghtFormat((decimal)l);
+            return SizeFormat((decimal)l);
         }
 
-        public static string LenghtFormat(double l)
+        public static string SizeFormat(double l)
         {
             var i = ByteSize.B;
             while (Math.Abs(l) >= 1024 && (int)i < 4)
@@ -1132,7 +1132,7 @@ namespace DataWF.Common
             return $"{l:0.00} {i}";
         }
 
-        public static string LenghtFormat(decimal l)
+        public static string SizeFormat(decimal l)
         {
             var i = ByteSize.B;
             while (Math.Abs(l) >= 1024 && (int)i < 4)
@@ -1153,22 +1153,22 @@ namespace DataWF.Common
             PB
         }
 
-        public static string LenghtFormat(object value)
+        public static string SizeFormat(object value)
         {
             if (value is decimal decimalValue)
-                return LenghtFormat(decimalValue);
+                return SizeFormat(decimalValue);
             if (value is double doubleValue)
-                return LenghtFormat(doubleValue);
+                return SizeFormat(doubleValue);
             else if (value is int intValue)
-                return LenghtFormat(intValue);
+                return SizeFormat(intValue);
             else if (value is long longValue)
-                return LenghtFormat(longValue);
+                return SizeFormat(longValue);
             else if (value is ulong ulongValue)
-                return LenghtFormat(ulongValue);
+                return SizeFormat(ulongValue);
             else if (value is Array arrayValue)
-                return LenghtFormat(arrayValue.Length);
+                return SizeFormat(arrayValue.Length);
             else if (value is IList listValue)
-                return LenghtFormat(listValue.Count);
+                return SizeFormat(listValue.Count);
             else
                 return TextDisplayFormat(value, null);
         }
@@ -1546,11 +1546,11 @@ namespace DataWF.Common
             var proc = System.Diagnostics.Process.GetCurrentProcess();
             var temp = proc.WorkingSet64;
             string descript = string.Format("Diff:{0} Working:{1} Virtual:{2} Private:{3} Peak:{4}",
-                                  Helper.LenghtFormat(temp - WorkingSet64),
-                                  Helper.LenghtFormat(proc.WorkingSet64),
-                                  Helper.LenghtFormat(proc.VirtualMemorySize64),
-                                  Helper.LenghtFormat(proc.PrivateMemorySize64),
-                                  Helper.LenghtFormat(proc.PeakWorkingSet64));
+                                  Helper.SizeFormat(temp - WorkingSet64),
+                                  Helper.SizeFormat(proc.WorkingSet64),
+                                  Helper.SizeFormat(proc.VirtualMemorySize64),
+                                  Helper.SizeFormat(proc.PrivateMemorySize64),
+                                  Helper.SizeFormat(proc.PeakWorkingSet64));
             logs.Add(new StateInfo("Memory", status, descript, StatusType.Warning));
             WorkingSet64 = temp;
         }

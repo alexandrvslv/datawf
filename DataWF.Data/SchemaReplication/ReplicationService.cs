@@ -34,11 +34,9 @@ namespace DataWF.Data
     public class ReplicationService : TcpServer
     {
         private static readonly object loadLock = new object();
-        private static readonly int timeOut = 60000;
-        private readonly ConcurrentDictionary<DBTransaction, List<SRItem>> buffer = new ConcurrentDictionary<DBTransaction, List<SRItem>>();
+        private readonly ConcurrentDictionary<DBTransaction, List<RSItem>> buffer = new ConcurrentDictionary<DBTransaction, List<RSItem>>();
         private readonly ConcurrentDictionary<long, SMRequest> requests = new ConcurrentDictionary<long, SMRequest>();
         private readonly ManualResetEventSlim loginEvent = new ManualResetEventSlim(false);
-        private readonly ManualResetEventSlim requestEvent = new ManualResetEventSlim(false);
         private readonly CancellationTokenSource synchCancel = new CancellationTokenSource();
         private readonly BinarySerializer serializer = new BinarySerializer();
 
@@ -63,7 +61,7 @@ namespace DataWF.Data
             DBService.AddItemUpdated(OnItemUpdate);
             DBService.AddTransactionCommit(OnTransactionCommit);
 
-            _ = Synch();
+            _ = SignIn();
         }
 
         public async Task Stop()
@@ -113,9 +111,12 @@ namespace DataWF.Data
             }
         }
 
-        private Task Synch(SRInstance instance)
+        private async Task Synch(RSInstance instance)
         {
-            throw new NotImplementedException();
+            foreach (var schema in Settings.Schems)
+            {
+                await schema.Synch(instance);
+            }
         }
 
         private async ValueTask OnTransactionCommit(DBTransaction transaction)
@@ -145,14 +146,14 @@ namespace DataWF.Data
                 var type = (arg.State & DBUpdateState.Delete) == DBUpdateState.Delete ? DBLogType.Delete
                     : (arg.State & DBUpdateState.Insert) == DBUpdateState.Insert ? DBLogType.Insert
                     : DBLogType.Update;
-                var replica = new SRItem()
+                var replica = new RSItem()
                 {
                     Command = type,
                     UserId = arg.User?.Id ?? 0,
                     Value = item,
                     Columns = arg.Columns
                 };
-                var items = buffer.GetOrAdd(arg.Transaction, new List<SRItem>());
+                var items = buffer.GetOrAdd(arg.Transaction, new List<RSItem>());
                 items.Add(replica);
             }
             return default(ValueTask);
@@ -163,16 +164,16 @@ namespace DataWF.Data
             var srSchema = Settings.GetSchema(table.Schema);
             if (srSchema == null)
                 return false;
-            return srSchema.GetSRTable(table) != null;
+            return srSchema.GetRSTable(table) != null;
         }
 
-        public async Task<bool> Broadcast(DBTransaction transaction, List<SRItem> items)
+        public async Task<bool> Broadcast(DBTransaction transaction, List<RSItem> items)
         {
             var message = new SMNotify
             {
                 Id = SMBase.NewId(),
                 EndPoint = Point,
-                Data = new SRTransaction { Connection = transaction.DbConnection.Name, Items = items }
+                Data = new RSTransaction { Connection = transaction.DbConnection.Name, Items = items }
             };
 
             return await Broadcast(message);
@@ -188,43 +189,15 @@ namespace DataWF.Data
             bool sended = false;
             foreach (var item in Settings.Instances)
             {
-                sended = await Send(message, item, checkState);
+                if(CheckAddress(Settings.Instance, item, checkState))
+                sended = await item.Send(message, this);
             }
             return sended;
         }
 
-        private async Task<bool> Send<T>(T message, SRInstance address, bool checkState = false) where T : SMBase
-        {
-            if (CheckAddress(address, null, checkState))
-            {
-                var sended = await SendElement(address.EndPoint, message);
-                if (sended)
-                {
-                    if (message is SMRequest request)
-                    {
-                        requests[request.Id] = request;
-                    }
-                }
-            }
+       
 
-            return false;
-        }
-
-        public async Task<SMResponce> Request(SMRequest request, SRInstance address)
-        {
-            if (!(address.Active ?? false))
-                throw new Exception("Inactive recipient");
-
-            requestEvent.Reset();
-            if (await Send(request, address))
-            {
-                requestEvent.Wait(timeOut);
-                return request.Responce;
-            }
-            return null;
-        }
-
-        private bool CheckAddress(SRInstance item, SRInstance address, bool checkState = false)
+        private bool CheckAddress(RSInstance item, RSInstance address, bool checkState = false)
         {
             return (address == null || item.Equals(address))
                 && ((item.Active ?? false) || (item.Active == null && checkState));
@@ -250,7 +223,7 @@ namespace DataWF.Data
                         await ProcessResponse((SMResponce)message, arg);
                         break;
                     case SMType.Notify:
-                        if (message.Data is SRTransaction transaction)
+                        if (message.Data is RSTransaction transaction)
                         {
                             await LoadTransaction(transaction);
                         }
@@ -285,17 +258,17 @@ namespace DataWF.Data
                     sender.TcpSocket = arg.TcpSocket;
                     break;
                 case SMResponceType.Data:
-                    if (message.Data is SRResult result)
+                    if (message.Data is RSResult result)
                     {
                         switch (result.Type)
                         {
-                            case SRQueryType.SchemaInfo:
+                            case RSQueryType.SchemaInfo:
                                 break;
-                            case SRQueryType.SynchTable:
+                            case RSQueryType.SynchTable:
                                 break;
-                            case SRQueryType.SynchSequence:
+                            case RSQueryType.SynchSequence:
                                 break;
-                            case SRQueryType.SynchFile:
+                            case RSQueryType.SynchFile:
                                 break;
                         }
                     }
@@ -333,17 +306,17 @@ namespace DataWF.Data
                     {
                         object data = null;
 
-                        if (message.Data is SRQuery query)
+                        if (message.Data is RSQuery query)
                         {
                             switch (query.Type)
                             {
-                                case SRQueryType.SchemaInfo:
+                                case RSQueryType.SchemaInfo:
                                     data = GenerateSchemaInfo(query.SchemaName);
                                     break;
-                                case SRQueryType.SynchTable:
+                                case RSQueryType.SynchTable:
                                     data = GenerateTableDiff(query.SchemaName, query.ObjectId, query.Stamp);
                                     break;
-                                case SRQueryType.SynchFile:
+                                case RSQueryType.SynchFile:
                                     data = GenerateFile(query.SchemaName, long.TryParse(query.ObjectId, out var id) ? id : -1L);
                                     break;
                             }
@@ -397,7 +370,7 @@ namespace DataWF.Data
             return table.GetReplicateItems(stamp);
         }
 
-        public static async Task LoadTransaction(SRTransaction srTransaction)
+        public static async Task LoadTransaction(RSTransaction srTransaction)
         {
             using (var transaction = new DBTransaction(DBService.Connections[srTransaction.Connection], null, true)
             { Replication = true })
@@ -431,7 +404,7 @@ namespace DataWF.Data
             await base.OnDataSend(arg);
         }
 
-        protected override void OnDataException(TcpExceptionEventArgs arg)
+        protected override void OnDataException(SocketExceptionArgs arg)
         {
             base.OnDataException(arg);
         }
@@ -441,11 +414,11 @@ namespace DataWF.Data
 
     public class ReplicationEventArgs : EventArgs
     {
-        public ReplicationEventArgs(List<SRItem> data)
+        public ReplicationEventArgs(List<RSItem> data)
         {
             Data = data;
         }
 
-        public List<SRItem> Data { get; }
+        public List<RSItem> Data { get; }
     }
 }

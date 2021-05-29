@@ -47,7 +47,7 @@ namespace DataWF.Module.Flow
         [Reference(nameof(StageId))]
         public Stage Stage
         {
-            get => GetReference(DocumentWorkTable.StageIdKey, ref stage);
+            get => GetReference(Table.StageIdKey, ref stage);
             set
             {
                 SetReference(stage = value, Table.StageIdKey);
@@ -84,7 +84,7 @@ namespace DataWF.Module.Flow
         [Reference(nameof(UserId))]
         public User User
         {
-            get => GetReference(DocumentWorkTable.UserIdKey, ref user);
+            get => GetReference(Table.UserIdKey, ref user);
             set
             {
                 SetReference(user = value, Table.UserIdKey);

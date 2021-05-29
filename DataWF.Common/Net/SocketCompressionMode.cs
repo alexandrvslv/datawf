@@ -1,6 +1,6 @@
 ﻿namespace DataWF.Common
 {
-    public enum TcpServerCompressionMode
+    public enum SocketCompressionMode
     {
         None,
         GZip,

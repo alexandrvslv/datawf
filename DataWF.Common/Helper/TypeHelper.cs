@@ -72,7 +72,20 @@ namespace DataWF.Common
                 return null;
             return itemType.GetProperty("Item", parameters);
         }
-
+        
+        public static IEnumerable<T> GetContainers<T>(IEnumerable<PropertyChangedEventHandler> handlers)
+        {
+            if (handlers == null)
+                yield break;
+            foreach (var handler in handlers)
+            {
+                if (handler.Target is T container)
+                {
+                    yield return container;
+                }
+            }
+        }
+        
         public static IEnumerable<T> GetContainers<T>(PropertyChangedEventHandler handler)
         {
             if (handler == null)

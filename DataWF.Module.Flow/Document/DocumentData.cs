@@ -49,8 +49,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(TemplateDataId))]
         public TemplateData TemplateData
         {
-            get => GetReference(DocumentDataTable.TemplateDataIdKey, ref template);
-            set => SetReference(template = value, DocumentDataTable.TemplateDataIdKey);
+            get => GetReference(Table.TemplateDataIdKey, ref template);
+            set => SetReference(template = value, Table.TemplateDataIdKey);
         }
 
         [Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]
@@ -63,29 +63,29 @@ namespace DataWF.Module.Flow
         [Column("file_url", 1024)]
         public string FileUrl
         {
-            get => GetValue<string>(DocumentDataTable.FileUrlKey);
-            set => SetValue(value, DocumentDataTable.FileUrlKey);
+            get => GetValue<string>(Table.FileUrlKey);
+            set => SetValue(value, Table.FileUrlKey);
         }
 
         [Column("file_last_write", Keys = DBColumnKeys.FileLastWrite)]
         public DateTime? FileLastWrite
         {
-            get => GetValue<DateTime?>(DocumentDataTable.FileLastWriteKey) ?? Stamp;
-            set => SetValue(value, DocumentDataTable.FileLastWriteKey);
+            get => GetValue<DateTime?>(Table.FileLastWriteKey) ?? Stamp;
+            set => SetValue(value, Table.FileLastWriteKey);
         }
 
         [Column("file_data", Keys = DBColumnKeys.File)]
         public virtual byte[] FileData
         {
-            get => buf ?? (buf = GetValue(DocumentDataTable.FileDataKey));
-            set => SetValue(value, DocumentDataTable.FileDataKey);
+            get => buf ?? (buf = GetValue(Table.FileDataKey));
+            set => SetValue(value, Table.FileDataKey);
         }
 
         [Column("file_lob", Keys = DBColumnKeys.FileOID)]
         public virtual long? FileLOB
         {
-            get => GetValue<long?>(DocumentDataTable.FileLOBKey);
-            set => SetValue(value, DocumentDataTable.FileLOBKey);
+            get => GetValue<long?>(Table.FileLOBKey);
+            set => SetValue(value, Table.FileLOBKey);
         }
 
         [Browsable(false)]

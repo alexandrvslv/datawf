@@ -14,31 +14,14 @@ namespace DataWF.Common
         {
             var prop = IPGlobalProperties.GetIPGlobalProperties();
             var active = prop.GetActiveTcpListeners();
-
+            var connections = prop.GetActiveTcpConnections();
             int myport = 49152;
             for (; myport < 65535; myport++)
             {
-                bool alreadyinuse = false;
-                foreach (var p in active)
+                if (!active.Any(p => p.Port == myport)
+                && !connections.Any(p => p.LocalEndPoint.Port == myport))
                 {
-                    if (p.Port == myport)
-                    {
-                        alreadyinuse = true;
-                        break;
-                    }
-                }
-                if (!alreadyinuse)
-                {
-                    var connections = prop.GetActiveTcpConnections();
-                    foreach (var p in connections)
-                        if (p.LocalEndPoint.Port == myport)
-                        {
-                            alreadyinuse = true;
-                            break;
-                        }
-
-                    if (!alreadyinuse)
-                        break;
+                    break;
                 }
             }
             return myport;
@@ -51,14 +34,7 @@ namespace DataWF.Common
             int myport = 49152;
             for (; myport < 65535; myport++)
             {
-                bool alreadyinuse = false;
-                foreach (var p in active)
-                    if (p.Port == myport)
-                    {
-                        alreadyinuse = true;
-                        break;
-                    }
-                if (!alreadyinuse)
+                if (!active.Any(p => p.Port == myport))
                 {
                     break;
                 }

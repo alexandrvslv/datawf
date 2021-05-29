@@ -23,14 +23,18 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
     [InvokerGenerator]
-    public partial class SRInstance : IEquatable<SRInstance>
+    public partial class RSInstance : IEquatable<RSInstance>
     {
+        private readonly ManualResetEventSlim requestEvent = new ManualResetEventSlim(false);
         private IPEndPoint endPoint;
+        private static readonly int timeOut = 60000;
 
         public string Host { get; set; } = "localhost";
 
@@ -50,10 +54,10 @@ namespace DataWF.Data
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as SRInstance);
+            return Equals(obj as RSInstance);
         }
 
-        public bool Equals(SRInstance other)
+        public bool Equals(RSInstance other)
         {
             return other != null &&
                    Host == other.Host &&
@@ -67,7 +71,32 @@ namespace DataWF.Data
             hashCode = hashCode * -1521134295 + Port.GetHashCode();
             return hashCode;
         }
+        public async Task<SMResponce> Request(SMRequest request, ReplicationService service)
+        {
+            if (!(Active ?? false))
+                throw new Exception("Inactive recipient");
 
+            requestEvent.Reset();
+            if (await Send(request, service))
+            {
+                requestEvent.Wait(timeOut);
+                return request.Responce;
+            }
+            return null;
+        }
+
+        public async Task<bool> Send<T>(T message, ReplicationService service) where T : SMBase
+        {
+            var sended = await service.SendElement(EndPoint, message);
+            if (sended)
+            {
+                if (message is SMRequest request)
+                {
+                    requests[request.Id] = request;
+                }
+            }
+            return false;
+        }
 
     }
 }

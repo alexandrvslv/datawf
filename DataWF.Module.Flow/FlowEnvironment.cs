@@ -43,7 +43,7 @@ namespace DataWF.Module.Flow
             if (arg.Item.Table == Schema.GetTable<UserReg>()) //|| arg.Row.Table == FlowEnvir.Config.Document.Table)
                 return;
             var documentTable = (DocumentTable<Document>)Schema.GetTable<Document>();
-            if (!(arg.Item.Table.IsVirtual))
+            if (!arg.Item.Table.IsVirtual)
             {
                 var cols = arg.Item.Table.Columns.GetByReference(documentTable);
 
@@ -80,8 +80,7 @@ namespace DataWF.Module.Flow
                 schema.GetTable<GroupPermission>().Load();
                 schema.GetTable<Scheduler>().Load();
 
-                AccessValue.Groups = new IdCollectionView<IGroupIdentity, UserGroup>(groups);
-                AccessValue.Users = new IdCollectionView<IUserIdentity, User>(users);
+                AccessValue.Provider = new CommonAccessProvider(schema);
 
             }
             watch.Stop();
@@ -171,6 +170,7 @@ namespace DataWF.Module.Flow
             get => schemaCode;
             set => schemaCode = value;
         }
+
         public static DBSchema Schema { get; private set; }
 
         //public DBSchema Schema

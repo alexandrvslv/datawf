@@ -83,7 +83,7 @@ namespace DataWF.Common
 
         public string SpeedFormat
         {
-            get => Helper.LenghtFormat(speed) + "/s";
+            get => Helper.SizeFormat(speed) + "/s";
         }
 
         public bool Finished => length == fileSize;

@@ -7,6 +7,17 @@ namespace DataWF.Common
 {
     public static class EndPointExtension
     {
+        public static IPEndPoint ToEndPoint(this Uri url)
+        {
+            var address = IPAddress.Parse(url.Host);
+            return new IPEndPoint(address, url.Port);
+        }
+
+        public static Uri ToUrl(this EndPoint endPoint, string scheme = "tcp")
+        {
+            return new Uri($"{scheme}://{endPoint}");
+        }
+
         public static byte[] GetBytes(this IPEndPoint endPoint)
         {
             var result = new List<byte>(endPoint.Address.GetAddressBytes());

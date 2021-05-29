@@ -63,7 +63,7 @@ namespace DataWF.Data
             }
             else
             {
-                return Helper.LenghtFormat(value.Length);
+                return Helper.SizeFormat(value.Length);
             }
         }
 

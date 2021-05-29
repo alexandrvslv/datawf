@@ -4,28 +4,36 @@ using System.IO;
 using System.IO.Compression;
 using System.IO.Pipelines;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public class TcpStreamEventArgs : TcpSocketEventArgs
+    public class SocketStreamArgs : SocketConnectionArgs
     {
-        public static readonly int BufferSize = 8 * 1024;
         private Pipe pipe;
         private Stream pipeReaderStream;
         private Stream pipeWriterStream;
         private Stream sourceStream;
 
-        public TcpStreamEventArgs(TcpSocket client, TcpStreamMode mode)
+        public SocketStreamArgs(ISocketConnection connection, SocketStreamMode mode)
+            : base(connection)
         {
             Mode = mode;
-            TcpSocket = client;
-            Buffer = new ArraySegment<byte>(new byte[BufferSize]);
+            Buffer = new ArraySegment<byte>(new byte[connection.Server.BufferSize]);
         }
 
-        public TcpStreamMode Mode { get; }
+        public SocketStreamMode Mode { get; }
 
         public ArraySegment<byte> Buffer { get; private set; }
+
+        public CancellationTokenSource CancellationToken { get; set; }
+
+        public SocketStreamState ReaderState { get; private set; }
+
+        public SocketStreamState WriterState { get; private set; }
+
+        public Memory<byte> FinCache { get; internal set; }
 
         public Pipe Pipe
         {
@@ -38,19 +46,19 @@ namespace DataWF.Common
                     pipeReaderStream = pipe.Reader.AsStream(true);
                     pipeWriterStream = pipe.Writer.AsStream(true);
 
-                    if (Mode == TcpStreamMode.Receive)
+                    if (Mode == SocketStreamMode.Receive)
                     {
                         WriterStream = pipeWriterStream;
-                        switch (TcpSocket.Server.Compression)
+                        switch (Connection.Server.Compression)
                         {
-                            case TcpServerCompressionMode.Brotli:
+                            case SocketCompressionMode.Brotli:
 #if NETSTANDARD2_0
                                 ReaderStream = new Brotli.BrotliStream(pipeReaderStream, CompressionMode.Decompress, true);
 #else
                                 ReaderStream = new BrotliStream(pipeReaderStream, CompressionMode.Decompress, true);
 #endif
                                 break;
-                            case TcpServerCompressionMode.GZip:
+                            case SocketCompressionMode.GZip:
                                 ReaderStream = new GZipStream(pipeReaderStream, CompressionMode.Decompress, true);
                                 break;
                             default:
@@ -58,19 +66,19 @@ namespace DataWF.Common
                                 break;
                         }
                     }
-                    if (Mode == TcpStreamMode.Send)
+                    if (Mode == SocketStreamMode.Send)
                     {
                         ReaderStream = pipeReaderStream;
-                        switch (TcpSocket.Server.Compression)
+                        switch (Connection.Server.Compression)
                         {
-                            case TcpServerCompressionMode.Brotli:
+                            case SocketCompressionMode.Brotli:
 #if NETSTANDARD2_0
                                 WriterStream = new Brotli.BrotliStream(pipeWriterStream, CompressionMode.Compress, true);
 #else
                                 WriterStream = new BrotliStream(pipeWriterStream, CompressionLevel.Fastest, true);
 #endif
                                 break;
-                            case TcpServerCompressionMode.GZip:
+                            case SocketCompressionMode.GZip:
                                 WriterStream = new GZipStream(pipeWriterStream, CompressionLevel.Fastest, true);
                                 break;
                             default:
@@ -99,7 +107,7 @@ namespace DataWF.Common
             {
                 sourceStream = value;
 
-                if (Mode == TcpStreamMode.Receive)
+                if (Mode == SocketStreamMode.Receive)
                 {
                     //if (Client.Server.Compression)
                     //    WriterStream = new Brotli.BrotliStream(sourceStream, CompressionMode.Compress);
@@ -115,12 +123,6 @@ namespace DataWF.Common
                 }
             }
         }
-
-        public TcpStreamState ReaderState { get; private set; }
-
-        public TcpStreamState WriterState { get; private set; }
-
-        public Memory<byte> FinCache { get; internal set; }
 
         internal Task<int> ReadStream()
         {
@@ -158,7 +160,7 @@ namespace DataWF.Common
             return read;
         }
 
-        public void CompleteRead(Exception exception = null)
+        public async Task CompleteRead(Exception exception = null)
         {
             try
             {
@@ -178,7 +180,8 @@ namespace DataWF.Common
             }
             finally
             {
-                ReaderState = TcpStreamState.Complete;
+                ReaderState = SocketStreamState.Complete;
+                await ReleasePipe();
             }
         }
 
@@ -202,19 +205,19 @@ namespace DataWF.Common
             }
             finally
             {
-                WriterState = TcpStreamState.Complete;
+                WriterState = SocketStreamState.Complete;
             }
 
         }
 
         public async ValueTask ReleasePipe(Exception exception = null)
         {
-            while (WriterState != TcpStreamState.Complete)
+            while (WriterState != SocketStreamState.Complete)
             {
                 await Task.Delay(5);
             }
 
-            while (ReaderState != TcpStreamState.Complete)
+            while (ReaderState != SocketStreamState.Complete)
             {
                 await Task.Delay(5);
             }
@@ -235,29 +238,29 @@ namespace DataWF.Common
             if (Pipe != null)
             {
                 Pipe.Reset();
-                TcpSocket.Pipes.Enqueue(Pipe);
+                SocketConnection.Pipes.Enqueue(Pipe);
             }
         }
 
         public void StartRead()
         {
-            if (ReaderState != TcpStreamState.None)
+            if (ReaderState != SocketStreamState.None)
                 throw new Exception("Reader Wrong State");
-            if (Mode == TcpStreamMode.Receive)
+            if (Mode == SocketStreamMode.Receive)
             {
-                Task.Factory.StartNew(p => TcpSocket.Server.OnDataLoadStart((TcpStreamEventArgs)p), this, TaskCreationOptions.PreferFairness);
-                ReaderState = TcpStreamState.Started;
+                Task.Factory.StartNew(p => Connection.Server.OnReceiveStart((SocketStreamArgs)p), this, TaskCreationOptions.PreferFairness);
+                ReaderState = SocketStreamState.Started;
             }
         }
     }
 
-    public enum TcpStreamMode
+    public enum SocketStreamMode
     {
         Send,
         Receive
     }
 
-    public enum TcpStreamState
+    public enum SocketStreamState
     {
         None = 0,
         Started,

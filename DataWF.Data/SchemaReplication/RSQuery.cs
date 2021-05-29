@@ -18,20 +18,14 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace DataWF.Data
 {
-    public class ReplicationSettings
+    public class RSQuery
     {
-        public RSInstance Instance { get; set; }
-        public List<RSSchema> Schems { get; set; }
-        public List<RSInstance> Instances { get; set; }
-
-        public RSSchema GetSchema(DBSchema schema)
-        {
-            return Schems.FirstOrDefault(p => p.Schema == schema);
-        }
+        public RSQueryType Type { get; set; }
+        public DateTime? Stamp { get; set; }
+        public string SchemaName { get; set; }
+        public string ObjectId { get; set; }
     }
 }

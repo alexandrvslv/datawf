@@ -17,27 +17,29 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+
 using DataWF.Common;
 using DataWF.Data;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [InvokerGenerator(Instance = true)]
-    public partial class SRTable
+    [InvokerGenerator(Instance = false)]
+    public partial class RSItem
     {
-        public string TableName { get; set; }
+        public DBLogType Command { get; set; }
 
-        [JsonIgnore]
-        public DBTable Table { get; set; }
+        public int UserId { get; set; }
+        
+        [ElementSerializer(typeof(DBItemSRSerializer<DBItem>))]
+        public DBItem Value { get; set; }
 
-        public void Initialize(SRSchema schema)
-        {
-            Table = schema.Schema.Tables[TableName];
-            if (Table == null)
-                throw new Exception($"Table with name {TableName} not found on schema {schema.SchemaName}");
-        }
+        [XmlIgnore, JsonIgnore]
+        public List<DBColumn> Columns { get; set; }
+        
     }
 }

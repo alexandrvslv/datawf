@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -46,6 +47,7 @@ namespace DataWF.Module.Flow
         public DocumentFilter(DBSchema schema)
             : base()
         {
+            Schema = schema;
             DocumentTable = (DocumentTable<Document>)schema.GetTable<Document>();
             QDoc = new QQuery(string.Empty, DocumentTable);
             QWork = new QQuery(string.Empty, DocumentTable.DocumentWorkTable);
@@ -54,7 +56,10 @@ namespace DataWF.Module.Flow
             paramWorkId = new QParam(DocumentTable.CurrentWorkIdKey, CompareType.IsNot, null);
         }
 
-        public DocumentTable<Document> DocumentTable { get; set; }
+        public DBSchema Schema { get; }
+
+        public DocumentTable<Document> DocumentTable { get; }
+
         public DocumentSearchDate DateType
         {
             get => dtype;
@@ -168,7 +173,7 @@ namespace DataWF.Module.Flow
 
         public Customer Customer
         {
-            get => customerCache ?? (customerCache = Customer.CustomerTable.LoadById(customer));
+            get => customerCache ?? (customerCache = Schema.GetTable<Customer>().LoadById(customer));
             set
             {
                 if (Customer == value)
@@ -247,7 +252,7 @@ namespace DataWF.Module.Flow
 
         public Template Template
         {
-            get => templateCache ?? (templateCache = DocumentTable.TemplateTable.LoadById(template));
+            get => templateCache ?? (templateCache = Schema.GetTable<Template>().LoadById(template));
             set
             {
                 string id = value?.PrimaryId.ToString();
@@ -278,7 +283,7 @@ namespace DataWF.Module.Flow
                 if (stage == null)
                     return null;
                 int index = stage.IndexOf(':');
-                return cacheStage ?? (cacheStage = DocumentTable.Schema.Tables[stage.Substring(0, index)].LoadItemById(stage.Substring(index + 1)));
+                return cacheStage ?? (cacheStage = Schema.Tables[stage.Substring(0, index)].LoadItemById(stage.Substring(index + 1)));
             }
             set
             {
@@ -315,7 +320,7 @@ namespace DataWF.Module.Flow
                 if (staff == null)
                     return null;
                 int index = staff.IndexOf(':');
-                return cacheUser ?? (cacheUser = DocumentTable.Schema.Tables[staff.Substring(0, index)].LoadItemById(staff.Substring(index + 1)));
+                return cacheUser ?? (cacheUser = Schema.Tables[staff.Substring(0, index)].LoadItemById(staff.Substring(index + 1)));
             }
             set
             {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -9,22 +10,28 @@ namespace DataWF.Common
     public abstract class DefaultItem : IEntryNotifyPropertyChanged
     {
         public static Action<PropertyChangedEventHandler, object, PropertyChangedEventArgs> GlogalChangedHook;
-        protected PropertyChangedEventHandler propertyChanged;
+        protected ThreadSafeList<PropertyChangedEventHandler> propertyChanged;
 
-        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore, Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore, JsonIgnore, XmlIgnore, Browsable(false)]
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(propertyChanged);
 
         public event PropertyChangedEventHandler PropertyChanged
         {
-            add => propertyChanged += value;
-            remove => propertyChanged -= value;
+            add
+            {
+                if (propertyChanged == null)
+                    propertyChanged = new ThreadSafeList<PropertyChangedEventHandler>();
+                propertyChanged.Add(value);
+            }
+            remove => propertyChanged.Remove(value);
         }
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs arg)
         {
-            foreach (PropertyChangedEventHandler handler in propertyChanged.GetInvocationList())
+            foreach (PropertyChangedEventHandler handler in propertyChanged)
             {
-                if (GlogalChangedHook == null || handler.Target is INotifyListPropertyChanged)
+                if (GlogalChangedHook == null
+                    || handler.Target is INotifyListPropertyChanged)
                 {
                     handler.Invoke(this, arg);
                 }
