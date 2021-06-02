@@ -79,7 +79,7 @@ namespace DataWF.Data
         {
             return item.ProcedureType == ProcedureTypes.StoredFunction || item.ProcedureType == ProcedureTypes.StoredProcedure
                 ? DDLType.Create
-                : DDLType.Default;
+                : DDLType.None;
         }
 
         public void AddCodes(DBProcedure item)
