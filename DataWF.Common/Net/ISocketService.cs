@@ -9,11 +9,11 @@ namespace DataWF.Common
     public interface ISocketService : IDisposable
     {
         Uri Address { get; set; }
-        IEnumerable<ISocketConnection> Clients { get; }
+        IEnumerable<ISocketConnection> Connections { get; }
         SocketCompressionMode Compression { get; set; }
         bool LogEvents { get; set; }
         bool OnLine { get; }
-        TimeSpan TransferTimeOut { get; set; }
+        TimeSpan TransferTimeout { get; set; }
         int BufferSize { get; set; }
 
         event EventHandler<SocketConnectionArgs> ClientConnect;
@@ -25,8 +25,8 @@ namespace DataWF.Common
         event EventHandler Started;
         event EventHandler Stopped;
 
-        ValueTask<ISocketConnection> CreateClient(Uri address);
-        ValueTask<ISocketConnection> CreateClient(object socket);
+        ValueTask<ISocketConnection> CreateConnection(Uri address);
+        ValueTask<ISocketConnection> CreateConnection(object socket);
         ISocketConnection GetConnection(Uri address);
         ISocketConnection GetConnection(string name);
         void Remove(ISocketConnection client);
@@ -34,10 +34,12 @@ namespace DataWF.Common
         void StopListener();
         void WaitAll();
         object OnSended(SocketStreamArgs args);
-        void OnReceiveStart(SocketStreamArgs args);
-        object OnReceiveFinish(SocketStreamArgs args);
+        ValueTask OnReceiveStart(SocketStreamArgs args);
+        ValueTask OnReceiveFinish(SocketStreamArgs args);
         void OnDataException(SocketExceptionArgs args);
         object OnClientDisconect(SocketConnectionArgs args);
         object OnClientConnect(SocketConnectionArgs args);
+        object OnClientTimeout(SocketConnectionArgs args);
+        void LogEvent(SocketStreamArgs args);
     }
 }

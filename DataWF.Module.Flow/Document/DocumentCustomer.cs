@@ -36,7 +36,7 @@ namespace DataWF.Module.Flow
             get => GetReference(Table.CustomerIdKey, ref customer);
             set
             {
-                SetReference(customer = value, DocumentCustomerTable.CustomerIdKey);
+                SetReference(customer = value, Table.CustomerIdKey);
                 Address = value?.Address;
                 EMail = value?.EMail;
                 Phone = value?.Phone;

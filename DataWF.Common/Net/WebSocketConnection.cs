@@ -7,13 +7,12 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
+#if !NETSTANDARD2_0
     public partial class WebSocketConnection : SocketConnection
     {
         private static readonly ArraySegment<byte> finSegment = new ArraySegment<byte>(fin);
         public WebSocketConnection()
-        {
-
-        }
+        { }
 
         public WebSocketState State => Socket?.State ?? WebSocketState.Aborted;
 
@@ -44,9 +43,9 @@ namespace DataWF.Common
                                     arg.CancellationToken?.Token ?? CancellationToken.None);
         }
 
-        protected override async Task<int> LoadPart(SocketStreamArgs arg)
+        protected override async Task<int> ReceivePart(SocketStreamArgs arg)
         {
-            var memory = arg.Pipe.Writer.GetMemory(arg.Buffer.Count + finLength);
+            var memory = arg.Pipe.Writer.GetMemory(arg.BufferSize);
             var result = await Socket.ReceiveAsync(memory, arg.CancellationToken?.Token ?? CancellationToken.None);
             switch (result.MessageType)
             {
@@ -70,28 +69,28 @@ namespace DataWF.Common
             }
         }
 
-        public override async ValueTask Connect(Uri address)
+        public override async ValueTask Connect()
         {
-            var arg = new SocketEventArgs { Socket = this };
+            var arg = new SocketConnectionArgs(this);
 
             try
             {
-                var client = new WebSocketClient();
-                await client.ConnectAsync(address, CancellationToken.None);
+                var client = new ClientWebSocket();
+                await client.ConnectAsync(Address, CancellationToken.None);
                 Socket = client;
                 Stamp = DateTime.UtcNow;
                 _ = Server.OnClientConnect(arg);                
             }
             catch (Exception ex)
             {
-                Server.OnDataException(new SocketExceptionEventArgs(arg, ex));
+                Server.OnDataException(new SocketExceptionArgs(arg, ex));
                 throw;
             }
         }
 
         public override async ValueTask Disconnect()
         {
-            var arg = new SocketEventArgs { Socket = this };
+            var arg = new SocketConnectionArgs(this);
             try
             {
                 await Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Good luck!", CancellationToken.None);
@@ -99,8 +98,14 @@ namespace DataWF.Common
             }
             catch (Exception ex)
             {
-                Server.OnDataException(new SocketExceptionEventArgs(arg, ex));
+                Server.OnDataException(new SocketExceptionArgs(arg, ex));
             }
         }
+
+        public override void OnTimeOut()
+        {
+            throw new NotImplementedException();
+        }
     }
+#endif
 }

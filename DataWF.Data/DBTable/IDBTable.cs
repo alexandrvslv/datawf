@@ -68,6 +68,9 @@ namespace DataWF.Data
         int ItemTypeIndex { get; set; }
         Dictionary<int, DBItemType> ItemTypes { get; set; }
         IDBLogTable LogTable { get; set; }
+
+        IEnumerable<DBReferencing> GetReferencing(Type valueType);
+
         string LogTableName { get; set; }
         string Query { get; set; }
         DBSequence Sequence { get; set; }

@@ -135,7 +135,7 @@ namespace DataWF.Data
             var message = new SMNotify
             {
                 Id = SMBase.NewId(),
-                EndPoint = endPoint,
+                Url = endPoint.ToStringUrl(UriScheme.udp),
                 Data = items
             };
             var buffer = serializer.Serialize(message);
@@ -232,7 +232,7 @@ namespace DataWF.Data
 
         protected virtual async ValueTask OnMessageLoad(SMBase message, UdpServerEventArgs arg)
         {
-            var sender = ((IEnumerable<Instance>)InstanceTable).FirstOrDefault(p => p.EndPoint == message.EndPoint);
+            var sender = ((IEnumerable<Instance>)InstanceTable).FirstOrDefault(p => p.Url == message.Url);
             if (sender == null)
                 return;
             sender.ReceiveCount++;
@@ -247,7 +247,7 @@ namespace DataWF.Data
                         {
                             Id = SMBase.NewId(),
                             RequestId = request.Id,
-                            EndPoint = endPoint,
+                            Url = endPoint.ToStringUrl(UriScheme.udp),
                             ResponceType = SMResponceType.Confirm,
                             Data = "Hi!"
                         }, sender);

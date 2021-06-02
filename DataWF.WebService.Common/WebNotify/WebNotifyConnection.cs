@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.WebService.Common
 {
-    [InvokerGenerator]
+    [InvokerGenerator(Instance = true)]
     public partial class WebNotifyConnection : DefaultItem, IDisposable
     {
         private static uint IdSequence = 0;
@@ -287,33 +287,5 @@ namespace DataWF.WebService.Common
             Socket?.Dispose();
             Socket = null;
         }
-
-        public class SocketInvoker : Invoker<WebNotifyConnection, WebSocket>
-        {
-            public static readonly SocketInvoker Instance = new SocketInvoker();
-            public override string Name => nameof(WebNotifyConnection.Socket);
-
-            public override bool CanWrite => true;
-
-            public override WebSocket GetValue(WebNotifyConnection target) => target.Socket;
-
-            public override void SetValue(WebNotifyConnection target, WebSocket value) => target.Socket = value;
-        }
-
-        public class UserInvoker : Invoker<WebNotifyConnection, IUserIdentity>
-        {
-            public static readonly UserInvoker Instance = new UserInvoker();
-            public override string Name => nameof(WebNotifyConnection.User);
-
-            public override bool CanWrite => true;
-
-            public override IUserIdentity GetValue(WebNotifyConnection target) => target.User;
-
-            public override void SetValue(WebNotifyConnection target, IUserIdentity value) => target.User = value;
-        }
-
-
     }
-
-
 }

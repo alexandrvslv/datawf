@@ -382,20 +382,19 @@ namespace DataWF.Data
 
         #region IEnumerable Members
 
-        IEnumerator IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+
+        public override IEnumerator<DBItem> GetItemEnumerator()
         {
-            return items.Count == 0 ? (IEnumerator)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
+            return GetEnumerator();
         }
 
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        public ThreadSafeEnumerator<T> GetEnumerator()
         {
-            return items.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
-        }
-
-        public override IEnumerator<DBItem> GetEnumerator()
-        {
-            return items.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
-        }
+            return items.Count == 0 ? ThreadSafeEnumerator<T>.Empty : new ThreadSafeEnumerator<T>(items);
+        }       
 
         #endregion
 

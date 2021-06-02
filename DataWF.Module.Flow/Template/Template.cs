@@ -158,7 +158,7 @@ namespace DataWF.Module.Flow
         public IEnumerable<TemplateData> Datas
         {
             get => GetReferencing<TemplateData>(Table.TemplateDataTable.TemplateIdKey, DBLoadParam.None);
-            set => SetReferencing(value, TemplateTable.TemplateDataTable.TemplateIdKey);
+            set => SetReferencing(value, Table.TemplateDataTable.TemplateIdKey);
         }
 
         [Referencing(nameof(TemplateReference.TemplateId))]

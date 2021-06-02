@@ -25,7 +25,6 @@ namespace DataWF.Module.Flow
     [Table("ddocument", "Document", BlockSize = 200)]
     public partial class Document : DBGroupItem, IDisposable
     {
-
         private DocInitType initype = DocInitType.Default;
         private int changes = 0;
         private Stage temporaryStage;
@@ -586,11 +585,11 @@ namespace DataWF.Module.Flow
             {
                 throw new InvalidOperationException($"{nameof(Template)} must be specified!");
             }
-            if (Table.saving.Contains(this))//prevent recursion cross transactions
+            if (Table.SaveStack.Contains(this))//prevent recursion cross transactions
             {
                 return;
             }
-            Table.saving.Add(this);
+            Table.SaveStack.Add(this);
 
             try
             {
@@ -667,7 +666,7 @@ namespace DataWF.Module.Flow
             }
             finally
             {
-                Table.saving.Remove(this);
+                Table.SaveStack.Remove(this);
             }
         }
 
@@ -708,13 +707,13 @@ namespace DataWF.Module.Flow
                 Stage = work.Stage,
                 Transaction = transaction
             };
-            return DocumentTable.ExecuteProcedures(param, work.Stage.GetProceduresByType(type));
+            return Table.ExecuteProcedures(param, work.Stage.GetProceduresByType(type));
         }
 
         public object ExecuteProceduresByStage(Stage stage, StageParamProcudureType type, DBTransaction transaction)
         {
             var param = new DocumentExecuteArgs(this) { Stage = stage, Transaction = transaction };
-            return DocumentTable.ExecuteProcedures(param, stage.GetProceduresByType(type));
+            return Table.ExecuteProcedures(param, stage.GetProceduresByType(type));
         }
 
         [ControllerMethod]
@@ -817,7 +816,7 @@ namespace DataWF.Module.Flow
         {
             if (UpdateState != DBUpdateState.Default)
                 return true;
-            var relations = DocumentTable.GetChildRelations();
+            var relations = Table.GetChildRelations();
             foreach (var relation in relations)
             {
                 foreach (DBItem row in GetReferencing(relation, DBLoadParam.None))

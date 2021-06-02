@@ -35,10 +35,10 @@ namespace DataWF.Data
 
     public enum DDLType
     {
+        None,
         Alter,
         Create,
-        Drop,
-        Default
+        Drop        
     }
 
     public enum DBExecuteType

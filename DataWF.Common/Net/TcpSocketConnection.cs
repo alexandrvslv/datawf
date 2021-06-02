@@ -20,8 +20,8 @@ namespace DataWF.Common
         private Socket socket;
 
         public TcpSocketConnection()
-        {}
-        
+        { }
+
         public Socket Socket
         {
             get { return socket; }
@@ -34,12 +34,12 @@ namespace DataWF.Common
                     if (socket.RemoteEndPoint is IPEndPoint point)
                     {
                         Point = point;
+                        Address = socket.RemoteEndPoint.ToUrl();
                     }
-                    Address = socket.RemoteEndPoint.ToUrl();
                 }
             }
         }
-        
+
         public override Uri Address
         {
             get => base.Address;
@@ -49,7 +49,7 @@ namespace DataWF.Common
                 Point = value?.ToEndPoint();
             }
         }
-        
+
         public IPEndPoint Point { get; set; }
 
         public IPEndPoint LocalPoint => socket == null ? null : (IPEndPoint)socket.LocalEndPoint;
@@ -69,44 +69,43 @@ namespace DataWF.Common
 
         protected override async Task SendFin(SocketStreamArgs arg)
         {
-            Socket.NoDelay = true;
+            //Socket.NoDelay = true;
 #if NETSTANDARD2_0
             await Task.Factory.FromAsync<int>(Socket.BeginSend(fin, 0, finLength, SocketFlags.None, null, arg), Socket.EndSend);
 #else
             await Socket.SendAsync(fin, SocketFlags.None);
 #endif
-            Socket.NoDelay = false;
+            //Socket.NoDelay = false;
         }
 
 
 
-        protected override async Task<int> LoadPart(SocketStreamArgs arg)
+        protected override async Task<int> ReceivePart(SocketStreamArgs arg)
         {
 #if NETSTANDARD2_0
-            return await Task.Factory.FromAsync(Socket.BeginReceive(arg.Buffer.Array, 0, Server.BufferSize, SocketFlags.None, null, arg), Socket.EndReceive);
+            return await Task.Factory.FromAsync(Socket.BeginReceive(arg.Buffer.Array, 0, arg.BufferSize, SocketFlags.None, null, arg), Socket.EndReceive);
 #else
-            var memory = arg.Pipe.Writer.GetMemory(arg.Buffer.Count + finLength);
+            var memory = arg.Pipe.Writer.GetMemory(arg.BufferSize);
             return await Socket.ReceiveAsync(memory, SocketFlags.None);
 #endif
         }
 
-        public override async ValueTask Connect(Uri url)
+        public override async ValueTask Connect()
         {
-            var address = url.ToEndPoint();
+            if (Point == null)
+                throw new Exception("Point not Specified");
             if (Socket == null)
             {
-                Socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                if (Point == null)
-                    throw new Exception("Point not Specified");
-                Socket.Bind(Point);
+                Socket = new Socket(Point.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                Socket.Bind(((TcpSocketService)Server).Point);
             }
             if (!Socket.Connected)
             {
                 var arg = new SocketConnectionArgs(this);
                 try
                 {
-                    Debug.WriteLine($"TcpClient {Point} Connect to {address}");
-                    await Task.Factory.FromAsync(Socket.BeginConnect(address, null, arg), Socket.EndDisconnect);
+                    Debug.WriteLine($"TcpClient {Point} Connect to {Point}");
+                    await Task.Factory.FromAsync(Socket.BeginConnect(Point, null, arg), Socket.EndDisconnect);
                     Stamp = DateTime.UtcNow;
                     _ = Server.OnClientConnect(arg);
                 }
@@ -131,7 +130,7 @@ namespace DataWF.Common
                     Socket.Close();
                     Socket.Dispose();
                     Socket = null;
-                    loadEvent.Set();
+                    receiveEvent.Set();
                     sendEvent.Set();
                     _ = Server.OnClientDisconect(arg);
                 }
@@ -155,11 +154,25 @@ namespace DataWF.Common
                     Socket.Close();
                     Socket.Dispose();
                     Socket = null;
-                    loadEvent.Set();
+                    receiveEvent.Set();
                     sendEvent.Set();
 
                 }
                 base.Dispose();
+            }
+        }
+
+        public override void OnTimeOut()
+        {
+            if (Socket.Poll(5000, SelectMode.SelectRead) && (Socket.Available == 0))
+            {
+                Server.OnClientTimeout(new SocketConnectionArgs(this));
+
+                Dispose();
+            }
+            else
+            {
+                Stamp = DateTime.UtcNow;
             }
         }
     }

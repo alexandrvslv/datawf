@@ -16,7 +16,7 @@ namespace DataWF.Common
         public ThreadSafeList(int capacity)
         {
             items = ArrayPool<T>.Shared.Rent(capacity);// new List<T>(capacity);
-            _capacity = capacity;
+            _capacity = items.Length;
         }
 
         public ThreadSafeList(T item) : this(1)
@@ -109,7 +109,9 @@ namespace DataWF.Common
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public IEnumerator<T> GetEnumerator() => _count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeArrayEnumerator<T>(items, _count);
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+
+        public ThreadSafeArrayEnumerator<T> GetEnumerator() => _count == 0 ? ThreadSafeArrayEnumerator<T>.Empty : new ThreadSafeArrayEnumerator<T>(items, _count);
 
         public int BinarySearch(T item, IComparer<T> comparer)
         {

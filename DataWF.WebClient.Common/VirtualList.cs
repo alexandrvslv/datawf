@@ -111,17 +111,12 @@ namespace DataWF.Common
             return base.Contains(item) || (IndexOf(item) >= 0);
         }
 
-        public override IEnumerator<T> GetEnumerator()
+        public override ThreadSafeEnumerator<T> GetEnumerator()
         {
             var count = Count;
-            for (int i = 0; i < count; i++)
-            {
-                var item = GetItemInternal(i);
-                if (item != null)
-                {
-                    yield return item;
-                }
-            }
+            return count == 0 
+                ? ThreadSafeEnumerator<T>.Empty
+                : new ThreadSafeEnumerator<T>(this, count);
         }
 
         public override int IndexOf(T item)

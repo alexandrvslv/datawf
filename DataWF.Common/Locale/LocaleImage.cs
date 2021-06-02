@@ -91,7 +91,7 @@ namespace DataWF.Common
         }
 
         [XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<PropertyChangedEventHandler, INotifyListPropertyChanged>(PropertyChanged);
 
         public event PropertyChangedEventHandler PropertyChanged;
 

@@ -32,7 +32,7 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public abstract partial class QItem : IDisposable, IEntryNotifyPropertyChanged, IComparable, IComparable<QItem>, IValued, IInvoker
+    public abstract partial class QItem : DefaultItem, IDisposable, IComparable, IComparable<QItem>, IValued, IInvoker
     {
         protected int order = -1;
         protected string alias;
@@ -42,9 +42,6 @@ namespace DataWF.Data
         public QItem()
         {
         }
-
-        [JsonIgnore, XmlIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public IQItemList List
@@ -140,17 +137,6 @@ namespace DataWF.Data
         public virtual void Dispose()
         {
         }
-
-        #region INotifyPropertyChanged Members
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        #endregion
 
         public int CompareTo(object obj)
         {

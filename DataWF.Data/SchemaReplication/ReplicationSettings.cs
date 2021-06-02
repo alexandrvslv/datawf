@@ -29,6 +29,11 @@ namespace DataWF.Data
         public List<RSSchema> Schems { get; set; }
         public List<RSInstance> Instances { get; set; }
 
+        public RSInstance GetInstance(string url)
+        {
+            return Instances.FirstOrDefault(p => string.Equals(p.Url, url, StringComparison.OrdinalIgnoreCase));
+        }
+
         public RSSchema GetSchema(DBSchema schema)
         {
             return Schems.FirstOrDefault(p => p.Schema == schema);

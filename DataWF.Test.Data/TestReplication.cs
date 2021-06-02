@@ -1,4 +1,5 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Data;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -14,75 +15,70 @@ namespace DataWF.Test.Data
         [Test]
         public async Task Synchronisation()
         {
-            var schema1 = new TestSchema()
-            {
-                Name = "test_schema1",
-                Connection = new DBConnection
-                {
-                    System = DBSystem.SQLite,
-                    DataBase = "replicant1",
-                    DataBaseId = 1
-                }
-            };
-            schema1.Generate("test_schema1");
-            DBService.Schems.Add(schema1);
+            var schema1 = GenerateSchema("test_schema1");
             schema1.Position.GeneratePositions();
             await schema1.Position.Save();
+
+            var schema2 = GenerateSchema("test_schema2");
 
             var rService1 = new ReplicationService(new ReplicationSettings
             {
                 Instance = new RSInstance
                 {
-                    Host = "localhost",
-                    Port = 51001
+                    Url = "tcp://localhost:51001"
                 },
                 Instances = new List<RSInstance>
                 {
                     new RSInstance
                     {
-                        Host = "localhost",
-                        Port = 51002,
+                        Url = "tcp://localhost:51002"
                     }
                 },
                 Schems = new List<RSSchema>(new[] { new RSSchema { SchemaName = schema1.Name } })
-            });
+            },
+            new TcpSocketService { });
             rService1.Start();
 
-            var schema2 = new TestSchema()
-            {
-                Name = "test_schema2",
-                Connection = new DBConnection
-                {
-                    System = DBSystem.SQLite,
-                    DataBase = "replicant2",
-                    DataBaseId = 2
-                }
-            };
-            schema2.Generate("test_schema2");
-            DBService.Schems.Add(schema2);
+
 
             var rService2 = new ReplicationService(new ReplicationSettings
             {
                 Instance = new RSInstance
                 {
-                    Host = "localhost",
-                    Port = 51002
+                    Url = "tcp://localhost:51002"
                 },
                 Instances = new List<RSInstance>
                 {
                     new RSInstance
                     {
-                        Host = "localhost",
-                        Port = 51001,
+                         Url = "tcp://localhost:51001"
                     }
                 },
                 Schems = new List<RSSchema>(new[] { new RSSchema { SchemaName = schema2.Name } })
-            });
+            },
+            new TcpSocketService { });
 
-            await rService1.SignIn();
-            await rService1.Synch();
+            await rService2.SignIn();
+            await rService2.Synch();
 
             Assert.AreEqual(6, schema2.Position.Count, "Fail Synch");
+        }
+
+        private static TestSchema GenerateSchema(string name)
+        {
+            var schema1 = new TestSchema()
+            {
+                Name = name,
+                Connection = new DBConnection
+                {
+                    System = DBSystem.SQLite,
+                    DataBase = name + ".db",
+                    DataBaseId = 1
+                }
+            };
+            schema1.Generate(name);
+            DBService.Schems.Add(schema1);
+            return schema1;
         }
     }
 }

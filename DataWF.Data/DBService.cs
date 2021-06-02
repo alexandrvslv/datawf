@@ -234,7 +234,7 @@ namespace DataWF.Data
 
         public static void OnDBSchemaChanged(DBSchemaItem item, DDLType type)
         {
-            if (type == DDLType.Default
+            if (type == DDLType.None
                 || !item.Containers.Any()
                 || item.Schema == null
                 || !item.Schema.Containers.Any()

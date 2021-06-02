@@ -31,32 +31,33 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class ReplicationService : TcpServer
+    public class ReplicationService
     {
         private static readonly object loadLock = new object();
         private readonly ConcurrentDictionary<DBTransaction, List<RSItem>> buffer = new ConcurrentDictionary<DBTransaction, List<RSItem>>();
-        private readonly ConcurrentDictionary<long, SMRequest> requests = new ConcurrentDictionary<long, SMRequest>();
+
         private readonly ManualResetEventSlim loginEvent = new ManualResetEventSlim(false);
         private readonly CancellationTokenSource synchCancel = new CancellationTokenSource();
-        private readonly BinarySerializer serializer = new BinarySerializer();
 
-        public ReplicationService(ReplicationSettings settings) : base()
+        public ReplicationService(ReplicationSettings settings, ISocketService socketService)
         {
             Settings = settings;
+            SocketService = socketService;
         }
 
         public ReplicationSettings Settings { get; }
+        public ISocketService SocketService { get; }
 
-        public override void Dispose()
+        public virtual void Dispose()
         {
             Stop().GetAwaiter().GetResult();
-            base.Dispose();
+            SocketService.Dispose();
         }
 
         public void Start()
         {
-            Point = Settings.Instance.EndPoint;
-            StartListener(100);
+            SocketService.Address = new Uri(Settings.Instance.Url);
+            SocketService.StartListener(100);
 
             DBService.AddItemUpdated(OnItemUpdate);
             DBService.AddTransactionCommit(OnTransactionCommit);
@@ -66,14 +67,14 @@ namespace DataWF.Data
 
         public async Task Stop()
         {
-            StopListener();
+            SocketService.StopListener();
 
             DBService.RemoveItemUpdated(OnItemUpdate);
             DBService.RemoveTransactionCommit(OnTransactionCommit);
             await Broadcast(new SMRequest
             {
                 Id = SMBase.NewId(),
-                EndPoint = Point,
+                Url = Settings.Instance.Url,
                 RequestType = SMRequestType.Logout,
                 Data = "By"
             }, false);
@@ -103,7 +104,7 @@ namespace DataWF.Data
                 await Broadcast(new SMRequest
                 {
                     Id = SMBase.NewId(),
-                    EndPoint = Point,
+                    Url = Settings.Instance.Url,
                     RequestType = SMRequestType.Login,
                     Data = "Hi"
                 }, true);
@@ -172,7 +173,7 @@ namespace DataWF.Data
             var message = new SMNotify
             {
                 Id = SMBase.NewId(),
-                EndPoint = Point,
+                Url = Settings.Instance.Url,
                 Data = new RSTransaction { Connection = transaction.DbConnection.Name, Items = items }
             };
 
@@ -181,188 +182,37 @@ namespace DataWF.Data
 
         public async Task<bool> Broadcast<T>(T message, bool checkState = false) where T : SMBase
         {
-            if (!Settings.Instances.Any(p => CheckAddress(p, null, checkState)))
-            {
-                return false;
-            }
-
             bool sended = false;
             foreach (var item in Settings.Instances)
             {
-                if(CheckAddress(Settings.Instance, item, checkState))
-                sended = await item.Send(message, this);
+                if (await CheckAddress(Settings.Instance, item, checkState))
+                    sended = await item.Send(message);
             }
             return sended;
         }
 
-       
-
-        private bool CheckAddress(RSInstance item, RSInstance address, bool checkState = false)
+        private async ValueTask<bool> CheckAddress(RSInstance item, RSInstance address, bool checkState = false)
         {
-            return (address == null || item.Equals(address))
+            var isChecked = (address == null || item.Equals(address))
                 && ((item.Active ?? false) || (item.Active == null && checkState));
+            if (isChecked && address.Connection == null)
+            {
+                address.Connection = await SocketService.CreateConnection(new Uri(address.Url));
+            }
+            return isChecked && (address.Connection?.Connected ?? false);
         }
 
-        protected override async Task OnDataLoadStart(TcpStreamEventArgs arg)
-        {
-            //await base.OnDataLoadStart(arg);
-            try
-            {
-                SMBase message = null;
-                using (var stream = arg.ReaderStream)
-                {
-                    message = (SMBase)serializer.Deserialize(stream, null);
-                }
-                //message.Caller = arg.Client;
-                switch (message.Type)
-                {
-                    case SMType.Request:
-                        await ProcessRequest((SMRequest)message, arg);
-                        break;
-                    case SMType.Response:
-                        await ProcessResponse((SMResponce)message, arg);
-                        break;
-                    case SMType.Notify:
-                        if (message.Data is RSTransaction transaction)
-                        {
-                            await LoadTransaction(transaction);
-                        }
-                        break;
-                }
-                arg.CompleteRead();
-                await arg.ReleasePipe();
-            }
-            catch (Exception ex)
-            {
-                arg.CompleteRead(ex);
-                await arg.ReleasePipe(ex);
-                OnDataException(new TcpExceptionEventArgs(arg, ex));
-            }
-        }
-
-        private async ValueTask ProcessResponse(SMResponce message, TcpStreamEventArgs arg)
-        {
-            var sender = Settings.Instances.FirstOrDefault(p => p.EndPointName == message.EndPoint.ToString());
-            if (sender == null)
-                return;
-            if (message.RequestId is long requestId
-                && requests.TryGetValue(requestId, out var request))
-            {
-                request.Responce = message;
-                requestEvent.Set();
-            }
-            switch (message.ResponceType)
-            {
-                case SMResponceType.Confirm:
-                    sender.Active = true;
-                    sender.TcpSocket = arg.TcpSocket;
-                    break;
-                case SMResponceType.Data:
-                    if (message.Data is RSResult result)
-                    {
-                        switch (result.Type)
-                        {
-                            case RSQueryType.SchemaInfo:
-                                break;
-                            case RSQueryType.SynchTable:
-                                break;
-                            case RSQueryType.SynchSequence:
-                                break;
-                            case RSQueryType.SynchFile:
-                                break;
-                        }
-                    }
-                    break;
-            }
-        }
-
-        protected virtual async ValueTask ProcessRequest(SMRequest message, TcpStreamEventArgs arg)
-        {
-            var sender = Settings.Instances.FirstOrDefault(p => p.EndPointName == message.EndPoint.ToString());
-            if (sender == null)
-                return;
-
-            switch (message.RequestType)
-            {
-                case SMRequestType.Login:
-                    sender.Active = true;
-                    sender.TcpSocket = arg.TcpSocket;
-                    await Send(new SMResponce
-                    {
-                        Id = SMBase.NewId(),
-                        EndPoint = Point,
-                        RequestId = message.Id,
-                        ResponceType = SMResponceType.Confirm,
-                        Data = "Hi"
-                    }, sender);
-                    break;
-                case SMRequestType.Logout:
-                    sender.Active = false;
-                    sender.TcpSocket = null;
-                    break;
-                case SMRequestType.Data:
-                    //if(!sender.Active)
-                    try
-                    {
-                        object data = null;
-
-                        if (message.Data is RSQuery query)
-                        {
-                            switch (query.Type)
-                            {
-                                case RSQueryType.SchemaInfo:
-                                    data = GenerateSchemaInfo(query.SchemaName);
-                                    break;
-                                case RSQueryType.SynchTable:
-                                    data = GenerateTableDiff(query.SchemaName, query.ObjectId, query.Stamp);
-                                    break;
-                                case RSQueryType.SynchFile:
-                                    data = GenerateFile(query.SchemaName, long.TryParse(query.ObjectId, out var id) ? id : -1L);
-                                    break;
-                            }
-                        }
-                        var responce = new SMResponce
-                        {
-                            Id = SMBase.NewId(),
-                            EndPoint = Point,
-                            RequestId = message.Id,
-                            ResponceType = SMResponceType.Data,
-                            Data = data
-                        };
-                        await Send(responce, sender);
-                        if (data is Stream stream)
-                        {
-                            stream.Dispose();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        var responce = new SMResponce
-                        {
-                            Id = SMBase.NewId(),
-                            EndPoint = Point,
-                            RequestId = message.Id,
-                            ResponceType = SMResponceType.Decline,
-                            Data = ex.Message
-                        };
-                        await Send(responce, sender);
-                    }
-
-                    break;
-            }
-        }
-
-        private object GenerateSchemaInfo(string schemaName)
+        public object GenerateSchemaInfo(string schemaName)
         {
             throw new NotImplementedException();
         }
 
-        private object GenerateFile(string schemaName, long v)
+        public object GenerateFile(string schemaName, long v)
         {
             throw new NotImplementedException();
         }
 
-        private object GenerateTableDiff(string schemaName, string tableName, DateTime? stamp)
+        public object GenerateTableDiff(string schemaName, string tableName, DateTime? stamp)
         {
             var table = DBService.Schems[schemaName]?.Tables[tableName];
             if (table == null)
@@ -370,44 +220,7 @@ namespace DataWF.Data
             return table.GetReplicateItems(stamp);
         }
 
-        public static async Task LoadTransaction(RSTransaction srTransaction)
-        {
-            using (var transaction = new DBTransaction(DBService.Connections[srTransaction.Connection], null, true)
-            { Replication = true })
-            {
-                try
-                {
-                    foreach (var item in srTransaction.Items)
-                    {
-                        switch (item.Command)
-                        {
-                            case DBLogType.Insert:
-                            case DBLogType.Update:
-                                await item.Value.Table.SaveItem(item.Value, transaction);
-                                break;
-                            case DBLogType.Delete:
-                                await item.Value.Delete(transaction);
-                                break;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    Helper.OnException(ex);
-                }
-            }
-        }
 
-        protected override async ValueTask OnDataSend(TcpStreamEventArgs arg)
-        {
-            await base.OnDataSend(arg);
-        }
-
-        protected override void OnDataException(SocketExceptionArgs arg)
-        {
-            base.OnDataException(arg);
-        }
 
 
     }

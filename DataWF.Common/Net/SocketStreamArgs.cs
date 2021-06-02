@@ -20,11 +20,12 @@ namespace DataWF.Common
             : base(connection)
         {
             Mode = mode;
-            Buffer = new ArraySegment<byte>(new byte[connection.Server.BufferSize]);
+            BufferSize = connection.Server.BufferSize;
+            Buffer = new ArraySegment<byte>(new byte[BufferSize]);
         }
 
         public SocketStreamMode Mode { get; }
-
+        public int BufferSize { get; }
         public ArraySegment<byte> Buffer { get; private set; }
 
         public CancellationTokenSource CancellationToken { get; set; }
@@ -124,6 +125,8 @@ namespace DataWF.Common
             }
         }
 
+        public Task Receiver { get; set; }
+
         internal Task<int> ReadStream()
         {
             return ReaderStream.ReadAsync(Buffer.Array, 0, Buffer.Count);
@@ -141,7 +144,7 @@ namespace DataWF.Common
                 var consumed = buffer.Start;
                 if (bufferLength != 0)
                 {
-                    var canRead = Buffer.Count - read;
+                    var canRead = BufferSize - read;
                     var toRead = (int)Math.Min(canRead, bufferLength);
 
                     var slize = toRead == bufferLength ? buffer : buffer.Slice(0, toRead);
@@ -248,7 +251,6 @@ namespace DataWF.Common
                 throw new Exception("Reader Wrong State");
             if (Mode == SocketStreamMode.Receive)
             {
-                Task.Factory.StartNew(p => Connection.Server.OnReceiveStart((SocketStreamArgs)p), this, TaskCreationOptions.PreferFairness);
                 ReaderState = SocketStreamState.Started;
             }
         }

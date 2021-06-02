@@ -1,21 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 
 namespace DataWF.Common
 {
-    public static class EndPointExtension
+    public static partial class EndPointExtension
     {
         public static IPEndPoint ToEndPoint(this Uri url)
         {
-            var address = IPAddress.Parse(url.Host);
+            if (!IPAddress.TryParse(url.Host, out var address))
+            {
+                address = Dns.GetHostAddresses(url.Host).FirstOrDefault(p=>p.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            }
             return new IPEndPoint(address, url.Port);
         }
 
-        public static Uri ToUrl(this EndPoint endPoint, string scheme = "tcp")
+        public static string ToStringUrl(this EndPoint endPoint, UriScheme scheme = UriScheme.tcp)
         {
-            return new Uri($"{scheme}://{endPoint}");
+            return $"{scheme}://{endPoint}";
+        }
+
+        public static Uri ToUrl(this EndPoint endPoint, UriScheme scheme = UriScheme.tcp)
+        {
+            return new Uri(endPoint.ToStringUrl(scheme));
         }
 
         public static byte[] GetBytes(this IPEndPoint endPoint)

@@ -29,13 +29,13 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public partial class DBColumnReference : IEntryNotifyPropertyChanged
+    public partial class DBColumnReference : DefaultItem
     {
         private string columnName;
         private DBColumn column;
 
         [XmlIgnore, JsonIgnore]
-        public DBSchema Schema { get { return List?.Schema; } }
+        public DBSchema Schema => List?.Schema;
 
         [Browsable(false)]
         public string ColumnName
@@ -67,20 +67,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
-
-        [Browsable(false), XmlIgnore, JsonIgnore]
-        public DBColumnReferenceList List
-        {
-            get { return Containers.FirstOrDefault() as DBColumnReferenceList; }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged([CallerMemberName] string property = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
+        public DBColumnReferenceList List => (DBColumnReferenceList)Containers.FirstOrDefault(p => p is DBColumnReferenceList);
 
         public override string ToString()
         {

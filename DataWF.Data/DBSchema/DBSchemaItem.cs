@@ -30,7 +30,7 @@ using System.Runtime.CompilerServices;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public abstract partial class DBSchemaItem : IEntryNotifyPropertyChanged, IComparable, ICloneable, IAccessable, IDBSchemaItem
+    public abstract partial class DBSchemaItem : DefaultItem, IComparable, ICloneable, IAccessable, IDBSchemaItem
     {
         protected string name;
         protected string oldname;
@@ -52,9 +52,6 @@ namespace DataWF.Data
             }
             this.name = name;
         }
-
-        [Browsable(false), XmlIgnore, JsonIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
 
         [Browsable(false), XmlIgnore, JsonIgnore]
         public virtual DBSchema Schema
@@ -82,7 +79,11 @@ namespace DataWF.Data
         public virtual AccessValue Access
         {
             get { return access ?? (access = new AccessValue(AccessValue.Provider.GetGroups())); }
-            set { access = value; }
+            set
+            {
+                access = value;
+                OnPropertyChanged();
+            }
         }
 
         [Browsable(false), Category("Naming"), XmlIgnore, JsonIgnore]
@@ -168,12 +169,10 @@ namespace DataWF.Data
 
         public abstract string FormatSql(DDLType ddlType, bool dependency = false);
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void OnPropertyChanged([CallerMemberName] string propertyName = "", DDLType type = DDLType.Default)
+        public void OnPropertyChanged([CallerMemberName] string propertyName = "", DDLType type = DDLType.None)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            if (type != DDLType.Default)
+            base.OnPropertyChanged(propertyName);
+            if (type != DDLType.None)
             {
                 DBService.OnDBSchemaChanged(this, type);
             }

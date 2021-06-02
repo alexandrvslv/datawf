@@ -135,10 +135,10 @@ namespace DataWF.Data
         {
             var isReplace = toReplace.Remove(item);
             if (Table.IsVirtual)
-                return DDLType.Default;
+                return DDLType.None;
             return (item.ColumnType == DBColumnTypes.Default)
                 ? isReplace ? DDLType.Alter : DDLType.Create
-                : DDLType.Default;
+                : DDLType.None;
         }
 
         public DBColumn Add(string name)

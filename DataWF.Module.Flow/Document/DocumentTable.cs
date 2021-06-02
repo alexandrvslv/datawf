@@ -4,13 +4,22 @@ using DataWF.Module.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace DataWF.Module.Flow
 {
+    public partial interface IDocumentTable
+    {
+        HashSet<Document> SaveStack { get; }
+        object ExecuteProcedures(DocumentExecuteArgs param, IEnumerable<StageProcedure> enumer);
+        void OnSaved(Document document, DocumentEventArgs documentEventArgs);
+    }
+
     public partial class DocumentTable<T>
     {
-        internal readonly List<Document> saving = new List<Document>();
-
+        private readonly HashSet<Document> saving = new HashSet<Document>();
+        [JsonIgnore]
+        public HashSet<Document> SaveStack => saving;
         public Document FindDocument(Template template, object p)
         {
             if (template == null)
@@ -80,7 +89,7 @@ namespace DataWF.Module.Flow
 
         public static event DocumentSaveDelegate Saved;
 
-        internal void OnSaved(Document document, DocumentEventArgs documentEventArgs)
+        public void OnSaved(Document document, DocumentEventArgs documentEventArgs)
         {
             Saved?.Invoke(document, documentEventArgs);
         }

@@ -291,7 +291,7 @@ namespace DataWF.Data
                     keys = value;
                     var isNotnull2 = (keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
 
-                    OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.Default);
+                    OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.None);
                 }
                 CheckPullIndex();
             }
@@ -496,7 +496,7 @@ namespace DataWF.Data
                 if (cdefault == value)
                     return;
                 cdefault = value;
-                OnPropertyChanged(nameof(DefaultValue), DDLType.Default);
+                OnPropertyChanged(nameof(DefaultValue), DDLType.None);
             }
         }
 
@@ -509,7 +509,7 @@ namespace DataWF.Data
                 if (ctype == value)
                     return;
                 ctype = value;
-                OnPropertyChanged(nameof(ColumnType), value == DBColumnTypes.Default ? DDLType.Create : DDLType.Default);
+                OnPropertyChanged(nameof(ColumnType), value == DBColumnTypes.Default ? DDLType.Create : DDLType.None);
             }
         }
 

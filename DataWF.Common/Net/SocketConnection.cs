@@ -12,27 +12,60 @@ namespace DataWF.Common
     [InvokerGenerator(Instance = true)]
     public abstract partial class SocketConnection : DefaultItem, ISocketConnection
     {
-        protected static readonly byte[] fin = new byte[] { 1, 60, 2, 102, 105, 110, 3, 62, 4 };
+        protected static readonly byte[] fin = new byte[] { 1, 2, 4, 8, 16, 32, 64, 128, 64, 32, 16, 8, 4, 2, 1 };
         protected static readonly int finLength = fin.Length;
-        protected static readonly int finCacheHalf = fin.Length - 1;
+        protected static readonly int finCacheHalf = fin.Length * 2;
         protected static readonly int finCacheLength = finCacheHalf * 2;
 
         internal static readonly ConcurrentQueue<Pipe> Pipes = new ConcurrentQueue<Pipe>();
         protected readonly BinarySerializer serializer = new BinarySerializer();
         protected ManualResetEventSlim sendEvent = new ManualResetEventSlim(true);
-        protected ManualResetEventSlim loadEvent = new ManualResetEventSlim(true);
+        protected ManualResetEventSlim receiveEvent = new ManualResetEventSlim(true);
         protected bool disposed;
+        private string name;
+        private DateTime stamp;
+        private Uri address;
 
         public SocketConnection()
         {
             Stamp = DateTime.UtcNow;
         }
+
+        public Func<SocketStreamArgs, ValueTask> ReceiveStart { get; set; }
+
         public abstract bool Connected { get; }
-        public string Name { get; set; }
+        public string Name
+        {
+            get => name;
+            set
+            {
+                name = value;
+                OnPropertyChanged();
+            }
+        }
+
         [JsonIgnore]
         public ISocketService Server { get; set; }
-        public DateTime Stamp { get; set; }
-        public virtual Uri Address { get; set; }
+        public DateTime Stamp
+        {
+            get => stamp;
+            set
+            {
+                stamp = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public virtual Uri Address
+        {
+            get => address;
+            set
+            {
+                address = value;
+                Name = value?.ToString();
+                OnPropertyChanged();
+            }
+        }
 
         public int ReceiveCount { get; set; }
         public long ReceiveLength { get; set; }
@@ -42,16 +75,18 @@ namespace DataWF.Common
         public string SendError { get; set; }
         public int SendingCount { get; internal set; }
 
-        public abstract ValueTask Connect(Uri address);
+        public abstract ValueTask Connect();
 
         public abstract ValueTask Disconnect();
+
+        public abstract void OnTimeOut();
 
         public virtual void Dispose()
         {
             if (!disposed)
             {
                 _ = Server.OnClientDisconect(new SocketConnectionArgs(this));
-                loadEvent?.Dispose();
+                receiveEvent?.Dispose();
                 sendEvent?.Dispose();
                 disposed = true;
             }
@@ -79,7 +114,7 @@ namespace DataWF.Common
             }
         }
 
-        public async Task SendText(string text)
+        public async Task Send(string text)
         {
             var buffer = Encoding.UTF8.GetBytes(text);
             using (var stream = new MemoryStream(buffer))
@@ -114,7 +149,7 @@ namespace DataWF.Common
             {
                 try
                 {
-                    serializer.Serialize(args.WriterStream, element, args.Buffer.Count);
+                    serializer.Serialize(args.WriterStream, element, Server.BufferSize);
                     args.CompleteWrite();
                 }
                 catch (Exception ex)
@@ -126,8 +161,6 @@ namespace DataWF.Common
 
         public virtual async Task<bool> Send(SocketStreamArgs arg)
         {
-            if (Server.TransferTimeOut != default(TimeSpan))
-                arg.CancellationToken = new CancellationTokenSource(Server.TransferTimeOut);
             if (!Connected)
             {
                 throw new Exception("Socket is Discconected!");
@@ -137,7 +170,10 @@ namespace DataWF.Common
                 sendEvent.Wait();
                 sendEvent.Reset();
                 SendingCount++;
-
+                if (Server.TransferTimeout != default(TimeSpan))
+                {
+                    arg.CancellationToken = new CancellationTokenSource(Server.TransferTimeout);
+                }
                 while (true)
                 {
                     //buffering Compresison results
@@ -149,7 +185,7 @@ namespace DataWF.Common
                         {
                             if (arg.CancellationToken.IsCancellationRequested)
                                 throw new TimeoutException($"Timeout of sending message {Helper.SizeFormat(arg.Transfered)}");
-                            arg.CancellationToken.CancelAfter(Server.TransferTimeOut);
+                            arg.CancellationToken.CancelAfter(Server.TransferTimeout);
                         }
                         arg.Transfered += sended;
                         arg.PartsCount++;
@@ -192,7 +228,7 @@ namespace DataWF.Common
 
         public void WaitAll()
         {
-            loadEvent.Wait();
+            receiveEvent.Wait();
             sendEvent.Wait();
         }
 
@@ -200,8 +236,8 @@ namespace DataWF.Common
         {
             while (Connected)
             {
-                loadEvent.Wait();
-                loadEvent.Reset();
+                receiveEvent.Wait();
+                receiveEvent.Reset();
 
                 var arg = new SocketStreamArgs(this, SocketStreamMode.Receive)
                 {
@@ -209,22 +245,36 @@ namespace DataWF.Common
                     FinCache = new Memory<byte>(new byte[finCacheLength])
                 };
 
-                await Load(arg);
+                await Receive(arg);
             }
         }
 
-        protected abstract Task<int> LoadPart(SocketStreamArgs arg);
+        protected abstract Task<int> ReceivePart(SocketStreamArgs arg);
 
-        protected virtual async ValueTask Load(Memory<byte> buffer)
+        protected virtual async ValueTask Receive(Memory<byte> buffer)
         {
             var arg = new SocketStreamArgs(this, SocketStreamMode.Receive)
             {
                 Pipe = GetPipe(),
-                FinCache = new Memory<byte>(new byte[finCacheLength])
+                FinCache = new Memory<byte>(new byte[finCacheLength]),
             };
-            arg.StartRead();
+            CacheFinHalf(buffer, arg);
+#if !NETSTANDARD2_0
+            var memory = arg.Pipe.Writer.GetMemory(buffer.Length);
+            buffer.Span.CopyTo(memory.Span);
+            buffer = memory.Slice(0, buffer.Length);
+#endif
+            await Receive(arg, buffer, true);
+        }
 
-            bool isBreak = CheckFinBuffer(ref buffer, arg, out var setLoad);
+        protected virtual async ValueTask<bool> Receive(SocketStreamArgs arg, Memory<byte> buffer, bool fromBuffer = false)
+        {
+            if (arg.ReaderState == SocketStreamState.None)
+            {
+                arg.StartRead();
+                arg.Receiver = Task.Factory.StartNew(p => OnReceiveStart((SocketStreamArgs)p), arg, TaskCreationOptions.PreferFairness);
+            }
+            bool isBreak = CheckFinBuffer(ref buffer, arg, out var setReceiver);
             if (!buffer.IsEmpty)
             {
                 arg.PartsCount++;
@@ -232,52 +282,39 @@ namespace DataWF.Common
 #if NETSTANDARD2_0
                 await arg.WriterStream.WriteAsync(buffer.ToArray(), 0, buffer.Length);
 #else
-                await arg.WriterStream.WriteAsync(buffer);
+                arg.Pipe.Writer.Advance(buffer.Length);
+                var result = await arg.Pipe.Writer.FlushAsync();
 #endif
             }
 
             if (isBreak)
             {
-                EndLoad(arg, setLoad);
+                OnReceiveFinish(arg, setReceiver);
             }
-            else
+            else if (fromBuffer)
             {
-                _ = Load(arg);
+                _ = Receive(arg);
             }
+            return isBreak;
         }
 
-        protected virtual async Task Load(SocketStreamArgs arg)
+        protected virtual async Task Receive(SocketStreamArgs arg)
         {
             try
             {
-                var setLoad = true;
                 while (true)
                 {
-                    int read = await LoadPart(arg);
+                    int read = await ReceivePart(arg);
                     if (read > 0)
                     {
+                        Stamp = DateTime.UtcNow;
 #if NETSTANDARD2_0
-                        var slice = new Memory<byte>(arg.Buffer.Array, 0, read);
+                        var buffer = new Memory<byte>(arg.Buffer.Array, 0, arg.BufferSize);
 #else
-                        var slice = memory.Length == read ? memory : memory.Slice(0, read);
+                        var memory = arg.Pipe.Writer.GetMemory(arg.BufferSize);
+                        var buffer = memory.Length == read ? memory : memory.Slice(0, read);
 #endif
-                        if (arg.ReaderState == SocketStreamState.None)
-                        {
-                            arg.StartRead();
-                        }
-                        var isBreak = CheckFinBuffer(ref slice, arg, out setLoad);
-                        if (!slice.IsEmpty)
-                        {
-                            arg.PartsCount++;
-                            arg.Transfered += slice.Length;
-#if NETSTANDARD2_0
-                            await arg.WriterStream.WriteAsync(slice.ToArray(), 0, slice.Length);
-#else
-                            arg.Pipe.Writer.Advance(slice.Length);
-                            var result = await arg.Pipe.Writer.FlushAsync();
-#endif
-                        }
-                        if (isBreak)
+                        if (await Receive(arg, buffer))
                             break;
                     }
                     else
@@ -286,7 +323,6 @@ namespace DataWF.Common
                         return;
                     }
                 }
-                EndLoad(arg, setLoad);
             }
             catch (Exception ex)
             {
@@ -296,14 +332,39 @@ namespace DataWF.Common
             }
         }
 
-        protected virtual void EndLoad(SocketStreamArgs arg, bool setLoad)
+        protected virtual async Task OnReceiveStart(SocketStreamArgs args)
+        {
+            try
+            {
+                if (ReceiveStart != null)
+                {
+                    await ReceiveStart(args);
+                }
+                else if (Server != null)
+                {
+                    await Server.OnReceiveStart(args);
+                }
+                else
+                {
+                    await Task.Delay(1);
+                    throw new Exception("No data load listener specified!");
+                }
+                await args.CompleteRead();
+            }
+            catch (Exception ex)
+            {
+                await args.CompleteRead(ex);
+            }
+        }
+
+        protected virtual void OnReceiveFinish(SocketStreamArgs arg, bool setLoad)
         {
             arg.CompleteWrite();
-            Stamp = DateTime.UtcNow;
+
             _ = Server.OnReceiveFinish(arg);
             if (setLoad)
             {
-                loadEvent.Set();
+                receiveEvent.Set();
             }
         }
 
@@ -318,12 +379,7 @@ namespace DataWF.Common
                 index = arg.FinCache.Span.IndexOf(fin);
                 if (index < 0)
                 {
-                    if (buffer.Length < finCacheHalf)
-                    { }
-
-                    var maxFinCache = Math.Min(finCacheHalf, buffer.Length);
-                    var finCacheSlice = arg.FinCache.Slice(finCacheHalf - maxFinCache);
-                    buffer.Span.Slice(buffer.Length - maxFinCache).CopyTo(finCacheSlice.Span);
+                    CacheFinHalf(buffer, arg);
 
                     setLoad = false;
                     return false;
@@ -339,12 +395,18 @@ namespace DataWF.Common
             {
                 setLoad = false;
                 var slice = buffer.Slice(endIndex).ToArray();
-                _ = Task.Run(() => _ = Load(slice));
+                _ = Task.Run(() => _ = Receive(slice));
             }
             buffer = index > 0 ? buffer.Slice(0, index) : Memory<byte>.Empty;
 
             return true;
         }
 
+        private static void CacheFinHalf(Memory<byte> buffer, SocketStreamArgs arg)
+        {
+            var maxFinCache = Math.Min(finCacheHalf, buffer.Length);
+            var finCacheSlice = arg.FinCache.Slice(finCacheHalf - maxFinCache);
+            buffer.Span.Slice(buffer.Length - maxFinCache).CopyTo(finCacheSlice.Span);
+        }
     }
 }

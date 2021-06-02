@@ -4,22 +4,12 @@ using System.Collections.Generic;
 
 namespace DataWF.Common
 {
-    public readonly struct EmptyEnumerator<T> : IEnumerator<T>
-    {
-        public static readonly EmptyEnumerator<T> Default = new EmptyEnumerator<T>();
-
-        public T Current => default(T);
-
-        object IEnumerator.Current => null;
-
-        public void Dispose() { }
-        public bool MoveNext() => false;
-        public void Reset() { }
-    }
 
     [Serializable]
     public struct ThreadSafeEnumerator<T> : IEnumerator<T>, IEnumerator
     {
+        public static readonly ThreadSafeEnumerator<T> Empty = new ThreadSafeEnumerator<T>(null, 0);
+
         private int i;
         private uint count;
         private IList<T> items;
@@ -36,10 +26,7 @@ namespace DataWF.Common
             current = default(T);
         }
 
-        public T Current
-        {
-            get => current;
-        }
+        public T Current => current;
 
         object IEnumerator.Current => Current;
 
@@ -63,51 +50,6 @@ namespace DataWF.Common
                 Helper.OnException(e);
                 return false;
             }
-        }
-
-        public void Reset()
-        {
-            i = 0;
-            current = default(T);
-        }
-    }
-
-
-    [Serializable]
-    public struct ThreadSafeArrayEnumerator<T> : IEnumerator<T>, IEnumerator
-    {
-        private int i;
-        private uint count;
-        private T[] items;
-        private T current;
-
-        public ThreadSafeArrayEnumerator(T[] items, int count)
-        {
-            i = 0;
-            this.count = (uint)count;
-            this.items = items;
-            current = default(T);
-        }
-
-        public T Current
-        {
-            get => current;
-        }
-
-        object IEnumerator.Current => Current;
-
-        public void Dispose()
-        { }
-
-        public bool MoveNext()
-        {
-            if ((uint)i < count)
-            {
-                current = items[i++];
-                return true;
-            }
-            current = default(T);
-            return false;
         }
 
         public void Reset()

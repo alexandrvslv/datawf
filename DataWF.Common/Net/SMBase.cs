@@ -47,15 +47,15 @@ namespace DataWF.Common
         public long Id { get; set; }
 
         [Display(Order = -1)]
-        [ElementSerializer(typeof(IPEndPointSerializer))]
-        public IPEndPoint EndPoint { get; set; }
+        //[ElementSerializer(typeof(UriSerializer))]
+        public string Url { get; set; }
 
         [Display(Order = 100)]
         public object Data { get; set; }
 
         public override string ToString()
         {
-            return string.Format("Type:{0} Id:{1} Data:{2}", Type, EndPoint, Data);
+            return string.Format("Type:{0} Id:{1} Data:{2}", Type, Url, Data);
         }
     }
 

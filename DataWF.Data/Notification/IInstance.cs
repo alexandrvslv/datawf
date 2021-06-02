@@ -27,10 +27,9 @@ namespace DataWF.Data
     {
         bool? Active { get; set; }
         IPEndPoint EndPoint { get; set; }
-        string Host { get; set; }
+        string Url { get; set; }
         int Id { get; set; }
         bool IsCurrent { get; }
-        int? Port { get; set; }
         long ReceiveCount { get; set; }
         long ReceiveLength { get; set; }
         long SendCount { get; set; }

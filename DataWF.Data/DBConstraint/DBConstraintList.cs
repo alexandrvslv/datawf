@@ -50,7 +50,7 @@ namespace DataWF.Data
 
         public override DDLType GetInsertType(T item)
         {
-            return (item.Column?.ColumnType == DBColumnTypes.Default) ? DDLType.Create : DDLType.Default;
+            return (item.Column?.ColumnType == DBColumnTypes.Default) ? DDLType.Create : DDLType.None;
         }
 
         internal void Replace(DBColumn exist, DBColumn replacer)

@@ -537,9 +537,11 @@ namespace DataWF.Data
 
         public abstract bool Remove(DBItem item);
 
-        public abstract IEnumerator<DBItem> GetEnumerator();
+        public abstract IEnumerator<DBItem> GetItemEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator<DBItem> IEnumerable<DBItem>.GetEnumerator() => GetItemEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetItemEnumerator();
 
         public abstract void CopyTo(DBItem[] array, int arrayIndex);
 

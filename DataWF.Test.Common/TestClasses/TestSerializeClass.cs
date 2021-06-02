@@ -1,9 +1,11 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.ComponentModel;
 
 namespace DataWF.Test.Common
 {
-    public class TestSerializeClass
+    [InvokerGenerator]
+    public partial class TestSerializeClass
     {
         public int IntValue { get; set; }
 

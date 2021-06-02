@@ -9,11 +9,13 @@ namespace DataWF.Common
 {
     public interface ISocketConnection: IDisposable
     {
+        bool Connected { get; }
         string Name { get; }
         ISocketService Server { get; set; }
         DateTime Stamp { get; set; }
         Uri Address { get; set; }
-        ValueTask Connect(Uri address, bool attachToServer = true);
+        Func<SocketStreamArgs, ValueTask> ReceiveStart { get; set; }
+        ValueTask Connect();
         ValueTask Disconnect();
         Pipe GetPipe();
         Task ListenerLoop();
@@ -22,5 +24,6 @@ namespace DataWF.Common
         Task<bool> Send(SocketStreamArgs arg);
         Task<bool> SendT<T>(T element);
         void WaitAll();
+        void OnTimeOut();
     }
 }

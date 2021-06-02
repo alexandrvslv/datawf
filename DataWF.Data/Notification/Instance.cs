@@ -45,18 +45,11 @@ namespace DataWF.Data
             set => SetValue(value, Table.IdKey);
         }
 
-        [Column("instance_host", Keys = DBColumnKeys.View)]
-        public string Host
+        [Column("instance_url", 1024, Keys = DBColumnKeys.View)]
+        public string Url
         {
-            get => GetValue<string>(Table.HostKey);
-            set => SetValue(value, Table.HostKey);
-        }
-
-        [Column("instance_port", Keys = DBColumnKeys.View)]
-        public int? Port
-        {
-            get => GetValue<int?>(Table.PortKey);
-            set => SetValue(value, Table.PortKey);
+            get => GetValue<string>(Table.UrlKey);
+            set => SetValue(value, Table.UrlKey);
         }
 
         [Column("instance_active")]
@@ -69,12 +62,11 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore]
         public IPEndPoint EndPoint
         {
-            get => ipEndPoint ?? (ipEndPoint = Host == null ? null : new IPEndPoint(IPAddress.Parse(Host), Port.GetValueOrDefault()));
+            get => ipEndPoint ?? (ipEndPoint = Url == null ? null : new Uri(Url).ToEndPoint());
             set
             {
                 ipEndPoint = value;
-                Host = value?.Address.ToString();
-                Port = value?.Port;
+                Url = value?.ToStringUrl(UriScheme.udp);
             }
         }
 
@@ -102,8 +94,7 @@ namespace DataWF.Data
         public async Task<Instance> GetByNetId(IPEndPoint endPoint, bool create, IUserIdentity user = null)
         {
             var query = new QQuery(this);
-            query.BuildParam(HostKey, CompareType.Equal, endPoint.Address.ToString());
-            query.BuildParam(PortKey, CompareType.Equal, endPoint.Port);
+            query.BuildParam(UrlKey, CompareType.Equal, endPoint.ToStringUrl(UriScheme.udp));
             query.BuildParam(ActiveKey, CompareType.Equal, false);
             var instance = Load(query).LastOrDefault();
             if (instance == null && create)

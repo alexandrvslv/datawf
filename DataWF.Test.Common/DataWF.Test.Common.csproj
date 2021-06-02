@@ -14,8 +14,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup> 
   <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
-    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj"/>
+    <ProjectReference Include="..\DataWF.Common.Generator\DataWF.Common.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />

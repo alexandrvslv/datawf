@@ -132,13 +132,13 @@ namespace DataWF.Common
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public bool IsHandled => PropertyChanged != null;
 
-        public IEnumerable<TT> GetHandlers<TT>() => TypeHelper.GetHandlers<TT>(CollectionChanged);
+        public IEnumerable<TT> GetHandlers<TT>() => TypeHelper.GetContainers<NotifyCollectionChangedEventHandler, TT>(CollectionChanged);
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<PropertyChangedEventHandler, INotifyListPropertyChanged>(PropertyChanged);
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public IEnumerable<IFilterable> Views => TypeHelper.GetHandlers<IFilterable>(CollectionChanged);
+        public IEnumerable<IFilterable> Views => TypeHelper.GetContainers<NotifyCollectionChangedEventHandler, IFilterable>(CollectionChanged);
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event PropertyChangedEventHandler PropertyChanged;
@@ -177,7 +177,16 @@ namespace DataWF.Common
             {
                 return index.Scan(comparer, value);
             }
-            return ListHelper.Search<T, K>(this, invoker, comparer, value);
+            return Search<K>(invoker, comparer, value);
+        }
+
+        private IEnumerable<T> Search<K>(IInvoker<T, K> invoker, CompareType comparer, object value)
+        {
+            foreach (var item in this)
+            {
+                if (ListHelper.CheckItemT<K>(invoker.GetValue(item), value, comparer, null))
+                    yield return item;
+            }
         }
 
         public IEnumerable<T> Select<K>(IInvoker<T, K> invoker, CompareType comparer, K value)
@@ -186,7 +195,7 @@ namespace DataWF.Common
             {
                 return index.Scan(comparer, value);
             }
-            return ListHelper.Search<T, K>(this, invoker, comparer, value);
+            return Search<K>(invoker, comparer, value);
         }
 
         public IEnumerable<T> Select(IInvoker invoker, CompareType comparer, object value)
@@ -917,9 +926,14 @@ namespace DataWF.Common
             return GetEnumerator();
         }
 
-        public virtual IEnumerator<T> GetEnumerator()
+        IEnumerator<T> IEnumerable<T>.GetEnumerator()
         {
-            return items.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
-        }        
+            return GetEnumerator();
+        }
+
+        public virtual ThreadSafeEnumerator<T> GetEnumerator()
+        {
+            return items.Count == 0 ? ThreadSafeEnumerator<T>.Empty : new ThreadSafeEnumerator<T>(items);
+        }
     }
 }
