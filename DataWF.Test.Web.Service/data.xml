@@ -1,0 +1,2107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--DataWF.Data.DBSchemaList, DataWF.Data-->
+<e Count="1" HandleChanges="True">
+  <i DisplayName="test" DataBase="test" ConnectionName="test" LogSchemaName="test_log" FileName="schems\test.xml" Name="test">
+    <Tables Count="45">
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Counterpart.Address, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="daddress" DisplayName="Address" GroupName="Address" SequenceName="seq_daddress" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="12">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="location_id" DisplayName="Location" Property="LocationId" ReferenceProperty="Location" Keys="View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="post_index" DisplayName="PostIndex" Property="PostIndex" Keys="View" Size="20" DBDataType="String" DataType="System.String" />
+          <i Name="street_ru" DisplayName="StreetRU" GroupName="street" Property="StreetRU" Keys="View, Culture" Size="1024" CultureCode="ru-RU" DBDataType="String" DataType="System.String" />
+          <i Name="street_en" DisplayName="StreetEN" GroupName="street" Property="StreetEN" Keys="View, Culture" Size="1024" CultureCode="en-US" DBDataType="String" DataType="System.String" />
+          <i Name="floor" DisplayName="Floor" Property="Floor" DBDataType="Clob" DataType="System.String" />
+          <i Name="ext_id" DisplayName="ExternalId" Property="ExternalId" DBDataType="Int" DataType="System.Int32" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="street" DisplayName="street" Order="1" />
+        </ColumnGroups>
+        <Indexes Count="2">
+          <i Name="daddress_location_id" DisplayName="daddress_location_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.daddress.location_id" />
+            </Columns>
+          </i>
+          <i Name="daddress_post_index" DisplayName="daddress_post_index" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.daddress.post_index" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="1">
+          <i Name="fk_daddress_location_id" DisplayName="fk_daddress_location_id" Type="Foreign" Property="Location">
+            <Columns Count="1">
+              <i ColumnName="test.daddress.location_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rlocation.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prdaddressunid" DisplayName="prdaddressunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.daddress.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.Address, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Counterpart.Customer, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="dcustomer" DisplayName="Customer" GroupName="Customer" SequenceName="seq_dcustomer" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="18">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="innr" DisplayName="INN" Property="INN" Keys="Code" Size="40" DBDataType="String" DataType="System.String" />
+          <i Name="code" DisplayName="Code" Property="Code" Size="40" DBDataType="String" DataType="System.String" />
+          <i Name="shortname_en" DisplayName="ShortNameEN" GroupName="shortname" Property="ShortNameEN" Keys="View, Culture" Size="512" CultureCode="en-US" DBDataType="String" DataType="System.String" />
+          <i Name="shortname_ru" DisplayName="ShortNameRU" GroupName="shortname" Property="ShortNameRU" Keys="View, Culture" Size="512" CultureCode="ru-RU" DBDataType="String" DataType="System.String" />
+          <i Name="name_ru" DisplayName="NameRU" GroupName="name" Property="NameRU" Keys="Culture" Size="1024" CultureCode="ru-RU" DBDataType="String" DataType="System.String" />
+          <i Name="name_en" DisplayName="NameEN" GroupName="name" Property="NameEN" Keys="Culture" Size="1024" CultureCode="en-US" DBDataType="String" DataType="System.String" />
+          <i Name="email" DisplayName="EMail" Property="EMail" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="phone" DisplayName="Phone" Property="Phone" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="country_id" DisplayName="Country" Property="CountryId" ReferenceProperty="Country" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="address_id" DisplayName="Address" Property="AddressId" ReferenceProperty="Address" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="sign_key" DisplayName="Key" Property="Key" Keys="System, Password" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="ext_id" DisplayName="ExternalId" Property="ExternalId" DBDataType="Int" DataType="System.Int32" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="3">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="shortname" DisplayName="shortname" Order="1" />
+          <i Name="name" DisplayName="name" Order="2" />
+        </ColumnGroups>
+        <Indexes Count="3">
+          <i Name="dcustomer_inn" DisplayName="dcustomer_inn" Unique="True">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer.innr" />
+            </Columns>
+          </i>
+          <i Name="dcustomer_code" DisplayName="dcustomer_code" Unique="True">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer.code" />
+            </Columns>
+          </i>
+          <i Name="dcustomer_email" DisplayName="dcustomer_email" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer.email" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="2">
+          <i Name="fk_dcustomer_country_id" DisplayName="fk_dcustomer_country_id" Type="Foreign" Property="Country">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer.country_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.Country.unid" />
+            </References>
+          </i>
+          <i Name="fk_dcustomer_address_id" DisplayName="fk_dcustomer_address_id" Type="Foreign" Property="Address">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer.address_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.daddress.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prdcustomerunid" DisplayName="prdcustomerunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.Customer, DataWF.Module.Counterpart" />
+          <i Key="1" Value="DataWF.Module.Counterpart.Company, DataWF.Module.Counterpart" />
+          <i Key="2" Value="DataWF.Module.Counterpart.Persone, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Counterpart.CustomerAddress, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="dcustomer_address" DisplayName="CustomerAddress" GroupName="Customer" SequenceName="seq_dcustomer_address" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="8">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="customer_id" DisplayName="Customer" Property="CustomerId" ReferenceProperty="Customer" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="address_id" DisplayName="Address" Property="AddressId" ReferenceProperty="Address" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="2">
+          <i Name="fk_dcustomer_address_customer_id" DisplayName="fk_dcustomer_address_customer_id" Type="Foreign" Property="Customer">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer_address.customer_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.dcustomer.unid" />
+            </References>
+          </i>
+          <i Name="fk_dcustomer_address_address_id" DisplayName="fk_dcustomer_address_address_id" Type="Foreign" Property="Address">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer_address.address_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.daddress.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prdcustomer_addressunid" DisplayName="prdcustomer_addressunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer_address.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.CustomerAddress, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Counterpart.CustomerReference, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="dcustomer_reference" DisplayName="CustomerReference" GroupName="Customer" SequenceName="seq_dcustomer_reference" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="11">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="company_id" DisplayName="Company" Property="CompanyId" ReferenceProperty="Company" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="persone_id" DisplayName="Persone" Property="PersoneId" ReferenceProperty="Persone" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="email" DisplayName="EMail" Property="EMail" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="phone" DisplayName="Phone" Property="Phone" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="ext_id" DisplayName="ExternalId" Property="ExternalId" DBDataType="Int" DataType="System.Int32" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="2">
+          <i Name="fk_dcustomer_reference_company_id" DisplayName="fk_dcustomer_reference_company_id" Type="Foreign" Property="Company">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer_reference.company_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.Company.unid" />
+            </References>
+          </i>
+          <i Name="fk_dcustomer_reference_persone_id" DisplayName="fk_dcustomer_reference_persone_id" Type="Foreign" Property="Persone">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer_reference.persone_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.Persone.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prdcustomer_referenceunid" DisplayName="prdcustomer_referenceunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.dcustomer_reference.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.CustomerReference, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.Document, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="ddocument" DisplayName="Document" GroupName="Document" SequenceName="seq_ddocument" BlockSize="256" Type="Table" IsCaching="False">
+        <Columns Count="21">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="template_id" DisplayName="Template" Property="TemplateId" ReferenceProperty="Template" Keys="Notnull, View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="parent_id" DisplayName="Parent" Property="ParentId" ReferenceProperty="Parent" Keys="Group, Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="document_date" DisplayName="DocumentDate" Property="DocumentDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="document_number" DisplayName="Number" Property="Number" Keys="Code, Indexing, View" Size="80" DBDataType="String" DataType="System.String" />
+          <i Name="customer_id" DisplayName="Customer" Property="CustomerId" ReferenceProperty="Customer" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="title_ru" DisplayName="TitleRU" GroupName="title" Property="TitleRU" Keys="View, Culture" CultureCode="ru-RU" DBDataType="Clob" DataType="System.String" />
+          <i Name="title_en" DisplayName="TitleEN" GroupName="title" Property="TitleEN" Keys="View, Culture" CultureCode="en-US" DBDataType="Clob" DataType="System.String" />
+          <i Name="complete_progress" DisplayName="CompleteProgress" Property="CompleteProgress" DBDataType="Double" DataType="System.Double" DefaultValue="0" />
+          <i Name="current_work_id" DisplayName="CurrentWork" Property="CurrentWorkId" ReferenceProperty="CurrentWork" Keys="Reference" DBDataType="BigInt" DataType="System.Int64" ColumnType="Code" />
+          <i Name="current_stage_id" DisplayName="CurrentStage" Property="CurrentStageId" ReferenceProperty="CurrentStage" Keys="Reference" DBDataType="Int" DataType="System.Int32" ColumnType="Code" />
+          <i Name="current_user_id" DisplayName="CurrentUser" Property="CurrentUserId" ReferenceProperty="CurrentUser" Keys="Reference" DBDataType="Int" DataType="System.Int32" ColumnType="Code" />
+          <i Name="work_user" DisplayName="WorkUser" Property="WorkUser" DBDataType="Clob" DataType="System.String" ColumnType="Internal" />
+          <i Name="work_stage" DisplayName="WorkStage" Property="WorkStage" DBDataType="Clob" DataType="System.String" ColumnType="Internal" />
+          <i Name="is_important" DisplayName="Important" Property="Important" DBDataType="Bool" DataType="System.Boolean" />
+          <i Name="is_comlete" DisplayName="IsComplete" Property="IsComplete" DBDataType="Bool" DataType="System.Boolean" DefaultValue="False" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="title" DisplayName="title" Order="1" />
+        </ColumnGroups>
+        <Indexes Count="4">
+          <i Name="ddocument_item_type" DisplayName="ddocument_item_type" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument.item_type" />
+            </Columns>
+          </i>
+          <i Name="ddocument_template_id" DisplayName="ddocument_template_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument.template_id" />
+            </Columns>
+          </i>
+          <i Name="ddocument_parent_id" DisplayName="ddocument_parent_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument.parent_id" />
+            </Columns>
+          </i>
+          <i Name="ddocuument_document_number" DisplayName="ddocuument_document_number" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument.document_number" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="6">
+          <i Name="fk_ddocument_template_id" DisplayName="fk_ddocument_template_id" Type="Foreign" Property="Template">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument.template_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rtemplate.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_parent_id" DisplayName="fk_ddocument_parent_id" Type="Foreign" Property="Parent">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument.parent_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ddocument.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_customer_id" DisplayName="fk_ddocument_customer_id" Type="Foreign" Property="Customer">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument.customer_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.dcustomer.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_current_work_id" DisplayName="fk_ddocument_current_work_id" Type="Foreign" Property="CurrentWork">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument.current_work_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ddocument_work.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_current_stage_id" DisplayName="fk_ddocument_current_stage_id" Type="Foreign" Property="CurrentStage">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument.current_stage_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rstage.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_current_user_id" DisplayName="fk_ddocument_current_user_id" Type="Foreign" Property="CurrentUser">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument.current_user_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ruser.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prddocumentunid" DisplayName="prddocumentunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.Document, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.DocumentComment, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="ddocument_comment" DisplayName="DocumentComment" GroupName="Document" SequenceName="seq_ddocument_comment" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="8">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="document_id" DisplayName="Document" Property="DocumentId" ReferenceProperty="Document" Keys="Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="message_id" DisplayName="Message" Property="MessageId" ReferenceProperty="Message" Keys="Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes Count="1">
+          <i Name="ddocument_comment_document_id" DisplayName="ddocument_comment_document_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_comment.document_id" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="2">
+          <i Name="fk_ddocument_comment_document_id" DisplayName="fk_ddocument_comment_document_id" Type="Foreign" Property="Document">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_comment.document_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ddocument.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_comment_message_id" DisplayName="fk_ddocument_comment_message_id" Type="Foreign" Property="Message">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_comment.message_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.dmessage.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prddocument_commentunid" DisplayName="prddocument_commentunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_comment.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.DocumentComment, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.DocumentCustomer, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="ddocument_customer" DisplayName="DocumentCustomer" GroupName="Document" SequenceName="seq_ddocument_customer" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="11">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="document_id" DisplayName="Document" Property="DocumentId" ReferenceProperty="Document" Keys="Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="customer_id" DisplayName="Customer" Property="CustomerId" ReferenceProperty="Customer" Keys="View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="address_id" DisplayName="Address" Property="AddressId" ReferenceProperty="Address" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="email" DisplayName="EMail" Property="EMail" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="phone" DisplayName="Phone" Property="Phone" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes Count="1">
+          <i Name="ddocument_customer_document_id" DisplayName="ddocument_customer_document_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_customer.document_id" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="3">
+          <i Name="fk_ddocument_customer_document_id" DisplayName="fk_ddocument_customer_document_id" Type="Foreign" Property="Document">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_customer.document_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ddocument.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_customer_customer_id" DisplayName="fk_ddocument_customer_customer_id" Type="Foreign" Property="Customer">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_customer.customer_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.dcustomer.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_customer_address_id" DisplayName="fk_ddocument_customer_address_id" Type="Foreign" Property="Address">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_customer.address_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.daddress.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prddocument_customerunid" DisplayName="prddocument_customerunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_customer.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.DocumentCustomer, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.DocumentData, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="ddocument_data" DisplayName="DocumentData" GroupName="Document" SequenceName="seq_ddocument_data" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="14">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="document_id" DisplayName="Document" Property="DocumentId" ReferenceProperty="Document" Keys="Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="template_data_id" DisplayName="TemplateData" Property="TemplateDataId" ReferenceProperty="TemplateData" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="file_name" DisplayName="FileName" Property="FileName" Keys="View, FileName" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="file_url" DisplayName="FileUrl" Property="FileUrl" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="file_last_write" DisplayName="FileLastWrite" Property="FileLastWrite" Keys="FileLastWrite" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="file_data" DisplayName="FileData" Property="FileData" Keys="File" DBDataType="Blob" DataType="System.Byte[]" />
+          <i Name="file_lob" DisplayName="FileLOB" Property="FileLOB" Keys="FileLOB" DBDataType="LargeObject" DataType="System.UInt32" />
+          <i Name="current_user_id" DisplayName="CurrentUser" Property="CurrentUserId" ReferenceProperty="CurrentUser" Keys="Reference" DBDataType="Int" DataType="System.Int32" ColumnType="Code" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes Count="2">
+          <i Name="ddocument_data_document_id" DisplayName="ddocument_data_document_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_data.document_id" />
+            </Columns>
+          </i>
+          <i Name="ddocument_data_item_type" DisplayName="ddocument_data_item_type" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_data.item_type" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="3">
+          <i Name="fk_ddocument_data_document_id" DisplayName="fk_ddocument_data_document_id" Type="Foreign" Property="Document">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_data.document_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ddocument.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_data_template_data_id" DisplayName="fk_ddocument_data_template_data_id" Type="Foreign" Property="TemplateData">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_data.template_data_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rtemplate_data.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_data_current_user_id" DisplayName="fk_ddocument_data_current_user_id" Type="Foreign" Property="CurrentUser">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_data.current_user_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ruser.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prddocument_dataunid" DisplayName="prddocument_dataunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_data.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.DocumentData, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.DocumentReference, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="ddocument_reference" DisplayName="DocumentReference" GroupName="Document" SequenceName="seq_ddocument_reference" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="8">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="document_id" DisplayName="Document" Property="DocumentId" ReferenceProperty="Document" Keys="Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="reference_id" DisplayName="Reference" Property="ReferenceId" ReferenceProperty="Reference" Keys="View, Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes Count="1">
+          <i Name="ddocument_reference_unique" DisplayName="ddocument_reference_unique" Unique="True">
+            <Columns Count="2">
+              <i ColumnName="test.ddocument_reference.document_id" />
+              <i ColumnName="test.ddocument_reference.reference_id" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="2">
+          <i Name="fk_ddocument_reference_document_id" DisplayName="fk_ddocument_reference_document_id" Type="Foreign" Property="Document">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_reference.document_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ddocument.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_reference_reference_id" DisplayName="fk_ddocument_reference_reference_id" Type="Foreign" Property="Reference">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_reference.reference_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ddocument.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prddocument_referenceunid" DisplayName="prddocument_referenceunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_reference.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.DocumentReference, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.DocumentWork, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="ddocument_work" DisplayName="DocumentWork" GroupName="Document" SequenceName="seq_ddocument_work" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="21">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="document_id" DisplayName="Document" Property="DocumentId" ReferenceProperty="Document" Keys="Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="stage_id" DisplayName="Stage" Property="StageId" ReferenceProperty="Stage" Keys="View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="work_id" DisplayName="Work" Property="WorkId" ReferenceProperty="Work" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="user_id" DisplayName="User" Property="UserId" ReferenceProperty="User" Keys="View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="position_id" DisplayName="Position" Property="PositionId" ReferenceProperty="Position" Keys="View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="department_id" DisplayName="Department" Property="DepartmentId" ReferenceProperty="Department" Keys="View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="from_id" DisplayName="From" Property="FromId" ReferenceProperty="From" Keys="Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="date_read" DisplayName="DateRead" Property="DateRead" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_limit" DisplayName="DateLimit" Property="DateLimit" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_complete" DisplayName="DateComplete" Property="DateComplete" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="is_complete" DisplayName="IsComplete" Property="IsComplete" DBDataType="Bool" DataType="System.Boolean" DefaultValue="False" />
+          <i Name="is_system" DisplayName="IsSystem" Property="IsSystem" DBDataType="Bool" DataType="System.Boolean" />
+          <i Name="is_start" DisplayName="IsStart" Property="IsStart" DBDataType="Bool" DataType="System.Boolean" />
+          <i Name="is_stop" DisplayName="IsStop" Property="IsStop" DBDataType="Bool" DataType="System.Boolean" />
+          <i Name="description" DisplayName="Description" Property="Description" Size="2048" DBDataType="String" DataType="System.String" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes Count="9">
+          <i Name="ddocument_work_document_id" DisplayName="ddocument_work_document_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.document_id" />
+            </Columns>
+          </i>
+          <i Name="ddocument_work_stage_id" DisplayName="ddocument_work_stage_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.stage_id" />
+            </Columns>
+          </i>
+          <i Name="ddocument_work_work_id" DisplayName="ddocument_work_work_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.work_id" />
+            </Columns>
+          </i>
+          <i Name="ddocument_work_user_id" DisplayName="ddocument_work_user_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.user_id" />
+            </Columns>
+          </i>
+          <i Name="ddocument_work_position_id" DisplayName="ddocument_work_position_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.position_id" />
+            </Columns>
+          </i>
+          <i Name="ddocument_work_department_id" DisplayName="ddocument_work_department_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.department_id" />
+            </Columns>
+          </i>
+          <i Name="ddocument_work_from_id" DisplayName="ddocument_work_from_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.from_id" />
+            </Columns>
+          </i>
+          <i Name="ddocument_work_date_complete" DisplayName="ddocument_work_date_complete" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.date_complete" />
+            </Columns>
+          </i>
+          <i Name="ddocument_work_is_complete" DisplayName="ddocument_work_is_complete" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.is_complete" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="7">
+          <i Name="fk_ddocument_work_document_id" DisplayName="fk_ddocument_work_document_id" Type="Foreign" Property="Document">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.document_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ddocument.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_work_stage_id" DisplayName="fk_ddocument_work_stage_id" Type="Foreign" Property="Stage">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.stage_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rstage.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_work_work_id" DisplayName="fk_ddocument_work_work_id" Type="Foreign" Property="Work">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.work_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rwork.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_work_user_id" DisplayName="fk_ddocument_work_user_id" Type="Foreign" Property="User">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.user_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ruser.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_work_position_id" DisplayName="fk_ddocument_work_position_id" Type="Foreign" Property="Position">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.position_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rposition.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_work_department_id" DisplayName="fk_ddocument_work_department_id" Type="Foreign" Property="Department">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.department_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rdepartment.unid" />
+            </References>
+          </i>
+          <i Name="fk_ddocument_work_from_id" DisplayName="fk_ddocument_work_from_id" Type="Foreign" Property="From">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.from_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ddocument_work.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prddocument_workunid" DisplayName="prddocument_workunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.ddocument_work.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.DocumentWork, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Messanger.Message, DataWF.Module.Messanger]], DataWF.Data-->
+      <i Name="dmessage" DisplayName="Message" GroupName="Message" SequenceName="seq_dmessage" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="8">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="user_id" DisplayName="User" Property="UserId" ReferenceProperty="User" Keys="View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="text_data" DisplayName="Data" Property="Data" DBDataType="Clob" DataType="System.String" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="1">
+          <i Name="fk_dmessage_user_id" DisplayName="fk_dmessage_user_id" Type="Foreign" Property="User">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage.user_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ruser.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prdmessageunid" DisplayName="prdmessageunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Messanger.Message, DataWF.Module.Messanger" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Messanger.MessageAddress, DataWF.Module.Messanger]], DataWF.Data-->
+      <i Name="dmessage_address" DisplayName="MessageAddress" GroupName="Message" SequenceName="seq_dmessage_address" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="11">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="message_id" DisplayName="Message" Property="MessageId" ReferenceProperty="Message" Keys="Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="user_id" DisplayName="User" Property="UserId" ReferenceProperty="User" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="position_id" DisplayName="Position" Property="PositionId" ReferenceProperty="Position" Keys="View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="department_id" DisplayName="Department" Property="DepartmentId" ReferenceProperty="Department" Keys="View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="date_read" DisplayName="DateRead" Property="DateRead" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes Count="3">
+          <i Name="dmessage_address_user_id" DisplayName="dmessage_address_user_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage_address.user_id" />
+            </Columns>
+          </i>
+          <i Name="dmessage_address_position_id" DisplayName="dmessage_address_position_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage_address.position_id" />
+            </Columns>
+          </i>
+          <i Name="dmessage_address_department_id" DisplayName="dmessage_address_department_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage_address.department_id" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="4">
+          <i Name="fk_dmessage_address_message_id" DisplayName="fk_dmessage_address_message_id" Type="Foreign" Property="Message">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage_address.message_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.dmessage.unid" />
+            </References>
+          </i>
+          <i Name="fk_dmessage_address_user_id" DisplayName="fk_dmessage_address_user_id" Type="Foreign" Property="User">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage_address.user_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ruser.unid" />
+            </References>
+          </i>
+          <i Name="fk_dmessage_address_position_id" DisplayName="fk_dmessage_address_position_id" Type="Foreign" Property="Position">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage_address.position_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rposition.unid" />
+            </References>
+          </i>
+          <i Name="fk_dmessage_address_department_id" DisplayName="fk_dmessage_address_department_id" Type="Foreign" Property="Department">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage_address.department_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rdepartment.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prdmessage_addressunid" DisplayName="prdmessage_addressunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage_address.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Messanger.MessageAddress, DataWF.Module.Messanger" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Messanger.MessageData, DataWF.Module.Messanger]], DataWF.Data-->
+      <i Name="dmessage_data" DisplayName="MessageData" GroupName="Message" SequenceName="seq_dmessage_data" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="9">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="message_id" DisplayName="Message" Property="MessageId" ReferenceProperty="Message" Keys="Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="mdata_name" DisplayName="DataName" Property="DataName" DBDataType="Clob" DataType="System.String" />
+          <i Name="mdata" DisplayName="Data" Property="Data" DBDataType="Blob" DataType="System.Byte[]" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="1">
+          <i Name="fk_dmessage_data_message_id" DisplayName="fk_dmessage_data_message_id" Type="Foreign" Property="Message">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage_data.message_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.dmessage.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prdmessage_dataunid" DisplayName="prdmessage_dataunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.dmessage_data.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Messanger.MessageData, DataWF.Module.Messanger" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Counterpart.PersoneIdentify, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="dpersone_indentify" DisplayName="PersoneIdentify" GroupName="Customer" SequenceName="seq_dpersone_indentify" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="11">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="persone_id" DisplayName="Persone" Property="PersoneId" ReferenceProperty="Persone" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="identify_number" DisplayName="Number" Property="Number" Size="30" DBDataType="String" DataType="System.String" />
+          <i Name="date_issue" DisplayName="DateIssue" Property="DateIssue" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_expire" DisplayName="DateExpire" Property="DateExpire" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="issued_by" DisplayName="IssuedBy" Property="IssuedBy" DBDataType="Clob" DataType="System.String" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="1">
+          <i Name="fk_dpersone_indentify_persone_id" DisplayName="fk_dpersone_indentify_persone_id" Type="Foreign" Property="Persone">
+            <Columns Count="1">
+              <i ColumnName="test.dpersone_indentify.persone_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.Persone.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prdpersone_indentifyunid" DisplayName="prdpersone_indentifyunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.dpersone_indentify.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.PersoneIdentify, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Common.Statistic, DataWF.Module.Common]], DataWF.Data-->
+      <i Name="dstats" DisplayName="Statistic" GroupName="Reference Book" SequenceName="seq_dstats" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="8">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="scheduler_id" DisplayName="Scheduler" Property="SchedulerId" ReferenceProperty="Scheduler" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="stat_result" DisplayName="Result" Property="Result" DBDataType="Decimal" DataType="System.Decimal" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="1">
+          <i Name="fk_dstats_scheduler_id" DisplayName="fk_dstats_scheduler_id" Type="Foreign" Property="Scheduler">
+            <Columns Count="1">
+              <i ColumnName="test.dstats.scheduler_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rscheduler.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prdstatsunid" DisplayName="prdstatsunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.dstats.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Common.Statistic, DataWF.Module.Common" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Common.UserApplication, DataWF.Module.Common]], DataWF.Data-->
+      <i Name="duser_application" DisplayName="UserApplication" GroupName="User" SequenceName="seq_duser_application" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="20">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="app_type" DisplayName="Type" Property="Type" Keys="Notnull, ElementType" Size="1024" DBDataType="Int" DataType="DataWF.Module.Common.UserApplicationType, DataWF.Module.Common" />
+          <i Name="email" DisplayName="EMail" Property="EMail" Keys="Code, Notnull" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="password" DisplayName="Password" Property="Password" Keys="Notnull" DBDataType="Clob" DataType="System.String" />
+          <i Name="temp_password" DisplayName="TemporaryPassword" Property="TemporaryPassword" DBDataType="Clob" DataType="System.String" />
+          <i Name="email_verified" DisplayName="EmailVerified" Property="EmailVerified" Keys="System" DBDataType="Bool" DataType="System.Boolean" DefaultValue="False" />
+          <i Name="phone" DisplayName="Phone" Property="Phone" Size="30" DBDataType="String" DataType="System.String" />
+          <i Name="phone_verified" DisplayName="PhoneVerified" Property="PhoneVerified" Keys="System" DBDataType="Bool" DataType="System.Boolean" DefaultValue="False" />
+          <i Name="name_first" DisplayName="FirstName" Property="FirstName" Keys="Notnull" Size="50" DBDataType="String" DataType="System.String" />
+          <i Name="name_last" DisplayName="LastName" Property="LastName" Keys="Notnull" Size="50" DBDataType="String" DataType="System.String" />
+          <i Name="name_middle" DisplayName="MiddleName" Property="MiddleName" Size="50" DBDataType="String" DataType="System.String" />
+          <i Name="company" DisplayName="Company" Property="Company" Keys="Notnull" Size="100" DBDataType="String" DataType="System.String" />
+          <i Name="department" DisplayName="Department" Property="Department" Keys="Notnull" Size="100" DBDataType="String" DataType="System.String" />
+          <i Name="position" DisplayName="Position" Property="Position" Keys="Notnull" Size="100" DBDataType="String" DataType="System.String" />
+          <i Name="user_id" DisplayName="User" Property="UserId" ReferenceProperty="User" Keys="System, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="1">
+          <i Name="fk_duser_application_user_id" DisplayName="fk_duser_application_user_id" Type="Foreign" Property="User">
+            <Columns Count="1">
+              <i ColumnName="test.duser_application.user_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ruser.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prduser_applicationunid" DisplayName="prduser_applicationunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.duser_application.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Common.UserApplication, DataWF.Module.Common" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Common.UserReg, DataWF.Module.Common]], DataWF.Data-->
+      <i Name="duser_log" DisplayName="UserReg" GroupName="User" SequenceName="seq_duser_log" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="11">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="user_id" DisplayName="User" Property="UserId" ReferenceProperty="User" Keys="View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="type_id" DisplayName="RegType" Property="RegType" Keys="View, ElementType" DBDataType="Int" DataType="DataWF.Module.Common.UserRegType, DataWF.Module.Common" />
+          <i Name="parent_id" DisplayName="Parent" Property="ParentId" ReferenceProperty="Parent" Keys="Group, Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="redo_id" DisplayName="Redo" Property="RedoId" ReferenceProperty="Redo" Keys="Reference" DBDataType="BigInt" DataType="System.Int64" />
+          <i Name="text_data" DisplayName="TextData" Property="TextData" DBDataType="Clob" DataType="System.String" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="3">
+          <i Name="fk_duser_log_user_id" DisplayName="fk_duser_log_user_id" Type="Foreign" Property="User">
+            <Columns Count="1">
+              <i ColumnName="test.duser_log.user_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ruser.unid" />
+            </References>
+          </i>
+          <i Name="fk_duser_log_parent_id" DisplayName="fk_duser_log_parent_id" Type="Foreign" Property="Parent">
+            <Columns Count="1">
+              <i ColumnName="test.duser_log.parent_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.duser_log.unid" />
+            </References>
+          </i>
+          <i Name="fk_duser_log_redo_id" DisplayName="fk_duser_log_redo_id" Type="Foreign" Property="Redo">
+            <Columns Count="1">
+              <i ColumnName="test.duser_log.redo_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.duser_log.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prduser_logunid" DisplayName="prduser_logunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.duser_log.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Common.UserReg, DataWF.Module.Common" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Common.Book, DataWF.Module.Common]], DataWF.Data-->
+      <i Name="rbook" DisplayName="Book" GroupName="Reference Book" SequenceName="seq_rbook" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="12">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="code" DisplayName="Code" Property="Code" Keys="Code" Size="512" DBDataType="String" DataType="System.String" />
+          <i Name="group_id" DisplayName="Parent" Property="ParentId" ReferenceProperty="Parent" Keys="Group, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="name_ru" DisplayName="NameRU" GroupName="name" Property="NameRU" Keys="View, Culture" Size="1024" CultureCode="ru-RU" DBDataType="String" DataType="System.String" />
+          <i Name="name_en" DisplayName="NameEN" GroupName="name" Property="NameEN" Keys="View, Culture" Size="1024" CultureCode="en-US" DBDataType="String" DataType="System.String" />
+          <i Name="book_value" DisplayName="Value" Property="Value" DBDataType="Clob" DataType="System.String" />
+          <i Name="ext_id" DisplayName="ExternalId" Property="ExternalId" DBDataType="Int" DataType="System.Int32" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="name" DisplayName="name" Order="1" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="1">
+          <i Name="fk_rbook_group_id" DisplayName="fk_rbook_group_id" Type="Foreign" Property="Parent">
+            <Columns Count="1">
+              <i ColumnName="test.rbook.group_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rbook.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrbookunid" DisplayName="prrbookunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rbook.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Common.Book, DataWF.Module.Common" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Common.Department, DataWF.Module.Common]], DataWF.Data-->
+      <i Name="rdepartment" DisplayName="Department" GroupName="User" SequenceName="seq_rdepartment" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="12">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="company_id" DisplayName="Company" Property="CompanyId" ReferenceProperty="Company" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="parent_id" DisplayName="Parent" Property="ParentId" ReferenceProperty="Parent" Keys="Group, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="code" DisplayName="Code" Property="Code" Keys="Code, Indexing" Size="256" DBDataType="String" DataType="System.String" />
+          <i Name="ext_id" DisplayName="ExternalId" Property="ExternalId" DBDataType="Int" DataType="System.Int32" />
+          <i Name="name_ru" DisplayName="NameRU" GroupName="name" Property="NameRU" Keys="View, Culture" Size="512" CultureCode="ru-RU" DBDataType="String" DataType="System.String" />
+          <i Name="name_en" DisplayName="NameEN" GroupName="name" Property="NameEN" Keys="View, Culture" Size="512" CultureCode="en-US" DBDataType="String" DataType="System.String" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="name" DisplayName="name" Order="1" />
+        </ColumnGroups>
+        <Indexes Count="2">
+          <i Name="rdepartment_parent_id" DisplayName="rdepartment_parent_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.rdepartment.parent_id" />
+            </Columns>
+          </i>
+          <i Name="rdepartment_code" DisplayName="rdepartment_code" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.rdepartment.code" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="2">
+          <i Name="fk_rdepartment_company_id" DisplayName="fk_rdepartment_company_id" Type="Foreign" Property="Company">
+            <Columns Count="1">
+              <i ColumnName="test.rdepartment.company_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.Company.unid" />
+            </References>
+          </i>
+          <i Name="fk_rdepartment_parent_id" DisplayName="fk_rdepartment_parent_id" Type="Foreign" Property="Parent">
+            <Columns Count="1">
+              <i ColumnName="test.rdepartment.parent_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rdepartment.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrdepartmentunid" DisplayName="prrdepartmentunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rdepartment.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Common.Department, DataWF.Module.Common" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Common.UserGroup, DataWF.Module.Common]], DataWF.Data-->
+      <i Name="rgroup" DisplayName="UserGroup" GroupName="User" SequenceName="seq_rgroup" BlockSize="16" Type="Table" IsCaching="False">
+        <Columns Count="11">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="parent_id" DisplayName="Parent" Property="ParentId" ReferenceProperty="Parent" Keys="Group, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="company_id" DisplayName="Company" Property="CompanyId" ReferenceProperty="Company" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="group_number" DisplayName="Number" Property="Number" Keys="Code" Size="512" DBDataType="String" DataType="System.String" />
+          <i Name="name_ru" DisplayName="NameRU" GroupName="name" Property="NameRU" Keys="View, Culture" CultureCode="ru-RU" DBDataType="Clob" DataType="System.String" />
+          <i Name="name_en" DisplayName="NameEN" GroupName="name" Property="NameEN" Keys="View, Culture" CultureCode="en-US" DBDataType="Clob" DataType="System.String" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="name" DisplayName="name" Order="1" />
+        </ColumnGroups>
+        <Indexes Count="1">
+          <i Name="rgroup_group_number" DisplayName="rgroup_group_number" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.rgroup.group_number" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="2">
+          <i Name="fk_rgroup_parent_id" DisplayName="fk_rgroup_parent_id" Type="Foreign" Property="Parent">
+            <Columns Count="1">
+              <i ColumnName="test.rgroup.parent_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rgroup.unid" />
+            </References>
+          </i>
+          <i Name="fk_rgroup_company_id" DisplayName="fk_rgroup_company_id" Type="Foreign" Property="Company">
+            <Columns Count="1">
+              <i ColumnName="test.rgroup.company_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.Company.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrgroupunid" DisplayName="prrgroupunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rgroup.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Common.UserGroup, DataWF.Module.Common" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Common.GroupPermission, DataWF.Module.Common]], DataWF.Data-->
+      <i Name="rgroup_permission" DisplayName="GroupPermission" GroupName="User" SequenceName="seq_rgroup_permission" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="11">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="parent_id" DisplayName="Parent" Property="ParentId" ReferenceProperty="Parent" Keys="Group, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="type_id" DisplayName="Type" Property="Type" Keys="ElementType" DBDataType="Int" DataType="DataWF.Module.Common.PermissionType, DataWF.Module.Common" DefaultValue="GTable" />
+          <i Name="code" DisplayName="Code" Property="Code" Keys="Code, Indexing, View" Size="512" DBDataType="String" DataType="System.String" />
+          <i Name="object_name" DisplayName="ObjectName" Property="ObjectName" Keys="Indexing" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="AccessItems" DisplayName="AccessItems" Property="AccessItems" DBDataType="Object" DataType="System.Collections.Generic.IEnumerable`1[[DataWF.Common.AccessItem, DataWF.Common]]" ColumnType="Code" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes Count="2">
+          <i Name="rgroup_permission_parent_id" DisplayName="rgroup_permission_parent_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.rgroup_permission.parent_id" />
+            </Columns>
+          </i>
+          <i Name="rgroup_permission_code" DisplayName="rgroup_permission_code" Unique="True">
+            <Columns Count="1">
+              <i ColumnName="test.rgroup_permission.code" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="1">
+          <i Name="fk_rgroup_permission_parent_id" DisplayName="fk_rgroup_permission_parent_id" Type="Foreign" Property="Parent">
+            <Columns Count="1">
+              <i ColumnName="test.rgroup_permission.parent_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rgroup_permission.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrgroup_permissionunid" DisplayName="prrgroup_permissionunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rgroup_permission.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Common.GroupPermission, DataWF.Module.Common" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Data.Instance, DataWF.Data]], DataWF.Data-->
+      <i Name="rinstance" DisplayName="Instance" GroupName="User" SequenceName="seq_rinstance" BlockSize="256" Type="Table" IsCaching="False">
+        <Columns Count="9">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="instance_host" DisplayName="Host" Property="Host" Keys="View" DBDataType="Clob" DataType="System.String" />
+          <i Name="instance_port" DisplayName="Port" Property="Port" Keys="View" DBDataType="Int" DataType="System.Int32" />
+          <i Name="instance_active" DisplayName="Active" Property="Active" DBDataType="Bool" DataType="System.Boolean" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns />
+        <Constraints Count="1">
+          <i Name="prrinstanceunid" DisplayName="prrinstanceunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rinstance.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Data.Instance, DataWF.Data" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Counterpart.Location, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="rlocation" DisplayName="Location" GroupName="Address" SequenceName="seq_rlocation" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="12">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="code" DisplayName="Code" Property="Code" Keys="Code, Indexing" Size="40" DBDataType="String" DataType="System.String" />
+          <i Name="codei" DisplayName="CodeI" Property="CodeI" Size="40" DBDataType="String" DataType="System.String" />
+          <i Name="parent_id" DisplayName="Parent" Property="ParentId" ReferenceProperty="Parent" Keys="Group, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="name_ru" DisplayName="NameRU" GroupName="name" Property="NameRU" Keys="View, Culture" Size="512" CultureCode="ru-RU" DBDataType="String" DataType="System.String" />
+          <i Name="name_en" DisplayName="NameEN" GroupName="name" Property="NameEN" Keys="View, Culture" Size="512" CultureCode="en-US" DBDataType="String" DataType="System.String" />
+          <i Name="ext_id" DisplayName="ExternalId" Property="ExternalId" DBDataType="Int" DataType="System.Int32" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="name" DisplayName="name" Order="1" />
+        </ColumnGroups>
+        <Indexes Count="3">
+          <i Name="rlocation_typeid_code" DisplayName="rlocation_typeid_code" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.rlocation.code" />
+            </Columns>
+          </i>
+          <i Name="rlocation_codei" DisplayName="rlocation_codei" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.rlocation.codei" />
+            </Columns>
+          </i>
+          <i Name="rlocation_parentid" DisplayName="rlocation_parentid" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.rlocation.parent_id" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="1">
+          <i Name="fk_rlocation_parent_id" DisplayName="fk_rlocation_parent_id" Type="Foreign" Property="Parent">
+            <Columns Count="1">
+              <i ColumnName="test.rlocation.parent_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rlocation.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrlocationunid" DisplayName="prrlocationunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rlocation.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.Location, DataWF.Module.Counterpart" />
+          <i Key="5" Value="DataWF.Module.Counterpart.City, DataWF.Module.Counterpart" />
+          <i Key="1" Value="DataWF.Module.Counterpart.Continent, DataWF.Module.Counterpart" />
+          <i Key="2" Value="DataWF.Module.Counterpart.Country, DataWF.Module.Counterpart" />
+          <i Key="3" Value="DataWF.Module.Counterpart.Currency, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Common.Position, DataWF.Module.Common]], DataWF.Data-->
+      <i Name="rposition" DisplayName="Position" GroupName="User" SequenceName="seq_rposition" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="13">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="company_id" DisplayName="Company" Property="CompanyId" ReferenceProperty="Company" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="department_id" DisplayName="Department" Property="DepartmentId" ReferenceProperty="Department" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="parent_id" DisplayName="Parent" Property="ParentId" ReferenceProperty="Parent" Keys="Group, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="code" DisplayName="Code" Property="Code" Keys="Code, Indexing" Size="40" DBDataType="String" DataType="System.String" />
+          <i Name="ext_id" DisplayName="ExternalId" Property="ExternalId" DBDataType="Int" DataType="System.Int32" />
+          <i Name="name_ru" DisplayName="NameRU" GroupName="name" Property="NameRU" Keys="View, Culture" Size="512" CultureCode="ru-RU" DBDataType="String" DataType="System.String" />
+          <i Name="name_en" DisplayName="NameEN" GroupName="name" Property="NameEN" Keys="View, Culture" Size="512" CultureCode="en-US" DBDataType="String" DataType="System.String" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="name" DisplayName="name" Order="1" />
+        </ColumnGroups>
+        <Indexes Count="3">
+          <i Name="rposition_department_id" DisplayName="rposition_department_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.rposition.department_id" />
+            </Columns>
+          </i>
+          <i Name="rposition_parent_id" DisplayName="rposition_parent_id" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.rposition.parent_id" />
+            </Columns>
+          </i>
+          <i Name="rposition_code" DisplayName="rposition_code" Unique="True">
+            <Columns Count="1">
+              <i ColumnName="test.rposition.code" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="3">
+          <i Name="fk_rposition_company_id" DisplayName="fk_rposition_company_id" Type="Foreign" Property="Company">
+            <Columns Count="1">
+              <i ColumnName="test.rposition.company_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.Company.unid" />
+            </References>
+          </i>
+          <i Name="fk_rposition_department_id" DisplayName="fk_rposition_department_id" Type="Foreign" Property="Department">
+            <Columns Count="1">
+              <i ColumnName="test.rposition.department_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rdepartment.unid" />
+            </References>
+          </i>
+          <i Name="fk_rposition_parent_id" DisplayName="fk_rposition_parent_id" Type="Foreign" Property="Parent">
+            <Columns Count="1">
+              <i ColumnName="test.rposition.parent_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rposition.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrpositionunid" DisplayName="prrpositionunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rposition.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Common.Position, DataWF.Module.Common" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Common.Scheduler, DataWF.Module.Common]], DataWF.Data-->
+      <i Name="rscheduler" DisplayName="Scheduler" GroupName="Reference Book" SequenceName="seq_rscheduler" BlockSize="32" Type="Table" IsCaching="False">
+        <Columns Count="15">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="company_id" DisplayName="Company" Property="CompanyId" ReferenceProperty="Company" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="code" DisplayName="Code" Property="Code" Keys="Code" DBDataType="Clob" DataType="System.String" />
+          <i Name="name_ru" DisplayName="NameRU" GroupName="name" Property="NameRU" Keys="View, Culture" CultureCode="ru-RU" DBDataType="Clob" DataType="System.String" />
+          <i Name="name_en" DisplayName="NameEN" GroupName="name" Property="NameEN" Keys="View, Culture" CultureCode="en-US" DBDataType="Clob" DataType="System.String" />
+          <i Name="orderid" DisplayName="Order" Property="Order" DBDataType="Int" DataType="System.Int32" />
+          <i Name="type_id" DisplayName="Type" Property="Type" Keys="Notnull, ElementType" DBDataType="Int" DataType="DataWF.Module.Common.SchedulerType, DataWF.Module.Common" DefaultValue="Interval" />
+          <i Name="run_interval" DisplayName="Interval" Property="Interval" Keys="Notnull" DBDataType="TimeSpan" DataType="System.TimeSpan" />
+          <i Name="procedure_name" DisplayName="ProcedureName" Property="ProcedureName" DBDataType="Clob" DataType="System.String" />
+          <i Name="date_execute" DisplayName="DateExecute" Property="DateExecute" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="name" DisplayName="name" Order="1" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="1">
+          <i Name="fk_rscheduler_company_id" DisplayName="fk_rscheduler_company_id" Type="Foreign" Property="Company">
+            <Columns Count="1">
+              <i ColumnName="test.rscheduler.company_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.Company.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrschedulerunid" DisplayName="prrschedulerunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rscheduler.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Common.Scheduler, DataWF.Module.Common" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.Stage, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="rstage" DisplayName="Stage" GroupName="Template" SequenceName="seq_rstage" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="13">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="code" DisplayName="Code" Property="Code" Keys="Code" Size="512" DBDataType="String" DataType="System.String" />
+          <i Name="export_code" DisplayName="ExportCode" Property="ExportCode" Size="512" DBDataType="String" DataType="System.String" />
+          <i Name="name_ru" DisplayName="NameRU" GroupName="name" Property="NameRU" Keys="View, Culture" Size="512" CultureCode="ru-RU" DBDataType="String" DataType="System.String" />
+          <i Name="name_en" DisplayName="NameEN" GroupName="name" Property="NameEN" Keys="View, Culture" Size="512" CultureCode="en-US" DBDataType="String" DataType="System.String" />
+          <i Name="work_id" DisplayName="Work" Property="WorkId" ReferenceProperty="Work" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="keys" DisplayName="Keys" Property="Keys" DBDataType="Int" DataType="DataWF.Module.Flow.StageKey, DataWF.Module.Flow" />
+          <i Name="time_limit" DisplayName="TimeLimit" Property="TimeLimit" DBDataType="TimeSpan" DataType="System.TimeSpan" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="name" DisplayName="name" Order="1" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="1">
+          <i Name="fk_rstage_work_id" DisplayName="fk_rstage_work_id" Type="Foreign" Property="Work">
+            <Columns Count="1">
+              <i ColumnName="test.rstage.work_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rwork.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrstageunid" DisplayName="prrstageunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rstage.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.Stage, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.StageParam, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="rstage_param" DisplayName="StageParam" GroupName="Template" SequenceName="seq_rstage_param" BlockSize="256" Type="Table" IsCaching="False">
+        <Columns Count="11">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="stage_id" DisplayName="Stage" Property="StageId" ReferenceProperty="Stage" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="code" DisplayName="ParamCode" Property="ParamCode" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="name" DisplayName="Name" Property="Name" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="procedure_type" DisplayName="ProcedureType" Property="ProcedureType" DBDataType="Int" DataType="DataWF.Module.Flow.StageParamProcudureType, DataWF.Module.Flow" />
+          <i Name="is_next" DisplayName="Next" Property="Next" DBDataType="Bool" DataType="System.Boolean" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="1">
+          <i Name="fk_rstage_param_stage_id" DisplayName="fk_rstage_param_stage_id" Type="Foreign" Property="Stage">
+            <Columns Count="1">
+              <i ColumnName="test.rstage_param.stage_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rstage.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrstage_paramunid" DisplayName="prrstage_paramunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rstage_param.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.StageParam, DataWF.Module.Flow" />
+          <i Key="4" Value="DataWF.Module.Flow.StageProcedure, DataWF.Module.Flow" />
+          <i Key="5" Value="DataWF.Module.Flow.StageReference, DataWF.Module.Flow" />
+          <i Key="3" Value="DataWF.Module.Flow.StageTemplate, DataWF.Module.Flow" />
+          <i Key="2" Value="DataWF.Module.Flow.StageForeign, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.Template, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="rtemplate" DisplayName="Template" GroupName="Template" SequenceName="seq_rtemplate" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="16">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="code" DisplayName="Code" Property="Code" Keys="Code" Size="250" DBDataType="String" DataType="System.String" />
+          <i Name="name_ru" DisplayName="NameRU" GroupName="name" Property="NameRU" Keys="View, Culture" Size="512" CultureCode="ru-RU" DBDataType="String" DataType="System.String" />
+          <i Name="name_en" DisplayName="NameEN" GroupName="name" Property="NameEN" Keys="View, Culture" Size="512" CultureCode="en-US" DBDataType="String" DataType="System.String" />
+          <i Name="alter_name1" DisplayName="AlterName1" Property="AlterName1" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="alter_name2" DisplayName="AlterName2" Property="AlterName2" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="alter_name3" DisplayName="AlterName3" Property="AlterName3" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="document_type" DisplayName="DocumentType" Property="DocumentType" Size="250" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="group_id" DisplayName="Parent" Property="ParentId" ReferenceProperty="Parent" Keys="Group, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="work_id" DisplayName="Work" Property="WorkId" ReferenceProperty="Work" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="is_file" DisplayName="IsFile" Property="IsFile" DBDataType="Bool" DataType="System.Boolean" DefaultValue="False" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="name" DisplayName="name" Order="1" />
+        </ColumnGroups>
+        <Indexes Count="1">
+          <i Name="rtemplate_item_type" DisplayName="rtemplate_item_type" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate.item_type" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="2">
+          <i Name="fk_rtemplate_group_id" DisplayName="fk_rtemplate_group_id" Type="Foreign" Property="Parent">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate.group_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rtemplate.unid" />
+            </References>
+          </i>
+          <i Name="fk_rtemplate_work_id" DisplayName="fk_rtemplate_work_id" Type="Foreign" Property="Work">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate.work_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rwork.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrtemplateunid" DisplayName="prrtemplateunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.Template, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.TemplateData, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="rtemplate_data" DisplayName="TemplateData" GroupName="Template" SequenceName="seq_rtemplate_data" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="9">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="template_id" DisplayName="Template" Property="TemplateId" ReferenceProperty="Template" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="file_id" DisplayName="File" Property="FileId" ReferenceProperty="File" Keys="View, Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="auto_generate" DisplayName="AutoGenerate" Property="AutoGenerate" DBDataType="Bool" DataType="System.Boolean" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes Count="1">
+          <i Name="rtemplate_data_index" DisplayName="rtemplate_data_index" Unique="True">
+            <Columns Count="2">
+              <i ColumnName="test.rtemplate_data.template_id" />
+              <i ColumnName="test.rtemplate_data.file_id" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="2">
+          <i Name="fk_rtemplate_data_template_id" DisplayName="fk_rtemplate_data_template_id" Type="Foreign" Property="Template">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate_data.template_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rtemplate.unid" />
+            </References>
+          </i>
+          <i Name="fk_rtemplate_data_file_id" DisplayName="fk_rtemplate_data_file_id" Type="Foreign" Property="File">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate_data.file_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rtemplate_file.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrtemplate_dataunid" DisplayName="prrtemplate_dataunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate_data.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.TemplateData, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.TemplateFile, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="rtemplate_file" DisplayName="TemplateFile" GroupName="Template" SequenceName="seq_rtemplate_file" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="9">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="template_file" DisplayName="Data" Property="Data" Keys="File" DBDataType="Blob" DataType="System.Byte[]" />
+          <i Name="template_file_name" DisplayName="DataName" Property="DataName" Keys="Code, View, FileName" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="template_last_write" DisplayName="DataLastWrite" Property="DataLastWrite" Keys="FileLastWrite" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns />
+        <Constraints Count="1">
+          <i Name="prrtemplate_fileunid" DisplayName="prrtemplate_fileunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate_file.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.TemplateFile, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.TemplateProperty, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="rtemplate_property" DisplayName="TemplateProperty" GroupName="Template" SequenceName="seq_rtemplate_property" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="8">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="template_id" DisplayName="Template" Property="TemplateId" ReferenceProperty="Template" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="property_name" DisplayName="PropertyName" Property="PropertyName" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes Count="1">
+          <i Name="rtemplate_property_index" DisplayName="rtemplate_property_index" Unique="True">
+            <Columns Count="2">
+              <i ColumnName="test.rtemplate_property.template_id" />
+              <i ColumnName="test.rtemplate_property.property_name" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="1">
+          <i Name="fk_rtemplate_property_template_id" DisplayName="fk_rtemplate_property_template_id" Type="Foreign" Property="Template">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate_property.template_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rtemplate.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrtemplate_propertyunid" DisplayName="prrtemplate_propertyunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate_property.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.TemplateProperty, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.TemplateReference, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="rtemplate_reference" DisplayName="TemplateReference" GroupName="Template" SequenceName="seq_rtemplate_reference" BlockSize="512" Type="Table" IsCaching="False">
+        <Columns Count="8">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="template_id" DisplayName="Template" Property="TemplateId" ReferenceProperty="Template" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="reference_id" DisplayName="Reference" Property="ReferenceId" ReferenceProperty="Reference" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes Count="1">
+          <i Name="rtemplate_reference_index" DisplayName="rtemplate_reference_index" Unique="True">
+            <Columns Count="2">
+              <i ColumnName="test.rtemplate_reference.template_id" />
+              <i ColumnName="test.rtemplate_reference.reference_id" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="2">
+          <i Name="fk_rtemplate_reference_template_id" DisplayName="fk_rtemplate_reference_template_id" Type="Foreign" Property="Template">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate_reference.template_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rtemplate.unid" />
+            </References>
+          </i>
+          <i Name="fk_rtemplate_reference_reference_id" DisplayName="fk_rtemplate_reference_reference_id" Type="Foreign" Property="Reference">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate_reference.reference_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rtemplate.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prrtemplate_referenceunid" DisplayName="prrtemplate_referenceunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rtemplate_reference.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.TemplateReference, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Common.User, DataWF.Module.Common]], DataWF.Data-->
+      <i Name="ruser" DisplayName="User" GroupName="User" SequenceName="seq_ruser" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="22">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="login" DisplayName="Login" Property="Login" Keys="Code, Indexing" Size="256" DBDataType="String" DataType="System.String" />
+          <i Name="email" DisplayName="EMail" Property="EMail" Keys="Indexing" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="ext_id" DisplayName="ExternalId" Property="ExternalId" DBDataType="Int" DataType="System.Int32" />
+          <i Name="company_id" DisplayName="Company" Property="CompanyId" ReferenceProperty="Company" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="abbreviation" DisplayName="Abbreviation" Property="Abbreviation" Keys="Indexing" Size="4" DBDataType="String" DataType="System.String" />
+          <i Name="name_ru" DisplayName="NameRU" GroupName="name" Property="NameRU" Keys="View, Culture" Size="512" CultureCode="ru-RU" DBDataType="String" DataType="System.String" />
+          <i Name="name_en" DisplayName="NameEN" GroupName="name" Property="NameEN" Keys="View, Culture" Size="512" CultureCode="en-US" DBDataType="String" DataType="System.String" />
+          <i Name="department_id" DisplayName="Department" Property="DepartmentId" ReferenceProperty="Department" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="position_id" DisplayName="Position" Property="PositionId" ReferenceProperty="Position" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="super" DisplayName="Super" Property="Super" DBDataType="Bool" DataType="System.Boolean" DefaultValue="False" />
+          <i Name="phone" DisplayName="Phone" Property="Phone" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="is_temporary_password" DisplayName="IsTemporaryPassword" Property="IsTemporaryPassword" DBDataType="Bool" DataType="System.Boolean" />
+          <i Name="password" DisplayName="Password" Property="Password" Keys="Password" Size="512" DBDataType="String" DataType="System.String" />
+          <i Name="token_refresh" DisplayName="RefreshToken" Property="RefreshToken" Keys="Password, NoLog" Size="2048" DBDataType="String" DataType="System.String" />
+          <i Name="auth_type" DisplayName="AuthType" Property="AuthType" DBDataType="Int" DataType="DataWF.Module.Common.UserAuthType, DataWF.Module.Common" />
+          <i Name="address_id" DisplayName="Address" Property="AddessId" ReferenceProperty="Address" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="name" DisplayName="name" Order="1" />
+        </ColumnGroups>
+        <Indexes Count="4">
+          <i Name="ruser_login" DisplayName="ruser_login" Unique="True">
+            <Columns Count="1">
+              <i ColumnName="test.ruser.login" />
+            </Columns>
+          </i>
+          <i Name="ruser_email" DisplayName="ruser_email" Unique="True">
+            <Columns Count="1">
+              <i ColumnName="test.ruser.email" />
+            </Columns>
+          </i>
+          <i Name="ruser_abbreviation" DisplayName="ruser_abbreviation" Unique="True">
+            <Columns Count="1">
+              <i ColumnName="test.ruser.abbreviation" />
+            </Columns>
+          </i>
+          <i Name="ruser_phone" DisplayName="ruser_phone" Unique="False">
+            <Columns Count="1">
+              <i ColumnName="test.ruser.phone" />
+            </Columns>
+          </i>
+        </Indexes>
+        <Foreigns Count="4">
+          <i Name="fk_ruser_company_id" DisplayName="fk_ruser_company_id" Type="Foreign" Property="Company">
+            <Columns Count="1">
+              <i ColumnName="test.ruser.company_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.Company.unid" />
+            </References>
+          </i>
+          <i Name="fk_ruser_department_id" DisplayName="fk_ruser_department_id" Type="Foreign" Property="Department">
+            <Columns Count="1">
+              <i ColumnName="test.ruser.department_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rdepartment.unid" />
+            </References>
+          </i>
+          <i Name="fk_ruser_position_id" DisplayName="fk_ruser_position_id" Type="Foreign" Property="Position">
+            <Columns Count="1">
+              <i ColumnName="test.ruser.position_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.rposition.unid" />
+            </References>
+          </i>
+          <i Name="fk_ruser_address_id" DisplayName="fk_ruser_address_id" Type="Foreign" Property="Address">
+            <Columns Count="1">
+              <i ColumnName="test.ruser.address_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.daddress.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prruserunid" DisplayName="prruserunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.ruser.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Common.User, DataWF.Module.Common" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Common.UserFile, DataWF.Module.Common]], DataWF.Data-->
+      <i Name="ruser_file" DisplayName="UserFile" GroupName="User" SequenceName="seq_ruser_file" BlockSize="128" Type="Table" IsCaching="False">
+        <Columns Count="11">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="user_file" DisplayName="Data" Property="Data" Keys="File" DBDataType="Blob" DataType="System.Byte[]" />
+          <i Name="user_file_name" DisplayName="DataName" Property="DataName" Keys="Code, View, FileName" Size="1024" DBDataType="String" DataType="System.String" />
+          <i Name="user_file_last_write" DisplayName="DataLastWrite" Property="DataLastWrite" Keys="FileLastWrite" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="user_id" DisplayName="User" Property="UserId" ReferenceProperty="User" Keys="Reference" DBDataType="Int" DataType="System.Int32" />
+          <i Name="is_avatar" DisplayName="IsAvatar" Property="IsAvatar" DBDataType="Bool" DataType="System.Boolean" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="1">
+          <i Name="system" DisplayName="system" Order="0" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns Count="1">
+          <i Name="fk_ruser_file_user_id" DisplayName="fk_ruser_file_user_id" Type="Foreign" Property="User">
+            <Columns Count="1">
+              <i ColumnName="test.ruser_file.user_id" />
+            </Columns>
+            <References Count="1">
+              <i ColumnName="test.ruser.unid" />
+            </References>
+          </i>
+        </Foreigns>
+        <Constraints Count="1">
+          <i Name="prruser_fileunid" DisplayName="prruser_fileunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.ruser_file.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Common.UserFile, DataWF.Module.Common" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBTable`1[[DataWF.Module.Flow.Work, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="rwork" DisplayName="Work" GroupName="Template" SequenceName="seq_rwork" BlockSize="32" Type="Table" IsCaching="False">
+        <Columns Count="9">
+          <i Name="item_type" DisplayName="ItemType" GroupName="system" Property="ItemType" Keys="ItemType" DBDataType="Int" DataType="System.Int32" DefaultValue="0" />
+          <i Name="unid" DisplayName="Id" Property="Id" Keys="Primary" DBDataType="Int" DataType="System.Int32" />
+          <i Name="code" DisplayName="Code" Property="Code" Keys="Code" DBDataType="Clob" DataType="System.String" />
+          <i Name="name_ru" DisplayName="NameRU" GroupName="name" Property="NameRU" Keys="View, Culture" CultureCode="ru-RU" DBDataType="Clob" DataType="System.String" />
+          <i Name="name_en" DisplayName="NameEN" GroupName="name" Property="NameEN" Keys="View, Culture" CultureCode="en-US" DBDataType="Clob" DataType="System.String" />
+          <i Name="status_id" DisplayName="Status" GroupName="system" Property="Status" Keys="State, Indexing" DBDataType="Int" DataType="DataWF.Common.DBStatus, DataWF.Common" DefaultValue="New" />
+          <i Name="date_create" DisplayName="DateCreate" GroupName="system" Property="DateCreate" Keys="Date, System, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="date_update" DisplayName="Stamp" GroupName="system" Property="Stamp" Keys="Stamp, System, NoLog, UtcDate" DBDataType="DateTime" DataType="System.DateTime" />
+          <i Name="group_access" DisplayName="Access" GroupName="system" Property="Access" Keys="System, Access" Size="512" DBDataType="ByteArray" DataType="System.Byte[]" />
+        </Columns>
+        <ColumnGroups Count="2">
+          <i Name="system" DisplayName="system" Order="0" />
+          <i Name="name" DisplayName="name" Order="1" />
+        </ColumnGroups>
+        <Indexes />
+        <Foreigns />
+        <Constraints Count="1">
+          <i Name="prrworkunid" DisplayName="prrworkunid" Type="Primary">
+            <Columns Count="1">
+              <i ColumnName="test.rwork.unid" />
+            </Columns>
+          </i>
+        </Constraints>
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.Work, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.City, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="City" DisplayName="City" GroupName="Address" Query="a.item_type = 5" Type="Table" IsCaching="False" BaseTableName="rlocation">
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.City, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.Company, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="Company" DisplayName="Company" GroupName="Customer" Query="a.item_type = 1" Type="Table" IsCaching="False" BaseTableName="dcustomer">
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.Company, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.Continent, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="Continent" DisplayName="Continent" GroupName="Address" Query="a.item_type = 1" Type="Table" IsCaching="False" BaseTableName="rlocation">
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.Continent, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.Country, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="Country" DisplayName="Country" GroupName="Address" Query="a.item_type = 2" Type="Table" IsCaching="False" BaseTableName="rlocation">
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.Country, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.Currency, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="Currency" DisplayName="Currency" GroupName="Address" Query="a.item_type = 3" Type="Table" IsCaching="False" BaseTableName="rlocation">
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.Currency, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.Persone, DataWF.Module.Counterpart]], DataWF.Data-->
+      <i Name="Persone" DisplayName="Persone" GroupName="Customer" Query="a.item_type = 2" Type="Table" IsCaching="False" BaseTableName="dcustomer">
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Counterpart.Persone, DataWF.Module.Counterpart" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Flow.StageForeign, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="StageForeign" DisplayName="StageForeign" GroupName="Template" Query="a.item_type = 2" Type="Table" IsCaching="False" BaseTableName="rstage_param">
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.StageForeign, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Flow.StageProcedure, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="StageProcedure" DisplayName="StageProcedure" GroupName="Template" Query="a.item_type = 4" Type="Table" IsCaching="False" BaseTableName="rstage_param">
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.StageProcedure, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Flow.StageReference, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="StageReference" DisplayName="StageReference" GroupName="Template" Query="a.item_type = 5" Type="Table" IsCaching="False" BaseTableName="rstage_param">
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.StageReference, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+      <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Flow.StageTemplate, DataWF.Module.Flow]], DataWF.Data-->
+      <i Name="StageTemplate" DisplayName="StageTemplate" GroupName="Template" Query="a.item_type = 3" Type="Table" IsCaching="False" BaseTableName="rstage_param">
+        <ItemTypes>
+          <i Key="0" Value="DataWF.Module.Flow.StageTemplate, DataWF.Module.Flow" />
+        </ItemTypes>
+      </i>
+    </Tables>
+    <TableGroups Count="7">
+      <i Name="User" DisplayName="User" />
+      <i Name="Reference Book" DisplayName="Reference Book" />
+      <i Name="Customer" DisplayName="Customer" />
+      <i Name="Address" DisplayName="Address" />
+      <i Name="Message" DisplayName="Message" />
+      <i Name="Document" DisplayName="Document" />
+      <i Name="Template" DisplayName="Template" />
+    </TableGroups>
+    <Procedures Count="10">
+      <i Name="DataWF.Data" Stamp="5249198086153171436" DataName="DataWF.Data.dll" ProcedureType="File" DisplayName="DataWF.Data">
+        <Parameters />
+      </i>
+      <i Name="DataWF.Data.IExecutable" Stamp="5249198086153226980" GroupName="DataWF.Data" DataName="DataWF.Data.dll" ProcedureType="Assembly" DisplayName="IExecutable">
+        <Parameters />
+      </i>
+      <i Name="DataWF.Module.Common" Stamp="5249198086153518109" DataName="DataWF.Module.Common.dll" ProcedureType="File" DisplayName="DataWF.Module.Common">
+        <Parameters />
+      </i>
+      <i Name="DataWF.Module.Counterpart" Stamp="5249198086153631587" DataName="DataWF.Module.Counterpart.dll" ProcedureType="File" DisplayName="DataWF.Module.Counterpart">
+        <Parameters />
+      </i>
+      <i Name="DataWF.Module.Messanger" Stamp="5249198086153679026" DataName="DataWF.Module.Messanger.dll" ProcedureType="File" DisplayName="DataWF.Module.Messanger">
+        <Parameters />
+      </i>
+      <i Name="DataWF.Module.Flow" Stamp="5249198086154277101" DataName="DataWF.Module.Flow.dll" ProcedureType="File" DisplayName="DataWF.Module.Flow">
+        <Parameters />
+      </i>
+      <i Name="DataWF.Module.Flow.CheckSystemStage" Stamp="5249198086154278091" GroupName="DataWF.Module.Flow" DataName="DataWF.Module.Flow.dll" ProcedureType="Assembly" DisplayName="Check System Stage">
+        <Parameters />
+      </i>
+      <i Name="DataWF.Module.Flow.DocumentCheckStageCompleate" Stamp="5249198086154280265" GroupName="DataWF.Module.Flow" DataName="DataWF.Module.Flow.dll" ProcedureType="Assembly" DisplayName="Document Check Stage Compleate">
+        <Parameters />
+      </i>
+      <i Name="DataWF.Module.Flow.DocumentNumberGenerator" Stamp="5249198086154280725" GroupName="DataWF.Module.Flow" DataName="DataWF.Module.Flow.dll" ProcedureType="Assembly" DisplayName="Document Number Generator">
+        <Parameters />
+      </i>
+      <i Name="DataWF.Module.Flow.SendEmail" Stamp="5249198086154281091" GroupName="DataWF.Module.Flow" DataName="DataWF.Module.Flow.dll" ProcedureType="Assembly" DisplayName="Send Email">
+        <Parameters />
+      </i>
+    </Procedures>
+    <Sequences Count="35">
+      <i Name="seq_rinstance" DisplayName="seq_rinstance" Current="1" Increment="1" />
+      <i Name="seq_rbook" DisplayName="seq_rbook" Current="1" Increment="1" />
+      <i Name="seq_rdepartment" DisplayName="seq_rdepartment" Current="1" Increment="1" />
+      <i Name="seq_dcustomer" DisplayName="seq_dcustomer" Current="1" Increment="1" />
+      <i Name="seq_rlocation" DisplayName="seq_rlocation" Current="1" Increment="1" />
+      <i Name="seq_daddress" DisplayName="seq_daddress" Current="1" Increment="1" />
+      <i Name="seq_rgroup_permission" DisplayName="seq_rgroup_permission" Current="1" Increment="1" />
+      <i Name="seq_rposition" DisplayName="seq_rposition" Current="1" Increment="1" />
+      <i Name="seq_rscheduler" DisplayName="seq_rscheduler" Current="1" Increment="1" />
+      <i Name="seq_dstats" DisplayName="seq_dstats" Current="1" Increment="1" />
+      <i Name="seq_ruser" DisplayName="seq_ruser" Current="1" Increment="1" />
+      <i Name="seq_duser_application" DisplayName="seq_duser_application" Current="1" Increment="1" />
+      <i Name="seq_ruser_file" DisplayName="seq_ruser_file" Current="1" Increment="1" />
+      <i Name="seq_rgroup" DisplayName="seq_rgroup" Current="1" Increment="1" />
+      <i Name="seq_duser_log" DisplayName="seq_duser_log" Current="1" Increment="1" />
+      <i Name="seq_dcustomer_address" DisplayName="seq_dcustomer_address" Current="1" Increment="1" />
+      <i Name="seq_dcustomer_reference" DisplayName="seq_dcustomer_reference" Current="1" Increment="1" />
+      <i Name="seq_dpersone_indentify" DisplayName="seq_dpersone_indentify" Current="1" Increment="1" />
+      <i Name="seq_dmessage" DisplayName="seq_dmessage" Current="1" Increment="1" />
+      <i Name="seq_dmessage_address" DisplayName="seq_dmessage_address" Current="1" Increment="1" />
+      <i Name="seq_dmessage_data" DisplayName="seq_dmessage_data" Current="1" Increment="1" />
+      <i Name="seq_ddocument" DisplayName="seq_ddocument" Current="1" Increment="1" />
+      <i Name="seq_rtemplate" DisplayName="seq_rtemplate" Current="1" Increment="1" />
+      <i Name="seq_rwork" DisplayName="seq_rwork" Current="1" Increment="1" />
+      <i Name="seq_ddocument_work" DisplayName="seq_ddocument_work" Current="1" Increment="1" />
+      <i Name="seq_rstage" DisplayName="seq_rstage" Current="1" Increment="1" />
+      <i Name="seq_ddocument_comment" DisplayName="seq_ddocument_comment" Current="1" Increment="1" />
+      <i Name="seq_ddocument_customer" DisplayName="seq_ddocument_customer" Current="1" Increment="1" />
+      <i Name="seq_ddocument_data" DisplayName="seq_ddocument_data" Current="1" Increment="1" />
+      <i Name="seq_rtemplate_data" DisplayName="seq_rtemplate_data" Current="1" Increment="1" />
+      <i Name="seq_rtemplate_file" DisplayName="seq_rtemplate_file" Current="1" Increment="1" />
+      <i Name="seq_ddocument_reference" DisplayName="seq_ddocument_reference" Current="1" Increment="1" />
+      <i Name="seq_rtemplate_property" DisplayName="seq_rtemplate_property" Current="1" Increment="1" />
+      <i Name="seq_rtemplate_reference" DisplayName="seq_rtemplate_reference" Current="1" Increment="1" />
+      <i Name="seq_rstage_param" DisplayName="seq_rstage_param" Current="1" Increment="1" />
+    </Sequences>
+  </i>
+</e>
