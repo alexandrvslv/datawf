@@ -56,7 +56,7 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public static void LoadBooks(DBSchema schema)
+        public static void LoadBooks(IFlowSchema schema)
         {
             Schema = schema;
             Helper.Logs.Add(new StateInfo("Flow Synchronization", "Start", "", StatusType.Information));
@@ -64,21 +64,21 @@ namespace DataWF.Module.Flow
             watch.Start();
             using (var transaction = new DBTransaction(schema) { ReaderParam = DBLoadParam.Synchronize | DBLoadParam.CheckDeleted })
             {
-                schema.GetTable<Book>().Load();
+                schema.Book.Load();
                 //cache groups
                 var groups = schema.GetTable<UserGroup>();
                 groups.Load();
                 var users = schema.GetTable<User>();
                 users.Load();
 
-                schema.GetTable<Location>().Load();
-                schema.GetTable<Template>().Load();
-                schema.GetTable<TemplateData>().Load();
-                schema.GetTable<Work>().Load();
-                schema.GetTable<Stage>().Load();
-                schema.GetTable<StageParam>().Load();
-                schema.GetTable<GroupPermission>().Load();
-                schema.GetTable<Scheduler>().Load();
+                schema.Location.Load();
+                schema.Template.Load();
+                schema.TemplateData.Load();
+                schema.Work.Load();
+                schema.Stage.Load();
+                schema.StageParam.Load();
+                schema.GroupPermission.Load();
+                schema.Scheduler.Load();
 
                 AccessValue.Provider = new CommonAccessProvider(schema);
 
@@ -97,7 +97,7 @@ namespace DataWF.Module.Flow
             Helper.LogWorkingSet("DataBase Info");
             LoadEnvir();
             Helper.LogWorkingSet("Flow Config");
-            LoadBooks(DBService.Schems.DefaultSchema);
+            LoadBooks((IFlowSchema)DBService.Schems.DefaultSchema);
             Helper.LogWorkingSet("Books");
             //FlowEnvironment.LoadDocuments();
             //Helper.LogWorkingSet("Documents");
@@ -171,7 +171,7 @@ namespace DataWF.Module.Flow
             set => schemaCode = value;
         }
 
-        public static DBSchema Schema { get; private set; }
+        public static IFlowSchema Schema { get; private set; }
 
         //public DBSchema Schema
         //{

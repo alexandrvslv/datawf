@@ -53,7 +53,7 @@ namespace DataWF.Module.Common
             return type;
         }
 
-        public async Task<GroupPermission> Get(GroupPermission group, DBSchemaItem item)
+        public async Task<GroupPermission> Get(GroupPermission group, IDBSchemaItem item)
         {
             PermissionType type = GetPermission(item, out string code, out string name);
 

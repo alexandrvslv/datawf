@@ -37,7 +37,7 @@ namespace DataWF.Data
     {
         private DBItem group;
 
-        public DBGroupItem(DBTable table) : base(table)
+        public DBGroupItem(IDBTable table) : base(table)
         { }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]

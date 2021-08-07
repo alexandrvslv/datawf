@@ -13,21 +13,20 @@ namespace DataWF.Module.Common
     {
         public Task Initialize(object[] args)
         {            
-            var schema = args.FirstOrDefault() as DBSchema;
+            var schema = args.FirstOrDefault() as ICommonSchema;
             if (AccessValue.Provider is AccessProviderStub)
             {
                 AccessValue.Provider = new CommonAccessProvider(schema);
             }
 
-            schema.GetTable<Book>().Load();
+            schema.Book.Load();
 
-            schema.GetTable<Department>().Load();
-            schema.GetTable<Position>().Load();
+            schema.Department.Load();
+            schema.Position.Load();
 
-            var userGoups = (UserGroupTable)schema.GetTable<UserGroup>();
-            userGoups.Load();
+            schema.UserGroup.Load();
 
-            var users = (UserTable)schema.GetTable<User>();
+            var users = schema.User;
             users.DefaultComparer = new DBComparer<User, string>(users.LoginKey) { Hash = true };
             users.Load();
 
@@ -42,9 +41,9 @@ namespace DataWF.Module.Common
             return perissions.CachePermission();
         }
 
-        public static Task GenerateLocations(DBSchema schema)
+        public static Task GenerateLocations(ICommonSchema schema)
         {
-            var locationTable = schema.GetTable<Location>();
+            var locationTable = schema.Location;
             locationTable.Load();
             var euas = new Continent(locationTable) { Code = "EUAS", Name = "Eurasia" }; euas.Attach();
             new Continent(locationTable) { Code = "AF", CodeI = "", Name = "Africa" }.Attach();

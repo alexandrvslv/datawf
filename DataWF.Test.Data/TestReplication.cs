@@ -12,53 +12,63 @@ namespace DataWF.Test.Data
     [TestFixture]
     public class TestReplication
     {
-        [Test]
-        public async Task Synchronisation()
+        private TestSchema schema1;
+        private TestSchema schema2;
+        private ReplicationService rService1;
+        private ReplicationService rService2;
+
+        [SetUp]
+        public void SetUp()
         {
-            var schema1 = GenerateSchema("test_schema1");
-            schema1.Position.GeneratePositions();
-            await schema1.Position.Save();
-
-            var schema2 = GenerateSchema("test_schema2");
-
-            var rService1 = new ReplicationService(new ReplicationSettings
+            schema1 = GenerateSchema("test_schema1");
+            schema2 = GenerateSchema("test_schema2");
+            rService1 = new ReplicationService(new ReplicationSettings
             {
                 Instance = new RSInstance
                 {
                     Url = "tcp://localhost:51001"
                 },
-                Instances = new List<RSInstance>
+                Instances = new SelectableList<RSInstance>
                 {
                     new RSInstance
                     {
                         Url = "tcp://localhost:51002"
                     }
                 },
-                Schems = new List<RSSchema>(new[] { new RSSchema { SchemaName = schema1.Name } })
+                Schems = new SelectableList<RSSchema>(new[] { new RSSchema { SchemaName = schema1.Name } })
             },
             new TcpSocketService { });
-            rService1.Start();
 
-
-
-            var rService2 = new ReplicationService(new ReplicationSettings
+            rService2 = new ReplicationService(new ReplicationSettings
             {
                 Instance = new RSInstance
                 {
                     Url = "tcp://localhost:51002"
                 },
-                Instances = new List<RSInstance>
+                Instances = new SelectableList<RSInstance>
                 {
                     new RSInstance
                     {
                          Url = "tcp://localhost:51001"
                     }
                 },
-                Schems = new List<RSSchema>(new[] { new RSSchema { SchemaName = schema2.Name } })
+                Schems = new SelectableList<RSSchema>(new[] { new RSSchema { SchemaName = schema2.Name } })
             },
             new TcpSocketService { });
+        }
 
+        [Test]
+        public async Task Synchronisation()
+        {
+            schema1.Position.GeneratePositions();
+            await schema1.Position.Save();
+
+            rService1.Start();
+            rService2.Start();
+
+            await rService1.SignIn();
             await rService2.SignIn();
+
             await rService2.Synch();
 
             Assert.AreEqual(6, schema2.Position.Count, "Fail Synch");
@@ -66,7 +76,7 @@ namespace DataWF.Test.Data
 
         private static TestSchema GenerateSchema(string name)
         {
-            var schema1 = new TestSchema()
+            var schema = new TestSchema()
             {
                 Name = name,
                 Connection = new DBConnection
@@ -76,9 +86,11 @@ namespace DataWF.Test.Data
                     DataBaseId = 1
                 }
             };
-            schema1.Generate(name);
-            DBService.Schems.Add(schema1);
-            return schema1;
+            schema.Generate(name);
+            DBService.Schems.Add(schema);
+            try { schema.DropDatabase(); } catch { }
+            schema.CreateDatabase();
+            return schema;
         }
     }
 }

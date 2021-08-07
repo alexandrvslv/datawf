@@ -43,7 +43,7 @@ namespace DataWF.Data
         public DBTableItem Container { get; set; }
 
         [XmlIgnore, JsonIgnore]
-        public DBSchema Schema { get { return Container?.Schema; } }
+        public IDBSchema Schema { get { return Container?.Schema; } }
 
         [XmlIgnore, JsonIgnore]
         public string Names { get; private set; }

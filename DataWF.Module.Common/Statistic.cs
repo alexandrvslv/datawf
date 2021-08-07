@@ -1,10 +1,12 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using DataWF.Module.Counterpart;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
+
     [Table("dstats", "Reference Book"), InvokerGenerator]
     public sealed partial class Statistic : DBItem//, IComparable
     {

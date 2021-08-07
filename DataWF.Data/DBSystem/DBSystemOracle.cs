@@ -376,7 +376,7 @@ namespace DataWF.Data
 
         public override async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
         {
-            var table = transaction.Schema.FileTable;
+            var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
             using (var blob = new OracleBlob((OracleConnection)transaction.Connection))
             {
                 await value.CopyToAsync(blob);

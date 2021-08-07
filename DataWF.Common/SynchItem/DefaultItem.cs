@@ -23,7 +23,7 @@ namespace DataWF.Common
                     propertyChanged = new ThreadSafeList<PropertyChangedEventHandler>();
                 propertyChanged.Add(value);
             }
-            remove => propertyChanged.Remove(value);
+            remove => propertyChanged?.Remove(value);
         }
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs arg)

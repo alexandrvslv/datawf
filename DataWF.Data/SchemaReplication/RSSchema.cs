@@ -29,7 +29,7 @@ namespace DataWF.Data
     public partial class RSSchema
     {
         private readonly IListIndex<RSTable> tableNameIndex;
-        private DBSchema schema;
+        private IDBSchema schema;
 
         public RSSchema()
         {
@@ -39,7 +39,7 @@ namespace DataWF.Data
         public string SchemaName { get; set; }
 
         [JsonIgnore]
-        public DBSchema Schema
+        public IDBSchema Schema
         {
             get => schema;
             set

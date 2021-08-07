@@ -5,11 +5,6 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Counterpart
 {
-    public class LocationList : DBTableView<Location>
-    {
-        public LocationList(LocationTable<Location> table) : base(table)
-        { }
-    }
 
     [Table("rlocation", "Address", BlockSize = 100, Type = typeof(LocationTable<>))]
     public partial class Location : DBGroupItem

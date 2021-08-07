@@ -17,25 +17,30 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
 using System;
+using System.Collections.Generic;
 
 namespace DataWF.Data
 {
-
-    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    public class ItemTypeAttribute : Attribute
+    public interface IDBSchema: IDBSchemaItem
     {
+        DBConnection Connection { get; set; }
+        DBSystem System { get; }
+        DBLogSchema LogSchema { get; set; }
+        DBProcedureList Procedures { get; set; }
+        DBSequenceList Sequences { get; set; }
+        DBTableGroupList TableGroups { get; set; }
+        DBTableList Tables { get; set; }
+        Version Version { get; set; }
+        bool IsSynchronizing { get; }
 
-        public ItemTypeAttribute(int id)
-        {
-            Id = id;
-        }
+        void CreateDatabase();
+        void DropDatabase();
 
-        public int Id { get; private set; }
-
-        public string Query { get; set; }
-
-        public Type Type { get; set; }
+        DBTable GetTable(Type type, bool generate = false);
+        DBTable<T> GetTable<T>(bool generate = false) where T : DBItem;
+        IDBTable GetVirtualTable<T>(int itemType) where T : DBItem;
+        DBTable ParseTable(string code);
+        IEnumerable<DBForeignKey> GetChildRelations(DBTable target);
     }
 }

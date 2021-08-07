@@ -12,7 +12,7 @@ namespace DataWF.Data.Generator
     {
         private TableCodeGenerator tableCodeGenerator;
         private SchemaCodeGenerator schemaCodeGenerator;
-
+        
         public void Initialize(GeneratorInitializationContext context)
         {
             // Register a syntax receiver that will be created for each generation pass
@@ -27,9 +27,10 @@ namespace DataWF.Data.Generator
             try
             {
 
-                var cultures = new List<string>(new[] { "RU", "EN" });//TODO Pass as argument
+                var cultures = new List<string>(new[] { "RU", "EN" });//TODO Pass as argument in destination project
                 tableCodeGenerator = new TableCodeGenerator(ref context, context.Compilation)
                 {
+                    Receiver = receiver,
                     Cultures = cultures,
                     LogItemCodeGenerator = new LogItemCodeGenerator(ref context, context.Compilation)
                     {

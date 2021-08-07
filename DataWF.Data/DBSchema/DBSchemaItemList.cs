@@ -36,7 +36,7 @@ namespace DataWF.Data
             : this(null)
         { }
 
-        public DBSchemaItemList(DBSchema schema)
+        public DBSchemaItemList(IDBSchema schema)
             : base()
         {
             nameIndex = Indexes.Add(DBSchemaItem.NameInvoker.Instance);
@@ -44,7 +44,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual DBSchema Schema { get; internal set; }
+        public virtual IDBSchema Schema { get; internal set; }
 
         public virtual T this[string name]
         {

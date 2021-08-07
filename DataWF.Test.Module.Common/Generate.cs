@@ -15,20 +15,17 @@ namespace DataWF.Test.Module.Common
         public async Task Initialize()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var schema = new DBSchema("common_database");
-            schema.Generate(new[] {
-                typeof(Customer).Assembly,
-                typeof(User).Assembly });
-            Assert.IsNotNull(schema);
+            var schema = new CommonSchema();
+            schema.Generate("common_database");
             DBService.Schems.Add(schema);
 
-            var bookTable = schema.GetTable<Book>();
-            var userGroupTable = (UserGroupTable)schema.GetTable<UserGroup>();
-            var groupPermissionTable = (GroupPermissionTable)schema.GetTable<GroupPermission>();
-            var userTable = (UserTable)schema.GetTable<User>();
-            var positionTable = (PositionTable)schema.GetTable<Position>();
-            var userRegTable = (UserRegTable)schema.GetTable<UserReg>();
-            var companyTable = (CompanyTable)schema.GetTable<Company>();
+            var bookTable = schema.Book;
+            var userGroupTable = schema.UserGroup;
+            var groupPermissionTable = schema.GroupPermission;
+            var userTable = schema.User;
+            var positionTable = schema.Position;
+            var userRegTable = schema.UserReg;
+            var companyTable = schema.Company;
 
             Assert.IsNotNull(bookTable);
             Assert.IsNotNull(userGroupTable);

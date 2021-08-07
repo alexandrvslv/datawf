@@ -335,44 +335,44 @@ namespace DataWF.Module.Flow
         [Referencing(nameof(DocumentWork.DocumentId))]
         public IEnumerable<DocumentWork> Works
         {
-            get => GetReferencing<DocumentWork>(Table.DocumentWorkTable.DocumentIdKey, DBLoadParam.None).
+            get => GetReferencing<DocumentWork>(Schema.DocumentWork.DocumentIdKey, DBLoadParam.None).
               OrderByDescending(p => p.DateCreate);
-            set => SetReferencing(value, Table.DocumentWorkTable.DocumentIdKey);
+            set => SetReferencing(value, Schema.DocumentWork.DocumentIdKey);
         }
 
         [Referencing(nameof(DocumentData.DocumentId))]
         public IEnumerable<DocumentData> Datas
         {
-            get => GetReferencing<DocumentData>(Table.DocumentDataTable.DocumentIdKey, DBLoadParam.None);
-            set => SetReferencing(value, Table.DocumentDataTable.DocumentIdKey);
+            get => GetReferencing<DocumentData>(Schema.DocumentData.DocumentIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.DocumentData.DocumentIdKey);
         }
 
         [Referencing(nameof(DocumentCustomer.DocumentId))]
         public IEnumerable<DocumentCustomer> Customers
         {
-            get => GetReferencing<DocumentCustomer>(Table.DocumentCustomerTable.DocumentIdKey, DBLoadParam.None);
-            set => SetReferencing(value, Table.DocumentCustomerTable.DocumentIdKey);
+            get => GetReferencing<DocumentCustomer>(Schema.DocumentCustomer.DocumentIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.DocumentCustomer.DocumentIdKey);
         }
 
         [Referencing(nameof(DocumentComment.DocumentId))]
         public IEnumerable<DocumentComment> Comments
         {
-            get => GetReferencing<DocumentComment>(Table.DocumentCommentTable.DocumentIdKey, DBLoadParam.None);
-            set => SetReferencing(value, Table.DocumentCommentTable.DocumentIdKey);
+            get => GetReferencing<DocumentComment>(Schema.DocumentComment.DocumentIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.DocumentComment.DocumentIdKey);
         }
 
         [Referencing(nameof(DocumentReference.ReferenceId))]
         public IEnumerable<DocumentReference> Referencing
         {
-            get => GetReferencing<DocumentReference>(Table.DocumentReferenceTable.ReferenceIdKey, DBLoadParam.None);
-            set => SetReferencing(value, Table.DocumentReferenceTable.ReferenceIdKey);
+            get => GetReferencing<DocumentReference>(Schema.DocumentReference.ReferenceIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.DocumentReference.ReferenceIdKey);
         }
 
         [Referencing(nameof(DocumentReference.DocumentId))]
         public IEnumerable<DocumentReference> Referenced
         {
-            get => GetReferencing<DocumentReference>(Table.DocumentReferenceTable.DocumentIdKey, DBLoadParam.None);
-            set => SetReferencing(value, Table.DocumentReferenceTable.DocumentIdKey);
+            get => GetReferencing<DocumentReference>(Schema.DocumentReference.DocumentIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.DocumentReference.DocumentIdKey);
         }
 
         [Browsable(false)]
@@ -505,7 +505,7 @@ namespace DataWF.Module.Flow
             if (document == null)
                 return null;
 
-            var reference = new DocumentReference(Table.DocumentReferenceTable) { Document = this, Reference = document };
+            var reference = new DocumentReference(Schema.DocumentReference) { Document = this, Reference = document };
             reference.GenerateId(transaction);
             reference.Attach();
             return reference;

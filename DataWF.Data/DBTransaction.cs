@@ -50,7 +50,7 @@ namespace DataWF.Data
         {
         }
 
-        public DBTransaction(DBSchema schema, IUserIdentity caller = null, bool noTransaction = false)
+        public DBTransaction(IDBSchema schema, IUserIdentity caller = null, bool noTransaction = false)
             : this(schema.Connection, caller, noTransaction)
         {
             Schema = schema;
@@ -71,7 +71,7 @@ namespace DataWF.Data
             }
             //Debug.WriteLine($"New DBTransaction owner:{owner} connection:{config} is NON{noTransaction}");
         }
-        public DBSchema Schema { get; set; }
+        public IDBSchema Schema { get; set; }
 
         public IUserIdentity Caller { get; private set; }
 

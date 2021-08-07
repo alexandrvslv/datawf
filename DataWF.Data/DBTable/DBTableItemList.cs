@@ -32,7 +32,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public override DBSchema Schema
+        public override IDBSchema Schema
         {
             get => base.Schema ?? Table?.Schema;
             internal set => base.Schema = value;

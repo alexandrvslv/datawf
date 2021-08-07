@@ -28,7 +28,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Attributes\VirtualColumnAttribute.cs" />
-    <Compile Remove="Attributes\VirtualTableAttribute.cs" />
     <Compile Remove="DBItem\DBVirtualItem.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -47,8 +46,8 @@
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
     <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj" />
-    <ProjectReference Include="..\DataWF.Common.Generator\DataWF.Common.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
-    <ProjectReference Include="..\DataWF.Data.Generator\DataWF.Data.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    <ProjectReference Include="..\DataWF.Common.Generator\DataWF.Common.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\DataWF.Data.Generator\DataWF.Data.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Generator\" />

@@ -116,7 +116,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [ItemType((int)StageParamType.Reference), InvokerGenerator]
+    [VirtualTable((int)StageParamType.Reference), InvokerGenerator]
     public sealed partial class StageReference : StageParam
     {
         public StageReference(DBTable table) : base(table)
@@ -138,7 +138,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [ItemType((int)StageParamType.Template), InvokerGenerator]
+    [VirtualTable((int)StageParamType.Template), InvokerGenerator]
     public sealed partial class StageTemplate : StageParam
     {
         public StageTemplate(DBTable table) : base(table)
@@ -153,7 +153,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [ItemType((int)StageParamType.Foreign), InvokerGenerator]
+    [VirtualTable((int)StageParamType.Foreign), InvokerGenerator]
     public sealed partial class StageForeign : StageParam
     {
         public StageForeign(DBTable table) : base(table)

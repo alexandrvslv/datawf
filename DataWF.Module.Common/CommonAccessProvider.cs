@@ -8,15 +8,15 @@ namespace DataWF.Module.Common
 {
     public class CommonAccessProvider : IAccessProvider
     {
-        public CommonAccessProvider(DBSchema schema)
+        public CommonAccessProvider(ICommonSchema schema)
         {
             Schema = schema;
-            UserGroupTable = (DBTable<UserGroup>)Schema.Tables.FirstOrDefault(p => p.ItemType.Type == typeof(UserGroup));
-            UserTable = (DBTable<User>)Schema.Tables.FirstOrDefault(p => p.ItemType.Type == typeof(User));
-            CompanyTable = (DBTable<Company>)Schema.Tables.FirstOrDefault(p => p.ItemType.Type == typeof(Company));
+            UserGroupTable = Schema.UserGroup;
+            UserTable = Schema.User;
+            CompanyTable = Schema.Company;
         }
 
-        public DBSchema Schema { get; }
+        public ICommonSchema Schema { get; }
         public DBTable<UserGroup> UserGroupTable { get; }
         public DBTable<User> UserTable { get; }
         public DBTable<Company> CompanyTable { get; }

@@ -23,14 +23,13 @@ namespace DataWF.Data.Generator
                 {
                     var attributesName = classDeclaration.AttributeLists.SelectMany(p => p.Attributes
                             .Select(p => p.Name.ToString()));
-                    if (attributesName.Any(p => string.Equals(p, "Table", StringComparison.Ordinal)
+                    if (attributesName.Any(p => 
+                       string.Equals(p, "Table", StringComparison.Ordinal)
                     || string.Equals(p, "TableAttribute", StringComparison.Ordinal)
                     || string.Equals(p, "AbstractTable", StringComparison.Ordinal)
                     || string.Equals(p, "AbstractTableAttribute", StringComparison.Ordinal)
                     || string.Equals(p, "VirtualTable", StringComparison.Ordinal)
                     || string.Equals(p, "VirtualTableAttribute", StringComparison.Ordinal)
-                    || string.Equals(p, "ItemType", StringComparison.Ordinal)
-                    || string.Equals(p, "ItemTypeAttribute", StringComparison.Ordinal)
                     || string.Equals(p, "LogTable", StringComparison.Ordinal)
                     || string.Equals(p, "LogTableAttribute", StringComparison.Ordinal)
                     ))

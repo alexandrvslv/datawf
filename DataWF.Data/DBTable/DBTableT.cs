@@ -274,11 +274,28 @@ namespace DataWF.Data
             SequenceName = value.SequenceName;
             Keys = value.Keys | DBTableKeys.Virtual;
             FilterQuery = null;
-
+            if (BaseTable != null)
+            {
+                BaseTable.AddVirtual(this);
+            }
             if (Columns.Count > 0)
                 return;
 
             var type = typeof(T);
+
+            foreach (DBColumnGroup group in BaseTable.ColumnGroups)
+            {
+                var exist = ColumnGroups[group.Name];
+                if (exist == null)
+                {
+                    ColumnGroups.Add(DBColumnFactory.CreateGroup(group));
+                }
+                else
+                {
+                    exist.Order = group.Order;
+                }
+            }
+
             foreach (DBColumn column in BaseTable.Columns)
             {
                 var exist = Columns[column.Name];

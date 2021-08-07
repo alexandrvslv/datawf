@@ -24,17 +24,17 @@ using System.Diagnostics;
 
 namespace DataWF.Data
 {
-    public class ItemTypeGenerator
+    public class VirtualTableGenerator
     {
-        private Dictionary<DBSchema, DBTable> generateCache = new Dictionary<DBSchema, DBTable>();
+        private Dictionary<IDBSchema, DBTable> generateCache = new Dictionary<IDBSchema, DBTable>();
 
-        public ItemTypeAttribute Attribute { get; set; }
+        public VirtualTableAttribute Attribute { get; set; }
 
         public Type Type { get; protected set; }
 
         public TableGenerator TableGenerator { get; set; }
 
-        public bool IsGenerated(DBSchema schema, out DBTable table) => generateCache.TryGetValue(schema, out table);
+        public bool IsGenerated(IDBSchema schema, out DBTable table) => generateCache.TryGetValue(schema, out table);
 
         public virtual void Initialize(Type type)
         {
@@ -42,12 +42,12 @@ namespace DataWF.Data
             TableGenerator = TableGenerator.GetInherit(type.BaseType);
             if (TableGenerator == null)
             {
-                throw new Exception($"Class with {nameof(ItemTypeAttribute)} must have are {nameof(Type.BaseType)} with {nameof(Data.TableAttribute)}!");
+                throw new Exception($"Class with {nameof(VirtualTableAttribute)} must have are {nameof(Type.BaseType)} with {nameof(Data.TableAttribute)}!");
             }
             TableGenerator.InitializeItemType(this);
         }
 
-        public virtual DBTable Generate(DBSchema schema)
+        public virtual DBTable Generate(IDBSchema schema)
         {
             if (schema == null)
                 throw new ArgumentException("Schema is required!", nameof(schema));
@@ -103,7 +103,7 @@ namespace DataWF.Data
             return table;
         }
 
-        public virtual DBTable CreateTable(DBSchema schema, DBTable baseTable)
+        public virtual DBTable CreateTable(IDBSchema schema, DBTable baseTable)
         {
             if (TableGenerator == null)
             {

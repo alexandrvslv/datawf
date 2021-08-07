@@ -41,7 +41,7 @@ namespace DataWF.WebService.Common
         protected DBColumn<K> primaryKey;
         protected DBLogTable<L> logTable;
 
-        public BaseController(DBSchema schema)
+        public BaseController(IDBSchema schema)
         {
             Schema = schema;
 #if DEBUG
@@ -54,7 +54,7 @@ namespace DataWF.WebService.Common
 
         public IUserIdentity CurrentUser => User.GetCommonUser();
 
-        protected DBSchema Schema { get; }
+        protected IDBSchema Schema { get; }
 
         public DBTable<T> Table { get; }
 

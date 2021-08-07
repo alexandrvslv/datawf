@@ -34,7 +34,7 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public partial class DBSchema : DBSchemaItem, IFileSerialize
+    public partial class DBSchema : DBSchemaItem, IFileSerialize, IDBSchema
     {
         public static DBSchema Generate(string schemaName, params Assembly[] assemblies)
         {
@@ -93,7 +93,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBConnection Connection
         {
-            get { return connection ?? (connection = DBService.Connections[ConnectionName]); }
+            get => connection ?? (connection = DBService.Connections[ConnectionName]);
             set
             {
                 connection = value;
@@ -122,7 +122,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBLogSchema LogSchema
         {
-            get { return logSchema ?? (logSchema = (DBLogSchema)DBService.Schems[logSchemaName]); }
+            get => logSchema ?? (logSchema = (DBLogSchema)DBService.Schems[logSchemaName]);
             set
             {
                 logSchema = value;
@@ -137,7 +137,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBSystem System { get { return Connection?.System ?? DBSystem.Default; } }
+        public DBSystem System => Connection?.System ?? DBSystem.Default;
 
         public DBTableList Tables { get; set; }
 
@@ -149,7 +149,7 @@ namespace DataWF.Data
 
         public override string Name
         {
-            get { return base.Name; }
+            get => base.Name;
             set
             {
                 base.Name = value;
@@ -164,7 +164,7 @@ namespace DataWF.Data
 
         public string DataBase
         {
-            get { return dataBase; }
+            get => dataBase;
             set
             {
                 if (dataBase != value)
@@ -233,7 +233,7 @@ namespace DataWF.Data
                     fileName = "schems" + Path.DirectorySeparatorChar + name + ".xml";
                 return fileName;
             }
-            set { fileName = value; }
+            set => fileName = value;
         }
 
         #endregion

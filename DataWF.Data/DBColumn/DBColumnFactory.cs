@@ -171,5 +171,16 @@ namespace DataWF.Data
             column.RefreshVirtualColumn(baseColumn);
             return column;
         }
+
+        public static DBColumnGroup CreateGroup(DBColumnGroup baseColumnGroup)
+        {
+            var columnGroup = new DBColumnGroup()
+            {
+                Name = baseColumnGroup.Name,
+                Order = baseColumnGroup.Order,
+                DisplayName = baseColumnGroup.DisplayName,
+            };
+            return columnGroup;
+        }
     }
 }

@@ -98,7 +98,7 @@ namespace DataWF.Data
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual DBSchema Schema => Table?.Schema;
+        public virtual IDBSchema Schema => Table?.Schema;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual DBSystem DBSystem => Schema?.System ?? DBSystem.Default;

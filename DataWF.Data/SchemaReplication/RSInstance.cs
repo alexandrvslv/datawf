@@ -40,11 +40,33 @@ namespace DataWF.Data
 
         private static readonly int timeOut = 60000;
         private ISocketConnection connection;
+        private string url;
+        private bool? active;
 
-        public string Url { get; set; } = "tcp://localhost:50001";
+        public string Url
+        {
+            get => url;
+            set
+            {
+                if (!string.Equals(url, value, StringComparison.OrdinalIgnoreCase))
+                {
+                    var temp = url;
+                    url = value;
+                    UrlValue = url == null ? null : new Uri(url);
+                    OnPropertyChanged(temp, url);
+                }
+            }
+        }
 
         [XmlIgnore, JsonIgnore]
-        public bool? Active { get; internal set; }
+        public Uri UrlValue { get; set; }
+
+        [XmlIgnore, JsonIgnore]
+        public bool? Active
+        {
+            get => active == null ? active : active.Value && (Connection?.Connected ?? false);
+            internal set => active = value;
+        }
 
         [XmlIgnore, JsonIgnore]
         public ISocketConnection Connection
@@ -105,33 +127,26 @@ namespace DataWF.Data
 
         protected async ValueTask OnReceiveStart(SocketStreamArgs arg)
         {
-            try
+            SMBase message = null;
+            using (var stream = arg.ReaderStream)
             {
-                SMBase message = null;
-                using (var stream = arg.ReaderStream)
-                {
-                    message = (SMBase)serializer.Deserialize(stream, null);
-                }
-                //message.Caller = arg.Client;
-                switch (message.Type)
-                {
-                    case SMType.Request:
-                        await ProcessRequest((SMRequest)message, arg);
-                        break;
-                    case SMType.Response:
-                        await ProcessResponse((SMResponce)message, arg);
-                        break;
-                    case SMType.Notify:
-                        if (message.Data is RSTransaction transaction)
-                        {
-                            await ProcessTransaction(transaction);
-                        }
-                        break;
-                }
+                message = (SMBase)serializer.Deserialize(stream, null);
             }
-            catch (Exception ex)
+            //message.Caller = arg.Client;
+            switch (message.Type)
             {
-                Service.SocketService.OnDataException(new SocketExceptionArgs(arg, ex));
+                case SMType.Request:
+                    await ProcessRequest((SMRequest)message, arg);
+                    break;
+                case SMType.Response:
+                    await ProcessResponse((SMResponce)message, arg);
+                    break;
+                case SMType.Notify:
+                    if (message.Data is RSTransaction transaction)
+                    {
+                        await ProcessTransaction(transaction);
+                    }
+                    break;
             }
         }
 

@@ -4,7 +4,7 @@ using DataWF.Common;
 
 namespace DataWF.Module.Counterpart
 {
-    [ItemType((int)Counterpart.LocationType.Currency)]
+    [VirtualTable((int)Counterpart.LocationType.Currency)]
     public sealed partial class Currency : Location
     {
         public Currency(DBTable table) : base(table)

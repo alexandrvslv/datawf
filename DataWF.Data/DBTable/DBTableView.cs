@@ -232,7 +232,7 @@ namespace DataWF.Data
 
         public bool IsEdited => GetEdited().Any();
 
-        public DBSchema Schema => Table?.Schema;
+        public IDBSchema Schema => Table?.Schema;
 
         public DBTable Table
         {

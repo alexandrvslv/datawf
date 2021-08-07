@@ -25,4 +25,21 @@ namespace DataWF.Common.Generator
 
     }
 
+    public static class SyntaxExtension
+    {
+        public static NamespaceDeclarationSyntax GetNamespace(this ClassDeclarationSyntax classDeclaration)
+        {
+            var parent = classDeclaration.Parent;
+            while (parent != null)
+            {
+                if (parent is NamespaceDeclarationSyntax namespaceDeclaration)
+                {
+                    return namespaceDeclaration;
+                }
+                parent = parent.Parent;
+            }
+            return null;
+        }
+    }
+
 }

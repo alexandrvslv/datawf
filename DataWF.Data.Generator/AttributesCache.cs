@@ -5,7 +5,7 @@ namespace DataWF.Data.Generator
     internal class AttributesCache
     {
         public INamedTypeSymbol Table;
-        public INamedTypeSymbol ItemType;
+        public INamedTypeSymbol VirtualTable;
         public INamedTypeSymbol Culture;
         public INamedTypeSymbol Reference;
         public INamedTypeSymbol Referencing;
@@ -22,7 +22,7 @@ namespace DataWF.Data.Generator
             Table = compilation.GetTypeByMetadataName("DataWF.Data.TableAttribute");
             LogTable = compilation.GetTypeByMetadataName("DataWF.Data.LogTableAttribute");
             AbstractTable = compilation.GetTypeByMetadataName("DataWF.Data.AbstractTableAttribute");
-            ItemType = compilation.GetTypeByMetadataName("DataWF.Data.ItemTypeAttribute");
+            VirtualTable = compilation.GetTypeByMetadataName("DataWF.Data.VirtualTableAttribute");
             LogItemType = compilation.GetTypeByMetadataName("DataWF.Data.LogItemTypeAttribute");
             Column = compilation.GetTypeByMetadataName("DataWF.Data.ColumnAttribute");
             LogColumn = compilation.GetTypeByMetadataName("DataWF.Data.LogColumnAttribute");

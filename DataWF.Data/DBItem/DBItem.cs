@@ -57,7 +57,7 @@ namespace DataWF.Data
         //        Build(table);
         //}
 
-        public DBItem(DBTable table)
+        public DBItem(IDBTable table)
         {
             if (table != null)
                 Build(table);
@@ -201,7 +201,7 @@ namespace DataWF.Data
         //}
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual DBSchema Schema
+        public virtual IDBSchema Schema
         {
             get => Table.Schema;
         }
@@ -214,7 +214,7 @@ namespace DataWF.Data
             {
                 if (table != value)
                 {
-                    table = (DBTable)value.GetVirtualTable(GetType());
+                    table = value.GetVirtualTable(GetType());
                     handler = table.GetNextHandler();
                 }
             }
@@ -728,7 +728,7 @@ namespace DataWF.Data
             return Format(Table.Columns[code]);
         }
 
-        public void Build(DBTable table, bool setDefauilts = true, int itemType = -1)
+        public void Build(IDBTable table, bool setDefauilts = true, int itemType = -1)
         {
             Table = table;
             if (setDefauilts)

@@ -47,7 +47,7 @@ namespace DataWF.Module.Flow
 
         public QQuery CreateRefsFilter(object id)
         {
-            var query = new QQuery("", DocumentReferenceTable);
+            var query = new QQuery("", Schema.DocumentReference);
             query.Parameters.Add(CreateRefsParam(id));
             return query;
         }

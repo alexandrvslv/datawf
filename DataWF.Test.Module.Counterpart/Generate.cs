@@ -15,14 +15,16 @@ namespace DataWf.Test.Module.Counterparty
         public async Task Initialize()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var schema = new DBSchema("wf_customer");
-            schema.Generate(new[] { typeof(User).Assembly, typeof(Customer).Assembly });
-            Assert.IsNotNull(Location.DBTable);
-            Assert.IsNotNull(Address.DBTable);
-            Assert.IsNotNull(Customer.DBTable);
-            Assert.IsNotNull(CustomerAddress.DBTable);
-            Assert.IsNotNull(PersoneIdentify.DBTable);
-            Assert.IsNotNull(CustomerReference.DBTable);
+            var schema = new CounterpartSchema();
+            schema.Generate("wf_customer");
+            Assert.IsNotNull(schema.Location);
+            Assert.IsNotNull(schema.Continent);
+            Assert.IsNotNull(schema.Country);
+            Assert.IsNotNull(schema.Address);
+            Assert.IsNotNull(schema.Customer);
+            Assert.IsNotNull(schema.CustomerAddress);
+            Assert.IsNotNull(schema.PersoneIdentify);
+            Assert.IsNotNull(schema.CustomerReference);
             DBService.Save();
             schema.Connection = new DBConnection
             {
@@ -33,43 +35,44 @@ namespace DataWf.Test.Module.Counterparty
             schema.DropDatabase();
             schema.CreateDatabase();
 
-            Location.DBTable.Add(new Continent { Code = "AF", Name = "Africa" });
-            Location.DBTable.Add(new Continent { Code = "AN", Name = "Antarctica" });
-            Location.DBTable.Add(new Continent { Code = "AS", Name = "Asia" });
-            Location.DBTable.Add(new Continent { Code = "EU", Name = "Europa" });
-            Location.DBTable.Add(new Continent { Code = "EUAS", Name = "Eurasia" });
-            Location.DBTable.Add(new Continent { Code = "NA", Name = "North america" });
-            Location.DBTable.Add(new Continent { Code = "OC", Name = "Oceania" });
-            Location.DBTable.Add(new Continent { Code = "SA", Name = "South america" });
+            new Continent(schema.Location) { Code = "AF", Name = "Africa" }.Attach();
+            new Continent(schema.Location) { Code = "AN", Name = "Antarctica" }.Attach();
+            new Continent(schema.Location) { Code = "AS", Name = "Asia" }.Attach();
+            new Continent(schema.Location) { Code = "EU", Name = "Europa" }.Attach();
+            new Continent(schema.Location) { Code = "EUAS", Name = "Eurasia" }.Attach();
+            new Continent(schema.Location) { Code = "NA", Name = "North america" }.Attach();
+            new Continent(schema.Location) { Code = "OC", Name = "Oceania" }.Attach();
+            new Continent(schema.Location) { Code = "SA", Name = "South america" }.Attach();
 
-            var russia = new Country
+            var russia = new Country(schema.Country)
             {
-                Parent = Location.DBTable.LoadByCode("EUAS"),
+                Parent = schema.Location.LoadByCode("EUAS"),
                 Code = "RU",
                 Name = "Russia"
             };
-            Location.DBTable.Add(russia);
-            var ruble = new Currency
+            russia.Attach();
+
+            var ruble = new Currency(schema.Currency)
             {
                 Parent = russia,
                 Code = "RUB",
                 Name = "Ruble"
             };
-            Location.DBTable.Add(ruble);
+            ruble.Attach();
 
-            Assert.AreEqual(1, DBTable.GetTable<Country>().Count);
-            Assert.AreEqual(1, DBTable.GetTable<Currency>().Count);
+            Assert.AreEqual(1, schema.GetTable<Country>().Count);
+            Assert.AreEqual(1, schema.GetTable<Currency>().Count);
 
-            await Location.DBTable.Save();
+            await schema.Location.Save();
 
-            Assert.AreEqual(1, DBTable.GetTable<Country>().Count);
-            Assert.AreEqual(1, DBTable.GetTable<Currency>().Count);
+            Assert.AreEqual(1, schema.GetTable<Country>().Count);
+            Assert.AreEqual(1, schema.GetTable<Currency>().Count);
 
-            Location.DBTable.Clear();
-            Location.DBTable.Load().LastOrDefault();
+            schema.Location.Clear();
+            schema.Location.Load().LastOrDefault();
 
-            Assert.AreEqual(1, DBTable.GetTable<Country>().Count);
-            Assert.AreEqual(1, DBTable.GetTable<Currency>().Count);
+            Assert.AreEqual(1, schema.GetTable<Country>().Count);
+            Assert.AreEqual(1, schema.GetTable<Currency>().Count);
 
 
 

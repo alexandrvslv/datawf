@@ -88,7 +88,7 @@ namespace DataWF.Data
         public JsonEncodedText JsonReferenceName { get => jsonReferenceName ??= JsonEncodedText.Encode(ReferencePropertyName, JavaScriptEncoder.UnsafeRelaxedJsonEscaping); }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public DBSystem DBSystem { get => Schema?.System ?? DBSystem.Default; }
+        public DBSystem DBSystem { get => Schema?.Connection.System ?? DBSystem.Default; }
 
         [Browsable(false)]
         public string BaseName { get; set; }
@@ -658,6 +658,7 @@ namespace DataWF.Data
         {
             BaseColumn = baseColumn;
             Name = baseColumn.Name;
+            GroupName = baseColumn.GroupName;
             Keys = baseColumn.Keys;
             Size = baseColumn.Size;
             Scale = baseColumn.Scale;

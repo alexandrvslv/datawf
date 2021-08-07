@@ -32,7 +32,7 @@ namespace DataWF.Data
 
         private static readonly Type dbItemType = typeof(DBItem);
         private static readonly Dictionary<Type, TableGenerator> cacheTableGenerators = new Dictionary<Type, TableGenerator>();
-        private static readonly Dictionary<Type, ItemTypeGenerator> cacheItemTypeGenerator = new Dictionary<Type, ItemTypeGenerator>();
+        private static readonly Dictionary<Type, VirtualTableGenerator> cacheItemTypeGenerator = new Dictionary<Type, VirtualTableGenerator>();
 
         public static void ClearGeneratorCache()
         {
@@ -133,7 +133,7 @@ namespace DataWF.Data
             return tableGenerator;
         }
 
-        public static ItemTypeGenerator GetItemType(Type type)
+        public static VirtualTableGenerator GetItemType(Type type)
         {
             if (!dbItemType.IsAssignableFrom(type))
             {
@@ -141,15 +141,15 @@ namespace DataWF.Data
             }
             if (!cacheItemTypeGenerator.TryGetValue(type, out var itemTypeGenerator))
             {
-                var itemTypeAttribute = type.GetCustomAttribute<ItemTypeAttribute>(false);
+                var itemTypeAttribute = type.GetCustomAttribute<VirtualTableAttribute>(false);
                 if (itemTypeAttribute is LogItemTypeAttribute)
                 {
                     itemTypeGenerator = new LogItemTypeGenerator { Attribute = itemTypeAttribute };
                     itemTypeGenerator.Initialize(type);
                 }
-                else if (itemTypeAttribute is ItemTypeAttribute)
+                else if (itemTypeAttribute is VirtualTableAttribute)
                 {
-                    itemTypeGenerator = new ItemTypeGenerator { Attribute = itemTypeAttribute };
+                    itemTypeGenerator = new VirtualTableGenerator { Attribute = itemTypeAttribute };
                     itemTypeGenerator.Initialize(type);
                 }
                 cacheItemTypeGenerator[type] = itemTypeGenerator;
@@ -161,12 +161,12 @@ namespace DataWF.Data
         protected SelectableList<ReferenceGenerator> cacheReferences;
         protected SelectableList<ReferencingGenerator> cacheReferencings;
         protected SelectableList<IndexGenerator> cacheIndexes;
-        protected SelectableList<ItemTypeGenerator> cacheItemTypes;
+        protected SelectableList<VirtualTableGenerator> cacheItemTypes;
         protected List<Type> cachedTypes = new List<Type>();
         protected ColumnGenerator cachePrimaryKey;
         protected ColumnGenerator cacheTypeKey;
         protected ColumnGenerator cacheFileKey;
-        private Dictionary<DBSchema, DBTable> cacheGenerated = new Dictionary<DBSchema, DBTable>();
+        private Dictionary<IDBSchema, DBTable> cacheGenerated = new Dictionary<IDBSchema, DBTable>();
 
         public TableAttribute Attribute { get; set; }
 
@@ -218,9 +218,9 @@ namespace DataWF.Data
 
         public SelectableList<ParameterInvoker> Parameters { get; private set; } = new SelectableList<ParameterInvoker>();
 
-        public bool IsGenerated(DBSchema schema, out DBTable table) => cacheGenerated.TryGetValue(schema, out table);
+        public bool IsGenerated(IDBSchema schema, out DBTable table) => cacheGenerated.TryGetValue(schema, out table);
 
-        public virtual DBTable CreateTable(DBSchema schema)
+        public virtual DBTable CreateTable(IDBSchema schema)
         {
             Debug.WriteLine($"Generate {Attribute.TableName} - {this.ItemType.Name}");
 
@@ -238,7 +238,7 @@ namespace DataWF.Data
             return table;
         }
 
-        public virtual DBTable Generate(DBSchema schema)
+        public virtual DBTable Generate(IDBSchema schema)
         {
             if (IsGenerated(schema, out var table))
                 return table;
@@ -297,7 +297,7 @@ namespace DataWF.Data
             }
         }
 
-        private DBTable GenerateBasic(DBSchema schema)
+        private DBTable GenerateBasic(IDBSchema schema)
         {
             if (schema == null)
                 throw new ArgumentNullException(nameof(schema));
@@ -356,7 +356,7 @@ namespace DataWF.Data
             cacheReferencings.Indexes.Add(ReferencingGenerator.PropertyNameInvoker.Instance);
             cacheIndexes = new SelectableList<IndexGenerator>();
             cacheIndexes.Indexes.Add(IndexGenerator.IndexNameInvoker.Instance);
-            cacheItemTypes = new SelectableList<ItemTypeGenerator>();
+            cacheItemTypes = new SelectableList<VirtualTableGenerator>();
 
             ItemType = type;
             var types = TypeHelper.GetTypeHierarchi(type);
@@ -366,7 +366,7 @@ namespace DataWF.Data
             }
         }
 
-        public void InitializeItemType(ItemTypeGenerator itemType)
+        public void InitializeItemType(VirtualTableGenerator itemType)
         {
             if (cacheItemTypes.Contains(itemType))
                 return;

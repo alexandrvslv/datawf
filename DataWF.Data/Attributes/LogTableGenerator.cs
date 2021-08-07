@@ -36,7 +36,7 @@ namespace DataWF.Data
             set => baseTable = value;
         }
 
-        public override DBTable CreateTable(DBSchema schema)
+        public override DBTable CreateTable(IDBSchema schema)
         {
             Debug.WriteLine($"Generate Log Table {Attribute.TableName} - {this.ItemType.Name}");
 
@@ -56,7 +56,7 @@ namespace DataWF.Data
             return table;
         }
 
-        public override DBTable Generate(DBSchema schema)
+        public override DBTable Generate(IDBSchema schema)
         {
             var table = base.Generate(schema);
             table.SetItemType(ItemType);

@@ -41,7 +41,11 @@ namespace DataWF.Data.Generator
             var schemaEntries = classSymbol.GetAttributes(Attributes.SchemaEntry)
                                 .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
                                 .Where(p => p != null && !p.IsAbstract);
-
+            var baseInterface = "IDBSchema";
+            if (classSymbol.BaseType != null && classSymbol.BaseType.Name != "DBSchema")
+            {
+                baseInterface = $"{classSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{classSymbol.BaseType.Name}";
+            }
             var namespaces = schemaEntries.Select(p => p.ContainingNamespace.ToDisplayString())
                 .Union(new[] { "System", "System.Text.Json.Serialization", "DataWF.Data" })
                 .Distinct(StringComparer.Ordinal)
@@ -57,7 +61,7 @@ using { @namespace };");
             source.Append($@"
 namespace { namespaceName}
 {{
-    public partial class {className}
+    public partial class {className}: I{className}
     {{");
             foreach (var schemaEntry in schemaEntries)
             {
@@ -100,6 +104,17 @@ namespace { namespaceName}
             }
             source.Append($@"
         }}
+    }}");
+            source.Append($@"
+    public partial interface I{className}: {baseInterface}
+    {{");
+            foreach (var schemaEntry in schemaEntries)
+            {
+                var tableTypeName = schemaEntry.IsSealed ? $"{schemaEntry.Name}Table" : $"{schemaEntry.Name}Table<{schemaEntry.Name}>";
+                source.Append($@"
+        {tableTypeName} {schemaEntry.Name} {{ get; }}");
+            }
+            source.Append($@"
     }}
 }}");
             return source.ToString();

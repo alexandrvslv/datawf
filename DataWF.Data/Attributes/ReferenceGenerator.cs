@@ -62,7 +62,7 @@ namespace DataWF.Data
             }
         }
 
-        public virtual DBTable CheckReference(DBSchema schema)
+        public virtual DBTable CheckReference(IDBSchema schema)
         {
             if (ReferenceType.IsAbstract)
             {

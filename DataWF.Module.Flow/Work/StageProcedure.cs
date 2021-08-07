@@ -3,7 +3,7 @@ using DataWF.Data;
 
 namespace DataWF.Module.Flow
 {
-    [ItemType((int)StageParamType.Procedure), InvokerGenerator]
+    [VirtualTable((int)StageParamType.Procedure), InvokerGenerator]
     public sealed partial class StageProcedure : StageParam
     {
         public StageProcedure(DBTable table) : base(table)

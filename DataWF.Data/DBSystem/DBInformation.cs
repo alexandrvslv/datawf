@@ -28,7 +28,7 @@ namespace DataWF.Data
             LoadRefrences(table.Schema, table);
         }
 
-        public static void LoadRefrences(DBSchema schema, DBTable table = null)
+        public static void LoadRefrences(IDBSchema schema, DBTable table = null)
         {
             var info = SMReference.Generate(schema, table);
             info.Parse(schema, table);
@@ -51,7 +51,7 @@ namespace DataWF.Data
             public string ReferenceTable { get; set; }
             public string ReferenceColumn { get; set; }
 
-            public static SMReference Generate(DBSchema schema, DBTable table)
+            public static SMReference Generate(IDBSchema schema, DBTable table)
             {
                 var info = new SMReference
                 {
@@ -116,7 +116,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU2
                 return info;
             }
 
-            public void Parse(DBSchema schema, DBTable table)
+            public void Parse(IDBSchema schema, DBTable table)
             {
                 QResult list = schema.Connection.ExecuteQResult(Filter);
 

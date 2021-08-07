@@ -155,7 +155,7 @@ namespace DataWF.Gui
                         try
                         {
                             var imodule = (IModuleInitialize)EmitInvoker.CreateObject(item);
-                            imodule.Initialize();
+                            imodule.Initialize(new object[] { null });
                         }
                         catch (Exception ex)
                         {

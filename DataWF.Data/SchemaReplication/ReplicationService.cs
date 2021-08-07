@@ -56,13 +56,21 @@ namespace DataWF.Data
 
         public void Start()
         {
-            SocketService.Address = new Uri(Settings.Instance.Url);
+            SocketService.Address = Settings.Instance.UrlValue;
             SocketService.StartListener(100);
-
+            SocketService.ClientConnect += OnConnectionEstablished;
             DBService.AddItemUpdated(OnItemUpdate);
             DBService.AddTransactionCommit(OnTransactionCommit);
+        }
 
-            _ = SignIn();
+        private void OnConnectionEstablished(object sender, SocketConnectionArgs e)
+        {
+            var instance = Settings.GetInstance(e.Connection.Address);
+            if (instance == null)
+            {
+                Helper.Logs.Add(new StateInfo("Replication", "Unexpected Connection", $"Address: {e.Connection.Address}", StatusType.Warning));
+                e.Connection.Dispose();
+            }
         }
 
         public async Task Stop()
@@ -96,20 +104,21 @@ namespace DataWF.Data
             }
         }
 
-        public async Task SignIn()
+        public async ValueTask SignIn()
         {
-            if (Settings.Instance.Active == false)
+            if (!Settings.Instances.Any(p => !p.Active.GetValueOrDefault()))
             {
-                loginEvent.Reset();
-                await Broadcast(new SMRequest
-                {
-                    Id = SMBase.NewId(),
-                    Url = Settings.Instance.Url,
-                    RequestType = SMRequestType.Login,
-                    Data = "Hi"
-                }, true);
-                loginEvent.Wait();
+                return;
             }
+            loginEvent.Reset();
+            await Broadcast(new SMRequest
+            {
+                Id = SMBase.NewId(),
+                Url = Settings.Instance.Url,
+                RequestType = SMRequestType.Login,
+                Data = "Hi"
+            }, true);
+            loginEvent.Wait();
         }
 
         private async Task Synch(RSInstance instance)
@@ -180,26 +189,40 @@ namespace DataWF.Data
             return await Broadcast(message);
         }
 
-        public async Task<bool> Broadcast<T>(T message, bool checkState = false) where T : SMBase
+        public async Task<bool> Broadcast<T>(T message, bool signIn = false) where T : SMBase
         {
             bool sended = false;
             foreach (var item in Settings.Instances)
             {
-                if (await CheckAddress(Settings.Instance, item, checkState))
+                if (signIn && item.Active.GetValueOrDefault())
+                    continue;
+                if (await CheckAddress(Settings.Instance, item, signIn))
                     sended = await item.Send(message);
             }
             return sended;
         }
 
-        private async ValueTask<bool> CheckAddress(RSInstance item, RSInstance address, bool checkState = false)
+        private async ValueTask<bool> CheckAddress(RSInstance item, RSInstance address, bool signIn = false)
         {
-            var isChecked = (address == null || item.Equals(address))
-                && ((item.Active ?? false) || (item.Active == null && checkState));
-            if (isChecked && address.Connection == null)
+            if (signIn && item.Active == null)
             {
-                address.Connection = await SocketService.CreateConnection(new Uri(address.Url));
+                try
+                {
+                    if (address.Connection == null)
+                    {
+                        address.Connection = await SocketService.CreateConnection(address.UrlValue);
+                    }
+                    else if (!address.Connection.Connected)
+                    {
+                        await address.Connection.Connect();
+                    }
+                }
+                catch
+                {
+                    Helper.Logs.Add(new StateInfo("Replication", "Connection Fail", $"Address: {address.Url}", StatusType.Warning));
+                }
             }
-            return isChecked && (address.Connection?.Connected ?? false);
+            return address.Connection?.Connected ?? false;
         }
 
         public object GenerateSchemaInfo(string schemaName)
@@ -219,9 +242,6 @@ namespace DataWF.Data
                 throw new Exception("No such Schema/Table");
             return table.GetReplicateItems(stamp);
         }
-
-
-
 
     }
 

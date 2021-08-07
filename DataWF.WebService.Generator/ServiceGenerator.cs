@@ -40,7 +40,7 @@ namespace DataWF.WebService.Generator
             var attributeTypes = new AttributeTypes();
             attributeTypes.Table = context.Compilation.GetTypeByMetadataName("DataWF.Data.TableAttribute");
             attributeTypes.AbstractTable = context.Compilation.GetTypeByMetadataName("DataWF.Data.AbstractTableAttribute");
-            attributeTypes.ItemType = context.Compilation.GetTypeByMetadataName("DataWF.Data.ItemTypeAttribute");
+            attributeTypes.VirtualTable = context.Compilation.GetTypeByMetadataName("DataWF.Data.VirtualTableAttribute");
             attributeTypes.Column = context.Compilation.GetTypeByMetadataName("DataWF.Data.ColumnAttribute");
             attributeTypes.ControllerMethod = context.Compilation.GetTypeByMetadataName("DataWF.Data.ControllerMethodAttribute");
             attributeTypes.ControllerParameter = context.Compilation.GetTypeByMetadataName("DataWF.Data.ControllerParameterAttribute");
@@ -58,7 +58,7 @@ namespace DataWF.WebService.Generator
                             {
                                 var tableAttribute = type.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributeTypes.Table, SymbolEqualityComparer.Default)
                                                              || p.AttributeClass.Equals(attributeTypes.AbstractTable, SymbolEqualityComparer.Default)
-                                                             || p.AttributeClass.Equals(attributeTypes.ItemType, SymbolEqualityComparer.Default));
+                                                             || p.AttributeClass.Equals(attributeTypes.VirtualTable, SymbolEqualityComparer.Default));
                                 if (tableAttribute != null)
                                 {
                                     ProcessController(type, tableAttribute, attributeTypes, nameSpace, context);
@@ -182,7 +182,7 @@ namespace {nameSpace}
             }
             source.Append($@"
     {{
-        public {controllerClassName}(DBSchema schema) :base(schema)
+        public {controllerClassName}(IDBSchema schema) :base(schema)
         {{ }}");
 
             if (tableType != null)
@@ -475,7 +475,7 @@ namespace {nameSpace}
         {
             internal INamedTypeSymbol Table;
             internal INamedTypeSymbol AbstractTable;
-            internal INamedTypeSymbol ItemType;
+            internal INamedTypeSymbol VirtualTable;
             internal INamedTypeSymbol ControllerMethod;
             internal INamedTypeSymbol ControllerParameter;
             internal INamedTypeSymbol Column;

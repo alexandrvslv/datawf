@@ -22,7 +22,7 @@ using System;
 namespace DataWF.Data
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    public class LogItemTypeAttribute : ItemTypeAttribute
+    public class LogItemTypeAttribute : VirtualTableAttribute
     {
         public LogItemTypeAttribute(int id) : base(id)
         {

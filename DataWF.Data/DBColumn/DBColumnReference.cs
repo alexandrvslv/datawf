@@ -35,7 +35,7 @@ namespace DataWF.Data
         private DBColumn column;
 
         [XmlIgnore, JsonIgnore]
-        public DBSchema Schema => List?.Schema;
+        public IDBSchema Schema => List?.Schema;
 
         [Browsable(false)]
         public string ColumnName

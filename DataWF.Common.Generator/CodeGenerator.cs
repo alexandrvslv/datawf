@@ -38,9 +38,9 @@ namespace DataWF.Common.Generator
             get => classSymbol;
             set => classSymbol = value;
         }
-        
+
         public CSharpParseOptions Options { get; set; }
-        
+
         public virtual Compilation Compilation
         {
             get => compilation;
@@ -65,18 +65,19 @@ namespace DataWF.Common.Generator
 
         protected virtual INamedTypeSymbol Compile()
         {
+            return Compile(ClassSyntax);
+        }
+
+        protected INamedTypeSymbol Compile(ClassDeclarationSyntax syntax)
+        {
             try
             {
-                SemanticModel model = Compilation.GetSemanticModel(ClassSyntax.SyntaxTree);
+                SemanticModel model = Compilation.GetSemanticModel(syntax.SyntaxTree);
                 return model.GetDeclaredSymbol(ClassSyntax) as INamedTypeSymbol;
             }
             catch
-            {
-                return null;
-            }
+            { return null; }
         }
-
-
     }
 
 }

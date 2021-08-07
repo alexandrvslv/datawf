@@ -44,19 +44,19 @@ namespace DataWF.Module.Flow
         private QParam paramCustomer;
         private QParam paramReferencing;
 
-        public DocumentFilter(DBSchema schema)
+        public DocumentFilter(IFlowSchema schema)
             : base()
         {
             Schema = schema;
-            DocumentTable = (DocumentTable<Document>)schema.GetTable<Document>();
+            DocumentTable = schema.Document;
             QDoc = new QQuery(string.Empty, DocumentTable);
-            QWork = new QQuery(string.Empty, DocumentTable.DocumentWorkTable);
-            QWork.Columns.Add(new QColumn(DocumentTable.DocumentWorkTable.DocumentIdKey));
+            QWork = new QQuery(string.Empty, schema.DocumentWork);
+            QWork.Columns.Add(new QColumn(schema.DocumentWork.DocumentIdKey));
             paramWork = new QParam(DocumentTable.IdKey, CompareType.In, QWork);
             paramWorkId = new QParam(DocumentTable.CurrentWorkIdKey, CompareType.IsNot, null);
         }
 
-        public DBSchema Schema { get; }
+        public IFlowSchema Schema { get; }
 
         public DocumentTable<Document> DocumentTable { get; }
 
@@ -97,8 +97,8 @@ namespace DataWF.Module.Flow
                         {
                             case DocumentSearchDate.Document: paramDate.LeftColumn = DocumentTable.DocumentDateKey; break;
                             case DocumentSearchDate.Create: paramDate.LeftColumn = DocumentTable.DocumentDateKey; break;
-                            case DocumentSearchDate.WorkBegin: paramDate.LeftColumn = DocumentTable.DocumentWorkTable.DateCreateKey; break;
-                            case DocumentSearchDate.WorkEnd: paramDate.LeftColumn = DocumentTable.DocumentWorkTable.DateCompleteKey; break;
+                            case DocumentSearchDate.WorkBegin: paramDate.LeftColumn = Schema.DocumentWork.DateCreateKey; break;
+                            case DocumentSearchDate.WorkEnd: paramDate.LeftColumn = Schema.DocumentWork.DateCompleteKey; break;
                         }
                         paramDate.RightValue = Date;
                     }
@@ -293,8 +293,8 @@ namespace DataWF.Module.Flow
                 stage = value == null ? null : $"{value.Table.Name}:{ value.PrimaryId}";
 
                 var column = Stage is Work
-                    ? DocumentTable.DocumentWorkTable.WorkIdKey
-                    : DocumentTable.DocumentWorkTable.StageIdKey;
+                    ? Schema.DocumentWork.WorkIdKey
+                    : Schema.DocumentWork.StageIdKey;
                 if (value != null)
                 {
                     if (paramStage == null)
@@ -329,10 +329,10 @@ namespace DataWF.Module.Flow
                 cacheUser = value;
                 staff = value == null ? null : $"{value.Table.Name}:{ value.PrimaryId}";
                 var column = Staff is Department
-                    ? DocumentTable.DocumentWorkTable.DepartmentIdKey
+                    ? Schema.DocumentWork.DepartmentIdKey
                     : Staff is Position
-                    ? DocumentTable.DocumentWorkTable.PositionIdKey
-                    : DocumentTable.DocumentWorkTable.UserIdKey;
+                    ? Schema.DocumentWork.PositionIdKey
+                    : Schema.DocumentWork.UserIdKey;
                 if (value != null)
                 {
                     if (paramStaff == null)

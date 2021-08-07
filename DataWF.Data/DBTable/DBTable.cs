@@ -1240,7 +1240,8 @@ namespace DataWF.Data
 
         public void AddVirtual(DBTable view)
         {
-            virtualTables.Add(view);
+            if(!virtualTables.Contains(view))
+                virtualTables.Add(view);
         }
 
         public virtual IEnumerable<DBForeignKey> GetChildRelations()

@@ -140,7 +140,7 @@ namespace DataWF.Data
             Helper.LogWorkingSet("Data Cache");
         }
 
-        public DBColumn ParseColumn(string name, DBSchema schema = null)
+        public DBColumn ParseColumn(string name, IDBSchema schema = null)
         {
             if (string.IsNullOrEmpty(name))
                 return null;
@@ -164,12 +164,12 @@ namespace DataWF.Data
             return null;
         }
 
-        public DBTable ParseTable(string code, DBSchema s = null)
+        public DBTable ParseTable(string code, IDBSchema s = null)
         {
             if (string.IsNullOrEmpty(code))
                 return null;
             DBTable table = null;
-            DBSchema schema = null;
+            IDBSchema schema = null;
             int index = code.IndexOf('.');
             if (index >= 0)
             {
@@ -219,7 +219,7 @@ namespace DataWF.Data
             var item = Serialization.Deserialize(file);
             if (item is DBTable table)
             {
-                DBSchema schema = selectedItem.Schema;
+                var schema = selectedItem.Schema;
 
                 if (schema.Tables.Contains(table.Name))
                     schema.Tables.Remove(table.Name);

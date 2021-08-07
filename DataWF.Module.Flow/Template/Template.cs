@@ -157,22 +157,22 @@ namespace DataWF.Module.Flow
         [Referencing(nameof(TemplateData.TemplateId))]
         public IEnumerable<TemplateData> Datas
         {
-            get => GetReferencing<TemplateData>(Table.TemplateDataTable.TemplateIdKey, DBLoadParam.None);
-            set => SetReferencing(value, Table.TemplateDataTable.TemplateIdKey);
+            get => GetReferencing<TemplateData>(Schema.TemplateData.TemplateIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.TemplateData.TemplateIdKey);
         }
 
         [Referencing(nameof(TemplateReference.TemplateId))]
         public IEnumerable<TemplateReference> References
         {
-            get => GetReferencing<TemplateReference>(Table.TemplateReferenceTable.TemplateIdKey, DBLoadParam.None);
-            set => SetReferencing(value, Table.TemplateReferenceTable.TemplateIdKey);
+            get => GetReferencing<TemplateReference>(Schema.TemplateReference.TemplateIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.TemplateReference.TemplateIdKey);
         }
 
         [Referencing(nameof(TemplateProperty.TemplateId))]
         public IEnumerable<TemplateProperty> Properties
         {
-            get => GetReferencing<TemplateProperty>(Table.TemplatePropertyTable.TemplateIdKey, DBLoadParam.None);
-            set => SetReferencing(value, Table.TemplatePropertyTable.TemplateIdKey);
+            get => GetReferencing<TemplateProperty>(Schema.TemplateProperty.TemplateIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.TemplateProperty.TemplateIdKey);
         }
 
         //[Browsable(false)]
@@ -228,22 +228,22 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public TemplateReference GetTemplateReference(int referenceId)
         {
-            using (var query = new QQuery(Table.TemplateReferenceTable))
+            using (var query = new QQuery(Schema.TemplateReference))
             {
-                query.BuildParam(Table.TemplateReferenceTable.TemplateIdKey, Id);
-                query.BuildParam(Table.TemplateReferenceTable.ReferenceIdKey, referenceId);
-                return Table.TemplateReferenceTable.Select(query).FirstOrDefault();
+                query.BuildParam(Schema.TemplateReference.TemplateIdKey, Id);
+                query.BuildParam(Schema.TemplateReference.ReferenceIdKey, referenceId);
+                return Schema.TemplateReference.Select(query).FirstOrDefault();
             }
         }
 
         [ControllerMethod]
         public TemplateProperty GetTemplateProperty(string propertyName)
         {
-            using (var query = new QQuery(Table.TemplatePropertyTable))
+            using (var query = new QQuery(Schema.TemplateProperty))
             {
-                query.BuildParam(Table.TemplatePropertyTable.TemplateIdKey, Id);
-                query.BuildParam(Table.TemplatePropertyTable.PropertyNameKey, propertyName);
-                return Table.TemplatePropertyTable.Select(query).FirstOrDefault();
+                query.BuildParam(Schema.TemplateProperty.TemplateIdKey, Id);
+                query.BuildParam(Schema.TemplateProperty.PropertyNameKey, propertyName);
+                return Schema.TemplateProperty.Select(query).FirstOrDefault();
             }
         }
 

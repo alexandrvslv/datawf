@@ -6,7 +6,7 @@ using DataWF.Common;
 
 namespace DataWF.Module.Counterpart
 {
-    [ItemType((int)CustomerType.Company)]
+    [VirtualTable((int)CustomerType.Company)]
     public sealed partial class Company : Customer, IDisposable, IGroupIdentity
     {
         public Company(DBTable table) : base(table)

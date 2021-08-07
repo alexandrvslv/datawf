@@ -4,11 +4,19 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using DataWF.Common.Generator;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace DataWF.Data.Generator
 {
     internal class TableCodeGenerator : BaseTableCodeGenerator
     {
+        private const string constTable = "Table";
+        private const string constDBLogItem = "DBLogItem";
+        private const string constDBTable = "DBTable";
+        private const string constCodeKey = "CodeKey";
+        private const string constFileNameKey = "FileNameKey";
+        private const string constFileLastWriteKey = "FileLastWriteKey";
+
         protected static string GetTableClassName(INamedTypeSymbol classSymbol, AttributesCache attributes)
         {
             string className = null;
@@ -22,44 +30,52 @@ namespace DataWF.Data.Generator
                 }
                 else
                 {
-                    className = classSymbol.Name + "Table";
+                    className = classSymbol.Name + constTable;
                 }
             }
 
-            var itemTypeAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.ItemType, SymbolEqualityComparer.Default));
+            var itemTypeAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.VirtualTable, SymbolEqualityComparer.Default));
             if (itemTypeAttribute != null)
             {
-                className = classSymbol.Name + "Table";
+                className = classSymbol.Name + constTable;
             }
 
             var logTableAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.LogTable, SymbolEqualityComparer.Default));
             if (logTableAttribute != null)
             {
-                className = classSymbol.Name + "Table";
+                className = classSymbol.Name + constTable;
             }
 
             var logItemTypeAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.LogItemType, SymbolEqualityComparer.Default));
             if (logItemTypeAttribute != null)
             {
-                className = classSymbol.Name + "Table";
+                className = classSymbol.Name + constTable;
             }
 
             var abstractAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.AbstractTable, SymbolEqualityComparer.Default));
             if (abstractAttribute != null)
             {
-                className = classSymbol.Name + "Table";
+                className = classSymbol.Name + constTable;
             }
 
             return className;
         }
-
-        protected static bool IsNew(string keyPropertyName)
+        
+        protected static bool IsNewProperty(string keyPropertyName)
         {
-            return string.Equals(keyPropertyName, "CodeKey", StringComparison.Ordinal)
-                || string.Equals(keyPropertyName, "FileNameKey", StringComparison.Ordinal)
-                || string.Equals(keyPropertyName, "FileLastWriteKey", StringComparison.Ordinal);
+            return string.Equals(keyPropertyName, constCodeKey, StringComparison.Ordinal)
+                || string.Equals(keyPropertyName, constFileNameKey, StringComparison.Ordinal)
+                || string.Equals(keyPropertyName, constFileLastWriteKey, StringComparison.Ordinal);
         }
 
+        private string baseClassName;
+        private string baseInterfaceName;
+        private string className;
+        private string interfaceName;
+        private string containerSchema;
+        private string namespaceName;
+        private string whereName;
+        private string genericArg;
         protected StringBuilder interfaceSource;
 
         public TableCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation) : base(ref context, compilation)
@@ -69,6 +85,7 @@ namespace DataWF.Data.Generator
 
         public InvokerCodeGenerator InvokerCodeGenerator { get; set; }
         public LogItemCodeGenerator LogItemCodeGenerator { get; set; }
+        public SyntaxReceiver Receiver { get; internal set; }
 
         public override bool Process(INamedTypeSymbol classSymbol)
         {
@@ -97,7 +114,7 @@ namespace DataWF.Data.Generator
 #if DEBUG
                     if (!System.Diagnostics.Debugger.IsAttached)
                     {
-                        //System.Diagnostics.Debugger.Launch();
+                        System.Diagnostics.Debugger.Launch();
                     }
 #endif
                 }
@@ -105,33 +122,39 @@ namespace DataWF.Data.Generator
             return false;
         }
 
-        public override string Generate()
+        private bool GenerateNames()
         {
-            if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
-            {
-                return null; //TODO: issue a diagnostic that it must be top level
-            }
-
-            string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
-            string className = null;
-            string whereName = null;
-            var baseClassName = "DBTable";
             className = GetTableClassName(classSymbol, attributes);
-
             if (className == null)
             {
-                return null;
+                return false;
             }
-            var genericArg = classSymbol.Name;
-            var interfaceName = "I" + className;
-            var baseInterfaceName = "IDBTable";
+            interfaceName = "I" + className;
+
+            baseClassName = constDBTable;
+            baseInterfaceName = "IDBTable";
+
+            namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
+
+            containerSchema = null;
+            if (!classSymbol.IsAbstract)
+            {
+                containerSchema = Receiver?.SchemaCandidates?
+                    .FirstOrDefault(p => string.Equals(p.GetNamespace()?.Name.ToString(), namespaceName, StringComparison.Ordinal))
+                    ?.Identifier.ToString();
+
+            }
+            
+            whereName = null;
+            genericArg = classSymbol.Name;
             if (!classSymbol.IsSealed)
             {
                 genericArg = "T";
                 className += "<T>";
                 whereName = $"where T: {classSymbol.Name}";
             }
-            if (classSymbol.BaseType.Name == "DBLogItem")
+            
+            if (classSymbol.BaseType.Name == constDBLogItem)
             {
                 baseClassName = "DBLogTable";
                 baseInterfaceName = "IDBLogTable";
@@ -143,7 +166,7 @@ namespace DataWF.Data.Generator
                 if (baseNamespace == namespaceName
                     || baseNamespace == "<global namespace>")
                 {
-                    baseClassName = classSymbol.BaseType.Name + "Table";
+                    baseClassName = classSymbol.BaseType.Name + constTable;
                     baseInterfaceName = "I" + baseClassName;
                 }
                 else
@@ -152,6 +175,21 @@ namespace DataWF.Data.Generator
                     baseInterfaceName = $"{baseNamespace}.I{classSymbol.BaseType.Name}Table";
                 }
             }
+            return true;
+        }
+
+        public override string Generate()
+        {
+            if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
+            {
+                return null; //TODO: issue a diagnostic that it must be top level
+            }
+
+            if (!GenerateNames())
+            {
+                return null;
+            }
+
             // begin building the generated source
             source = new StringBuilder($@"using System.Text.Json.Serialization;
 using DataWF.Common;
@@ -171,13 +209,24 @@ namespace {namespaceName}
             {
                 ProcessColumnProperty(propertySymbol);
             }
+
+            ProcessTableContainerSchema();
             source.Append(@"
-    }
-");
+    }");
             interfaceSource.Append(@"
     }
 ");
             source.Append(interfaceSource);
+
+            ProcessClassPartial();
+
+            source.Append(@"
+}");
+            return source.ToString();
+        }
+
+        private void ProcessClassPartial()
+        {
             source.Append($@"
     public partial class {classSymbol.Name}
     {{
@@ -186,12 +235,38 @@ namespace {namespaceName}
         {{
             get => ({(classSymbol.IsSealed ? className : interfaceName)})base.Table;
             set => base.Table = value;
-        }}
-    }}
-");
-            source.Append(@"
-}");
-            return source.ToString();
+        }}");
+            ProcessClassContainerSchema();
+
+            source.Append($@"
+    }}");
+        }
+
+        private void ProcessTableContainerSchema()
+        {
+            if (containerSchema != null)
+            {
+                source.Append($@"
+        [JsonIgnore]
+        public new I{containerSchema} Schema
+        {{
+            get => (I{containerSchema})base.Schema;
+            set => base.Schema = value;
+        }}");
+            }
+        }
+
+        private void ProcessClassContainerSchema()
+        {
+            if (containerSchema != null)
+            {
+                source.Append($@"
+        [JsonIgnore]
+        public new I{containerSchema} Schema
+        {{
+            get => (I{containerSchema})base.Schema;
+        }}");
+            }
         }
 
         private void ProcessColumnProperty(IPropertySymbol propertySymbol)
@@ -225,10 +300,10 @@ namespace {namespaceName}
                         source.Append($@"
         private DBColumn<{propertyType}> {keyFieldName};
         [JsonIgnore]
-        public {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= ParseColumn<{propertyType}>(""{sqlName.Value}_{culture.ToLowerInvariant()}"");
+        public {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= ParseColumn<{propertyType}>(""{sqlName.Value}_{culture.ToLowerInvariant()}"");
 ");
                         interfaceSource.Append($@"
-        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
+        {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
                     }
                 }
                 else
@@ -237,10 +312,10 @@ namespace {namespaceName}
                     source.Append($@"
         private DBColumn<{propertyType}> {keyFieldName};
         [JsonIgnore]
-        public {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= ParseProperty<{propertyType}>(nameof({propertySymbol.ContainingType.Name}.{propertyName}));
+        public {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= ParseProperty<{propertyType}>(nameof({propertySymbol.ContainingType.Name}.{propertyName}));
 ");
                     interfaceSource.Append($@"
-        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
+        {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
                 }
             }
 
@@ -251,11 +326,19 @@ namespace {namespaceName}
                 source.Append($@"
         private DBColumn<{propertyType}> {keyFieldName};
         [JsonIgnore]
-        public {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= ParseProperty<{propertyType}>(nameof({propertySymbol.ContainingType.Name}.{propertyName}));
+        public {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= ParseProperty<{propertyType}>(nameof({propertySymbol.ContainingType.Name}.{propertyName}));
 ");
                 interfaceSource.Append($@"
-        {(IsNew(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
+        {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
             }
+
+            //ProcessReferencePropertyTable(propertySymbol, propertyType);
+
+            //ProcessReferecingPropertyTable(propertySymbol, propertyType);
+        }
+
+        private void ProcessReferencePropertyTable(IPropertySymbol propertySymbol, ITypeSymbol propertyType)
+        {
             var referenceAttribute = propertySymbol.GetAttribute(attributes.Reference);
             if (referenceAttribute != null)
             {
@@ -290,6 +373,10 @@ namespace {namespaceName}
                     }
                 }
             }
+        }
+
+        private void ProcessReferecingPropertyTable(IPropertySymbol propertySymbol, ITypeSymbol propertyType)
+        {
             var referencingAttribute = propertySymbol.GetAttribute(attributes.Referencing);
             if (referencingAttribute != null)
             {
@@ -316,6 +403,7 @@ namespace {namespaceName}
                 }
             }
         }
+
 
     }
 

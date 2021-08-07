@@ -28,7 +28,7 @@ namespace DataWF.Data
         {
         }
 
-        public override DBTable CheckReference(DBSchema schema)
+        public override DBTable CheckReference(IDBSchema schema)
         {
             if (schema is DBLogSchema logSchema)
                 schema = logSchema.BaseSchema;

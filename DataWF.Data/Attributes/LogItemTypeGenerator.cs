@@ -21,7 +21,7 @@ using System;
 
 namespace DataWF.Data
 {
-    public class LogItemTypeGenerator : ItemTypeGenerator
+    public class LogItemTypeGenerator : VirtualTableGenerator
     {
         public LogItemTypeAttribute LogAttribute
         {
@@ -35,12 +35,12 @@ namespace DataWF.Data
             set => TableGenerator = value;
         }
 
-        public override DBTable CreateTable(DBSchema schema, DBTable baseTable)
+        public override DBTable CreateTable(IDBSchema schema, DBTable baseTable)
         {
             return base.CreateTable(schema, baseTable);
         }
 
-        public override DBTable Generate(DBSchema schema)
+        public override DBTable Generate(IDBSchema schema)
         {
             return base.Generate(schema);
         }

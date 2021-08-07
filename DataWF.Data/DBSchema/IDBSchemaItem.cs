@@ -18,11 +18,13 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using System.Collections.Generic;
 
 namespace DataWF.Data
 {
     public interface IDBSchemaItem
     {
+        IEnumerable<INotifyListPropertyChanged> Containers { get; }
         AccessValue Access { get; set; }
         string DisplayName { get; set; }
         string FullName { get; }
@@ -30,7 +32,7 @@ namespace DataWF.Data
         LocaleItem LocaleInfo { get; }
         string Name { get; set; }
         string OldName { get; set; }
-        DBSchema Schema { get; set; }
+        IDBSchema Schema { get; set; }
 
         string FormatSql(DDLType ddlType, bool dependency = false);
         string GetLocalizeCategory();

@@ -34,7 +34,7 @@ namespace DataWF.Data
     {
         protected string name;
         protected string oldname;
-        private DBSchema schema;
+        private IDBSchema schema;
         protected LocaleItem litem;
         protected AccessValue access;
         private bool isSynchronized;
@@ -54,7 +54,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public virtual DBSchema Schema
+        public virtual IDBSchema Schema
         {
             get => schema;
             set

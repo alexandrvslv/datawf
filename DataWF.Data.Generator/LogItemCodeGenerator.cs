@@ -83,7 +83,7 @@ namespace DataWF.Data.Generator
                 }
             }
 
-            var itemTypeAttribute = classSymbol.GetAttribute(attributes.ItemType);
+            var itemTypeAttribute = classSymbol.GetAttribute(attributes.VirtualTable);
             if (itemTypeAttribute != null)
             {
                 className = classSymbol.Name + "Log";
