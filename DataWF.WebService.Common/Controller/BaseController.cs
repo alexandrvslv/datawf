@@ -28,6 +28,7 @@ namespace DataWF.WebService.Common
         where T : DBItem
         where L : DBLogItem
     {
+        protected int MaxDeleteDepth = 4;
         protected static bool IsDenied(T value, IUserIdentity user)
         {
             if (value.Access.GetFlag(AccessType.Admin, user))
@@ -360,7 +361,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult<bool>> Delete([FromRoute] K id)
+        public virtual async Task<ActionResult<bool>> Delete([FromRoute] K id)
         {
             var value = default(T);
             using (var transaction = new DBTransaction(Table, CurrentUser))
@@ -377,7 +378,7 @@ namespace DataWF.WebService.Common
                         value.Reject(transaction.Caller);
                         return Forbid();
                     }
-                    await value.Delete(transaction, 4, DBLoadParam.Load);
+                    await value.Delete(transaction, MaxDeleteDepth, DBLoadParam.Load);
                     transaction.Commit();
                     return Ok(true);
 

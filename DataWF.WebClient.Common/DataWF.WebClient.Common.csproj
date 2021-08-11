@@ -29,6 +29,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>  
   <ItemGroup>
+    <PackageReference Include="Brotli.NET" Version="2.1.1" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
     <ProjectReference Include="..\DataWF.Common.Generator\DataWF.Common.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
   </ItemGroup>

@@ -6,7 +6,7 @@ namespace DataWF.Common
 {
     public interface IFileLaunch
     {
-        Task<bool> Launch(string stringUri);
+        Task<bool> Launch(string stringUri, FileAttributes attributes = FileAttributes.Normal);
 
         Task<(Stream Stream, string FileName)> Save(string fileName);
 
