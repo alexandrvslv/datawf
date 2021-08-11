@@ -38,7 +38,7 @@ namespace DataWF.Data
 {
     [ElementSerializer(typeof(DBItemSerializer))]
     [InvokerGenerator]
-    public partial class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IPullHandler
+    public partial class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IPullHandler, IDBTableContent
     {
         public static readonly DBItem EmptyItem = new DBItem(null) { cacheToString = "Loading" };
 
@@ -214,7 +214,7 @@ namespace DataWF.Data
             {
                 if (table != value)
                 {
-                    table = value.GetVirtualTable(GetType());
+                    table = (DBTable)value.GetVirtualTable(GetType());
                     handler = table.GetNextHandler();
                 }
             }
@@ -680,7 +680,7 @@ namespace DataWF.Data
             return GetReferencing(column.Table, column, param);
         }
 
-        public IEnumerable<DBItem> GetReferencing(DBTable table, DBColumn column, DBLoadParam param)
+        public IEnumerable<DBItem> GetReferencing(IDBTable table, DBColumn column, DBLoadParam param)
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
@@ -696,7 +696,7 @@ namespace DataWF.Data
             }
         }
 
-        public IEnumerable<DBItem> GetReferencing(DBTable table, QQuery query, DBLoadParam param)
+        public IEnumerable<DBItem> GetReferencing(IDBTable table, QQuery query, DBLoadParam param)
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
@@ -1215,7 +1215,7 @@ namespace DataWF.Data
             }
             foreach (var relation in Table.GetChildRelations())
             {
-                if (relation.Table is IDBLogTable
+                if (relation.Table is IDBTableLog
                     || relation.Table.IsVirtual
                     || relation.Table.Type != DBTableType.Table
                     || relation.Column.ColumnType != DBColumnTypes.Default)

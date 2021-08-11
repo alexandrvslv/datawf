@@ -96,7 +96,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBTable ReferenceTable => Reference?.Table;
+        public IDBTable ReferenceTable => Reference?.Table;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public string ReferenceTableName => ReferenceName?.Substring(0, ReferenceName.LastIndexOf(".", StringComparison.Ordinal));

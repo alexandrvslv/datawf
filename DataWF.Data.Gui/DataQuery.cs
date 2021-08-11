@@ -149,7 +149,7 @@ namespace DataWF.Data.Gui
         }
 
 
-        public DBSchema CurrentSchema
+        public IDBSchema CurrentSchema
         {
             get { return schema; }
             set
@@ -164,7 +164,7 @@ namespace DataWF.Data.Gui
         #region IProjectEditor implementation
 
         private ProjectHandler project;
-        private DBSchema schema;
+        private IDBSchema schema;
 
         public ProjectHandler Project
         {

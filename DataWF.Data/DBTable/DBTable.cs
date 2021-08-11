@@ -50,10 +50,10 @@ namespace DataWF.Data
 
         protected DBCommand dmlInsert;
         protected DBCommand dmlDelete;
-        protected IDBLogTable logTable;
+        protected IDBTableLog logTable;
         protected DBTableGroup tableGroup;
         protected DBSequence cacheSequence;
-        protected readonly List<DBTable> virtualTables = new List<DBTable>(0);
+        protected readonly List<IDBTable> virtualTables = new List<IDBTable>(0);
         protected readonly ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
         protected DBColumn<string> nameKey = DBColumn<string>.EmptyKey;
         protected DBColumn<byte[]> accessKey = DBColumn<byte[]>.EmptyKey;
@@ -71,8 +71,6 @@ namespace DataWF.Data
         protected DBColumn<DBStatus> stateKey = DBColumn<DBStatus>.EmptyKey;
         protected DBColumn<byte[]> imageKey = DBColumn<byte[]>.EmptyKey;
         protected DBColumn<int> itemTypeKey = DBColumn<int>.EmptyKey;
-
-        public IComparer DefaultComparer;
         public int Hash = -1;
         protected internal int index = ++tableIndex;
         protected internal ConcurrentQueue<PullHandler> FreeHandlers = new ConcurrentQueue<PullHandler>();
@@ -85,8 +83,8 @@ namespace DataWF.Data
         protected string groupName;
         protected string sequenceName;
         protected string logTableName;
-        private DBTable baseTable;
-        protected string baseTableName;
+        private IDBTable parentTable;
+        protected string parentTableName;
         protected DBTableKeys keys = DBTableKeys.None;
         protected DBTableType type = DBTableType.Table;
         protected int blockSize = 256;
@@ -108,33 +106,36 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
+        public IComparer DefaultComparer { get; set; }
+
+        [XmlIgnore, JsonIgnore]
         public TableGenerator Generator { get; internal set; }
 
         [XmlAttribute, Browsable(false), Category("Database")]
-        public string BaseTableName
+        public string ParentTableName
         {
-            get => baseTableName;
+            get => parentTableName;
             set
             {
-                if (baseTableName != value)
+                if (parentTableName != value)
                 {
-                    baseTableName = value;
-                    baseTable = null;
-                    OnPropertyChanged(nameof(BaseTableName), DDLType.Alter);
+                    parentTableName = value;
+                    parentTable = null;
+                    OnPropertyChanged(DDLType.Alter);
                 }
             }
         }
 
         [XmlIgnore, JsonIgnore, Category("Database")]
-        public virtual DBTable BaseTable
+        public IDBTable ParentTable
         {
-            get => baseTable ?? (baseTable = Schema?.Tables[baseTableName]);
+            get => parentTable ?? (parentTable = Schema?.Tables[parentTableName]);
             set
             {
-                if (BaseTable != value)
+                if (ParentTable != value)
                 {
-                    BaseTableName = value?.Name;
-                    baseTable = value;
+                    ParentTableName = value?.Name;
+                    parentTable = (DBTable)value;
                 }
             }
         }
@@ -162,10 +163,9 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public virtual IDBLogTable LogTable
+        public IDBTableLog LogTable
         {
-            get => IsVirtual ? BaseTable.LogTable
-                : logTable ??= ((IDBLogTable)Schema?.LogSchema?.Tables[LogTableName] ?? (IDBLogTable)Schema?.Tables[LogTableName]);
+            get => logTable ??= ((IDBTableLog)Schema?.LogSchema?.Tables[LogTableName] ?? (IDBTableLog)Schema?.Tables[LogTableName]);
             set
             {
                 LogTableName = value?.Name;
@@ -213,7 +213,7 @@ namespace DataWF.Data
                 if (query != value)
                 {
                     query = value;
-                    OnPropertyChanged(nameof(Query), DDLType.Alter);
+                    OnPropertyChanged(DDLType.Alter);
                 }
             }
         }
@@ -251,7 +251,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual string SqlName => IsVirtual ? BaseTableName : name;
+        public virtual string SqlName => IsVirtual ? ParentTableName : name;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public abstract bool IsEdited { get; }
@@ -390,7 +390,7 @@ namespace DataWF.Data
                 if (type == value)
                     return;
                 type = value;
-                OnPropertyChanged(nameof(Type), DDLType.Alter);
+                OnPropertyChanged(DDLType.Alter);
             }
         }
 
@@ -608,19 +608,19 @@ namespace DataWF.Data
             // Info = DBService.GetTableAttribute(type);
         }
 
-        public IEnumerable<DBTable> GetVirtualTables()
+        public IEnumerable<IDBTable> GetVirtualTables()
         {
             foreach (var item in virtualTables)
             {
-                yield return (DBTable)item;
+                yield return item;
             }
         }
 
-        public DBTable GetVirtualTable(int itemType)
+        public IDBTable GetVirtualTable(int itemType)
         {
             if (itemType == 0)
                 return this;
-            return virtualTables.FirstOrDefault(p => p.ItemTypeIndex == itemType) as DBTable;
+            return virtualTables.FirstOrDefault(p => p.ItemTypeIndex == itemType);
         }
 
         public DBTable<T> GetVirtualTable<T>() where T : DBItem
@@ -628,12 +628,12 @@ namespace DataWF.Data
             return (DBTable<T>)GetVirtualTable(typeof(T));
         }
 
-        public DBTable GetVirtualTable(Type type)
+        public IDBTable GetVirtualTable(Type type)
         {
             if (type == ItemType.Type)
                 return this;
             if (IsVirtual)
-                return BaseTable.GetVirtualTable(type);
+                return ParentTable.GetVirtualTable(type);
             return virtualTables.FirstOrDefault(p => p.ItemType.Type == type) ?? this;
         }
 
@@ -818,7 +818,7 @@ namespace DataWF.Data
         {
             if (IsVirtual)
             {
-                var baseColumn = BaseTable.CheckColumn(name, type, ref newCol);
+                var baseColumn = ParentTable.CheckColumn(name, type, ref newCol);
                 if (newCol)
                     Columns.Add(DBColumnFactory.CreateVirtual(baseColumn, this));
                 return baseColumn;
@@ -921,7 +921,7 @@ namespace DataWF.Data
         {
             if (IsVirtual)
             {
-                return await BaseTable.SaveItem(item, transaction);
+                return await ParentTable.SaveItem(item, transaction);
             }
             if (item.UpdateState == DBUpdateState.Default || (item.UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
@@ -996,7 +996,7 @@ namespace DataWF.Data
                 && !transaction.NoLogs
                 && LogTable != null)
             {
-                args.LogItem = (DBLogItem)LogTable.NewItem(DBUpdateState.Insert, false, item.ItemType);
+                args.LogItem = (DBItemLog)LogTable.NewItem(DBUpdateState.Insert, false, item.ItemType);
                 args.LogItem.BaseItem = item;
                 DBService.OnLogItem(args);
                 await args.LogItem.Save(transaction.GetSubTransaction(LogTable.Connection));
@@ -1014,7 +1014,7 @@ namespace DataWF.Data
         {
             if (IsVirtual)
             {
-                return BaseTable.NextHash();
+                return ParentTable.NextHash();
             }
             return Interlocked.Increment(ref Hash);
         }
@@ -1084,11 +1084,11 @@ namespace DataWF.Data
             int s = 0, i = name.IndexOf('.');
             while (i > 0)
             {
-                DBColumn column = table.Columns[name.Substring(s, i - s)];
+                var column = table.Columns[name.Substring(s, i - s)];
                 if (column == null)
                     break;
                 if (column.IsReference)
-                    table = column.ReferenceTable;
+                    table = (DBTable)column.ReferenceTable;
                 s = i + 1;
                 i = name.IndexOf('.', s);
             }
@@ -1210,7 +1210,7 @@ namespace DataWF.Data
 
         #endregion
 
-        public void GetAllChildTables(List<DBTable> parents)
+        public void GetAllChildTables(List<IDBTable> parents)
         {
             foreach (var table in GetChildTables())
             {
@@ -1222,23 +1222,23 @@ namespace DataWF.Data
             }
         }
 
-        public IEnumerable<DBTable> GetChildTables()
+        public IEnumerable<IDBTable> GetChildTables()
         {
             foreach (DBForeignKey rel in GetChildRelations())
             {
                 yield return rel.Table;
 
                 if (rel.Table.IsVirtual)
-                    yield return rel.Table.BaseTable;
+                    yield return rel.Table.ParentTable;
             }
         }
 
-        public void RemoveVirtual(DBTable view)
+        public void RemoveVirtual(IDBTable view)
         {
             virtualTables.Remove(view);
         }
 
-        public void AddVirtual(DBTable view)
+        public void AddVirtual(IDBTable view)
         {
             if(!virtualTables.Contains(view))
                 virtualTables.Add(view);
@@ -1251,7 +1251,7 @@ namespace DataWF.Data
 
             if (IsVirtual)
             {
-                foreach (var item in BaseTable.GetChildRelations())
+                foreach (var item in ParentTable.GetChildRelations())
                     yield return item;
             }
 
@@ -1268,9 +1268,9 @@ namespace DataWF.Data
             }
         }
 
-        public void GetAllParentTables(List<DBTable> parents)
+        public void GetAllParentTables(List<IDBTable> parents)
         {
-            foreach (DBTable table in GetParentTables())
+            foreach (var table in GetParentTables())
             {
                 if (table != this && !parents.Contains(table))
                 {
@@ -1281,14 +1281,14 @@ namespace DataWF.Data
             //return l;
         }
 
-        public IEnumerable<DBTable> GetParentTables()
+        public IEnumerable<IDBTable> GetParentTables()
         {
             foreach (var item in Foreigns)
             {
                 yield return item.ReferenceTable;
 
                 if (item.ReferenceTable.IsVirtual)
-                    yield return item.ReferenceTable.BaseTable;
+                    yield return item.ReferenceTable.ParentTable;
             }
         }
 
@@ -1623,13 +1623,13 @@ namespace DataWF.Data
             return null;
         }
 
-        public IDBLogTable GenerateLogTable()
+        public IDBTableLog GenerateLogTable()
         {
             if (LogTable == null)
             {
                 var genericType = TypeHelper.ParseType(ItemType.Type.Name + "Log");
-                var itemType = genericType ?? typeof(DBLogItem);
-                LogTable = (IDBLogTable)(Schema.LogSchema ?? Schema).GetTable(itemType, true);
+                var itemType = genericType ?? typeof(DBItemLog);
+                LogTable = (IDBTableLog)(Schema.LogSchema ?? Schema).GetTable(itemType, true);
                 if (LogTable == null)
                 {
                     var tableGenerator = new LogTableGenerator()
@@ -1638,9 +1638,9 @@ namespace DataWF.Data
                         BaseTableGenerator = Generator
                     };
                     tableGenerator.Initialize(itemType);
-                    LogTable = (IDBLogTable)tableGenerator.Generate(Schema.LogSchema ?? Schema);
+                    LogTable = (IDBTableLog)tableGenerator.Generate(Schema.LogSchema ?? Schema);
                 }
-                LogTable.BaseTable = this;
+                LogTable.TargetTable = this;
                 if (!LogTable.Schema.Tables.Contains(LogTable))
                 {
                     LogTable.Schema.Tables.Add((DBTable)LogTable);
@@ -1648,7 +1648,7 @@ namespace DataWF.Data
             }
             else
             {
-                LogTable.BaseTable = this;
+                LogTable.TargetTable = this;
             }
             return logTable;
         }
@@ -1785,7 +1785,7 @@ namespace DataWF.Data
         {
             if (IsVirtual)
             {
-                return BaseTable.GetItemType(typeIndex);
+                return ParentTable.GetItemType(typeIndex);
             }
             return typeIndex == 0 ? ItemType : ItemTypes[typeIndex];
         }
@@ -1794,7 +1794,7 @@ namespace DataWF.Data
         {
             if (IsVirtual)
             {
-                return BaseTable.GetTypeIndex(type);
+                return ParentTable.GetTypeIndex(type);
             }
             foreach (var entry in ItemTypes)
             {

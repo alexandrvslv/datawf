@@ -26,7 +26,7 @@ namespace DataWF.WebService.Common
     [LoggerAndFormatter]
     public abstract class BaseController<T, K, L> : ControllerBase
         where T : DBItem
-        where L : DBLogItem
+        where L : DBItemLog
     {
         protected int MaxDeleteDepth = 4;
         protected static bool IsDenied(T value, IUserIdentity user)
@@ -40,7 +40,7 @@ namespace DataWF.WebService.Common
         }
 
         protected DBColumn<K> primaryKey;
-        protected DBLogTable<L> logTable;
+        protected DBTableLog<L> logTable;
 
         public BaseController(IDBSchema schema)
         {
@@ -50,7 +50,7 @@ namespace DataWF.WebService.Common
 #endif
             Table = Schema.GetTable<T>();
             primaryKey = (DBColumn<K>)Table.PrimaryKey;
-            logTable = Table.LogTable as DBLogTable<L>;
+            logTable = Table.LogTable as DBTableLog<L>;
         }
 
         public IUserIdentity CurrentUser => User.GetCommonUser();
@@ -845,7 +845,7 @@ namespace DataWF.WebService.Common
             var transaction = new DBTransaction(Table, CurrentUser);
             try
             {
-                var logItem = (DBLogItem)Table.LogTable?.LoadItemById<long>(logId);
+                var logItem = (DBItemLog)Table.LogTable?.LoadItemById<long>(logId);
                 if (logItem == null)
                 {
                     transaction.Dispose();

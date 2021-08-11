@@ -50,7 +50,7 @@ namespace DataWF.Data
                 if (type == value)
                     return;
                 type = value;
-                OnPropertyChanged(nameof(Type), DDLType.Alter);
+                OnPropertyChanged(DDLType.Alter);
             }
         }
 
@@ -62,7 +62,7 @@ namespace DataWF.Data
                 if (value == this.value)
                     return;
                 this.value = value;
-                OnPropertyChanged(nameof(Value), DDLType.Alter);
+                OnPropertyChanged(DDLType.Alter);
             }
         }
 

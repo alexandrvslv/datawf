@@ -578,9 +578,9 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
 
         public virtual void Format(StringBuilder ddl, DBForeignKey constraint)
         {
-            DBTable refer = constraint.ReferenceTable;
+            var refer = constraint.ReferenceTable;
             if (refer.IsVirtual)
-                refer = refer.BaseTable;
+                refer = refer.ParentTable;
             ddl.AppendFormat(" constraint {0} foreign key ({1}) references {2}({3})",
                              constraint.Name,
                              constraint.Column.SqlName,
@@ -630,7 +630,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
                 }
                 ddl.Length -= 2;
                 ddl.AppendLine();
-                ddl.AppendLine($"from {virtualTable.BaseTable.SqlName} a where {virtualTable.Query};");
+                ddl.AppendLine($"from {virtualTable.ParentTable.SqlName} a where {virtualTable.Query};");
             }
         }
 

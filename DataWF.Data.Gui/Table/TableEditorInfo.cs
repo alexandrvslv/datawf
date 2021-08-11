@@ -14,7 +14,7 @@
 
         public TableEditorStatus Status { get; set; }
 
-        public DBTable Table { get; set; }
+        public IDBTable Table { get; set; }
 
         public void Dispose()
         {

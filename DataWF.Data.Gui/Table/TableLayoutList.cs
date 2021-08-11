@@ -72,7 +72,7 @@ namespace DataWF.Data.Gui
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public DBTable Table
+        public IDBTable Table
         {
             get
             {
@@ -198,7 +198,7 @@ namespace DataWF.Data.Gui
         {
             if (args.Properties == null)
             {
-                DBTable table = Table;
+                var table = Table;
 
                 if (args.Cell != null)
                 {

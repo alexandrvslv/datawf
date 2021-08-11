@@ -133,7 +133,7 @@ namespace DataWF.Data.Gui
         }
 
 
-        public DBSchema CurrentSchema
+        public IDBSchema CurrentSchema
         {
             get { return dataTree.CurrentSchema; }
         }
@@ -781,7 +781,7 @@ namespace DataWF.Data.Gui
             //ProjectHandler ph = new ProjectHandler();
             if (CurrentSchema == null)
                 return;
-            var export = new DBExport() { Source = CurrentSchema };
+            var export = new DBExport() { Source = (DBSchema)CurrentSchema };
             var exportEditor = new DataExport() { Export = export };
             GuiService.Main.DockPanel.Put(exportEditor);
 

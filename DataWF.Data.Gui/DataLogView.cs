@@ -19,7 +19,7 @@ namespace DataWF.Data.Gui
         }
         protected DBItem filter;
         protected DataLogMode mode = DataLogMode.None;
-        protected SelectableList<DBLogItem> listSource;
+        protected SelectableList<DBItemLog> listSource;
 
         protected VPaned split;
         protected Toolsbar bar;
@@ -38,7 +38,7 @@ namespace DataWF.Data.Gui
         protected TableLayoutList detailList;
         protected TableLayoutList detailRow;
         protected GroupBox map;
-        private DBTable table;
+        private IDBTable table;
         private DateInterval date = new DateInterval(DateTime.Today.AddMonths(-1), DateTime.Today);
 
         public DataLogView()
@@ -99,7 +99,7 @@ namespace DataWF.Data.Gui
                 GenerateToString = false,
                 Mode = LayoutListMode.List,
                 Name = "list",
-                ListSource = listSource = new SelectableList<DBLogItem>()
+                ListSource = listSource = new SelectableList<DBItemLog>()
             };
             list.GenerateColumns = true;
             list.CellMouseClick += ListCellMouseClick;
@@ -152,7 +152,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public DBTable Table
+        public IDBTable Table
         {
             get { return table; }
             set
@@ -189,7 +189,7 @@ namespace DataWF.Data.Gui
                 if (filter.Access.GetFlag(AccessType.Admin, GuiEnvironment.User) || filter.Access.GetFlag(AccessType.Update, GuiEnvironment.User))
                 {
                     toolRollback.Visible = filter.Access.GetFlag(AccessType.Update, GuiEnvironment.User);
-                    Table = filter.Table;
+                    Table = (DBTable)filter.Table;
                 }
                 else
                 {
@@ -227,7 +227,7 @@ namespace DataWF.Data.Gui
 
         public static void RowReject(DBItem row, ref Command dr, Window form)
         {
-            DBLogItem changes = new DBLogItem(row);
+            DBItemLog changes = new DBItemLog(row);
             if (changes.BaseItem.Status == DBStatus.New)
             {
                 if (dr == Command.Save)
@@ -275,16 +275,16 @@ namespace DataWF.Data.Gui
 
         protected virtual void SelectData()
         {
-            if (list.SelectedItem is DBLogItem)
+            if (list.SelectedItem is DBItemLog)
             {
                 detailList.FieldSource = list.SelectedItem;
-                detailRow.FieldSource = ((DBLogItem)list.SelectedItem).BaseItem;
+                detailRow.FieldSource = ((DBItemLog)list.SelectedItem).BaseItem;
             }
         }
 
         protected void ListCellDoubleClick(object sender, LayoutHitTestEventArgs e)
         {
-            var log = list.SelectedItem as DBLogItem;
+            var log = list.SelectedItem as DBItemLog;
             var view = new DataLogView { Filter = log.BaseItem, Mode = DataLogMode.Default };
             view.ShowDialog(this);
         }
@@ -320,9 +320,9 @@ namespace DataWF.Data.Gui
                     }
                     if (Date != null)
                     {
-                        query.BuildParam(logTable.DateKey, CompareType.Between, interval);
+                        query.BuildParam(logTable.DateCreateKey, CompareType.Between, interval);
                     }
-                    foreach (DBLogItem item in logTable.LoadItems(query))
+                    foreach (DBItemLog item in logTable.LoadItems(query))
                         list.ListSource.Add(item);
                 }
                 if (mode == DataLogMode.Document)
@@ -330,7 +330,7 @@ namespace DataWF.Data.Gui
                     foreach (var refed in filter.Table.GetChildRelations())
                     {
                         if (refed.Table.LogTable == null
-                        || refed.Table is IDBVirtualTable
+                        || refed.Table.IsVirtual
                         || (Table != filter.Table && refed.Table != Table))
                             continue;
 
@@ -339,9 +339,9 @@ namespace DataWF.Data.Gui
                             query.BuildParam(refed.Table.LogTable.GetLogColumn(refed.Column), CompareType.Equal, filter.PrimaryId);
                             if (Date != null)
                             {
-                                query.BuildParam(refed.Table.LogTable.DateKey, CompareType.Between, interval);
+                                query.BuildParam(refed.Table.LogTable.DateCreateKey, CompareType.Between, interval);
                             }
-                            foreach (DBLogItem item in refed.Table.LogTable.LoadItems(query))
+                            foreach (DBItemLog item in refed.Table.LogTable.LoadItems(query))
                                 list.ListSource.Add(item);
                         }
                     }
@@ -379,7 +379,7 @@ namespace DataWF.Data.Gui
             if (list.SelectedItem == null)
                 return;
 
-            var redo = list.Selection.GetItems<DBLogItem>();
+            var redo = list.Selection.GetItems<DBItemLog>();
             if (redo[0] != null && redo[0].Table.Access.GetFlag(AccessType.Update, GuiEnvironment.User))
             {
                 using (var transaction = new DBTransaction(GuiEnvironment.User))

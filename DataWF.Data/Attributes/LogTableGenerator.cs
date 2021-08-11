@@ -41,19 +41,20 @@ namespace DataWF.Data
             Debug.WriteLine($"Generate Log Table {Attribute.TableName} - {this.ItemType.Name}");
 
             var type = Attribute.Type
-                ?? TypeHelper.ParseType(ItemType.FullName + "Table")
-                ?? TypeHelper.ParseType(ItemType.FullName + "Table`1")
-                ?? typeof(DBLogTable<>);
+                ?? (ItemType.IsSealed
+                    ? TypeHelper.ParseType(ItemType.FullName + "Table")
+                    : TypeHelper.ParseType(ItemType.FullName + "Table`1"))
+                ?? typeof(DBTableLog<>);
             if (type.IsGenericTypeDefinition)
             {
                 type = type.MakeGenericType(ItemType);
             }
-            var table = (DBTable)EmitInvoker.CreateObject(type);
+            var table = (IDBTableLog)EmitInvoker.CreateObject(type);
             table.Name = Attribute.TableName;
             table.Schema = schema;
             var baseSchema = schema is DBLogSchema logSchema ? logSchema.BaseSchema : schema;
-            table.BaseTable = baseSchema.GetTable(LogAttribute.BaseType);
-            return table;
+            table.TargetTable = baseSchema.GetTable(LogAttribute.BaseType);
+            return (DBTable)table;
         }
 
         public override DBTable Generate(IDBSchema schema)

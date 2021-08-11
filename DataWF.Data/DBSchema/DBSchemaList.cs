@@ -214,7 +214,7 @@ namespace DataWF.Data
             return schema.TableGroups[code];
         }
 
-        public void Deserialize(string file, DBSchemaItem selectedItem)
+        public void Deserialize(string file, IDBSchemaItem selectedItem)
         {
             var item = Serialization.Deserialize(file);
             if (item is DBTable table)

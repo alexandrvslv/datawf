@@ -79,7 +79,7 @@ namespace DataWF.Module.CommonGui
                     {
                         tableView.Dispose();
                     }
-                    list.ListSource = view = new DBTableView<UserReg>((string)null, DBViewKeys.Empty);
+                    list.ListSource = view = new DBTableView<UserReg>(filter.Schema.GetTable<UserReg>(), (string)null, DBViewKeys.Empty);
                 }
                 var query = view.Query;
 

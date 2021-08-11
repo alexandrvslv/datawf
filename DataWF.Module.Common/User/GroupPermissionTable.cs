@@ -105,7 +105,7 @@ namespace DataWF.Module.Common
 
         public async Task CachePermission(GroupPermission parent, DBTable table)
         {
-            if (table is IDBLogTable)
+            if (table is IDBTableLog)
                 return;
             var permission = await Get(parent, table);
 

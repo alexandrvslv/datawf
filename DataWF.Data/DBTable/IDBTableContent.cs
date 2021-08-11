@@ -21,6 +21,6 @@ namespace DataWF.Data
 {
     public interface IDBTableContent
     {
-        DBTable Table { get; set; }
+        IDBTable Table { get; set; }
     }
 }

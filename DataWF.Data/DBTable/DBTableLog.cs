@@ -29,27 +29,28 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public partial class DBLogTable<T> : DBTable<T>, IDBLogTable where T : DBLogItem
+    public partial class DBTableLog<T> : DBTable<T>, IDBTableLog where T : DBItemLog
     {
-        private DBTable baseTable;
+        private IDBTable targetTable;
+        private string targetTableName;
         private DBColumn basekey = DBColumn.EmptyKey;
         private DBColumn userLogkey = DBColumn.EmptyKey;
 
-        public DBLogTable()
+        public DBTableLog()
         { }
 
-        public DBLogTable(DBTable table)
+        public DBTableLog(IDBTable table)
         {
-            BaseTable = table;
+            TargetTable = table;
         }
 
         public DBColumn BaseKey
         {
             get
             {
-                if (basekey == DBColumn.EmptyKey && BaseTable != null)
+                if (basekey == DBColumn.EmptyKey && TargetTable != null)
                 {
-                    basekey = GetLogColumn(BaseTable.PrimaryKey);
+                    basekey = GetLogColumn(TargetTable.PrimaryKey);
                 }
                 return basekey;
             }
@@ -61,25 +62,37 @@ namespace DataWF.Data
             {
                 if (userLogkey == DBColumn.EmptyKey)
                 {
-                    userLogkey = Columns[DBLogItem.UserLogKeyName];
+                    userLogkey = Columns[DBItemLog.UserLogKeyName];
                 }
                 return userLogkey;
             }
         }
+        public string TargetTableName
+        {
+            get => targetTableName;
+            set
+            {
+                if (string.Equals(targetTableName, value, StringComparison.Ordinal))
+                {
+                    targetTableName = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         [XmlIgnore, JsonIgnore]
-        public override DBTable BaseTable
+        public IDBTable TargetTable
         {
             get
             {
-                return baseTable ??= (Schema is DBLogSchema logSchema
-                              ? logSchema.BaseSchema.Tables[BaseTableName]
-                              : Schema?.Tables[BaseTableName]);
+                return targetTable ??= (Schema is DBLogSchema logSchema
+                              ? logSchema.BaseSchema.Tables[TargetTableName]
+                              : Schema?.Tables[TargetTableName]);
             }
             set
             {
-                BaseTableName = value?.Name ?? throw new ArgumentException("BaseTable set operation required not null value!");
-                baseTable = value;
+                TargetTableName = value?.Name ?? throw new ArgumentException("TargetTable set operation required not null value!");
+                targetTable = value;
                 Name = value.Name + "_log";
                 Schema = value.Schema.LogSchema ?? value.Schema;
                 var seqName = value.SequenceName + "_log";
@@ -107,7 +120,7 @@ namespace DataWF.Data
                 foreach (var entry in value.ItemTypes)
                 {
                     var logEquevalent = TypeHelper.ParseType(entry.Value.Type.Name + "Log");
-                    ItemTypes[entry.Key] = new DBItemType { Type = logEquevalent ?? typeof(DBLogItem) };
+                    ItemTypes[entry.Key] = new DBItemType { Type = logEquevalent ?? typeof(DBItemLog) };
                 }
             }
         }
@@ -115,7 +128,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public override AccessValue Access
         {
-            get { return access ?? BaseTable.Access; }
+            get { return access ?? TargetTable.Access; }
             set { base.Access = value; }
         }
 
@@ -126,14 +139,14 @@ namespace DataWF.Data
 
         public DBColumn ParseLogProperty(string name)
         {
-            return BaseTable?.ParseProperty(name)?.LogColumn;
+            return TargetTable?.ParseProperty(name)?.LogColumn;
         }
 
         public DBColumn ParseLogProperty(string name, ref DBColumn column)
         {
             if (column != DBColumn.EmptyKey)
                 return column;
-            return column = BaseTable?.ParseProperty(name)?.LogColumn;
+            return column = TargetTable?.ParseProperty(name)?.LogColumn;
         }
 
         public IEnumerable<DBColumn> GetLogColumns()
@@ -150,7 +163,7 @@ namespace DataWF.Data
         public override async Task<bool> SaveItem(DBItem item, DBTransaction transaction)
         {
             if ((item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete
-                && item is DBLogItem logItem && FileOIDKey != null
+                && item is DBItemLog logItem && FileOIDKey != null
                 && !transaction.Replication)
             {
                 var lob = item.GetValue(FileOIDKey);
@@ -197,6 +210,85 @@ namespace DataWF.Data
                 {
                     i++;
                 }
+            }
+        }
+
+        public static async Task Reject(IEnumerable<T> redo, IUserIdentity user)
+        {
+            var changed = new Dictionary<DBItem, List<T>>();
+            foreach (T log in redo.OrderBy(p => p.PrimaryId))
+            {
+                DBItem row = log.BaseItem;
+                if (row == null)
+                {
+                    if (log.LogType == DBLogType.Insert)
+                        continue;
+                    row = log.BaseTable.NewItem(DBUpdateState.Insert, false);
+                    row.SetValue(log.BaseId, log.BaseTable.PrimaryKey, DBSetValueMode.Loading);
+                }
+                else if (log.LogType == DBLogType.Delete && !changed.ContainsKey(row))
+                {
+                    continue;
+                }
+                log.Upload(row);
+
+                if (log.LogType == DBLogType.Insert)
+                {
+                    row.UpdateState |= DBUpdateState.Delete;
+                }
+                else if (log.LogType == DBLogType.Delete)
+                {
+                    row.UpdateState |= DBUpdateState.Insert;
+                    log.BaseTable.Add(row);
+                }
+                else if (log.LogType == DBLogType.Update && row.GetIsChanged())
+                {
+                    row.UpdateState |= DBUpdateState.Update;
+                }
+
+                log.Status = DBStatus.Delete;
+
+                if (!changed.TryGetValue(row, out var list))
+                    changed[row] = list = new List<T>();
+
+                list.Add(log);
+            }
+
+            foreach (var entry in changed)
+            {
+                using (var transaction = new DBTransaction(entry.Key.Table, user))
+                {
+                    //var currentLog = entry.Key.Table.LogTable.NewItem();
+                    await entry.Key.Save(transaction);
+
+                    foreach (var item in entry.Value)
+                    {
+                        await item.Save(transaction);
+                    }
+                    transaction.Commit();
+                }
+            }
+        }
+
+        public static async Task Accept(DBItem row, IEnumerable<T> logs, IUserIdentity user)
+        {
+            if (row.Status == DBStatus.Edit || row.Status == DBStatus.New || row.Status == DBStatus.Error)
+                row.Status = DBStatus.Actual;
+            else if (row.Status == DBStatus.Delete)
+                row.Delete();
+            using (var transaction = new DBTransaction(row.Table, user))
+            {
+                await row.Save(transaction);
+
+                foreach (var item in logs)
+                {
+                    if (item.Status == DBStatus.New)
+                    {
+                        item.Status = DBStatus.Actual;
+                        await item.Save(transaction);
+                    }
+                }
+                transaction.Commit();
             }
         }
 

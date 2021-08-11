@@ -85,7 +85,7 @@ namespace DataWF.Data.Gui
                 using (var transaction = new DBTransaction(procedure.Schema, GuiEnvironment.User))
                     try
                     {
-                        var args = new ExecuteArgs(document);
+                        var args = new ExecuteArgs(document.Schema, document);
                         e.Result = Execute(procedure, args);
                         transaction.Commit();
                     }
@@ -124,7 +124,7 @@ namespace DataWF.Data.Gui
 
         public static object Execute(DBProcedure procedure, DBItem document = null)
         {
-            return Execute(procedure, new ExecuteArgs(document));
+            return Execute(procedure, new ExecuteArgs(procedure.Schema, document));
         }
 
         public static object Execute(DBProcedure procedure, ExecuteArgs args)

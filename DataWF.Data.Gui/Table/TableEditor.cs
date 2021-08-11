@@ -148,7 +148,7 @@ namespace DataWF.Data.Gui
             get { return DBList.Selection.GetItems<DBItem>(); }
         }
 
-        public DBTable Table
+        public IDBTable Table
         {
             get { return view?.Table ?? baseRow?.Table; }
         }

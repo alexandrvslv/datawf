@@ -35,14 +35,14 @@ namespace DataWF.Data
         public int Compare(DBTable a, DBTable b, bool referenceCheck)
         {
             var rez = 0;
-            if (a is IDBLogTable)
+            if (a is IDBTableLog)
             {
-                if (!(b is IDBLogTable))
+                if (!(b is IDBTableLog))
                 {
                     rez = 1;
                 }
             }
-            else if (b is IDBLogTable)
+            else if (b is IDBTableLog)
             {
                 rez = -1;
             }

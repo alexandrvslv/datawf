@@ -192,7 +192,7 @@ namespace DataWF.Data.Gui
             {
                 qdelete.BuildParam(table.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
                 qdelete.BuildParam(table.LogTable.StatusKey, CompareType.Equal, DBStatus.New);
-                foreach (DBLogItem log in table.LogTable.LoadItems(qdelete, DBLoadParam.Synchronize))
+                foreach (DBItemLog log in table.LogTable.LoadItems(qdelete, DBLoadParam.Synchronize))
                 {
                     LogMap change = new LogMap { Table = table };
                     //change.Logs.Add(log);

@@ -14,7 +14,7 @@ namespace DataWF.Module.Common
         public async ValueTask OnDBItemLoging(DBItemEventArgs arg)
         {
             if (arg.Item.Table == this
-                || arg.Item.Table is IDBLogTable
+                || arg.Item.Table is IDBTableLog
                 || arg.Item.Schema != Schema)
                 return;
             var user = arg.User as User;

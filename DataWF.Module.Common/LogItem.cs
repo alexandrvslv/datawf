@@ -5,11 +5,11 @@ using DataWF.Module.Common;
 namespace DataWF.Module.Common
 {
     [AbstractTable, InvokerGenerator(Instance = false)]
-    public abstract partial class LogItem : DBLogItem
+    public abstract partial class LogItem : DBItemLog
     {
         private UserReg userReg;
 
-        public LogItem(DBTable table) : base(table)
+        public LogItem(IDBTableLog table) : base(table)
         { }
 
         [Reference(nameof(UserRegId))]

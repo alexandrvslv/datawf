@@ -234,7 +234,7 @@ namespace DataWF.Data
 
         public IDBSchema Schema => Table?.Schema;
 
-        public DBTable Table
+        public IDBTable Table
         {
             get => table;
             set => table = value as DBTable<T>;

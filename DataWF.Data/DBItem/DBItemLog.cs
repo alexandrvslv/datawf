@@ -31,7 +31,7 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public partial class DBLogItem : DBItem
+    public partial class DBItemLog : DBItem
     {
         public static DBTable UserRegTable { get; set; }
         public static readonly string UserLogKeyName = "userlog_id";
@@ -39,10 +39,10 @@ namespace DataWF.Data
         private DBItem baseItem;
         private DBUserReg dbUserReg;
 
-        public DBLogItem(DBTable table) : base(table)
+        public DBItemLog(IDBTableLog table) : base(table)
         { }
 
-        public DBLogItem(DBItem item) : this((DBTable)item.Table.LogTable)
+        public DBItemLog(DBItem item) : this(item.Table.LogTable)
         {
             BaseItem = item;
         }
@@ -124,10 +124,10 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public DBTable BaseTable => LogTable?.BaseTable;
+        public IDBTable BaseTable => LogTable?.TargetTable;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public IDBLogTable LogTable => (IDBLogTable)Table;
+        public IDBTableLog LogTable => (IDBTableLog)Table;
 
         public virtual DBUser GetUser()
         {
@@ -186,7 +186,7 @@ namespace DataWF.Data
             }
         }
 
-        public DBLogItem GetPrevius(IUserIdentity user = null)
+        public DBItemLog GetPrevius(IUserIdentity user = null)
         {
             using (var transaction = new DBTransaction(Table, user, true))
             {
@@ -194,7 +194,7 @@ namespace DataWF.Data
             }
         }
 
-        public DBLogItem GetPrevius(DBTransaction transaction)
+        public DBItemLog GetPrevius(DBTransaction transaction)
         {
             using (var query = new QQuery("", (DBTable)LogTable))
             {
@@ -204,7 +204,7 @@ namespace DataWF.Data
                 //query.Orders.Add(new QOrder(LogTable.PrimaryKey));
 
                 var id = transaction.ExecuteQuery(query.Format());
-                return (DBLogItem)LogTable.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                return (DBItemLog)LogTable.LoadItemById(id, DBLoadParam.Load, null, transaction);
             }
         }
 
@@ -251,7 +251,7 @@ namespace DataWF.Data
                 {
                     query.BuildParam(referenceColumn.LogColumn, CompareType.Equal, BaseId);
                     query.BuildParam(referenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
-                    var logItems = referenceTable.LogTable.LoadItems(query).Cast<DBLogItem>().OrderByDescending(p => p.DateCreate);
+                    var logItems = referenceTable.LogTable.LoadItems(query).Cast<DBItemLog>().OrderByDescending(p => p.DateCreate);
                     foreach (var refed in logItems)
                     {
                         if (!stack.Contains(refed.BaseId) && Math.Abs((DateCreate - refed.DateCreate).TotalMinutes) < 5)
@@ -279,7 +279,7 @@ namespace DataWF.Data
                         {
                             query.BuildParam(column.ReferenceTable.LogTable.BaseKey, CompareType.Equal, BaseItem.GetValue(column));
                             query.BuildParam(column.ReferenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
-                            var logItem = column.ReferenceTable.LogTable.LoadItems(query).Cast<DBLogItem>().OrderByDescending(p => p.DateCreate).FirstOrDefault();
+                            var logItem = column.ReferenceTable.LogTable.LoadItems(query).Cast<DBItemLog>().OrderByDescending(p => p.DateCreate).FirstOrDefault();
                             if (logItem != null)
                             {
                                 await logItem.Undo(transaction);
@@ -298,83 +298,6 @@ namespace DataWF.Data
             }
         }
 
-        public static async Task Reject(IEnumerable<DBLogItem> redo, IUserIdentity user)
-        {
-            var changed = new Dictionary<DBItem, List<DBLogItem>>();
-            foreach (DBLogItem log in redo.OrderBy(p => p.PrimaryId))
-            {
-                DBItem row = log.BaseItem;
-                if (row == null)
-                {
-                    if (log.LogType == DBLogType.Insert)
-                        continue;
-                    row = log.BaseTable.NewItem(DBUpdateState.Insert, false);
-                    row.SetValue(log.BaseId, log.BaseTable.PrimaryKey, DBSetValueMode.Loading);
-                }
-                else if (log.LogType == DBLogType.Delete && !changed.ContainsKey(row))
-                {
-                    continue;
-                }
-                log.Upload(row);
-
-                if (log.LogType == DBLogType.Insert)
-                {
-                    row.UpdateState |= DBUpdateState.Delete;
-                }
-                else if (log.LogType == DBLogType.Delete)
-                {
-                    row.UpdateState |= DBUpdateState.Insert;
-                    log.BaseTable.Add(row);
-                }
-                else if (log.LogType == DBLogType.Update && row.GetIsChanged())
-                {
-                    row.UpdateState |= DBUpdateState.Update;
-                }
-
-                log.Status = DBStatus.Delete;
-
-                if (!changed.TryGetValue(row, out var list))
-                    changed[row] = list = new List<DBLogItem>();
-
-                list.Add(log);
-            }
-
-            foreach (var entry in changed)
-            {
-                using (var transaction = new DBTransaction(entry.Key.Table, user))
-                {
-                    //var currentLog = entry.Key.Table.LogTable.NewItem();
-                    await entry.Key.Save(transaction);
-
-                    foreach (var item in entry.Value)
-                    {
-                        await item.Save(transaction);
-                    }
-                    transaction.Commit();
-                }
-            }
-        }
-
-        public static async Task Accept(DBItem row, IEnumerable<DBLogItem> logs, IUserIdentity user)
-        {
-            if (row.Status == DBStatus.Edit || row.Status == DBStatus.New || row.Status == DBStatus.Error)
-                row.Status = DBStatus.Actual;
-            else if (row.Status == DBStatus.Delete)
-                row.Delete();
-            using (var transaction = new DBTransaction(row.Table, user))
-            {
-                await row.Save(transaction);
-
-                foreach (var item in logs)
-                {
-                    if (item.Status == DBStatus.New)
-                    {
-                        item.Status = DBStatus.Actual;
-                        await item.Save(transaction);
-                    }
-                }
-                transaction.Commit();
-            }
-        }
+        
     }
 }

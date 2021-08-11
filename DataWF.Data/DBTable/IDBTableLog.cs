@@ -22,10 +22,11 @@ using System.Collections.Generic;
 namespace DataWF.Data
 {
 
-    public interface IDBLogTable : IDBDependTable
+    public interface IDBTableLog : IDBTable
     {
         DBColumn BaseKey { get; }
-        string BaseTableName { get; set; }
+        string TargetTableName { get; set; }
+        IDBTable TargetTable { get; set; }
         DBColumn UserLogKey { get; }
 
         DBColumn GetLogColumn(DBColumn column);

@@ -56,7 +56,7 @@ namespace DataWF.WebService.Common
         {
             var item = arg.Item;
 
-            if (!(item is DBLogItem) && item.Table.Type == DBTableType.Table && item.Table.IsLoging)
+            if (!(item is DBItemLog) && item.Table.Type == DBTableType.Table && item.Table.IsLoging)
             {
                 var type = (arg.State & DBUpdateState.Delete) == DBUpdateState.Delete ? DBLogType.Delete
                     : (arg.State & DBUpdateState.Insert) == DBUpdateState.Insert ? DBLogType.Insert

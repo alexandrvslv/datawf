@@ -394,7 +394,7 @@ namespace DataWF.Data
                 tables.Sort(new InvokerComparer<DBTable, string>("Name"));
                 foreach (var table in tables)
                 {
-                    if (table.Type == DBTableType.Table && !(table is IDBLogTable))
+                    if (table.Type == DBTableType.Table && !(table is IDBTableLog))
                     {
                         writer.WriteElementString("H2", table.DisplayName + " (" + table.Name + ")");
                         writer.WriteStartElement("table");
@@ -629,7 +629,7 @@ namespace DataWF.Data
 
             foreach (DBTable table in Tables)
             {
-                if (!(table is IDBLogTable)
+                if (!(table is IDBTableLog)
                     && !table.IsVirtual
                     && table.IsLoging)
                 {

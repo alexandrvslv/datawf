@@ -156,7 +156,7 @@ namespace DataWF.Data
             return column;
         }
 
-        public static DBColumn CreateLog(DBColumn baseColumn, IDBLogTable table)
+        public static DBColumn CreateLog(DBColumn baseColumn, IDBTableLog table)
         {
             var column = (DBColumn)EmitInvoker.CreateObject(baseColumn.GetType());
             column.Table = (DBTable)table;

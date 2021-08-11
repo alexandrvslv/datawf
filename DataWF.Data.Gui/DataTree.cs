@@ -32,7 +32,7 @@ namespace DataWF.Data.Gui
 
     public class SchemaItemNode : Node, ILocalizable
     {
-        public DBSchemaItem Item { get; set; }
+        public IDBSchemaItem Item { get; set; }
 
         public void Localize()
         {
@@ -45,7 +45,7 @@ namespace DataWF.Data.Gui
 
     public class DataTree : LayoutList
     {
-        private DBSchemaItem datafilter = null;
+        private IDBSchemaItem datafilter = null;
         private DataTreeKeys dataKeys = DataTreeKeys.None;
         private TextEntry filterEntry;
 
@@ -83,7 +83,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public DBSchemaItem DataFilter
+        public IDBSchemaItem DataFilter
         {
             get { return datafilter; }
             set
@@ -257,18 +257,18 @@ namespace DataWF.Data.Gui
                 Nodes.Remove(node);
             }
         }
-        public DBSchemaItem SelectedDBItem
+        public IDBSchemaItem SelectedDBItem
         {
             get { return (SelectedNode as SchemaItemNode)?.Item; }
             set { SelectedNode = value == null ? null : Find(value); }
         }
 
-        public DBSchema CurrentSchema
+        public IDBSchema CurrentSchema
         {
             get
             {
-                return SelectedDBItem == null ? null : SelectedDBItem is DBSchema
-                    ? (DBSchema)SelectedDBItem : SelectedDBItem.Schema;
+                return SelectedDBItem == null ? null : SelectedDBItem is IDBSchema schema
+                    ? schema : SelectedDBItem.Schema;
             }
         }
 
@@ -305,7 +305,7 @@ namespace DataWF.Data.Gui
             Nodes.Sense = true;
         }
 
-        public virtual SchemaItemNode Init(DBSchemaItem item)
+        public virtual SchemaItemNode Init(IDBSchemaItem item)
         {
             SchemaItemNode node = null;
             if (item is DBSchema)
@@ -364,7 +364,7 @@ namespace DataWF.Data.Gui
                 CheckItem(table, node, ShowTable
                     && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.Read, GuiEnvironment.User)))
                     && (!CheckTableAdmin || (CheckTableAdmin && table.Access.GetFlag(AccessType.Admin, GuiEnvironment.User)))
-                    && (!(table is IDBLogTable) || ShowLogTable));
+                    && (!(table is IDBTableLog) || ShowLogTable));
             }
 
             InitList(schema.Procedures.SelectByParent(null), node, ShowProcedures, "Procedures");
@@ -424,7 +424,7 @@ namespace DataWF.Data.Gui
                 CheckItem(table, node, ShowTable
                     && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.Read, GuiEnvironment.User)))
                     && (!CheckTableAdmin || (CheckTableAdmin && table.Access.GetFlag(AccessType.Admin, GuiEnvironment.User)))
-                    && (!(table is IDBLogTable) || ShowLogTable));
+                    && (!(table is IDBTableLog) || ShowLogTable));
             }
             return node;
         }
@@ -513,7 +513,7 @@ namespace DataWF.Data.Gui
             return InitItem(relation);
         }
 
-        public SchemaItemNode InitItem(DBSchemaItem item)
+        public SchemaItemNode InitItem(IDBSchemaItem item)
         {
             string name = GetName(item);
             var node = Find(name);

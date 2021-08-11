@@ -36,14 +36,14 @@ namespace DataWF.Data
 
     public class ExecuteEventArgs : CancelEventArgs
     {
-        public ExecuteEventArgs(DBSchema schema, DBTable table, string query)
+        public ExecuteEventArgs(IDBSchema schema, DBTable table, string query)
         {
             Schema = schema;
             Table = table;
             Query = query;
         }
 
-        public DBSchema Schema { get; set; }
+        public IDBSchema Schema { get; set; }
 
         public DBTable Table { get; set; }
 
@@ -316,7 +316,7 @@ namespace DataWF.Data
             Save();
         }
 
-        private static IEnumerable<DBSchemaChange> GetChanges(DBSchema schema)
+        private static IEnumerable<DBSchemaChange> GetChanges(IDBSchema schema)
         {
             var isSqlite = schema.Connection.System == DBSystem.SQLite;
             var chages = Changes.Where(p => p.Item.Schema == schema).ToList();
@@ -410,7 +410,7 @@ namespace DataWF.Data
             Console.WriteLine();
         }
 
-        public static string BuildChangesQuery(DBSchema schema)
+        public static string BuildChangesQuery(IDBSchema schema)
         {
             var builder = new StringBuilder();
             var isSqlite = schema.Connection.System == DBSystem.SQLite;
@@ -467,13 +467,13 @@ namespace DataWF.Data
                 else
                     return 1;
             }
-            var xpars = new List<DBTable>();
+            var xpars = new List<IDBTable>();
             x.GetAllParentTables(xpars);
-            var ypars = new List<DBTable>();
+            var ypars = new List<IDBTable>();
             y.GetAllParentTables(ypars);
-            var xchil = new List<DBTable>();
+            var xchil = new List<IDBTable>();
             x.GetAllChildTables(xchil);
-            var ychil = new List<DBTable>();
+            var ychil = new List<IDBTable>();
             y.GetAllChildTables(ychil);
 
             if (xpars.Contains(y))
@@ -482,7 +482,7 @@ namespace DataWF.Data
                 return -1;
             else
             {
-                var merge = (List<DBTable>)ListHelper.AND(xpars, ypars, null);
+                var merge = (List<IDBTable>)ListHelper.AND(xpars, ypars, null);
                 if (merge.Count > 0)
                 {
                     int r = xpars.Count.CompareTo(ypars.Count);
@@ -499,7 +499,7 @@ namespace DataWF.Data
                 return 1;
             else
             {
-                List<DBTable> merge = (List<DBTable>)ListHelper.AND(xchil, ychil, null);
+                var merge = (List<IDBTable>)ListHelper.AND(xchil, ychil, null);
                 if (merge.Count > 0)
                 {
                     int r = xchil.Count.CompareTo(ychil.Count);

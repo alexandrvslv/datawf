@@ -56,9 +56,9 @@ namespace DataWF.Data
         {
             get
             {
-                if (BaseTable == null)
+                if (ParentTable == null)
                     return null;
-                return filterQuery ??= new QQuery(query, BaseTable) { TypeFilter = typeof(T) };
+                return filterQuery ??= new QQuery(query, ParentTable) { TypeFilter = typeof(T) };
             }
             set => filterQuery = value;
         }
@@ -66,7 +66,7 @@ namespace DataWF.Data
         [Browsable(false), XmlIgnore, JsonIgnore]
         public override bool IsSynchronized
         {
-            get => base.IsSynchronized || (IsVirtual && (BaseTable?.IsSynchronized ?? false));
+            get => base.IsSynchronized || (IsVirtual && (ParentTable?.IsSynchronized ?? false));
             set => base.IsSynchronized = value;
         }
 
@@ -138,7 +138,7 @@ namespace DataWF.Data
             {
                 if (!item.Attached)
                 {
-                    BaseTable.Add(item);
+                    ParentTable.Add(item);
                 }
                 else
                 {
@@ -189,7 +189,7 @@ namespace DataWF.Data
             {
                 if (item.Attached)
                 {
-                    return BaseTable.Remove(item);
+                    return ParentTable.Remove(item);
                 }
                 else
                 {
@@ -259,7 +259,7 @@ namespace DataWF.Data
             else if (type == NotifyCollectionChangedAction.Reset)
             {
                 Clear();
-                foreach (T sitem in BaseTable.SelectItems(FilterQuery))
+                foreach (T sitem in ParentTable.SelectItems(FilterQuery))
                 {
                     Add(sitem);
                 }
@@ -268,22 +268,22 @@ namespace DataWF.Data
 
         public override void RefreshVirtualTable(DBTable value)
         {
-            BaseTable = value;
+            ParentTable = value;
             GroupName = value.GroupName;
             BlockSize = value.BlockSize;
             SequenceName = value.SequenceName;
             Keys = value.Keys | DBTableKeys.Virtual;
             FilterQuery = null;
-            if (BaseTable != null)
+            if (ParentTable != null)
             {
-                BaseTable.AddVirtual(this);
+                ParentTable.AddVirtual(this);
             }
             if (Columns.Count > 0)
                 return;
 
             var type = typeof(T);
 
-            foreach (DBColumnGroup group in BaseTable.ColumnGroups)
+            foreach (DBColumnGroup group in ParentTable.ColumnGroups)
             {
                 var exist = ColumnGroups[group.Name];
                 if (exist == null)
@@ -296,7 +296,7 @@ namespace DataWF.Data
                 }
             }
 
-            foreach (DBColumn column in BaseTable.Columns)
+            foreach (DBColumn column in ParentTable.Columns)
             {
                 var exist = Columns[column.Name];
                 if (exist == null)
@@ -311,7 +311,7 @@ namespace DataWF.Data
                 }
             }
 
-            foreach (DBForeignKey reference in BaseTable.Foreigns)
+            foreach (DBForeignKey reference in ParentTable.Foreigns)
             {
                 var existColumn = Columns[reference.Column.Name];
                 if (existColumn == null || reference.Reference == null)
@@ -330,7 +330,7 @@ namespace DataWF.Data
                 }
             }
 
-            foreach (DBConstraint constraint in BaseTable.Constraints)
+            foreach (DBConstraint constraint in ParentTable.Constraints)
             {
                 var existColumn = Columns[constraint.Column.Name];
                 if (existColumn == null)
@@ -1371,7 +1371,7 @@ namespace DataWF.Data
         {
             if (IsVirtual)
             {
-                BaseTable?.RemoveVirtual(this);
+                ParentTable?.RemoveVirtual(this);
                 filterQuery?.Dispose();
             }
             base.Dispose();
@@ -1386,7 +1386,7 @@ namespace DataWF.Data
             {
                 if (typeIndex == 0)
                     typeIndex = GetTypeIndex(typeof(T));
-                return BaseTable.NewItem(state, def, typeIndex);
+                return ParentTable.NewItem(state, def, typeIndex);
             }
 
             return base.NewItem(state, def, typeIndex);

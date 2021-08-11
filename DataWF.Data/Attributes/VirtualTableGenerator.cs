@@ -124,7 +124,7 @@ namespace DataWF.Data
             var table = (DBTable)EmitInvoker.CreateObject(typeOfTable);
             table.Name = Type.Name;
             table.Schema = schema;
-            table.BaseTable = baseTable;
+            table.ParentTable = baseTable;
             table.DisplayName = Type.Name;
 
             return table;

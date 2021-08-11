@@ -225,8 +225,9 @@ namespace DataWF.Data
             Debug.WriteLine($"Generate {Attribute.TableName} - {this.ItemType.Name}");
 
             var type = Attribute?.Type
-                ?? TypeHelper.ParseType(ItemType.FullName + "Table")
-                ?? TypeHelper.ParseType(ItemType.FullName + "Table`1")
+                ?? (ItemType.IsSealed
+                    ? TypeHelper.ParseType(ItemType.FullName + "Table")
+                    : TypeHelper.ParseType(ItemType.FullName + "Table`1"))
                 ?? typeof(DBTable<>);
             if (type.IsGenericTypeDefinition)
             {

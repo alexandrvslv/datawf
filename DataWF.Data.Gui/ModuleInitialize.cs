@@ -10,8 +10,9 @@ namespace DataWF.Data.Gui
 {
     public class ModuleInitialize : IModuleInitialize
     {
-        public Task Initialize()
+        public Task Initialize(object[] args)
         {
+            var schema = args[0] as IDBSchema;
             GuiEnvironment.CellEditorFabric[typeof(DBColumn)] = (cell) =>
             {
                 return new CellEditorDataTree();
@@ -50,7 +51,7 @@ namespace DataWF.Data.Gui
             };
             GuiEnvironment.CellEditorFabric[typeof(DBItem)] = (cell) =>
             {
-                var table = DBTable.GetTable(cell.Invoker.DataType);
+                var table = schema.GetTable(cell.Invoker.DataType);
                 return table == null ? null : new CellEditorTable() { Table = table };
             };
 

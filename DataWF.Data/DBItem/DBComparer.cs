@@ -43,7 +43,7 @@ namespace DataWF.Data
 
     public class DBComparer<T, K> : IComparer<T>, IComparer where T : DBItem
     {
-        public DBTable Table;
+        public IDBTable Table;
         public string PropertyName;
         public string Format;
         public ListSortDirection Direction;
@@ -54,7 +54,7 @@ namespace DataWF.Data
         private bool refernce;
         public bool Hash;
 
-        public DBComparer(DBTable table, DBColumn column, string proeprty, ListSortDirection direction = ListSortDirection.Ascending)
+        public DBComparer(IDBTable table, DBColumn column, string proeprty, ListSortDirection direction = ListSortDirection.Ascending)
         {
             Table = table;
             PropertyName = proeprty;

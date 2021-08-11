@@ -45,7 +45,7 @@ namespace DataWF.Data
                 if (unique = value)
                     return;
                 unique = value;
-                OnPropertyChanged(nameof(Unique), DDLType.Alter);
+                OnPropertyChanged(DDLType.Alter);
             }
         }
 

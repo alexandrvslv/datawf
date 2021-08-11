@@ -361,7 +361,7 @@ namespace DataWF.Data.Gui
             procedure.Save();
             if (procedure.ProcedureType == ProcedureTypes.Source || procedure.ProcedureType == ProcedureTypes.Assembly)
             {
-                var args = new ExecuteArgs();
+                var args = new ExecuteArgs(procedure.Schema);
                 var obj = procedure.CreateObject(args);
 
                 if (obj is Window)
@@ -400,7 +400,7 @@ namespace DataWF.Data.Gui
             }
             else
             {
-                var args = new ExecuteArgs { Parameters = ProcedureProgress.CreateParam(procedure) };
+                var args = new ExecuteArgs(procedure.Schema) { Parameters = ProcedureProgress.CreateParam(procedure) };
                 var obj = procedure.CreateObject(args);
                 object result = procedure.ExecuteObject(obj, args);
                 MessageDialog.ShowMessage(ParentWindow, result == null ? "Succesfull!" : result.ToString(), "Execute complete!");

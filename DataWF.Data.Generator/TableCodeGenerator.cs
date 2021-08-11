@@ -8,19 +8,28 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace DataWF.Data.Generator
 {
+    internal enum TableCodeGeneratorMode
+    {
+        Default,
+        Virtual,
+        Abstract,
+        Log,
+        VirtualLog,
+    }
     internal class TableCodeGenerator : BaseTableCodeGenerator
     {
         private const string constTable = "Table";
-        private const string constDBLogItem = "DBLogItem";
+        private const string constDBLogItem = "DBItemLog";
         private const string constDBTable = "DBTable";
         private const string constCodeKey = "CodeKey";
         private const string constFileNameKey = "FileNameKey";
         private const string constFileLastWriteKey = "FileLastWriteKey";
 
-        protected static string GetTableClassName(INamedTypeSymbol classSymbol, AttributesCache attributes)
+        protected static string GetTableClassName(INamedTypeSymbol classSymbol, AttributesCache attributes, out TableCodeGeneratorMode mode)
         {
+            mode = TableCodeGeneratorMode.Default;
             string className = null;
-            var tableAttribyte = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.Table, SymbolEqualityComparer.Default));
+            var tableAttribyte = GetDefaultTableAttribute(classSymbol, attributes);
             if (tableAttribyte != null)
             {
                 var typeName = tableAttribyte.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, "Type", StringComparison.Ordinal)).Value;
@@ -34,31 +43,45 @@ namespace DataWF.Data.Generator
                 }
             }
 
-            var itemTypeAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.VirtualTable, SymbolEqualityComparer.Default));
+            var itemTypeAttribute = GetVirtualTableAttribute(classSymbol, attributes);
             if (itemTypeAttribute != null)
             {
+                mode = TableCodeGeneratorMode.Virtual;
                 className = classSymbol.Name + constTable;
             }
 
             var logTableAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.LogTable, SymbolEqualityComparer.Default));
             if (logTableAttribute != null)
             {
+                mode = TableCodeGeneratorMode.Log;
                 className = classSymbol.Name + constTable;
             }
 
             var logItemTypeAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.LogItemType, SymbolEqualityComparer.Default));
             if (logItemTypeAttribute != null)
             {
+                mode = TableCodeGeneratorMode.VirtualLog;
                 className = classSymbol.Name + constTable;
             }
 
             var abstractAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.AbstractTable, SymbolEqualityComparer.Default));
             if (abstractAttribute != null)
             {
+                mode = TableCodeGeneratorMode.Abstract;
                 className = classSymbol.Name + constTable;
             }
 
             return className;
+        }
+
+        private static AttributeData GetDefaultTableAttribute(INamedTypeSymbol classSymbol, AttributesCache attributes)
+        {
+            return classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.Table, SymbolEqualityComparer.Default));
+        }
+
+        private static AttributeData GetVirtualTableAttribute(INamedTypeSymbol classSymbol, AttributesCache attributes)
+        {
+            return classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.VirtualTable, SymbolEqualityComparer.Default));
         }
 
         protected static bool IsNewProperty(string keyPropertyName)
@@ -71,6 +94,7 @@ namespace DataWF.Data.Generator
         private string baseClassName;
         private string baseInterfaceName;
         private string className;
+        private TableCodeGeneratorMode mode;
         private string interfaceName;
         private string containerSchema;
         private string namespaceName;
@@ -124,11 +148,12 @@ namespace DataWF.Data.Generator
 
         private bool GenerateNames()
         {
-            className = GetTableClassName(classSymbol, attributes);
+            className = GetTableClassName(classSymbol, attributes, out var mode);
             if (className == null)
             {
                 return false;
             }
+            this.mode = mode;
             interfaceName = "I" + className;
 
             baseClassName = constDBTable;
@@ -137,7 +162,7 @@ namespace DataWF.Data.Generator
             namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
 
             containerSchema = null;
-            if (!classSymbol.IsAbstract)
+            //if (!classSymbol.IsAbstract)
             {
                 containerSchema = Receiver?.SchemaCandidates?
                     .FirstOrDefault(p => string.Equals(p.GetNamespace()?.Name.ToString(), namespaceName, StringComparison.Ordinal))
@@ -156,8 +181,8 @@ namespace DataWF.Data.Generator
 
             if (classSymbol.BaseType.Name == constDBLogItem)
             {
-                baseClassName = "DBLogTable";
-                baseInterfaceName = "IDBLogTable";
+                baseClassName = "DBTableLog";
+                baseInterfaceName = "IDBTableLog";
             }
             else //&& classSymbol.BaseType.Name != "DBGroupItem"
             if (classSymbol.BaseType.Name != "DBItem")
@@ -175,6 +200,7 @@ namespace DataWF.Data.Generator
                     baseInterfaceName = $"{baseNamespace}.I{classSymbol.BaseType.Name}Table";
                 }
             }
+
             return true;
         }
 
@@ -209,13 +235,14 @@ namespace {namespaceName}
             {
                 ProcessColumnProperty(propertySymbol);
             }
-
+            interfaceSource.Append(@"
+    }");
             ProcessTableContainerSchema();
+            ProcessParentTable();
+            ProcessTargetTable();
             source.Append(@"
     }");
-            interfaceSource.Append(@"
-    }
-");
+
             source.Append(interfaceSource);
 
             ProcessClassPartial();
@@ -223,6 +250,36 @@ namespace {namespaceName}
             source.Append(@"
 }");
             return source.ToString();
+        }
+
+        private void ProcessParentTable()
+        {
+            if (mode == TableCodeGeneratorMode.Virtual
+                || mode == TableCodeGeneratorMode.VirtualLog)
+            {
+                source.Append($@"
+        public new {baseInterfaceName} ParentTable
+        {{
+            get => ({baseInterfaceName})base.ParentTable;
+            set => base.ParentTable = value;
+        }}");
+            }
+        }
+
+        private void ProcessTargetTable()
+        {
+            if (interfaceName != null
+                && (mode == TableCodeGeneratorMode.Log
+                || mode == TableCodeGeneratorMode.VirtualLog))
+            {
+                var targetClass = interfaceName.Replace("Log", "");
+                source.Append($@"
+        public new {targetClass} TargetTable
+        {{
+            get => ({targetClass})base.TargetTable;
+            set => base.ParentTable = value;
+        }}");
+            }
         }
 
         private void ProcessClassPartial()
@@ -351,7 +408,7 @@ namespace {namespaceName}
             {
                 if (propertyType is INamedTypeSymbol refItemType)
                 {
-                    var refTableName = GetTableClassName(refItemType, attributes);
+                    var refTableName = GetTableClassName(refItemType, attributes, out var refMode);
                     if (refTableName != null && interfaceSource.ToString().IndexOf(refTableName, StringComparison.Ordinal) < 0)
                     {
                         var refTableClassName = refTableName;
@@ -391,7 +448,7 @@ namespace {namespaceName}
                     && named.TypeArguments.Length > 0
                     && named.TypeArguments.First() is INamedTypeSymbol refItemType)
                 {
-                    var refTableName = GetTableClassName(refItemType, attributes);
+                    var refTableName = GetTableClassName(refItemType, attributes, out var refModel);
                     if (refTableName != null && interfaceSource.ToString().IndexOf(refTableName, StringComparison.Ordinal) < 0)
                     {
                         var refTableClassName = refTableName;

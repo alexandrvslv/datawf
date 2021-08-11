@@ -22,7 +22,7 @@ namespace DataWF.Data.Gui
             get { return DropDown?.Target as DataTree; }
         }
 
-        public DBSchemaItem DataFilter { get; set; }
+        public IDBSchemaItem DataFilter { get; set; }
 
         public DataTreeKeys DataKeys
         {

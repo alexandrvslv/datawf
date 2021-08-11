@@ -24,10 +24,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\DataWF.WebService.Generator\AssemblyResolver.cs" Link="AssemblyResolver.cs" />
-    <Compile Include="..\DataWF.WebService.Generator\CodeGeneratorMode.cs" Link="CodeGeneratorMode.cs" />
     <Compile Include="..\DataWF.WebService.Generator\ServiceGenerator.cs" Link="ServiceGenerator.cs" />
-    <Compile Include="..\DataWF.WebService.Generator\SyntaxHelper.cs" Link="SyntaxHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />

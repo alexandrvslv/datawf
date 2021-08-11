@@ -39,7 +39,7 @@ namespace DataWF.Module.CommonGui
         private TextEntry filterEntry;
 
         private CellStyle userStyle;
-
+        private ICommonSchema schema;
 
         public UserTree()
         {
@@ -77,7 +77,7 @@ namespace DataWF.Module.CommonGui
                 if (userKeys != value)
                 {
                     userKeys = value;
-                    RefreshData();
+                    RefreshData(null);
                 }
             }
         }
@@ -144,14 +144,15 @@ namespace DataWF.Module.CommonGui
         public bool ShowListNode { get; set; } = true;
 
 
-        private void RefreshData()
+        private void RefreshData(ICommonSchema schema)
         {
-            InitItem(Department.DBTable?.DefaultView, ShowDepartment, GlyphType.Home, Colors.SandyBrown);
+            this.schema = schema;
+            InitItem(schema.Department.DefaultView, ShowDepartment, GlyphType.Home, Colors.SandyBrown);
             //InitItem(Position.DBTable?.DefaultView, ShowPosition);
             //InitItem(User.DBTable?.DefaultView, ShowUser);
-            InitItem(UserGroup.DBTable?.DefaultView, ShowGroup, GlyphType.Users, Colors.LightSeaGreen);
-            InitItem(Scheduler.DBTable?.DefaultView, ShowScheduler, GlyphType.TimesCircle, Colors.LightPink);
-            InitItem(GroupPermission.DBTable?.DefaultView, ShowPermission, GlyphType.Database, Colors.LightSteelBlue);
+            InitItem(schema.UserGroup.DefaultView, ShowGroup, GlyphType.Users, Colors.LightSeaGreen);
+            InitItem(schema.Scheduler.DefaultView, ShowScheduler, GlyphType.TimesCircle, Colors.LightPink);
+            InitItem(schema.GroupPermission.DefaultView, ShowPermission, GlyphType.Database, Colors.LightSteelBlue);
         }
 
         private void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)

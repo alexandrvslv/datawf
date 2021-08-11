@@ -77,14 +77,14 @@ namespace DataWF.Data
             }
         }
 
-        public DBTable BaseTable
+        public IDBTable BaseTable
         {
-            get => Table.IsVirtual ? Table.BaseTable : Table;
+            get => Table.IsVirtual ? Table.ParentTable : Table;
         }
 
         public override DBTable Table
         {
-            get => Column?.Table ?? base.Table;
+            get => (DBTable)(Column?.Table ?? base.Table);
             set { }
         }
 

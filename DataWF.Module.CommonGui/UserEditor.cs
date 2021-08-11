@@ -10,6 +10,7 @@ namespace DataWF.Module.CommonGui
 {
     public class UserEditor : VPanel, IDockContent
     {
+        public static ICommonSchema Schema;
         private User user;
         private GroupBoxItem groupAttributes;
         private GroupBoxItem groupGroups;
@@ -73,7 +74,7 @@ namespace DataWF.Module.CommonGui
             PackStart(groupMap, true, true);
 
             Localize();
-            User.DBTable.RowUpdated += OnRowUpdated;
+            Schema.User.RowUpdated += OnRowUpdated;
         }
 
         private void OnFieldsSaving(object sender, EventArgs e)
@@ -86,9 +87,9 @@ namespace DataWF.Module.CommonGui
         {
             if (User != null && arg.Item.PrimaryId.Equals(User.Id))
             {
-                if (arg.Columns != null && arg.Columns.Contains(User.DBTable.ParseProperty(nameof(User.Password))))
+                if (arg.Columns != null && arg.Columns.Contains(Schema.User.ParseProperty(nameof(User.Password))))
                 {
-                    await UserReg.LogUser(User, UserRegType.Password, "Temporary Password");
+                    await Schema.UserReg.LogUser(User, UserRegType.Password, "Temporary Password");
                 }
             }
         }
@@ -146,7 +147,7 @@ namespace DataWF.Module.CommonGui
                 user.PropertyChanged -= UserPropertyChanged;
             }
 
-            User.DBTable.RowUpdated -= OnRowUpdated;
+            Schema.User.RowUpdated -= OnRowUpdated;
             base.Dispose(disposing);
         }
 
@@ -155,9 +156,9 @@ namespace DataWF.Module.CommonGui
             string userLogin = user.Login;
             string userPassword = user.Password;
 
-            var list = User.DBTable.Select("where " +
-                                                 User.DBTable.CodeKey.SqlName + " = '" + userLogin + "' and " +
-                                                 User.DBTable.ParseProperty(nameof(User.Password)).SqlName + " = '" + userPassword + "'").ToList();
+            var list = Schema.User.Select("where " +
+                                                 Schema.User.CodeKey.SqlName + " = '" + userLogin + "' and " +
+                                                 Schema.User.ParseProperty(nameof(User.Password)).SqlName + " = '" + userPassword + "'").ToList();
 
             if (list.Count != 0)
             {
@@ -168,12 +169,12 @@ namespace DataWF.Module.CommonGui
                 }
                 else
                 {
-                    await User.RegisterSession(row);
+                    await Schema.User.RegisterSession(row);
                     GuiEnvironment.User = row;
                     //row ["session_start"] = DateTime.Now;
                     if (!row.Super.GetValueOrDefault())
                     {
-                        await GroupPermission.CachePermission();
+                        await Schema.GroupPermission.CachePermission();
                     }
                     MessageDialog.ShowMessage(ParentWindow, string.Format(Locale.Get("Login", "Welcome {0}"), row.Name), "Login");
                 }

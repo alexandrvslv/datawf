@@ -139,7 +139,7 @@ namespace DataWF.Data
                 {
                     litem.Name = Name;
                 }
-                OnPropertyChanged(nameof(Name), DDLType.Alter);
+                OnPropertyChanged(DDLType.Alter);
             }
         }
 
@@ -169,7 +169,7 @@ namespace DataWF.Data
 
         public abstract string FormatSql(DDLType ddlType, bool dependency = false);
 
-        public void OnPropertyChanged([CallerMemberName] string propertyName = "", DDLType type = DDLType.None)
+        public void OnPropertyChanged(DDLType type = DDLType.None, [CallerMemberName] string propertyName = "")
         {
             base.OnPropertyChanged(propertyName);
             if (type != DDLType.None)

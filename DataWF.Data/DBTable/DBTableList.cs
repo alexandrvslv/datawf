@@ -53,7 +53,7 @@ namespace DataWF.Data
             var index = base.AddInternal(item);
             if (item.IsVirtual)
             {
-                item.BaseTable.AddVirtual(item);
+                item.ParentTable.AddVirtual(item);
             }
             return index;
         }

@@ -12,7 +12,7 @@ namespace DataWF.Data.Gui
 {
     public class QueryResultView : VPanel, ISync, IReadOnly
     {
-        protected DBSchema schema;
+        protected IDBSchema schema;
         protected IDbCommand command;
 
         private QueryResultList list = new QueryResultList();
@@ -72,7 +72,7 @@ namespace DataWF.Data.Gui
             get { return command; }
         }
 
-        public void SetCommand(IDbCommand command, DBSchema schema, string name)
+        public void SetCommand(IDbCommand command, IDBSchema schema, string name)
         {
             if (Query == null)
                 Query = new QResult() { Name = name };

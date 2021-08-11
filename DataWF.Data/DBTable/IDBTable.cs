@@ -20,6 +20,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Data;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -46,6 +47,7 @@ namespace DataWF.Data
         DBColumn<DateTime?> ReplicateStampKey { get; }
         DBColumn<DBStatus> StatusKey { get; }
         DBSystem System { get; }
+        IComparer DefaultComparer { get; set; }
         int BlockSize { get; set; }
         List<DBForeignKey> ChildRelations { get; }
         DBColumnGroupList ColumnGroups { get; set; }
@@ -67,10 +69,9 @@ namespace DataWF.Data
         DBItemType ItemType { get; }
         int ItemTypeIndex { get; set; }
         Dictionary<int, DBItemType> ItemTypes { get; set; }
-        IDBLogTable LogTable { get; set; }
-
+        IDBTableLog LogTable { get; set; }
+        IDBTable ParentTable { get; }
         IEnumerable<DBReferencing> GetReferencing(Type valueType);
-
         string LogTableName { get; set; }
         string Query { get; set; }
         DBSequence Sequence { get; set; }
@@ -88,7 +89,7 @@ namespace DataWF.Data
         void Accept(DBItem item);
         void AcceptChanges(IUserIdentity user);
         void AddView(IDBTableView view);
-        void AddVirtual(DBTable view);
+        void AddVirtual(IDBTable view);
         string BuildQuery(string whereFilter, string alias, IEnumerable<DBColumn> cols, string function = null);
         DBColumn CheckColumn(string name, Type type, ref bool newCol);
         void CheckColumns(DBTransaction transaction);
@@ -105,20 +106,20 @@ namespace DataWF.Data
         string FormatQTable(string alias);
         void Generate(DBTableInfo tableInfo);
         void GenerateDefaultColumns();
-        IDBLogTable GenerateLogTable();
+        IDBTableLog GenerateLogTable();
         DBSequence GenerateSequence(string sequenceName = null);
         long GenerateId(DBTransaction transaction);
-        DBTable GetVirtualTable(Type type);
-        void GetAllChildTables(List<DBTable> parents);
-        void GetAllParentTables(List<DBTable> parents);
+        IDBTable GetVirtualTable(Type type);
+        void GetAllChildTables(List<IDBTable> parents);
+        void GetAllParentTables(List<IDBTable> parents);
         IEnumerable<DBItem> GetChangedItems();
         IEnumerable<DBForeignKey> GetChildRelations();
-        IEnumerable<DBTable> GetVirtualTables();
-        IEnumerable<DBTable> GetChildTables();
+        IEnumerable<IDBTable> GetVirtualTables();
+        IEnumerable<IDBTable> GetChildTables();
         DBColumn<string> GetCultureColumn(string group, CultureInfo culture);
         DBItemType GetItemType(int typeIndex);
         DBColumn<string> GetNameKey(string group);
-        IEnumerable<DBTable> GetParentTables();
+        IEnumerable<IDBTable> GetParentTables();
         int GetRowCount(DBTransaction transaction, string where);
         string GetRowText(object id);
         string GetRowText(object id, bool allColumns, bool showColumn, string separator);
@@ -151,6 +152,7 @@ namespace DataWF.Data
         int NextHash();
         void OnItemChanged<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
         void OnItemChanging<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
+        void OnBaseTableChanged(DBItem item, NotifyCollectionChangedAction type);
         void OnUpdated(DBItemEventArgs e);
         bool OnUpdating(DBItemEventArgs e);
         bool IsSerializeableColumn(DBColumn column, Type type);
@@ -164,7 +166,7 @@ namespace DataWF.Data
         void RejectChanges(IUserIdentity user);
         void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
         void RemoveView(IDBTableView view);
-        void RemoveVirtual(DBTable view);
+        void RemoveVirtual(IDBTable view);
         Task Save(IEnumerable<DBItem> rows = null);
         Task Save(DBTransaction transaction, IEnumerable<DBItem> rows = null);
         void SaveFile();

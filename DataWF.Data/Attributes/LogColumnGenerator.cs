@@ -44,12 +44,12 @@ namespace DataWF.Data
 
         public override DBColumn GenerateColumn(DBTable table)
         {
-            if (!(table is IDBLogTable logTable))
+            if (!(table is IDBTableLog logTable))
                 throw new Exception("Log Column Expect Log Table");
             if (BaseColumn == null)
                 throw new Exception("Base Column Not found");
 
-            var baseColumn = logTable.BaseTable.Columns[BaseColumn.ColumnName];
+            var baseColumn = logTable.TargetTable.Columns[BaseColumn.ColumnName];
 
             if (baseColumn == null)
                 throw new Exception("Base Column Not found");

@@ -58,7 +58,7 @@ namespace DataWF.Data
     public class LogMap
     {
         private DBItem row;
-        private List<DBLogItem> logs = new List<DBLogItem>();
+        private List<DBItemLog> logs = new List<DBItemLog>();
         private readonly SelectableList<LogEntry> changes = new SelectableList<LogEntry>();
         private string user;
         private DBTable table;
@@ -98,12 +98,12 @@ namespace DataWF.Data
             QQuery query = new QQuery(string.Empty, (DBTable)Row.Table.LogTable);
             query.BuildParam(Row.Table.LogTable.BaseKey, CompareType.Equal, row.PrimaryId);
             query.BuildParam(Row.Table.LogTable.StatusKey, CompareType.Equal, (int)DBStatus.New);
-            Logs.AddRange(Row.Table.LogTable.LoadItems(query, DBLoadParam.Load | DBLoadParam.Synchronize).Cast<DBLogItem>());
+            Logs.AddRange(Row.Table.LogTable.LoadItems(query, DBLoadParam.Load | DBLoadParam.Synchronize).Cast<DBItemLog>());
 
             RefreshChanges();
         }
 
-        public List<DBLogItem> Logs
+        public List<DBItemLog> Logs
         {
             get { return logs; }
             set
@@ -120,11 +120,11 @@ namespace DataWF.Data
 
         public void RefreshChanges()
         {
-            logs.Sort(new DBComparer<DBLogItem, int?>(Row.Table.LogTable.PrimaryKey));
+            logs.Sort(new DBComparer<DBItemLog, int?>(Row.Table.LogTable.PrimaryKey));
 
             changes.Clear();
             user = string.Empty;
-            DBLogItem prev = null;
+            DBItemLog prev = null;
             foreach (var log in Logs)
             {
                 if (log.Status == DBStatus.New)
@@ -177,13 +177,13 @@ namespace DataWF.Data
 
         public async Task Accept(IUserIdentity user)
         {
-            await DBLogItem.Accept(row, logs, user);
+            await DBTableLog<DBItemLog>.Accept(row, logs, user);
             RefreshLogs();
         }
 
         public async Task Reject(IUserIdentity user)
         {
-            await DBLogItem.Reject(logs, user);
+            await DBTableLog<DBItemLog>.Reject(logs, user);
             RefreshLogs();
         }
     }

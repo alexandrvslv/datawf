@@ -33,7 +33,7 @@ namespace DataWF.Module.Common
             var userRegs = (UserRegTable)schema.GetTable<UserReg>();
             userRegs.DefaultComparer = new DBComparer<UserReg, long?>(userRegs.IdKey) { Hash = true };
 
-            DBLogItem.UserRegTable = userRegs;
+            DBItemLog.UserRegTable = userRegs;
             DBService.AddItemLoging(userRegs.OnDBItemLoging);
 
             var perissions = (GroupPermissionTable)schema.GetTable<GroupPermission>();

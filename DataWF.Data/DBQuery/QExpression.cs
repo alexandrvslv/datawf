@@ -97,7 +97,7 @@ namespace DataWF.Data
             return obj is decimal ? (decimal)obj : obj == null || obj == DBNull.Value ? 0M : decimal.Parse(obj.ToString());
         }
 
-        public void Parse(string query, DBTable table)
+        public void Parse(string query, IDBTable table)
         {
             QQuery q = new QQuery("", table);
             q.ParseExpression(this, query);

@@ -30214,7 +30214,7 @@
           "Reject"
         ]
       },
-      "DBLogItem": {
+      "DBItemLog": {
         "required": [
           "LogId"
         ],
@@ -30355,7 +30355,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DBLogItem"
+            "$ref": "#/components/schemas/DBItemLog"
           }
         ],
         "properties": {

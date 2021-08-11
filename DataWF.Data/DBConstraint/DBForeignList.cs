@@ -79,7 +79,7 @@ namespace DataWF.Data
                 }
                 if (table.IsVirtual)
                 {
-                    table.BaseTable.ChildRelations.Add(item);
+                    table.ParentTable.ChildRelations.Add(item);
                 }
             }
         }

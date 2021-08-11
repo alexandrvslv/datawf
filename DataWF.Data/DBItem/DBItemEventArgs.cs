@@ -64,7 +64,7 @@ namespace DataWF.Data
 
         public DBItem Item { get; }
 
-        public DBLogItem LogItem { get; set; }
+        public DBItemLog LogItem { get; set; }
 
         public List<DBColumn> Columns { get; set; }
 

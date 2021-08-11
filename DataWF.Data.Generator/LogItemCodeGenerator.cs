@@ -28,7 +28,7 @@ namespace DataWF.Data.Generator
             if (logClassSource != null)
             {
                 var logItemSource = SourceText.From(logClassSource, Encoding.UTF8);
-                Context.AddSource($"{classSymbol.Name}LogGen.cs", logItemSource);
+                Context.AddSource($"{classSymbol.ContainingNamespace.ToDisplayString()}.Log.{classSymbol.Name}Gen.cs", logItemSource);
 
                 var logItemSyntax = CSharpSyntaxTree.ParseText(logItemSource, (CSharpParseOptions)Options);
 
@@ -49,7 +49,7 @@ namespace DataWF.Data.Generator
 
         public override string Generate()
         {
-            string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
+            string namespaceName = $"{classSymbol.ContainingNamespace.ToDisplayString()}.Log";
             string className = null;
             string tableSqlName = null;
             var tableAttribute = classSymbol.GetAttribute(attributes.Table);
@@ -76,8 +76,8 @@ namespace DataWF.Data.Generator
             if (abstractTableAttribute != null)
             {
                 className = classSymbol.Name + "Log";
-                if (string.Equals(classSymbol.Name, "DBLogItem", StringComparison.Ordinal)
-                    || string.Equals(classSymbol.BaseType?.Name, "DBLogItem", StringComparison.Ordinal))
+                if (string.Equals(classSymbol.Name, "DBItemLog", StringComparison.Ordinal)
+                    || string.Equals(classSymbol.BaseType?.Name, "DBItemLog", StringComparison.Ordinal))
                 {
                     return null;
                 }
@@ -93,12 +93,12 @@ namespace DataWF.Data.Generator
             {
                 var tableName = "Table";// $"{className}Table";
                 var tableTypeName = $"I{className}Table";
-                string baseClassName = "DBLogItem";
+                string baseClassName = "DBItemLog";
 
                 if (classSymbol.BaseType.Name != "DBItem"
                     && classSymbol.BaseType.Name != "DBGroupItem")
                 {
-                    var baseNamespace = classSymbol.BaseType.ContainingNamespace.ToDisplayString();
+                    var baseNamespace = $"{classSymbol.BaseType.ContainingNamespace.ToDisplayString()}.Log";
                     baseClassName = classSymbol.BaseType.Name + "Log";
 
                     if (baseNamespace != namespaceName)
@@ -137,7 +137,10 @@ namespace {namespaceName}
     public {(classSymbol.IsSealed ? "sealed " : string.Empty)} {(classSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className} : {baseClassName}
     {{");
                 source.Append($@"
-        public {className}(DBTable table):base(table)
+        public {className}({tableTypeName} table): base(table)
+        {{ }}
+        
+        public {className}({classSymbol.Name} item): base(item)
         {{ }}
 ");
                 //{(itemTypeAttribute != null ? "Typed" : string.Empty)}

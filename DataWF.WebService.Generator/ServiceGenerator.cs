@@ -103,7 +103,7 @@ namespace DataWF.WebService.Generator
 
             var controllerClassName = $"{type.Name}Controller";
 
-            if (type.BaseType.Name == "DBLogItem"
+            if (type.BaseType.Name == "DBItemLog"
                 || type.Name == "DBItem"
                 || type.Name == "DBGroupItem")
             {
@@ -124,7 +124,7 @@ namespace DataWF.WebService.Generator
 
             var logType = context.Compilation.GetTypeByMetadataName($"{typeNamespace}.{type.Name}Log")
                 ?? context.Compilation.GetTypeByMetadataName($"{type.BaseType.ContainingNamespace}.{type.BaseType.Name}Log")
-                ?? context.Compilation.GetTypeByMetadataName("DataWF.Data.DBLogItem");
+                ?? context.Compilation.GetTypeByMetadataName("DataWF.Data.DBItemLog");
             var logTypeName = logType.Name;
 
             var tableTypeName = $"{type.Name}Table";

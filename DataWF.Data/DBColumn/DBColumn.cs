@@ -46,7 +46,7 @@ namespace DataWF.Data
 
         #region Variable
         private QExpression expression;
-        protected DBTable cacheReferenceTable;
+        protected IDBTable cacheReferenceTable;
         CultureInfo cacheCulture;
         DBColumnGroup cacheGroup;
         protected DBColumnKeys keys = DBColumnKeys.None;
@@ -96,7 +96,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn BaseColumn
         {
-            get { return baseColumn == DBColumn.EmptyKey ? (baseColumn = Table.BaseTable?.Columns[BaseName]) : baseColumn; }
+            get { return baseColumn == DBColumn.EmptyKey ? (baseColumn = Table.ParentTable?.Columns[BaseName]) : baseColumn; }
             set
             {
                 baseColumn = value;
@@ -291,7 +291,7 @@ namespace DataWF.Data
                     keys = value;
                     var isNotnull2 = (keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
 
-                    OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.None);
+                    OnPropertyChanged(isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.None);
                 }
                 CheckPullIndex();
             }
@@ -325,7 +325,7 @@ namespace DataWF.Data
         public string ReferenceTableName => Table?.Foreigns.GetByColumn(this)?.FirstOrDefault()?.ReferenceTableName;
 
         [XmlIgnore, JsonIgnore, Category("Database")]
-        public DBTable ReferenceTable
+        public IDBTable ReferenceTable
         {
             get
             {
@@ -398,7 +398,7 @@ namespace DataWF.Data
                     }
                 }
                 CheckPull();
-                OnPropertyChanged(nameof(DBDataType), DDLType.Alter);
+                OnPropertyChanged(DDLType.Alter);
             }
         }
 
@@ -496,7 +496,7 @@ namespace DataWF.Data
                 if (cdefault == value)
                     return;
                 cdefault = value;
-                OnPropertyChanged(nameof(DefaultValue), DDLType.None);
+                OnPropertyChanged(DDLType.None);
             }
         }
 
@@ -509,7 +509,7 @@ namespace DataWF.Data
                 if (ctype == value)
                     return;
                 ctype = value;
-                OnPropertyChanged(nameof(ColumnType), value == DBColumnTypes.Default ? DDLType.Create : DDLType.None);
+                OnPropertyChanged(value == DBColumnTypes.Default ? DDLType.Create : DDLType.None);
             }
         }
 
@@ -522,7 +522,7 @@ namespace DataWF.Data
                 if (query == value)
                     return;
                 query = value;
-                OnPropertyChanged(nameof(Query), DDLType.Alter);
+                OnPropertyChanged(DDLType.Alter);
             }
         }
 
@@ -549,7 +549,7 @@ namespace DataWF.Data
                         else
                             DBDataType = DBDataType.ByteArray;
                     }
-                    OnPropertyChanged(nameof(Size), DDLType.Alter);
+                    OnPropertyChanged(DDLType.Alter);
                 }
             }
         }
@@ -563,7 +563,7 @@ namespace DataWF.Data
                 if (scale != value)
                 {
                     scale = value;
-                    OnPropertyChanged(nameof(Scale), DDLType.Alter);
+                    OnPropertyChanged(DDLType.Alter);
                 }
             }
         }

@@ -8,7 +8,7 @@ namespace DataWF.Module.Common
 {
     public class UserRegItem
     {
-        private DBLogItem cacheLogItem;
+        private DBItemLog cacheLogItem;
         private IDBTable cacheTargetTable;
         private DBItem cacheTarget;
 
@@ -41,7 +41,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        public IDBLogTable LogTable
+        public IDBTableLog LogTable
         {
             get { return Table?.LogTable; }
         }
@@ -50,9 +50,9 @@ namespace DataWF.Module.Common
         public long? LogId { get; set; }
 
         [XmlIgnore]
-        public DBLogItem LogItem
+        public DBItemLog LogItem
         {
-            get => cacheLogItem ?? (cacheLogItem = (DBLogItem)LogTable?.LoadItemById(LogId));
+            get => cacheLogItem ?? (cacheLogItem = (DBItemLog)LogTable?.LoadItemById(LogId));
             set
             {
                 cacheLogItem = value;

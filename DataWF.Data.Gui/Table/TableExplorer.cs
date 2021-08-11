@@ -9,7 +9,7 @@ namespace DataWF.Data.Gui
 {
     public class TableExplorer : ListExplorer
     {
-        private DBTable table;
+        private IDBTable table;
 
         public TableExplorer() : base(new TableEditor())
         {
@@ -43,7 +43,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public DBTable Table
+        public IDBTable Table
         {
             get { return table; }
             set
@@ -59,7 +59,7 @@ namespace DataWF.Data.Gui
             Initialize(row.Table, row, null, openmode, readOnly);
         }
 
-        public void Initialize(DBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
+        public void Initialize(IDBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
         {
             if (this.table == null)
             {
@@ -84,7 +84,7 @@ namespace DataWF.Data.Gui
             Current = node;
         }
 
-        public TableExplorerNode InitToolTable(DBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
+        public TableExplorerNode InitToolTable(IDBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
         {
             TableExplorerNode node = Find(table, ownColumn, row);
             if (node == null)
@@ -106,7 +106,7 @@ namespace DataWF.Data.Gui
             return node;
         }
 
-        public TableExplorerNode Find(DBTable table, DBColumn column, DBItem row)
+        public TableExplorerNode Find(IDBTable table, DBColumn column, DBItem row)
         {
             if (table == null)
                 return null;
@@ -147,7 +147,7 @@ namespace DataWF.Data.Gui
             node.Check = true;
         }
 
-        public TableExplorerNode SelectRow(TableExplorerNode owner, DBTable table, DBItem row, DBColumn column, bool readOnly)
+        public TableExplorerNode SelectRow(TableExplorerNode owner, IDBTable table, DBItem row, DBColumn column, bool readOnly)
         {
             var node = InitToolTable(table, row, column, TableEditorMode.Item, readOnly);
             if (node.ToolParent == null)

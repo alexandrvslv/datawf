@@ -28,7 +28,7 @@ namespace DataWF.Data
     [InvokerGenerator(Instance = true)]
     public abstract partial class DBTableItem : DBSchemaItem, IDBTableContent
     {
-        private DBTable table;
+        private IDBTable table;
 
         protected DBTableItem()
         { }
@@ -37,7 +37,7 @@ namespace DataWF.Data
         { }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBTable Table
+        public IDBTable Table
         {
             get { return table; }
             set

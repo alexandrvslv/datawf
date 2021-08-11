@@ -61,7 +61,7 @@ namespace DataWF.Data
             Table = table;
         }
 
-        public QQuery(string query, DBTable table = null, IEnumerable cols = null, QQuery bquery = null)
+        public QQuery(string query, IDBTable table = null, IEnumerable cols = null, QQuery bquery = null)
             : this()
         {
             baseQuery = bquery;
@@ -70,7 +70,7 @@ namespace DataWF.Data
                 order = bquery.order + 1;
             }
 
-            Table = table;
+            Table = (DBTable)table;
             Parse(query);
             if (cols != null)
             {
@@ -589,7 +589,7 @@ namespace DataWF.Data
                                                                         column = new QColumn(dbColumn);
                                                                         parameter.SetValue(column);
                                                                         parameter.Comparer = CompareType.In;
-                                                                        pTable = dbColumn.ReferenceTable;
+                                                                        pTable = (DBTable)dbColumn.ReferenceTable;
                                                                         pQuery = new QQuery("", pTable, new[] { pTable.PrimaryKey }, pQuery);
                                                                         parameter.SetValue(pQuery);
                                                                         parameter = pQuery.Add();
@@ -1043,7 +1043,7 @@ namespace DataWF.Data
                         {
                             param = CreateParam(LogicType.Undefined, dbColumn, CompareType.In, null);
                             q.Parameters.Add(param);
-                            table = dbColumn.ReferenceTable;
+                            table = (DBTable)dbColumn.ReferenceTable;
                             q = new QQuery("", table);
                             param.RightItem = q;
                             q.Columns.Add(new QColumn(dbColumn.ReferenceTable.PrimaryKey.Name));
