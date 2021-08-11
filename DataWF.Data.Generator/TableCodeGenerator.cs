@@ -60,7 +60,7 @@ namespace DataWF.Data.Generator
 
             return className;
         }
-        
+
         protected static bool IsNewProperty(string keyPropertyName)
         {
             return string.Equals(keyPropertyName, constCodeKey, StringComparison.Ordinal)
@@ -96,7 +96,7 @@ namespace DataWF.Data.Generator
             {
                 try
                 {
-                    Context.AddSource($"{ClassSymbol.Name}TableGen.cs", SourceText.From(classSource, Encoding.UTF8));
+                    Context.AddSource($"{ClassSymbol.ContainingNamespace.ToDisplayString()}.{ClassSymbol.Name}TableGen.cs", SourceText.From(classSource, Encoding.UTF8));
 
                     var invokerAttribute = ClassSymbol.GetAttribute(InvokerCodeGenerator.AtributeType);
                     if (invokerAttribute == null)
@@ -112,10 +112,10 @@ namespace DataWF.Data.Generator
                 {
                     Console.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
 #if DEBUG
-                    if (!System.Diagnostics.Debugger.IsAttached)
-                    {
-                        System.Diagnostics.Debugger.Launch();
-                    }
+                    //if (!System.Diagnostics.Debugger.IsAttached)
+                    //{
+                    //    System.Diagnostics.Debugger.Launch();
+                    //}
 #endif
                 }
             }
@@ -144,7 +144,7 @@ namespace DataWF.Data.Generator
                     ?.Identifier.ToString();
 
             }
-            
+
             whereName = null;
             genericArg = classSymbol.Name;
             if (!classSymbol.IsSealed)
@@ -153,7 +153,7 @@ namespace DataWF.Data.Generator
                 className += "<T>";
                 whereName = $"where T: {classSymbol.Name}";
             }
-            
+
             if (classSymbol.BaseType.Name == constDBLogItem)
             {
                 baseClassName = "DBLogTable";
@@ -229,7 +229,14 @@ namespace {namespaceName}
         {
             source.Append($@"
     public partial class {classSymbol.Name}
-    {{
+    {{");
+            if (!classSymbol.Constructors.Any(p => p.Parameters.Any()))
+            {
+                source.Append($@"
+        public {classSymbol.Name}(IDBTable table): base(table)
+        {{ }}");
+            }
+            source.Append($@"
         [JsonIgnore]
         public new {(classSymbol.IsSealed ? className : interfaceName)} Table
         {{

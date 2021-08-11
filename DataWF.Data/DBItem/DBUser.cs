@@ -28,9 +28,6 @@ namespace DataWF.Data
     [AbstractTable]
     public abstract partial class DBUser : DBItem, IUserIdentity
     {
-        public DBUser(DBTable table) : base(table)
-        { }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {

@@ -27,9 +27,6 @@ namespace DataWF.Data
     {
         private DBUser dbUser;
 
-        public DBUserReg(DBTable table) : base(table)
-        { }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {

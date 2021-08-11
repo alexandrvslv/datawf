@@ -37,7 +37,10 @@ namespace DataWF.Common.Generator
             {
                 Console.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
 #if DEBUG
-                //System.Diagnostics.Debugger.Launch();
+                //if (!System.Diagnostics.Debugger.IsAttached)
+                //{
+                //    System.Diagnostics.Debugger.Launch();
+                //}
 #endif
             }
         }

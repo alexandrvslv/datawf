@@ -10,9 +10,6 @@ namespace DataWF.Module.Counterpart
     {
         private Location location;
 
-        public Address(DBTable table) : base(table)
-        { }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

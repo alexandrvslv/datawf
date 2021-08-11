@@ -51,7 +51,7 @@ namespace DataWF.Common.Generator
             }
 
             var source = Generate();
-            Context.AddSource($"{classSymbol.Name}InvokersGen.cs", SourceText.From(source.ToString(), Encoding.UTF8));
+            Context.AddSource($"{classSymbol.ContainingNamespace.ToDisplayString()}.{classSymbol.Name}InvokersGen.cs", SourceText.From(source.ToString(), Encoding.UTF8));
             return true;
         }
 
