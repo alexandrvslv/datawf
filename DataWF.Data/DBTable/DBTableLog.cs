@@ -85,8 +85,8 @@ namespace DataWF.Data
         {
             get
             {
-                return targetTable ??= (Schema is DBLogSchema logSchema
-                              ? logSchema.BaseSchema.Tables[TargetTableName]
+                return targetTable ??= (Schema is DBSchemaLog logSchema
+                              ? logSchema.TargetSchema.Tables[TargetTableName]
                               : Schema?.Tables[TargetTableName]);
             }
             set

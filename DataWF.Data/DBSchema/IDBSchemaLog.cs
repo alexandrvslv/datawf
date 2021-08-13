@@ -17,32 +17,11 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using System;
-
 namespace DataWF.Data
 {
-    public class LogItemTypeGenerator : VirtualTableGenerator
+    public interface IDBSchemaLog: IDBSchema
     {
-        public LogItemTypeAttribute LogAttribute
-        {
-            get => Attribute as LogItemTypeAttribute;
-            set => Attribute = value;
-        }
-
-        public LogTableGenerator LogTableGenerator
-        {
-            get => TableGenerator as LogTableGenerator;
-            set => TableGenerator = value;
-        }
-
-        public override DBTable CreateTable(IDBSchema schema, DBTable baseTable)
-        {
-            return base.CreateTable(schema, baseTable);
-        }
-
-        public override DBTable Generate(IDBSchema schema)
-        {
-            return base.Generate(schema);
-        }
+        IDBSchema TargetSchema { get; set; }
+        string TargetSchemaName { get; set; }
     }
 }

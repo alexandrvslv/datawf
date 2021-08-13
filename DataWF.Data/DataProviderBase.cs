@@ -37,7 +37,7 @@ namespace DataWF.Data
 
         public DBSchema Schema
         {
-            get => schema ?? (schema = DBService.Schems[schemaName]);
+            get => schema ??= DBService.Schems[schemaName];
             set => DBService.Schems[schemaName] = schema = value;
         }
 
@@ -63,7 +63,10 @@ namespace DataWF.Data
             return null;
         }
 
-        public abstract void Generate();
+        public virtual void Generate()
+        {
+            Schema?.Generate(SchemaName);
+        }
 
         public virtual void Load()
         {

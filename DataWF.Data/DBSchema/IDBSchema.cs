@@ -26,7 +26,7 @@ namespace DataWF.Data
     {
         DBConnection Connection { get; set; }
         DBSystem System { get; }
-        DBLogSchema LogSchema { get; set; }
+        IDBSchemaLog LogSchema { get; set; }
         DBProcedureList Procedures { get; set; }
         DBSequenceList Sequences { get; set; }
         DBTableGroupList TableGroups { get; set; }
@@ -35,6 +35,7 @@ namespace DataWF.Data
         bool IsSynchronizing { get; }
 
         void CreateDatabase();
+        void CreateSchema();
         void DropDatabase();
 
         DBTable GetTable(Type type, bool generate = false);

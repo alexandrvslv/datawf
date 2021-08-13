@@ -28,32 +28,47 @@ namespace DataWF.Data.Generator
             {
 
                 var cultures = new List<string>(new[] { "RU", "EN" });//TODO Pass as argument in destination project
-                tableCodeGenerator = new TableCodeGenerator(ref context, context.Compilation)
+                var compilation = context.Compilation;
+
+                tableCodeGenerator = new TableCodeGenerator(ref context, compilation)
                 {
-                    Receiver = receiver,
                     Cultures = cultures,
-                    LogItemCodeGenerator = new LogItemCodeGenerator(ref context, context.Compilation)
+                    TableLogCodeGenerator = new TableLogCodeGenerator(ref context, compilation)
                     {
                         Cultures = cultures
                     }
                 };
 
-
                 foreach (ClassDeclarationSyntax classSyntax in receiver.TableCandidates)
                 {
                     if (context.CancellationToken.IsCancellationRequested)
                         return;
-                    tableCodeGenerator.Process(classSyntax);
+                    if (tableCodeGenerator.Process(classSyntax))
+                    {
+                        compilation = tableCodeGenerator.Compilation;
+                    }
                 }
 
-                schemaCodeGenerator = new SchemaCodeGenerator(ref context, context.Compilation);
+                schemaCodeGenerator = new SchemaCodeGenerator(ref context, compilation)
+                {
+                    Cultures = cultures,
+                    SchemaLogCodeGenerator = new SchemaLogCodeGenerator(ref context, compilation)
+                    {
+                        Cultures = cultures
+                    }
+                };
 
                 foreach (ClassDeclarationSyntax classSyntax in receiver.SchemaCandidates)
                 {
                     if (context.CancellationToken.IsCancellationRequested)
                         return;
-                    schemaCodeGenerator.Process(classSyntax);
+                    if (schemaCodeGenerator.Process(classSyntax))
+                    {
+                        compilation = schemaCodeGenerator.Compilation;
+                    }
                 }
+
+                           
             }
             catch (Exception ex)
             {

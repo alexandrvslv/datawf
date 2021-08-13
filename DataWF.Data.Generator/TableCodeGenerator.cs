@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using DataWF.Common.Generator;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Diagnostics;
 
 namespace DataWF.Data.Generator
 {
@@ -13,11 +14,11 @@ namespace DataWF.Data.Generator
         Default,
         Virtual,
         Abstract,
-        Log,
-        VirtualLog,
+        Log
     }
     internal class TableCodeGenerator : BaseTableCodeGenerator
     {
+        private static readonly DiagnosticDescriptor diagnosticDescriptor = new DiagnosticDescriptor("TCG001", "Couldn't generate Table", "Couldn't generate Table", nameof(TableCodeGenerator), DiagnosticSeverity.Warning, true);
         private const string constTable = "Table";
         private const string constDBLogItem = "DBItemLog";
         private const string constDBTable = "DBTable";
@@ -57,13 +58,6 @@ namespace DataWF.Data.Generator
                 className = classSymbol.Name + constTable;
             }
 
-            var logItemTypeAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.LogItemType, SymbolEqualityComparer.Default));
-            if (logItemTypeAttribute != null)
-            {
-                mode = TableCodeGeneratorMode.VirtualLog;
-                className = classSymbol.Name + constTable;
-            }
-
             var abstractAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.AbstractTable, SymbolEqualityComparer.Default));
             if (abstractAttribute != null)
             {
@@ -96,6 +90,7 @@ namespace DataWF.Data.Generator
         private string className;
         private TableCodeGeneratorMode mode;
         private string interfaceName;
+        private bool isLogType;
         private string containerSchema;
         private string namespaceName;
         private string whereName;
@@ -107,9 +102,7 @@ namespace DataWF.Data.Generator
             InvokerCodeGenerator = new InvokerCodeGenerator(ref context, compilation);
         }
 
-        public InvokerCodeGenerator InvokerCodeGenerator { get; set; }
-        public LogItemCodeGenerator LogItemCodeGenerator { get; set; }
-        public SyntaxReceiver Receiver { get; internal set; }
+        public TableLogCodeGenerator TableLogCodeGenerator { get; set; }
 
         public override bool Process(INamedTypeSymbol classSymbol)
         {
@@ -128,18 +121,20 @@ namespace DataWF.Data.Generator
                         InvokerCodeGenerator.Process(classSymbol);
                     }
 
-                    LogItemCodeGenerator?.Process(classSymbol);
+                    if(TableLogCodeGenerator?.Process(classSymbol) == true)
+                        Compilation = TableLogCodeGenerator.Compilation;
 
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
+                    context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, Location.None, classSymbol.Name, ex.Message));
+                    
 #if DEBUG
-                    //if (!System.Diagnostics.Debugger.IsAttached)
-                    //{
-                    //    System.Diagnostics.Debugger.Launch();
-                    //}
+                    if (!System.Diagnostics.Debugger.IsAttached)
+                    {
+                        System.Diagnostics.Debugger.Launch();
+                    }
 #endif
                 }
             }
@@ -155,6 +150,7 @@ namespace DataWF.Data.Generator
             }
             this.mode = mode;
             interfaceName = "I" + className;
+            isLogType = mode == TableCodeGeneratorMode.Log || className.EndsWith("Log", StringComparison.Ordinal);
 
             baseClassName = constDBTable;
             baseInterfaceName = "IDBTable";
@@ -162,12 +158,17 @@ namespace DataWF.Data.Generator
             namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
 
             containerSchema = null;
-            //if (!classSymbol.IsAbstract)
+            foreach (var type in classSymbol.ContainingNamespace.GetTypeMembers())
             {
-                containerSchema = Receiver?.SchemaCandidates?
-                    .FirstOrDefault(p => string.Equals(p.GetNamespace()?.Name.ToString(), namespaceName, StringComparison.Ordinal))
-                    ?.Identifier.ToString();
-
+                if (type.TypeKind == TypeKind.Class
+                    && type.AllInterfaces.Any(p => p.Name == "IDBSchema"))
+                {
+                    var isLogSchema = type.AllInterfaces.Any(p => p.Name == "IDBSchemaLog");
+                    if (isLogType == isLogSchema && type.Name != "DBSchema")
+                    {
+                        containerSchema = type.Name;
+                    }
+                }
             }
 
             whereName = null;
@@ -225,7 +226,8 @@ using DataWF.Common;
             source.Append($@"
 namespace {namespaceName}
 {{
-    public {(classSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className}: {baseClassName}<{genericArg}>{(interfaceName != null ? $", {interfaceName}" : string.Empty)} {whereName}
+    public {(classSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className}: {baseClassName}<{genericArg}>, {interfaceName}
+    {whereName}
     {{");
             interfaceSource = new StringBuilder($@"
     public partial interface {interfaceName}: {baseInterfaceName}
@@ -254,8 +256,7 @@ namespace {namespaceName}
 
         private void ProcessParentTable()
         {
-            if (mode == TableCodeGeneratorMode.Virtual
-                || mode == TableCodeGeneratorMode.VirtualLog)
+            if (isLogType)
             {
                 source.Append($@"
         public new {baseInterfaceName} ParentTable
@@ -269,8 +270,7 @@ namespace {namespaceName}
         private void ProcessTargetTable()
         {
             if (interfaceName != null
-                && (mode == TableCodeGeneratorMode.Log
-                || mode == TableCodeGeneratorMode.VirtualLog))
+                && isLogType)
             {
                 var targetClass = interfaceName.Replace("Log", "");
                 source.Append($@"
@@ -290,7 +290,7 @@ namespace {namespaceName}
             if (!classSymbol.Constructors.Any(p => p.Parameters.Any()))
             {
                 source.Append($@"
-        public {classSymbol.Name}(IDBTable table): base(table)
+        public {classSymbol.Name}({interfaceName} table): base(table)
         {{ }}");
             }
             source.Append($@"

@@ -4,14 +4,19 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using DataWF.Common.Generator;
 using System.Linq;
+using System.Diagnostics;
 
 namespace DataWF.Data.Generator
 {
     internal class SchemaCodeGenerator : BaseTableCodeGenerator
     {
-        public SchemaCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation) : base(ref context, compilation)
+        public SchemaCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation) 
+            : base(ref context, compilation)
         {
+            InvokerCodeGenerator = new InvokerCodeGenerator(ref context, compilation);
         }
+
+        public SchemaLogCodeGenerator SchemaLogCodeGenerator { get; set; }
 
         public override bool Process(INamedTypeSymbol classSymbol)
         {
@@ -21,11 +26,28 @@ namespace DataWF.Data.Generator
             {
                 try
                 {
-                    Context.AddSource($"{classSymbol.Name}SchemaGen.cs", SourceText.From(classSource, Encoding.UTF8));
+                    Context.AddSource($"{classSymbol.ContainingNamespace.ToDisplayString()}.{classSymbol.Name}SchemaGen.cs", SourceText.From(classSource, Encoding.UTF8));
+
+                    var invokerAttribute = ClassSymbol.GetAttribute(InvokerCodeGenerator.AtributeType);
+                    if (invokerAttribute == null)
+                    {
+                        //InvokerCodeGenerator.Process(classSymbol);
+                    }
+
+                    if (SchemaLogCodeGenerator?.Process(classSymbol) == true)
+                        Compilation = SchemaLogCodeGenerator.Compilation;
                     return true;
                 }
-                catch (Exception)
-                { }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
+#if DEBUG
+                    if (!System.Diagnostics.Debugger.IsAttached)
+                    {
+                        System.Diagnostics.Debugger.Launch();
+                    }
+#endif
+                }
             }
             return false;
         }
@@ -55,6 +77,8 @@ namespace DataWF.Data.Generator
 
             foreach (var @namespace in namespaces)
             {
+                if (@namespace == "<global namespace>")
+                    continue;
                 source.Append($@"
 using { @namespace };");
             }
@@ -68,11 +92,7 @@ namespace { namespaceName}
                 var tableTypeName = schemaEntry.IsSealed ? $"{schemaEntry.Name}Table" : $"{schemaEntry.Name}Table<{schemaEntry.Name}>";
                 source.Append($@"
         private {tableTypeName} _{schemaEntry.Name};");
-            }
-
-            foreach (var schemaEntry in schemaEntries)
-            {
-                var tableTypeName = schemaEntry.IsSealed ? $"{schemaEntry.Name}Table" : $"{schemaEntry.Name}Table<{schemaEntry.Name}>";
+            
                 source.Append($@"
         [JsonIgnore]
         public {tableTypeName} {schemaEntry.Name} => _{schemaEntry.Name} ??= ({tableTypeName})GetTable<{schemaEntry.Name}>();");

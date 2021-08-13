@@ -6,13 +6,13 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using DataWF.Common.Generator;
+using System.Diagnostics;
 
 namespace DataWF.Data.Generator
 {
-    internal class LogItemCodeGenerator : BaseTableCodeGenerator
+    internal class TableLogCodeGenerator : BaseTableCodeGenerator
     {
-
-        public LogItemCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation) : base(ref context, compilation)
+        public TableLogCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation) : base(ref context, compilation)
         {
             TableCodeGenerator = new TableCodeGenerator(ref context, compilation);
         }
@@ -27,29 +27,37 @@ namespace DataWF.Data.Generator
             string logClassSource = Generate();
             if (logClassSource != null)
             {
-                var logItemSource = SourceText.From(logClassSource, Encoding.UTF8);
-                Context.AddSource($"{classSymbol.ContainingNamespace.ToDisplayString()}.Log.{classSymbol.Name}Gen.cs", logItemSource);
-
-                var logItemSyntax = CSharpSyntaxTree.ParseText(logItemSource, (CSharpParseOptions)Options);
-
-                TableCodeGenerator.Cultures = Cultures;
-                TableCodeGenerator.InvokerCodeGenerator.Compilation =
-                    TableCodeGenerator.Compilation = TableCodeGenerator.Compilation.AddSyntaxTrees(logItemSyntax);
-
-                var unitSyntax = (CompilationUnitSyntax)logItemSyntax.GetRoot();
-                var logClassSyntax = unitSyntax.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault()?.Members.OfType<ClassDeclarationSyntax>().FirstOrDefault();
-                if (logClassSyntax != null)
+                try
                 {
-                    TableCodeGenerator.Process(logClassSyntax);
+                    var logItemSource = SourceText.From(logClassSource, Encoding.UTF8);
+                    Context.AddSource($"{classSymbol.ContainingNamespace.ToDisplayString()}.{classSymbol.Name}LogGen.cs", logItemSource);
+
+                    var logItemSyntax = CSharpSyntaxTree.ParseText(logItemSource, (CSharpParseOptions)Options);
+
+                    TableCodeGenerator.Cultures = Cultures;
+                    Compilation =
+                        TableCodeGenerator.InvokerCodeGenerator.Compilation =
+                        TableCodeGenerator.Compilation = TableCodeGenerator.Compilation.AddSyntaxTrees(logItemSyntax);
+
+                    var unitSyntax = (CompilationUnitSyntax)logItemSyntax.GetRoot();
+                    var logClassSyntax = unitSyntax.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault()?.Members.OfType<ClassDeclarationSyntax>().FirstOrDefault();
+                    if (logClassSyntax != null)
+                    {
+                        TableCodeGenerator.Process(logClassSyntax);
+                    }
+                    return true;
                 }
-                return true;
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
+                }
             }
             return false;
         }
 
         public override string Generate()
         {
-            string namespaceName = $"{classSymbol.ContainingNamespace.ToDisplayString()}.Log";
+            string namespaceName = $"{classSymbol.ContainingNamespace.ToDisplayString()}";
             string className = null;
             string tableSqlName = null;
             var tableAttribute = classSymbol.GetAttribute(attributes.Table);
@@ -58,7 +66,7 @@ namespace DataWF.Data.Generator
                 var keys = tableAttribute.GetNamedValue("Keys");
                 if (keys.IsNull || ((int)keys.Value & (1 << 0)) == 0)
                 {
-                    className = classSymbol.Name + "Log";
+                    className = $"{classSymbol.Name}Log";
                 }
                 var name = tableAttribute.GetNamedValue("TableName");
                 if (name.IsNull)
@@ -75,7 +83,7 @@ namespace DataWF.Data.Generator
             var abstractTableAttribute = classSymbol.GetAttribute(attributes.AbstractTable);
             if (abstractTableAttribute != null)
             {
-                className = classSymbol.Name + "Log";
+                className = $"{classSymbol.Name}Log";
                 if (string.Equals(classSymbol.Name, "DBItemLog", StringComparison.Ordinal)
                     || string.Equals(classSymbol.BaseType?.Name, "DBItemLog", StringComparison.Ordinal))
                 {
@@ -83,10 +91,10 @@ namespace DataWF.Data.Generator
                 }
             }
 
-            var itemTypeAttribute = classSymbol.GetAttribute(attributes.VirtualTable);
-            if (itemTypeAttribute != null)
+            var virtualTableAttribute = classSymbol.GetAttribute(attributes.VirtualTable);
+            if (virtualTableAttribute != null)
             {
-                className = classSymbol.Name + "Log";
+                className = $"{classSymbol.Name}Log";
             }
 
             if (className != null)
@@ -98,12 +106,12 @@ namespace DataWF.Data.Generator
                 if (classSymbol.BaseType.Name != "DBItem"
                     && classSymbol.BaseType.Name != "DBGroupItem")
                 {
-                    var baseNamespace = $"{classSymbol.BaseType.ContainingNamespace.ToDisplayString()}.Log";
-                    baseClassName = classSymbol.BaseType.Name + "Log";
+                    var baseNamespace = $"{classSymbol.BaseType.ContainingNamespace.ToDisplayString()}";
+                    baseClassName = $"{classSymbol.BaseType.Name}Log";
 
                     if (baseNamespace != namespaceName)
                     {
-                        baseClassName = $"{baseNamespace}.{classSymbol.BaseType.Name}Log";
+                        baseClassName = $"{baseNamespace}.{baseClassName}";
                     }
                 }
                 // begin building the generated source
@@ -123,14 +131,14 @@ namespace {namespaceName}
                 {
                     source.Append($"[AbstractTable, InvokerGenerator]");
                 }
-                else if (itemTypeAttribute != null)
+                else if (virtualTableAttribute != null)
                 {
-                    var itemType = itemTypeAttribute.GetNamedValue("Id");
+                    var itemType = virtualTableAttribute.GetNamedValue("Id");
                     if (itemType.IsNull)
                     {
-                        itemType = itemTypeAttribute.ConstructorArguments.FirstOrDefault();
+                        itemType = virtualTableAttribute.ConstructorArguments.FirstOrDefault();
                     }
-                    source.Append($"[LogItemType({itemType.Value})]");
+                    source.Append($"[VirtualTable({itemType.Value})]");
                 }
 
                 source.Append($@"

@@ -24,12 +24,9 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [Table("file_data", "General", Keys = DBTableKeys.NoLogs | DBTableKeys.Private, Type = typeof(FileDataTable)), InvokerGenerator]
+    [Table("file_data", "General", Keys = DBTableKeys.NoLogs | DBTableKeys.Private, Type = typeof(FileDataTable))]
     public sealed partial class FileData : DBItem
     {
-        public FileData(DBTable table) : base(table)
-        { }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {

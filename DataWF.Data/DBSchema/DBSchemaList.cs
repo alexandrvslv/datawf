@@ -64,7 +64,7 @@ namespace DataWF.Data
             int index = base.AddInternal(item);
             if (item.LogSchema != null && !Contains(item.LogSchema))
             {
-                Add(item.LogSchema);
+                Add((DBSchema)item.LogSchema);
             }
             return index;
         }

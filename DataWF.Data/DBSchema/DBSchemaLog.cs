@@ -17,15 +17,41 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using System;
+using DataWF.Common;
+using DataWF.Data;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    public class LogItemTypeAttribute : VirtualTableAttribute
+    [InvokerGenerator(Instance = true)]
+    public partial class DBSchemaLog : DBSchema, IDBSchemaLog
     {
-        public LogItemTypeAttribute(int id) : base(id)
+        protected IDBSchema targetSchema;
+        protected string targetSchemaName;
+
+        public string TargetSchemaName
         {
+            get { return targetSchemaName; }
+            set
+            {
+                if (targetSchemaName != value)
+                {
+                    targetSchemaName = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore]
+        public IDBSchema TargetSchema
+        {
+            get { return targetSchema ?? (targetSchema = DBService.Schems[TargetSchemaName]); }
+            set
+            {
+                targetSchema = value;
+                TargetSchemaName = value?.Name;
+            }
         }
     }
 }

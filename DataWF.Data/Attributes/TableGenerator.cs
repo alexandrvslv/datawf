@@ -142,12 +142,7 @@ namespace DataWF.Data
             if (!cacheItemTypeGenerator.TryGetValue(type, out var itemTypeGenerator))
             {
                 var itemTypeAttribute = type.GetCustomAttribute<VirtualTableAttribute>(false);
-                if (itemTypeAttribute is LogItemTypeAttribute)
-                {
-                    itemTypeGenerator = new LogItemTypeGenerator { Attribute = itemTypeAttribute };
-                    itemTypeGenerator.Initialize(type);
-                }
-                else if (itemTypeAttribute is VirtualTableAttribute)
+                if (itemTypeAttribute is VirtualTableAttribute)
                 {
                     itemTypeGenerator = new VirtualTableGenerator { Attribute = itemTypeAttribute };
                     itemTypeGenerator.Initialize(type);

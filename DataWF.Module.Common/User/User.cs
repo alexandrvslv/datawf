@@ -30,9 +30,6 @@ namespace DataWF.Module.Common
         private AccessValue cacheAccess;
         private Address address;
 
-        public User(DBTable table) : base(table)
-        { }
-
         [JsonIgnore]
         public UserReg LogStart { get; set; }
 

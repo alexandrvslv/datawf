@@ -52,7 +52,7 @@ namespace DataWF.Data
             var table = (IDBTableLog)EmitInvoker.CreateObject(type);
             table.Name = Attribute.TableName;
             table.Schema = schema;
-            var baseSchema = schema is DBLogSchema logSchema ? logSchema.BaseSchema : schema;
+            var baseSchema = schema is DBSchemaLog logSchema ? logSchema.TargetSchema : schema;
             table.TargetTable = baseSchema.GetTable(LogAttribute.BaseType);
             return (DBTable)table;
         }

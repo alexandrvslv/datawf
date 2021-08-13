@@ -57,10 +57,10 @@ namespace DataWF.Data
         private string connectionName = string.Empty;
         protected string dataBase = "";
         protected string fileName = "";
-        protected DBLogSchema logSchema;
         protected string logSchemaName;
         private bool cacheRelation;
         private FileDataTable fileTable;
+        private IDBSchemaLog logSchema;
 
         public DBSchema()
             : this(null)
@@ -82,10 +82,11 @@ namespace DataWF.Data
             Serialization.Deserialize(fileName, this);
         }
 
-        public Version Version { get; set; }
+
+        public Version Version { get; set; } = new Version(1, 0, 0, 0);
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBSchemaList Schems => Containers.FirstOrDefault() as DBSchemaList;
+        public DBSchemaList Schems => Containers.FirstOrDefault(p=>p is DBSchemaList) as DBSchemaList;
 
         [Browsable(false)]
         public string ConnectionName { get => connectionName; set => connectionName = value; }
@@ -114,15 +115,15 @@ namespace DataWF.Data
                 if (logSchemaName != value)
                 {
                     logSchemaName = value;
-                    OnPropertyChanged(nameof(LogSchemaName));
+                    OnPropertyChanged();
                 }
             }
         }
 
         [XmlIgnore, JsonIgnore]
-        public DBLogSchema LogSchema
+        public IDBSchemaLog LogSchema
         {
-            get => logSchema ?? (logSchema = (DBLogSchema)DBService.Schems[logSchemaName]);
+            get => logSchema ?? (logSchema = (IDBSchemaLog)DBService.Schems[logSchemaName]);
             set
             {
                 logSchema = value;
@@ -131,7 +132,7 @@ namespace DataWF.Data
                     && DBService.Schems.Contains(this)
                     && !DBService.Schems.Contains(value.Name))
                 {
-                    DBService.Schems.Add(value);
+                    DBService.Schems.Add((DBSchema)value);
                 }
             }
         }
@@ -330,17 +331,17 @@ namespace DataWF.Data
             System.CreateSchema(this, Connection);
         }
 
-        public DBLogSchema GenerateLogSchema()
+        public virtual IDBSchemaLog GenerateLogSchema()
         {
             if (LogSchema == null)
             {
                 //var logConnection = connection.Clone();
                 //logConnection.Name += "_log";
-                LogSchema = new DBLogSchema()
+                LogSchema = new DBSchemaLog()
                 {
                     Name = Name + "_log",
                     Connection = connection,
-                    BaseSchema = this
+                    TargetSchema = this
                 };
             }
             return LogSchema;

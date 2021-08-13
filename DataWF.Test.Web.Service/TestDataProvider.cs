@@ -1,6 +1,7 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Module.Common;
+using DataWF.Module.Flow;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -13,19 +14,13 @@ namespace DataWF.Test.Web.Service
         {
             SchemaName = "test";
         }
-
-        public override void Generate()
+        
+        public new FlowSchema Schema 
         {
-            Schema.Generate(new[] {
-                typeof(DataWF.Data.Instance).Assembly,
-                typeof(Module.Common.User).Assembly,
-                typeof(Module.Counterpart.Customer).Assembly,
-                typeof(Module.Messanger.Message).Assembly,
-                typeof(Module.Flow.Document).Assembly,
-                typeof(TestDataProvider).Assembly,
-            });
+            get => (FlowSchema)base.Schema;
+            set => base.Schema = value;
         }
-
+        
         public override void Load()
         {
             DBService.Load();
@@ -54,7 +49,7 @@ namespace DataWF.Test.Web.Service
                 NameEN = "admin",
             }.SaveOrUpdate((IUserIdentity)null);
 
-            _ = new User(Schema.GetTable<User>())
+            _ = new User(Schema.User)
             {
                 Id = 1,
                 Login = "admin",
@@ -67,7 +62,7 @@ namespace DataWF.Test.Web.Service
 
         public override Task CreateNew()
         {
-            Schema = new DBSchema()
+            Schema = new FlowSchema()
             {
                 Name = schemaName,
                 Connection = new DBConnection

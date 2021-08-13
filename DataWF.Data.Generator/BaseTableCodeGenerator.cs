@@ -27,6 +27,9 @@ namespace DataWF.Data.Generator
         public AttributesCache Attributes { get => attributes; set => attributes = value; }
         public List<string> Cultures { get => cultures; set => cultures = value; }
         protected List<IPropertySymbol> Properties { get => properties; set => properties = value; }
+
+        public InvokerCodeGenerator InvokerCodeGenerator { get; set; }
+
     }
 
 }

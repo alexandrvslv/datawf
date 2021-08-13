@@ -30,13 +30,10 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [Table("rinstance", "General", BlockSize = 128, Keys = DBTableKeys.NoLogs | DBTableKeys.NoReplicate | DBTableKeys.Private, Type = typeof(InstanceTable)), InvokerGenerator]
+    [Table("rinstance", "General", BlockSize = 128, Keys = DBTableKeys.NoLogs | DBTableKeys.NoReplicate | DBTableKeys.Private, Type = typeof(InstanceTable))]
     public sealed partial class Instance : DBItem, IInstance
     {
         private IPEndPoint ipEndPoint;
-
-        public Instance(DBTable table) : base(table)
-        { }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id

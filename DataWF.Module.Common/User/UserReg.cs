@@ -34,9 +34,6 @@ namespace DataWF.Module.Common
         private User user;
         private UserReg redo;
 
-        public UserReg(DBTable table) : base(table)
-        { }
-
         [Reference(nameof(UserId))]
         public User User
         {
