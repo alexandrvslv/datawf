@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentDetailView<T> : ListEditor, IDocument, ISync
-        where T : DBItem, IDocumentDetail, new()
+    public abstract class DocumentDetailView<T> : ListEditor, IDocument, ISync
+        where T : DocumentItem
     {
         protected Document document;
         protected DBTableView<T> view;
@@ -33,7 +33,7 @@ namespace DataWF.Module.FlowGui
 
         public DBTable<T> Table
         {
-            get { return Schema.GetTable<T>(null, false); }
+            get { return FlowExplorer.Schema.GetTable<T>(false); }
         }
 
         public virtual Document Document
@@ -85,9 +85,11 @@ namespace DataWF.Module.FlowGui
 
         protected override void OnToolInsertClick(object sender, EventArgs e)
         {
-            var newItem = new T { Document = Document };
+            var newItem = GetNewItem();
             ShowObject(newItem);
         }
+
+        protected abstract T GetNewItem();
 
         protected override void OnToolRemoveClick(object sender, EventArgs e)
         {

@@ -545,7 +545,7 @@ namespace DataWF.Data
             return column?.GetReference<R>(this, ref item, param);
         }
 
-        public R GetPropertyReference<R>(ref R item, [CallerMemberName] string property = null) where R : DBItem
+        public R GetReference<R>(ref R item, [CallerMemberName] string property = null) where R : DBItem
         {
             return GetReference(Table.Columns.GetByReferenceProperty(property), ref item);
         }
@@ -566,7 +566,7 @@ namespace DataWF.Data
         //    return row.GetReference<T>(row.Table.Columns[code.Substring(pi)], param);
         //}
 
-        public T SetPropertyReference<T>(T value, [CallerMemberName] string property = null) where T : DBItem
+        public T SetReference<T>(T value, [CallerMemberName] string property = null) where T : DBItem
         {
             return SetReference(value, Table.Columns.GetByReferenceProperty(property));
         }
@@ -754,7 +754,7 @@ namespace DataWF.Data
         {
             foreach (LocaleString c in value)
             {
-                SetName(c.Culture, c.Value, @group);
+                SetName(c.Value, c.Culture, @group);
             }
         }
 
@@ -785,15 +785,15 @@ namespace DataWF.Data
 
         public string GetName([CallerMemberName] string @group = null)
         {
-            return GetValue<string>(Table.GetNameKey(@group));
+            return GetValue<string>(Table.GetCultureColumn(@group));
         }
 
         public void SetName(string value, [CallerMemberName] string @group = null)
         {
-            SetValue(value, Table.GetNameKey(@group));
+            SetValue(value, Table.GetCultureColumn(@group));
         }
 
-        public void SetName(CultureInfo culture, string value, [CallerMemberName] string @group = null)
+        public void SetName(string value, CultureInfo culture, [CallerMemberName] string @group = null)
         {
             if (culture == null)
                 return;
@@ -846,11 +846,6 @@ namespace DataWF.Data
         public void Reject(DBColumn column)
         {
             column.Reject(this);
-        }
-
-        public bool Changed(DBColumn column)
-        {
-            return column != null ? GetOld(column, out object value) : false;
         }
 
         public virtual void Reject(IUserIdentity user)

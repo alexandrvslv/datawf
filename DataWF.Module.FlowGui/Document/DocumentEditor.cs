@@ -191,7 +191,7 @@ namespace DataWF.Module.FlowGui
 
             if (page.Widget is IExecutable)
             {
-                await ((IExecutable)page.Widget).Execute(new ExecuteArgs(document));
+                await ((IExecutable)page.Widget).Execute(new ExecuteArgs(document.Schema, document));
             }
 
             if (page.Widget is TableEditor)
@@ -241,7 +241,7 @@ namespace DataWF.Module.FlowGui
         public object ExecuteDocumentProcedure(DBProcedure proc, Document document, bool callback)
         {
             document.Save();
-            var args = new ExecuteArgs(document);
+            var args = new ExecuteArgs(document.Schema, document);
             object result = null;
             try
             {

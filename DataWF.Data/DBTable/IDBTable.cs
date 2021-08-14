@@ -118,7 +118,7 @@ namespace DataWF.Data
         IEnumerable<IDBTable> GetChildTables();
         DBColumn<string> GetCultureColumn(string group, CultureInfo culture);
         DBItemType GetItemType(int typeIndex);
-        DBColumn<string> GetNameKey(string group);
+        DBColumn<string> GetCultureColumn(string group);
         IEnumerable<IDBTable> GetParentTables();
         int GetRowCount(DBTransaction transaction, string where);
         string GetRowText(object id);

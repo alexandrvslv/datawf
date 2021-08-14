@@ -157,7 +157,7 @@ namespace DataWF.Module.FlowGui
             PackStart(bar, false, false);
             PackStart(map, true, true);
 
-            UserReg.RowLoged += FlowEnvirRowLoged;
+            FlowExplorer.Schema.UserReg.RowLoged += FlowEnvirRowLoged;
 
             Localize();
         }
@@ -339,7 +339,7 @@ namespace DataWF.Module.FlowGui
 
         protected override void Dispose(bool disposing)
         {
-            UserReg.RowLoged -= FlowEnvirRowLoged;
+            FlowExplorer.Schema.UserReg.RowLoged -= FlowEnvirRowLoged;
             userGroup.PropertyChanged -= GroupPropertyChanged;
             base.Dispose(disposing);
         }

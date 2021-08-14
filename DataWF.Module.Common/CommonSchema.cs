@@ -5,6 +5,7 @@ namespace DataWF.Module.Common
 {
     [Schema("common_schema")]
     [SchemaEntry(typeof(FileData))]
+    [SchemaEntry(typeof(Instance))]
     [SchemaEntry(typeof(Book))]
     [SchemaEntry(typeof(Department))]
     [SchemaEntry(typeof(Position))]

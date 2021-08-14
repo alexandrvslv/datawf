@@ -416,7 +416,7 @@ namespace DataWF.Module.FlowGui
             var nodes = listUsers.Nodes.GetChecked().Cast<TableItemNode>().Select(p => (DBItem)p.Item).ToList();
             foreach (DocumentSendItem sender in items)
             {
-                using (var transaction = new DBTransaction(Document.DBTable, GuiEnvironment.User))
+                using (var transaction = new DBTransaction(FlowExplorer.Schema, GuiEnvironment.User))
                 {
                     try
                     {

@@ -21,9 +21,9 @@ Note: most of DataWF UI libraries of this repository is in developing/deprecatin
 
 ## Planing
 
-Code quality, tests, simplify, usability
-Support multiservices: muilti web clients geneerator, web reference properties, 
-Port UI to Avalonia or Maui
+- Code quality, tests, simplify, usability
+- Support multiservices: muilti web clients geneerator, web reference properties, 
+- Port UI to Avalonia or Maui
 
 ## DataWF.Data
 
@@ -31,7 +31,7 @@ ORM based on ADO.NET clients implementations. Not use EF directly, just as analo
 
 Features: Code-first, Relational data managment, Formatting DDL and DML, Caching large tables, Query parser/executor
 
-Cover folowing database objects: Schema, Table, View, Column, Constraints(Primary and Foreign Key), Index, Stored Procedure.
+Cover basis database objects: Schema, Table, View, Column, Constraints(Primary and Foreign Key), Index, Stored Procedure.
 
 Support several RDBMS:
 

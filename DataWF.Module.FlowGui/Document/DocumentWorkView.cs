@@ -16,9 +16,9 @@ namespace DataWF.Module.FlowGui
 
         public DocumentWorkView()
         {
-            actualParam = new QParam(LogicType.And, DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DateComplete)), CompareType.Is, null);
+            actualParam = new QParam(LogicType.And, FlowExplorer.Schema.DocumentWork.ParseProperty(nameof(DocumentWork.DateComplete)), CompareType.Is, null);
 
-            view.ApplySortInternal(new DBComparer<DocumentWork, long?>(DocumentWork.DBTable.PrimaryKey));
+            view.ApplySortInternal(new DBComparer<DocumentWork, long>(FlowExplorer.Schema.DocumentWork.IdKey));
             view.Query.Parameters.Add(actualParam);
 
             list.AllowSort = false;
@@ -58,5 +58,9 @@ namespace DataWF.Module.FlowGui
             GuiService.Localize(this, "DocumentWorks", "Works", GlyphType.EditAlias);
         }
 
+        protected override DocumentWork GetNewItem()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

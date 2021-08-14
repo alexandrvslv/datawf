@@ -92,7 +92,7 @@ namespace DataWF.Module.FlowGui
             var nodeSend = new TableItemNode()
             {
                 Name = "Send",
-                Tag = new DocumentFilter()
+                Tag = new DocumentFilter(FlowExplorer.Schema)
                 {
                     Staff = (User)GuiEnvironment.User,
                     DateType = DocumentSearchDate.WorkEnd,
@@ -105,7 +105,7 @@ namespace DataWF.Module.FlowGui
             var nodeRecent = new TableItemNode()
             {
                 Name = "Recent",
-                Tag = new DocumentFilter()
+                Tag = new DocumentFilter(FlowExplorer.Schema)
                 {
                     Staff = (User)GuiEnvironment.User,
                     DateType = DocumentSearchDate.WorkEnd,
@@ -117,7 +117,7 @@ namespace DataWF.Module.FlowGui
             var nodeSearch = new TableItemNode()
             {
                 Name = "Search",
-                Tag = new DocumentFilter() { }
+                Tag = new DocumentFilter(FlowExplorer.Schema) { }
             };
             GuiService.Localize(nodeSearch, "DocumentWorker", nodeSearch.Name);
 

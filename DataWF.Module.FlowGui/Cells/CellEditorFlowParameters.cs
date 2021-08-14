@@ -50,7 +50,7 @@ namespace DataWF.Module.FlowGui
                 else if (gp.ItemType == (int)StageParamType.Column)
                 {
                     DataType = typeof(DBColumn);
-                    DataFilter = Document.DBTable;
+                    DataFilter = FlowExplorer.Schema.Document;
                 }
             }
             base.InitializeEditor(editor, value, dataSource);

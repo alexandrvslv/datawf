@@ -33,7 +33,7 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(Table.CompanyIdKey, ref company);
+            get => GetReference((DBColumn)Table.CompanyIdKey, ref company);
             set => SetReference(company = value, Table.CompanyIdKey);
         }
 
@@ -48,7 +48,7 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(PersoneId))]
         public Persone Persone
         {
-            get => GetReference(Table.PersoneIdKey, ref persone);
+            get => GetReference((DBColumn)Table.PersoneIdKey, ref persone);
             set
             {
                 SetReference(persone = value, Table.PersoneIdKey);

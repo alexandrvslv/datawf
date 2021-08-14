@@ -74,7 +74,7 @@ namespace DataWF.Module.Common
         [Reference(nameof(RedoId))]
         public UserReg Redo
         {
-            get => GetReference(Table.RedoIdKey, ref redo);
+            get => GetReference((DBColumn)Table.RedoIdKey, ref redo);
             set => SetReference(redo = value, Table.RedoIdKey);
         }
 

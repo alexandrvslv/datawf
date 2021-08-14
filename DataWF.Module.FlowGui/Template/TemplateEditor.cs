@@ -33,8 +33,8 @@ namespace DataWF.Module.FlowGui
                     FillHeight = true,
                     Widget = datas = new TableEditor
                     {
-                        TableView = new DBTableView<TemplateData>((QParam)null, DBViewKeys.Empty),
-                        OwnerColumn = TemplateData.DBTable.ParseProperty(nameof(TemplateData.TemplateId)),
+                        TableView = new DBTableView<TemplateData>(FlowExplorer.Schema.TemplateData, (QParam)null, DBViewKeys.Empty),
+                        OwnerColumn = FlowExplorer.Schema.TemplateData.TemplateIdKey,
                         OpenMode = TableEditorMode.Referencing
                     }
                 })

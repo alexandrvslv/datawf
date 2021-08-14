@@ -735,7 +735,7 @@ namespace DataWF.Data
             return where;
         }
 
-        public DBColumn<string> GetNameKey(string group)
+        public DBColumn<string> GetCultureColumn(string group)
         {
             if (group.Equals("Name", StringComparison.OrdinalIgnoreCase))
             {
@@ -939,14 +939,18 @@ namespace DataWF.Data
                         item.Stamp = DateTime.UtcNow;
                     if (DateCreateKey != null)
                         item.DateCreate = DateTime.UtcNow;
-                    if (IsLoging && StatusKey != null && !item.Changed(StatusKey))
+                    if (IsLoging && StatusKey != null && !item.IsChangedKey(StatusKey))
                         item.Status = DBStatus.New;
                 }
                 else if ((item.UpdateState & DBUpdateState.Update) == DBUpdateState.Update)
                 {
                     if (StampKey != null)
                         item.Stamp = DateTime.UtcNow;
-                    if (IsLoging && StatusKey != null && item.Status == DBStatus.Actual && !item.Changed(StatusKey) && !item.Changed(AccessKey))
+                    if (IsLoging 
+                        && StatusKey != null 
+                        && item.Status == DBStatus.Actual 
+                        && !item.IsChangedKey(StatusKey) 
+                        && !item.IsChangedKey(AccessKey))
                         item.Status = DBStatus.Edit;
                 }
                 if (!item.OnUpdating(args))

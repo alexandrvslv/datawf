@@ -96,7 +96,7 @@ namespace DataWF.Module.FlowGui
                 template = value;
                 if (Mode == LayoutListMode.List && Documents != null)
                 {
-                    var type = Document.DBTable.GetItemType(template?.DocumentType ?? 0).Type;
+                    var type = FlowExplorer.Schema.Document.GetItemType(template?.DocumentType ?? 0).Type;
                     if (ListType != type)
                     {
                         Documents.ItemType = type;

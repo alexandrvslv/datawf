@@ -125,7 +125,7 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(CountryId))]
         public Country Country
         {
-            get => GetReference(Table.CountryIdKey, ref country);
+            get => GetReference((DBColumn)Table.CountryIdKey, ref country);
             set => SetReference(country = value, Table.CountryIdKey);
         }
 
@@ -140,7 +140,7 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get => GetReference(Table.AddressIdKey, ref address);
+            get => GetReference((DBColumn)Table.AddressIdKey, ref address);
             set => SetReference(address = value, Table.AddressIdKey);
         }
 

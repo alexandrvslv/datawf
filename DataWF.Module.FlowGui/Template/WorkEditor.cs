@@ -41,8 +41,8 @@ namespace DataWF.Module.FlowGui
                     FillHeight = true,
                     Widget = stages = new TableEditor
                     {
-                        TableView = new DBTableView<Stage>((QParam)null, DBViewKeys.Empty),
-                        OwnerColumn = Stage.DBTable.ParseProperty(nameof(Stage.WorkId)),
+                        TableView = new DBTableView<Stage>(FlowExplorer.Schema.Stage, (QParam)null, DBViewKeys.Empty),
+                        OwnerColumn = FlowExplorer.Schema.Stage.WorkIdKey,
                         OpenMode = TableEditorMode.Referencing
                     }
                 },

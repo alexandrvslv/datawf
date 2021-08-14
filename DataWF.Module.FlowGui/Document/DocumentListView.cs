@@ -115,8 +115,8 @@ namespace DataWF.Module.FlowGui
             PackStart(bar, false, false);
             PackStart(list, true, true);
             Name = "DocumentListView";
-            Documents = new DBTableView<Document>();
-            Filter = new DocumentFilter();
+            Documents = new DBTableView<Document>(FlowExplorer.Schema.Document);
+            Filter = new DocumentFilter(FlowExplorer.Schema);
         }
 
         [DefaultValue(true)]
@@ -490,7 +490,7 @@ namespace DataWF.Module.FlowGui
                     foreach (string fileName in ofDialog.FileNames)
                     {
                         string name = System.IO.Path.GetFileName(fileName);
-                        var drow = DocumentData.DBTable.LoadByCode(name, DocumentData.FileNameKey, DBLoadParam.Load);
+                        var drow = FlowExplorer.Schema.DocumentData.LoadByCode(name, FlowExplorer.Schema.DocumentData.FileNameKey, DBLoadParam.Load);
                         if (drow != null)
                         {
                             if (dr == Command.Save)
@@ -525,7 +525,7 @@ namespace DataWF.Module.FlowGui
             }
             else if (documents.Count > 1)
             {
-                var list = new DBTableView<Document>((QParam)null, DBViewKeys.Static | DBViewKeys.Empty)
+                var list = new DBTableView<Document>(FlowExplorer.Schema.Document, (QParam)null, DBViewKeys.Static | DBViewKeys.Empty)
                 {
                     ItemType = documents[0].GetType()
                 };

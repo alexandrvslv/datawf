@@ -6,11 +6,6 @@ namespace DataWF.Module.Flow
     [VirtualTable((int)StageParamType.Procedure), InvokerGenerator]
     public sealed partial class StageProcedure : StageParam
     {
-        public StageProcedure(DBTable table) : base(table)
-        {
-            ItemType = (int)StageParamType.Procedure;
-        }
-
         public DBProcedure Procedure
         {
             get => Param as DBProcedure;

@@ -78,8 +78,8 @@ namespace DataWF.Module.FlowGui
 
         private void RefreshData()
         {
-            InitItem(Template.DBTable?.DefaultView, ShowTemplate, GlyphType.Book, Colors.LightBlue);
-            InitItem(Work.DBTable?.DefaultView, ShowWork, GlyphType.GearsAlias, Colors.Silver);
+            InitItem(FlowExplorer.Schema.Template?.DefaultView, ShowTemplate, GlyphType.Book, Colors.LightBlue);
+            InitItem(FlowExplorer.Schema.Work?.DefaultView, ShowWork, GlyphType.GearsAlias, Colors.Silver);
         }
 
         public override TableItemNode InitItem(DBItem item)

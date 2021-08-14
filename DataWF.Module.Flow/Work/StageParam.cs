@@ -14,11 +14,6 @@ namespace DataWF.Module.Flow
         private object _cache;
         private Stage stage;
 
-        public StageParam(DBTable table) : base(table)
-        { }
-
-        public IStageParamTable StageParamTable => (IStageParamTable)Table;
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
@@ -75,10 +70,10 @@ namespace DataWF.Module.Flow
                             _cache = DBService.Schems.ParseProcedure(ParamCode);
                             break;
                         case StageParamType.Reference:
-                            _cache = Schema.GetTable<Stage>().LoadItemById(ParamCode);
+                            _cache = Schema.Stage.LoadItemById(ParamCode);
                             break;
                         case StageParamType.Template:
-                            _cache = Schema.GetTable<Template>().LoadItemById(ParamCode);
+                            _cache = Schema.Template.LoadItemById(ParamCode);
                             break;
                     }
                 }
@@ -119,11 +114,6 @@ namespace DataWF.Module.Flow
     [VirtualTable((int)StageParamType.Reference), InvokerGenerator]
     public sealed partial class StageReference : StageParam
     {
-        public StageReference(DBTable table) : base(table)
-        {
-            ItemType = (int)StageParamType.Reference;
-        }
-
         public Stage ReferenceStage
         {
             get => Param as Stage;
@@ -141,11 +131,6 @@ namespace DataWF.Module.Flow
     [VirtualTable((int)StageParamType.Template), InvokerGenerator]
     public sealed partial class StageTemplate : StageParam
     {
-        public StageTemplate(DBTable table) : base(table)
-        {
-            ItemType = (int)StageParamType.Template;
-        }
-
         public Template Template
         {
             get => Param as Template;
@@ -156,11 +141,6 @@ namespace DataWF.Module.Flow
     [VirtualTable((int)StageParamType.Foreign), InvokerGenerator]
     public sealed partial class StageForeign : StageParam
     {
-        public StageForeign(DBTable table) : base(table)
-        {
-            ItemType = (int)StageParamType.Foreign;
-        }
-
         [XmlIgnore, JsonIgnore]
         public DBForeignKey Foreign
         {

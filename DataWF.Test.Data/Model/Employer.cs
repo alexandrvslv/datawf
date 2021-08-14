@@ -33,8 +33,8 @@ namespace DataWF.Test.Data
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get => GetPropertyReference<Position>(ref position);
-            set => SetPropertyReference(position = value);
+            get => GetReference<Position>(ref position);
+            set => SetReference(position = value);
         }
 
         [Column("typeid", Keys = DBColumnKeys.ElementType), DefaultValue(EmployerType.Type2)]

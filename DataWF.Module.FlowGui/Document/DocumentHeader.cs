@@ -52,7 +52,7 @@ namespace DataWF.Module.FlowGui
             if (!synch)
             {
                 if (Document != null && Document.Id != null)
-                    Document.DBTable.ReloadItem(Document.Id);
+                    Document.Table.ReloadItem(Document.Id);
                 synch = true;
             }
         }

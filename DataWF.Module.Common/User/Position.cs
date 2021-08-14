@@ -36,7 +36,7 @@ namespace DataWF.Module.Common
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference(Table.CompanyIdKey, ref company);
+            get => GetReference((DBColumn)Table.CompanyIdKey, ref company);
             set => SetReference(company = value, Table.CompanyIdKey);
         }
 
@@ -50,7 +50,7 @@ namespace DataWF.Module.Common
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get => GetReference(Table.DepartmentIdKey, ref department);
+            get => GetReference((DBColumn)Table.DepartmentIdKey, ref department);
             set => SetReference(department = value, Table.DepartmentIdKey);
         }
 

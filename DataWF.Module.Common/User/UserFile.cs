@@ -52,7 +52,7 @@ namespace DataWF.Module.Common
         [Reference(nameof(UserId))]
         public User User
         {
-            get => GetReference(Table.UserIdKey, ref user);
+            get => GetReference((DBColumn)Table.UserIdKey, ref user);
             set => SetReference(user = value, Table.UserIdKey);
         }
 

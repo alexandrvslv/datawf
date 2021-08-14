@@ -40,7 +40,7 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get => GetReference(Table.CustomerIdKey, ref customer);
+            get => GetReference((DBColumn)Table.CustomerIdKey, ref customer);
             set => SetReference(customer = value, Table.CustomerIdKey);
         }
 
@@ -55,7 +55,7 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get => GetReference(Table.AddressIdKey, ref address);
+            get => GetReference((DBColumn)Table.AddressIdKey, ref address);
             set => SetReference(address = value, Table.AddressIdKey);
         }
     }

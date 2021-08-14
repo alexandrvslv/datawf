@@ -48,7 +48,7 @@ namespace DataWF.Module.Common
         [Reference(nameof(SchedulerId))]
         public Scheduler Scheduler
         {
-            get => GetReference(Table.SchedulerIdKey, ref scheduler);
+            get => GetReference((DBColumn)Table.SchedulerIdKey, ref scheduler);
             set => SetReference(scheduler = value, Table.SchedulerIdKey);
         }
 

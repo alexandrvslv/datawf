@@ -26,7 +26,7 @@ namespace DataWF.Module.FlowGui
         private Stage mstage = null;
         private Template mtemplate = null;
         private ManualResetEvent load = new ManualResetEvent(false);
-        private DocumentFilter search = new DocumentFilter() { CurrentUser = (User)GuiEnvironment.User };
+        private DocumentFilter search = new DocumentFilter(FlowExplorer.Schema) { CurrentUser = (User)GuiEnvironment.User };
         private ToolItem toolRefresh;
 
 
@@ -39,19 +39,19 @@ namespace DataWF.Module.FlowGui
 
             //mtimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs asg) => { CheckNewDocument(null); mtimer.Stop(); };
 
-            qWork = new QQuery(string.Empty, DocumentWork.DBTable);
-            qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, GuiEnvironment.User.Id);
+            qWork = new QQuery(string.Empty, FlowExplorer.Schema.DocumentWork);
+            qWork.BuildParam(FlowExplorer.Schema.DocumentWork.IsCompleteKey, CompareType.Equal, false);
+            qWork.BuildParam(FlowExplorer.Schema.DocumentWork.UserIdKey, CompareType.Equal, GuiEnvironment.User.Id);
 
-            var qDocWorks = new QQuery(string.Empty, DocumentWork.DBTable);
-            qDocWorks.Columns.Add(new QColumn(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId))));
-            qDocWorks.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qDocWorks.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, GuiEnvironment.User.Id);
+            var qDocWorks = new QQuery(string.Empty, FlowExplorer.Schema.DocumentWork);
+            qDocWorks.Columns.Add(new QColumn(FlowExplorer.Schema.DocumentWork.DocumentIdKey));
+            qDocWorks.BuildParam(FlowExplorer.Schema.DocumentWork.IsCompleteKey, CompareType.Equal, false);
+            qDocWorks.BuildParam(FlowExplorer.Schema.DocumentWork.UserIdKey, CompareType.Equal, GuiEnvironment.User.Id);
 
-            qDocs = new QQuery(string.Empty, Document.DBTable);
+            qDocs = new QQuery(string.Empty, FlowExplorer.Schema.Document);
             qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qDocWorks);
 
-            works = new DocumentWorkList(qWork.ToWhere(), DBViewKeys.Empty);
+            works = new DocumentWorkList(FlowExplorer.Schema.DocumentWork, qWork.ToWhere(), DBViewKeys.Empty);
             works.CollectionChanged += WorksListChanged;
 
             AllowPreview = true;
@@ -91,7 +91,7 @@ namespace DataWF.Module.FlowGui
                         {
                             try
                             {
-                                Document.DBTable.Load(qDocs, DBLoadParam.Referencing, null).LastOrDefault();
+                                FlowExplorer.Schema.Document.Load(qDocs, DBLoadParam.Referencing, null).LastOrDefault();
                                 //DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize, works).LastOrDefault();
                                 Helper.LogWorkingSet("Documents");
                             }

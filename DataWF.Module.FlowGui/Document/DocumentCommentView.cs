@@ -35,7 +35,7 @@ namespace DataWF.Module.FlowGui
 
         private async void OnSend(Message message)
         {
-            var comment = new DocumentComment()
+            var comment = new DocumentComment(FlowExplorer.Schema.DocumentComment)
             {
                 Document = Document,
                 Message = message
@@ -60,6 +60,11 @@ namespace DataWF.Module.FlowGui
         {
             base.Localize();
             GuiService.Localize(this, Name, "Comments", GlyphType.Comments);
+        }
+
+        protected override DocumentComment GetNewItem()
+        {
+            throw new NotImplementedException();
         }
     }
 }

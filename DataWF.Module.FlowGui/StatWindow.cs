@@ -16,7 +16,7 @@ namespace DataWF.Module.FlowGui
             Mode = ToolShowMode.Dialog;
             ButtonClose.Visible = false;
 
-            users.ListSource = Instance.DBTable.DefaultView;
+            users.ListSource = FlowExplorer.Schema.Instance.DefaultView;
             stats.ListSource = NetStat.Items;
 
             map.Add(new GroupBoxItem() { Widget = users, Name = "Users", FillHeight = true, FillWidth = true });

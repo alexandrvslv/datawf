@@ -164,5 +164,10 @@ namespace DataWF.Module.FlowGui
                 }
             }
         }
+
+        protected override T GetNewItem()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

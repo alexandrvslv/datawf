@@ -15,6 +15,7 @@ namespace DataWF.Module.FlowGui
     [Module(true)]
     public partial class FlowExplorer : VPanel, IDockContent
     {
+        public static FlowSchema Schema;
         private ToolWindow ose;
         private ListEditor se;
         private Toolsbar barMain;
@@ -36,43 +37,43 @@ namespace DataWF.Module.FlowGui
                 new ToolMenuItem
                 {
                     Name = "Template",
-                    Sensitive = Template.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                    Sensitive = FlowExplorer.Schema.Template.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                     Glyph = GlyphType.Book
                 },
                  new ToolMenuItem
                  {
                      Name = "Template Data",
-                     Sensitive = TemplateData.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                     Sensitive = FlowExplorer.Schema.TemplateData.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                      Glyph = GlyphType.File
                  },
                 new ToolMenuItem
                 {
                     Name = "Work",
-                    Sensitive = Work.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                    Sensitive = FlowExplorer.Schema.Work.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                     Glyph = GlyphType.GearsAlias
                 },
                 new ToolMenuItem
                 {
                     Name = "Work Stage",
-                    Sensitive = Stage.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                    Sensitive = FlowExplorer.Schema.Stage.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                     Glyph = GlyphType.EditAlias
                 },
                 new ToolMenuItem
                 {
                     Name = "Stage Parameter",
-                    Sensitive = StageParam.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                    Sensitive = FlowExplorer.Schema.StageParam.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                     Glyph = GlyphType.Columns,
                     DropDown = new Menubar(
                         new ToolMenuItem
                         {
                             Name = "Stage Procedure",
-                            Sensitive = StageParam.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                            Sensitive = FlowExplorer.Schema.StageParam.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                             Glyph = GlyphType.EditAlias
                         },
                         new ToolMenuItem
                         {
                             Name = "Stage Reference",
-                            Sensitive = StageParam.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                            Sensitive = FlowExplorer.Schema.StageParam.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                             Glyph = GlyphType.EditAlias
                         }
                         )
@@ -80,31 +81,31 @@ namespace DataWF.Module.FlowGui
                 new ToolMenuItem
                 {
                     Name = "Group",
-                    Sensitive = UserGroup.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                    Sensitive = FlowExplorer.Schema.UserGroup.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                     Glyph = GlyphType.Users
                 },
                 new ToolMenuItem
                 {
                     Name = "Department",
-                    Sensitive = Department.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                    Sensitive = FlowExplorer.Schema.Department.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                     Glyph = GlyphType.Home
                 },
                 new ToolMenuItem
                 {
                     Name = "Position",
-                    Sensitive = Position.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                    Sensitive = FlowExplorer.Schema.Position.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                     Glyph = GlyphType.UserMd
                 },
                 new ToolMenuItem
                 {
                     Name = "User",
-                    Sensitive = User.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                    Sensitive = FlowExplorer.Schema.User.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                     Glyph = GlyphType.User
                 },
                 new ToolMenuItem
                 {
                     Name = "Scheduler",
-                    Sensitive = Scheduler.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false,
+                    Sensitive = FlowExplorer.Schema.Scheduler.Access.GetFlag(AccessType.Create, GuiEnvironment.User),
                     Glyph = GlyphType.ClockO
                 })
             { Name = "FlowExplorer" };
@@ -124,18 +125,18 @@ namespace DataWF.Module.FlowGui
             ose.ButtonAcceptClick += AcceptOnActivated;
 
             var userKeys = UserTreeKeys.None;
-            if (Department.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Department;
-            if (Position.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Position;
-            if (GroupPermission.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Permission;
-            if (User.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.User;
-            if (UserGroup.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Group;
-            if (Scheduler.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Scheduler;
+            if (FlowExplorer.Schema.Department.Access.GetFlag(AccessType.Read, GuiEnvironment.User)) userKeys |= UserTreeKeys.Department;
+            if (FlowExplorer.Schema.Position.Access.GetFlag(AccessType.Read, GuiEnvironment.User)) userKeys |= UserTreeKeys.Position;
+            if (FlowExplorer.Schema.GroupPermission.Access.GetFlag(AccessType.Read, GuiEnvironment.User)) userKeys |= UserTreeKeys.Permission;
+            if (FlowExplorer.Schema.User.Access.GetFlag(AccessType.Read, GuiEnvironment.User)) userKeys |= UserTreeKeys.User;
+            if (FlowExplorer.Schema.UserGroup.Access.GetFlag(AccessType.Read, GuiEnvironment.User)) userKeys |= UserTreeKeys.Group;
+            if (FlowExplorer.Schema.Scheduler.Access.GetFlag(AccessType.Read, GuiEnvironment.User)) userKeys |= UserTreeKeys.Scheduler;
             var keys = FlowTreeKeys.None;
             //if (TemplateParam.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.TemplateParam;
-            if (Template.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.Template;
-            if (StageParam.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.StageParam;
-            if (Stage.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.Stage;
-            if (Work.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.Work;
+            if (FlowExplorer.Schema.Template.Access.GetFlag(AccessType.Read, GuiEnvironment.User)) keys |= FlowTreeKeys.Template;
+            if (FlowExplorer.Schema.StageParam.Access.GetFlag(AccessType.Read, GuiEnvironment.User)) keys |= FlowTreeKeys.StageParam;
+            if (FlowExplorer.Schema.Stage.Access.GetFlag(AccessType.Read, GuiEnvironment.User)) keys |= FlowTreeKeys.Stage;
+            if (FlowExplorer.Schema.Work.Access.GetFlag(AccessType.Read, GuiEnvironment.User)) keys |= FlowTreeKeys.Work;
             tree = new FlowTree
             {
                 FlowKeys = keys,
@@ -184,51 +185,51 @@ namespace DataWF.Module.FlowGui
             object tag = tree.SelectedDBItem;
             if (item.Name == "Work")
             {
-                row = new Work();
+                row = new Work(FlowExplorer.Schema.Work);
             }
             else if (item.Name == "Work Stage")
             {
-                row = new Stage();
+                row = new Stage(FlowExplorer.Schema.Stage);
                 if (tag is Work)
                     ((Stage)row).Work = (Work)tag;
             }
             else if (item.Name == "Stage Parameter")
             {
-                row = new StageParam();
+                row = new StageParam(FlowExplorer.Schema.StageParam);
                 if (tag is Stage)
                     ((StageParam)row).Stage = (Stage)tag;
             }
             else if (item.Name == "Stage Procedure")
             {
-                row = new StageProcedure();
+                row = new StageProcedure(FlowExplorer.Schema.StageProcedure);
                 if (tag is Stage)
                     ((StageParam)row).Stage = (Stage)tag;
             }
             else if (item.Name == "Stage Reference")
             {
-                row = new StageReference();
+                row = new StageReference(FlowExplorer.Schema.StageReference);
                 if (tag is Stage)
                     ((StageParam)row).Stage = (Stage)tag;
             }
             else if (item.Name == "Group")
             {
-                row = new UserGroup();
+                row = new UserGroup(FlowExplorer.Schema.UserGroup);
             }
             else if (item.Name == "Template")
             {
-                row = new Template();
+                row = new Template(FlowExplorer.Schema.Template);
                 if (tag is Template)
                     ((Template)row).Parent = (Template)tag;
             }
             else if (item.Name == "Template Data")
             {
-                row = new TemplateData();
+                row = new TemplateData(FlowExplorer.Schema.TemplateData);
                 if (tag is Template)
                     ((TemplateData)row).Template = (Template)tag;
             }
             else if (item.Name == "User")
             {
-                row = new User();
+                row = new User(FlowExplorer.Schema.User);
                 if (tag is Department)
                     ((User)row).Department = (Department)tag;
                 else if (tag is Position)
@@ -241,7 +242,7 @@ namespace DataWF.Module.FlowGui
             }
             else if (item.Name == "Scheduler")
             {
-                row = new Scheduler();
+                row = new Scheduler(FlowExplorer.Schema.Scheduler);
                 if (tag is DBProcedure)
                     ((Scheduler)row).Procedure = (DBProcedure)tag;
             }
@@ -293,7 +294,7 @@ namespace DataWF.Module.FlowGui
 
         private void ToolMainRefreshClick(object sender, EventArgs e)
         {
-            FlowEnvironment.LoadBooks();
+            FlowEnvironment.LoadBooks(FlowExplorer.Schema);
         }
 
         private void ToolMainCopyClick(object sender, EventArgs e)
