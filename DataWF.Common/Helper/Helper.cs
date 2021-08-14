@@ -10,6 +10,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
@@ -239,6 +240,23 @@ namespace DataWF.Common
         public static StateInfoList Logs
         {
             get { return logs; }
+        }
+
+        public static void Log(StateInfo entry)
+        {
+            logs.Add(entry);
+        }
+
+        public static StateInfo Log(object sender, string description,  StatusType type = StatusType.Information, object tag = null, [CallerMemberName]string message = "")
+        {
+           return  Log(sender?.GetType().Name ?? "Default", message, description, type, tag);
+        }
+
+        public static StateInfo Log(string module, string message, string descriprion = null, StatusType type = StatusType.Information, object tag = null)
+        {
+            var stateInfo = new StateInfo(module, message, descriprion, type, tag);
+            logs.Add(stateInfo);
+            return stateInfo;
         }
 
         public static string DateDaysString(DateTime date)
@@ -1512,7 +1530,7 @@ namespace DataWF.Common
         public static void OnSerializeNotify(object sender, SerializationNotifyEventArgs arg)
         {
             string message = arg.Type.ToString() + " " + arg.Element;
-            Logs.Add(new StateInfo("Serialization", message, arg.FileName, StatusType.Information));
+            Logs.Add("Serialization", message, arg.FileName, StatusType.Information);
         }
 
         public static bool IsThreadExceptionHanled
@@ -1551,7 +1569,7 @@ namespace DataWF.Common
                                   Helper.SizeFormat(proc.VirtualMemorySize64),
                                   Helper.SizeFormat(proc.PrivateMemorySize64),
                                   Helper.SizeFormat(proc.PeakWorkingSet64));
-            logs.Add(new StateInfo("Memory", status, descript, StatusType.Warning));
+            Logs.Add("Memory", status, descript, StatusType.Warning);
             WorkingSet64 = temp;
         }
 

@@ -258,7 +258,7 @@ namespace DataWF.Data
                     info.Description = CompilerError(result);
                     info.Type = StatusType.Error;
                 }
-                Helper.Logs.Add(info);
+                Helper.Log(info);
 
 
                 using (FileStream ms = new FileStream(outFile + ".csproj", FileMode.Create))
@@ -482,7 +482,7 @@ namespace DataWF.Data
 
         public object ExecuteObject(object obj, ExecuteArgs param)
         {
-            Helper.Logs.Add(new StateInfo("Procedure", this.Name, param.ToString(), StatusType.Information));
+            Helper.Log(this, $"{Name} {param.ToString()}", StatusType.Information);
 
             //if (FlowEnvir.Config.LogProcedure)
             //DocumentLog.LogUser(FlowEnvir.Personal.User, DocumentLogType.Execute, this.ToString(), this, param.Document);
@@ -793,7 +793,7 @@ namespace DataWF.Data
             Helper.SetDirectory(Environment.SpecialFolder.LocalApplicationData);
 
             //var appDir = Tool.GetDirectory();
-            Helper.Logs.Add(new StateInfo("Startup", "Cache Sources", "", StatusType.Information));
+            Helper.Log(schema, "Procedures");
 
 
             var groups = schema.Procedures.Select(ProcedureTypeInvoker.Instance,

@@ -11,112 +11,112 @@ namespace DataWF.Test.Data
         }
 
         [Column("int_value", Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull)]
-        public int IntId { get => GetProperty<int>(); set => SetProperty(value); }
+        public int IntId { get => GetValue<int>(); set => SetValue(value); }
 
         [Column("int_unsigned")]
-        public uint IntUnsigned { get => GetProperty<uint>(); set => SetProperty(value); }
+        public uint IntUnsigned { get => GetValue<uint>(); set => SetValue(value); }
 
         [Column("int_nullable")]
-        public int? IntNullable { get => GetProperty<int?>(); set => SetProperty(value); }
+        public int? IntNullable { get => GetValue<int?>(); set => SetValue(value); }
 
         [Column("short_value")]
-        public short Short { get => GetProperty<short>(); set => SetProperty(value); }
+        public short Short { get => GetValue<short>(); set => SetValue(value); }
 
         [Column("short_unsigned")]
-        public ushort ShortUnsigned { get => GetProperty<ushort>(); set => SetProperty(value); }
+        public ushort ShortUnsigned { get => GetValue<ushort>(); set => SetValue(value); }
 
         [Column("short_nullable")]
-        public short? ShortNullable { get => GetProperty<short?>(); set => SetProperty(value); }
+        public short? ShortNullable { get => GetValue<short?>(); set => SetValue(value); }
 
         [Column("long_value")]
-        public long Long { get => GetProperty<long>(); set => SetProperty(value); }
+        public long Long { get => GetValue<long>(); set => SetValue(value); }
 
         [Column("long_nullable")]
-        public long? LongNullable { get => GetProperty<long?>(); set => SetProperty(value); }
+        public long? LongNullable { get => GetValue<long?>(); set => SetValue(value); }
 
         [Column("byte_value")]
-        public byte Byte { get => GetProperty<byte>(); set => SetProperty(value); }
+        public byte Byte { get => GetValue<byte>(); set => SetValue(value); }
 
         [Column("byte_signed")]
-        public sbyte ByteSigned { get => GetProperty<sbyte>(); set => SetProperty(value); }
+        public sbyte ByteSigned { get => GetValue<sbyte>(); set => SetValue(value); }
 
         [Column("byte_nullable")]
-        public byte? ByteNullable { get => GetProperty<byte?>(); set => SetProperty(value); }
+        public byte? ByteNullable { get => GetValue<byte?>(); set => SetValue(value); }
 
         [Column("float_value")]
-        public float Float { get => GetProperty<float>(); set => SetProperty(value); }
+        public float Float { get => GetValue<float>(); set => SetValue(value); }
 
         [Column("float_nullable")]
-        public float? FloatNullable { get => GetProperty<float?>(); set => SetProperty(value); }
+        public float? FloatNullable { get => GetValue<float?>(); set => SetValue(value); }
 
         [Column("double_value")]
-        public double Double { get => GetProperty<double>(); set => SetProperty(value); }
+        public double Double { get => GetValue<double>(); set => SetValue(value); }
 
         [Column("double_nullable")]
-        public double? DoubleNullable { get => GetProperty<double?>(); set => SetProperty(value); }
+        public double? DoubleNullable { get => GetValue<double?>(); set => SetValue(value); }
 
         [Column("decimal_value", Size = 29)]
-        public decimal Decimal { get => GetProperty<decimal>(); set => SetProperty(value); }
+        public decimal Decimal { get => GetValue<decimal>(); set => SetValue(value); }
 
         [Column("decimal_nullable", Size = 29)]
-        public decimal? DecimalNullable { get => GetProperty<decimal?>(); set => SetProperty(value); }
+        public decimal? DecimalNullable { get => GetValue<decimal?>(); set => SetValue(value); }
 
         [Column("bool_value")]
-        public bool Bool { get => GetProperty<bool>(); set => SetProperty(value); }
+        public bool Bool { get => GetValue<bool>(); set => SetValue(value); }
 
         [Column("bool_nullable")]
-        public bool? BoolNullable { get => GetProperty<bool?>(); set => SetProperty(value); }
+        public bool? BoolNullable { get => GetValue<bool?>(); set => SetValue(value); }
 
         [Column("datetime_value")]
-        public DateTime DateTime { get => GetProperty<DateTime>(); set => SetProperty(value); }
+        public DateTime DateTime { get => GetValue<DateTime>(); set => SetValue(value); }
 
         [Column("datetime_nullable")]
-        public DateTime? DateTimeNullable { get => GetProperty<DateTime?>(); set => SetProperty(value); }
+        public DateTime? DateTimeNullable { get => GetValue<DateTime?>(); set => SetValue(value); }
 
         [Column("typespan_value")]
-        public TimeSpan TimeSpan { get => GetProperty<TimeSpan>(); set => SetProperty(value); }
+        public TimeSpan TimeSpan { get => GetValue<TimeSpan>(); set => SetValue(value); }
 
         [Column("timespan_nullable")]
-        public TimeSpan? TimeSpanNullable { get => GetProperty<TimeSpan?>(); set => SetProperty(value); }
+        public TimeSpan? TimeSpanNullable { get => GetValue<TimeSpan?>(); set => SetValue(value); }
 
         [Column("enum_long")]
-        public Int64Enum EnumLong { get => GetProperty<Int64Enum>(); set => SetProperty(value); }
+        public Int64Enum EnumLong { get => GetValue<Int64Enum>(); set => SetValue(value); }
 
         [Column("enum_long_nullable")]
-        public Int64Enum? EnumLongNullable { get => GetProperty<Int64Enum?>(); set => SetProperty(value); }
+        public Int64Enum? EnumLongNullable { get => GetValue<Int64Enum?>(); set => SetValue(value); }
 
         [Column("enum_int")]
-        public Int32Enum EnumInt { get => GetProperty<Int32Enum>(); set => SetProperty(value); }
+        public Int32Enum EnumInt { get => GetValue<Int32Enum>(); set => SetValue(value); }
 
         [Column("enum_int_unsigned")]
-        public UInt32Enum EnumIntUnsigned { get => GetProperty<UInt32Enum>(); set => SetProperty(value); }
+        public UInt32Enum EnumIntUnsigned { get => GetValue<UInt32Enum>(); set => SetValue(value); }
 
         [Column("enum_int_nullable")]
-        public Int32Enum? EnumIntNullable { get => GetProperty<Int32Enum?>(); set => SetProperty(value); }
+        public Int32Enum? EnumIntNullable { get => GetValue<Int32Enum?>(); set => SetValue(value); }
 
         [Column("enum_short")]
-        public Int16Enum EnumShort { get => GetProperty<Int16Enum>(); set => SetProperty(value); }
+        public Int16Enum EnumShort { get => GetValue<Int16Enum>(); set => SetValue(value); }
 
         [Column("enum_short_unsigned")]
-        public UInt16Enum EnumShortUnsigned { get => GetProperty<UInt16Enum>(); set => SetProperty(value); }
+        public UInt16Enum EnumShortUnsigned { get => GetValue<UInt16Enum>(); set => SetValue(value); }
 
         [Column("enum_short_nullable")]
-        public Int16Enum? EnumShortNullable { get => GetProperty<Int16Enum?>(); set => SetProperty(value); }
+        public Int16Enum? EnumShortNullable { get => GetValue<Int16Enum?>(); set => SetValue(value); }
 
         [Column("enum_byte")]
-        public UInt8Enum EnumByte { get => GetProperty<UInt8Enum>(); set => SetProperty(value); }
+        public UInt8Enum EnumByte { get => GetValue<UInt8Enum>(); set => SetValue(value); }
 
         [Column("enum_byte_signed")]
-        public Int8Enum EnumByteSigned { get => GetProperty<Int8Enum>(); set => SetProperty(value); }
+        public Int8Enum EnumByteSigned { get => GetValue<Int8Enum>(); set => SetValue(value); }
 
         [Column("enum_byte_nullable")]
-        public UInt8Enum? EnumByteNullable { get => GetProperty<UInt8Enum?>(); set => SetProperty(value); }
+        public UInt8Enum? EnumByteNullable { get => GetValue<UInt8Enum?>(); set => SetValue(value); }
 
         [Column("string_value")]
-        public string String { get => GetProperty<string>(); set => SetProperty(value); }
+        public string String { get => GetValue<string>(); set => SetValue(value); }
 
         [Column("bytearray_value")]
-        public byte[] ByteArray { get => GetProperty<byte[]>(); set => SetProperty(value); }
+        public byte[] ByteArray { get => GetValue<byte[]>(); set => SetValue(value); }
     }
 
     public enum Int64Enum : long

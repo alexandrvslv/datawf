@@ -41,8 +41,8 @@ namespace DataWF.Test.Module.Common
                 System = DBSystem.SQLite,
                 DataBase = "test.common"
             };
-            schema.DropDatabase();
-            schema.CreateDatabase();
+            schema.ExecuteDropDatabase();
+            schema.ExecuteCreateDatabase();
 
             var group = new UserGroup(userGroupTable)
             {

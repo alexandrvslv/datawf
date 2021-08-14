@@ -140,7 +140,7 @@ namespace DataWF.Module.Common
 
             var info = new StateInfo
             {
-                Module = "Task",
+                Module = nameof(Scheduler),
                 Message = Name ?? task.Name,
                 Tag = result
             };
@@ -173,7 +173,7 @@ namespace DataWF.Module.Common
                 info.Type = StatusType.Information;
             }
 
-            Helper.Logs.Add(info);
+            Helper.Log(info);
 
             if (result is Exception)
             {

@@ -39,14 +39,7 @@ namespace DataWF.Gui
 
         public void Add(string source, string message, string description, StatusType type)
         {
-            Helper.Logs.Add(new StateInfo
-            {
-                Date = DateTime.Now,
-                Module = source,
-                Message = message,
-                Description = description,
-                Type = type
-            });
+            Helper.Log(source, message, description, type);
         }
 
         public LogList List

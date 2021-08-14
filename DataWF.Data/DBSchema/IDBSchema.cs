@@ -24,24 +24,24 @@ namespace DataWF.Data
 {
     public interface IDBSchema: IDBSchemaItem
     {
+        Version Version { get; set; }
         DBConnection Connection { get; set; }
         DBSystem System { get; }
-        IDBSchemaLog LogSchema { get; set; }
-        DBProcedureList Procedures { get; set; }
-        DBSequenceList Sequences { get; set; }
-        DBTableGroupList TableGroups { get; set; }
         DBTableList Tables { get; set; }
-        Version Version { get; set; }
+        DBTableGroupList TableGroups { get; set; }
+        DBSequenceList Sequences { get; set; }
+        DBProcedureList Procedures { get; set; }
+        IDBSchemaLog LogSchema { get; set; }
         bool IsSynchronizing { get; }
 
-        void CreateDatabase();
-        void CreateSchema();
-        void DropDatabase();
+        void ExecuteCreateDatabase();
+        void ExecuteCreateSchema();
+        void ExecuteDropDatabase();
 
         DBTable GetTable(Type type, bool generate = false);
         DBTable<T> GetTable<T>(bool generate = false) where T : DBItem;
         IDBTable GetVirtualTable<T>(int itemType) where T : DBItem;
         DBTable ParseTable(string code);
-        IEnumerable<DBForeignKey> GetChildRelations(DBTable target);
+        IEnumerable<DBForeignKey> GetAllForeignConstraints(DBTable target);
     }
 }

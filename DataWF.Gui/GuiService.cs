@@ -241,7 +241,7 @@ namespace DataWF.Gui
             }
             catch (Exception ex)
             {
-                Helper.Logs.Add(new StateInfo(ex));
+                Helper.OnException(ex);
                 return null;
             }
         }

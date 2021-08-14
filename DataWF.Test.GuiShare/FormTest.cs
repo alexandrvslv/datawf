@@ -19,7 +19,7 @@ namespace DataWF.TestGui
         {
             //DBService.Execute += (e) =>
             //{
-            //    Helper.Logs.Add(new StateInfo(
+            //    Helper.Log(
             //        "DBService",
             //        "Execute" + e.Type,
             //        e.Query,
@@ -74,8 +74,8 @@ namespace DataWF.TestGui
                     System = DBSystem.SQLite,
                     DataBase = "test.common.sqlite"
                 };
-                schema.DropDatabase();
-                schema.CreateDatabase();
+                schema.ExecuteDropDatabase();
+                schema.ExecuteCreateDatabase();
             }).ConfigureAwait(false);
         }
 

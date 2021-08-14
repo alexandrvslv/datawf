@@ -124,18 +124,14 @@ namespace { namespaceName }
             set => base.LogSchema = value;
         }}
 
-        public override IDBSchemaLog GenerateLogSchema()
+        public override DBSchemaLog NewLogSchema()
         {{
-            if (LogSchema == null)
-            {{
-                LogSchema = new {className}()
+            return new {className}
                 {{
                     Name = Name + ""_log"",
                     Connection = connection,
                     TargetSchema = this
                 }};
-            }}
-            return LogSchema;
         }}
     }}
 }}");

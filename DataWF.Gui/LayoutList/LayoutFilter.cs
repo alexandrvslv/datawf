@@ -104,13 +104,6 @@ namespace DataWF.Gui
                     OnPropertyChanged(nameof(Value));
                 }
             }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
+        }       
     }
 }

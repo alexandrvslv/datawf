@@ -121,7 +121,7 @@ namespace DataWF.WebService.Common
                     connection.Action = action;
                 }
             }
-            Helper.Logs.Add(new StateInfo("Web Request", action, address) { User = user?.Name });
+            Helper.Log("Web Request", action, address).User = user?.Name;
         }
 
         public virtual WebNotifyConnection Register(WebSocket socket, IUserIdentity user, string address)

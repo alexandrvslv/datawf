@@ -77,14 +77,14 @@ namespace DataWF.Module.MessangerGui
             if (Staff is User user)
             {
                 string query = string.Format("where ({0}={1} and {2} in (select {3} from {4} where {5}={6})) or ({0}={6} and {2} in (select {3} from {4} where {5}={1}))",
-                                   MessageAddress.DBTable.ParseProperty(nameof(MessageAddress.UserId)).Name,
+                                   MessageExplorer.Schema.MessageAddress.UserIdKey.Name,
                                    user.Id,
-                                   MessageAddress.DBTable.ParseProperty(nameof(MessageAddress.MessageId)).Name,
-                                   Message.DBTable.ParseProperty(nameof(Message.Id)).Name,
-                                   Message.DBTable.Name,
-                                   Message.DBTable.ParseProperty(nameof(Message.UserId)).Name,
+                                   MessageExplorer.Schema.MessageAddress.MessageIdKey.Name,
+                                   MessageExplorer.Schema.Message.IdKey.Name,
+                                   MessageExplorer.Schema.Message.Name,
+                                   MessageExplorer.Schema.Message.UserIdKey.Name,
                                    GuiEnvironment.User.Id);
-                var items = await MessageAddress.DBTable.LoadAsync(query, DBLoadParam.Load | DBLoadParam.Synchronize, null, null);
+                var items = await MessageExplorer.Schema.MessageAddress.LoadAsync(query, DBLoadParam.Load | DBLoadParam.Synchronize, null, null);
                 items.LastOrDefault();
             }
         }
@@ -100,7 +100,7 @@ namespace DataWF.Module.MessangerGui
             {
                 using (var transaction = new DBTransaction())
                 {
-                    var message = await Message.Send((User)GuiEnvironment.User, GetStaff(), MessageText);
+                    var message = await MessageExplorer.Schema.Message.Send((User)GuiEnvironment.User, GetStaff(), MessageText);
                     OnSending?.Invoke(message);
                     transaction.Commit();
                 }

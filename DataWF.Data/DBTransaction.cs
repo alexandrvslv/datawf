@@ -518,7 +518,7 @@ namespace DataWF.Data
         {
             if (rez is Exception ex)
             {
-                Helper.Logs.Add(new StateInfo("Transaction", ex.Message, text, StatusType.Warning));
+                Helper.Log(nameof(DBTransaction), ex.Message, text, StatusType.Warning);
             }
 
             Execute?.Invoke(new DBExecuteEventArg { Time = ms, Query = text, Type = type, Rezult = rez });

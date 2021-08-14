@@ -59,7 +59,6 @@ namespace DataWF.Data
         protected string fileName = "";
         protected string logSchemaName;
         private bool cacheRelation;
-        private FileDataTable fileTable;
         private IDBSchemaLog logSchema;
 
         public DBSchema()
@@ -68,6 +67,7 @@ namespace DataWF.Data
 
         public DBSchema(string name) : base(name)
         {
+            Name = name;
             DataBase = name;
             Sequences = new DBSequenceList(this);
             Tables = new DBTableList(this);
@@ -77,16 +77,14 @@ namespace DataWF.Data
 
         public DBSchema(string name, string fileName) : this(name)
         {
-            //Init();
             FileName = fileName;
             Serialization.Deserialize(fileName, this);
         }
 
-
         public Version Version { get; set; } = new Version(1, 0, 0, 0);
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBSchemaList Schems => Containers.FirstOrDefault(p=>p is DBSchemaList) as DBSchemaList;
+        public DBSchemaList Schems => Containers.FirstOrDefault(p => p is DBSchemaList) as DBSchemaList;
 
         [Browsable(false)]
         public string ConnectionName { get => connectionName; set => connectionName = value; }
@@ -176,9 +174,6 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public FileDataTable FileTable => fileTable ??= (FileDataTable)GetTable<FileData>();
-
         [XmlIgnore, JsonIgnore]
         public bool IsSynchronizing { get; internal set; }
 
@@ -187,7 +182,7 @@ namespace DataWF.Data
             return Tables[name] ?? new DBTable<DBItem>(name) { Schema = this };
         }
 
-        public void GenerateTablesInfo(IEnumerable<DBTableInfo> tables)
+        public void GenerateTables(IEnumerable<DBTableInfo> tables)
         {
             foreach (var tableInfo in tables)
             {
@@ -266,45 +261,22 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public void LoadTablesInfo()
-        {
-            try
-            {
-                IsSynchronizing = true;
-
-                foreach (var tableInfo in GetTablesInfo())
-                {
-                    var table = GenerateTable(tableInfo.Name);
-                    table.Type = tableInfo.View ? DBTableType.View : DBTableType.Table;
-                    table.Generate(tableInfo);
-                    if (!Tables.Contains(table))
-                    {
-                        Tables.Add(table);
-                    }
-                }
-            }
-            finally
-            {
-                IsSynchronizing = false;
-            }
-        }
-
-        public IEnumerable<DBTableInfo> GetTablesInfo(string schemaName = null, string tableName = null)
-        {
-            return System.GetTablesInfo(Connection, schemaName, tableName);
-        }
-
-        public void DropDatabase()
-        {
-            System.DropDatabase(this);
-        }
-
-        public void CreateDatabase()
+        public void ExecuteDropDatabase()
         {
             if (Connection == null)
                 throw new InvalidOperationException("Connection is not defined!");
-            Helper.Logs.Add(new StateInfo("Load", "Database", "Create Database"));
+            Helper.Log(this, "Start");
+            System.DropDatabase(this);
+            Helper.Log(this, "Success");
+        }
+
+        public void ExecuteCreateDatabase()
+        {
+            if (Connection == null)
+                throw new InvalidOperationException("Connection is not defined!");
+            Helper.Log(this, "Start");
             System.CreateDatabase(this, Connection);
+            Helper.Log(this, "Success");
             if (LogSchema != null)
             {
                 if (LogSchema.Connection == null)
@@ -314,70 +286,41 @@ namespace DataWF.Data
 
                 if (LogSchema.Connection != Connection)
                 {
-                    LogSchema.CreateDatabase();
+                    LogSchema.ExecuteCreateDatabase();
                 }
                 else
                 {
-                    LogSchema.CreateSchema();
+                    LogSchema.ExecuteCreateSchema();
                 }
             }
         }
 
-        public void CreateSchema()
+        public void ExecuteCreateSchema()
         {
             if (Connection == null)
                 throw new InvalidOperationException("Connection is not defined!");
-            Helper.Logs.Add(new StateInfo("Load", "Database", "Create Schema"));
+            Helper.Log(this, "Start");
             System.CreateSchema(this, Connection);
+            Helper.Log(this, "Success");
         }
 
-        public virtual IDBSchemaLog GenerateLogSchema()
+        public virtual IDBSchemaLog GetLogSchema()
         {
             if (LogSchema == null)
             {
-                //var logConnection = connection.Clone();
-                //logConnection.Name += "_log";
-                LogSchema = new DBSchemaLog()
-                {
-                    Name = Name + "_log",
-                    Connection = connection,
-                    TargetSchema = this
-                };
+                LogSchema = NewLogSchema();
             }
             return LogSchema;
         }
 
-        internal IEnumerable<DBConstraint> GetConstraints()
+        public virtual DBSchemaLog NewLogSchema()
         {
-            foreach (var table in Tables)
+            return new DBSchemaLog()
             {
-                if (table.IsVirtual)
-                    continue;
-                foreach (var constraint in table.Constraints)
-                    yield return constraint;
-            }
-        }
-
-        internal IEnumerable<DBForeignKey> GetForeigns()
-        {
-            foreach (var table in Tables)
-            {
-                if (table.IsVirtual)
-                    continue;
-                foreach (var constraint in table.Foreigns)
-                    yield return constraint;
-            }
-        }
-
-        internal IEnumerable<DBIndex> GetIndexes()
-        {
-            foreach (var table in Tables)
-            {
-                if (table.IsVirtual)
-                    continue;
-                foreach (var index in table.Indexes)
-                    yield return index;
-            }
+                Name = Name + "_log",
+                Connection = connection,
+                TargetSchema = this
+            };
         }
 
         public void ExportXHTML(string filename)
@@ -508,31 +451,47 @@ namespace DataWF.Data
             return table;
         }
 
-        public Task LoadTablesInfoAsync()
+        public IEnumerable<DBTableInfo> GetTablesInfo(string schemaName = null, string tableName = null)
+        {
+            return System.GetTablesInfo(Connection, schemaName, tableName);
+        }
+
+        public void GenerateFromTablesInfo()
+        {
+            try
+            {
+                IsSynchronizing = true;
+
+                foreach (var tableInfo in GetTablesInfo())
+                {
+                    var table = GenerateTable(tableInfo.Name);
+                    table.Type = tableInfo.View ? DBTableType.View : DBTableType.Table;
+                    table.Generate(tableInfo);
+                    if (!Tables.Contains(table))
+                    {
+                        Tables.Add(table);
+                    }
+                }
+            }
+            finally
+            {
+                IsSynchronizing = false;
+            }
+        }
+
+        public Task GenerateFromTablesInfoAsync()
         {
             return Task.Run(() =>
             {
                 try
                 {
-                    LoadTablesInfo();
+                    GenerateFromTablesInfo();
                 }
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
                 }
             });
-        }
-
-        public void Generate(IEnumerable<Assembly> assemblies)
-        {
-            var types = new List<Type>();
-            foreach (var assembly in assemblies)
-            {
-                Procedures.Generate(assembly);
-                types.AddRange(assembly.GetExportedTypes()
-                    .Where(item => item.IsClass));
-            }
-            Generate(types);
         }
 
         public IDBTable GetVirtualTable<T>(int itemType) where T : DBItem
@@ -587,13 +546,26 @@ namespace DataWF.Data
 
         public virtual void Generate(string name)
         {
-            Name = name;
+            if (name != null)
+                Name = name;
+        }
+
+        public void Generate(IEnumerable<Assembly> assemblies)
+        {
+            var types = new List<Type>();
+            foreach (var assembly in assemblies)
+            {
+                Procedures.Generate(assembly);
+                types.AddRange(assembly.GetExportedTypes()
+                    .Where(item => item.IsClass));
+            }
+            Generate(types);
         }
 
         public void Generate(IEnumerable<Type> types)
         {
-            var logSchema = GenerateLogSchema();
-            Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Schema"));
+            var logSchema = GetLogSchema();
+            Helper.Log(this, $"Start generate {types.Count()} type(s)");
             var tableGenerators = new HashSet<TableGenerator>();
             var logTableGenerators = new HashSet<LogTableGenerator>();
             foreach (var type in types)
@@ -624,9 +596,12 @@ namespace DataWF.Data
 
             foreach (var logTableGenerator in logTableGenerators)
             {
-                var table = logTableGenerator.Generate(logSchema);
+                var table = logTableGenerator.Generate(logSchema ?? (IDBSchema)this);
                 table.RemoveDeletedColumns();
             }
+            
+            if(logSchema is DBSchema defLogSchema)
+                defLogSchema.Generate(defLogSchema.Name);
 
             foreach (DBTable table in Tables)
             {
@@ -639,20 +614,33 @@ namespace DataWF.Data
             }
 
             Procedures.CheckDeleted();
+
+            Helper.Log(this, $"Success");
         }
 
-        public string GeneretePatch(IEnumerable<DBItem> items)
+        internal IEnumerable<DBConstraint> GetAllConstraints()
         {
-            var rez = new StringBuilder();
-
-            foreach (var item in items)
+            foreach (var table in Tables)
             {
-                rez.Append(item.FormatPatch());
+                if (table.IsVirtual)
+                    continue;
+                foreach (var constraint in table.Constraints)
+                    yield return constraint;
             }
-            return rez.ToString();
         }
 
-        public IEnumerable<DBForeignKey> GetChildRelations(DBTable target)
+        internal IEnumerable<DBForeignKey> GetAllForeignConstraints()
+        {
+            foreach (var table in Tables)
+            {
+                if (table.IsVirtual)
+                    continue;
+                foreach (var constraint in table.Foreigns)
+                    yield return constraint;
+            }
+        }
+
+        public IEnumerable<DBForeignKey> GetAllForeignConstraints(DBTable target)
         {
             if (!cacheRelation)
             {
@@ -668,6 +656,17 @@ namespace DataWF.Data
 
             }
             return target.ChildRelations;
+        }
+
+        internal IEnumerable<DBIndex> GetAllIndexes()
+        {
+            foreach (var table in Tables)
+            {
+                if (table.IsVirtual)
+                    continue;
+                foreach (var index in table.Indexes)
+                    yield return index;
+            }
         }
     }
 }

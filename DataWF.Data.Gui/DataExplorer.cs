@@ -357,7 +357,7 @@ namespace DataWF.Data.Gui
 
             if (value is DBSchema)
             {
-                await ((DBSchema)value).LoadTablesInfoAsync();
+                await ((DBSchema)value).GenerateFromTablesInfoAsync();
             }
         }
 
@@ -536,7 +536,7 @@ namespace DataWF.Data.Gui
         {
             if (dataTree.SelectedDBItem is DBSchema)
             {
-                ((DBSchema)dataTree.SelectedDBItem).LoadTablesInfoAsync();
+                ((DBSchema)dataTree.SelectedDBItem).GenerateFromTablesInfoAsync();
             }
         }
 
@@ -601,7 +601,7 @@ namespace DataWF.Data.Gui
 
         private void ToolAddColumnGroupClick(object sender, EventArgs e)
         {
-            var table = dataTree.SelectedDBItem as DBTable;
+            var table = dataTree.SelectedDBItem as IDBTable;
             if (dataTree.SelectedDBItem is IDBTableContent tableContent)
             {
                 table = tableContent.Table;
@@ -619,7 +619,7 @@ namespace DataWF.Data.Gui
 
         private void ToolAddColumnClick(object sender, EventArgs e)
         {
-            var table = dataTree.SelectedDBItem as DBTable;
+            var table = dataTree.SelectedDBItem as IDBTable;
             var group = dataTree.SelectedDBItem as DBColumnGroup;
             if (dataTree.SelectedDBItem is IDBTableContent tableContent)
             {
@@ -643,7 +643,7 @@ namespace DataWF.Data.Gui
 
         private void ToolAddIndexClick(object sender, EventArgs e)
         {
-            var table = dataTree.SelectedDBItem as DBTable;
+            var table = dataTree.SelectedDBItem as IDBTable;
             if (dataTree.SelectedDBItem is IDBTableContent tableContent)
             {
                 table = tableContent.Table;
@@ -671,7 +671,7 @@ namespace DataWF.Data.Gui
 
         private void ToolAddConstraintClick(object sender, EventArgs e)
         {
-            var table = dataTree.SelectedDBItem as DBTable;
+            var table = dataTree.SelectedDBItem as IDBTable;
             if (dataTree.SelectedDBItem is IDBTableContent tableContent)
             {
                 table = tableContent.Table;
@@ -699,7 +699,7 @@ namespace DataWF.Data.Gui
 
         private void ToolAddForeignClick(object sender, EventArgs e)
         {
-            var table = dataTree.SelectedDBItem as DBTable;
+            var table = dataTree.SelectedDBItem as IDBTable;
             if (dataTree.SelectedDBItem is IDBTableContent tableContent)
             {
                 table = tableContent.Table;

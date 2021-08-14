@@ -74,12 +74,12 @@ namespace DataWF.Data.Gui
         private void CheckAssembly(Assembly assembly)
         {
             var hasModule = false;
-            Helper.Logs.Add(new StateInfo("Main Form", "Assembly Loadind", assembly.FullName));
+            Helper.Log(this, assembly.FullName);
             foreach (Type type in assembly.GetExportedTypes())
             {
                 if (TypeHelper.IsInterface(type, typeof(IDockContent)))
                 {
-                    Helper.Logs.Add(new StateInfo("Main Form", "Module Initialize", Locale.Get(type)));
+                    Helper.Log(this, Locale.Get(type));
                     try
                     {
                         foreach (var attribute in type.GetCustomAttributes<ModuleAttribute>(false))
@@ -93,7 +93,7 @@ namespace DataWF.Data.Gui
                     }
                     catch (Exception ex)
                     {
-                        Helper.Logs.Add(new StateInfo("Main Form", ex.Message, ex.StackTrace, StatusType.Error));
+                        Helper.OnException(ex);
                     }
                 }
                 if (TypeHelper.IsInterface(type, typeof(IProjectEditor)))
@@ -109,7 +109,7 @@ namespace DataWF.Data.Gui
                     }
                     catch (Exception ex)
                     {
-                        Helper.Logs.Add(new StateInfo("Main Form", ex.Message, ex.StackTrace, StatusType.Error));
+                        Helper.OnException(ex);
                     }
                 }
             }

@@ -1246,7 +1246,7 @@ namespace DataWF.Data
 
         public virtual IEnumerable<DBForeignKey> GetChildRelations()
         {
-            foreach (var item in Schema?.GetChildRelations(this) ?? Enumerable.Empty<DBForeignKey>())
+            foreach (var item in Schema?.GetAllForeignConstraints(this) ?? Enumerable.Empty<DBForeignKey>())
                 yield return item;
 
             if (IsVirtual)

@@ -2412,7 +2412,7 @@ namespace DataWF.Gui
                 field.IsCompaund = IsComplex(field);
                 if (field.Invoker == null)
                 {
-                    Helper.Logs.Add(new StateInfo("LayoutList", "Remove unreferenced field", $"Field Name: {field.Name} ItemType: {fieldType}", StatusType.Warning));
+                    Helper.Log(this, $"Remove unreferenced Field Name: {field.Name} ItemType: {fieldType}", StatusType.Warning);
                     field.Remove();
                     return;
                 }
@@ -2487,7 +2487,7 @@ namespace DataWF.Gui
                 column.Collect = GetCellCollect(column);
                 if (column.Invoker == null)
                 {
-                    Helper.Logs.Add(new StateInfo("LayoutList", "Remove unreferenced column", $"Column Name: {column.Name} ItemType: {listType}", StatusType.Warning));
+                    Helper.Log(this, $"Remove unreferenced Column Name: {column.Name} ItemType: {listType}", StatusType.Warning);
                     column.Remove();
                     return;
                 }

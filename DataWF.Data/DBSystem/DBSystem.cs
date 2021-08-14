@@ -755,7 +755,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
 
             if (schema.Connection.System != DBSystem.SQLite)
             {
-                foreach (var constraint in schema.GetConstraints())
+                foreach (var constraint in schema.GetAllConstraints())
                 {
                     if (constraint.Table.IsVirtual || constraint.Column.ColumnType != DBColumnTypes.Default)
                         continue;
@@ -763,7 +763,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
                     ddl.AppendLine("go");
                 }
 
-                foreach (var foreign in schema.GetForeigns())
+                foreach (var foreign in schema.GetAllForeignConstraints())
                 {
                     if (foreign.Table.IsVirtual || foreign.Column.ColumnType != DBColumnTypes.Default)
                         continue;
@@ -778,7 +778,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
                 ddl.AppendLine("go");
             }
 
-            foreach (var index in schema.GetIndexes())
+            foreach (var index in schema.GetAllIndexes())
             {
                 if (index.Table.IsVirtual)
                     continue;

@@ -12,8 +12,8 @@ namespace DataWF.Test.Data
     {
         public const string SchemaName = "test";
         private TestSchema schema;
-        private DBTable<Position> positionTable;
-        private DBTable<Employer> employerTable;
+        private PositionTable positionTable;
+        private EmployerTable<Employer> employerTable;
 
         [SetUp]
         public async Task Setup()
@@ -38,8 +38,8 @@ namespace DataWF.Test.Data
             schema = new TestSchema();
             schema.Generate("");
             schema.Connection = DBService.Connections["TestSqlLite"];
-            schema.DropDatabase();
-            schema.CreateDatabase();
+            schema.ExecuteDropDatabase();
+            schema.ExecuteCreateDatabase();
 
             positionTable = schema.Position;
 

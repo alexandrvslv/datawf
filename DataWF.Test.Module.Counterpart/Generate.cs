@@ -32,8 +32,8 @@ namespace DataWf.Test.Module.Counterparty
                 DataBase = "test.common",
                 System = DBSystem.SQLite
             };
-            schema.DropDatabase();
-            schema.CreateDatabase();
+            schema.ExecuteDropDatabase();
+            schema.ExecuteCreateDatabase();
 
             new Continent(schema.Location) { Code = "AF", Name = "Africa" }.Attach();
             new Continent(schema.Location) { Code = "AN", Name = "Antarctica" }.Attach();

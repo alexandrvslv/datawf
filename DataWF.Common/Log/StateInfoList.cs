@@ -16,7 +16,19 @@ namespace DataWF.Common
             Limit = limit;
         }
 
+        public bool WriteDebug { get; set; }
+
         public int Limit { get; set; }
+
+        public void Add(string module, string message, string descriprion = null, StatusType type = StatusType.Information, object tag = null)
+        {
+            Add(new StateInfo(module, message, descriprion, type, tag));
+        }
+
+        public void Add(Exception ex)
+        {
+            Add(new StateInfo(ex));
+        }
 
         public override NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
         {
@@ -31,6 +43,14 @@ namespace DataWF.Common
                 });
             }
             return args;
+        }
+
+        public override int AddInternal(StateInfo item)
+        {
+            if(WriteDebug)
+            System.Diagnostics.Debug.WriteLine(string.Concat(item.Module, " ", item.Message, " ", item.Description));
+
+            return base.AddInternal(item);
         }
 
         #region IFSerialize implementation
@@ -64,6 +84,7 @@ namespace DataWF.Common
             get { return "details.log"; }
             set { }
         }
+
 
         #endregion
     }

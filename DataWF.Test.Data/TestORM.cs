@@ -93,7 +93,6 @@ namespace DataWF.Test.Data
         {
             DBService.Schems.Clear();
             DBService.Schems.Add(schema);
-            DBService.Schems.Add(schema.LogSchema);
 
             var buffer = Serialization.Instance.Serialize(DBService.Schems);
             PrintBuffer(buffer);
@@ -196,8 +195,8 @@ namespace DataWF.Test.Data
                 Directory.Delete(connection.GetFilesPath(), true);
             schema.Connection = connection;
 
-            schema.DropDatabase();
-            schema.CreateDatabase();
+            schema.ExecuteDropDatabase();
+            schema.ExecuteCreateDatabase();
 
             var result = schema.GetTablesInfo(connection.Schema, EmployerTableName);
             Assert.IsTrue(result.Count() == 1, "Generate Sql Table / Get Information Fail.");
@@ -425,7 +424,7 @@ namespace DataWF.Test.Data
       test_numeric numeric(20,10))");
 
             result = schema.GetTablesInfo(connection.Schema, "test_table");
-            schema.GenerateTablesInfo(result);
+            schema.GenerateTables(result);
             var table = schema.Tables["test_table"] as DBTable<DBItem>;
             Assert.IsNotNull(table, "DBInformation Load Fail");
 

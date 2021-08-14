@@ -15,8 +15,13 @@ namespace DataWF.Common
         }
 
         public StateInfo(Exception e)
-            : this("Exeption handler", e.Message, e.GetType().Name, StatusType.Error, e)
+            : this()
         {
+            Module = e.TargetSite?.ReflectedType?.Name ?? "Exeption handler";
+            Message = e.Message;
+            Description = e.GetType().Name;
+            Type = StatusType.Error; 
+            Tag = e;
             Stack = e.StackTrace;
             if (e.InnerException != null)
             {

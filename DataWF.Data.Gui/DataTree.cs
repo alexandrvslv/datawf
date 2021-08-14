@@ -272,12 +272,12 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public DBTable CurrentTable
+        public IDBTable CurrentTable
         {
             get
             {
-                return SelectedDBItem == null ? null : SelectedDBItem is DBTable
-                    ? (DBTable)SelectedDBItem : (SelectedDBItem as IDBTableContent).Table;
+                return SelectedDBItem == null ? null : SelectedDBItem is IDBTable table
+                    ? table : (SelectedDBItem as IDBTableContent)?.Table;
             }
         }
 

@@ -68,7 +68,7 @@ namespace DataWF.Data
             var instance = Settings.GetInstance(e.Connection.Address);
             if (instance == null)
             {
-                Helper.Logs.Add(new StateInfo("Replication", "Unexpected Connection", $"Address: {e.Connection.Address}", StatusType.Warning));
+                Helper.Log("Replication", "Unexpected Connection", $"Address: {e.Connection.Address}", StatusType.Warning);
                 e.Connection.Dispose();
             }
         }
@@ -219,7 +219,7 @@ namespace DataWF.Data
                 }
                 catch
                 {
-                    Helper.Logs.Add(new StateInfo("Replication", "Connection Fail", $"Address: {address.Url}", StatusType.Warning));
+                    Helper.Log("Replication", "Connection Fail", $"Address: {address.Url}", StatusType.Warning);
                 }
             }
             return address.Connection?.Connected ?? false;

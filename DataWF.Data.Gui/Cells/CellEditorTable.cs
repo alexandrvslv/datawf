@@ -11,7 +11,7 @@ namespace DataWF.Data.Gui
 {
     public class CellEditorTable : CellEditorList
     {
-        protected DBTable table;
+        protected IDBTable table;
         protected DBColumn column;
         protected string viewFilter = string.Empty;
 
@@ -45,7 +45,7 @@ namespace DataWF.Data.Gui
             get { return TableEditor?.List; }
         }
 
-        public DBTable Table
+        public IDBTable Table
         {
             get { return table; }
             set
@@ -173,7 +173,7 @@ namespace DataWF.Data.Gui
                 }
                 if (viewFilter != null && viewFilter.Length > 0)
                 {
-                    View.DefaultParam = new QParam(table, viewFilter);
+                    View.DefaultParam = new QParam((DBTable)table, viewFilter);
                 }
             }
             return tableEditor;

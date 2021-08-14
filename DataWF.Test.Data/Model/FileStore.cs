@@ -6,11 +6,6 @@ namespace DataWF.Test.Data
     [Table(TestORM.FileTableName, "Files")]
     public sealed partial class FileStore : DBItem
     {
-        public FileStore(DBTable table) : base(table)
-        {
-        }
-
-
         [Column("id", Keys = DBColumnKeys.Primary)]
         public int Id
         {

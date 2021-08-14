@@ -123,8 +123,8 @@ namespace DataWF.Module.Finance
         [Column("bankid"), Index("daccount_bankid")]
         public int? BankId
         {
-            get => GetProperty<int?>(nameof(BankId));
-            set => SetProperty(value, nameof(BankId));
+            get => GetValue<int?>(nameof(BankId));
+            set => SetValue(value, nameof(BankId));
         }
 
         [Reference(nameof(BankId))]

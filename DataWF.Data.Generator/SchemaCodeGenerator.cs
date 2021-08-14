@@ -5,11 +5,19 @@ using Microsoft.CodeAnalysis.Text;
 using DataWF.Common.Generator;
 using System.Linq;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace DataWF.Data.Generator
 {
     internal class SchemaCodeGenerator : BaseTableCodeGenerator
     {
+        private string namespaceName;
+        private string className;
+        private AttributeData schemaAttribute;
+        private object schemaName;
+        private IEnumerable<ITypeSymbol> schemaEntries;
+        private string baseInterface;
+
         public SchemaCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation) 
             : base(ref context, compilation)
         {
@@ -54,16 +62,16 @@ namespace DataWF.Data.Generator
 
         public override string Generate()
         {
-            var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
-            var className = classSymbol.Name;
+            namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
+            className = classSymbol.Name;
 
-            var schemaAttribute = classSymbol.GetAttribute(Attributes.Schema);
-            var schemaName = schemaAttribute?.ConstructorArguments.FirstOrDefault().Value;
+            schemaAttribute = classSymbol.GetAttribute(Attributes.Schema);
+            schemaName = schemaAttribute?.ConstructorArguments.FirstOrDefault().Value;
 
-            var schemaEntries = classSymbol.GetAttributes(Attributes.SchemaEntry)
+            schemaEntries = classSymbol.GetAttributes(Attributes.SchemaEntry)
                                 .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
                                 .Where(p => p != null && !p.IsAbstract);
-            var baseInterface = "IDBSchema";
+            baseInterface = "IDBSchema";
             if (classSymbol.BaseType != null && classSymbol.BaseType.Name != "DBSchema")
             {
                 baseInterface = $"{classSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{classSymbol.BaseType.Name}";
@@ -92,18 +100,40 @@ namespace { namespaceName}
                 var tableTypeName = schemaEntry.IsSealed ? $"{schemaEntry.Name}Table" : $"{schemaEntry.Name}Table<{schemaEntry.Name}>";
                 source.Append($@"
         private {tableTypeName} _{schemaEntry.Name};");
-            
+
                 source.Append($@"
         [JsonIgnore]
         public {tableTypeName} {schemaEntry.Name} => _{schemaEntry.Name} ??= ({tableTypeName})GetTable<{schemaEntry.Name}>();");
             }
+            
+            ProcessGenerateMethod();
+
+            source.Append($@"
+    }}");
+            source.Append($@"
+    public partial interface I{className}: {baseInterface}
+    {{");
+            foreach (var schemaEntry in schemaEntries)
+            {
+                var tableTypeName = schemaEntry.IsSealed ? $"{schemaEntry.Name}Table" : $"{schemaEntry.Name}Table<{schemaEntry.Name}>";
+                source.Append($@"
+        {tableTypeName} {schemaEntry.Name} {{ get; }}");
+            }
+            source.Append($@"
+    }}
+}}");
+            return source.ToString();
+        }
+
+        private void ProcessGenerateMethod()
+        {
             source.Append($@"
 
         public override void Generate(string name)
         {{
             base.Generate(name);");
             if (schemaName != null)
-            {                
+            {
                 source.Append($@"
             if(string.IsNullOrEmpty(name))
                 Name = ""{schemaName}"";");
@@ -122,23 +152,9 @@ namespace { namespaceName}
                 source.Append($@"
             }});");
             }
-            source.Append($@"
-        }}
-    }}");
-            source.Append($@"
-    public partial interface I{className}: {baseInterface}
-    {{");
-            foreach (var schemaEntry in schemaEntries)
-            {
-                var tableTypeName = schemaEntry.IsSealed ? $"{schemaEntry.Name}Table" : $"{schemaEntry.Name}Table<{schemaEntry.Name}>";
-                source.Append($@"
-        {tableTypeName} {schemaEntry.Name} {{ get; }}");
-            }
-            source.Append($@"
-    }}
-}}");
-            return source.ToString();
-        }
-    }
 
+            source.Append($@"
+        }}");
+        }       
+    }
 }

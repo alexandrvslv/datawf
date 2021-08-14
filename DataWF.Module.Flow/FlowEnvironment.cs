@@ -32,7 +32,7 @@ namespace DataWF.Module.Flow
                 string message = string.Format("in {0} ms ({1})", arg.Time.TotalMilliseconds, arg.Rezult is IDataReader
                                                ? ((IDataReader)arg.Rezult).RecordsAffected + "*" + ((IDataReader)arg.Rezult).FieldCount : (arg.Rezult is Exception
                                                ? ((Exception)arg.Rezult).Message : arg.Rezult));
-                Helper.Logs.Add(new StateInfo("Execute " + arg.Type, message, arg.Query, arg.Rezult is Exception ? StatusType.Warning : StatusType.Information));
+                Helper.Log("Execute " + arg.Type, message, arg.Query, arg.Rezult is Exception ? StatusType.Warning : StatusType.Information);
             }
             if (arg.Rezult is Exception)
                 Helper.OnException((Exception)arg.Rezult);
@@ -59,7 +59,7 @@ namespace DataWF.Module.Flow
         public static void LoadBooks(IFlowSchema schema)
         {
             Schema = schema;
-            Helper.Logs.Add(new StateInfo("Flow Synchronization", "Start", "", StatusType.Information));
+            Helper.Log(schema, "Start", StatusType.Information);
             Stopwatch watch = new Stopwatch();
             watch.Start();
             using (var transaction = new DBTransaction(schema) { ReaderParam = DBLoadParam.Synchronize | DBLoadParam.CheckDeleted })
@@ -85,7 +85,7 @@ namespace DataWF.Module.Flow
             }
             watch.Stop();
 
-            Helper.Logs.Add(new StateInfo("Flow Synchronization", "Complete", "in " + watch.ElapsedMilliseconds + " ms", StatusType.Information));
+            Helper.Log(schema, $"Success in {watch.ElapsedMilliseconds} ms", StatusType.Information);
 
             var workTable = (DocumentWorkTable)schema.GetTable<DocumentWork>();
             workTable.DefaultComparer = new DBComparer<DocumentWork, long>(workTable.IdKey) { Hash = true };

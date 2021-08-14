@@ -58,7 +58,7 @@ namespace DataWF.Data
 
             //Schema.DropDatabase();
 
-            Schema.CreateDatabase();
+            Schema.ExecuteCreateDatabase();
             Save();
             return null;
         }
@@ -70,6 +70,7 @@ namespace DataWF.Data
 
         public virtual void Load()
         {
+            Helper.Log(this, "Start");
             DBService.Load();
 
             if (Schema == null || Schema.Connection == null)
@@ -83,7 +84,7 @@ namespace DataWF.Data
             Generate();
             DBService.CommitChanges();
 
-            Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Data"));
+            Helper.Log(this, "Load & Generate Success");
 
             foreach (var initializer in Helper.ModuleInitializer)
             {

@@ -9,7 +9,7 @@ namespace DataWF.Module.FlowGui
 {
     public class ModuleInitialize : IModuleInitialize
     {
-        public Task Initialize()
+        public Task Initialize(object[] args)
         {
             GuiEnvironment.CellEditorFabric[typeof(Template)] = (Cell) =>
             {

@@ -36,7 +36,7 @@ namespace DataWF.Test.Web.Service
             Generate();
             DBService.CommitChanges();
 
-            Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Data"));
+            Helper.Log(this, "Generate Data");
 
             foreach (var initializer in Helper.ModuleInitializer)
             {
@@ -74,8 +74,8 @@ namespace DataWF.Test.Web.Service
             };
 
             Generate();
-            Schema.DropDatabase();
-            Schema.CreateDatabase();
+            Schema.ExecuteDropDatabase();
+            Schema.ExecuteCreateDatabase();
             Save();
             return Task.CompletedTask;
         }

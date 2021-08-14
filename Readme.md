@@ -46,39 +46,128 @@ Note: used beta version of ODP.NET for .netstandard compatibility
 Model example:
 
     [Table("employer_table")]
-    public class Employer : DBItem
+    public sealed partial class Employer : DBItem
     {
-        public static DBTable<Employer> DBTable { get { return DBService.GetTable<Employer>(); } }
-
-        public Employer() { Build(DBTable); }
-
         [Column("id", Keys = DBColumnKeys.Primary)]
-        public int? Id {  get { return GetProperty<int?>(); }  set { SetProperty(value); } }
+        public int Id 
+        {  
+            get => GetValue<int>();  
+            set => SetValue(value);
+        }
 
         [Column("inn", 20, Keys = DBColumnKeys.Code), Index("employerinn", true)]
-        public string INN {  get { return GetProperty<string>(); }  set { SetProperty(value); } }
+        public string INN 
+        {  
+            get => GetValue<string>(); 
+            set => SetValue(value);
+        }
 
         [Column("name", 200, Keys = DBColumnKeys.Culture)]
-        public override string Name {  get { return GetName(nameof(Name)); }  set { SetName(nameof(Name), value); } }
+        public override string Name 
+        {  
+            get => GetName(); 
+            set => SetName(value); 
+        }
 
         [Column("positionid")]
-        public int? PositionId { get { return GetProperty<int?>(); } set { SetProperty(value); } }
+        public int? PositionId 
+        { 
+            get => GetValue<int?>(); 
+            set => SetValue(value);
+        }
 
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get { return GetPropertyReference<Position>(); }
-            set { SetPropertyReference(value); }
+            get => GetReference<Position>();
+            set => SetReference(value);
         }
 
         [Column("typeid", Keys = DBColumnKeys.Type, Default = "1")]
-        public EmployerType? Type {  get { return GetProperty<EmployerType?>(); }  set { SetProperty(value); } }
+        public EmployerType? Type 
+        {  
+            get => GetValue<EmployerType?>();
+            set => SetValue(value);
+        }
+    }
+
+Source generator for model:
+    
+    // Table with columns cache
+    public partial class EmployerTable : DBTable<Employer>, IEmployerTable
+    {
+        public DBColumn<int> IdKey => _IdKey ??= ParseProperty(nameof(Employer.Id));
+        public DBColumn<string> INNKey => _IINKey ??= ParseProperty(nameof(Employer.INN));
+        ...
+    }
+
+    // Table interface
+    public partial interface IEmployerTable : IDBTable
+    {
+        DBColumn<int> IdKey { get; }
+        DBColumn<string> INNKey { get; }
+        ...
+    }
+
+    // Log object (with log table)
+    public partial class EmployerLog: DBItemLog
+    {
+        public EmployerLog(Employer item): base(item)
+        {}
+
+        [LogColumn("id", "id_log")]
+        public int Id
+        {
+            get => GetValue<int>(Table.IdKey);
+            set => SetValue<int>(value, Table.IdKey);
+        }
+    }
+
+Models Schema:
+
+    [Schema("employers")]
+    [SchemaEntry(typeof(Employer))]
+    [SchemaEntry(typeof(Position))]
+    public partial class EmployerSchema: DBSchema
+    {}
+
+Source generator for Models Schema:
+
+    // Embed tables reference && runtime generation
+    public partial class EmployerSchema: IEmployerSchema
+    {
+        public EmployerTable Employer => _Employer ??= GetTable<Employer>();
+        public PositionTable Position => _Position ??= GetTable<Position>();
+        
+        public void Generate()
+        {
+            base.Generate(new Type[]{typeof(Employer), typeof(Position)});
+        }
+    }
+
+    // Schema interface
+    public partial interface IEmployerSchema: IDBSchema
+    {
+        EmployerTable Employer {get;}
+        PositionTable Position {get;}
+    }
+
+    // Log Schema
+    public partial class EmployerSchemaLog: IEmployerSchemaLog
+    {
+        public EmployerLogTable EmployerLog => _EmployerLog ??= GetTable<EmployerLog>();
+        public PositionLogTable PositionLog => _PositionLog ??= GetTable<PositionLog>();
+        
+        public void Generate()
+        {
+            base.Generate(new Type[]{typeof(EmployerLog), typeof(PositionLog)});
+        }
     }
 
 Connection example:
 
     var connection = new DBConnection("test") { System = DBSystem.SQLite, DataBase = "test.sqlite" };
-    var qresult = connection.ExecuteQResult( $"select * from {SomeTableName}");
+    var qresult = connection.ExecuteQResult($"select * from {SomeTableName}");
 
 ## DataWF.Gui
 

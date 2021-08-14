@@ -8,10 +8,6 @@ namespace DataWF.Test.Data
     {
         private Position parent;
 
-        public Position(DBTable table) : base(table)
-        {
-        }
-
         [Column("id", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
@@ -51,8 +47,8 @@ namespace DataWF.Test.Data
         [Column("description")]
         public string Description
         {
-            get => GetProperty<string>();
-            set => SetProperty(value);
+            get => GetValue<string>();
+            set => SetValue(value);
         }
     }
 

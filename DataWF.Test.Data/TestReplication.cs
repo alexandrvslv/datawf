@@ -88,8 +88,8 @@ namespace DataWF.Test.Data
             };
             schema.Generate(name);
             DBService.Schems.Add(schema);
-            try { schema.DropDatabase(); } catch { }
-            schema.CreateDatabase();
+            try { schema.ExecuteDropDatabase(); } catch { }
+            schema.ExecuteCreateDatabase();
             return schema;
         }
     }

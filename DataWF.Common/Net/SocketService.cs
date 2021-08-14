@@ -146,8 +146,7 @@ namespace DataWF.Common
             {
                 var message = $"{arg.Mode} R:{arg.ReaderState} W:{arg.WriterState}";
                 var description = $"Service: {Address} Connection: {arg.Connection.Address} Transferred: { Helper.SizeFormat(arg.Transfered)} ({arg.PartsCount})";
-                System.Diagnostics.Debug.WriteLine(string.Concat(message, " ", description));
-                Helper.Logs.Add(new StateInfo(nameof(TcpSocketService), message, description));
+                Helper.Log(this, description, message: message);
             }
         }
 
@@ -215,14 +214,14 @@ namespace DataWF.Common
         {
             Started?.Invoke(this, EventArgs.Empty);
 
-            Helper.Logs.Add(new StateInfo(nameof(SocketService), "Start", Address.ToString()));
+            Helper.Log(this, Address.ToString());
         }
 
         protected virtual void OnStop()
         {
             Stopped?.Invoke(this, EventArgs.Empty);
 
-            Helper.Logs.Add(new StateInfo(nameof(SocketService), "Stop", Address.ToString()));
+            Helper.Log(this, Address.ToString());
         }
 
         public virtual void Dispose()

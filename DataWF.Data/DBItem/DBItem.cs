@@ -383,7 +383,7 @@ namespace DataWF.Data
             return column.GetValue(this);
         }
 
-        public T GetProperty<T>([CallerMemberName] string property = null)
+        public T GetValue<T>([CallerMemberName] string property = null)
         {
             return GetValue<T>((DBColumn<T>)Table.Columns.GetByProperty(property));
         }
@@ -438,7 +438,7 @@ namespace DataWF.Data
             //DBService.OnEdited(args);
         }
 
-        public void SetProperty<T>(T value, [CallerMemberName] string property = null)
+        public void SetValue<T>(T value, [CallerMemberName] string property = null)
         {
             SetValue<T>(value, (DBColumn<T>)Table.Columns.GetByProperty(property));
         }
@@ -460,27 +460,6 @@ namespace DataWF.Data
         public void SetValue(object value, DBColumn column, DBSetValueMode mode = DBSetValueMode.Default)
         {
             column.SetValue(this, value, mode);
-        }
-
-        public bool IsChangedKey(DBColumn column)
-        {
-            return column.IsChanged(this);
-        }
-
-        public virtual bool GetIsChanged()
-        {
-            return GetChangeKeys().Any();
-        }
-
-        public IEnumerable<DBColumn> GetChangeKeys()
-        {
-            foreach (var column in Table.Columns)
-            {
-                if (column.IsChanged(this))
-                {
-                    yield return column;
-                }
-            }
         }
 
         public void SetValues(object[] values, DBSetValueMode mode = DBSetValueMode.Loading)
@@ -511,6 +490,27 @@ namespace DataWF.Data
                 if (column != null)
                 {
                     SetValue(kvp.Value, column, mode);
+                }
+            }
+        }
+
+        public bool IsChangedKey(DBColumn column)
+        {
+            return column.IsChanged(this);
+        }
+
+        public virtual bool GetIsChanged()
+        {
+            return GetChangeKeys().Any();
+        }
+
+        public IEnumerable<DBColumn> GetChangeKeys()
+        {
+            foreach (var column in Table.Columns)
+            {
+                if (column.IsChanged(this))
+                {
+                    yield return column;
                 }
             }
         }
@@ -1714,6 +1714,18 @@ namespace DataWF.Data
             ref readonly var yHandler = ref y.handler;
             return xHandler.Value.CompareTo(yHandler.Value);
         }
+
+        public string GeneretePatch(IEnumerable<DBItem> items)
+        {
+            var rez = new StringBuilder();
+
+            foreach (var item in items)
+            {
+                rez.Append(item.FormatPatch());
+            }
+            return rez.ToString();
+        }
+
     }
 }
 

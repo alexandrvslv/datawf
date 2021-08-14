@@ -15,7 +15,7 @@ namespace DataWF.Module.MessangerGui
     public class MessageExplorer : VPanel, IDockContent
     {
         private UserTree tree;
-
+        public static MessageSchema Schema;
         public MessageExplorer()
         {
             tree = new UserTree
@@ -35,9 +35,9 @@ namespace DataWF.Module.MessangerGui
 
             Localize();
 
-            if (MessageAddress.DBTable != null)
+            if (Schema.MessageAddress != null)
             {
-                MessageAddress.DBTable.DefaultView.CollectionChanged += OnListChanged;
+                Schema.MessageAddress.DefaultView.CollectionChanged += OnListChanged;
             }
             SynchMessage();
         }
@@ -46,7 +46,7 @@ namespace DataWF.Module.MessangerGui
         {
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                Application.Invoke(() => OnLoad(MessageAddress.DBTable.DefaultView[e.NewStartingIndex]));
+                Application.Invoke(() => OnLoad(Schema.MessageAddress.DefaultView[e.NewStartingIndex]));
             }
         }
 
@@ -70,12 +70,12 @@ namespace DataWF.Module.MessangerGui
 
         public static void SynchMessage()
         {
-            if (MessageAddress.DBTable == null)
+            if (Schema.MessageAddress == null)
                 return;
-            var query = new QQuery(string.Empty, MessageAddress.DBTable);
-            query.BuildPropertyParam(nameof(MessageAddress.UserId), CompareType.Equal, GuiEnvironment.User?.Id);
-            query.BuildPropertyParam(nameof(MessageAddress.DateRead), CompareType.Is, DBNull.Value);
-            MessageAddress.DBTable.Load(query, DBLoadParam.Synchronize, null).LastOrDefault();
+            var query = new QQuery(string.Empty, Schema.MessageAddress);
+            query.BuildParam(Schema.MessageAddress.UserIdKey, CompareType.Equal, GuiEnvironment.User?.Id);
+            query.BuildParam(Schema.MessageAddress.DateReadKey, CompareType.Is, DBNull.Value);
+            Schema.MessageAddress.Load(query, DBLoadParam.Synchronize, null).LastOrDefault();
         }
 
         public DockType DockType

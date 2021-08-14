@@ -53,5 +53,10 @@ namespace DataWF.Data
                 TargetSchemaName = value?.Name;
             }
         }
+
+        public override IDBSchemaLog GetLogSchema()
+        {
+            return this;
+        }
     }
 }
