@@ -7,6 +7,11 @@ namespace DataWF.Common.Generator
 {
     public abstract class CodeGenerator
     {
+        public static readonly DiagnosticDescriptor DDCommonLibrary = new DiagnosticDescriptor("DWFG001",
+            "DataWF.Common project or reference not in project references",
+            "DataWF.Common project or reference not in project references",
+            "DataWF.Generator", DiagnosticSeverity.Warning, true);
+
         protected StringBuilder source;
         protected INamedTypeSymbol classSymbol;
         protected GeneratorExecutionContext context;
@@ -50,7 +55,6 @@ namespace DataWF.Common.Generator
                 Options = (compilation as CSharpCompilation).SyntaxTrees[0].Options as CSharpParseOptions;
             }
         }
-
 
         public bool Process(ClassDeclarationSyntax classSyntax)
         {

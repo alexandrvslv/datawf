@@ -15,6 +15,7 @@
     <RepositoryUrl>https://github.com/alexandrvslv/datawf.git</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" />    
   </ItemGroup>
@@ -22,4 +23,5 @@
   <ItemGroup>
     <Folder Include="Package\" />
   </ItemGroup>
+  
 </Project>

@@ -44,6 +44,8 @@ namespace DataWF.WebService.Generator
             attributeTypes.Column = context.Compilation.GetTypeByMetadataName("DataWF.Data.ColumnAttribute");
             attributeTypes.ControllerMethod = context.Compilation.GetTypeByMetadataName("DataWF.Data.ControllerMethodAttribute");
             attributeTypes.ControllerParameter = context.Compilation.GetTypeByMetadataName("DataWF.Data.ControllerParameterAttribute");
+            attributeTypes.Schema = context.Compilation.GetTypeByMetadataName("DataWF.Data.SchemaAttribute");
+            attributeTypes.SchemaEntry = context.Compilation.GetTypeByMetadataName("DataWF.Data.SchemaEntryAttribute");
             try
             {
                 foreach (var assemblyReference in context.Compilation.References)
@@ -140,7 +142,7 @@ namespace DataWF.WebService.Generator
                 return;
             }
             var tableDeclareType = $"{tableType.Name}{(tableIsGeneric ? "<T>" : string.Empty)}";
-
+            var schemaType = "IDBSchema";
             var keyType = "K";
 
             var source = new StringBuilder($@"//Source generator for {type.Name}
@@ -182,7 +184,7 @@ namespace {nameSpace}
             }
             source.Append($@"
     {{
-        public {controllerClassName}(IDBSchema schema) :base(schema)
+        public {controllerClassName}({schemaType} schema) :base(schema)
         {{ }}");
 
             if (tableType != null)
@@ -469,102 +471,6 @@ namespace {nameSpace}
                 parametersInfo.Add(new MethodParametrInfo(parameter, attributeTypes));
             }
             return parametersInfo;
-        }
-
-        public class AttributeTypes
-        {
-            internal INamedTypeSymbol Table;
-            internal INamedTypeSymbol AbstractTable;
-            internal INamedTypeSymbol VirtualTable;
-            internal INamedTypeSymbol ControllerMethod;
-            internal INamedTypeSymbol ControllerParameter;
-            internal INamedTypeSymbol Column;
-
-            public AttributeTypes()
-            {
-            }
-        }
-
-        class SyntaxReceiver : ISyntaxReceiver
-        {
-            public List<string> NameSpaces { get; set; } = new List<string>();
-
-            /// <summary>
-            /// Called for every syntax node in the compilation, we can inspect the nodes and save any information useful for generation
-            /// </summary>
-            public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
-            {
-                // any field with at least one attribute is a candidate for property generation
-                if (syntaxNode is NamespaceDeclarationSyntax namespaceDeclarationSyntax)
-                {
-                    var nameSpace = namespaceDeclarationSyntax.Name.ToString();
-
-                    if (!NameSpaces.Contains(nameSpace, StringComparer.Ordinal))
-                        NameSpaces.Add(nameSpace);
-                }
-            }
-        }
-
-        class MethodParametrInfo
-        {
-
-            public MethodParametrInfo(IParameterSymbol info, AttributeTypes attributeTypes)
-            {
-                Info = info;
-                Type = info.Type;
-                ValueName = info?.Name;
-                Attribute = Info.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributeTypes.ControllerParameter, SymbolEqualityComparer.Default));
-                AttributeValue = (int?)(Attribute?.ConstructorArguments.FirstOrDefault().Value ?? null);
-                if (AttributeValue != null)
-                {
-                    switch (AttributeValue.Value)
-                    {
-                        case 0: AttributeType = "FromRoute"; break;
-                        case 1: AttributeType = "FromQuery"; break;
-                        case 2: AttributeType = "FromBody"; break;
-                    }
-                }
-                if (IsBaseType(Type, "DBItem")
-                    && (Attribute == null || AttributeValue != 2))
-                {
-                    Table = true;
-                    var primaryKey = GetPrimaryKey(Type, attributeTypes);
-                    if (primaryKey != null)
-                    {
-                        Type = primaryKey.Type;
-                        ValueName += "Value";
-                    }
-                }
-                else
-                {
-                    Table = false;
-                }
-
-                if (IsBaseType(info.Type, "DBTransaction"))
-                {
-                    ValueName = prTransaction;
-                    Declare = false;
-                }
-                else if (IsBaseType(info.Type, "Stream"))
-                {
-                    ValueName = prStream;
-                    Declare = false;
-                }
-                else
-                {
-                    Declare = true;
-                }
-            }
-            public bool Table { get; }
-            public bool Declare { get; }
-            public ITypeSymbol Type { get; }
-            public string ValueName { get; set; }
-            public AttributeData Attribute { get; }
-            public int? AttributeValue { get; }
-            public string AttributeType { get; }
-
-            public IParameterSymbol Info { get; }
-
         }
 
         private static bool IsEnumerable(ITypeSymbol returnResultType)

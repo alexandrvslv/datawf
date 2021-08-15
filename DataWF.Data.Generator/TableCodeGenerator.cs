@@ -18,7 +18,7 @@ namespace DataWF.Data.Generator
     }
     internal class TableCodeGenerator : BaseTableCodeGenerator
     {
-        private static readonly DiagnosticDescriptor diagnosticDescriptor = new DiagnosticDescriptor("TCG001", "Couldn't generate Table", "Couldn't generate Table", nameof(TableCodeGenerator), DiagnosticSeverity.Warning, true);
+        private static readonly DiagnosticDescriptor diagnosticDescriptor = new DiagnosticDescriptor("DWFG001", "Couldn't generate Table", "Couldn't generate Table", nameof(TableCodeGenerator), DiagnosticSeverity.Warning, true);
         private const string constTable = "Table";
         private const string constDBLogItem = "DBItemLog";
         private const string constDBTable = "DBTable";
@@ -121,7 +121,7 @@ namespace DataWF.Data.Generator
                         InvokerCodeGenerator.Process(classSymbol);
                     }
 
-                    if(TableLogCodeGenerator?.Process(classSymbol) == true)
+                    if (TableLogCodeGenerator?.Process(classSymbol) == true)
                         Compilation = TableLogCodeGenerator.Compilation;
 
                     return true;
@@ -129,7 +129,7 @@ namespace DataWF.Data.Generator
                 catch (Exception ex)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, Location.None, classSymbol.Name, ex.Message));
-                    
+
 #if DEBUG
                     if (!System.Diagnostics.Debugger.IsAttached)
                     {
@@ -150,7 +150,7 @@ namespace DataWF.Data.Generator
             }
             this.mode = mode;
             interfaceName = "I" + className;
-            isLogType = mode == TableCodeGeneratorMode.Log || className.EndsWith("Log", StringComparison.Ordinal);
+            isLogType = mode == TableCodeGeneratorMode.Log || classSymbol.Name.EndsWith("Log", StringComparison.Ordinal);
 
             baseClassName = constDBTable;
             baseInterfaceName = "IDBTable";
@@ -164,9 +164,9 @@ namespace DataWF.Data.Generator
                     && type.AllInterfaces.Any(p => p.Name == "IDBSchema"))
                 {
                     var isLogSchema = type.AllInterfaces.Any(p => p.Name == "IDBSchemaLog");
-                    if (isLogType == isLogSchema && type.Name != "DBSchema")
+                    if ((isLogSchema == isLogType || isLogType) && type.Name != "DBSchema")
                     {
-                        containerSchema = type.Name;
+                        containerSchema = $"{type.Name}{(isLogType && !isLogSchema ? "Log" : "")}";
                     }
                 }
             }
@@ -277,7 +277,7 @@ namespace {namespaceName}
         public new {targetClass} TargetTable
         {{
             get => ({targetClass})base.TargetTable;
-            set => base.ParentTable = value;
+            set => base.TargetTable = value;
         }}");
             }
         }

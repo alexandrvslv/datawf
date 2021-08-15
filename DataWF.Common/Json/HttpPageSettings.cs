@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DataWF.WebClient.Common
+namespace DataWF.Common
 {
     public class HttpPageSettings
     {

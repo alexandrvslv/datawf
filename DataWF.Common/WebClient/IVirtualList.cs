@@ -1,7 +1,7 @@
 ﻿using DataWF.Common;
 using System.Collections;
 
-namespace DataWF.WebClient.Common
+namespace DataWF.Common
 {
     public interface IVirtualList : IList
     {

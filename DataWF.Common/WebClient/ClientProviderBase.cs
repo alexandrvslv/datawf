@@ -11,6 +11,14 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    public class ClientProviderAttribure : Attribute
+    {
+        public ClientProviderAttribure(string documentPath)
+        { }
+
+    }
+
     public class ClientProviderBase : IClientProvider
     {
         private static readonly Dictionary<Type, ICrudClient> crudClients = new Dictionary<Type, ICrudClient>();
