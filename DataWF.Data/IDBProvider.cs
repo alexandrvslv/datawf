@@ -25,9 +25,9 @@ namespace DataWF.Data
 
     public interface IDBProvider
     {
+        DBSchema Schema { get; }
         void Load();
         void Save();
-
         DBUser FindUser(string email);
     }
 }

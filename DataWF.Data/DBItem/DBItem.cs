@@ -40,7 +40,7 @@ namespace DataWF.Data
     [InvokerGenerator]
     public partial class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IPullHandler, IDBTableContent
     {
-        public static readonly DBItem EmptyItem = new DBItem(null) { cacheToString = "Loading" };
+        public static readonly DBItem EmptyItem = new DBItem((IDBTable)null) { cacheToString = "Loading" };
 
         internal PullHandler? oldHandler;
         internal PullHandler handler;
@@ -50,12 +50,12 @@ namespace DataWF.Data
         protected internal DBUpdateState update = DBUpdateState.Insert;
         private AccessValue access;
 
-        //public DBItem()
-        //{
-        //    var table = DBService.GetTable(GetType());
-        //    if (table != null)
-        //        Build(table);
-        //}
+        public DBItem(IDBSchema schema)
+        {
+            var table = schema.GetTable(GetType());
+            if (table != null)
+                Build(table);
+        }
 
         public DBItem(IDBTable table)
         {

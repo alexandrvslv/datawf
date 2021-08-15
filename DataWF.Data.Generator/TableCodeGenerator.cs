@@ -287,7 +287,9 @@ namespace {namespaceName}
         {
             source.Append($@"
     public partial class {classSymbol.Name}
-    {{");
+    {{
+        public {classSymbol.Name}(IDBSchema schema):base(schema)
+        {{}}");
             if (!classSymbol.Constructors.Any(p => p.Parameters.Any()))
             {
                 source.Append($@"

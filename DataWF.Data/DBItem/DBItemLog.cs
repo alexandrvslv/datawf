@@ -39,6 +39,9 @@ namespace DataWF.Data
         private DBItem baseItem;
         private DBUserReg dbUserReg;
 
+        public DBItemLog(IDBSchema schema) : base(schema)
+        { }
+
         public DBItemLog(IDBTableLog table) : base(table)
         { }
 

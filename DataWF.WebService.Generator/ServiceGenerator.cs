@@ -145,7 +145,7 @@ namespace DataWF.WebService.Generator
             var tableDeclareType = $"{tableType.Name}{(tableIsGeneric ? "<T>" : string.Empty)}";
             var schemaType = "IDBSchema";
             var keyType = "K";
-
+            
             var source = new StringBuilder($@"//Source generator for {type.Name}
 using DataWF.Common;
 using DataWF.Data;
@@ -500,7 +500,7 @@ namespace {nameSpace}
             var property = GetPrimaryKey(type.GetMembers().OfType<IPropertySymbol>());
             if (property != null)
                 return property;
-            if (type.BaseType != null)
+            while (type.BaseType != null)
             {
                 property = GetPrimaryKey(type.BaseType.GetMembers().OfType<IPropertySymbol>());
                 if (property != null)
@@ -526,12 +526,5 @@ namespace {nameSpace}
                 return null;
             }
         }
-
-
     }
-
-
-
-
-
 }
