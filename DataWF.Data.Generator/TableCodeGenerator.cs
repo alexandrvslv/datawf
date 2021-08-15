@@ -18,7 +18,7 @@ namespace DataWF.Data.Generator
     }
     internal class TableCodeGenerator : BaseTableCodeGenerator
     {
-        private static readonly DiagnosticDescriptor diagnosticDescriptor = new DiagnosticDescriptor("DWFG001", "Couldn't generate Table", "Couldn't generate Table", nameof(TableCodeGenerator), DiagnosticSeverity.Warning, true);
+        private static readonly DiagnosticDescriptor diagnosticDescriptor = new DiagnosticDescriptor("DWFG001", "Couldn't generate Table", "Couldn't generate Table {0} {1}", nameof(TableCodeGenerator), DiagnosticSeverity.Warning, true);
         private const string constTable = "Table";
         private const string constDBLogItem = "DBItemLog";
         private const string constDBTable = "DBTable";
@@ -130,12 +130,12 @@ namespace DataWF.Data.Generator
                 {
                     context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, Location.None, classSymbol.Name, ex.Message));
 
-#if DEBUG
-                    if (!System.Diagnostics.Debugger.IsAttached)
-                    {
-                        System.Diagnostics.Debugger.Launch();
-                    }
-#endif
+//#if DEBUG
+//                    if (!System.Diagnostics.Debugger.IsAttached)
+//                    {
+//                        System.Diagnostics.Debugger.Launch();
+//                    }
+//#endif
                 }
             }
             return false;
@@ -167,6 +167,7 @@ namespace DataWF.Data.Generator
                     if ((isLogSchema == isLogType || isLogType) && type.Name != "DBSchema")
                     {
                         containerSchema = $"{type.Name}{(isLogType && !isLogSchema ? "Log" : "")}";
+                        break;
                     }
                 }
             }

@@ -105,9 +105,10 @@ namespace DataWF.WebService.Generator
 
             var controllerClassName = $"{type.Name}Controller";
 
-            if (type.BaseType.Name == "DBItemLog"
-                || type.Name == "DBItem"
-                || type.Name == "DBGroupItem")
+            if (type.BaseType.Name.Equals("DBItemLog", StringComparison.Ordinal)
+                || type.Name.Equals("DBItem", StringComparison.Ordinal)
+                || type.Name.Equals("DBGroupItem", StringComparison.Ordinal)
+                || type.Name.EndsWith("Log", StringComparison.Ordinal))
             {
                 return;
             }
