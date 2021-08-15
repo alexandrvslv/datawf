@@ -1,5 +1,6 @@
 ﻿using DataWF.Common;
 using System.Collections;
+using System.Threading.Tasks;
 
 namespace DataWF.WebClient.Common
 {
@@ -8,5 +9,7 @@ namespace DataWF.WebClient.Common
         IModelView ModelView { get; set; }
 
         int PageSize { get; set; }
+
+        ValueTask<object> GetItemAsync(int index);
     }
 }

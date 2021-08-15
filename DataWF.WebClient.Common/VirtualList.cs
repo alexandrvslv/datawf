@@ -70,6 +70,28 @@ namespace DataWF.Common
             }
             return itemIndex < items.Count ? items[itemIndex] : default(T);
         }
+        async ValueTask<object> IVirtualList.GetItemAsync(int index)
+        {
+            return await GetItemAsync(index);
+        }
+
+        public async ValueTask<T> GetItemAsync(int index)
+        {
+            var pageIndex = index / Pages.PageSize;
+            var itemIndex = index % Pages.PageSize;
+            if (!cache.TryGetValue(pageIndex, out var items))
+            {
+                if (ModelView != null)
+                {
+                    await ProcessGet(index, pageIndex);
+                }
+            }
+            if (items == null)
+            {
+                return index < this.items.Count ? this.items[index] : default(T);
+            }
+            return itemIndex < items.Count ? items[itemIndex] : default(T);
+        }
 
         private async ValueTask ProcessGet(int index, int pageIndex)
         {
