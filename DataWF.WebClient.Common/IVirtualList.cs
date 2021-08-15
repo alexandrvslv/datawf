@@ -11,5 +11,7 @@ namespace DataWF.WebClient.Common
         int PageSize { get; set; }
 
         ValueTask<object> GetItemAsync(int index);
+
+        Task LoadAsync();
     }
 }

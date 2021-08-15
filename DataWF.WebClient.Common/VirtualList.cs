@@ -61,7 +61,7 @@ namespace DataWF.Common
             {
                 if (ModelView != null)
                 {
-                    _ = ProcessGet(index, pageIndex);
+                    _ = ProcessGet(pageIndex);
                 }
             }
             if (items == null)
@@ -70,12 +70,8 @@ namespace DataWF.Common
             }
             return itemIndex < items.Count ? items[itemIndex] : default(T);
         }
-        async ValueTask<object> IVirtualList.GetItemAsync(int index)
-        {
-            return await GetItemAsync(index);
-        }
 
-        public async ValueTask<T> GetItemAsync(int index)
+        public async ValueTask<object> GetItemAsync(int index)
         {
             var pageIndex = index / Pages.PageSize;
             var itemIndex = index % Pages.PageSize;
@@ -83,7 +79,7 @@ namespace DataWF.Common
             {
                 if (ModelView != null)
                 {
-                    await ProcessGet(index, pageIndex);
+                    await ProcessGet(pageIndex);
                 }
             }
             if (items == null)
@@ -93,7 +89,16 @@ namespace DataWF.Common
             return itemIndex < items.Count ? items[itemIndex] : default(T);
         }
 
-        private async ValueTask ProcessGet(int index, int pageIndex)
+        public async Task LoadAsync()
+        {
+            var result = (await ModelView.Get()).Cast<T>().ToList();
+            for(var pageIndex = 0; pageIndex < Pages.PageCount; pageIndex++)
+            {
+                cache[pageIndex] = result.Skip(pageIndex * Pages.PageSize).Take(PageSize).ToList();
+            }
+        }
+
+        private async ValueTask ProcessGet(int pageIndex, int? pageSize = null)
         {
             if (Interlocked.CompareExchange(ref processingGet, 1, 0) == 0)
             {
