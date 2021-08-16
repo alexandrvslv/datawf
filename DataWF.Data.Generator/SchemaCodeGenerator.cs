@@ -16,9 +16,10 @@ namespace DataWF.Data.Generator
         private AttributeData schemaAttribute;
         private object schemaName;
         private IEnumerable<ITypeSymbol> schemaEntries;
+        private List<ITypeSymbol> allSchemaEntries;
         private string baseInterface;
 
-        public SchemaCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation) 
+        public SchemaCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation)
             : base(ref context, compilation)
         {
             InvokerCodeGenerator = new InvokerCodeGenerator(ref context, compilation);
@@ -71,6 +72,7 @@ namespace DataWF.Data.Generator
             schemaEntries = classSymbol.GetAttributes(Attributes.SchemaEntry)
                                 .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
                                 .Where(p => p != null && !p.IsAbstract);
+            allSchemaEntries = GetAllSchemaEntries();
             baseInterface = "IDBSchema";
             if (classSymbol.BaseType != null && classSymbol.BaseType.Name != "DBSchema")
             {
@@ -105,7 +107,7 @@ namespace { namespaceName}
         [JsonIgnore]
         public {tableTypeName} {schemaEntry.Name} => _{schemaEntry.Name} ??= ({tableTypeName})GetTable<{schemaEntry.Name}>();");
             }
-            
+
             ProcessGenerateMethod();
 
             source.Append($@"
@@ -125,28 +127,36 @@ namespace { namespaceName}
             return source.ToString();
         }
 
+        private List<ITypeSymbol> GetAllSchemaEntries()
+        {
+            var list = new List<ITypeSymbol>();
+            var symbol = classSymbol;
+            while (symbol != null)
+            {
+                list.AddRange(symbol.GetAttributes(Attributes.SchemaEntry)
+                .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
+                .Where(p => p != null && !p.IsAbstract));
+                symbol = symbol.BaseType;
+            }
+            return list;
+        }
+
         private void ProcessGenerateMethod()
         {
             source.Append($@"
 
         public override void Generate(string name)
         {{
-            base.Generate(name);");
-            if (schemaName != null)
-            {
-                source.Append($@"
-            if(string.IsNullOrEmpty(name))
-                Name = ""{schemaName}"";");
-            }
-            if (schemaEntries.Any())
+            Name = name ?? ""{schemaName}"";");
+            if (allSchemaEntries.Any())
             {
                 source.Append($@"
             Generate(new Type[]
             {{");
-                foreach (var schemaEntry in schemaEntries)
+                foreach (var schemaEntry in allSchemaEntries)
                 {
                     source.Append($@"
-                typeof({schemaEntry.Name}),");
+                typeof({schemaEntry.ContainingNamespace.ToDisplayString()}.{schemaEntry.Name}),");
                 }
 
                 source.Append($@"
@@ -155,6 +165,6 @@ namespace { namespaceName}
 
             source.Append($@"
         }}");
-        }       
+        }
     }
 }

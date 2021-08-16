@@ -20,9 +20,9 @@ namespace DataWF.Common.Generator
             // retreive the populated receiver 
             if (!(context.SyntaxReceiver is SyntaxReceiver receiver))
                 return;
+
             try
             {
-
                 var codeGenerator = new InvokerCodeGenerator(ref context, context.Compilation);
 
                 // loop over the candidate fields, and keep the ones that are actually annotated
@@ -35,14 +35,9 @@ namespace DataWF.Common.Generator
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
-#if DEBUG
-                //if (!System.Diagnostics.Debugger.IsAttached)
-                //{
-                //    System.Diagnostics.Debugger.Launch();
-                //}
-#endif
+               
             }
+
         }
     }
 

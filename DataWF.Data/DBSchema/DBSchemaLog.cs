@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using DataWF.Data;
+using System;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
@@ -57,6 +58,12 @@ namespace DataWF.Data
         public override IDBSchemaLog GetLogSchema()
         {
             return this;
+        }
+
+        public override DBTable GetTable(Type type, bool generate = false)
+        {
+            return TargetSchema?.GetTable(type, false) ?? base.GetTable(type, generate);
+
         }
     }
 }

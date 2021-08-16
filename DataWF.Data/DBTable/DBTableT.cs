@@ -34,7 +34,8 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBTable<T> : DBTable, IIdCollection<T> where T : DBItem
+    [InvokerGenerator(Instance = true)]
+    public partial class DBTable<T> : DBTable, IIdCollection<T> where T : DBItem
     {
         protected readonly List<T> items = new List<T>();
         protected readonly List<T> insertItems = new List<T>();

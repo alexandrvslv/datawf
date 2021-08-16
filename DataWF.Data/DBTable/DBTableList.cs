@@ -55,6 +55,9 @@ namespace DataWF.Data
             {
                 item.ParentTable.AddVirtual(item);
             }
+            if (Schema is IDBSchemaLog
+                && !(item is IDBTableLog))
+            { }
             return index;
         }
 

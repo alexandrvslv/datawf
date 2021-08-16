@@ -10,6 +10,8 @@ namespace DataWF.Common.Generator
 {
     public class InvokerCodeGenerator : CodeGenerator
     {
+        private static readonly DiagnosticDescriptor diagnosticDescriptor = new DiagnosticDescriptor("DWFCG001", "Couldn't generate Invokers", "Couldn't generate Invokers {0} {1}", nameof(InvokerCodeGenerator), DiagnosticSeverity.Warning, true);
+
         protected IEnumerable<IPropertySymbol> properties;
         protected INamedTypeSymbol atributeType;
 
@@ -32,27 +34,39 @@ namespace DataWF.Common.Generator
 
         public override bool Process(INamedTypeSymbol classSymbol)
         {
-            ClassSymbol = classSymbol;
-            Properties = ClassSymbol.GetMembers()
-                        .OfType<IPropertySymbol>()
-                        .Where(symbol => !symbol.IsOverride
-                                && !symbol.IsIndexer
-                                && !symbol.IsStatic
-                                && !symbol.Name.Contains('.'))
-                        .ToList();
-
-            if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
+            try
             {
-                return false; //TODO: issue a diagnostic that it must be top level
-            }
-            if (Properties == null || !Properties.Any())
-            {
-                return false;
-            }
+                ClassSymbol = classSymbol;
+                if (classSymbol == null)
+                    return false;
+                Properties = ClassSymbol.GetMembers()
+                            .OfType<IPropertySymbol>()
+                            .Where(symbol => !symbol.IsOverride
+                                    && !symbol.IsIndexer
+                                    && !symbol.IsStatic
+                                    && !symbol.Name.Contains('.'))
+                            .ToList();
 
-            var source = Generate();
-            Context.AddSource($"{classSymbol.ContainingNamespace.ToDisplayString()}.{classSymbol.Name}InvokersGen.cs", SourceText.From(source.ToString(), Encoding.UTF8));
-            return true;
+                if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
+                {
+                    return false; //TODO: issue a diagnostic that it must be top level
+                }
+                if (Properties == null || !Properties.Any())
+                {
+                    return false;
+                }
+
+                var source = Generate();//
+                Context.AddSource($"{classSymbol.ContainingNamespace.ToDisplayString()}.{classSymbol.Name}{(classSymbol.TypeParameters.Count())}InvokersGen.cs", SourceText.From(source.ToString(), Encoding.UTF8));
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                //System.Diagnostics.Debugger.Launch();
+                context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, Location.None, classSymbol.Name, ex.Message));
+            }
+            return false;
         }
 
         public override string Generate()

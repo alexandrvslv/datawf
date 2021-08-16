@@ -91,6 +91,10 @@ namespace DataWF.Data
 
         public override int Add(T item)
         {
+            if (item.Schema != null && item.Schema != Schema)
+            {
+                throw new Exception($"item {item} already attached to {item.Schema}");
+            }
             var index = base.Add(item);
             if (index > -1)
             {

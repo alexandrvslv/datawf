@@ -44,6 +44,7 @@ namespace DataWF.Data
             TargetTable = table;
         }
 
+        [XmlIgnore, JsonIgnore]
         public DBColumn BaseKey
         {
             get
@@ -56,6 +57,7 @@ namespace DataWF.Data
             }
         }
 
+        [XmlIgnore, JsonIgnore]
         public DBColumn UserLogKey
         {
             get
@@ -67,6 +69,7 @@ namespace DataWF.Data
                 return userLogkey;
             }
         }
+
         public string TargetTableName
         {
             get => targetTableName;

@@ -505,7 +505,7 @@ namespace DataWF.Data
             return (DBTable<T>)GetTable(typeof(T), generate);
         }
 
-        public DBTable GetTable(Type type, bool generate = false)
+        public virtual DBTable GetTable(Type type, bool generate = false)
         {
             if (type == null)
                 return null;
@@ -555,7 +555,6 @@ namespace DataWF.Data
             var types = new List<Type>();
             foreach (var assembly in assemblies)
             {
-                Procedures.Generate(assembly);
                 types.AddRange(assembly.GetExportedTypes()
                     .Where(item => item.IsClass));
             }
@@ -564,8 +563,9 @@ namespace DataWF.Data
 
         public void Generate(IEnumerable<Type> types)
         {
-            var logSchema = GetLogSchema();
+            var logSchema = (IDBSchema)GetLogSchema() ?? this;
             Helper.Log(this, $"Start generate {types.Count()} type(s)");
+            var assemblies = new HashSet<Assembly>();
             var tableGenerators = new HashSet<TableGenerator>();
             var logTableGenerators = new HashSet<LogTableGenerator>();
             foreach (var type in types)
@@ -586,6 +586,11 @@ namespace DataWF.Data
                 {
                     Procedures.Generate(type);
                 }
+
+                if (!assemblies.Contains(type.Assembly))
+                {
+                    assemblies.Add(type.Assembly);
+                }
             }
 
             foreach (var tableGenerator in tableGenerators)
@@ -596,25 +601,26 @@ namespace DataWF.Data
 
             foreach (var logTableGenerator in logTableGenerators)
             {
-                var table = logTableGenerator.Generate(logSchema ?? (IDBSchema)this);
+                var table = logTableGenerator.Generate(logSchema);
                 table.RemoveDeletedColumns();
             }
-            
-            if(logSchema is DBSchema defLogSchema)
-                defLogSchema.Generate(defLogSchema.Name);
 
+            if (logSchema is DBSchema defLogSchema && logSchema != this)
+            {
+                defLogSchema.Generate(defLogSchema.Name);
+                foreach (var assembly in assemblies)
+                    Procedures.Generate(assembly);
+
+                Procedures.CheckDeleted();
+            }
             foreach (DBTable table in Tables)
             {
                 if (!(table is IDBTableLog)
-                    && !table.IsVirtual
                     && table.IsLoging)
                 {
                     table.GenerateLogTable();
                 }
             }
-
-            Procedures.CheckDeleted();
-
             Helper.Log(this, $"Success");
         }
 

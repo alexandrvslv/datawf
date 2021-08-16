@@ -260,6 +260,7 @@ namespace {namespaceName}
             if (isLogType)
             {
                 source.Append($@"
+        [JsonIgnore]    
         public new {baseInterfaceName} ParentTable
         {{
             get => ({baseInterfaceName})base.ParentTable;
@@ -275,6 +276,7 @@ namespace {namespaceName}
             {
                 var targetClass = interfaceName.Replace("Log", "");
                 source.Append($@"
+        [JsonIgnore]
         public new {targetClass} TargetTable
         {{
             get => ({targetClass})base.TargetTable;

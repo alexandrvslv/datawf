@@ -69,7 +69,7 @@ namespace DataWF.Data
                 var derivedGenerator = TableGenerator.GetDerived(ReferenceType).FirstOrDefault();
                 if (derivedGenerator != null)
                 {
-                    return derivedGenerator.Generate(schema);
+                    return schema.GetTable(derivedGenerator.ItemType, true);
                 }
                 else
                 {
