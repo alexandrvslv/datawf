@@ -10,7 +10,7 @@ namespace DataWF.Module.Flow
     [Table("ddocument_work", "Document", BlockSize = 400), InvokerGenerator]
     public sealed partial class DocumentWork : DocumentItem
     {
-        public static DocumentWork Empty = new DocumentWork(null);
+        public static DocumentWork Empty = new DocumentWork((IDocumentWorkTable)null);
         private Stage stage;
         private Work work;
         private User user;
