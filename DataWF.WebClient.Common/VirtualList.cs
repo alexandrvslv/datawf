@@ -111,9 +111,15 @@ namespace DataWF.Common
 
                     int i = pages.ListFrom;
                     var result = (await ModelView.Get(pages).ConfigureAwait(false)).Cast<T>().ToList();
-                    cache[pageIndex] = result;
-
-                    OnCollectionChanged(NotifyCollectionChangedAction.Reset);
+                    if (processingGet == 0)
+                    {
+                        cache.Remove(pageIndex);
+                    }
+                    else
+                    {
+                        cache[pageIndex] = result;
+                        OnCollectionChanged(NotifyCollectionChangedAction.Reset);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -122,7 +128,7 @@ namespace DataWF.Common
                 }
                 finally
                 {
-                    Interlocked.Decrement(ref processingGet);
+                    Interlocked.Exchange(ref processingGet, 0);
                 }
             }
         }
@@ -182,6 +188,7 @@ namespace DataWF.Common
 
         private void ClearCache()
         {
+            Interlocked.Exchange(ref processingGet, 0);
             cache.Clear();
             pages.ListCount = 1;
         }
