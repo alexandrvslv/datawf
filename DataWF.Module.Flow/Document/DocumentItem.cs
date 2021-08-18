@@ -9,10 +9,6 @@ namespace DataWF.Module.Flow
     {
         protected Document document;
 
-        protected DocumentItem(DBTable table) : base(table)
-        {
-        }
-
         [Browsable(false)]
         [Column("document_id")]
         public virtual long? DocumentId

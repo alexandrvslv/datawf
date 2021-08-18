@@ -12,9 +12,6 @@ namespace DataWF.Module.Flow
         private Customer customer;
         private Address address;
 
-        public DocumentCustomer(DBTable table) : base(table)
-        { }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {

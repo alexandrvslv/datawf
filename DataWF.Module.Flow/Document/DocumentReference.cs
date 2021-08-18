@@ -10,10 +10,6 @@ namespace DataWF.Module.Flow
     {
         private Document reference;
 
-        public DocumentReference(DBTable table) : base(table)
-        {
-        }
-
         [Browsable(false)]
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id

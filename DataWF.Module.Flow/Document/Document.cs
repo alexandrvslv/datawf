@@ -531,8 +531,7 @@ namespace DataWF.Module.Flow
 
         public DocumentWork CreateWork(DocumentWork from, Stage stage, DBItem staff)
         {
-            var worksTable = Table.Schema.GetTable<DocumentWork>();
-            var work = new DocumentWork(worksTable)
+            var work = new DocumentWork(Schema.DocumentWork)
             {
                 DateCreate = DateTime.UtcNow,
                 Document = this,

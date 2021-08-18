@@ -19,9 +19,6 @@ namespace DataWF.Module.Flow
         private User currentUser;
         private TemplateData template;
 
-        public DocumentData(DBTable table) : base(table)
-        { }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {

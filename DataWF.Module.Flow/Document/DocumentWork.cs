@@ -17,10 +17,6 @@ namespace DataWF.Module.Flow
         private Department department;
         private DocumentWork from;
 
-        public DocumentWork(DBTable table) : base(table)
-        {
-        }
-
         [Index("ddocument_work_document_id")]
         public override long? DocumentId
         {
