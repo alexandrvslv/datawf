@@ -21,7 +21,7 @@ namespace DataWF.Data.Generator
 
         public override bool Process(INamedTypeSymbol classSymbol)
         {
-            ClassSymbol = classSymbol;
+            TypeSymbol = classSymbol;
             string classSource = Generate();
             if (classSource != null)
             {
@@ -55,25 +55,25 @@ namespace DataWF.Data.Generator
 
         public override string Generate()
         {
-            var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
-            var className = $"{classSymbol.Name}Log";
+            var namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
+            var className = $"{typeSymbol.Name}Log";
 
-            var schemaAttribute = classSymbol.GetAttribute(Attributes.Schema);
+            var schemaAttribute = typeSymbol.GetAttribute(Attributes.Schema);
             var schemaName = schemaAttribute?.ConstructorArguments.FirstOrDefault().Value + "_log";
 
-            var schemaEntries = classSymbol.GetAttributes(Attributes.SchemaEntry)
+            var schemaEntries = typeSymbol.GetAttributes(Attributes.SchemaEntry)
                                 .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
                                 .Where(p => p != null && !p.IsAbstract);
             var baseInterface = "IDBSchemaLog";
-            if (classSymbol.BaseType != null && classSymbol.BaseType.Name != "DBSchema")
+            if (typeSymbol.BaseType != null && typeSymbol.BaseType.Name != "DBSchema")
             {
-                baseInterface = $"{classSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{classSymbol.BaseType.Name}Log";
+                baseInterface = $"{typeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{typeSymbol.BaseType.Name}Log";
             }
 
             var baseClass = "DBSchemaLog";
-            if (classSymbol.BaseType != null && classSymbol.BaseType.Name != "DBSchema")
+            if (typeSymbol.BaseType != null && typeSymbol.BaseType.Name != "DBSchema")
             {
-                baseClass = $"{classSymbol.BaseType.ContainingNamespace.ToDisplayString()}.{classSymbol.BaseType.Name}Log";
+                baseClass = $"{typeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.{typeSymbol.BaseType.Name}Log";
             }
             var namespaces = schemaEntries.Select(p => p.ContainingNamespace.ToDisplayString())
                 .Union(new[] { "System", "System.Text.Json.Serialization", "DataWF.Data" })
@@ -108,14 +108,14 @@ namespace { namespaceName }
     public partial class {className}: {baseClass}
     {{ 
         [JsonIgnore]
-        public new I{classSymbol.Name} TargetSchema
+        public new I{typeSymbol.Name} TargetSchema
         {{
-            get => (I{classSymbol.Name})base.TargetSchema;
+            get => (I{typeSymbol.Name})base.TargetSchema;
             set => base.TargetSchema = value;
         }}
     }}
 
-    public partial class {classSymbol.Name}
+    public partial class {typeSymbol.Name}
     {{ 
         [JsonIgnore]
         public new I{className} LogSchema

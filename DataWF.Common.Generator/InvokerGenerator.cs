@@ -21,23 +21,15 @@ namespace DataWF.Common.Generator
             if (!(context.SyntaxReceiver is SyntaxReceiver receiver))
                 return;
 
-            try
-            {
-                var codeGenerator = new InvokerCodeGenerator(ref context, context.Compilation);
+            var codeGenerator = new InvokerCodeGenerator(ref context, context.Compilation);
 
-                // loop over the candidate fields, and keep the ones that are actually annotated
-                foreach (ClassDeclarationSyntax classDeclaration in receiver.CandidateCalsses)
-                {
-                    if (context.CancellationToken.IsCancellationRequested)
-                        return;
-                    codeGenerator.Process(classDeclaration);
-                }
-            }
-            catch (Exception ex)
+            // loop over the candidate fields, and keep the ones that are actually annotated
+            foreach (ClassDeclarationSyntax classDeclaration in receiver.CandidateCalsses)
             {
-               
+                if (context.CancellationToken.IsCancellationRequested)
+                    return;
+                codeGenerator.Process(classDeclaration);
             }
-
         }
     }
 

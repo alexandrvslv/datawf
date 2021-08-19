@@ -106,16 +106,16 @@ namespace DataWF.Data.Generator
 
         public override bool Process(INamedTypeSymbol classSymbol)
         {
-            ClassSymbol = classSymbol;
-            Properties = ClassSymbol.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsStatic).ToList();
+            TypeSymbol = classSymbol;
+            Properties = TypeSymbol.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsStatic).ToList();
             string classSource = Generate();
             if (classSource != null)
             {
                 try
                 {
-                    Context.AddSource($"{ClassSymbol.ContainingNamespace.ToDisplayString()}.{ClassSymbol.Name}TableGen.cs", SourceText.From(classSource, Encoding.UTF8));
+                    Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}TableGen.cs", SourceText.From(classSource, Encoding.UTF8));
 
-                    var invokerAttribute = ClassSymbol.GetAttribute(InvokerCodeGenerator.AtributeType);
+                    var invokerAttribute = TypeSymbol.GetAttribute(InvokerCodeGenerator.AtributeType);
                     if (invokerAttribute == null)
                     {
                         InvokerCodeGenerator.Process(classSymbol);
@@ -143,22 +143,22 @@ namespace DataWF.Data.Generator
 
         private bool GenerateNames()
         {
-            className = GetTableClassName(classSymbol, attributes, out var mode);
+            className = GetTableClassName(typeSymbol, attributes, out var mode);
             if (className == null)
             {
                 return false;
             }
             this.mode = mode;
             interfaceName = "I" + className;
-            isLogType = mode == TableCodeGeneratorMode.Log || classSymbol.Name.EndsWith("Log", StringComparison.Ordinal);
+            isLogType = mode == TableCodeGeneratorMode.Log || typeSymbol.Name.EndsWith("Log", StringComparison.Ordinal);
 
             baseClassName = constDBTable;
             baseInterfaceName = "IDBTable";
 
-            namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
+            namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
 
             containerSchema = null;
-            foreach (var type in classSymbol.ContainingNamespace.GetTypeMembers())
+            foreach (var type in typeSymbol.ContainingNamespace.GetTypeMembers())
             {
                 if (type.TypeKind == TypeKind.Class
                     && type.AllInterfaces.Any(p => p.Name == "IDBSchema"))
@@ -173,33 +173,33 @@ namespace DataWF.Data.Generator
             }
 
             whereName = null;
-            genericArg = classSymbol.Name;
-            if (!classSymbol.IsSealed)
+            genericArg = typeSymbol.Name;
+            if (!typeSymbol.IsSealed)
             {
                 genericArg = "T";
                 className += "<T>";
-                whereName = $"where T: {classSymbol.Name}";
+                whereName = $"where T: {typeSymbol.Name}";
             }
 
-            if (classSymbol.BaseType.Name == constDBLogItem)
+            if (typeSymbol.BaseType.Name == constDBLogItem)
             {
                 baseClassName = "DBTableLog";
                 baseInterfaceName = "IDBTableLog";
             }
             else //&& classSymbol.BaseType.Name != "DBGroupItem"
-            if (classSymbol.BaseType.Name != "DBItem")
+            if (typeSymbol.BaseType.Name != "DBItem")
             {
-                var baseNamespace = classSymbol.BaseType.ContainingNamespace.ToDisplayString();
+                var baseNamespace = typeSymbol.BaseType.ContainingNamespace.ToDisplayString();
                 if (baseNamespace == namespaceName
                     || baseNamespace == "<global namespace>")
                 {
-                    baseClassName = classSymbol.BaseType.Name + constTable;
+                    baseClassName = typeSymbol.BaseType.Name + constTable;
                     baseInterfaceName = "I" + baseClassName;
                 }
                 else
                 {
-                    baseClassName = $"{baseNamespace}.{classSymbol.BaseType.Name}Table";
-                    baseInterfaceName = $"{baseNamespace}.I{classSymbol.BaseType.Name}Table";
+                    baseClassName = $"{baseNamespace}.{typeSymbol.BaseType.Name}Table";
+                    baseInterfaceName = $"{baseNamespace}.I{typeSymbol.BaseType.Name}Table";
                 }
             }
 
@@ -208,7 +208,7 @@ namespace DataWF.Data.Generator
 
         public override string Generate()
         {
-            if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
+            if (!typeSymbol.ContainingSymbol.Equals(typeSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
             {
                 return null; //TODO: issue a diagnostic that it must be top level
             }
@@ -227,7 +227,7 @@ using DataWF.Common;
             source.Append($@"
 namespace {namespaceName}
 {{
-    public {(classSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className}: {baseClassName}<{genericArg}>, {interfaceName}
+    public {(typeSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className}: {baseClassName}<{genericArg}>, {interfaceName}
     {whereName}
     {{");
             interfaceSource = new StringBuilder($@"
@@ -288,21 +288,21 @@ namespace {namespaceName}
         private void ProcessClassPartial()
         {
             source.Append($@"
-    public partial class {classSymbol.Name}
+    public partial class {typeSymbol.Name}
     {{
-        public {classSymbol.Name}(IDBSchema schema):base(schema)
+        public {typeSymbol.Name}(IDBSchema schema):base(schema)
         {{}}");
-            if (!classSymbol.Constructors.Any(p => p.Parameters.Any()))
+            if (!typeSymbol.Constructors.Any(p => p.Parameters.Any()))
             {
                 source.Append($@"
-        public {classSymbol.Name}({interfaceName} table): base(table)
+        public {typeSymbol.Name}({interfaceName} table): base(table)
         {{ }}");
             }
             source.Append($@"
         [JsonIgnore]
-        public new {(classSymbol.IsSealed ? className : interfaceName)} Table
+        public new {(typeSymbol.IsSealed ? className : interfaceName)} Table
         {{
-            get => ({(classSymbol.IsSealed ? className : interfaceName)})base.Table;
+            get => ({(typeSymbol.IsSealed ? className : interfaceName)})base.Table;
             set => base.Table = value;
         }}");
             ProcessClassContainerSchema();

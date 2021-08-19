@@ -29,7 +29,7 @@ namespace DataWF.Data.Generator
 
         public override bool Process(INamedTypeSymbol classSymbol)
         {
-            ClassSymbol = classSymbol;
+            TypeSymbol = classSymbol;
             string classSource = Generate();
             if (classSource != null)
             {
@@ -37,7 +37,7 @@ namespace DataWF.Data.Generator
                 {
                     Context.AddSource($"{classSymbol.ContainingNamespace.ToDisplayString()}.{classSymbol.Name}SchemaGen.cs", SourceText.From(classSource, Encoding.UTF8));
 
-                    var invokerAttribute = ClassSymbol.GetAttribute(InvokerCodeGenerator.AtributeType);
+                    var invokerAttribute = TypeSymbol.GetAttribute(InvokerCodeGenerator.AtributeType);
                     if (invokerAttribute == null)
                     {
                         //InvokerCodeGenerator.Process(classSymbol);
@@ -63,20 +63,20 @@ namespace DataWF.Data.Generator
 
         public override string Generate()
         {
-            namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
-            className = classSymbol.Name;
+            namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
+            className = typeSymbol.Name;
 
-            schemaAttribute = classSymbol.GetAttribute(Attributes.Schema);
+            schemaAttribute = typeSymbol.GetAttribute(Attributes.Schema);
             schemaName = schemaAttribute?.ConstructorArguments.FirstOrDefault().Value;
 
-            schemaEntries = classSymbol.GetAttributes(Attributes.SchemaEntry)
+            schemaEntries = typeSymbol.GetAttributes(Attributes.SchemaEntry)
                                 .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
                                 .Where(p => p != null && !p.IsAbstract);
             allSchemaEntries = GetAllSchemaEntries();
             baseInterface = "IDBSchema";
-            if (classSymbol.BaseType != null && classSymbol.BaseType.Name != "DBSchema")
+            if (typeSymbol.BaseType != null && typeSymbol.BaseType.Name != "DBSchema")
             {
-                baseInterface = $"{classSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{classSymbol.BaseType.Name}";
+                baseInterface = $"{typeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{typeSymbol.BaseType.Name}";
             }
             var namespaces = schemaEntries.Select(p => p.ContainingNamespace.ToDisplayString())
                 .Union(new[] { "System", "System.Text.Json.Serialization", "DataWF.Data" })
@@ -130,7 +130,7 @@ namespace { namespaceName}
         private List<ITypeSymbol> GetAllSchemaEntries()
         {
             var list = new List<ITypeSymbol>();
-            var symbol = classSymbol;
+            var symbol = typeSymbol;
             while (symbol != null)
             {
                 list.AddRange(symbol.GetAttributes(Attributes.SchemaEntry)

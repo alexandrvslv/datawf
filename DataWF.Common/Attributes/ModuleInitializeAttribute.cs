@@ -13,6 +13,6 @@ namespace DataWF.Common
 
         public Type InitializeType { get; }
     }
-
+    
 }
 

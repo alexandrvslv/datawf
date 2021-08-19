@@ -10,7 +10,12 @@ namespace DataWF.Common.Generator
 {
     public class InvokerCodeGenerator : CodeGenerator
     {
-        private static readonly DiagnosticDescriptor diagnosticDescriptor = new DiagnosticDescriptor("DWFCG001", "Couldn't generate Invokers", "Couldn't generate Invokers {0} {1}", nameof(InvokerCodeGenerator), DiagnosticSeverity.Warning, true);
+        private static readonly DiagnosticDescriptor diagnosticDescriptor = new DiagnosticDescriptor("DWFG002", 
+            "Couldn't generate Invokers", 
+            "Couldn't generate Invokers {0} {1}", 
+            nameof(InvokerCodeGenerator), 
+            DiagnosticSeverity.Warning, 
+            true);
 
         protected IEnumerable<IPropertySymbol> properties;
         protected INamedTypeSymbol atributeType;
@@ -36,10 +41,10 @@ namespace DataWF.Common.Generator
         {
             try
             {
-                ClassSymbol = classSymbol;
+                TypeSymbol = classSymbol;
                 if (classSymbol == null)
                     return false;
-                Properties = ClassSymbol.GetMembers()
+                Properties = TypeSymbol.GetMembers()
                             .OfType<IPropertySymbol>()
                             .Where(symbol => !symbol.IsOverride
                                     && !symbol.IsIndexer
@@ -71,13 +76,13 @@ namespace DataWF.Common.Generator
 
         public override string Generate()
         {
-            string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
-            var className = classSymbol.Name;
+            string namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
+            var className = typeSymbol.Name;
 
-            var attributeData = classSymbol.GetAttribute(atributeType);
+            var attributeData = typeSymbol.GetAttribute(atributeType);
             var argInstance = attributeData?.GetNamedValue("Instance") ?? default(TypedConstant);
             var isInstance = !argInstance.IsNull && (bool)argInstance.Value;
-            var genericArgs = classSymbol.IsGenericType ? $"<{string.Join(", ", classSymbol.TypeParameters.Select(p => p.Name))}>" : string.Empty;
+            var genericArgs = typeSymbol.IsGenericType ? $"<{string.Join(", ", typeSymbol.TypeParameters.Select(p => p.Name))}>" : string.Empty;
             // begin building the generated source
             source = new StringBuilder($@"{(namespaceName != "DataWF.Common" ? "using DataWF.Common;" : "")}
 using {namespaceName};
@@ -119,12 +124,12 @@ namespace {namespaceName}
             var instanceCache = instance ? $@"
             public static readonly {invokerName} Instance = new {invokerName}();" : "";
             source.Append($@"
-        public class {invokerName}: Invoker<{classSymbol.Name}{genericArgs}, {propertyType}>
+        public class {invokerName}: Invoker<{typeSymbol.Name}{genericArgs}, {propertyType}>
         {{{instanceCache}
-            public override string Name => nameof({classSymbol.Name}{genericArgs}.{propertyName});
+            public override string Name => nameof({typeSymbol.Name}{genericArgs}.{propertyName});
             public override bool CanWrite => {(!propertySymbol.IsReadOnly ? "true" : "false")};
-            public override {propertyType} GetValue({classSymbol.Name}{genericArgs} target) => target.{propertyName};
-            public override void SetValue({classSymbol.Name}{genericArgs} target, {propertyType} value){(propertySymbol.IsReadOnly ? "{}" : $" => target.{propertyName} = value;")}
+            public override {propertyType} GetValue({typeSymbol.Name}{genericArgs} target) => target.{propertyName};
+            public override void SetValue({typeSymbol.Name}{genericArgs} target, {propertyType} value){(propertySymbol.IsReadOnly ? "{}" : $" => target.{propertyName} = value;")}
         }}
 ");
         }
@@ -134,9 +139,9 @@ namespace {namespaceName}
             // get the name and type of the field
             string propertyName = propertySymbol.Name;
             ITypeSymbol propertyType = propertySymbol.Type;
-            string genericArgs = classSymbol.IsGenericType ? $"<{string.Join("", Enumerable.Repeat(",", classSymbol.TypeParameters.Length - 1))}>" : "";
-            string nameGenericArgs = classSymbol.IsGenericType ? "<object>" : "";
-            source.Append($@"[assembly: Invoker(typeof({classSymbol.Name}{genericArgs}), ""{propertyName}"", typeof({classSymbol.Name}{genericArgs}.{propertyName}Invoker))]
+            string genericArgs = typeSymbol.IsGenericType ? $"<{string.Join("", Enumerable.Repeat(",", typeSymbol.TypeParameters.Length - 1))}>" : "";
+            string nameGenericArgs = typeSymbol.IsGenericType ? "<object>" : "";
+            source.Append($@"[assembly: Invoker(typeof({typeSymbol.Name}{genericArgs}), ""{propertyName}"", typeof({typeSymbol.Name}{genericArgs}.{propertyName}Invoker))]
 ");
         }
     }

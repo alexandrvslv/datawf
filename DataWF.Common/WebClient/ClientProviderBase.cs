@@ -12,11 +12,16 @@ using System.Threading.Tasks;
 namespace DataWF.Common
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class ClientProviderAttribure : Attribute
+    public class ClientProviderAttribute : Attribute
     {
-        public ClientProviderAttribure(string documentPath)
-        { }
+        public ClientProviderAttribute(string documentPath)
+        {
+            DocumentPath = documentPath;
+        }
 
+        public string DocumentPath { get; }
+
+        public string UsingReferences { get; set; }
     }
 
     public class ClientProviderBase : IClientProvider

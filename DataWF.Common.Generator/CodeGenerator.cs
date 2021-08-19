@@ -13,7 +13,7 @@ namespace DataWF.Common.Generator
             "DataWF.Generator", DiagnosticSeverity.Warning, true);
 
         protected StringBuilder source;
-        protected INamedTypeSymbol classSymbol;
+        protected INamedTypeSymbol typeSymbol;
         protected GeneratorExecutionContext context;
         protected ClassDeclarationSyntax classSyntax;
         private Compilation compilation;
@@ -38,10 +38,10 @@ namespace DataWF.Common.Generator
             set => classSyntax = value;
         }
 
-        public INamedTypeSymbol ClassSymbol
+        public INamedTypeSymbol TypeSymbol
         {
-            get => classSymbol;
-            set => classSymbol = value;
+            get => typeSymbol;
+            set => typeSymbol = value;
         }
 
         public CSharpParseOptions Options { get; set; }
@@ -59,25 +59,25 @@ namespace DataWF.Common.Generator
         public bool Process(ClassDeclarationSyntax classSyntax)
         {
             ClassSyntax = classSyntax;
-            ClassSymbol = Compile();
-            return ClassSymbol != null ? Process(ClassSymbol) : false;
+            TypeSymbol = GetSymbol(classSyntax);
+            return TypeSymbol != null ? Process(TypeSymbol) : false;
         }
 
         public abstract bool Process(INamedTypeSymbol classSymbol);
 
         public abstract string Generate();
 
-        protected virtual INamedTypeSymbol Compile()
+        protected virtual INamedTypeSymbol GetSymbol()
         {
-            return Compile(ClassSyntax);
+            return GetSymbol(ClassSyntax);
         }
 
-        protected INamedTypeSymbol Compile(ClassDeclarationSyntax syntax)
+        protected INamedTypeSymbol GetSymbol(BaseTypeDeclarationSyntax syntax)
         {
             try
             {
                 SemanticModel model = Compilation.GetSemanticModel(syntax.SyntaxTree);
-                return model.GetDeclaredSymbol(ClassSyntax) as INamedTypeSymbol;
+                return model.GetDeclaredSymbol(syntax) as INamedTypeSymbol;
             }
             catch
             { return null; }

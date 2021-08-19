@@ -1,25 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DataWF.Common;
 
 namespace DataWF.Test.Web.CodeGenerator
 {
-    public partial class WebClientTestProvider : ClientProviderBase
+    [ClientProvider("../DataWF.Test.Web.Service/wwwwroot/swagger.json", UsingReferences ="DataWF.Common;")]
+    public partial class WebClientTestProvider
     {
-        public WebClientTestProvider()
-        {
-            InitializeComponent();
-        }
-
-        public WebClientTestProvider(IContainer container)
-        {
-            container.Add(this);
-
-            InitializeComponent();
-        }
     }
 }

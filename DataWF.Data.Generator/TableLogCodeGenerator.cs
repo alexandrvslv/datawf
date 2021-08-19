@@ -22,7 +22,7 @@ namespace DataWF.Data.Generator
 
         public override bool Process(INamedTypeSymbol classSymbol)
         {
-            ClassSymbol = classSymbol;
+            TypeSymbol = classSymbol;
             Properties = classSymbol.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsStatic).ToList();
             string logClassSource = Generate();
             if (logClassSource != null)
@@ -57,16 +57,16 @@ namespace DataWF.Data.Generator
 
         public override string Generate()
         {
-            string namespaceName = $"{classSymbol.ContainingNamespace.ToDisplayString()}";
+            string namespaceName = $"{typeSymbol.ContainingNamespace.ToDisplayString()}";
             string className = null;
             string tableSqlName = null;
-            var tableAttribute = classSymbol.GetAttribute(attributes.Table);
+            var tableAttribute = typeSymbol.GetAttribute(attributes.Table);
             if (tableAttribute != null)
             {
                 var keys = tableAttribute.GetNamedValue("Keys");
                 if (keys.IsNull || ((int)keys.Value & (1 << 0)) == 0)
                 {
-                    className = $"{classSymbol.Name}Log";
+                    className = $"{typeSymbol.Name}Log";
                 }
                 var name = tableAttribute.GetNamedValue("TableName");
                 if (name.IsNull)
@@ -80,21 +80,21 @@ namespace DataWF.Data.Generator
                 tableSqlName = name.Value.ToString();
             }
 
-            var abstractTableAttribute = classSymbol.GetAttribute(attributes.AbstractTable);
+            var abstractTableAttribute = typeSymbol.GetAttribute(attributes.AbstractTable);
             if (abstractTableAttribute != null)
             {
-                className = $"{classSymbol.Name}Log";
-                if (string.Equals(classSymbol.Name, "DBItemLog", StringComparison.Ordinal)
-                    || string.Equals(classSymbol.BaseType?.Name, "DBItemLog", StringComparison.Ordinal))
+                className = $"{typeSymbol.Name}Log";
+                if (string.Equals(typeSymbol.Name, "DBItemLog", StringComparison.Ordinal)
+                    || string.Equals(typeSymbol.BaseType?.Name, "DBItemLog", StringComparison.Ordinal))
                 {
                     return null;
                 }
             }
 
-            var virtualTableAttribute = classSymbol.GetAttribute(attributes.VirtualTable);
+            var virtualTableAttribute = typeSymbol.GetAttribute(attributes.VirtualTable);
             if (virtualTableAttribute != null)
             {
-                className = $"{classSymbol.Name}Log";
+                className = $"{typeSymbol.Name}Log";
             }
 
             if (className != null)
@@ -103,11 +103,11 @@ namespace DataWF.Data.Generator
                 var tableTypeName = $"I{className}Table";
                 string baseClassName = "DBItemLog";
 
-                if (classSymbol.BaseType.Name != "DBItem"
-                    && classSymbol.BaseType.Name != "DBGroupItem")
+                if (typeSymbol.BaseType.Name != "DBItem"
+                    && typeSymbol.BaseType.Name != "DBGroupItem")
                 {
-                    var baseNamespace = $"{classSymbol.BaseType.ContainingNamespace.ToDisplayString()}";
-                    baseClassName = $"{classSymbol.BaseType.Name}Log";
+                    var baseNamespace = $"{typeSymbol.BaseType.ContainingNamespace.ToDisplayString()}";
+                    baseClassName = $"{typeSymbol.BaseType.Name}Log";
 
                     if (baseNamespace != namespaceName)
                     {
@@ -125,7 +125,7 @@ namespace {namespaceName}
     ");
                 if (tableAttribute != null)
                 {
-                    source.Append($"[LogTable(typeof({classSymbol.Name}), \"{tableSqlName}_log\")]");
+                    source.Append($"[LogTable(typeof({typeSymbol.Name}), \"{tableSqlName}_log\")]");
                 }
                 else if (abstractTableAttribute != null)
                 {
@@ -142,13 +142,13 @@ namespace {namespaceName}
                 }
 
                 source.Append($@"
-    public {(classSymbol.IsSealed ? "sealed " : string.Empty)} {(classSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className} : {baseClassName}
+    public {(typeSymbol.IsSealed ? "sealed " : string.Empty)} {(typeSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className} : {baseClassName}
     {{");
                 source.Append($@"
         public {className}({tableTypeName} table): base(table)
         {{ }}
         
-        public {className}({classSymbol.Name} item): base(item)
+        public {className}({typeSymbol.Name} item): base(item)
         {{ }}
 ");
                 //{(itemTypeAttribute != null ? "Typed" : string.Empty)}

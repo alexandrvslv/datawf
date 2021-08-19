@@ -4,9 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-//using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace DataWF.WebClient.Generator
@@ -36,6 +34,25 @@ namespace DataWF.WebClient.Generator
             return SF.UsingDirective(qualifiedName);
         }
 
+        public static void AddUsing(INamedTypeSymbol type, HashSet<string> usings)
+        {
+            AddUsing(type.ContainingNamespace.ToDisplayString(), usings);
+            if (type.IsGenericType)
+            {
+                foreach (var genericArgument in type.TypeArguments)
+                    if (genericArgument is INamedTypeSymbol namedType)
+                        AddUsing(namedType, usings);
+            }
+        }
+
+        public static void AddUsing(string usingName, HashSet<string> usings)
+        {
+            if (!usings.Contains(usingName))
+            {
+                usings.Add(usingName);
+            }
+        }
+
         public static void AddUsing(Type type, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             AddUsing(type.Namespace, usings);
@@ -52,18 +69,6 @@ namespace DataWF.WebClient.Generator
             {
                 usings.Add(usingName, SyntaxHelper.CreateUsingDirective(usingName));
             }
-        }
-
-        public static CompilationUnitSyntax GenUnit(MemberDeclarationSyntax @class, string nameSpace, IEnumerable<UsingDirectiveSyntax> usings, IEnumerable<AttributeListSyntax> attributes)
-        {
-            var @namespace = SF.NamespaceDeclaration(SF.ParseName(nameSpace))
-                                             .AddMembers(@class);
-            return SF.CompilationUnit(
-                externs: SF.List<ExternAliasDirectiveSyntax>(),
-                usings: SF.List(usings),
-                attributeLists: SF.List(attributes),
-                members: SF.List<MemberDeclarationSyntax>(new[] { @namespace }))
-                                        .NormalizeWhitespace("    ", true);
         }
 
         public static IEnumerable<CompilationUnitSyntax> LoadResources(Assembly assembly, string path, string newNameSpace, string output)
