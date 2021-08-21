@@ -41,7 +41,7 @@ namespace DataWF.Common.Generator
 
         private readonly Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
         private OpenApiDocument document;
-        private List<IAssemblySymbol> usingReferences;
+        private List<IAssemblySymbol> usingReferences = new List<IAssemblySymbol>();
 
         public ClientProviderGenerator(ref GeneratorExecutionContext context)
             : base(ref context)
@@ -51,45 +51,20 @@ namespace DataWF.Common.Generator
         public InvokerGenerator InvokerGenerator { get; set; }
 
         public string DocumentSource { get; set; }
+        public AttributeData Attribute { get; private set; }
         public string Namespace { get; set; }
         public HashSet<IAssemblySymbol> References { get; } = new HashSet<IAssemblySymbol>();
         public string ProviderName { get; set; }
 
         public override bool Process()
         {
-            var attribute = TypeSymbol.GetAttribute(Attributes.ClientProvider);
-            DocumentSource = attribute.ConstructorArguments.FirstOrDefault().Value.ToString();
-            if (!DocumentSource.StartsWith("http"))
-            {
-                var mainSyntaxTree = Compilation.SyntaxTrees
-                          .First(x => x.HasCompilationUnitRoot);
-
-                var projectDirectory = Path.GetDirectoryName(mainSyntaxTree.FilePath);
-                DocumentSource = Path.GetFullPath(Path.Combine(projectDirectory, DocumentSource));
-            }
+            Attribute = TypeSymbol.GetAttribute(Attributes.ClientProvider);
             Namespace = TypeSymbol.ContainingNamespace.ToDisplayString();
             ProviderName = TypeSymbol.Name;
-            var url = new Uri(DocumentSource);
-            if (url.Scheme == "http" || url.Scheme == "https")
-                document = OpenApiDocument.FromUrlAsync(url.OriginalString).GetAwaiter().GetResult();
-            else if (url.Scheme == "file")
-                document = OpenApiDocument.FromFileAsync(url.LocalPath).GetAwaiter().GetResult();
 
-            var usingReferenceNames = new HashSet<string>((attribute.GetNamedValue("UsingReferences").Value?.ToString() ?? "")
-                .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
-            usingReferences = new List<IAssemblySymbol>();
-            foreach (var assemblyReference in Compilation.References)
-            {
-                var assembly = Compilation.GetAssemblyOrModuleSymbol(assemblyReference);
-                if (assembly is IAssemblySymbol assemblySymbol)
-                {
-                    References.Add(assemblySymbol);
-                    if (usingReferenceNames.Contains(assemblySymbol.Name))
-                    {
-                        usingReferences.Add(assemblySymbol);
-                    }
-                }
-            }
+            LoadDocument();
+
+            LoadReferences();
 
             foreach (var definition in document.Definitions)
             {
@@ -118,6 +93,44 @@ namespace DataWF.Common.Generator
             });
 
             return true;
+        }
+
+        private void LoadDocument()
+        {
+            DocumentSource = Attribute.ConstructorArguments.FirstOrDefault().Value.ToString();
+            if (!DocumentSource.StartsWith("http"))
+            {
+                var mainSyntaxTree = Compilation.SyntaxTrees
+                          .First(x => x.HasCompilationUnitRoot);
+
+                var projectDirectory = Path.GetDirectoryName(mainSyntaxTree.FilePath);
+                DocumentSource = Path.GetFullPath(Path.Combine(projectDirectory, DocumentSource));
+            }
+            var url = new Uri(DocumentSource);
+            if (url.Scheme == "http" || url.Scheme == "https")
+                document = OpenApiDocument.FromUrlAsync(url.OriginalString).GetAwaiter().GetResult();
+            else if (url.Scheme == "file")
+                document = OpenApiDocument.FromFileAsync(url.LocalPath).GetAwaiter().GetResult();
+        }
+
+        private void LoadReferences()
+        {
+            var usingReferenceParam = Attribute.GetNamedValue("UsingReferences").Value?.ToString();
+            var usingReferenceNames = usingReferenceParam != null
+                ? new HashSet<string>(usingReferenceParam.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                : null;
+            foreach (var assemblyReference in Compilation.References)
+            {
+                var assembly = Compilation.GetAssemblyOrModuleSymbol(assemblyReference);
+                if (assembly is IAssemblySymbol assemblySymbol)
+                {
+                    References.Add(assemblySymbol);
+                    if (usingReferenceNames?.Contains(assemblySymbol.Name) ?? false)
+                    {
+                        usingReferences.Add(assemblySymbol);
+                    }
+                }
+            }
         }
 
         private StringBuilder GenProvider()
@@ -728,7 +741,9 @@ namespace {Namespace}
             foreach (var item in schema.Enumeration)
             {
                 var sitem = schema.EnumerationNames[i++];
-                var memeber = members?[i].ToString() ?? sitem;
+                var memeber = sitem;
+                if (members != null && members.Length > i)
+                    memeber = members[i]?.ToString();
                 //if (!Char.IsLetter(sitem[0]))
                 //{
                 //    sitem = definitionName[0] + sitem;

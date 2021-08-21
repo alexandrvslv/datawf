@@ -21,7 +21,7 @@ namespace DataWF.Common.Generator
 
         public static readonly DiagnosticDescriptor DDFailGeneration = new DiagnosticDescriptor("DWFG002",
             "Couldn't Generate",
-            "Couldn't Generate {0} {1} {2}",
+            "Couldn't Generate {0} {1} {2} {3}",
             "Warning",
             DiagnosticSeverity.Warning,
             true);

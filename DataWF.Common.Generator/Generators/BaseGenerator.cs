@@ -9,8 +9,6 @@ namespace DataWF.Common.Generator
     internal abstract class BaseGenerator
     {
 
-
-
         public static Compilation compilation;
         public static Compilation Compilation
         {
@@ -86,7 +84,7 @@ namespace DataWF.Common.Generator
             }
             catch (Exception ex)
             {
-                try { Context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDFailGeneration, Location.None, GetType().Name, TypeSymbol.Name, ex.Message)); } catch { }
+                try { Context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDFailGeneration, Location.None, GetType().Name, TypeSymbol.Name, ex.Message, ex.StackTrace)); } catch { }
                 return false;
             }
         }
