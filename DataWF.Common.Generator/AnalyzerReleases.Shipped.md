@@ -4,5 +4,6 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|--------------------
-DWFG001  |  Design  |  Warning | DataWF.Common project or reference not in project references
-DWFG002  |  Design  |  Warning | Couldn't generate Invokers
+DWFG001 | Warning  | Warning  | DataWF.Common references not found
+DWFG002 | Warning  | Warning  | Couldn't Generate
+DWFG003 | Info     | Info     | Success Generate

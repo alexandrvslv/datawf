@@ -7,7 +7,7 @@ using DataWF.Common.Generator;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Diagnostics;
 
-namespace DataWF.Data.Generator
+namespace DataWF.Common.Generator
 {
     internal enum TableCodeGeneratorMode
     {
@@ -16,9 +16,8 @@ namespace DataWF.Data.Generator
         Abstract,
         Log
     }
-    internal class TableCodeGenerator : BaseTableCodeGenerator
+    internal class TableGenerator : BaseTableGenerator
     {
-        private static readonly DiagnosticDescriptor diagnosticDescriptor = new DiagnosticDescriptor("DWFG001", "Couldn't generate Table", "Couldn't generate Table {0} {1}", nameof(TableCodeGenerator), DiagnosticSeverity.Warning, true);
         private const string constTable = "Table";
         private const string constDBLogItem = "DBItemLog";
         private const string constDBTable = "DBTable";
@@ -26,11 +25,11 @@ namespace DataWF.Data.Generator
         private const string constFileNameKey = "FileNameKey";
         private const string constFileLastWriteKey = "FileLastWriteKey";
 
-        protected static string GetTableClassName(INamedTypeSymbol classSymbol, AttributesCache attributes, out TableCodeGeneratorMode mode)
+        protected static string GetTableClassName(INamedTypeSymbol classSymbol, out TableCodeGeneratorMode mode)
         {
             mode = TableCodeGeneratorMode.Default;
             string className = null;
-            var tableAttribyte = GetDefaultTableAttribute(classSymbol, attributes);
+            var tableAttribyte = GetDefaultTableAttribute(classSymbol);
             if (tableAttribyte != null)
             {
                 var typeName = tableAttribyte.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, "Type", StringComparison.Ordinal)).Value;
@@ -44,21 +43,21 @@ namespace DataWF.Data.Generator
                 }
             }
 
-            var itemTypeAttribute = GetVirtualTableAttribute(classSymbol, attributes);
+            var itemTypeAttribute = GetVirtualTableAttribute(classSymbol);
             if (itemTypeAttribute != null)
             {
                 mode = TableCodeGeneratorMode.Virtual;
                 className = classSymbol.Name + constTable;
             }
 
-            var logTableAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.LogTable, SymbolEqualityComparer.Default));
+            var logTableAttribute = classSymbol.GetAttribute(Attributes.LogTable);
             if (logTableAttribute != null)
             {
                 mode = TableCodeGeneratorMode.Log;
                 className = classSymbol.Name + constTable;
             }
 
-            var abstractAttribute = classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.AbstractTable, SymbolEqualityComparer.Default));
+            var abstractAttribute = classSymbol.GetAttribute(Attributes.AbstractTable);
             if (abstractAttribute != null)
             {
                 mode = TableCodeGeneratorMode.Abstract;
@@ -68,14 +67,14 @@ namespace DataWF.Data.Generator
             return className;
         }
 
-        private static AttributeData GetDefaultTableAttribute(INamedTypeSymbol classSymbol, AttributesCache attributes)
+        private static AttributeData GetDefaultTableAttribute(INamedTypeSymbol classSymbol)
         {
-            return classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.Table, SymbolEqualityComparer.Default));
+            return classSymbol.GetAttribute(Attributes.Table);
         }
 
-        private static AttributeData GetVirtualTableAttribute(INamedTypeSymbol classSymbol, AttributesCache attributes)
+        private static AttributeData GetVirtualTableAttribute(INamedTypeSymbol classSymbol)
         {
-            return classSymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributes.VirtualTable, SymbolEqualityComparer.Default));
+            return classSymbol.GetAttribute(Attributes.VirtualTable);
         }
 
         protected static bool IsNewProperty(string keyPropertyName)
@@ -97,68 +96,53 @@ namespace DataWF.Data.Generator
         private string genericArg;
         protected StringBuilder interfaceSource;
 
-        public TableCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation) : base(ref context, compilation)
+        public TableGenerator(ref GeneratorExecutionContext context, InvokerGenerator invokerGenerator)
+            : base(ref context, invokerGenerator)
         {
-            InvokerCodeGenerator = new InvokerCodeGenerator(ref context, compilation);
         }
 
-        public TableLogCodeGenerator TableLogCodeGenerator { get; set; }
+        public TableLogGenerator TableLogGenerator { get; set; }
 
-        public override bool Process(INamedTypeSymbol classSymbol)
+        public override bool Process()
         {
-            TypeSymbol = classSymbol;
             Properties = TypeSymbol.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsStatic).ToList();
             string classSource = Generate();
             if (classSource != null)
             {
-                try
+                Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}TableGen.cs", SourceText.From(classSource, Encoding.UTF8));
+
+                var invokerAttribute = TypeSymbol.GetAttribute(Attributes.Invoker);
+                if (invokerAttribute == null)
                 {
-                    Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}TableGen.cs", SourceText.From(classSource, Encoding.UTF8));
-
-                    var invokerAttribute = TypeSymbol.GetAttribute(InvokerCodeGenerator.AtributeType);
-                    if (invokerAttribute == null)
-                    {
-                        InvokerCodeGenerator.Process(classSymbol);
-                    }
-
-                    if (TableLogCodeGenerator?.Process(classSymbol) == true)
-                        Compilation = TableLogCodeGenerator.Compilation;
-
-                    return true;
+                    InvokerGenerator.Process(TypeSymbol);
                 }
-                catch (Exception ex)
-                {
-                    context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, Location.None, classSymbol.Name, ex.Message));
 
-//#if DEBUG
-//                    if (!System.Diagnostics.Debugger.IsAttached)
-//                    {
-//                        System.Diagnostics.Debugger.Launch();
-//                    }
-//#endif
-                }
+                TableLogGenerator?.Process(TypeSymbol);
+
+                return true;
             }
+
             return false;
         }
 
         private bool GenerateNames()
         {
-            className = GetTableClassName(typeSymbol, attributes, out var mode);
+            className = GetTableClassName(TypeSymbol, out var mode);
             if (className == null)
             {
                 return false;
             }
             this.mode = mode;
             interfaceName = "I" + className;
-            isLogType = mode == TableCodeGeneratorMode.Log || typeSymbol.Name.EndsWith("Log", StringComparison.Ordinal);
+            isLogType = mode == TableCodeGeneratorMode.Log || TypeSymbol.Name.EndsWith("Log", StringComparison.Ordinal);
 
             baseClassName = constDBTable;
             baseInterfaceName = "IDBTable";
 
-            namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
+            namespaceName = TypeSymbol.ContainingNamespace.ToDisplayString();
 
             containerSchema = null;
-            foreach (var type in typeSymbol.ContainingNamespace.GetTypeMembers())
+            foreach (var type in TypeSymbol.ContainingNamespace.GetTypeMembers())
             {
                 if (type.TypeKind == TypeKind.Class
                     && type.AllInterfaces.Any(p => p.Name == "IDBSchema"))
@@ -173,46 +157,41 @@ namespace DataWF.Data.Generator
             }
 
             whereName = null;
-            genericArg = typeSymbol.Name;
-            if (!typeSymbol.IsSealed)
+            genericArg = TypeSymbol.Name;
+            if (!TypeSymbol.IsSealed)
             {
                 genericArg = "T";
                 className += "<T>";
-                whereName = $"where T: {typeSymbol.Name}";
+                whereName = $"where T: {TypeSymbol.Name}";
             }
 
-            if (typeSymbol.BaseType.Name == constDBLogItem)
+            if (TypeSymbol.BaseType.Name == constDBLogItem)
             {
                 baseClassName = "DBTableLog";
                 baseInterfaceName = "IDBTableLog";
             }
             else //&& classSymbol.BaseType.Name != "DBGroupItem"
-            if (typeSymbol.BaseType.Name != "DBItem")
+            if (TypeSymbol.BaseType.Name != "DBItem")
             {
-                var baseNamespace = typeSymbol.BaseType.ContainingNamespace.ToDisplayString();
+                var baseNamespace = TypeSymbol.BaseType.ContainingNamespace.ToDisplayString();
                 if (baseNamespace == namespaceName
                     || baseNamespace == "<global namespace>")
                 {
-                    baseClassName = typeSymbol.BaseType.Name + constTable;
+                    baseClassName = TypeSymbol.BaseType.Name + constTable;
                     baseInterfaceName = "I" + baseClassName;
                 }
                 else
                 {
-                    baseClassName = $"{baseNamespace}.{typeSymbol.BaseType.Name}Table";
-                    baseInterfaceName = $"{baseNamespace}.I{typeSymbol.BaseType.Name}Table";
+                    baseClassName = $"{baseNamespace}.{TypeSymbol.BaseType.Name}Table";
+                    baseInterfaceName = $"{baseNamespace}.I{TypeSymbol.BaseType.Name}Table";
                 }
             }
 
             return true;
         }
 
-        public override string Generate()
+        public virtual string Generate()
         {
-            if (!typeSymbol.ContainingSymbol.Equals(typeSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
-            {
-                return null; //TODO: issue a diagnostic that it must be top level
-            }
-
             if (!GenerateNames())
             {
                 return null;
@@ -227,7 +206,7 @@ using DataWF.Common;
             source.Append($@"
 namespace {namespaceName}
 {{
-    public {(typeSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className}: {baseClassName}<{genericArg}>, {interfaceName}
+    public {(TypeSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className}: {baseClassName}<{genericArg}>, {interfaceName}
     {whereName}
     {{");
             interfaceSource = new StringBuilder($@"
@@ -288,21 +267,21 @@ namespace {namespaceName}
         private void ProcessClassPartial()
         {
             source.Append($@"
-    public partial class {typeSymbol.Name}
+    public partial class {TypeSymbol.Name}
     {{
-        public {typeSymbol.Name}(IDBSchema schema):base(schema)
+        public {TypeSymbol.Name}(IDBSchema schema):base(schema)
         {{}}");
-            if (!typeSymbol.Constructors.Any(p => p.Parameters.Any()))
+            if (!TypeSymbol.Constructors.Any(p => p.Parameters.Any()))
             {
                 source.Append($@"
-        public {typeSymbol.Name}({interfaceName} table): base(table)
+        public {TypeSymbol.Name}({interfaceName} table): base(table)
         {{ }}");
             }
             source.Append($@"
         [JsonIgnore]
-        public new {(typeSymbol.IsSealed ? className : interfaceName)} Table
+        public new {(TypeSymbol.IsSealed ? className : interfaceName)} Table
         {{
-            get => ({(typeSymbol.IsSealed ? className : interfaceName)})base.Table;
+            get => ({(TypeSymbol.IsSealed ? className : interfaceName)})base.Table;
             set => base.Table = value;
         }}");
             ProcessClassContainerSchema();
@@ -346,7 +325,7 @@ namespace {namespaceName}
             string keyFieldName = $"_{propertyName}Key";
 
             // get the AutoNotify attribute from the field, and any associated data
-            AttributeData columnAttribute = propertySymbol.GetAttribute(attributes.Column);
+            AttributeData columnAttribute = propertySymbol.GetAttribute(Attributes.Column);
             if (columnAttribute != null)
             {
                 var overridenPropertyType = columnAttribute.GetNamedValue("DataType");
@@ -388,7 +367,7 @@ namespace {namespaceName}
                 }
             }
 
-            var logColumnAttribute = propertySymbol.GetAttribute(attributes.LogColumn);
+            var logColumnAttribute = propertySymbol.GetAttribute(Attributes.LogColumn);
             if (logColumnAttribute != null)
             {
                 string keyPropertyName = $"{propertyName}Key";
@@ -408,12 +387,12 @@ namespace {namespaceName}
 
         private void ProcessReferencePropertyTable(IPropertySymbol propertySymbol, ITypeSymbol propertyType)
         {
-            var referenceAttribute = propertySymbol.GetAttribute(attributes.Reference);
+            var referenceAttribute = propertySymbol.GetAttribute(Attributes.Reference);
             if (referenceAttribute != null)
             {
                 if (propertyType is INamedTypeSymbol refItemType)
                 {
-                    var refTableName = GetTableClassName(refItemType, attributes, out var refMode);
+                    var refTableName = GetTableClassName(refItemType, out var refMode);
                     if (refTableName != null && interfaceSource.ToString().IndexOf(refTableName, StringComparison.Ordinal) < 0)
                     {
                         var refTableClassName = refTableName;
@@ -446,14 +425,14 @@ namespace {namespaceName}
 
         private void ProcessReferecingPropertyTable(IPropertySymbol propertySymbol, ITypeSymbol propertyType)
         {
-            var referencingAttribute = propertySymbol.GetAttribute(attributes.Referencing);
+            var referencingAttribute = propertySymbol.GetAttribute(Attributes.Referencing);
             if (referencingAttribute != null)
             {
                 if (propertyType is INamedTypeSymbol named
                     && named.TypeArguments.Length > 0
                     && named.TypeArguments.First() is INamedTypeSymbol refItemType)
                 {
-                    var refTableName = GetTableClassName(refItemType, attributes, out var refModel);
+                    var refTableName = GetTableClassName(refItemType, out var refModel);
                     if (refTableName != null && interfaceSource.ToString().IndexOf(refTableName, StringComparison.Ordinal) < 0)
                     {
                         var refTableClassName = refTableName;

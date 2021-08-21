@@ -16,17 +16,17 @@
   <ItemGroup>
     <ProjectReference Include="..\DataWF.WebService.Common\DataWF.WebService.Common.csproj" />
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Common.Generator\DataWF.Common.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
     <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj" />
     <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
     <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />
-    <ProjectReference Include="..\DataWF.WebService.Generator\DataWF.WebService.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
  <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <Target Name="SwaggerToFile" AfterTargets="AfterBuild">
-    <!--<Exec Command="dotnet swagger tofile - -output $(ProjectDir)wwwroot/swagger.json $(OutputPath)$(AssemblyName).dll v1" />-->
+    <Exec Command="dotnet swagger tofile --output $(ProjectDir)wwwroot/swagger.json $(OutputPath)$(AssemblyName).dll v1" />
   </Target>
 </Project>

@@ -10,111 +10,82 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace DataWF.WebService.Generator
+namespace DataWF.Common.Generator
 {
-    [Generator]
-    public partial class ServiceGenerator : ISourceGenerator
+    internal class DataProviderGenerator : BaseGenerator
     {
         private const string prStream = "uploaded";
         private const string prUser = "CurrentUser";
         private const string prTransaction = "transaction";
-        private readonly Dictionary<string, ClassDeclarationSyntax> controllers = new Dictionary<string, ClassDeclarationSyntax>(StringComparer.Ordinal);
-        private readonly Dictionary<string, Dictionary<string, UsingDirectiveSyntax>> controllersUsings = new Dictionary<string, Dictionary<string, UsingDirectiveSyntax>>(StringComparer.Ordinal);
-        public List<Assembly> Assemblies { get; private set; }
-        public string Output { get; }
-        public string Namespace { get; private set; }
+        private readonly HashSet<string> generated = new HashSet<string>(StringComparer.Ordinal);
+        private INamedTypeSymbol[] tableAttributes;
 
-        public void Initialize(GeneratorInitializationContext context)
-        {
-            context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+        public DataProviderGenerator(ref GeneratorExecutionContext context) : base(ref context)
+        { 
         }
 
-        public void Execute(GeneratorExecutionContext context)
-        {
-            // retreive the populated receiver
-            if (!(context.SyntaxReceiver is SyntaxReceiver receiver))
-                return;
+        public string Namespace { get; private set; }
 
-            var nameSpace = receiver.NameSpaces.FirstOrDefault() ?? "Controller";
-            var moduleInitializeAtributeType = context.Compilation.GetTypeByMetadataName("DataWF.Common.ModuleInitializeAttribute");
-            var attributeTypes = new AttributeTypes();
-            attributeTypes.Table = context.Compilation.GetTypeByMetadataName("DataWF.Data.TableAttribute");
-            attributeTypes.AbstractTable = context.Compilation.GetTypeByMetadataName("DataWF.Data.AbstractTableAttribute");
-            attributeTypes.VirtualTable = context.Compilation.GetTypeByMetadataName("DataWF.Data.VirtualTableAttribute");
-            attributeTypes.Column = context.Compilation.GetTypeByMetadataName("DataWF.Data.ColumnAttribute");
-            attributeTypes.ControllerMethod = context.Compilation.GetTypeByMetadataName("DataWF.Data.ControllerMethodAttribute");
-            attributeTypes.ControllerParameter = context.Compilation.GetTypeByMetadataName("DataWF.Data.ControllerParameterAttribute");
-            attributeTypes.Schema = context.Compilation.GetTypeByMetadataName("DataWF.Data.SchemaAttribute");
-            attributeTypes.SchemaEntry = context.Compilation.GetTypeByMetadataName("DataWF.Data.SchemaEntryAttribute");
-            try
+        public override bool Process()
+        {
+            Namespace = TypeSymbol.ContainingNamespace.ToDisplayString();
+            var attribute = TypeSymbol.GetAttribute(Attributes.DataProvider);
+            var schemaType = attribute.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol;
+            var schemaEntries = schemaType.GetAllAttributes(Attributes.SchemaEntry);
+            tableAttributes = new[] { Attributes.Table, Attributes.VirtualTable, Attributes.VirtualTable, Attributes.AbstractTable,
+                Attributes.LogTable };
+            foreach (var schemaEntry in schemaEntries)
             {
-                foreach (var assemblyReference in context.Compilation.References)
+                var type = schemaEntry.ConstructorArguments.FirstOrDefault().Value as INamedTypeSymbol;
+                ProcessController(type);
+            }
+            return true;
+        }
+
+        public IEnumerable<INamedTypeSymbol> FindTables()
+        {
+            var tableAttributes = new[] { Attributes.Table, Attributes.AbstractTable, Attributes.VirtualTable };
+            foreach (var assemblyReference in Compilation.References)
+            {
+                var assembly = Compilation.GetAssemblyOrModuleSymbol(assemblyReference);
+                if (assembly is IAssemblySymbol assemblySymbol)
                 {
-                    var assembly = context.Compilation.GetAssemblyOrModuleSymbol(assemblyReference);
-                    if (assembly is IAssemblySymbol assemblySymbol)
+                    var moduleInitialize = assemblySymbol.GetAttribute(Attributes.ModuleInitialize);
+                    if (moduleInitialize != null || assemblySymbol.Name == "DataWF.Data")
                     {
-                        var moduleInitialize = assemblySymbol.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(moduleInitializeAtributeType, SymbolEqualityComparer.Default));
-                        if (moduleInitialize != null || assemblySymbol.Name == "DataWF.Data")
+                        foreach (var type in assemblySymbol.GlobalNamespace.GetTypes())
                         {
-                            foreach (var type in GetTypes(assemblySymbol.GlobalNamespace))
+                            var tableAttribute = type.GetAttribute(tableAttributes);
+                            if (tableAttribute != null)
                             {
-                                var tableAttribute = type.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributeTypes.Table, SymbolEqualityComparer.Default)
-                                                             || p.AttributeClass.Equals(attributeTypes.AbstractTable, SymbolEqualityComparer.Default)
-                                                             || p.AttributeClass.Equals(attributeTypes.VirtualTable, SymbolEqualityComparer.Default));
-                                if (tableAttribute != null)
-                                {
-                                    ProcessController(type, tableAttribute, attributeTypes, nameSpace, context);
-                                }
+                                yield return type;
                             }
                         }
                     }
                 }
             }
-            catch (Exception)
-            {
-#if DEBUG
-                if (!System.Diagnostics.Debugger.IsAttached)
-                {
-                    System.Diagnostics.Debugger.Launch();
-                }
-#endif
-            }
         }
 
-        private IEnumerable<INamedTypeSymbol> GetTypes(INamespaceSymbol nameSpace)
+        private void ProcessController(INamedTypeSymbol type)
         {
-            foreach (var memeber in nameSpace.GetMembers())
-            {
-                if (memeber is INamespaceSymbol subNamespace)
-                {
-                    foreach (var subType in GetTypes(subNamespace))
-                    {
-                        yield return subType;
-                    }
-                }
-                else if (memeber is INamedTypeSymbol type)
-                {
-                    yield return type;
-                }
-            }
-        }
-
-        private void ProcessController(INamedTypeSymbol type, AttributeData attribute, AttributeTypes attributeTypes, string nameSpace, GeneratorExecutionContext context)
-        {
-            Dictionary<string, string> usings = new Dictionary<string, string>();
-
-            var controllerClassName = $"{type.Name}Controller";
-
             if (type.BaseType.Name.Equals("DBItemLog", StringComparison.Ordinal)
                 || type.Name.Equals("DBItem", StringComparison.Ordinal)
                 || type.Name.Equals("DBGroupItem", StringComparison.Ordinal)
-                || type.Name.EndsWith("Log", StringComparison.Ordinal))
+                || type.Name.EndsWith("Log", StringComparison.Ordinal)
+                || generated.Contains(type.Name))
             {
                 return;
             }
+            ProcessController(type.BaseType);
+            Dictionary<string, string> usings = new Dictionary<string, string>();
+
+            var attribute = type.GetAttribute(tableAttributes);
+            var controllerClassName = $"{type.Name}Controller";
+
+
             if (attribute.AttributeClass.Name == "TableAttribute")
             {
-                var keysArg = attribute.NamedArguments.FirstOrDefault(p => p.Key == "Keys").Value;
+                var keysArg = attribute.GetNamedValue("Keys");
                 if (!keysArg.IsNull && ((int)keysArg.Value & (1 << 3)) != 0)
                     return;
             }
@@ -125,17 +96,17 @@ namespace DataWF.WebService.Generator
             }
             var typeNamespace = type.ContainingNamespace.ToDisplayString();
 
-            var logType = context.Compilation.GetTypeByMetadataName($"{typeNamespace}.{type.Name}Log")
-                ?? context.Compilation.GetTypeByMetadataName($"{type.BaseType.ContainingNamespace}.{type.BaseType.Name}Log")
-                ?? context.Compilation.GetTypeByMetadataName("DataWF.Data.DBItemLog");
+            var logType = Compilation.GetTypeByMetadataName($"{typeNamespace}.{type.Name}Log")
+                ?? Compilation.GetTypeByMetadataName($"{type.BaseType.ContainingNamespace}.{type.BaseType.Name}Log")
+                ?? Compilation.GetTypeByMetadataName("DataWF.Data.DBItemLog");
             var logTypeName = logType.Name;
 
             var tableTypeName = $"{type.Name}Table";
-            var tableType = context.Compilation.GetTypeByMetadataName($"{typeNamespace}.{tableTypeName}");
+            var tableType = Compilation.GetTypeByMetadataName($"{typeNamespace}.{tableTypeName}");
             var tableIsGeneric = false;
             if (tableType == null)
             {
-                tableType = context.Compilation.GetTypeByMetadataName($"{typeNamespace}.{tableTypeName}`1");
+                tableType = Compilation.GetTypeByMetadataName($"{typeNamespace}.{tableTypeName}`1");
                 tableIsGeneric = true;
             }
             if (tableType == null)
@@ -145,7 +116,7 @@ namespace DataWF.WebService.Generator
             var tableDeclareType = $"{tableType.Name}{(tableIsGeneric ? "<T>" : string.Empty)}";
             var schemaType = "IDBSchema";
             var keyType = "K";
-            
+
             var source = new StringBuilder($@"//Source generator for {type.Name}
 using DataWF.Common;
 using DataWF.Data;
@@ -159,7 +130,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using {typeNamespace};
 
-namespace {nameSpace}
+namespace {Namespace}
 {{");
             if (!type.IsSealed)
             {
@@ -171,7 +142,7 @@ namespace {nameSpace}
             }
             else
             {
-                var primaryKey = GetPrimaryKey(type, attributeTypes);
+                var primaryKey = type.GetPrimaryKey();
                 if (primaryKey == null)
                 {
                     return;
@@ -196,10 +167,10 @@ namespace {nameSpace}
 
             foreach (var method in type.GetMembers().OfType<IMethodSymbol>().Where(p => p.MethodKind == MethodKind.Ordinary))
             {
-                var controllerMethodAttribute = method.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributeTypes.ControllerMethod, SymbolEqualityComparer.Default));
+                var controllerMethodAttribute = method.GetAttribute(Attributes.ControllerMethod);
                 if (controllerMethodAttribute != null)
                 {
-                    ProcessControllerMethod(source, method, controllerMethodAttribute, attributeTypes, keyType, true, context);
+                    ProcessControllerMethod(source, method, controllerMethodAttribute, keyType, true);
                 }
             }
 
@@ -207,10 +178,10 @@ namespace {nameSpace}
             {
                 foreach (var method in tableType.GetMembers().OfType<IMethodSymbol>().Where(p => p.MethodKind == MethodKind.Ordinary))
                 {
-                    var controllerMethodAttribute = method.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributeTypes.ControllerMethod, SymbolEqualityComparer.Default));
+                    var controllerMethodAttribute = method.GetAttribute(Attributes.ControllerMethod);
                     if (controllerMethodAttribute != null)
                     {
-                        ProcessControllerMethod(source, method, controllerMethodAttribute, attributeTypes, keyType, false, context);
+                        ProcessControllerMethod(source, method, controllerMethodAttribute, keyType, false);
                     }
                 }
             }
@@ -218,7 +189,7 @@ namespace {nameSpace}
     }");
             if (!type.IsAbstract && !type.IsSealed)
             {
-                var primaryKey = GetPrimaryKey(type, attributeTypes);
+                var primaryKey = type.GetPrimaryKey();
                 if (primaryKey != null)
                 {
                     source.Append($@"
@@ -234,10 +205,11 @@ namespace {nameSpace}
             }
             source.Append(@"
 }");
-            context.AddSource($"{type.Name}Controller", SourceText.From(source.ToString(), Encoding.UTF8));
+            Context.AddSource($"{type.Name}Controller", SourceText.From(source.ToString(), Encoding.UTF8));
+            generated.Add(type.Name);
         }
 
-        private void ProcessControllerMethod(StringBuilder source, IMethodSymbol method, AttributeData controllerMethodAttribute, AttributeTypes attributeTypes, string keyType, bool inLine, GeneratorExecutionContext context)
+        private void ProcessControllerMethod(StringBuilder source, IMethodSymbol method, AttributeData controllerMethodAttribute, string keyType, bool inLine)
         {
             var isHtmlArg = controllerMethodAttribute.NamedArguments.FirstOrDefault(p => p.Key == "ReturnHtml").Value;
             var isHtml = !isHtmlArg.IsNull && (bool)isHtmlArg.Value;
@@ -269,7 +241,7 @@ namespace {nameSpace}
                 }
             }
 
-            var parameters = GetParametersInfo(method, attributeTypes);
+            var parameters = GetParametersInfo(method);
             var isTransact = method.Parameters.Any(p => p.Type.Name == "DBTransaction");
 
             source.Append($@"
@@ -344,7 +316,7 @@ namespace {nameSpace}
                 parametersBuilder.Length -= 2;
             }
 
-            if (IsBaseType(returnResultType, "Stream"))
+            if (returnResultType.IsBaseType("Stream"))
             {
                 source.Append($@"
                     var exportStream = {(isAsync ? "(await " : "")}{(!inLine ? "Table" : " idValue")}.{method.Name}({parametersBuilder}){(isAsync ? ")" : "")} as FileStream;");
@@ -378,7 +350,7 @@ namespace {nameSpace}
                     source.Append($@"
                     {prTransaction}.Commit();");
                 }
-                if (IsEnumerable(returnResultType))
+                if (returnResultType.IsEnumerable())
                 {
                     source.Append($@"
                     result = Pagination(result);");
@@ -464,67 +436,17 @@ namespace {nameSpace}
             source.Length -= 2;
         }
 
-        private List<MethodParametrInfo> GetParametersInfo(IMethodSymbol method, AttributeTypes attributeTypes)
+        private List<MethodParametrInfo> GetParametersInfo(IMethodSymbol method)
         {
             var parametersInfo = new List<MethodParametrInfo>();
             foreach (var parameter in method.Parameters)
             {
-                parametersInfo.Add(new MethodParametrInfo(parameter, attributeTypes));
+                parametersInfo.Add(new MethodParametrInfo(parameter));
             }
             return parametersInfo;
         }
 
-        private static bool IsEnumerable(ITypeSymbol returnResultType)
-        {
-            if (string.Equals(returnResultType.Name, "string", StringComparison.OrdinalIgnoreCase))
-                return false;
-            return returnResultType.AllInterfaces.Any(p => p.Name == "IEnumerable" && p.TypeParameters.Length > 0);
-        }
 
-        public static bool IsBaseType(ITypeSymbol type, string v)
-        {
-            if (type.Name == v)
-                return true;
 
-            while (type.BaseType != null)
-            {
-                if (type.BaseType.Name == v)
-                    return true;
-                type = type.BaseType;
-            }
-            return false;
-        }
-
-        public static IPropertySymbol GetPrimaryKey(ITypeSymbol type, AttributeTypes attributeTypes)
-        {
-            var property = GetPrimaryKey(type.GetMembers().OfType<IPropertySymbol>());
-            if (property != null)
-                return property;
-            while (type.BaseType != null)
-            {
-                property = GetPrimaryKey(type.BaseType.GetMembers().OfType<IPropertySymbol>());
-                if (property != null)
-                    return property;
-                type = type.BaseType;
-            }
-            return null;
-
-            IPropertySymbol GetPrimaryKey(IEnumerable<IPropertySymbol> properties)
-            {
-                foreach (var property in properties)
-                {
-                    var columnAttribute = property.GetAttributes().FirstOrDefault(p => p.AttributeClass.Equals(attributeTypes.Column, SymbolEqualityComparer.Default));
-                    if (columnAttribute != null)
-                    {
-                        var keys = columnAttribute.NamedArguments.FirstOrDefault(p => p.Key == "Keys").Value;
-                        if (!keys.IsNull && (((int)keys.Value) & (1 << 0)) != 0)
-                        {
-                            return property;
-                        }
-                    }
-                }
-                return null;
-            }
-        }
     }
 }

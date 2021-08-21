@@ -8,72 +8,62 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Diagnostics;
 
-namespace DataWF.Data.Generator
+namespace DataWF.Common.Generator
 {
-    internal class SchemaLogCodeGenerator : BaseTableCodeGenerator
+    internal class SchemaLogGenerator : BaseTableGenerator
     {
-        public SchemaLogCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation)
-            : base(ref context, compilation)
+        public SchemaLogGenerator(ref GeneratorExecutionContext context, InvokerGenerator invokerGenerator)
+            : base(ref context, invokerGenerator)
         {
-            SchemaCodeGenerator = new SchemaCodeGenerator(ref context, compilation);
+            SchemaGenerator = new SchemaGenerator(ref context, invokerGenerator);
         }
-        public SchemaCodeGenerator SchemaCodeGenerator { get; }
+        public SchemaGenerator SchemaGenerator { get; }
 
-        public override bool Process(INamedTypeSymbol classSymbol)
+        public override bool Process()
         {
-            TypeSymbol = classSymbol;
             string classSource = Generate();
             if (classSource != null)
             {
-                try
+                var logSchemaSource = SourceText.From(classSource, Encoding.UTF8);
+                Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}SchemaLogGen.cs", logSchemaSource);
+
+                var logSchemaSyntax = CSharpSyntaxTree.ParseText(logSchemaSource, (CSharpParseOptions)Options);
+
+                SchemaGenerator.Cultures = Cultures;
+                Compilation = SchemaGenerator.Compilation.AddSyntaxTrees(logSchemaSyntax);
+
+                var unitSyntax = (CompilationUnitSyntax)logSchemaSyntax.GetRoot();
+                var logClassSyntax = unitSyntax.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault()?.Members.OfType<ClassDeclarationSyntax>().FirstOrDefault();
+                if (logClassSyntax != null)
                 {
-                    var logSchemaSource = SourceText.From(classSource, Encoding.UTF8);
-                    Context.AddSource($"{classSymbol.ContainingNamespace.ToDisplayString()}.{classSymbol.Name}SchemaLogGen.cs", logSchemaSource);
-
-                    var logSchemaSyntax = CSharpSyntaxTree.ParseText(logSchemaSource, (CSharpParseOptions)Options);
-
-                    SchemaCodeGenerator.Cultures = Cultures;
-                    Compilation =
-                        SchemaCodeGenerator.InvokerCodeGenerator.Compilation =
-                        SchemaCodeGenerator.Compilation = SchemaCodeGenerator.Compilation.AddSyntaxTrees(logSchemaSyntax);
-
-                    var unitSyntax = (CompilationUnitSyntax)logSchemaSyntax.GetRoot();
-                    var logClassSyntax = unitSyntax.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault()?.Members.OfType<ClassDeclarationSyntax>().FirstOrDefault();
-                    if (logClassSyntax != null)
-                    {
-                        SchemaCodeGenerator.Process(logClassSyntax);
-                    }
-                    return true;
+                    SchemaGenerator.Process(logClassSyntax);
                 }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
-                }
+                return true;
             }
             return false;
         }
 
-        public override string Generate()
+        public string Generate()
         {
-            var namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
-            var className = $"{typeSymbol.Name}Log";
+            var namespaceName = TypeSymbol.ContainingNamespace.ToDisplayString();
+            var className = $"{TypeSymbol.Name}Log";
 
-            var schemaAttribute = typeSymbol.GetAttribute(Attributes.Schema);
+            var schemaAttribute = TypeSymbol.GetAttribute(Attributes.Schema);
             var schemaName = schemaAttribute?.ConstructorArguments.FirstOrDefault().Value + "_log";
 
-            var schemaEntries = typeSymbol.GetAttributes(Attributes.SchemaEntry)
+            var schemaEntries = TypeSymbol.GetAttributes(Attributes.SchemaEntry)
                                 .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
                                 .Where(p => p != null && !p.IsAbstract);
             var baseInterface = "IDBSchemaLog";
-            if (typeSymbol.BaseType != null && typeSymbol.BaseType.Name != "DBSchema")
+            if (TypeSymbol.BaseType != null && TypeSymbol.BaseType.Name != "DBSchema")
             {
-                baseInterface = $"{typeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{typeSymbol.BaseType.Name}Log";
+                baseInterface = $"{TypeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{TypeSymbol.BaseType.Name}Log";
             }
 
             var baseClass = "DBSchemaLog";
-            if (typeSymbol.BaseType != null && typeSymbol.BaseType.Name != "DBSchema")
+            if (TypeSymbol.BaseType != null && TypeSymbol.BaseType.Name != "DBSchema")
             {
-                baseClass = $"{typeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.{typeSymbol.BaseType.Name}Log";
+                baseClass = $"{TypeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.{TypeSymbol.BaseType.Name}Log";
             }
             var namespaces = schemaEntries.Select(p => p.ContainingNamespace.ToDisplayString())
                 .Union(new[] { "System", "System.Text.Json.Serialization", "DataWF.Data" })
@@ -108,14 +98,14 @@ namespace { namespaceName }
     public partial class {className}: {baseClass}
     {{ 
         [JsonIgnore]
-        public new I{typeSymbol.Name} TargetSchema
+        public new I{TypeSymbol.Name} TargetSchema
         {{
-            get => (I{typeSymbol.Name})base.TargetSchema;
+            get => (I{TypeSymbol.Name})base.TargetSchema;
             set => base.TargetSchema = value;
         }}
     }}
 
-    public partial class {typeSymbol.Name}
+    public partial class {TypeSymbol.Name}
     {{ 
         [JsonIgnore]
         public new I{className} LogSchema

@@ -7,76 +7,61 @@ using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
 
-namespace DataWF.Data.Generator
+namespace DataWF.Common.Generator
 {
-    internal class SchemaCodeGenerator : BaseTableCodeGenerator
+    internal class SchemaGenerator : BaseTableGenerator
     {
         private string namespaceName;
         private string className;
         private AttributeData schemaAttribute;
         private object schemaName;
         private IEnumerable<ITypeSymbol> schemaEntries;
-        private List<ITypeSymbol> allSchemaEntries;
+        private IEnumerable<ITypeSymbol> allSchemaEntries;
         private string baseInterface;
 
-        public SchemaCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation)
-            : base(ref context, compilation)
+        public SchemaGenerator(ref GeneratorExecutionContext context, InvokerGenerator invokerGenerator)
+            : base(ref context, invokerGenerator)
         {
-            InvokerCodeGenerator = new InvokerCodeGenerator(ref context, compilation);
         }
 
-        public SchemaLogCodeGenerator SchemaLogCodeGenerator { get; set; }
+        public SchemaLogGenerator SchemaLogCodeGenerator { get; set; }
 
-        public override bool Process(INamedTypeSymbol classSymbol)
+        public override bool Process()
         {
-            TypeSymbol = classSymbol;
             string classSource = Generate();
             if (classSource != null)
             {
-                try
-                {
-                    Context.AddSource($"{classSymbol.ContainingNamespace.ToDisplayString()}.{classSymbol.Name}SchemaGen.cs", SourceText.From(classSource, Encoding.UTF8));
+                Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}SchemaGen.cs", SourceText.From(classSource, Encoding.UTF8));
 
-                    var invokerAttribute = TypeSymbol.GetAttribute(InvokerCodeGenerator.AtributeType);
-                    if (invokerAttribute == null)
-                    {
-                        //InvokerCodeGenerator.Process(classSymbol);
-                    }
-
-                    if (SchemaLogCodeGenerator?.Process(classSymbol) == true)
-                        Compilation = SchemaLogCodeGenerator.Compilation;
-                    return true;
-                }
-                catch (Exception ex)
+                var invokerAttribute = TypeSymbol.GetAttribute(Attributes.Invoker);
+                if (invokerAttribute == null)
                 {
-                    Debug.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
-#if DEBUG
-                    if (!System.Diagnostics.Debugger.IsAttached)
-                    {
-                        System.Diagnostics.Debugger.Launch();
-                    }
-#endif
+                    //InvokerCodeGenerator.Process(classSymbol);
                 }
+
+                SchemaLogCodeGenerator?.Process(TypeSymbol);
+
+                return true;
             }
             return false;
         }
 
-        public override string Generate()
+        public string Generate()
         {
-            namespaceName = typeSymbol.ContainingNamespace.ToDisplayString();
-            className = typeSymbol.Name;
+            namespaceName = TypeSymbol.ContainingNamespace.ToDisplayString();
+            className = TypeSymbol.Name;
 
-            schemaAttribute = typeSymbol.GetAttribute(Attributes.Schema);
+            schemaAttribute = TypeSymbol.GetAttribute(Attributes.Schema);
             schemaName = schemaAttribute?.ConstructorArguments.FirstOrDefault().Value;
 
-            schemaEntries = typeSymbol.GetAttributes(Attributes.SchemaEntry)
+            schemaEntries = TypeSymbol.GetAttributes(Attributes.SchemaEntry)
                                 .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
                                 .Where(p => p != null && !p.IsAbstract);
             allSchemaEntries = GetAllSchemaEntries();
             baseInterface = "IDBSchema";
-            if (typeSymbol.BaseType != null && typeSymbol.BaseType.Name != "DBSchema")
+            if (TypeSymbol.BaseType != null && TypeSymbol.BaseType.Name != "DBSchema")
             {
-                baseInterface = $"{typeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{typeSymbol.BaseType.Name}";
+                baseInterface = $"{TypeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{TypeSymbol.BaseType.Name}";
             }
             var namespaces = schemaEntries.Select(p => p.ContainingNamespace.ToDisplayString())
                 .Union(new[] { "System", "System.Text.Json.Serialization", "DataWF.Data" })
@@ -127,18 +112,11 @@ namespace { namespaceName}
             return source.ToString();
         }
 
-        private List<ITypeSymbol> GetAllSchemaEntries()
+        private IEnumerable<INamedTypeSymbol> GetAllSchemaEntries()
         {
-            var list = new List<ITypeSymbol>();
-            var symbol = typeSymbol;
-            while (symbol != null)
-            {
-                list.AddRange(symbol.GetAttributes(Attributes.SchemaEntry)
-                .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
-                .Where(p => p != null && !p.IsAbstract));
-                symbol = symbol.BaseType;
-            }
-            return list;
+            return TypeSymbol.GetAllAttributes(Attributes.SchemaEntry)
+                .Select(p => p.ConstructorArguments.FirstOrDefault().Value as INamedTypeSymbol)
+                .Where(p => p != null && !p.IsAbstract);
         }
 
         private void ProcessGenerateMethod()

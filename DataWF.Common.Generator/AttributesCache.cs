@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace DataWF.Data.Generator
-{
+namespace DataWF.Common.Generator
+{ 
     internal class AttributesCache
     {
         public INamedTypeSymbol Table;
@@ -15,6 +15,12 @@ namespace DataWF.Data.Generator
         public INamedTypeSymbol LogColumn;
         public INamedTypeSymbol Schema;
         public INamedTypeSymbol SchemaEntry;
+        public INamedTypeSymbol ControllerMethod;
+        public INamedTypeSymbol ControllerParameter;
+        public INamedTypeSymbol ModuleInitialize;
+        public INamedTypeSymbol Invoker;
+        public INamedTypeSymbol DataProvider;
+        public INamedTypeSymbol ClientProvider;
 
         public AttributesCache(Compilation compilation)
         {
@@ -29,6 +35,12 @@ namespace DataWF.Data.Generator
             Referencing = compilation.GetTypeByMetadataName("DataWF.Data.ReferencingAttribute");
             Schema = compilation.GetTypeByMetadataName("DataWF.Data.SchemaAttribute");
             SchemaEntry = compilation.GetTypeByMetadataName("DataWF.Data.SchemaEntryAttribute");
+            ControllerMethod = compilation.GetTypeByMetadataName("DataWF.Data.ControllerMethodAttribute");
+            ControllerParameter = compilation.GetTypeByMetadataName("DataWF.Data.ControllerParameterAttribute");
+            ModuleInitialize = compilation.GetTypeByMetadataName("DataWF.Common.ModuleInitializeAttribute");
+            Invoker = compilation.GetTypeByMetadataName("DataWF.Common.InvokerGeneratorAttribute");
+            DataProvider = compilation.GetTypeByMetadataName("DataWF.Common.DataProviderAttribute");
+            ClientProvider = compilation.GetTypeByMetadataName("DataWF.Common.ClientProviderAttribute");
         }
     }
 

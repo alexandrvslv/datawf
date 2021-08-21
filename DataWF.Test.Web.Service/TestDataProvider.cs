@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Test.Web.Service
 {
+    [DataProvider(typeof(FlowSchema))]
     public class TestDataProvider : DataProviderBase
     {
         public TestDataProvider()
@@ -80,7 +81,7 @@ namespace DataWF.Test.Web.Service
             return Task.CompletedTask;
         }
 
-        public UserTable Users => (UserTable)Schema.GetTable<User>();
+        public UserTable Users => Schema.User;
 
         public override DBUser FindUser(string email)
         {

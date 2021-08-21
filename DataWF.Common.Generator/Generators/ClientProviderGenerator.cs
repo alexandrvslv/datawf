@@ -7,13 +7,14 @@ using NJsonSchema;
 using NSwag;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace DataWF.WebClient.Generator
+namespace DataWF.Common.Generator
 {
-    public class ClientProviderCodeGenerator : CodeGenerator
+    internal class ClientProviderGenerator : BaseGenerator
     {
         private readonly HashSet<string> VirtualOperations = new HashSet<string>
         {
@@ -42,32 +43,32 @@ namespace DataWF.WebClient.Generator
         private OpenApiDocument document;
         private List<IAssemblySymbol> usingReferences;
 
-        public ClientProviderCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation)
-            : base(ref context, compilation)
+        public ClientProviderGenerator(ref GeneratorExecutionContext context)
+            : base(ref context)
         {
         }
 
-        public InvokerCodeGenerator InvokerCodeGenerator { get; set; }
+        public InvokerGenerator InvokerGenerator { get; set; }
 
         public string DocumentSource { get; set; }
         public string Namespace { get; set; }
         public HashSet<IAssemblySymbol> References { get; } = new HashSet<IAssemblySymbol>();
         public string ProviderName { get; set; }
-        public INamedTypeSymbol ClientProviderAttributeType { get; internal set; }
 
-        public override string Generate()
+        public override bool Process()
         {
-            source = new StringBuilder();
+            var attribute = TypeSymbol.GetAttribute(Attributes.ClientProvider);
+            DocumentSource = attribute.ConstructorArguments.FirstOrDefault().Value.ToString();
+            if (!DocumentSource.StartsWith("http"))
+            {
+                var mainSyntaxTree = Compilation.SyntaxTrees
+                          .First(x => x.HasCompilationUnitRoot);
 
-            return source.ToString();
-        }
-
-        public override bool Process(INamedTypeSymbol classSymbol)
-        {
-            var attribute = classSymbol.GetAttribute(ClientProviderAttributeType);
-            DocumentSource = attribute.ConstructorArguments.FirstOrDefault().ToCSharpString();
-            Namespace = classSymbol.ContainingNamespace.ToDisplayString();
-            ProviderName = classSymbol.Name;
+                var projectDirectory = Path.GetDirectoryName(mainSyntaxTree.FilePath);
+                DocumentSource = Path.GetFullPath(Path.Combine(projectDirectory, DocumentSource));
+            }
+            Namespace = TypeSymbol.ContainingNamespace.ToDisplayString();
+            ProviderName = TypeSymbol.Name;
             var url = new Uri(DocumentSource);
             if (url.Scheme == "http" || url.Scheme == "https")
                 document = OpenApiDocument.FromUrlAsync(url.OriginalString).GetAwaiter().GetResult();
@@ -77,9 +78,9 @@ namespace DataWF.WebClient.Generator
             var usingReferenceNames = new HashSet<string>((attribute.GetNamedValue("UsingReferences").Value?.ToString() ?? "")
                 .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
             usingReferences = new List<IAssemblySymbol>();
-            foreach (var assemblyReference in Context.Compilation.References)
+            foreach (var assemblyReference in Compilation.References)
             {
-                var assembly = context.Compilation.GetAssemblyOrModuleSymbol(assemblyReference);
+                var assembly = Compilation.GetAssemblyOrModuleSymbol(assemblyReference);
                 if (assembly is IAssemblySymbol assemblySymbol)
                 {
                     References.Add(assemblySymbol);
@@ -122,7 +123,7 @@ namespace DataWF.WebClient.Generator
         private StringBuilder GenProvider()
         {
             source = new StringBuilder($@"
-    public partial class {ProviderName} {(typeSymbol.BaseType?.Name != "ClientProviderBase" ? ": ClientProviderBase" : "")}
+    public partial class {ProviderName} {(TypeSymbol.BaseType?.Name != "ClientProviderBase" ? ": ClientProviderBase" : "")}
     {{
         public static {ProviderName} Default = new {ProviderName}();");
 
@@ -634,7 +635,7 @@ namespace {Namespace}
                     {
                         try
                         {
-                            var parsedType = Helper.ParseType(definitionName, reference);
+                            var parsedType = SyntaxHelper.ParseType(definitionName, reference);
                             if (parsedType != null)
                             {
                                 if (parsedType.EnumUnderlyingType != null)
@@ -1290,15 +1291,14 @@ using {item};");
 
             var syntaxTree = CSharpSyntaxTree.ParseText(sourceText, (CSharpParseOptions)Options);
 
-            Compilation =
-                InvokerCodeGenerator.Compilation = Compilation.AddSyntaxTrees(syntaxTree);
+            Compilation = Compilation.AddSyntaxTrees(syntaxTree);
             var unitSyntax = (CompilationUnitSyntax)syntaxTree.GetRoot();
             var nameSpaceSyntax = unitSyntax.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
             var classSyntax = nameSpaceSyntax.Members.OfType<ClassDeclarationSyntax>().FirstOrDefault();
             if (classSyntax != null)
             {
-                InvokerCodeGenerator.Process(classSyntax);
-                return InvokerCodeGenerator.TypeSymbol;
+                InvokerGenerator.Process(classSyntax);
+                return InvokerGenerator.TypeSymbol;
             }
             var enumSyntax = nameSpaceSyntax.Members.OfType<EnumDeclarationSyntax>().FirstOrDefault();
             if (enumSyntax != null)

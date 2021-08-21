@@ -8,65 +8,56 @@ using Microsoft.CodeAnalysis.Text;
 using DataWF.Common.Generator;
 using System.Diagnostics;
 
-namespace DataWF.Data.Generator
+namespace DataWF.Common.Generator
 {
-    internal class TableLogCodeGenerator : BaseTableCodeGenerator
+    internal class TableLogGenerator : BaseTableGenerator
     {
-        public TableLogCodeGenerator(ref GeneratorExecutionContext context, Compilation compilation) : base(ref context, compilation)
+        public TableLogGenerator(ref GeneratorExecutionContext context, InvokerGenerator invokerGenerator)
+            : base(ref context, invokerGenerator)
         {
-            TableCodeGenerator = new TableCodeGenerator(ref context, compilation);
+            TableGenerator = new TableGenerator(ref context, invokerGenerator);
         }
 
-        public TableCodeGenerator TableCodeGenerator { get; set; }
+        public TableGenerator TableGenerator { get; set; }
 
 
-        public override bool Process(INamedTypeSymbol classSymbol)
+        public override bool Process()
         {
-            TypeSymbol = classSymbol;
-            Properties = classSymbol.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsStatic).ToList();
+            Properties = TypeSymbol.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsStatic).ToList();
             string logClassSource = Generate();
             if (logClassSource != null)
             {
-                try
+                var logItemSource = SourceText.From(logClassSource, Encoding.UTF8);
+                Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}LogGen.cs", logItemSource);
+
+                var logItemSyntax = CSharpSyntaxTree.ParseText(logItemSource, (CSharpParseOptions)Options);
+
+                TableGenerator.Cultures = Cultures;
+                Compilation = TableGenerator.Compilation.AddSyntaxTrees(logItemSyntax);
+
+                var unitSyntax = (CompilationUnitSyntax)logItemSyntax.GetRoot();
+                var logClassSyntax = unitSyntax.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault()?.Members.OfType<ClassDeclarationSyntax>().FirstOrDefault();
+                if (logClassSyntax != null)
                 {
-                    var logItemSource = SourceText.From(logClassSource, Encoding.UTF8);
-                    Context.AddSource($"{classSymbol.ContainingNamespace.ToDisplayString()}.{classSymbol.Name}LogGen.cs", logItemSource);
-
-                    var logItemSyntax = CSharpSyntaxTree.ParseText(logItemSource, (CSharpParseOptions)Options);
-
-                    TableCodeGenerator.Cultures = Cultures;
-                    Compilation =
-                        TableCodeGenerator.InvokerCodeGenerator.Compilation =
-                        TableCodeGenerator.Compilation = TableCodeGenerator.Compilation.AddSyntaxTrees(logItemSyntax);
-
-                    var unitSyntax = (CompilationUnitSyntax)logItemSyntax.GetRoot();
-                    var logClassSyntax = unitSyntax.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault()?.Members.OfType<ClassDeclarationSyntax>().FirstOrDefault();
-                    if (logClassSyntax != null)
-                    {
-                        TableCodeGenerator.Process(logClassSyntax);
-                    }
-                    return true;
+                    TableGenerator.Process(logClassSyntax);
                 }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
-                }
+                return true;
             }
             return false;
         }
 
-        public override string Generate()
+        public string Generate()
         {
-            string namespaceName = $"{typeSymbol.ContainingNamespace.ToDisplayString()}";
+            string namespaceName = $"{TypeSymbol.ContainingNamespace.ToDisplayString()}";
             string className = null;
             string tableSqlName = null;
-            var tableAttribute = typeSymbol.GetAttribute(attributes.Table);
+            var tableAttribute = TypeSymbol.GetAttribute(Attributes.Table);
             if (tableAttribute != null)
             {
                 var keys = tableAttribute.GetNamedValue("Keys");
                 if (keys.IsNull || ((int)keys.Value & (1 << 0)) == 0)
                 {
-                    className = $"{typeSymbol.Name}Log";
+                    className = $"{TypeSymbol.Name}Log";
                 }
                 var name = tableAttribute.GetNamedValue("TableName");
                 if (name.IsNull)
@@ -80,21 +71,21 @@ namespace DataWF.Data.Generator
                 tableSqlName = name.Value.ToString();
             }
 
-            var abstractTableAttribute = typeSymbol.GetAttribute(attributes.AbstractTable);
+            var abstractTableAttribute = TypeSymbol.GetAttribute(Attributes.AbstractTable);
             if (abstractTableAttribute != null)
             {
-                className = $"{typeSymbol.Name}Log";
-                if (string.Equals(typeSymbol.Name, "DBItemLog", StringComparison.Ordinal)
-                    || string.Equals(typeSymbol.BaseType?.Name, "DBItemLog", StringComparison.Ordinal))
+                className = $"{TypeSymbol.Name}Log";
+                if (string.Equals(TypeSymbol.Name, "DBItemLog", StringComparison.Ordinal)
+                    || string.Equals(TypeSymbol.BaseType?.Name, "DBItemLog", StringComparison.Ordinal))
                 {
                     return null;
                 }
             }
 
-            var virtualTableAttribute = typeSymbol.GetAttribute(attributes.VirtualTable);
+            var virtualTableAttribute = TypeSymbol.GetAttribute(Attributes.VirtualTable);
             if (virtualTableAttribute != null)
             {
-                className = $"{typeSymbol.Name}Log";
+                className = $"{TypeSymbol.Name}Log";
             }
 
             if (className != null)
@@ -103,11 +94,11 @@ namespace DataWF.Data.Generator
                 var tableTypeName = $"I{className}Table";
                 string baseClassName = "DBItemLog";
 
-                if (typeSymbol.BaseType.Name != "DBItem"
-                    && typeSymbol.BaseType.Name != "DBGroupItem")
+                if (TypeSymbol.BaseType.Name != "DBItem"
+                    && TypeSymbol.BaseType.Name != "DBGroupItem")
                 {
-                    var baseNamespace = $"{typeSymbol.BaseType.ContainingNamespace.ToDisplayString()}";
-                    baseClassName = $"{typeSymbol.BaseType.Name}Log";
+                    var baseNamespace = $"{TypeSymbol.BaseType.ContainingNamespace.ToDisplayString()}";
+                    baseClassName = $"{TypeSymbol.BaseType.Name}Log";
 
                     if (baseNamespace != namespaceName)
                     {
@@ -125,7 +116,7 @@ namespace {namespaceName}
     ");
                 if (tableAttribute != null)
                 {
-                    source.Append($"[LogTable(typeof({typeSymbol.Name}), \"{tableSqlName}_log\")]");
+                    source.Append($"[LogTable(typeof({TypeSymbol.Name}), \"{tableSqlName}_log\")]");
                 }
                 else if (abstractTableAttribute != null)
                 {
@@ -142,13 +133,13 @@ namespace {namespaceName}
                 }
 
                 source.Append($@"
-    public {(typeSymbol.IsSealed ? "sealed " : string.Empty)} {(typeSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className} : {baseClassName}
+    public {(TypeSymbol.IsSealed ? "sealed " : string.Empty)} {(TypeSymbol.IsAbstract ? "abstract " : string.Empty)}partial class {className} : {baseClassName}
     {{");
                 source.Append($@"
         public {className}({tableTypeName} table): base(table)
         {{ }}
         
-        public {className}({typeSymbol.Name} item): base(item)
+        public {className}({TypeSymbol.Name} item): base(item)
         {{ }}
 ");
                 //{(itemTypeAttribute != null ? "Typed" : string.Empty)}
@@ -172,7 +163,7 @@ namespace {namespaceName}
 
 
             // get the attribute from the property, and any associated data
-            var columnAttribute = propertySymbol.GetAttribute(attributes.Column);
+            var columnAttribute = propertySymbol.GetAttribute(Attributes.Column);
             if (columnAttribute != null)
             {
                 TypedConstant columnType = columnAttribute.GetNamedValue("ColumnType");
@@ -219,7 +210,7 @@ namespace {namespaceName}
                 }
             }
 
-            var referenceAttribute = propertySymbol.GetAttribute(attributes.Reference);
+            var referenceAttribute = propertySymbol.GetAttribute(Attributes.Reference);
             if (referenceAttribute != null)
             {
                 string keyFieldName = $"_{propertyName}";
@@ -236,7 +227,7 @@ namespace {namespaceName}
                 var columnProperty = propertySymbol.ContainingType.GetMembers(columnPropertyName).FirstOrDefault() as IPropertySymbol;
                 if (columnProperty != null)
                 {
-                    columnAttribute = columnProperty.GetAttribute(attributes.Column);
+                    columnAttribute = columnProperty.GetAttribute(Attributes.Column);
                     if (columnAttribute != null)
                     {
                         TypedConstant columnType = columnAttribute.GetNamedValue("ColumnType");
