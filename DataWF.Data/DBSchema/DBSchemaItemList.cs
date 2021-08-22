@@ -107,7 +107,9 @@ namespace DataWF.Data
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnItemPropertyChanged(sender, e);
-            if (Schema != null && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
+            if (Schema != null
+                && !Schema.IsSynchronizing
+                && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
             {
                 schemaList.OnItemsListChanged(this, e);
             }
@@ -116,7 +118,9 @@ namespace DataWF.Data
         public override NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
         {
             var args = base.OnCollectionChanged(type, item, index, oldIndex, oldItem);
-            if (Schema != null && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
+            if (Schema != null
+                && !Schema.IsSynchronizing
+                && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
             {
                 schemaList.OnItemsListChanged(this, args ?? ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
             }

@@ -175,7 +175,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public bool IsSynchronizing { get; internal set; }
+        public bool IsSynchronizing { get; internal set; } = true;
 
         public DBTable GenerateTable(string name)
         {

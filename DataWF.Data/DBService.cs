@@ -221,9 +221,11 @@ namespace DataWF.Data
         public static void Load(string file)
         {
             Serialization.Deserialize("connections.xml", connections);
-            schems.HandleChanges = false;
             Serialization.Deserialize(file, schems);
-            schems.HandleChanges = true;
+            foreach (var schema in schems)
+            {
+                schema.IsSynchronizing = false;
+            }
             Helper.LogWorkingSet("Schema");
             Changes.Clear();
         }

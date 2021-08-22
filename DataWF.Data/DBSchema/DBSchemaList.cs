@@ -36,8 +36,6 @@ namespace DataWF.Data
         public DBSchemaList() : base()
         { }
 
-        public bool HandleChanges { get; set; } = true;
-
         [JsonIgnore, XmlIgnore]
         public DBSchema DefaultSchema
         {
@@ -71,10 +69,7 @@ namespace DataWF.Data
 
         protected internal void OnItemsListChanged(object sender, EventArgs arg)
         {
-            if (HandleChanges)
-            {
-                ItemsListChanged?.Invoke(sender, arg);
-            }
+            ItemsListChanged?.Invoke(sender, arg);
         }
 
         public override NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
@@ -247,18 +242,6 @@ namespace DataWF.Data
                 }
 
             }
-        }
-
-        public class HandleChangesInvoker<T> : Invoker<T, bool> where T : DBSchemaList
-        {
-            public static readonly HandleChangesInvoker<T> Instance = new HandleChangesInvoker<T>();
-            public override string Name => nameof(DBSchemaList.HandleChanges);
-
-            public override bool CanWrite => true;
-
-            public override bool GetValue(T target) => target.HandleChanges;
-
-            public override void SetValue(T target, bool value) => target.HandleChanges = value;
         }
     }
 }
