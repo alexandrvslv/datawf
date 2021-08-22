@@ -710,15 +710,12 @@ namespace {Namespace}
             SyntaxHelper.AddUsing("System.Runtime.Serialization", usings);
 
             source = new StringBuilder($@"
-namespace {Namespace} 
-{{
     {((schema.ExtensionData?.TryGetValue("x-flags", out _) ?? false) ? "[Flags]" : "")}
     public enum {GetDefinitionName(schema)}
     {{");
             GenDefinitionEnumMemebers(schema);
             source.Append($@"
-    }}
-}}");
+    }}");
             return source;
         }
 
@@ -758,15 +755,12 @@ namespace {Namespace}
         {
             var refFields = referenceFields[schema] = new List<RefField>();
             source = new StringBuilder($@"
-namespace {Namespace} 
-{{
     public partial class {GetDefinitionName(schema)}:{string.Join(", ", GenDefinitionClassBases(schema, usings))}
     {{");
             GenDefinitionClassMemebers(schema, refFields, usings);
 
             source.Append($@"
-    }}
-}}");
+    }}");
             return source;
         }
 
@@ -783,10 +777,7 @@ namespace {Namespace}
             else
             {
                 //yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IEntryNotifyPropertyChanged)));
-                if (schema.Id == "DBItem")
-                    yield return "SynchronizedItem";
-                else
-                    yield return "DefaultItem";
+                yield return "SynchronizedItem";
             }
             var idKey = GetPrimaryKey(schema, false);
             if (idKey != null)
@@ -801,7 +792,16 @@ namespace {Namespace}
             var idKey = GetPrimaryKey(schema);
             var typeKey = GetTypeKey(schema);
             var typeId = GetTypeId(schema);
-
+            var definition = GetDefinitionName(schema);
+            if (definition == "DBItem")
+            {
+                source.Append($@"
+        [JsonIgnore]    
+        public {ProviderName} Provider
+        {{
+            get => ({ProviderName})Container;
+        }}");
+            }
             foreach (var property in schema.Properties)
             {
                 GenDefinitionClassField(property.Value, idKey, refFields, usings);
@@ -1298,9 +1298,14 @@ namespace {Namespace}
                 unitSource.Append($@"
 using {item};");
             }
-            unitSource.AppendLine();
-            unitSource.Append(@class);
+            unitSource.Append($@"
 
+namespace {Namespace}
+{{
+");
+            unitSource.Append(@class);
+            unitSource.Append($@"
+}}");
             var sourceText = SourceText.From(unitSource.ToString(), Encoding.UTF8);
             Context.AddSource(name, sourceText);
 
