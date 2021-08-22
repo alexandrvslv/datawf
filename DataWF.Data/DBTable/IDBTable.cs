@@ -149,12 +149,7 @@ namespace DataWF.Data
         T NewItem<T>(DBUpdateState state = DBUpdateState.Insert, bool def = true) where T : DBItem;
         DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true);
         DBItem NewItem(DBUpdateState state, bool def, int typeIndex);
-        int NextHash();
-        void OnItemChanged<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
-        void OnItemChanging<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
         void OnBaseTableChanged(DBItem item, NotifyCollectionChangedAction type);
-        void OnUpdated(DBItemEventArgs e);
-        bool OnUpdating(DBItemEventArgs e);
         bool IsSerializeableColumn(DBColumn column, Type type);
         DBColumn ParseColumn(string name);
         DBColumn ParseColumnProperty(string property);

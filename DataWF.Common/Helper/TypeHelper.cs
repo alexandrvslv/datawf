@@ -175,7 +175,21 @@ namespace DataWF.Common
             return IsInterface(type, typeof(IFileSerialize));
         }
 
-        public static bool IsBaseTypeName(Type type, string filterType)
+        public static IEnumerable<Type> GetDerivedInterfaces<T>(this Type type)
+        {
+            return GetDerivedInterfaces(type, typeof(T));            
+        }
+
+        public static IEnumerable<Type> GetDerivedInterfaces(this Type type, Type interfaceType)
+        {
+            foreach (var typeInterface in type.GetInterfaces())
+            {
+                if (interfaceType.IsAssignableFrom(typeInterface))
+                    yield return typeInterface;
+            }
+        }
+
+        public static bool IsBaseTypeName(this Type type, string filterType)
         {
             while (type != null)
             {
@@ -185,8 +199,8 @@ namespace DataWF.Common
             }
             return false;
         }
-
-        public static bool IsBaseType(Type type, Type filterType)
+        
+        public static bool IsBaseType(this Type type, Type filterType)
         {
             return type == filterType || type.IsSubclassOf(filterType);
         }

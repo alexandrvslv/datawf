@@ -934,12 +934,12 @@ namespace DataWF.Data
 
         public virtual bool OnUpdating(DBItemEventArgs arg)
         {
-            return Table.OnUpdating(arg);
+            return table.OnUpdating(arg);
         }
 
         public virtual void OnUpdated(DBItemEventArgs arg)
         {
-            Table.OnUpdated(arg);
+            table.OnUpdated(arg);
         }
 
         #region INotifyPropertyChanged Members
@@ -951,7 +951,7 @@ namespace DataWF.Data
         {
             if (Attached)
             {
-                Table.OnItemChanging<V>(this, property, column, value);
+                table.OnItemChanging<V>(this, property, column, value);
             }
             RaisePropertyChanging(property);
         }
@@ -969,7 +969,7 @@ namespace DataWF.Data
             }
             if (Attached)
             {
-                Table.OnItemChanged<V>(this, property, column, value);
+                table.OnItemChanged<V>(this, property, column, value);
                 if (property == nameof(Access) && access != null)
                 {
                     access = ReadAccess();

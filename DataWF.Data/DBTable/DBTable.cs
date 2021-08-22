@@ -53,7 +53,7 @@ namespace DataWF.Data
         protected IDBTableLog logTable;
         protected DBTableGroup tableGroup;
         protected DBSequence cacheSequence;
-        protected readonly List<IDBTable> virtualTables = new List<IDBTable>(0);
+        protected readonly List<DBTable> virtualTables = new List<DBTable>(0);
         protected readonly ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
         protected DBColumn<string> nameKey = DBColumn<string>.EmptyKey;
         protected DBColumn<byte[]> accessKey = DBColumn<byte[]>.EmptyKey;
@@ -117,7 +117,7 @@ namespace DataWF.Data
             get => parentTableName;
             set
             {
-                if (parentTableName != value)
+                if (!string.Equals(parentTableName, value, StringComparison.Ordinal))
                 {
                     parentTableName = value;
                     parentTable = null;
@@ -136,6 +136,10 @@ namespace DataWF.Data
                 {
                     ParentTableName = value?.Name;
                     parentTable = (DBTable)value;
+                    if (parentTable != null)
+                    {
+                        BlockSize = parentTable.BlockSize;
+                    }
                 }
             }
         }
@@ -245,6 +249,10 @@ namespace DataWF.Data
                     foreach (var column in Columns)
                     {
                         column.CheckPull();
+                    }
+                    foreach (var table in virtualTables)
+                    {
+                        table.BlockSize = value;
                     }
                 }
             }
@@ -545,8 +553,8 @@ namespace DataWF.Data
 
         public abstract void CopyTo(DBItem[] array, int arrayIndex);
 
-        public abstract void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value);
-        public abstract void OnItemChanged<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
+        protected internal abstract void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value);
+        protected internal abstract void OnItemChanged<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
         public abstract void Trunc();
 
         public bool IsSerializeableColumn(DBColumn column, Type type)
@@ -575,6 +583,23 @@ namespace DataWF.Data
         {
             return Columns[property]
                 ?? ParseProperty(property);
+        }
+
+        public virtual DBColumn ParseColumn(string name)
+        {
+            DBTable table = this;
+            int s = 0, i = name.IndexOf('.');
+            while (i > 0)
+            {
+                var column = table.Columns[name.Substring(s, i - s)];
+                if (column == null)
+                    break;
+                if (column.IsReference)
+                    table = (DBTable)column.ReferenceTable;
+                s = i + 1;
+                i = name.IndexOf('.', s);
+            }
+            return table.Columns[name.Substring(s)];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -648,7 +673,8 @@ namespace DataWF.Data
 
         public void RefreshSequence(DBTransaction transaction, bool truncate = false)
         {
-            var maximum = Convert.ToInt64(transaction.ExecuteQuery($"select max({PrimaryKey.SqlName}) from {SqlName}"));
+            var result = transaction.ExecuteQuery($"select max({PrimaryKey.SqlName}) from {SqlName}");
+            var maximum = result == DBNull.Value ? 0L : Convert.ToInt64(result);
             if (!truncate)
             {
                 var current = Sequence.GetCurrent(transaction);
@@ -885,15 +911,23 @@ namespace DataWF.Data
 
         public event EventHandler<DBItemEventArgs> RowUpdating;
 
-        public bool OnUpdating(DBItemEventArgs e)
+        protected internal virtual bool OnUpdating(DBItemEventArgs e)
         {
             DBService.OnUpdating(e);
             RowUpdating?.Invoke(this, e);
             return !e.Cancel;
         }
 
+        protected internal virtual void OnUpdated(DBItemEventArgs e)
+        {
+            DBService.OnUpdated(e);
+            RowUpdated?.Invoke(this, e);
+        }
+
         protected internal PullHandler GetNextHandler()
         {
+            if (IsVirtual)
+                return ((DBTable)ParentTable).GetNextHandler();
             if (FreeHandlers.TryDequeue(out var handler))
             {
                 return handler;
@@ -901,13 +935,16 @@ namespace DataWF.Data
             return PullHandler.FromSeqence(NextHash(), BlockSize);
         }
 
-        public event EventHandler<DBItemEventArgs> RowUpdated;
-
-        public void OnUpdated(DBItemEventArgs e)
+        protected internal int NextHash()
         {
-            DBService.OnUpdated(e);
-            RowUpdated?.Invoke(this, e);
+            if (IsVirtual)
+            {
+                return ((DBTable)ParentTable).NextHash();
+            }
+            return Interlocked.Increment(ref Hash);
         }
+
+        public event EventHandler<DBItemEventArgs> RowUpdated;
 
         public void DeleteById(object id)
         {
@@ -946,10 +983,10 @@ namespace DataWF.Data
                 {
                     if (StampKey != null)
                         item.Stamp = DateTime.UtcNow;
-                    if (IsLoging 
-                        && StatusKey != null 
-                        && item.Status == DBStatus.Actual 
-                        && !item.IsChangedKey(StatusKey) 
+                    if (IsLoging
+                        && StatusKey != null
+                        && item.Status == DBStatus.Actual
+                        && !item.IsChangedKey(StatusKey)
                         && !item.IsChangedKey(AccessKey))
                         item.Status = DBStatus.Edit;
                 }
@@ -1014,15 +1051,6 @@ namespace DataWF.Data
 
         public abstract void Accept(DBItem item);
 
-        public virtual int NextHash()
-        {
-            if (IsVirtual)
-            {
-                return ParentTable.NextHash();
-            }
-            return Interlocked.Increment(ref Hash);
-        }
-
         public async Task Save(IEnumerable<DBItem> rows = null)
         {
             using (var transaction = new DBTransaction(this))
@@ -1081,23 +1109,6 @@ namespace DataWF.Data
         }
 
         #endregion
-
-        public virtual DBColumn ParseColumn(string name)
-        {
-            DBTable table = this;
-            int s = 0, i = name.IndexOf('.');
-            while (i > 0)
-            {
-                var column = table.Columns[name.Substring(s, i - s)];
-                if (column == null)
-                    break;
-                if (column.IsReference)
-                    table = (DBTable)column.ReferenceTable;
-                s = i + 1;
-                i = name.IndexOf('.', s);
-            }
-            return table.Columns[name.Substring(s)];
-        }
 
         public abstract void Clear();
 
@@ -1239,13 +1250,16 @@ namespace DataWF.Data
 
         public void RemoveVirtual(IDBTable view)
         {
-            virtualTables.Remove(view);
+            virtualTables.Remove((DBTable)view);
         }
 
         public void AddVirtual(IDBTable view)
         {
-            if(!virtualTables.Contains(view))
-                virtualTables.Add(view);
+            if (!virtualTables.Contains(view))
+            {
+                ((DBTable)view).ParentTable = this;
+                virtualTables.Add((DBTable)view);
+            }
         }
 
         public virtual IEnumerable<DBForeignKey> GetChildRelations()

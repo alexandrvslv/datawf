@@ -426,7 +426,7 @@ namespace DataWF.Data
             queryViews.Add(view);
         }
 
-        public override void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value)
+        protected internal override void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
             if (IsVirtual)
             {
@@ -447,7 +447,7 @@ namespace DataWF.Data
             }
         }
 
-        public override void OnItemChanged<V>(DBItem item, string property, DBColumn<V> column, V value)
+        protected internal override void OnItemChanged<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
             if (string.Equals(property, nameof(DBItem.Attached), StringComparison.Ordinal)
                 || string.Equals(property, nameof(DBItem.UpdateState), StringComparison.Ordinal))

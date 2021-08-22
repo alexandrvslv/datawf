@@ -21,8 +21,10 @@ namespace DataWF.Common.Generator
         {
             // retreive the populated receiver 
             if (!(context.SyntaxReceiver is SyntaxReceiver receiver))
+            {
+                try { context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDFailGeneration, Location.None, GetType().Name, "Check Receiver", "Fail", "But why?")); } catch { }
                 return;
-
+            }
             try
             {
                 BaseGenerator.Compilation = context.Compilation;
@@ -105,7 +107,7 @@ namespace DataWF.Common.Generator
             }
             catch (Exception ex)
             {
-                try { context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDFailGeneration, Location.None, GetType().Name, ex.GetType().Name, ex.Message)); } catch { }
+                try { context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDFailGeneration, Location.None, GetType().Name, ex.GetType().Name, ex.Message, ex.StackTrace)); } catch { }
             }
         }
     }

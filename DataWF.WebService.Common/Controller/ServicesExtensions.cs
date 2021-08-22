@@ -61,7 +61,10 @@ namespace DataWF.WebService.Common
             {
                 dataProvider.Load();
             }
-            services.AddSingleton<IDBSchema>(dataProvider.Schema);
+            
+            foreach (var interfaceType in TypeHelper.GetDerivedInterfaces<IDBSchema>(dataProvider.Schema.GetType()))
+                services.AddSingleton(interfaceType, dataProvider.Schema);
+
             return services.AddSingleton(dataProvider);
         }
 
