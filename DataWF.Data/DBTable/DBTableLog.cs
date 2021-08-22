@@ -75,7 +75,7 @@ namespace DataWF.Data
             get => targetTableName;
             set
             {
-                if (string.Equals(targetTableName, value, StringComparison.Ordinal))
+                if (!string.Equals(targetTableName, value, StringComparison.Ordinal))
                 {
                     targetTableName = value;
                     OnPropertyChanged();
