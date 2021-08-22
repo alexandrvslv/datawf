@@ -153,7 +153,7 @@ namespace DataWF.Data
             get => logTableName;
             set
             {
-                if (logTableName != value)
+                if (!string.Equals(logTableName, value, StringComparison.Ordinal))
                 {
                     logTable = null;
                     logTableName = value;
@@ -1652,8 +1652,11 @@ namespace DataWF.Data
                 {
                     var tableGenerator = new LogTableGenerator()
                     {
-                        Attribute = new LogTableAttribute(ItemType.Type, Name + "_log") { SequenceName = SequenceName + "_log" },
-                        BaseTableGenerator = Generator
+                        Attribute = new LogTableAttribute(ItemType.Type, $"{Name}{(IsVirtual ? "Log": "_log")}")
+                        {
+                            SequenceName = SequenceName + "_log"
+                        },
+                        TargetTableGenerator = Generator
                     };
                     tableGenerator.Initialize(itemType);
                     LogTable = (IDBTableLog)tableGenerator.Generate(Schema.LogSchema ?? Schema);

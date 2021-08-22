@@ -33,6 +33,7 @@ namespace DataWF.Data
         private IListIndex<T, string> groupNameIndex;
         private IListIndex<T, string> propertyNameIndex;
         private IListIndex<T, string> refPropertyNameIndex;
+        private IListIndex<T, string> targetNameIndex;
         private IListIndex<T, bool> isViewIndex;
         private IListIndex<T, bool> isReferenceIndex;
 
@@ -44,6 +45,7 @@ namespace DataWF.Data
             refPropertyNameIndex = Indexes.Add(DBColumn.ReferencePropertyNameInvoker.Instance);
             isViewIndex = Indexes.Add(DBColumn.IsViewInvoker.Instance);
             isReferenceIndex = Indexes.Add(DBColumn.IsReferenceInvoker.Instance);
+            targetNameIndex = Indexes.Add(DBColumn.TargetNameInvoker.Instance);
             //Indexes.Add(DBColumn.ReferenceTableInvoker<T>.Instance);
         }
 
@@ -190,6 +192,11 @@ namespace DataWF.Data
         public IEnumerable<DBColumn> GetIsView()
         {
             return isViewIndex.Scan(CompareType.Equal, true);
+        }
+
+        public DBColumn GetByTarget(string name)
+        {
+            return string.IsNullOrEmpty(name) ? null : targetNameIndex.SelectOne(name);
         }
 
         public DBColumn GetByProperty(string property)

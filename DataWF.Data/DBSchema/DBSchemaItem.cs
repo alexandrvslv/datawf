@@ -128,9 +128,9 @@ namespace DataWF.Data
             get => name;
             set
             {
-                if (value == name)
+                if (string.Equals(value, name, StringComparison.Ordinal))
                     return;
-                if (oldname == value)
+                if (string.Equals(oldname, value, StringComparison.Ordinal))
                     oldname = null;
                 else if (oldname == null)
                     oldname = name;

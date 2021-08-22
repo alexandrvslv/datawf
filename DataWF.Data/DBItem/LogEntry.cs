@@ -134,13 +134,13 @@ namespace DataWF.Data
                         user += name + "; ";
                     foreach (var logColumn in log.LogTable.GetLogColumns())
                     {
-                        LogEntry map = changes.SelectOne(nameof(LogEntry.Column), CompareType.Equal, logColumn.BaseColumn);
+                        LogEntry map = changes.SelectOne(nameof(LogEntry.Column), CompareType.Equal, logColumn.TargetColumn);
                         if (map == null)
                         {
                             map = new LogEntry
                             {
                                 User = name,
-                                Column = logColumn.BaseColumn,
+                                Column = logColumn.TargetColumn,
                                 Old = prev?.GetValue(logColumn)
                             };
                             changes.Add(map);

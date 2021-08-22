@@ -38,18 +38,18 @@ namespace DataWF.Data
 
         public LogTableGenerator LogTable => Table as LogTableGenerator;
 
-        public override int Size => BaseColumn?.Size ?? base.Size;
+        public override int Size => TargetColumn?.Size ?? base.Size;
 
-        public ColumnGenerator BaseColumn => LogTable?.BaseTableGenerator?.GetColumn(LogAttribute?.BaseName);
+        public ColumnGenerator TargetColumn => LogTable?.TargetTableGenerator?.GetColumn(LogAttribute?.TargetName);
 
         public override DBColumn GenerateColumn(DBTable table)
         {
             if (!(table is IDBTableLog logTable))
                 throw new Exception("Log Column Expect Log Table");
-            if (BaseColumn == null)
+            if (TargetColumn == null)
                 throw new Exception("Base Column Not found");
 
-            var baseColumn = logTable.TargetTable.Columns[BaseColumn.ColumnName];
+            var baseColumn = logTable.TargetTable.Columns[TargetColumn.ColumnName];
 
             if (baseColumn == null)
                 throw new Exception("Base Column Not found");

@@ -86,21 +86,18 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public IDBTable TargetTable
         {
-            get
-            {
-                return targetTable ??= (Schema is DBSchemaLog logSchema
+            get => targetTable ??= (Schema is DBSchemaLog logSchema
                               ? logSchema.TargetSchema.Tables[TargetTableName]
                               : Schema?.Tables[TargetTableName]);
-            }
             set
             {
-                TargetTableName = value?.Name ?? throw new ArgumentException("TargetTable set operation required not null value!");
+                TargetTableName = value?.Name ?? throw new ArgumentException("Value is required", nameof(value));
                 targetTable = value;
-                Name = value.Name + "_log";
+                Name = $"{value.Name}{(IsVirtual ? "Log" : "_log")}";
                 Schema = value.Schema.LogSchema ?? value.Schema;
-                var seqName = value.SequenceName + "_log";
+                var seqName = $"{value.SequenceName}_log";
                 Sequence = Schema.Sequences[seqName] ?? new DBSequence() { Name = seqName };
-                DisplayName = value.DisplayName + " Log";
+                DisplayName = $"{value.DisplayName} Log";
 
 
                 foreach (var column in value.Columns)
@@ -137,7 +134,7 @@ namespace DataWF.Data
 
         public DBColumn GetLogColumn(DBColumn column)
         {
-            return ParseColumn(column.Name + "_log");
+            return Columns.GetByTarget(column.Name) ?? Columns[$"{column.Name}_log"];
         }
 
         public DBColumn ParseLogProperty(string name)
@@ -156,7 +153,7 @@ namespace DataWF.Data
         {
             foreach (var column in Columns)
             {
-                if (column.BaseColumn != null)
+                if (column.TargetColumn != null)
                 {
                     yield return column;
                 }
@@ -170,7 +167,7 @@ namespace DataWF.Data
                 && !transaction.Replication)
             {
                 var lob = item.GetValue(FileOIDKey);
-                var current = logItem.BaseItem == DBItem.EmptyItem ? null : logItem.BaseItem.GetValue((DBColumn<long?>)FileOIDKey.BaseColumn);
+                var current = logItem.BaseItem == DBItem.EmptyItem ? null : logItem.BaseItem.GetValue((DBColumn<long?>)FileOIDKey.TargetColumn);
                 if (lob != null && lob != current)
                 {
                     var qquery = new QQuery(this);
@@ -201,7 +198,7 @@ namespace DataWF.Data
             for (int i = 0; i < Columns.Count;)
             {
                 var column = Columns[i];
-                if (column.BaseName != null && column.BaseColumn == null)
+                if (column.TargetName != null && column.TargetColumn == null)
                 {
                     column.RemoveConstraints();
                     column.RemoveForeignKeys();

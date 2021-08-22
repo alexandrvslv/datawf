@@ -27,11 +27,11 @@ namespace DataWF.Data
         public LogColumnAttribute()
         { }
 
-        public LogColumnAttribute(string baseName, string name) : base(name)
+        public LogColumnAttribute(string targetName, string name) : base(name)
         {
-            BaseName = baseName;
+            TargetName = targetName;
         }
 
-        public string BaseName { get; }
+        public string TargetName { get; }
     }
 }

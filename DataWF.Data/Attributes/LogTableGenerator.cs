@@ -30,7 +30,7 @@ namespace DataWF.Data
 
         public LogTableAttribute LogAttribute => base.Attribute as LogTableAttribute;
 
-        public TableGenerator BaseTableGenerator
+        public TableGenerator TargetTableGenerator
         {
             get => baseTable ?? (baseTable = TableGenerator.Get(LogAttribute.BaseType));
             set => baseTable = value;

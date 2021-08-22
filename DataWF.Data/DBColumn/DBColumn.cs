@@ -68,7 +68,8 @@ namespace DataWF.Data
         protected string subList;
         //private Dictionary<int, object> tags;
         private DBColumn logColumn;
-        private DBColumn baseColumn = DBColumn.EmptyKey;
+        private DBColumn parentColumn;
+        private DBColumn targetColumn;
         private PropertyInfo propertyInfo;
         private PropertyInfo referencePropertyInfo;
         private JsonEncodedText? jsonName;
@@ -91,18 +92,33 @@ namespace DataWF.Data
         public DBSystem DBSystem { get => Schema?.Connection.System ?? DBSystem.Default; }
 
         [Browsable(false)]
-        public string BaseName { get; set; }
+        public string TargetName { get; set; }
 
         [XmlIgnore, JsonIgnore]
-        public DBColumn BaseColumn
+        public DBColumn TargetColumn
         {
-            get { return baseColumn == DBColumn.EmptyKey ? (baseColumn = Table.ParentTable?.Columns[BaseName]) : baseColumn; }
+            get => targetColumn ??= Table is IDBTableLog logTable
+                ? logTable.TargetTable?.Columns[TargetName]
+                : null;// Table.ParentTable.Columns[TargetName];
             set
             {
-                baseColumn = value;
-                BaseName = value?.Name;
+                targetColumn = value;
+                TargetName = value?.Name;
             }
         }
+
+        [XmlIgnore, JsonIgnore]
+        public DBColumn ParentColumn
+        {
+            get => parentColumn ??= Table.ParentTable?.Columns[Name];
+            set
+            {
+                parentColumn = value;
+            }
+        }
+
+        [JsonIgnore, XmlIgnore]
+        public DBColumn LogColumn => logColumn ??= Table?.LogTable?.GetLogColumn(this);
 
         [Browsable(false), XmlIgnore, JsonIgnore]
         public Dictionary<Type, string> DefaultValues { get; set; }
@@ -590,10 +606,7 @@ namespace DataWF.Data
         public bool IsFileName => (Keys & DBColumnKeys.FileName) == DBColumnKeys.FileName;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public bool IsFileLOB => (Keys & DBColumnKeys.FileOID) == DBColumnKeys.FileOID;
-
-        [JsonIgnore, XmlIgnore]
-        public DBColumn LogColumn => logColumn ?? (logColumn = Table?.LogTable?.GetLogColumn(this));
+        public bool IsFileLOB => (Keys & DBColumnKeys.FileOID) == DBColumnKeys.FileOID;        
 
         [JsonIgnore, XmlIgnore]
         public object Default => null;
@@ -625,7 +638,7 @@ namespace DataWF.Data
 
         public void RefreshLogColumn(DBColumn baseColumn)
         {
-            BaseColumn = baseColumn;
+            TargetColumn = baseColumn;
             Name = GetLogName(baseColumn);
             DisplayName = baseColumn.DisplayName + " Log";
             DBDataType = baseColumn.DBDataType;
@@ -656,7 +669,7 @@ namespace DataWF.Data
 
         public void RefreshVirtualColumn(DBColumn baseColumn)
         {
-            BaseColumn = baseColumn;
+            ParentColumn = baseColumn;
             Name = baseColumn.Name;
             GroupName = baseColumn.GroupName;
             Keys = baseColumn.Keys;

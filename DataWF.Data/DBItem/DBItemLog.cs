@@ -121,7 +121,7 @@ namespace DataWF.Data
                               ? DBLogType.Delete : DBLogType.None;
                 foreach (var column in LogTable.GetLogColumns())
                 {
-                    column.Copy(value, column.BaseColumn, this);
+                    column.Copy(value, column.TargetColumn, this);
                 }
             }
         }
@@ -185,7 +185,7 @@ namespace DataWF.Data
         {
             foreach (var logColumn in LogTable.GetLogColumns())
             {
-                logColumn.BaseColumn.Copy(this, logColumn, value);
+                logColumn.TargetColumn.Copy(this, logColumn, value);
             }
         }
 
