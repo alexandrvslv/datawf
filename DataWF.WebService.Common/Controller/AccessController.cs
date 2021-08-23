@@ -19,8 +19,12 @@ namespace DataWF.WebService.Common
     {
         private DBTable GetTable(string name)
         {
-            return DBService.Schems.DefaultSchema.Tables.FirstOrDefault(p =>
+            var table = DBService.Schems.DefaultSchema.Tables.FirstOrDefault(p =>
                 string.Equals(p.ItemTypeName, name, StringComparison.Ordinal));
+            if (table == null && DBService.Schems.DefaultSchema.LogSchema != null)
+                table = DBService.Schems.DefaultSchema.LogSchema.Tables.FirstOrDefault(p =>
+                    string.Equals(p.ItemTypeName, name, StringComparison.Ordinal));
+            return table;
             //TypeHelper.ParseType(name);
             //if (type == null)
             //{
@@ -32,7 +36,7 @@ namespace DataWF.WebService.Common
         public IUserIdentity CurrentUser => User.GetCommonUser();
 
         [HttpGet("Get/{name}")]
-        public ActionResult<AccessValue> Get([FromRoute]string name)
+        public ActionResult<AccessValue> Get([FromRoute] string name)
         {
             try
             {
@@ -50,7 +54,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("GetProperty/{name}/{property}")]
-        public ActionResult<AccessValue> GetProperty([FromRoute]string name, [FromRoute]string property)
+        public ActionResult<AccessValue> GetProperty([FromRoute] string name, [FromRoute] string property)
         {
             try
             {
@@ -105,7 +109,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpGet("GetItems/{name}/{id}")]
-        public ActionResult<IEnumerable<AccessItem>> Get([FromRoute]string name, [FromRoute]string id)
+        public ActionResult<IEnumerable<AccessItem>> Get([FromRoute] string name, [FromRoute] string id)
         {
             var table = GetTable(name);
             if (table == null)
@@ -131,7 +135,11 @@ namespace DataWF.WebService.Common
                 {
                     return Forbid();
                 }
-
+                if (value is DBLogItem logItem
+                    && logItem.Access?.Owner != logItem)
+                {
+                    return new ActionResult<IEnumerable<AccessItem>>(Enumerable.Empty<AccessItem>());
+                }
                 return new ActionResult<IEnumerable<AccessItem>>(value.Access.Items);
             }
             catch (Exception ex)
@@ -141,12 +149,16 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPut("SetItems/{name}/{id}")]
-        public async Task<ActionResult<bool>> Set([FromRoute]string name, [FromRoute]string id, [FromBody]List<AccessItem> accessItems)
+        public async Task<ActionResult<bool>> Set([FromRoute] string name, [FromRoute] string id, [FromBody] List<AccessItem> accessItems)
         {
             var table = GetTable(name);
             if (table == null)
             {
                 return NotFound();
+            }
+            if (table is IDBLogTable)
+            {
+                return Forbid("History is Readonly!");
             }
             var accessColumn = table.AccessKey;
             if (accessColumn == null)
@@ -184,7 +196,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPut("SetItems/{name}")]
-        public async Task<ActionResult<bool>> Set([FromRoute]string name, [FromBody]AccessUpdatePackage accessPack)
+        public async Task<ActionResult<bool>> Set([FromRoute] string name, [FromBody] AccessUpdatePackage accessPack)
         {
             if (accessPack == null)
             {
@@ -194,6 +206,10 @@ namespace DataWF.WebService.Common
             if (table == null)
             {
                 return NotFound();
+            }
+            if (table is IDBLogTable)
+            {
+                return Forbid("History is Readonly!");
             }
             var accessColumn = table.AccessKey;
             if (accessColumn == null)
@@ -235,12 +251,16 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPut("ClearAccess/{name}/{id}")]
-        public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute]string name, [FromRoute]string id)
+        public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute] string name, [FromRoute] string id)
         {
             var table = GetTable(name);
             if (table == null)
             {
                 return NotFound();
+            }
+            if (table is IDBLogTable)
+            {
+                return Forbid("History is Readonly!");
             }
             var accessColumn = table.AccessKey;
             if (accessColumn == null)
@@ -277,12 +297,16 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPut("ClearAccess/{name}")]
-        public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute]string name, [FromBody]List<string> ids)
+        public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute] string name, [FromBody] List<string> ids)
         {
             var table = GetTable(name);
             if (table == null)
             {
                 return NotFound();
+            }
+            if (table is IDBLogTable)
+            {
+                return Forbid("History is Readonly!");
             }
             var accessColumn = table.AccessKey;
             if (accessColumn == null)
