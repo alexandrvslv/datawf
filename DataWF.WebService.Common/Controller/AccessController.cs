@@ -21,9 +21,8 @@ namespace DataWF.WebService.Common
         {
             var table = DBService.Schems.DefaultSchema.Tables.FirstOrDefault(p =>
                 string.Equals(p.ItemTypeName, name, StringComparison.Ordinal));
-            if (table == null && DBService.Schems.DefaultSchema.LogSchema != null)
-                table = DBService.Schems.DefaultSchema.LogSchema.Tables.FirstOrDefault(p =>
-                    string.Equals(p.ItemTypeName, name, StringComparison.Ordinal));
+            if (table == null && name.EndsWith("Log"))
+                table = (DBTable)GetTable(name.Replace("Log", ""))?.LogTable;
             return table;
             //TypeHelper.ParseType(name);
             //if (type == null)
