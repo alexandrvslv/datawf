@@ -689,7 +689,7 @@ namespace DataWF.Data
 
         public T GetReference<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBItem
         {
-            return (T)GetReference(column, param);
+            return GetReference(column, param) is T typedValue ? typedValue : null;
         }
 
         public DBItem SetReference(DBItem value, string column)
