@@ -274,7 +274,7 @@ namespace DataWF.Data
             T value = typedPropertyInvoker.GetValue(item);
             if (Equal(value, default(T)))
                 return null;
-            return (R)LoadReference(value, param);
+            return LoadReference(value, param) is R typeValue ? typeValue : null;
         }
 
         public override R GetReference<R>(DBItem item, ref R reference, DBLoadParam param)
@@ -285,7 +285,7 @@ namespace DataWF.Data
             if (!isEmpty && Equal(value, id))
                 return reference;
 
-            return reference = isEmpty ? (R)null : (R)LoadReference(value, param);
+            return reference = isEmpty ? (R)null : LoadReference(value, param) is R typeValue ? typeValue : null;
         }
 
         public override void SetReference<R>(DBItem item, R reference)
