@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace DataWF.Test.Web.Service
 {
-    [DataProvider(typeof(FlowSchema))]
+    [DataProvider()]
+    [SchemaEntry(typeof(FlowSchema))]
     public class TestDataProvider : DataProviderBase
     {
         public TestDataProvider()

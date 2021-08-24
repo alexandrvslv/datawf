@@ -9,11 +9,9 @@ namespace DataWF.Common
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public class DataProviderAttribute : Attribute
     {
-        public DataProviderAttribute(Type schemaType)
+        public DataProviderAttribute()
         {
-            SchemaType = schemaType;
         }
 
-        public Type SchemaType { get; }
     }
 }
