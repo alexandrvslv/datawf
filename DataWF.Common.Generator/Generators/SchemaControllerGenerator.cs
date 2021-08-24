@@ -12,7 +12,7 @@ using System.Text;
 
 namespace DataWF.Common.Generator
 {
-    internal class DataProviderGenerator : BaseGenerator
+    internal class SchemaControllerGenerator : BaseGenerator
     {
         private const string prStream = "uploaded";
         private const string prUser = "CurrentUser";
@@ -20,7 +20,7 @@ namespace DataWF.Common.Generator
         private readonly HashSet<string> generated = new HashSet<string>(StringComparer.Ordinal);
         private INamedTypeSymbol[] tableAttributes;
 
-        public DataProviderGenerator(ref GeneratorExecutionContext context) : base(ref context)
+        public SchemaControllerGenerator(ref GeneratorExecutionContext context) : base(ref context)
         { 
         }
 
@@ -29,7 +29,7 @@ namespace DataWF.Common.Generator
         public override bool Process()
         {
             Namespace = TypeSymbol.ContainingNamespace.ToDisplayString();
-            var attribute = TypeSymbol.GetAttribute(Attributes.DataProvider);
+            var attribute = TypeSymbol.GetAttribute(Attributes.SchemaController);
             var schemaType = attribute.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol;
             var schemaEntries = schemaType.GetAllAttributes(Attributes.SchemaEntry);
             tableAttributes = new[] { Attributes.Table, Attributes.VirtualTable, Attributes.VirtualTable, Attributes.AbstractTable,

@@ -93,15 +93,15 @@ namespace DataWF.Common.Generator
                     }
                 }
 
-                if (receiver.DataProviderCandidate.Any())
+                if (receiver.SchemaControllerCandidate.Any())
                 {
-                    var serviceGenerator = new DataProviderGenerator(ref context) { };
+                    var controllerGenerator = new SchemaControllerGenerator(ref context) { };
 
-                    foreach (var serviceClass in receiver.DataProviderCandidate)
+                    foreach (var serviceClass in receiver.SchemaControllerCandidate)
                     {
                         if (context.CancellationToken.IsCancellationRequested)
                             return;
-                        serviceGenerator.Process(serviceClass);
+                        controllerGenerator.Process(serviceClass);
                     }
                 }
             }

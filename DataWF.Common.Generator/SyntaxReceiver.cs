@@ -15,7 +15,7 @@ namespace DataWF.Common.Generator
         public List<ClassDeclarationSyntax> TableCandidates { get; } = new List<ClassDeclarationSyntax>();
         public List<ClassDeclarationSyntax> SchemaCandidates { get; } = new List<ClassDeclarationSyntax>();
         public List<ClassDeclarationSyntax> ClientProviderCandidate { get; } = new List<ClassDeclarationSyntax>();
-        public List<ClassDeclarationSyntax> DataProviderCandidate { get; } = new List<ClassDeclarationSyntax>();
+        public List<ClassDeclarationSyntax> SchemaControllerCandidate { get; } = new List<ClassDeclarationSyntax>();
 
         /// <summary>
         /// Called for every syntax node in the compilation, we can inspect the nodes and save any information useful for generation
@@ -61,10 +61,10 @@ namespace DataWF.Common.Generator
                         {
                             ClientProviderCandidate.Add(classDeclarationSyntax);
                         }
-                        else if (string.Equals(attribute, "DataProvider", StringComparison.Ordinal)
-                           || string.Equals(attribute, "DataProviderAttribute", StringComparison.Ordinal))
+                        else if (string.Equals(attribute, "SchemaController", StringComparison.Ordinal)
+                           || string.Equals(attribute, "SchemaControllerAttribute", StringComparison.Ordinal))
                         {
-                            DataProviderCandidate.Add(classDeclarationSyntax);
+                            SchemaControllerCandidate.Add(classDeclarationSyntax);
                         }
                     }
                 }               

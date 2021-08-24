@@ -1,4 +1,6 @@
-﻿using DataWF.WebService.Common;
+﻿using DataWF.Data;
+using DataWF.Module.Flow;
+using DataWF.WebService.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -7,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace DataWF.Test.Web.Service
 {
+    [SchemaController(typeof(FlowSchema))]
     public class Startup
     {
         public Startup(IConfiguration configuration)
