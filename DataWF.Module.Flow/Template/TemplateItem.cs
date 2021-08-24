@@ -12,12 +12,8 @@ namespace DataWF.Module.Flow
     {
         private Template template;
 
-        protected TemplateItem(DBTable table) : base(table)
-        {
-        }
-
-        [Column("template_id"), Index("rtemplate_data_index", true), Browsable(false)]
-        public int? TemplateId
+        [Column("template_id"), Browsable(false)]
+        public virtual int? TemplateId
         {
             get => GetValue<int?>(Table.TemplateIdKey);
             set => SetValue(value, Table.TemplateIdKey);

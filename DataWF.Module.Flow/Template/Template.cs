@@ -22,10 +22,6 @@ namespace DataWF.Module.Flow
     {
         private Work work;
 
-        public Template(DBTable table) : base(table)
-        {
-        }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

@@ -11,16 +11,15 @@ namespace DataWF.Module.Flow
     {
         private TemplateFile templateFile;
 
-        public TemplateData(DBTable table) : base(table)
-        {
-        }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get => GetValue<int?>(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
+
+        [Index("rtemplate_data_index", true)]
+        public override int? TemplateId { get => base.TemplateId; set => base.TemplateId = value; }
 
         [Browsable(false)]
         [Column("file_id", Keys = DBColumnKeys.View), Index("rtemplate_data_index", true)]

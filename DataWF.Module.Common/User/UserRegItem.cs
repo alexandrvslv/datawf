@@ -72,7 +72,7 @@ namespace DataWF.Module.Common
                 var logPrevius = LogItem.GetPrevius();
                 foreach (var logColumn in LogTable.GetLogColumns())
                 {
-                    var column = logColumn.BaseColumn;
+                    var column = logColumn.TargetColumn;
                     if ((column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp)
                         continue;
                     var oldValue = logPrevius?.GetValue(logColumn);

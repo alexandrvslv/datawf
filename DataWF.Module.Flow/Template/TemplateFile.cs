@@ -9,10 +9,6 @@ namespace DataWF.Module.Flow
     [Table("rtemplate_file", "Template", BlockSize = 100), InvokerGenerator]
     public partial class TemplateFile : DBItem
     {
-        public TemplateFile(DBTable table) : base(table)
-        {
-        }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
