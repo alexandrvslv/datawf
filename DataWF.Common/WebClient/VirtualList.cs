@@ -60,7 +60,7 @@ namespace DataWF.Common
             {
                 if (ModelView != null)
                 {
-                    _ = ProcessGet(index, pageIndex);
+                    _ = ProcessGet(pageIndex);
                 }
             }
             if (items == null)
@@ -70,7 +70,34 @@ namespace DataWF.Common
             return itemIndex < items.Count ? items[itemIndex] : default(T);
         }
 
-        private async ValueTask ProcessGet(int index, int pageIndex)
+        public async ValueTask<object> GetItemAsync(int index)
+        {
+            var pageIndex = index / Pages.PageSize;
+            var itemIndex = index % Pages.PageSize;
+            if (!cache.TryGetValue(pageIndex, out var items))
+            {
+                if (ModelView != null)
+                {
+                    await ProcessGet(pageIndex);
+                }
+            }
+            if (items == null)
+            {
+                return index < this.items.Count ? this.items[index] : default(T);
+            }
+            return itemIndex < items.Count ? items[itemIndex] : default(T);
+        }
+
+        public async Task LoadAsync()
+        {
+            var result = (await ModelView.Get()).Cast<T>().ToList();
+            for(var pageIndex = 0; pageIndex < Pages.PageCount; pageIndex++)
+            {
+                cache[pageIndex] = result.Skip(pageIndex * Pages.PageSize).Take(PageSize).ToList();
+            }
+        }
+
+        private async ValueTask ProcessGet(int pageIndex, int? pageSize = null)
         {
             if (Interlocked.CompareExchange(ref processingGet, 1, 0) == 0)
             {
@@ -83,9 +110,15 @@ namespace DataWF.Common
 
                     int i = pages.ListFrom;
                     var result = (await ModelView.Get(pages).ConfigureAwait(false)).Cast<T>().ToList();
-                    cache[pageIndex] = result;
-
-                    OnCollectionChanged(NotifyCollectionChangedAction.Reset);
+                    if (processingGet == 0)
+                    {
+                        cache.Remove(pageIndex);
+                    }
+                    else
+                    {
+                        cache[pageIndex] = result;
+                        OnCollectionChanged(NotifyCollectionChangedAction.Reset);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -94,7 +127,7 @@ namespace DataWF.Common
                 }
                 finally
                 {
-                    Interlocked.Decrement(ref processingGet);
+                    Interlocked.Exchange(ref processingGet, 0);
                 }
             }
         }
@@ -149,6 +182,7 @@ namespace DataWF.Common
 
         private void ClearCache()
         {
+            Interlocked.Exchange(ref processingGet, 0);
             cache.Clear();
             pages.ListCount = 1;
         }

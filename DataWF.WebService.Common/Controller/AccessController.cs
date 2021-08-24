@@ -28,7 +28,10 @@ namespace DataWF.WebService.Common
 
         private DBTable GetTable(string name)
         {
-            return DBService.Schems.DefaultSchema.Tables.GetByTypeName(name);
+            var table = Schema.Tables.GetByTypeName(name);
+            if (table == null && name.EndsWith("Log"))
+                table = (DBTable)GetTable(name.Replace("Log", ""))?.LogTable;
+            return table;
             //TypeHelper.ParseType(name);
             //if (type == null)
             //{
@@ -137,7 +140,11 @@ namespace DataWF.WebService.Common
                 {
                     return Forbid();
                 }
-
+                if (value is DBItemLog itemlog
+                    && itemlog.Access?.Owner != itemlog)
+                {
+                    return new ActionResult<IEnumerable<AccessItem>>(Enumerable.Empty<AccessItem>());
+                }
                 return new ActionResult<IEnumerable<AccessItem>>(value.Access.Items);
             }
             catch (Exception ex)
@@ -153,6 +160,10 @@ namespace DataWF.WebService.Common
             if (table == null)
             {
                 return NotFound();
+            }
+            if (table is IDBTableLog)
+            {
+                return Forbid("History is Readonly!");
             }
             var accessColumn = table.AccessKey;
             if (accessColumn == null)
@@ -201,6 +212,10 @@ namespace DataWF.WebService.Common
             {
                 return NotFound();
             }
+            if (table is IDBTableLog)
+            {
+                return Forbid("History is Readonly!");
+            }
             var accessColumn = table.AccessKey;
             if (accessColumn == null)
             {
@@ -247,6 +262,10 @@ namespace DataWF.WebService.Common
             if (table == null)
             {
                 return NotFound();
+            }
+            if (table is IDBTableLog)
+            {
+                return Forbid("History is Readonly!");
             }
             var accessColumn = table.AccessKey;
             if (accessColumn == null)
