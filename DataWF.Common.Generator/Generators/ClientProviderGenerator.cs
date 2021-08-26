@@ -709,17 +709,17 @@ namespace {Namespace}
         {
             SyntaxHelper.AddUsing("System.Runtime.Serialization", usings);
 
-            source = new StringBuilder($@"
+            var source = new StringBuilder($@"
     {((schema.ExtensionData?.TryGetValue("x-flags", out _) ?? false) ? "[Flags]" : "")}
     public enum {GetDefinitionName(schema)}
     {{");
-            GenDefinitionEnumMemebers(schema);
+            GenDefinitionEnumMemebers(source, schema);
             source.Append($@"
     }}");
             return source;
         }
 
-        private void GenDefinitionEnumMemebers(JsonSchema schema)
+        private void GenDefinitionEnumMemebers(StringBuilder source, JsonSchema schema)
         {
             //object[] names = null;
             //if (schema.ExtensionData != null
@@ -753,11 +753,12 @@ namespace {Namespace}
 
         private StringBuilder GenDefinitionClass(JsonSchema schema, HashSet<string> usings)
         {
+            usings.Add("System.Text.Json.Serialization");
             var refFields = referenceFields[schema] = new List<RefField>();
-            source = new StringBuilder($@"
-    public partial class {GetDefinitionName(schema)}:{string.Join(", ", GenDefinitionClassBases(schema, usings))}
+            var source = new StringBuilder($@"
+    public partial class {GetDefinitionName(schema)}: {string.Join(", ", GenDefinitionClassBases(schema, usings))}
     {{");
-            GenDefinitionClassMemebers(schema, refFields, usings);
+            GenDefinitionClassMemebers(source, schema, refFields, usings);
 
             source.Append($@"
     }}");
@@ -787,36 +788,36 @@ namespace {Namespace}
             }
         }
 
-        private void GenDefinitionClassMemebers(JsonSchema schema, List<RefField> refFields, HashSet<string> usings)
+        private void GenDefinitionClassMemebers(StringBuilder source, JsonSchema schema, List<RefField> refFields, HashSet<string> usings)
         {
             var idKey = GetPrimaryKey(schema);
             var typeKey = GetTypeKey(schema);
             var typeId = GetTypeId(schema);
             var definition = GetDefinitionName(schema);
-            if (definition == "DBItem")
+            if (schema.InheritedSchema == null)
             {
                 source.Append($@"
         [JsonIgnore]    
-        public {ProviderName} Provider
+        public new {ProviderName} Provider
         {{
-            get => ({ProviderName})Container;
+            get => ({ProviderName})base.Provider;
         }}");
             }
             foreach (var property in schema.Properties)
             {
-                GenDefinitionClassField(property.Value, idKey, refFields, usings);
+                GenDefinitionClassField(source, property.Value, idKey, refFields, usings);
             }
 
-            GenDefinitionClassConstructorBody(schema, idKey, typeKey, typeId, refFields, usings);
+            GenDefinitionClassConstructorBody(source, schema, idKey, typeKey, typeId, refFields, usings);
 
             if (refFields.Count > 0 && idKey.ParentSchema != schema)
             {
-                GenDefinitionClassProperty(idKey, idKey, typeKey, refFields, usings, true);
+                GenDefinitionClassProperty(source, idKey, idKey, typeKey, refFields, usings, true);
             }
 
             foreach (var property in schema.Properties)
             {
-                GenDefinitionClassProperty(property.Value, idKey, typeKey, refFields, usings);
+                GenDefinitionClassProperty(source, property.Value, idKey, typeKey, refFields, usings);
             }
 
             if (GetPrimaryKey(schema, false) != null)
@@ -846,7 +847,7 @@ namespace {Namespace}
             }
         }
 
-        private void GenDefinitionClassField(JsonSchemaProperty property, JsonSchemaProperty idKey, List<RefField> refFields, HashSet<string> usings)
+        private void GenDefinitionClassField(StringBuilder source, JsonSchemaProperty property, JsonSchemaProperty idKey, List<RefField> refFields, HashSet<string> usings)
         {
             var refkey = GetPropertyRefKey(property);
             if (refkey != null && property.Type == JsonObjectType.Array)
@@ -905,7 +906,7 @@ namespace {Namespace}
             }
         }
 
-        private void GenDefinitionClassConstructorBody(JsonSchema schema, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId, List<RefField> refFields, HashSet<string> usings)
+        private void GenDefinitionClassConstructorBody(StringBuilder source, JsonSchema schema, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId, List<RefField> refFields, HashSet<string> usings)
         {
             source.Append($@"
         public {GetDefinitionName(schema)}()
@@ -968,7 +969,7 @@ namespace {Namespace}
                 @default: @default);
         }
 
-        private void GenDefinitionClassProperty(JsonSchemaProperty property, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, List<RefField> refFields, HashSet<string> usings, bool isOverride = false)
+        private void GenDefinitionClassProperty(StringBuilder source, JsonSchemaProperty property, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, List<RefField> refFields, HashSet<string> usings, bool isOverride = false)
         {
             var refkey = GetPropertyRefKey(property);
             var typeDeclaration = GetTypeString(property, usings, refkey == null ? "SelectableList" : "ReferenceList");
@@ -976,8 +977,8 @@ namespace {Namespace}
         [{string.Join(", ", GenDefinitionClassPropertyAttributes(property, idKey, typeKey, usings))}]
         public {(isOverride ? "override " : property == idKey ? "virtual " : "")}{typeDeclaration} {GetPropertyName(property)} 
         {{");
-            GenDefintionClassPropertyGet(property, isOverride);
-            GenDefinitionClassPropertySet(property, idKey, refFields, usings, isOverride);
+            GenDefintionClassPropertyGet(source, property, isOverride);
+            GenDefinitionClassPropertySet(source, property, idKey, refFields, usings, isOverride);
             source.Append($@"
         }}");
         }
@@ -1057,7 +1058,7 @@ namespace {Namespace}
             }
         }
 
-        private void GenDefintionClassPropertyGet(JsonSchemaProperty property, bool isOverride)
+        private void GenDefintionClassPropertyGet(StringBuilder source, JsonSchemaProperty property, bool isOverride)
         {
             var fieldName = GetFieldName(property);
             if (isOverride)
@@ -1083,7 +1084,7 @@ namespace {Namespace}
             get => {fieldName};");
         }
 
-        private void GenDefinitionClassPropertySet(JsonSchemaProperty property, JsonSchemaProperty idKey, List<RefField> refFields, HashSet<string> usings, bool isOverride)
+        private void GenDefinitionClassPropertySet(StringBuilder source, JsonSchemaProperty property, JsonSchemaProperty idKey, List<RefField> refFields, HashSet<string> usings, bool isOverride)
         {
             source.Append($@"
             set

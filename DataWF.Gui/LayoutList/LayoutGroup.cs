@@ -8,7 +8,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class LayoutGroup : IComparable, IEntryNotifyPropertyChanged, IDisposable
+    public class LayoutGroup : DefaultItem, IComparable, IDisposable
     {
         protected int startIndex = -1;
         protected int endIndex = -1;
@@ -112,16 +112,6 @@ namespace DataWF.Gui
         {
             get { return stamp; }
             set { stamp = value; }
-        }
-
-        [XmlIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<PropertyChangedEventHandler, INotifyListPropertyChanged>(PropertyChanged);
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
         public bool Contains(int index)

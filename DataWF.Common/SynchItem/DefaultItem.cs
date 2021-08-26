@@ -13,7 +13,7 @@ namespace DataWF.Common
         protected ThreadSafeList<PropertyChangedEventHandler> propertyChanged;
 
         [Newtonsoft.Json.JsonIgnore, JsonIgnore, XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<PropertyChangedEventHandler, INotifyListPropertyChanged>(propertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged, PropertyChangedEventHandler>(propertyChanged);
 
         public event PropertyChangedEventHandler PropertyChanged
         {

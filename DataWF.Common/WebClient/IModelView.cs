@@ -25,7 +25,6 @@ namespace DataWF.Common
         event EventHandler<ModelViewEventArgs> Added;
         event EventHandler<ModelViewEventArgs> Removed;
 
-
         event EventHandler StatusChanged;
         Task<IEnumerable> Get(HttpPageSettings pages = null);
         bool CanEdit(object item);
@@ -33,5 +32,24 @@ namespace DataWF.Common
         Task Save(object item, ProgressToken token);
         void ChangeCanExecute();
         IEnumerable<object> SearchByValue(IInvoker valueInvoker, object value);
+    }
+
+    public interface IModelView<T> : IModelView
+    {
+        new T SelectedItem { get; set; }
+        new IFilterable<T> Items { get; set; }
+        new Query<T> Filter { get; set; }
+
+        Task<IEnumerable<T>> Get(string filter, HttpPageSettings list = null);
+    }
+
+    public interface ICrudModelView<T> : IModelView<T>
+    {
+        bool AccessCreate { get; }
+        bool AccessRead { get; }
+        bool AccessUpdate { get; }
+        bool AccessAdmin { get; }
+
+        Task<IEnumerable<T>> GetInternal(string filter, HttpPageSettings list = null);
     }
 }

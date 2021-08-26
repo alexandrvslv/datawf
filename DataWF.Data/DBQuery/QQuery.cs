@@ -1063,7 +1063,7 @@ namespace DataWF.Data
                 return BuildParam(Table.Columns[column], value, buildParam);
             }
         }
-
+        
         public QParam BuildParam(DBColumn column, object value, QQueryBuildParam buildParam = QQueryBuildParam.None)
         {
             CompareType comparer = CompareType.Equal;
@@ -1168,11 +1168,14 @@ namespace DataWF.Data
 
         public QParam BuildParam(DBColumn parent, DBColumn column, object p, QQueryBuildParam buildParam)
         {
+            IQueryable.
             var query = new QQuery("", column.Table);
             query.BuildColumn(column.Table.PrimaryKey);
             query.BuildParam(column, p, buildParam);
             var param = CreateParam(parent, CompareType.In, query);
             Parameters.Add(param);
+            System.Linq.Expressions.Expression
+            new Query().Where(a=>a.Properyt == value).And(b,EqualityComparer, value).A
             return param;
         }
 

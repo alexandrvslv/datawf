@@ -73,7 +73,7 @@ namespace DataWF.Common
             return itemType.GetProperty("Item", parameters);
         }
 
-        public static IEnumerable<T> GetContainers<D, T>(IEnumerable<D> handlers) where D : Delegate
+        public static IEnumerable<T> GetContainers<T, D>(ThreadSafeList<D> handlers) where D : Delegate
         {
             if (handlers == null)
                 yield break;
@@ -86,7 +86,7 @@ namespace DataWF.Common
             }
         }
 
-        public static IEnumerable<T> GetContainers<D, T>(D handler) where D : Delegate
+        public static IEnumerable<T> GetContainers<T, D>(D handler) where D : Delegate
         {
             if (handler == null)
                 yield break;

@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
+using System.Text.Json.Serialization;
 
 namespace DataWF.Common
 {
@@ -12,11 +13,18 @@ namespace DataWF.Common
     public abstract partial class SynchronizedItem : DefaultItem, ISynchronized
     {
         protected SynchronizedStatus syncStatus = SynchronizedStatus.New;
+        protected IClientItemList clientContainer = null;
 
-        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore, Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore, JsonIgnore, XmlIgnore, Browsable(false)]
+        public IClientItemList ClientContainer => clientContainer ?? (clientContainer = TypeHelper.GetContainers<IClientItemList, PropertyChangedEventHandler>(propertyChanged).FirstOrDefault());
+
+        [Newtonsoft.Json.JsonIgnore, JsonIgnore, XmlIgnore, Browsable(false)]
+        public IClientProvider Provider => ClientContainer?.Client.Provider;
+
+        [Newtonsoft.Json.JsonIgnore, JsonIgnore, XmlIgnore, Browsable(false)]
         public IDictionary<string, object> Changes { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
 
-        [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
+        [Newtonsoft.Json.JsonIgnore, JsonIgnore, XmlIgnore]
         public virtual SynchronizedStatus SyncStatus
         {
             get => syncStatus;

@@ -40,7 +40,7 @@ namespace DataWF.Common
     public interface ICrudClient : IClient
     {
         IClientConverter Converter { get; }
-        IList Items { get; }
+        IClientItemList Items { get; }
         bool IsSynchronized { get; set; }
         Type ItemType { get; }
         int TypeId { get; }
@@ -72,7 +72,7 @@ namespace DataWF.Common
 
     public interface ICrudClient<T> : ICrudClient
     {
-        new ChangeableList<T> Items { get; }
+        new ClientItemList<T> Items { get; }
         bool Add(T item);
         bool Remove(T item);
         Task<T> Get(T item);
@@ -126,23 +126,9 @@ namespace DataWF.Common
         Task<Stream> DownloadLogFileAsync(long logId, ProgressToken progressToken);
     }
 
-    public interface IModelView<T> : IModelView
+    public interface IClientItemList : IList
     {
-        new T SelectedItem { get; set; }
-        new IFilterable<T> Items { get; set; }
-        new Query<T> Filter { get; set; }
-
-        Task<IEnumerable<T>> Get(string filter, HttpPageSettings list = null);
-    }
-
-    public interface ICrudModelView<T> : IModelView<T>
-    {
-        bool AccessCreate { get; }
-        bool AccessRead { get; }
-        bool AccessUpdate { get; }
-        bool AccessAdmin { get; }
-
-        Task<IEnumerable<T>> GetInternal(string filter, HttpPageSettings list = null);
+        IClient Client { get; }
     }
 
     public enum ClientStatus

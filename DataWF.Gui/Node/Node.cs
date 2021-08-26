@@ -9,7 +9,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class Node : IGroup, IEntryNotifyPropertyChanged, IComparable, IGlyph, ICheck
+    public class Node : DefaultItem, IGroup, IComparable, IGlyph, ICheck
     {
         protected bool expand;
         protected bool check;
@@ -292,18 +292,6 @@ namespace DataWF.Gui
         }
 
         public Color GlyphColor { get; set; }
-
-        [XmlIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<PropertyChangedEventHandler, INotifyListPropertyChanged>(PropertyChanged);
-
-        #endregion
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
 
         public IEnumerable<Node> GetNodes()
         {

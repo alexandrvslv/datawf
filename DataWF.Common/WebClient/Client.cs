@@ -25,6 +25,7 @@ namespace DataWF.Common
         public Client(IInvoker<T, K> idInvoker, IInvoker<T, int> typeInvoker, int typeId = 0)
         {
             IdInvoker = idInvoker;
+            Items = new ClientItemList<T>(this) { AsyncNotification = true };
             Items.Indexes.Concurrent = true;
             Items.Indexes.Add(IdInvoker);
             Items.CollectionChanged += OnItemsCollectionChanged;
@@ -51,9 +52,9 @@ namespace DataWF.Common
 
         public Type ItemType { get { return typeof(T); } }
 
-        IList ICrudClient.Items => Items;
+        IClientItemList ICrudClient.Items => Items;
 
-        public ChangeableList<T> Items { get; set; } = new ChangeableList<T> { AsyncNotification = true };
+        public ClientItemList<T> Items { get; set; }
 
         public bool IsSynchronized
         {

@@ -132,13 +132,13 @@ namespace DataWF.Common
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public bool IsHandled => PropertyChanged != null;
 
-        public IEnumerable<TT> GetHandlers<TT>() => TypeHelper.GetContainers<NotifyCollectionChangedEventHandler, TT>(CollectionChanged);
+        public IEnumerable<TT> GetHandlers<TT>() => TypeHelper.GetContainers<TT, NotifyCollectionChangedEventHandler>(CollectionChanged);
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<PropertyChangedEventHandler, INotifyListPropertyChanged>(PropertyChanged);
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged, PropertyChangedEventHandler>(PropertyChanged);
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public IEnumerable<IFilterable> Views => TypeHelper.GetContainers<NotifyCollectionChangedEventHandler, IFilterable>(CollectionChanged);
+        public IEnumerable<IFilterable> Views => TypeHelper.GetContainers<IFilterable, NotifyCollectionChangedEventHandler>(CollectionChanged);
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event PropertyChangedEventHandler PropertyChanged;

@@ -12,6 +12,7 @@ namespace DataWF.Test.Common
         private EventHandler defaultHandler;
         private ThreadSafeList<EventHandler> safeListHandler;
         private List<EventHandler> listHandler;
+        private HashSet<EventHandler> hashSetHandler;
 
         public event EventHandler DefaultHandler
         {
@@ -41,6 +42,17 @@ namespace DataWF.Test.Common
             remove => listHandler.Remove(value);
         }
 
+        public event EventHandler HashSetHandler
+        {
+            add
+            {
+                if (hashSetHandler == null)
+                    hashSetHandler = new HashSet<EventHandler>();
+                hashSetHandler.Add(value);
+            }
+            remove => hashSetHandler.Remove(value);
+        }
+
         [SetUp]
         public void Setup()
         {            
@@ -52,9 +64,15 @@ namespace DataWF.Test.Common
             [Values(1000, 100000)] int callCount)
         {
             defaultHandler = null;
+            DefaultHandler += Callback1;
+            DefaultHandler += Callback2;
+            DefaultHandler -= Callback1;
+            Assert.AreEqual(defaultHandler.GetInvocationList().Length, 1);
+
+            defaultHandler = null;
             var call = 0;
             for (int i = 0; i < callbackCount; i++)
-                DefaultHandler += Callback;
+                DefaultHandler += new EventHandler(Callback);
             for (int i = 0; i < callCount; i++)
             {
                 defaultHandler(this, EventArgs.Empty);
@@ -72,9 +90,15 @@ namespace DataWF.Test.Common
             [Values(1000, 100000)] int callCount)
         {
             defaultHandler = null;
+            DefaultHandler += Callback1;
+            DefaultHandler += Callback2;
+            DefaultHandler -= Callback1;
+            Assert.AreEqual(defaultHandler.GetInvocationList().Length, 1);
+
+            defaultHandler = null;
             var call = 0;
             for (int i = 0; i < callbackCount; i++)
-                DefaultHandler += Callback;
+                DefaultHandler += new EventHandler(Callback);
             for (int i = 0; i < callCount; i++)
             {
                 foreach(EventHandler handler in defaultHandler.GetInvocationList())
@@ -93,9 +117,15 @@ namespace DataWF.Test.Common
             [Values(1000, 100000)] int callCount)
         {
             listHandler = null;
+            ListHandler += Callback1;
+            ListHandler += Callback2;
+            ListHandler -= Callback1;
+            Assert.AreEqual(listHandler.Count, 1);
+
+            listHandler = null;
             var call = 0;
             for (int i = 0; i < callbackCount; i++)
-                ListHandler += Callback;
+                ListHandler += new EventHandler(Callback);
             for (int i = 0; i < callCount; i++)
             {
                 foreach (var handler in listHandler)
@@ -114,9 +144,15 @@ namespace DataWF.Test.Common
             [Values(1000, 100000)] int callCount)
         {
             safeListHandler = null;
+            SafeListHandler += Callback1;
+            SafeListHandler += Callback2;
+            SafeListHandler -= Callback1;
+            Assert.AreEqual(safeListHandler.Count, 1);
+
+            safeListHandler = null;
             var call = 0;
             for (int i = 0; i < callbackCount; i++)
-                SafeListHandler += Callback;
+                SafeListHandler += new EventHandler(Callback);
             for (int i = 0; i < callCount; i++)
             {
                 foreach (var handler in safeListHandler)
@@ -129,6 +165,35 @@ namespace DataWF.Test.Common
             }
         }
 
+        [Test, Combinatorial]
+        public void CallHashSet(
+            [Values(1, 300)] int callbackCount,
+            [Values(1000, 100000)] int callCount)
+        {
+            hashSetHandler = null;
+            HashSetHandler += Callback1;
+            HashSetHandler += Callback2;
+            HashSetHandler -= Callback1;
+            Assert.AreEqual(hashSetHandler.Count, 1);
 
+            hashSetHandler = null;
+            var call = 0;
+            for (int i = 0; i < callbackCount; i++)
+                HashSetHandler += new EventHandler(Callback);
+            for (int i = 0; i < callCount; i++)
+            {
+                foreach (var handler in hashSetHandler)
+                    handler(this, EventArgs.Empty);
+            }
+            Assert.AreEqual(callCount, call);
+            void Callback(object sender, EventArgs args)
+            {
+                call++;
+            }
+        }
+
+
+        void Callback1(object sender, EventArgs args) { }
+        void Callback2(object sender, EventArgs args) { }
     }
 }

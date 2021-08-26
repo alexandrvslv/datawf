@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 namespace DataWF.Common
 {
     [InvokerGenerator(Instance = true)]
-    public partial class LocaleString : ICloneable, IEntryNotifyPropertyChanged
+    public partial class LocaleString : DefaultItem, ICloneable
     {
         internal string culture = "ru-RU";
         protected string value;
@@ -86,9 +86,6 @@ namespace DataWF.Common
             }
         }
 
-        [XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<PropertyChangedEventHandler, INotifyListPropertyChanged>(PropertyChanged);
-
         public override string ToString()
         {
             return string.Format("{0}({1})", Value, CultureName);
@@ -111,12 +108,7 @@ namespace DataWF.Common
 
         #endregion
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
+        
     }
 }
 
