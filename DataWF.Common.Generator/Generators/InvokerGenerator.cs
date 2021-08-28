@@ -17,6 +17,8 @@ namespace DataWF.Common.Generator
         }
 
         public IEnumerable<IPropertySymbol> Properties { get => properties; set => properties = value; }
+        
+        public bool ForceInstance { get; set; }
 
         public override bool Process()
         {
@@ -46,7 +48,7 @@ namespace DataWF.Common.Generator
 
             var attributeData = TypeSymbol.GetAttribute(Attributes.Invoker);
             var argInstance = attributeData?.GetNamedValue("Instance") ?? default(TypedConstant);
-            var isInstance = !argInstance.IsNull && (bool)argInstance.Value;
+            var isInstance = ForceInstance || !argInstance.IsNull && (bool)argInstance.Value;
             var genericArgs = TypeSymbol.IsGenericType ? $"<{string.Join(", ", TypeSymbol.TypeParameters.Select(p => p.Name))}>" : string.Empty;
             // begin building the generated source
             source = new StringBuilder($@"{(namespaceName != "DataWF.Common" ? "using DataWF.Common;" : "")}

@@ -31,6 +31,7 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
     [Table("rinstance", "General", BlockSize = 128, Keys = DBTableKeys.NoLogs | DBTableKeys.NoReplicate | DBTableKeys.Private, Type = typeof(InstanceTable))]
+    [InvokerGenerator]
     public sealed partial class Instance : DBItem, IInstance
     {
         private IPEndPoint ipEndPoint;

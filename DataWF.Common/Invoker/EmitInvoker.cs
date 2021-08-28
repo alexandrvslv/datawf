@@ -132,7 +132,11 @@ namespace DataWF.Common
         {
             var token = MetadataToken.GetToken(info);
             if (cache && cacheCtors.TryGetValue(token, out var invoker))
+            {
+                if (invoker.Info != info)
+                { throw new Exception($"Token {token.GetHashCode()} collision cache: {invoker.Info} - {info}"); }
                 return invoker;
+            }
             return cacheCtors[token] = new EmitConstructor(info);
         }
 
@@ -281,8 +285,8 @@ namespace DataWF.Common
         {
             if (type == null)
                 return null;
-
-            return Initialize(type, ctypes, cache)?.Create(cparams);
+            var ctorInvoker = Initialize(type, ctypes, cache);
+            return ctorInvoker?.Create(cparams);
         }
 
         public static object Invoke(Type type, string name, object item, params object[] parameters)
