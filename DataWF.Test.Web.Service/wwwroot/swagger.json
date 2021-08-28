@@ -36074,9 +36074,6 @@
           }
         }
       },
-      "ActionResult": {
-        "type": "object"
-      },
       "Address": {
         "required": [
           "Id"
@@ -36504,9 +36501,6 @@
             }
           }
         }
-      },
-      "CriticalFinalizerObject": {
-        "type": "object"
       },
       "Currency": {
         "type": "object",
@@ -36972,37 +36966,6 @@
             }
           }
         }
-      },
-      "DayOfWeek": {
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
-        "type": "integer",
-        "format": "int32",
-        "x-enumNames": [
-          "Sunday",
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday"
-        ],
-        "x-enumMembers": [
-          "Sunday",
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday"
-        ]
       },
       "DBGroupItem": {
         "type": "object",
@@ -38500,23 +38463,6 @@
           }
         }
       },
-      "EntityTagHeaderValue": {
-        "type": "object",
-        "properties": {
-          "Tag": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/StringSegment"
-              }
-            ],
-            "readOnly": true
-          },
-          "IsWeak": {
-            "type": "boolean",
-            "readOnly": true
-          }
-        }
-      },
       "GroupPermission": {
         "required": [
           "Id"
@@ -38712,10 +38658,6 @@
           "Company",
           "Project"
         ]
-      },
-      "IntPtr": {
-        "type": "object",
-        "additionalProperties": false
       },
       "LinkModel": {
         "type": "object",
@@ -38929,9 +38871,6 @@
             "type": "string"
           }
         }
-      },
-      "MarshalByRefObject": {
-        "type": "object"
       },
       "Message": {
         "required": [
@@ -39558,40 +39497,6 @@
           "Menu",
           "Table",
           "File"
-        ]
-      },
-      "SafeFileHandle": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/SafeHandleZeroOrMinusOneIsInvalid"
-          }
-        ]
-      },
-      "SafeHandle": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/CriticalFinalizerObject"
-          }
-        ],
-        "properties": {
-          "IsInvalid": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "IsClosed": {
-            "type": "boolean",
-            "readOnly": true
-          }
-        }
-      },
-      "SafeHandleZeroOrMinusOneIsInvalid": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/SafeHandle"
-          }
         ]
       },
       "Scheduler": {
@@ -40291,33 +40196,6 @@
           "Warning",
           "Error"
         ]
-      },
-      "StringSegment": {
-        "type": "object",
-        "properties": {
-          "Buffer": {
-            "type": "string",
-            "readOnly": true
-          },
-          "Offset": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "Length": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "Value": {
-            "type": "string",
-            "readOnly": true
-          },
-          "HasValue": {
-            "type": "boolean",
-            "readOnly": true
-          }
-        }
       },
       "Template": {
         "required": [

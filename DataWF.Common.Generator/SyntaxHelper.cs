@@ -90,12 +90,13 @@ namespace DataWF.Common.Generator
             {
                 if (!cacheAssemblySymbolTypes.TryGetValue(assembly, out var cache))
                 {
-                    var definedTypes = assembly.GetForwardedTypes();
+                    var definedTypes = assembly.GlobalNamespace.GetTypes();
                     cacheAssemblySymbolTypes[assembly] =
-                        cache = new Dictionary<string, INamedTypeSymbol>(definedTypes.Length, StringComparer.Ordinal);
+                        cache = new Dictionary<string, INamedTypeSymbol>(StringComparer.Ordinal);
                     foreach (var defined in definedTypes)
                     {
-                        cache[defined.Name] = defined;
+                        if(defined.DeclaredAccessibility == Accessibility.Public)
+                            cache[defined.Name] = defined;
                     }
                 }
 

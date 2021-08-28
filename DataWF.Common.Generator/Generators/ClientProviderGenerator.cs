@@ -88,7 +88,6 @@ namespace DataWF.Common.Generator
             var provider = GenUnit($"{Namespace}.{TypeSymbol.Name}.Gen.cs", GenProvider(), usings: new List<string>()
             {
                 "DataWF.Common",
-                "DataWF.WebClient.Common",
                 "System"
             });
 
@@ -630,21 +629,17 @@ namespace {Namespace}
 
         private INamedTypeSymbol GetReferenceType(JsonSchema definition)
         {
+            //System.Diagnostics.Debugger.Launch();
             var definitionName = GetDefinitionName(definition);
             if (!cacheReferences.TryGetValue(definitionName, out var type))
-            {
-                if (definitionName.Equals("DefaultItem", StringComparison.OrdinalIgnoreCase))
-                {
-                    type = Compilation.GetTypeByMetadataName(typeof(object).FullName);
-                }
-                else
+            {                
                 if (definitionName.Equals(nameof(TimeSpan), StringComparison.OrdinalIgnoreCase))
                 {
                     type = Compilation.GetTypeByMetadataName(typeof(TimeSpan).FullName);
                 }
                 else
                 {
-                    foreach (var reference in References)
+                    foreach (var reference in usingReferences)
                     {
                         try
                         {

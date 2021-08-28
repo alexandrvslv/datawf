@@ -17,6 +17,16 @@ namespace DataWF.WebService.Common
     {
         public void Apply(OpenApiSchema schema, SchemaFilterContext context)
         {
+            var name = context.Type.Name;
+
+            if (context.Type.IsBaseType(typeof(System.IO.Stream))
+                || context.Type.IsBaseType(typeof(Microsoft.AspNetCore.Mvc.FileStreamResult)))
+            {
+                schema.Type = "file";
+                schema.Properties.Clear();
+                return;
+            }
+
             if (!TypeHelper.IsSerializeAttribute(context.Type)
                 && !TypeHelper.IsEnumerable(context.Type)
                 && context.Type != typeof(object))
@@ -24,7 +34,7 @@ namespace DataWF.WebService.Common
                 schema.Type = "object";
                 schema.Properties.Clear();
                 schema.AdditionalPropertiesAllowed = true;
-
+                
                 OpenApiSchema baseSchema = GetBaseSchema(context);
                 if (baseSchema != null)
                 {
