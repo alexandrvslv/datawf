@@ -7,7 +7,7 @@ namespace DataWF.Common
     [Serializable]
     public struct ThreadSafeArrayEnumerator<T> : IEnumerator<T>, IEnumerator
     {
-        public static readonly ThreadSafeArrayEnumerator<T> Empty = new ThreadSafeArrayEnumerator<T>(null, -1);
+        public static readonly ThreadSafeArrayEnumerator<T> Empty = new ThreadSafeArrayEnumerator<T>(null, 0);
         private int i;
         private uint count;
         private T[] items;

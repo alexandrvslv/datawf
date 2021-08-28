@@ -81,11 +81,15 @@ namespace DataWF.Common.Generator
 
             foreach (var entry in cacheClients)
             {
+                var name = entry.Key;
+                var source = entry.Value;
+                source.Append($@"
+    }}");
                 var usings = cacheUsings[entry.Key];
-                var unit = GenUnit($"{Namespace}.{entry.Key}Gen.cs", entry.Value, usings.OrderBy(p => p));
+                GenUnit($"{Namespace}.{name}Gen.cs", source, usings.OrderBy(p => p));
             }
 
-            var provider = GenUnit($"{Namespace}.{TypeSymbol.Name}.Gen.cs", GenProvider(), usings: new List<string>()
+            GenUnit($"{Namespace}.{TypeSymbol.Name}.Gen.cs", GenProvider(), usings: new List<string>()
             {
                 "DataWF.Common",
                 "System"
@@ -182,24 +186,25 @@ namespace DataWF.Common.Generator
                     "System.Threading.Tasks",
                 };
             }
-            if (!cacheClients.TryGetValue(clientName, out var clientSyntax))
+            if (!cacheClients.TryGetValue(clientName, out var clientSource))
             {
-                clientSyntax = GenClient(clientName, usings);
+                cacheClients[clientName] =
+                    clientSource = GenClient(clientName, usings);
             }
 
-            GenOperation(clientSyntax, descriptor, usings);
+            GenOperation(clientSource, descriptor, usings);
         }
 
         private StringBuilder GenClient(string clientName, HashSet<string> usings)
         {
+            //System.Diagnostics.Debugger.Launch();
             var baseType = GetClientBaseType(clientName, usings, out var idKey, out var typeKey, out var typeId);
             var clientSource = new StringBuilder();
             clientSource.Append($@"
-namespace {Namespace} 
-{{
     public partial class {clientName}Client: {baseType}
     {{");
             GenClientMembers(clientSource, clientName, idKey, typeKey, typeId, usings);
+
             return clientSource;
         }
 
@@ -209,9 +214,6 @@ namespace {Namespace}
             document.Definitions.TryGetValue(clientName, out var clientSchema);
             var typeName = $"{clientName}Client";
 
-            clientSource.Append($@"
-            //public static {typeName} Instance {{get; private set;}}
-");
             var cache = clientSchema != null ? GetClientReferences(clientSchema) : new HashSet<RefField>();
 
             GenClientConstructor(clientSource, clientName, idKey, typeKey, typeId, cache);
@@ -229,12 +231,12 @@ namespace {Namespace}
         {
             var idName = idKey == null ? null : GetPropertyName(idKey);
             var typeName = typeKey == null ? null : GetPropertyName(typeKey);
-
+            var baseCtor = idKey == null ? "" : $@"{clientName}.{idName}Invoker.Default,
+                  {clientName}.{typeName}Invoker.Default,
+                  {typeId}";
             clientSource.Append($@"
         public {clientName}Client({ProviderName} provider)
-            : base({(clientName == "Instance" ? Namespace + "." : "")}{clientName}.{idName}Invoker.Default,
-                  {(clientName == "Instance" ? Namespace + "." : "")}{clientName}.{typeName}Invoker.Default,
-                  {typeId})
+            : base({baseCtor})
         {{
             Provider = provider;
             //Instance = Instance ?? this;");
@@ -292,7 +294,7 @@ namespace {Namespace}
         }}");
         }
 
-        private void GenOperation(StringBuilder clientSource, OpenApiOperationDescription descriptor, HashSet<string> usings)
+        private void GenOperation(StringBuilder source, OpenApiOperationDescription descriptor, HashSet<string> usings)
         {
             var operationName = GetOperationName(descriptor, out var clientName);
             var actualName = $"{operationName}Async";
@@ -301,35 +303,35 @@ namespace {Namespace}
             var returnType = GetReturningTypeCheck(descriptor, operationName, usings);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
 
-            clientSource.Append($@"
+            source.Append($@"
         public {(isOverride ? "override " : "")}async {returnType} {actualName}(");
-            GenOperationParameter(clientSource, descriptor, usings);
-            clientSource.Append($@")
+            GenOperationParameter(source, descriptor, usings);
+            source.Append($@")
         {{");
-            GenOperationBody(clientSource, actualName, descriptor, usings, isOverride);
-            clientSource.Append($@"
+            GenOperationBody(source, actualName, descriptor, usings, isOverride);
+            source.Append($@"
         }}");
         }
 
-        private void GenOperationParameter(StringBuilder clientSource, OpenApiOperationDescription descriptor, HashSet<string> usings)
+        private void GenOperationParameter(StringBuilder source, OpenApiOperationDescription descriptor, HashSet<string> usings)
         {
             foreach (var parameter in descriptor.Operation.Parameters)
             {
                 if (parameter.Kind == OpenApiParameterKind.Header)
                     continue;
-                clientSource.Append($"{GetTypeString(parameter, usings, "List")} {parameter.Name}, ");
+                source.Append($"{GetTypeString(parameter, usings, "List")} {parameter.Name}, ");
             }
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             var returnType = GetReturningType(descriptor, usings);
             if (bodyParameter == null && returnType.StartsWith("List<", StringComparison.Ordinal))
             {
-                clientSource.Append($"HttpPageSettings pages, ");
+                source.Append($"HttpPageSettings pages, ");
             }
-            clientSource.Append($"HttpJsonSettings settings, ");
-            clientSource.Append($"ProgressToken progressToken, ");
+            source.Append($"HttpJsonSettings settings, ");
+            source.Append($"ProgressToken progressToken");
         }
 
-        private void GenOperationBody(StringBuilder clientSource, string actualName, OpenApiOperationDescription descriptor, HashSet<string> usings, bool isOverride)
+        private void GenOperationBody(StringBuilder source, string actualName, OpenApiOperationDescription descriptor, HashSet<string> usings, bool isOverride)
         {
             var method = descriptor.Method.ToString().ToUpperInvariant();
             var responceSchema = (JsonSchema)null;
@@ -356,29 +358,29 @@ namespace {Namespace}
 
             var returnType = GetReturningType(descriptor, usings);
 
-            clientSource.Append($@"
+            source.Append($@"
             return await Request<{returnType}>(progressToken, HttpMethod.{method.ToInitcap()}, ""{path}"", ""{mediatype}"", settings");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             if (bodyParameter == null)
             {
                 if (returnType.StartsWith("List<", StringComparison.Ordinal))
                 {
-                    clientSource.Append(", pages");
+                    source.Append(", pages");
                 }
                 else
                 {
-                    clientSource.Append(", null");
+                    source.Append(", null");
                 }
             }
             else
             {
-                clientSource.Append($", {bodyParameter.Name}");
+                source.Append($", {bodyParameter.Name}");
             }
             foreach (var parameter in descriptor.Operation.Parameters.Where(p => p.Kind == OpenApiParameterKind.Path || p.Kind == OpenApiParameterKind.Query))
             {
-                clientSource.Append($", {parameter.Name}");
+                source.Append($", {parameter.Name}");
             }
-            clientSource.Append(").ConfigureAwait(false);");
+            source.Append(").ConfigureAwait(false);");
         }
 
         private bool GetOrGenDefinion(string key, out INamedTypeSymbol type)
@@ -601,14 +603,14 @@ namespace {Namespace}
 
         private JsonSchema GetReturningTypeSchema(OpenApiOperationDescription descriptor)
         {
-            return descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce.Schema != null
+            return descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce != null
                 ? responce.Schema : null;
         }
 
         private string GetReturningType(OpenApiOperationDescription descriptor, HashSet<string> usings)
         {
             var returnType = "string";
-            if (descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce.Schema != null)
+            if (descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce != null)
             {
                 returnType = $"{GetTypeString(responce.Schema, usings, "List")}";
             }
@@ -629,10 +631,9 @@ namespace {Namespace}
 
         private INamedTypeSymbol GetReferenceType(JsonSchema definition)
         {
-            //System.Diagnostics.Debugger.Launch();
             var definitionName = GetDefinitionName(definition);
             if (!cacheReferences.TryGetValue(definitionName, out var type))
-            {                
+            {
                 if (definitionName.Equals(nameof(TimeSpan), StringComparison.OrdinalIgnoreCase))
                 {
                     type = Compilation.GetTypeByMetadataName(typeof(TimeSpan).FullName);
@@ -651,7 +652,7 @@ namespace {Namespace}
                                     if (definition.EnumerationNames == null)
                                         continue;
                                     var defiEnumeration = definition.EnumerationNames;
-                                    var typeEnumeration = parsedType.GetMembers().Select(p => p.Name);
+                                    var typeEnumeration = parsedType.GetMembers().OfType<IFieldSymbol>().Select(p => p.Name);
                                     if (defiEnumeration.SequenceEqual(typeEnumeration))
                                     {
                                         type = parsedType;
@@ -665,8 +666,9 @@ namespace {Namespace}
                                         .OfType<IPropertySymbol>()
                                         .Where(p => !p.IsStatic && p.DeclaredAccessibility == Accessibility.Public)
                                         .Select(p => p.Name);
+                                    var defiCount = defiProperties.Count();
                                     var percent = (float)defiProperties.Intersect(typeProperties, StringComparer.Ordinal).Count();
-                                    percent /= (float)defiProperties.Count();
+                                    percent = defiCount == 0 ? 1 : percent / defiProperties.Count();
                                     if (percent > 0.5f)
                                     {
                                         type = parsedType;
@@ -696,8 +698,8 @@ namespace {Namespace}
 
             var @class = schema.IsEnumeration ? GenDefinitionEnum(schema, usings) : GenDefinitionClass(schema, usings);
 
-            //Context.AddSource(, SourceText.From(source.ToString(), Encoding.UTF8));
-            return GenUnit($"{Namespace}.{GetDefinitionName(schema)}DefenitionGen.cs", @class, usings.OrderBy(p => p));
+            var syntaxTree = GenUnit($"{Namespace}.{GetDefinitionName(schema)}DefenitionGen.cs", @class, usings.OrderBy(p => p));
+            return GenUnit(syntaxTree);
         }
 
         private StringBuilder GenDefinitionEnum(JsonSchema schema, HashSet<string> usings)
@@ -716,12 +718,6 @@ namespace {Namespace}
 
         private void GenDefinitionEnumMemebers(StringBuilder source, JsonSchema schema)
         {
-            //object[] names = null;
-            //if (schema.ExtensionData != null
-            //    && schema.ExtensionData.TryGetValue("x-enumNames", out var enumNames))
-            //{
-            //    names = (object[])enumNames;
-            //}
             object[] members = null;
             if (schema.ExtensionData != null
                 && schema.ExtensionData.TryGetValue("x-enumMembers", out var enumMembers))
@@ -732,17 +728,14 @@ namespace {Namespace}
             //var definitionName = GetDefinitionName(schema);
             foreach (var item in schema.Enumeration)
             {
-                var sitem = schema.EnumerationNames[i++];
+                var sitem = schema.EnumerationNames[i];
                 var memeber = sitem;
                 if (members != null && members.Length > i)
                     memeber = members[i]?.ToString();
-                //if (!Char.IsLetter(sitem[0]))
-                //{
-                //    sitem = definitionName[0] + sitem;
-                //}
+                i++;
                 source.Append($@"
         [EnumMember(Value = ""{ memeber }"")]
-        public {sitem} = {item};");
+        {sitem} = {item},");
             }
         }
 
@@ -1196,9 +1189,9 @@ namespace {Namespace}
                 : null;
         }
 
-        private string GetTypeString(JsonSchema schema, HashSet<string> usings, string listType = "SelectableList", bool nullDefault = false)
+        private string GetTypeString(JsonSchema schema, HashSet<string> usings, string listType = "SelectableList")
         {
-            var nullable = schema.IsNullableRaw ?? nullDefault;
+            var nullable = schema.IsNullableRaw ?? false;
             switch (schema.Type)
             {
                 case JsonObjectType.Integer:
@@ -1242,16 +1235,16 @@ namespace {Namespace}
                             return "string";
                     }
                 case JsonObjectType.Array:
-                    return $"{listType}<{GetTypeString(schema.Item, usings, listType, nullDefault)}>";
+                    return $"{listType}<{GetTypeString(schema.Item, usings, listType)}>";
                 case JsonObjectType.None:
                     if (schema.ActualTypeSchema != schema)
                     {
-                        return GetTypeString(schema.ActualTypeSchema, usings, listType, nullable);
+                        return GetTypeString(schema.ActualTypeSchema, usings, listType);
                     }
                     else if (schema is JsonSchemaProperty propertySchema)
                     {
                         return GetTypeString(propertySchema.AllOf.FirstOrDefault()?.Reference
-                            ?? propertySchema.AnyOf.FirstOrDefault()?.Reference, usings, listType, nullable);
+                            ?? propertySchema.AnyOf.FirstOrDefault()?.Reference, usings, listType);
                     }
                     else
                     {
@@ -1286,7 +1279,7 @@ namespace {Namespace}
             return "string";
         }
 
-        public INamedTypeSymbol GenUnit(string name, StringBuilder @class, IEnumerable<string> usings)
+        public SyntaxTree GenUnit(string name, StringBuilder @class, IEnumerable<string> usings)
         {
             var unitSource = new StringBuilder();
             foreach (var item in usings)
@@ -1305,7 +1298,13 @@ namespace {Namespace}
             var sourceText = SourceText.From(unitSource.ToString(), Encoding.UTF8);
             Context.AddSource(name, sourceText);
 
-            var syntaxTree = CSharpSyntaxTree.ParseText(sourceText, (CSharpParseOptions)Options);
+            return CSharpSyntaxTree.ParseText(sourceText, (CSharpParseOptions)Options);
+        }
+
+        public INamedTypeSymbol GenUnit(SyntaxTree syntaxTree)
+        {
+            if (syntaxTree == null)
+                return null;
 
             Compilation = Compilation.AddSyntaxTrees(syntaxTree);
             var unitSyntax = (CompilationUnitSyntax)syntaxTree.GetRoot();

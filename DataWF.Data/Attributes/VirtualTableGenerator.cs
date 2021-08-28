@@ -80,13 +80,7 @@ namespace DataWF.Data
             {
                 var virtualColumn = table.Columns[columnGenerator.ColumnName];
                 if (virtualColumn != null)
-                {
-                    var baseColumn = baseTable.Columns[columnGenerator.ColumnName];
-                    if (virtualColumn.DataType != columnGenerator.DataType)
-                    {
-                        table.Columns.Add(DBColumnFactory.CreateVirtual(baseColumn, table));
-                    }
-                    virtualColumn.RefreshVirtualColumn(baseColumn);
+                {                    
                     if (columnGenerator.DefaultValues != null && columnGenerator.DefaultValues.TryGetValue(Type, out var defaultValue))
                     {
                         virtualColumn.DefaultValue = defaultValue;

@@ -95,7 +95,7 @@ namespace DataWF.Common.Generator
                 baseName = $"{type.BaseType.Name}Controller";
             }
             var typeNamespace = type.ContainingNamespace.ToDisplayString();
-
+            var usingNamespace = typeNamespace == "DataWF.Data" ? "" : $"using {typeNamespace};";
             var logType = Compilation.GetTypeByMetadataName($"{typeNamespace}.{type.Name}Log")
                 ?? Compilation.GetTypeByMetadataName($"{type.BaseType.ContainingNamespace}.{type.BaseType.Name}Log")
                 ?? Compilation.GetTypeByMetadataName("DataWF.Data.DBItemLog");
@@ -128,7 +128,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using {typeNamespace};
+{usingNamespace}
 
 namespace {Namespace}
 {{");

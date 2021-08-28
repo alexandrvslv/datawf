@@ -35,6 +35,13 @@ namespace DataWF.Common.Generator
 
         private static readonly Dictionary<Assembly, Dictionary<string, Type>> cacheAssemblyTypes = new Dictionary<Assembly, Dictionary<string, Type>>();
         private static readonly Dictionary<IAssemblySymbol, Dictionary<string, INamedTypeSymbol>> cacheAssemblySymbolTypes = new Dictionary<IAssemblySymbol, Dictionary<string, INamedTypeSymbol>>();
+
+        public static void LaunchDebugger()
+        {
+            if (!System.Diagnostics.Debugger.IsAttached)
+                System.Diagnostics.Debugger.Launch();
+        }
+
         //https://stackoverflow.com/a/24768641
         public static string ToInitcap(this string str, params char[] separator)
         {

@@ -29,5 +29,4 @@
   <Target Name="SwaggerToFile" AfterTargets="AfterBuild">
     <Exec Command="dotnet swagger tofile --output $(ProjectDir)wwwroot\swagger.json $(OutputPath)$(AssemblyName).dll v1" />
   </Target>
-  <ProjectExtensions><VisualStudio><UserProperties wwwroot_4swagger_1json__JsonSchema="https://citation-file-format.github.io/1.2.0/schema.json" /></VisualStudio></ProjectExtensions>
 </Project>

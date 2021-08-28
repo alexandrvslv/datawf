@@ -11,6 +11,13 @@ namespace DataWF.Common.Generator
     /// </summary>
     internal class SyntaxReceiver : ISyntaxReceiver
     {
+        private readonly GeneratorInitializationContext context;
+
+        public SyntaxReceiver(ref GeneratorInitializationContext context)
+        {
+            this.context = context;
+        }
+
         public List<ClassDeclarationSyntax> IvokerCandidates { get; } = new List<ClassDeclarationSyntax>();
         public List<ClassDeclarationSyntax> TableCandidates { get; } = new List<ClassDeclarationSyntax>();
         public List<ClassDeclarationSyntax> SchemaCandidates { get; } = new List<ClassDeclarationSyntax>();
@@ -32,6 +39,8 @@ namespace DataWF.Common.Generator
 
                     foreach (var attribute in attributesName)
                     {
+                        if (context.CancellationToken.IsCancellationRequested)
+                            return;
                         if (string.Equals(attribute, "InvokerGenerator", StringComparison.Ordinal)
                             || string.Equals(attribute, "InvokerGeneratorAttribute", StringComparison.Ordinal))
                         {
@@ -67,15 +76,18 @@ namespace DataWF.Common.Generator
                             SchemaControllerCandidate.Add(classDeclarationSyntax);
                         }
                     }
-                }               
+                }
             }
             catch (Exception ex)
             {
+                SyntaxHelper.LaunchDebugger();
                 Console.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
-#if DEBUG
-                //System.Diagnostics.Debugger.Launch();
-#endif
             }
+        }
+
+        public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
+        {
+            throw new NotImplementedException();
         }
     }
 

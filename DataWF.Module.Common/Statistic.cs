@@ -17,9 +17,9 @@ namespace DataWF.Module.Common
         }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public long Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue<long>(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 

@@ -279,9 +279,6 @@ namespace DataWF.Data
             {
                 ParentTable.AddVirtual(this);
             }
-            if (Columns.Count > 0)
-                return;
-
             var type = typeof(T);
 
             foreach (DBColumnGroup group in ParentTable.ColumnGroups)
@@ -300,7 +297,7 @@ namespace DataWF.Data
             foreach (DBColumn column in ParentTable.Columns)
             {
                 var exist = Columns[column.Name];
-                if (exist == null)
+                if (exist == null || exist.DataType != column.DataType)
                 {
                     if (!(column.PropertyInvoker?.TargetType.IsAssignableFrom(type) ?? true))
                         continue;

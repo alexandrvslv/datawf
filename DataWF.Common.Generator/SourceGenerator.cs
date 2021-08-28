@@ -14,7 +14,7 @@ namespace DataWF.Common.Generator
         public void Initialize(GeneratorInitializationContext context)
         {
             // Register a syntax receiver that will be created for each generation pass
-            context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+            context.RegisterForSyntaxNotifications(() => new SyntaxReceiver(ref context));
         }
 
         public void Execute(GeneratorExecutionContext context)

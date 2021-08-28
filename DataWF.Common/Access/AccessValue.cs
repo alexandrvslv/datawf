@@ -12,7 +12,7 @@ namespace DataWF.Common
     public class AccessValue : IAccessValue, IBinarySerializable//, IEnumerable<AccessItem>
     {
         public static IAccessProvider Provider = new AccessProviderStub { Groups = new IdCollection<IGroupIdentity>() };
-
+        public static readonly AccessValue Empty = new AccessValue();
         public static implicit operator AccessValue(byte[] value)
         {
             return new AccessValue(value);
