@@ -47,44 +47,36 @@ namespace DataWF.Module.Flow
 
         public QQuery CreateRefsFilter(object id)
         {
-            var query = new QQuery("", Schema.DocumentReference);
-            query.Parameters.Add(CreateRefsParam(id));
-            return query;
+            return Schema.DocumentReference.Query().Where(p => CreateRefsParam(p, id));
         }
 
-        public QParam CreateRefsParam(object id)
+        public void CreateRefsParam(QParam param, object id)
         {
-            var documentReferenceTable = (DocumentReferenceTable<DocumentReference>)Schema.GetTable<DocumentReference>();
-            var qrefing = new QQuery(string.Format("select {0} from {1} where {2} = {3}",
-                                                   documentReferenceTable.DocumentIdKey.Name,
-                                                   documentReferenceTable.Name,
-                                                   documentReferenceTable.ReferenceIdKey.Name,
-                                                   id));
-            var qrefed = new QQuery(string.Format("select {2} from {1} where {0} = {3}",
-                                                  documentReferenceTable.DocumentIdKey.Name,
-                                                  documentReferenceTable.Name,
-                                                  documentReferenceTable.ReferenceIdKey.Name,
-                                                  id));
+            //string.Format("select {0} from {1} where {2} = {3}"
+            var qrefing = Schema.DocumentReference.Query()
+                  .Column(Schema.DocumentReference.DocumentIdKey)
+                  .Where(Schema.DocumentReference.ReferenceIdKey, id);
+            //string.Format("select {2} from {1} where {0} = {3}",
+            var qrefed = Schema.DocumentReference.Query()
+                  .Column(Schema.DocumentReference.ReferenceIdKey)
+                  .Where(Schema.DocumentReference.DocumentIdKey, id);
 
-            var param = new QParam();
-            param.Parameters.Add(new QParam(LogicType.And, IdKey, CompareType.In, qrefed));
-            param.Parameters.Add(new QParam(LogicType.Or, IdKey, CompareType.In, qrefing));
-            return param;
+            param.And(IdKey, CompareType.In, qrefed)
+                 .Or(IdKey, CompareType.In, qrefing);
         }
 
         public void LoadDocuments(User user)
         {
-            var worksTable = (DocumentWorkTable)Schema.GetTable<DocumentWork>();
-            var qWork = new QQuery(string.Empty, worksTable);
-            qWork.Columns.Add(new QColumn(worksTable.DocumentIdKey));
-            qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, user);
+            var worksTable = Schema.DocumentWork;
+            var qWork = worksTable.Query(DBLoadParam.Synchronize).Column(worksTable.DocumentIdKey)
+                .Where(worksTable.IsCompleteKey, CompareType.Equal, false)
+                .And(worksTable.UserIdKey, CompareType.Equal, user);
 
-            var qDocs = new QQuery(string.Empty, this);
-            qDocs.BuildParam(IdKey, CompareType.In, qWork);
+            var qDocs = this.Query(DBLoadParam.Synchronize)
+                .Where(IdKey, CompareType.In, qWork);
 
-            Load(qDocs, DBLoadParam.Synchronize);
-            worksTable.Load(qWork, DBLoadParam.Synchronize);
+            Load(qDocs);
+            worksTable.Load(qWork);
         }
 
         public static event DocumentSaveDelegate Saved;

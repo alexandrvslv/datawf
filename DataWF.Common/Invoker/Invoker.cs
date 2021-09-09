@@ -11,7 +11,7 @@ using System.Text.Json;
 namespace DataWF.Common
 {
 
-    public abstract class Invoker<T, V> : IInvoker<T, V>, IValuedInvoker<V>, IInvokerExtension
+    public abstract class Invoker<T, V> : IInvoker<T, V>, IValuedInvoker<V>
     {
         public Invoker()
         {
@@ -49,68 +49,6 @@ namespace DataWF.Common
         public override string ToString()
         {
             return $"{typeof(T).Name}.{Name} {typeof(V).Name}";
-        }
-
-        public virtual IListIndex CreateIndex(bool concurrent)
-        {
-            return ListIndexFactory.Create<T, V>(this, concurrent);
-        }
-
-        public virtual IListIndex CreateIndex<TT>(bool concurrent)
-        {
-            return ListIndexFactory.Create<TT, V>(this, concurrent);
-        }
-
-        public virtual IQueryParameter CreateParameter(Type type)
-        {
-            type = type ?? typeof(T);
-            return (IQueryParameter)Activator.CreateInstance(typeof(QueryParameter<,>).MakeGenericType(type, typeof(V)), (IInvoker)this);
-        }
-
-        public virtual IQueryParameter CreateParameter(Type type, CompareType compare, object value)
-        {
-            type = type ?? typeof(T);
-            var parameter = CreateParameter(type);
-            parameter.Comparer = compare;
-            parameter.Value = value;
-            return parameter;
-        }
-
-        public virtual IQueryParameter CreateParameter(Type type, LogicType logic, CompareType compare, object value = null, QueryGroup group = QueryGroup.None)
-        {
-            type = type ?? typeof(T);
-            var parameter = CreateParameter(type);
-            parameter.Logic = logic;
-            parameter.Comparer = compare;
-            parameter.Value = value;
-            parameter.Group = group;
-            return parameter;
-        }
-
-        public virtual IQueryParameter<TT> CreateParameter<TT>()
-        {
-            return CreateParameter<TT>(CompareType.Equal, null);
-        }
-
-        public virtual IQueryParameter<TT> CreateParameter<TT>(CompareType compare, object value)
-        {
-            return new QueryParameter<TT, V> { Invoker = (IInvoker<TT, V>)this, Comparer = compare, Value = value };
-        }
-
-        public virtual IQueryParameter<TT> CreateParameter<TT>(LogicType logic, CompareType compare, object value = null, QueryGroup group = QueryGroup.None)
-        {
-            return new QueryParameter<TT, V> { Logic = logic, Invoker = (IInvoker<TT, V>)this, Comparer = compare, Value = value, Group = group };
-        }
-
-        public virtual IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
-        {
-            type = type ?? typeof(T);
-            return (InvokerComparer)Activator.CreateInstance(typeof(InvokerComparer<,>).MakeGenericType(type, typeof(V)), (IInvoker)this, direction);
-        }
-
-        public virtual IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
-        {
-            return new InvokerComparer<TT, V>((IInvoker<TT, V>)this, direction);
         }
 
         public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)

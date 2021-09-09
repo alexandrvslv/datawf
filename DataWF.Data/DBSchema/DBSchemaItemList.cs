@@ -85,7 +85,7 @@ namespace DataWF.Data
         public override bool Remove(T item)
         {
             bool flag = base.Remove(item);
-            DBService.OnDBSchemaChanged(item, GetRemoveType(item));
+            ((DBSchema)Schema)?.OnChanged(item, GetRemoveType(item));
             return flag;
         }
 
@@ -98,8 +98,7 @@ namespace DataWF.Data
             var index = base.Add(item);
             if (index > -1)
             {
-                if (Schema != null)
-                    DBService.OnDBSchemaChanged(item, GetInsertType(item));
+                ((DBSchema)Schema)?.OnChanged(item, GetInsertType(item));
             }
             return index;
         }

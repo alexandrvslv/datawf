@@ -40,7 +40,7 @@ namespace DataWF.Data
             get => GetValue<byte[]>(Table.DataKey);
             set => SetValue(value, Table.DataKey);
         }
-
+        
         [Column("file_size")]
         public int? Size
         {

@@ -24,30 +24,49 @@ using System.ComponentModel;
 
 namespace DataWF.Data
 {
-    public class DBComparerList : IComparer, IComparer<DBItem>
+    public class DBComparerList : DBComparerList<DBItem>
     {
-        protected List<IComparer> comparers;
+        public DBComparerList(params DBColumn[] columns) : base(columns)
+        {
+        }
 
-        public List<IComparer> Comparers
+        public DBComparerList(List<IComparer<DBItem>> comparers) : base(comparers)
+        {
+        }
+
+        public DBComparerList(DBTable table, params string[] columns) : base(table, columns)
+        {
+        }
+
+        public DBComparerList(DBSchema schema, string table, params string[] columns) : base(schema, table, columns)
+        {
+        }
+    }
+
+    public class DBComparerList<T> : IComparer, IComparer<T> where T : DBItem
+    {
+        protected List<IComparer<T>> comparers;
+
+        public List<IComparer<T>> Comparers
         {
             get { return comparers; }
         }
 
         public DBComparerList(params DBColumn[] columns)
         {
-            comparers = new List<IComparer>();
+            comparers = new List<IComparer<T>>();
             foreach (var col in columns)
-                comparers.Add(col.CreateComparer());
+                comparers.Add(col.CreateComparer<T>());
         }
 
-        public DBComparerList(string table, params string[] columns)
-            : this(DBService.Schems.ParseTable(table), columns)
+        public DBComparerList(DBSchema schema, string table, params string[] columns)
+            : this(schema.ParseTable(table), columns)
         {
         }
 
         public DBComparerList(DBTable table, params string[] columns)
         {
-            comparers = new List<IComparer>();
+            comparers = new List<IComparer<T>>();
             foreach (string column in columns)
             {
                 var dir = ListSortDirection.Ascending;
@@ -56,12 +75,12 @@ namespace DataWF.Data
                 string name = column.Trim().IndexOf(" ", StringComparison.Ordinal) > 0
                                     ? column.Substring(0, column.IndexOf(" ", StringComparison.Ordinal))
                                     : column;
-                var dbColumn = table.ParseColumn(name);
-                comparers.Add(dbColumn.CreateComparer(dir));
+                var dbColumn = table.GetColumn(name);
+                comparers.Add(dbColumn.CreateComparer<T>(dir));
             }
         }
 
-        public DBComparerList(List<IComparer> comparers)
+        public DBComparerList(List<IComparer<T>> comparers)
         {
             this.comparers = comparers;
         }
@@ -70,14 +89,14 @@ namespace DataWF.Data
 
         public int Compare(object x, object y)
         {
-            return Compare(x as DBItem, y as DBItem);
+            return Compare(x as T, y as T);
         }
 
         #endregion
 
         #region IComparer<RowSetting> Members
 
-        public int Compare(DBItem x, DBItem y)
+        public int Compare(T x, T y)
         {
             if ((x == null && y == null) || (x != null && x.Equals(y)))
                 return 0;
@@ -93,13 +112,13 @@ namespace DataWF.Data
         #endregion
         public override bool Equals(object obj)
         {
-            if (obj is DBComparerList)
+            if (obj is DBComparerList<T> listComparer)
             {
-                if (((DBComparerList)obj).comparers.Count == comparers.Count)
+                if (listComparer.comparers.Count == comparers.Count)
                 {
                     for (int i = 0; i < comparers.Count; i++)
                     {
-                        if (!((DBComparerList)obj).comparers[i].Equals(comparers[i]))
+                        if (!listComparer.comparers[i].Equals(comparers[i]))
                             return false;
                     }
                     return true;

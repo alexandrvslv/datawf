@@ -37,14 +37,6 @@ namespace DataWF.Data
         private IDbCommand command;
         private IDbTransaction transaction;
 
-        public DBTransaction()
-            : this((IUserIdentity)null)
-        { }
-
-        public DBTransaction(IUserIdentity caller)
-            : this(DBService.Schems.DefaultSchema, caller)
-        { }
-
         public DBTransaction(IDBSchemaItem schemaItem, IUserIdentity caller = null, bool noTransaction = false)
             : this(schemaItem.Schema, caller, noTransaction)
         {

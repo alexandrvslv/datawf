@@ -284,15 +284,15 @@ namespace DataWF.Module.Common
         private (Company company, Department department, Position position) CheckValues(DBTransaction transaction)
         {
             var schema = Schema;
-            var companies = (CompanyTable)schema.GetTable<Counterpart.Company>();
-            var departments = (DepartmentTable)schema.GetTable<Common.Department>();
-            var positions = (PositionTable)schema.GetTable<Common.Position>();
-            var users = (UserTable)schema.GetTable<Common.User>();
+            var companies = schema.Company;
+            var departments = schema.Department;
+            var positions = schema.Position;
+            var users = schema.User;
 
-            companies.LoadCache("", DBLoadParam.Referencing, transaction);
-            departments.LoadCache("", DBLoadParam.Referencing, transaction);
-            positions.LoadCache("", DBLoadParam.Referencing, transaction);
-            users.LoadCache("", DBLoadParam.Referencing, transaction);
+            companies.Load(transaction: transaction);
+            departments.Load(transaction: transaction);
+            positions.Load(transaction: transaction);
+            users.Load(transaction: transaction);
 
             //var userTable = 
 
@@ -302,36 +302,30 @@ namespace DataWF.Module.Common
             }
 
             var company = (Company)null;
-            using (var queryCompany = new QQuery(companies))
-            {
-                queryCompany.BuildNameParam(nameof(Customer.ShortName), CompareType.Equal, $"{Company}");
-                queryCompany.BuildNameParam(nameof(Customer.Name), CompareType.Equal, $"{Company}").Logic = LogicType.Or;
-                company = companies.Select(queryCompany).FirstOrDefault();
-            }
+            var queryCompany = companies.Query()
+                .Where(nameof(Customer.ShortName), CompareType.Equal, $"{Company}")
+                .Or(nameof(Customer.Name), CompareType.Equal, $"{Company}");
+            company = companies.Select(queryCompany).FirstOrDefault();
             if (company == null)
             {
                 throw new ArgumentException($"Company with specified name: {Company} not found!", nameof(Company));
             }
 
             var department = (Department)null;
-            using (var queryDepartment = new QQuery(departments))
-            {
-                queryDepartment.BuildParam(departments.CompanyIdKey, company);
-                queryDepartment.BuildNameParam(nameof(Common.Department.Name), CompareType.Equal, $"{Department}");
-                department = departments.Select(queryDepartment).FirstOrDefault();
-            }
+            var queryDepartment = departments.Query()
+                .Where(departments.CompanyIdKey, company)
+                .And(nameof(Common.Department.Name), CompareType.Equal, $"{Department}");
+            department = departments.Select(queryDepartment).FirstOrDefault();
             if (department == null)
             {
                 throw new ArgumentException($"Department with specified name: {Department} not found!", nameof(Department));
             }
 
             var position = (Position)null;
-            using (var queryPosition = new QQuery(positions))
-            {
-                queryPosition.BuildParam(positions.DepartmentIdKey, department);
-                queryPosition.BuildNameParam(nameof(Common.Position.Name), CompareType.Equal, $"{Position}");
-                position = positions.Select(queryPosition).FirstOrDefault();
-            }
+            var queryPosition = positions.Query(DBLoadParam.None)
+                .Where(positions.DepartmentIdKey, department)
+                .And(nameof(Common.Position.Name), CompareType.Equal, $"{Position}");
+            position = positions.Select(queryPosition).FirstOrDefault();
             if (position == null)
             {
                 throw new ArgumentException($"Position with specified name: {Position} not found!", nameof(Position));

@@ -110,7 +110,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBItem BaseItem
         {
-            get => baseItem ?? (baseItem = BaseTable.PrimaryKey.LoadByKey(GetValue(LogTable.BaseKey)) ?? DBItem.EmptyItem);
+            get => baseItem ??= (BaseTable.PrimaryKey.Load(GetValue(LogTable.BaseKey)).FirstOrDefault() ?? DBItem.EmptyItem);
             set
             {
                 baseItem = value;
@@ -134,7 +134,7 @@ namespace DataWF.Data
 
         public virtual DBUser GetUser()
         {
-            var reg = (DBUserReg)UserRegTable?.LoadItemById(UserRegId);
+            var reg = UserRegTable?.LoadById<DBUserReg>(UserRegId);
             return reg?.DBUser;
         }
 
@@ -154,7 +154,7 @@ namespace DataWF.Data
             await RedoFile(transaction);
             if (BaseItem.IsChanged)
             {
-                await BaseTable.SaveItem(BaseItem, transaction);
+                await BaseTable.Save(BaseItem, transaction);
             }
             if (baseItem != null && LogType == DBLogType.Delete)
             {
@@ -199,16 +199,15 @@ namespace DataWF.Data
 
         public DBItemLog GetPrevius(DBTransaction transaction)
         {
-            using (var query = new QQuery("", (DBTable)LogTable))
-            {
-                query.Columns.Add(new QFunc(QFunctionType.max, new[] { new QColumn(LogTable.PrimaryKey) }));
-                query.BuildParam(LogTable.PrimaryKey, CompareType.Less, LogId);
-                query.BuildParam(LogTable.BaseKey, CompareType.Equal, GetValue(LogTable.BaseKey));
-                //query.Orders.Add(new QOrder(LogTable.PrimaryKey));
+            var query = LogTable.Query<DBItemLog>()
+                .Column(QFunctionType.max, LogTable.PrimaryKey)
+                .Where(LogTable.PrimaryKey, CompareType.Less, LogId)
+                .And(LogTable.BaseKey, CompareType.Equal, GetValue(LogTable.BaseKey));
+            //from sss in indexer 
+            //query.Orders.Add(new QOrder(LogTable.PrimaryKey));
 
-                var id = transaction.ExecuteQuery(query.Format());
-                return (DBItemLog)LogTable.LoadItemById(id, DBLoadParam.Load, null, transaction);
-            }
+            var id = transaction.ExecuteQuery(query.Format());
+            return LogTable.LoadById<DBItemLog>(id, DBLoadParam.Load, transaction);
         }
 
         public override Task SaveReferenced(DBTransaction transaction)
@@ -242,7 +241,7 @@ namespace DataWF.Data
 
         private async Task UndoReferencing(DBTransaction transaction, DBItem baseItem)
         {
-            foreach (var reference in BaseTable.GetPropertyReferencing(baseItem.GetType()))
+            foreach (var reference in BaseTable.GetReferencingByProperty(baseItem.GetType()))
             {
                 var referenceTable = reference.ReferenceTable;
                 var referenceColumn = reference.ReferenceColumn;
@@ -250,18 +249,18 @@ namespace DataWF.Data
                 if (referenceTable?.LogTable == null || referenceColumn?.LogColumn == null)
                     continue;
                 var stack = new HashSet<object>();
-                using (var query = new QQuery((DBTable)referenceTable.LogTable))
+                var query = referenceTable.LogTable.Query<DBItemLog>()
+                    .Where(referenceColumn.LogColumn, CompareType.Equal, BaseId)
+                    .And(referenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete)
+                    .OrderBy(referenceTable.LogTable.DateCreateKey);
+
+                var logItems = referenceTable.LogTable.Load<DBItemLog>(query).OrderByDescending(p => p.DateCreate);
+                foreach (var refed in logItems)
                 {
-                    query.BuildParam(referenceColumn.LogColumn, CompareType.Equal, BaseId);
-                    query.BuildParam(referenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
-                    var logItems = referenceTable.LogTable.LoadItems(query).Cast<DBItemLog>().OrderByDescending(p => p.DateCreate);
-                    foreach (var refed in logItems)
+                    if (!stack.Contains(refed.BaseId) && Math.Abs((DateCreate - refed.DateCreate).TotalMinutes) < 5)
                     {
-                        if (!stack.Contains(refed.BaseId) && Math.Abs((DateCreate - refed.DateCreate).TotalMinutes) < 5)
-                        {
-                            stack.Add(refed.BaseId);
-                            await refed.Undo(transaction);
-                        }
+                        stack.Add(refed.BaseId);
+                        await refed.Undo(transaction);
                     }
                 }
             }
@@ -278,19 +277,17 @@ namespace DataWF.Data
                 {
                     if (column.ReferenceTable.IsLoging)
                     {
-                        using (var query = new QQuery((DBTable)column.ReferenceTable.LogTable))
+                        var query = column.ReferenceTable.LogTable.Query<DBItemLog>()
+                            .Where(column.ReferenceTable.LogTable.BaseKey, CompareType.Equal, BaseItem.GetValue(column))
+                            .And(column.ReferenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
+                        var logItem = column.ReferenceTable.LogTable.Load<DBItemLog>(query).OrderByDescending(p => p.DateCreate).FirstOrDefault();
+                        if (logItem != null)
                         {
-                            query.BuildParam(column.ReferenceTable.LogTable.BaseKey, CompareType.Equal, BaseItem.GetValue(column));
-                            query.BuildParam(column.ReferenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
-                            var logItem = column.ReferenceTable.LogTable.LoadItems(query).Cast<DBItemLog>().OrderByDescending(p => p.DateCreate).FirstOrDefault();
-                            if (logItem != null)
-                            {
-                                await logItem.Undo(transaction);
-                            }
-                            else
-                            {
-                                BaseItem.SetValue(null, column);
-                            }
+                            await logItem.Undo(transaction);
+                        }
+                        else
+                        {
+                            BaseItem.SetValue(null, column);
                         }
                     }
                     else

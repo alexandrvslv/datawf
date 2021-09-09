@@ -32,7 +32,7 @@ namespace DataWF.Module.Common
         [XmlIgnore]
         public DBItem Item
         {
-            get => cacheTarget ?? (cacheTarget = (Table?.LoadItemById(ItemId) ?? DBItem.EmptyItem));
+            get => cacheTarget ?? (cacheTarget = (Table?.LoadById<DBItem>(ItemId) ?? DBItem.EmptyItem));
             set
             {
                 cacheTarget = value;
@@ -52,7 +52,7 @@ namespace DataWF.Module.Common
         [XmlIgnore]
         public DBItemLog LogItem
         {
-            get => cacheLogItem ?? (cacheLogItem = (DBItemLog)LogTable?.LoadItemById(LogId));
+            get => cacheLogItem ?? (cacheLogItem = LogTable?.LoadById<DBItemLog>(LogId));
             set
             {
                 cacheLogItem = value;

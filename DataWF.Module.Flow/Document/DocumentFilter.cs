@@ -88,7 +88,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramDate == null)
                     {
-                        paramDate = QDoc.BuildPropertyParam(nameof(Document.DocumentDate), CompareType.Between, Date);
+                        paramDate = QDoc.BuildParam(nameof(Document.DocumentDate), CompareType.Between, Date);
                         paramDate.IsDefault = true;
                     }
                     else
@@ -362,7 +362,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramTitle == null)
                     {
-                        paramTitle = QDoc.BuildNameParam(nameof(Document.Title), CompareType.Like, $"%{Title}%");
+                        paramTitle = QDoc.CreateNameParam(nameof(Document.Title), CompareType.Like, $"%{Title}%");
                         paramTitle.IsDefault = true;
                     }
                     else

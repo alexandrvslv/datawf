@@ -99,7 +99,7 @@ namespace DataWF.Common
             }
         }
 
-        public static bool IsInterface(Type type, Type interfaceType)
+        public static bool IsInterface(this Type type, Type interfaceType)
         {
             return interfaceType.IsAssignableFrom(type);
         }
@@ -150,22 +150,22 @@ namespace DataWF.Common
                : type;
         }
 
-        public static bool IsDictionary(Type type)
+        public static bool IsDictionary(this Type type)
         {
             return IsInterface(type, typeof(IDictionary)) && type != typeof(byte[]);
         }
 
-        public static bool IsList(Type type)
+        public static bool IsList(this Type type)
         {
             return IsInterface(type, typeof(IList)) && type != typeof(byte[]);
         }
 
-        public static bool IsEnumerable(Type type)
+        public static bool IsEnumerable(this Type type)
         {
             return IsInterface(type, typeof(IEnumerable)) && type != typeof(string) && type != typeof(byte[]);
         }
 
-        public static bool IsCollection(Type type)
+        public static bool IsCollection(this Type type)
         {
             return IsInterface(type, typeof(ICollection)) && type != typeof(byte[]);
         }

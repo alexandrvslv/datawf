@@ -25,34 +25,7 @@ namespace DataWF.Common
         {
             target.Expand = value;
         }
-        public override IQueryParameter CreateParameter(Type type)
-        {
-            var parameter = base.CreateParameter(type);
-            parameter.Value = true;
-            parameter.IsGlobal = true;
-            parameter.FormatIgnore = true;
-            return parameter;
-        }
-
-        public override IQueryParameter<TT> CreateParameter<TT>()
-        {
-            var parameter = base.CreateParameter<TT>();
-            parameter.Value = true;
-            parameter.IsGlobal = true;
-            parameter.FormatIgnore = true;
-            return parameter;
-        }
-
-        public override IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
-        {
-            type = type ?? typeof(T);
-            return (InvokerComparer)Activator.CreateInstance(typeof(TreeComparer<>).MakeGenericType(type));
-        }
-
-        public override IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
-        {
-            return (InvokerComparer<TT>)CreateComparer(typeof(TT), direction);
-        }
+       
     }
 
     public class TreeInvoker : TreeInvoker<IGroup>

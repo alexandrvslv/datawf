@@ -133,20 +133,20 @@ namespace DataWF.Module.Common
 
         public IEnumerable<UserReg> GetOld(User User)
         {
-            var regTable = (UserRegTable)Schema.GetTable<UserReg>();
-            var filter = new QQuery(string.Empty, regTable);
-            filter.BuildParam(regTable.UserIdKey, CompareType.Equal, User.PrimaryId);
-            filter.BuildParam(regTable.RegTypeKey, CompareType.Equal, UserRegType.Password);
-            filter.Orders.Add(new QOrder(regTable.PrimaryKey) { Direction = ListSortDirection.Descending });
-            return regTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize);
+            var regTable = Schema.UserReg;
+            var query = regTable.Query(DBLoadParam.Load | DBLoadParam.Synchronize)
+                .Where(regTable.UserIdKey, CompareType.Equal, User.PrimaryId)
+                .And(regTable.RegTypeKey, CompareType.Equal, UserRegType.Password)
+                .OrderBy(regTable.PrimaryKey, ListSortDirection.Descending);
+            return regTable.Load(query);
         }
 
         public async Task<User> GetUser(string login, string passoword)
         {
-            var regTable = (UserRegTable)Schema.GetTable<UserReg>();
-            var query = new QQuery(string.Empty, this);
-            query.BuildParam(LoginKey, CompareType.Equal, login);
-            query.BuildParam(PasswordKey, CompareType.Equal, passoword);
+            var regTable = Schema.UserReg;
+            var query = Query(DBLoadParam.Load)
+                .Where(LoginKey, CompareType.Equal, login)
+                .And(PasswordKey, CompareType.Equal, passoword);
             var user = Select(query).FirstOrDefault();
             if (user != null)
             {

@@ -139,14 +139,14 @@ namespace DataWF.Data
 
         public DBColumn ParseLogProperty(string name)
         {
-            return TargetTable?.ParseProperty(name)?.LogColumn;
+            return TargetTable?.GetColumnByProperty(name)?.LogColumn;
         }
 
         public DBColumn ParseLogProperty(string name, ref DBColumn column)
         {
             if (column != DBColumn.EmptyKey)
                 return column;
-            return column = TargetTable?.ParseProperty(name)?.LogColumn;
+            return column = TargetTable?.GetColumnByProperty(name)?.LogColumn;
         }
 
         public IEnumerable<DBColumn> GetLogColumns()
@@ -160,7 +160,7 @@ namespace DataWF.Data
             }
         }
 
-        public override async Task<bool> SaveItem(DBItem item, DBTransaction transaction)
+        public override async Task<bool> Save(DBItem item, DBTransaction transaction)
         {
             if ((item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete
                 && item is DBItemLog logItem && FileOIDKey != null
@@ -170,8 +170,7 @@ namespace DataWF.Data
                 var current = logItem.BaseItem == DBItem.EmptyItem ? null : logItem.BaseItem.GetValue((DBColumn<long?>)FileOIDKey.TargetColumn);
                 if (lob != null && lob != current)
                 {
-                    var qquery = new QQuery(this);
-                    qquery.BuildParam(FileOIDKey, lob);
+                    var qquery = this.Query().Where(FileOIDKey, lob);
                     if (!Load(qquery).Any(p => p != item))
                     {
                         try
@@ -189,7 +188,7 @@ namespace DataWF.Data
                     }
                 }
             }
-            return await base.SaveItem(item, transaction);
+            return await base.Save(item, transaction);
         }
 
         public override void RemoveDeletedColumns()

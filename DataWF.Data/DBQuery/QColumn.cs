@@ -27,70 +27,45 @@ using System.Linq;
 
 namespace DataWF.Data
 {
-    public class QColumn : QItem, IInvokerExtension
+    public sealed class QColumn : QItem
     {
-        protected DBColumn columnn;
+        private DBColumn column;
         private object temp;
-        protected string columnName;
-        private string prefix;
+        private string columnAlias;
 
         public QColumn()
         {
+            IsReference = true;
         }
 
-        public QColumn(string name)
-            : base()
-        {
-            columnName = name;
-        }
-
-        public QColumn(DBColumn column)
+        public QColumn(DBColumn column) : this()
         {
             Column = column;
         }
 
-        public string ColumnName
+        public override string Name
         {
-            get => columnName;
-            set
-            {
-                if (columnName != value)
-                {
-                    columnName = value;
-                    columnn = null;
-                }
-                OnPropertyChanged();
-            }
+            get => Column?.Name;
+            set { }
         }
 
-        public virtual DBColumn Column
+        public override IDBTable Table
         {
-            get => columnn ?? (columnName != null ? (base.Table?.ParseColumn(columnName) ?? DBService.Schems.ParseColumn(columnName)) : null);
+            get => Column?.Table;
+            set { }
+        }
+
+        public DBColumn Column
+        {
+            get => column;
             set
             {
                 if (Column != value)
                 {
-                    ColumnName = value?.Name;
-                    //prefix = value.Table.Code;
-                    columnn = value;
+                    Name = value?.Name;
+                    column = value;
                 }
             }
-        }
-
-        public IDBTable BaseTable
-        {
-            get => Table.IsVirtual ? Table.ParentTable : Table;
-        }
-
-        public override DBTable Table
-        {
-            get => (DBTable)(Column?.Table ?? base.Table);
-            set { }
-        }
-
-        public QTable QTable
-        {
-            get => Query.Tables.FirstOrDefault(p => p.BaseTable == BaseTable);
         }
 
         public string FullName
@@ -98,15 +73,15 @@ namespace DataWF.Data
             get => $"{Table}.{Column}";
         }
 
-        public string Prefix
+        public string ColumnAlias
         {
-            get => prefix ?? QTable?.Alias;
+            get => columnAlias;
             set
             {
-                if (prefix != value)
+                if (columnAlias != value)
                 {
-                    prefix = value;
-                    OnPropertyChanged(nameof(Prefix));
+                    columnAlias = value;
+                    //OnPropertyChanged(nameof(Prefix));
                 }
             }
         }
@@ -115,28 +90,28 @@ namespace DataWF.Data
 
         public override void Dispose()
         {
-            columnn = null;
+            column = null;
             base.Dispose();
         }
 
         public override string Format(IDbCommand command = null)
         {
             if (Column == null)
-                return ColumnName;
+                return Name;
             else if (command != null
                 && (Column.ColumnType == DBColumnTypes.Internal
                 || Column.ColumnType == DBColumnTypes.Expression
                 || Column.ColumnType == DBColumnTypes.Code))
                 return string.Empty;
             else if (Column.ColumnType == DBColumnTypes.Query && Column.Table.Type != DBTableType.View)
-                return $"({Column.Query}) as {ColumnName}";
+                return $"({Column.Query}) as {Name}";
             else
-                return $"{(Prefix != null ? (Prefix + ".") : "")}{ColumnName}{(alias != null ? (" as " + alias) : "")}";
+                return $"{(TableAlias != null ? (TableAlias + ".") : "")}{Name}{(ColumnAlias != null ? ($" as {ColumnAlias}") : "")}";
         }
 
-        public override object GetValue(DBItem row)
+        public override object GetValue(DBItem item)
         {
-            return temp ?? Column.GetValue(row);
+            return temp ?? (item == null ? null : Column.GetValue(item));
         }
 
         public override string ToString()
@@ -144,56 +119,14 @@ namespace DataWF.Data
             return Column == null ? base.ToString() : Column.ToString();
         }
 
-        public IListIndex CreateIndex(bool concurrent)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IListIndex CreateIndex<T>(bool concurrent)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter CreateParameter(Type type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter<TT> CreateParameter<TT>()
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter CreateParameter(Type type, CompareType comparer, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter CreateParameter(Type type, LogicType logic, CompareType comparer, object value = null, QueryGroup group = QueryGroup.None)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter<TT> CreateParameter<TT>(CompareType comparer, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter<TT> CreateParameter<TT>(LogicType logic, CompareType comparer, object value = null, QueryGroup group = QueryGroup.None)
-        {
-            throw new NotImplementedException();
-        }
-
         public IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
         {
             return Column?.CreateComparer(type, direction);
         }
 
-        public IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
+        public IComparer<T> CreateComparer<T>(ListSortDirection direction = ListSortDirection.Ascending)
         {
-            return (IComparer<TT>)Column?.CreateComparer(typeof(TT), direction);
+            return (IComparer<T>)Column?.CreateComparer(typeof(T), direction);
         }
-
-
     }
 }

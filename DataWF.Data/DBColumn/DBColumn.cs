@@ -39,6 +39,7 @@ namespace DataWF.Data
     public abstract partial class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker, IPropertySerializeInfo
     {
         public static readonly DBColumn EmptyKey = new DBColumn<object>();
+
         public static string GetLogName(DBColumn column)
         {
             return column.Name + "_log";
@@ -606,7 +607,7 @@ namespace DataWF.Data
         public bool IsFileName => (Keys & DBColumnKeys.FileName) == DBColumnKeys.FileName;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public bool IsFileLOB => (Keys & DBColumnKeys.FileOID) == DBColumnKeys.FileOID;        
+        public bool IsFileLOB => (Keys & DBColumnKeys.FileOID) == DBColumnKeys.FileOID;
 
         [JsonIgnore, XmlIgnore]
         public object Default => null;
@@ -841,15 +842,25 @@ namespace DataWF.Data
 
         public abstract void SetValue(DBItem item, object value, DBSetValueMode mode);
 
+        public DBItem GetReference(DBItem item, DBLoadParam param) => GetReference<DBItem>(item, param);
+
         public abstract R GetReference<R>(DBItem item, DBLoadParam param) where R : DBItem;
+
+        public DBItem GetReference(DBItem item, ref DBItem reference, DBLoadParam param) => GetReference<DBItem>(item, ref reference, param);
 
         public abstract R GetReference<R>(DBItem item, ref R reference, DBLoadParam param) where R : DBItem;
 
+        public void SetReference(DBItem item, DBItem value) => SetReference<DBItem>(item, value);
+
         public abstract void SetReference<R>(DBItem item, R value) where R : DBItem;
 
-        public abstract DBItem LoadByKey(DBItem item, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
+        public IEnumerable<DBItem> Load(DBItem item, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) => Load<DBItem>(item, param, transaction);
 
-        public abstract DBItem LoadByKey(object key, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
+        public abstract IEnumerable<R> Load<R>(DBItem item, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where R : DBItem;
+
+        public IEnumerable<DBItem> Load(object key, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) => Load<DBItem>(key, param, transaction);
+
+        public abstract IEnumerable<R> Load<R>(object key, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where R : DBItem;
 
         internal protected abstract PullIndex CreatePullIndex();
 
@@ -917,6 +928,17 @@ namespace DataWF.Data
 
         public abstract IEnumerable Distinct(IEnumerable<DBItem> enumerable);
 
+        public bool IsSerializeable(Type type)
+        {
+            return PropertyName != null
+                && PropertyInvoker != null && PropertyInvoker != this
+                && PropertyInvoker.TargetType.IsAssignableFrom(type)
+                && !TypeHelper.IsNonSerialize(PropertyInfo)
+                //&& (Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
+                && (Keys & DBColumnKeys.Password) != DBColumnKeys.Password
+                && (Keys & DBColumnKeys.File) != DBColumnKeys.File;
+        }
+
         public void RemoveConstraints()
         {
             for (var j = 0; j < Table.Constraints.Count;)
@@ -973,24 +995,9 @@ namespace DataWF.Data
             }
         }
 
-        public IListIndex CreateIndex(bool concurrent)
-        {
-            throw new NotImplementedException();
-        }
-
         public override string ToString()
         {
             return base.ToString();
-        }
-
-        public IQueryParameter CreateParameter()
-        {
-            throw new NotImplementedException();
-        }
-
-        public InvokerComparer CreateComparer()
-        {
-            throw new NotImplementedException();
         }
 
         public abstract bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision);
@@ -1000,27 +1007,69 @@ namespace DataWF.Data
             return CheckItem((DBItem)item, typedValue, comparer, comparision);
         }
 
-        public virtual IEnumerable<T> Search<T>(CompareType comparer, DBColumn column, IEnumerable<T> list) where T : DBItem
+        public abstract R SelectOne<R>(DBItem value, IEnumerable<R> list) where R : DBItem;
+
+        public virtual R SelectOne<R>(object value, IEnumerable<R> list) where R : DBItem
         {
-            foreach (T item in list)
+            value = ParseValue(value);
+            if (PullIndex is IPullIndex index)
+            {
+                return (R)index.SelectOneObject(value);
+            }
+            return Search<R>(CompareType.Equal, value, list).FirstOrDefault();
+        }
+
+        public virtual IEnumerable<R> Search<R>(CompareType comparer, DBColumn column, IEnumerable<R> list) where R : DBItem
+        {
+            foreach (R item in list)
             {
                 if (CheckItem(item, column.GetValue(item), comparer))
                     yield return item;
             }
         }
 
-        public virtual IEnumerable<T> Search<T>(CompareType comparer, object value, IEnumerable<T> list) where T : DBItem
+        public virtual IEnumerable<R> Search<R>(CompareType comparer, object value, IEnumerable<R> list = null) where R : DBItem
         {
-            foreach (T item in list)
+            foreach (R item in list)
             {
                 if (CheckItem(item, value, comparer))
                     yield return item;
             }
         }
 
-        public DBColumn GetVirtualColumn(DBTable table)
+        public abstract IEnumerable<R> Select<R>(CompareType comparer, DBItem item, IEnumerable<R> list = null) where R : DBItem;
+
+        public virtual IEnumerable<R> Select<R>(CompareType comparer, object value, IEnumerable<R> list = null) where R : DBItem
         {
-            return table.ParseColumn(name);
+            if (value is IEnumerable<R> enumerabble)
+            {
+                return enumerabble;
+            }
+
+            if (list == null && PullIndex != null)
+            {
+                return SelectIndex<R>(value, comparer);
+            }
+            return Search(comparer, value, list ?? (IEnumerable<R>)Table);
+        }
+
+        public virtual IEnumerable<R> Select<R>(CompareType comparer, object value, IEnumerable<DBTuple> list) where R : DBItem
+        {
+            if (value is IEnumerable<R> enumerabble)
+            {
+                return enumerabble;
+            }
+
+            if (list == null && PullIndex != null)
+            {
+                return SelectIndex<R>(value, comparer);
+            }
+            return Search(comparer, value, (IEnumerable<R>)Table);
+        }
+
+        public DBColumn GetVirtualColumn(IDBTable table)
+        {
+            return table.GetColumn(name);
         }
 
         public bool CheckDefault(object value)

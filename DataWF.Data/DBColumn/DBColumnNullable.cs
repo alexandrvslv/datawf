@@ -22,6 +22,7 @@ using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.Json;
 
 namespace DataWF.Data
@@ -42,7 +43,10 @@ namespace DataWF.Data
         protected override T? GetReferenceId(DBItem item)
         {
             if (item.Table.PrimaryKey is DBColumn<T> typedColumn)
-                return typedColumn.GetValue(item);
+            {
+                var typedValue = typedColumn.GetValue(item);
+                return typedColumn.Equal(typedValue, default(T)) ? null : typedValue;
+            }
             return base.GetReferenceId(item);
         }
 
@@ -50,7 +54,7 @@ namespace DataWF.Data
         protected override DBItem LoadReference(T? id, DBLoadParam param)
         {
             if (ReferenceTable.PrimaryKey is DBColumn<T> typedColumn)
-                return ReferenceTable.LoadItemByKey((T)id, typedColumn, param);
+                return ReferenceTable.LoadByKey<DBItem, T>((T)id, typedColumn, param).FirstOrDefault();
             return base.LoadReference(id, param);
         }
 

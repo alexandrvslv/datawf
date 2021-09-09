@@ -98,7 +98,7 @@ namespace DataWF.Module.MessangerGui
         {
             if (!string.IsNullOrEmpty(MessageText))
             {
-                using (var transaction = new DBTransaction())
+                using (var transaction = new DBTransaction(MessageExplorer.Schema))
                 {
                     var message = await MessageExplorer.Schema.Message.Send((User)GuiEnvironment.User, GetStaff(), MessageText);
                     OnSending?.Invoke(message);

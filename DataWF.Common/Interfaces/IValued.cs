@@ -2,7 +2,7 @@
 {
     public interface IValued
     {
-        object GetValue();
+        object GetValue<T>();
     }
 }
 

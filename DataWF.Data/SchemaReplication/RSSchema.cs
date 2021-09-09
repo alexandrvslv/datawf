@@ -56,9 +56,9 @@ namespace DataWF.Data
         [JsonIgnore]
         public SelectableList<RSTable> Tables { get; set; } = new SelectableList<RSTable>();
 
-        public void Initialize()
+        public void Initialize(DBProvider provider)
         {
-            Schema = DBService.Schems[SchemaName];
+            Schema = provider.Schems[SchemaName];
             if (Schema == null)
                 throw new Exception($"Schema with name {SchemaName} not found!");
             Tables.Clear();

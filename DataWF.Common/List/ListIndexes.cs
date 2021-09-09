@@ -28,10 +28,9 @@ namespace DataWF.Common
 
         public IListIndex<T> Add(IInvoker invoker)
         {
-            if (!indexes.TryGetValue(invoker.Name, out var index)
-                && invoker is IInvokerExtension invokerExtension)
+            if (!indexes.TryGetValue(invoker.Name, out var index))
             {
-                index = (IListIndex<T>)invokerExtension.CreateIndex<T>(Concurrent);
+                index = (IListIndex<T>)invoker.CreateIndex<T>(Concurrent);
                 indexes.Add(invoker.Name, index);
                 index.Refresh(Source);
             }

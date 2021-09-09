@@ -611,7 +611,7 @@ namespace DataWF.Data.Gui
 
                 LayoutField ff = (LayoutField)e.Cell;
                 if (e.Data != DBNull.Value)
-                    query.BuildParam(ff.Name, e.Data, QQueryBuildParam.AutoLike | QQueryBuildParam.SplitString);
+                    query.BuildParam(ff.Name, e.Data, QBuildParam.AutoLike | QBuildParam.SplitString);
 
                 foreach (LayoutField field in flist.Fields)
                 {
@@ -622,7 +622,7 @@ namespace DataWF.Data.Gui
                         continue;
                     if (string.IsNullOrEmpty(val.ToString()))
                         continue;
-                    query.BuildParam(field.Name, val, QQueryBuildParam.AutoLike | QQueryBuildParam.SplitString);
+                    query.BuildParam(field.Name, val, QBuildParam.AutoLike | QBuildParam.SplitString);
                 }
 
                 if (query.Parameters.Count == 0)

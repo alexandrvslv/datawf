@@ -91,9 +91,9 @@ namespace DataWF.Data
     {
         public async Task<Instance> GetByNetId(IPEndPoint endPoint, bool create, IUserIdentity user = null)
         {
-            var query = new QQuery(this);
-            query.BuildParam(UrlKey, CompareType.Equal, endPoint.ToStringUrl(UriScheme.udp));
-            query.BuildParam(ActiveKey, CompareType.Equal, false);
+            var query = Query()
+                .Where(UrlKey, CompareType.Equal, endPoint.ToStringUrl(UriScheme.udp))
+                .And(ActiveKey, CompareType.Equal, false);
             var instance = Load(query).LastOrDefault();
             if (instance == null && create)
             {

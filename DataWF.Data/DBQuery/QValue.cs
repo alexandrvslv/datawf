@@ -17,6 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF.Common;
 using System;
 using System.ComponentModel;
 using System.Data;
@@ -24,17 +25,18 @@ using System.Globalization;
 
 namespace DataWF.Data
 {
-    public class QValue : QColumn
+    public class QValue : QItem
     {
         [DefaultValue(null)]
         protected object _value = null;
+        private DBColumn column;
 
         public QValue()
         { }
 
         public QValue(object value, DBColumn column = null)
         {
-            base.Column = column;
+            Column = column;
             Value = value;
         }
 
@@ -60,23 +62,20 @@ namespace DataWF.Data
                 if (_value != value)
                 {
                     _value = value;
-                    OnPropertyChanged(nameof(Value));
+                    //OnPropertyChanged(nameof(Value));
                 }
             }
         }
 
-        public override DBColumn Column
+        public DBColumn Column
         {
-            get => base.Column;
+            get => column;
             set
             {
                 if (Column != value)
                 {
-                    base.Column = value;
-                    if (Column != null)
-                    {
-                        _value = Column.ParseValue(_value);
-                    }
+                    column = value;
+                    //OnPropertyChanged();
                 }
             }
         }
@@ -90,7 +89,7 @@ namespace DataWF.Data
 
         public override string ToString()
         {
-            return Column != null ? Column.FormatQuery(Value) : DBSystem.FormatQuery(Value);
+            return Column != null ? Column.FormatQuery(Value) : System.FormatQuery(Value);
         }
 
         public override object GetValue(DBItem row)
@@ -98,6 +97,28 @@ namespace DataWF.Data
             return Value;
         }
 
+        public override object GetValue<T>()
+        {
+            var value = GetValue((DBItem)null);
+            var param = Holder as QParam ?? List as QParam;
+            var comparer = param.Comparer;
 
+            if (value is string stringValue)
+            {
+                if (comparer.Type == CompareTypes.In)
+                {
+                    value = stringValue.Split(Helper.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
+                }
+                else if (comparer.Type == CompareTypes.Like)
+                {
+                    value = Helper.BuildLike(stringValue);
+                }
+            }
+            else if (value is DBItem dbItem)
+            {
+                value = dbItem.PrimaryId;
+            }
+            return value;
+        }
     }
 }

@@ -23,12 +23,6 @@ using System.ComponentModel;
 
 namespace DataWF.Data
 {
-    public interface IQItemList
-    {
-        IQuery Query { get; }
-        IQItemList Container { get; }
-        void Delete(QItem item);
-    }
 
     public class QItemList<T> : SelectableList<T>, IQItemList where T : QItem
     {
@@ -57,6 +51,11 @@ namespace DataWF.Data
         public IQItemList Container { get; set; }
 
         public IQuery Query => Container.Query;
+        
+        void IQItemList.Add(QItem item)
+        {
+            this.Add((T)item);
+        }
 
         public void Delete(QItem item)
         {

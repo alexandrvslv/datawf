@@ -29,5 +29,9 @@ namespace DataWF.Data
         void Load();
         void Save();
         DBUser FindUser(string email);
+
+        DBConnectionList Connections { get; }
+
+        DBSchemaList Schems { get; }
     }
 }

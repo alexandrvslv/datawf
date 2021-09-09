@@ -24,32 +24,23 @@ namespace DataWF.Data
 {
     public class QTable : QItem
     {
-        protected JoinType join;
+        protected JoinType join = JoinType.Undefined;
         protected DBTable table;
-        protected string tableName = null;
+        private QParam onParam;
 
         public QTable()
         { }
 
-        public QTable(DBTable table, string alias = null)
+        public QTable(IDBTable table, string alias = null)
         {
             Table = table;
-            this.alias = alias;
+            TableAlias = alias;
         }
 
-
-        public string TableName
+        public override string Name
         {
-            get => tableName;
-            set
-            {
-                if (tableName != value)
-                {
-                    tableName = value;
-                    table = null;
-                    OnPropertyChanged();
-                }
-            }
+            get => Table?.Name;
+            set { }
         }
 
         public JoinType Join
@@ -60,38 +51,43 @@ namespace DataWF.Data
                 if (join != value)
                 {
                     join = value;
-                    OnPropertyChanged(nameof(Join));
+                    //OnPropertyChanged();
                 }
             }
         }
 
-        public DBTable BaseTable
+        public override IDBTable Table
         {
-            get => Table.IsVirtual ? (DBTable)Table.ParentTable : Table;
-        }
-
-        public override DBTable Table
-        {
-            get => table ??= DBService.Schems.ParseTable(tableName);
+            get => table;
             set
             {
-                if (Table != value)
+                if (table != value)
                 {
-                    TableName = value?.Name;
-                    table = value;
-                    OnPropertyChanged(nameof(Table));
+                    table = (DBTable)value;
+                    //OnPropertyChanged();
                 }
+            }
+        }
+
+        public QParam On
+        {
+            get => onParam;
+            set
+            {
+                onParam = value;
+                onParam.Holder = this;
+                //OnPropertyChanged();
             }
         }
 
         public override string Format(IDbCommand command = null)
         {
-            return $"{Join.Format()} {Table?.FormatQTable(alias) ?? ($"{TableName} {alias}")}";
+            return $"{Join.Format()} {System.FormatQTable(Table, TableAlias)} {(On != null ? $" on {On.Format(command)}" : string.Empty)}";
         }
 
         public override object GetValue(DBItem row)
         {
-            return TableName;
+            return Name;
         }
     }
 }

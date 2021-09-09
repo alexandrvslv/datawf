@@ -472,7 +472,7 @@ namespace DataWF.Data
             if (ProcedureType == ProcedureTypes.Assembly || ProcedureType == ProcedureTypes.Source)
                 temp = EmitInvoker.CreateObject(GetObjectType(), true);
             else if (ProcedureType == ProcedureTypes.Table)
-                temp = DBService.Schems.ParseTable(Source);
+                temp = Schema.ParseTable(Source);
             else if (ProcedureType == ProcedureTypes.Constant)
                 temp = Source;
             else
@@ -749,7 +749,7 @@ namespace DataWF.Data
                 parameters.Add("documentid", document.PrimaryId);
                 foreach (DBColumn column in document.Table.Columns)
                 {
-                    if (!document.Table.IsSerializeableColumn(column, document.GetType()))
+                    if (!column.IsSerializeable(document.GetType()))
                         continue;
                     object val = document[column];
                     if (val != null)

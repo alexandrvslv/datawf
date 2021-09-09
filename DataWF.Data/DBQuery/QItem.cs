@@ -32,12 +32,37 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public abstract partial class QItem : DefaultItem, IDisposable, IComparable, IComparable<QItem>, IValued, IInvoker
+    public abstract partial class QItem : IDisposable, IComparable, IComparable<QItem>, IQItem
     {
+        public static QItem Fabric(object value, DBColumn column)
+        {
+            switch (value)
+            {
+                case QItem qItem:
+                    return qItem;
+                case DBColumn dBColumn:
+                    return new QColumn(dBColumn);
+                case IInvoker invoker:
+                    return new QInvoker(invoker);
+                case IBetween betweenValue:
+                    return new QBetween(betweenValue.MinValue(), betweenValue.MaxValue(), column);
+                case string text:
+                    return new QValue(text, column);
+                case byte[] bytes:
+                    return new QValue(bytes, column);
+                case IEnumerable enumerable:
+                    return new QArray(enumerable, column);
+                default:
+                    return new QValue(value, column);
+            }
+        }
+
         protected int order = -1;
-        protected string alias;
+        private string tableAlias;
         private QItem holder;
         private IQItemList list;
+        protected QTable qTable;
+        private bool refmode;
 
         public QItem()
         {
@@ -56,19 +81,25 @@ namespace DataWF.Data
             set
             {
                 order = value;
-                OnPropertyChanged();
+                //OnPropertyChanged();
             }
         }
 
-        public string Alias
+        public bool IsReference
         {
-            get => alias;
+            get => refmode;
+            set => refmode = value;
+        }
+
+        public string TableAlias
+        {
+            get => tableAlias;
             set
             {
-                if (alias != value)
+                if (tableAlias != value)
                 {
-                    alias = value;
-                    OnPropertyChanged();
+                    tableAlias = value;
+                    //OnPropertyChanged();
                 }
             }
         }
@@ -82,7 +113,7 @@ namespace DataWF.Data
                 if (holder != value)
                 {
                     holder = value;
-                    OnPropertyChanged();
+                    //OnPropertyChanged();
                 }
             }
         }
@@ -91,45 +122,67 @@ namespace DataWF.Data
         public virtual IQuery Query => Holder?.Query ?? List?.Query;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual DBTable Table
+        public virtual IDBTable Table
         {
-            get => Query?.Table;
+            get => QTable?.Table;
             set { }
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual IDBSchema Schema => Table?.Schema;
+        public virtual QTable QTable
+        {
+            get => qTable ??= Query?.GetTableByAlias(tableAlias);
+            set => qTable = value;
+        }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual DBSystem DBSystem => Schema?.System ?? DBSystem.Default;
+        public virtual IDBSchema Schema
+        {
+            get => Query.Schema ?? Table?.Schema;
+            set { }
+        }
 
-        public Type DataType => typeof(DBItem);
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public virtual DBSystem System => Schema?.System ?? DBSystem.Default;
 
-        public Type TargetType => typeof(object);
+        public Type DataType => typeof(object);
+
+        public Type TargetType => typeof(DBItem);
 
         public bool CanWrite => false;
 
-        public string Name
+        public virtual string Name
         {
-            get => ToString();
+            get => string.Empty;
             set { }
         }
 
         public abstract string Format(IDbCommand command = null);
 
-        public object GetValue()
+        public virtual object GetValue<T>()
         {
-            return GetValue(null);
+            var value = GetValue((DBItem)null);
+            if (value == null || value is DBColumn)
+                return value;
+            if (value is QItem qItem)
+                value = qItem.GetValue<T>();
+            return value;
         }
 
         public object GetValue(object target)
         {
-            return GetValue((DBItem)target);
+            if (target is DBItem dbItem)
+                return GetValue(dbItem);
+            if (target is DBTuple turple)
+                return GetValue(turple);
+            return null;
         }
+
+        public object GetValue(DBTuple tuple) => GetValue(tuple.Get(QTable));
 
         public abstract object GetValue(DBItem row);
 
-        public void SetValue(object target, object value)
+        public virtual void SetValue(object target, object value)
         {
             throw new NotSupportedException();
         }
@@ -181,5 +234,7 @@ namespace DataWF.Data
             }
             return param;
         }
+
+        
     }
 }

@@ -30,7 +30,7 @@ namespace DataWF.Module.Common
             users.DefaultComparer = new DBComparer<User, string>(users.LoginKey) { Hash = true };
             users.Load();
 
-            var userRegs = (UserRegTable)schema.GetTable<UserReg>();
+            var userRegs = schema.UserReg;
             userRegs.DefaultComparer = new DBComparer<UserReg, long?>(userRegs.IdKey) { Hash = true };
 
             DBItemLog.UserRegTable = userRegs;

@@ -392,18 +392,18 @@ namespace DataWF.Data
         protected virtual DBItem LoadReference(T id, DBLoadParam param)
         {
             if (ReferenceTable.PrimaryKey is DBColumn<T> typedColumn)
-                return ReferenceTable.LoadItemByKey(id, typedColumn, param);
-            return ReferenceTable.LoadItemByKey((object)id, ReferenceTable.PrimaryKey, param);
+                return ReferenceTable.LoadByKey<DBItem, T>(id, typedColumn, param).FirstOrDefault();
+            return ReferenceTable.LoadByKey<DBItem>((object)id, ReferenceTable.PrimaryKey, param).FirstOrDefault();
         }
 
-        public override DBItem LoadByKey(DBItem item, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public override IEnumerable<R> Load<R>(DBItem item, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
-            return Table.LoadItemByKey(GetValue(item), this, param, cols, transaction);
+            return Table.LoadByKey<R, T>(GetReferenceId(item), this, param, transaction);
         }
 
-        public override DBItem LoadByKey(object key, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public override IEnumerable<R> Load<R>(object key, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
-            return Table.LoadItemByKey(Parse(key), this, param, cols, transaction);
+            return Table.LoadByKey<R, T>(Parse(key), this, param, transaction);
         }
 
         public override bool IsChanged(DBItem item)
@@ -705,9 +705,7 @@ namespace DataWF.Data
         public bool CheckItem(DBItem item, T val1, object val2, CompareType comparer)
         {
             if (item == null)
-                return false;
-            if (val2 is QQuery query2)
-                val2 = item.Table.SelectValues(item, query2, comparer);
+                return false;            
 
             switch (comparer.Type)
             {
@@ -716,7 +714,7 @@ namespace DataWF.Data
                     return val1 != null && r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
                 case CompareTypes.In:
                     if (val2 is string)
-                        val2 = val2.ToString().Split(QQuery.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
+                        val2 = val2.ToString().Split(Helper.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
                     return CheckIn(item, val1, val2, comparer.Not);
                 case CompareTypes.Between:
                     var between = val2 as QBetween;
@@ -756,32 +754,76 @@ namespace DataWF.Data
             return not;
         }
 
-        public virtual IEnumerable<TT> Search<TT>(CompareType comparer, T value, IEnumerable<TT> list) where TT : DBItem
+        public override IEnumerable<R> Select<R>(CompareType comparer, DBItem item, IEnumerable<R> list = null)
         {
-            foreach (TT item in list)
+            return Select<R>(comparer, GetReferenceId(item), list);
+        }
+
+        public virtual IEnumerable<R> Select<R>(CompareType comparer, T value, IEnumerable<R> list = null) where R : DBItem
+        {
+            if (PullIndex is IPullOutIndex<R, T> index)
+            {
+                if (comparer == CompareType.Equal)
+                {
+                    return index.Select(value);
+                }
+                return index.Select(value, comparer);
+            }
+            return Search<R>(comparer, value, list ?? (IEnumerable<R>)Table);
+        }
+
+        public override IEnumerable<R> Select<R>(CompareType comparer, object value, IEnumerable<R> list = null)
+        {
+            if (value is T typeValue)
+                return Select<R>(comparer, typeValue, list);
+            return base.Select(comparer, value, list);
+        }
+
+        public override R SelectOne<R>(DBItem value, IEnumerable<R> list)
+        {
+            return SelectOne<R>(GetReferenceId(value), list);
+        }
+
+        public virtual R SelectOne<R>(T value, IEnumerable<R> list) where R : DBItem
+        {
+            if (PullIndex is IPullOutIndex<R, T> index)
+            {
+                return index.SelectOne(value);
+            }
+            return Search<R>(CompareType.Equal, value, list).FirstOrDefault();
+        }
+
+        public override R SelectOne<R>(object value, IEnumerable<R> list)
+        {
+            return SelectOne<R>(Parse(value), list);
+        }
+
+        public virtual IEnumerable<R> Search<R>(CompareType comparer, T value, IEnumerable<R> list) where R : DBItem
+        {
+            foreach (R item in list)
             {
                 if (CheckItem(item, value, comparer))
                     yield return item;
             }
         }
 
-        public virtual IEnumerable<TT> Search<TT>(CompareType comparer, DBColumn<T> column, IEnumerable<TT> list) where TT : DBItem
+        public virtual IEnumerable<R> Search<R>(CompareType comparer, DBColumn<T> column, IEnumerable<R> list) where R : DBItem
         {
-            foreach (TT item in list)
+            foreach (R item in list)
             {
                 if (CheckItem(item, column.GetValue(item), comparer))
                     yield return item;
             }
         }
 
-        public override IEnumerable<TT> Search<TT>(CompareType comparer, DBColumn column, IEnumerable<TT> list)
+        public override IEnumerable<R> Search<R>(CompareType comparer, DBColumn column, IEnumerable<R> list)
         {
             if (column is DBColumn<T> typedColumn)
                 return Search(comparer, typedColumn, list);
             return base.Search(comparer, column, list);
         }
 
-        public override IEnumerable<TT> Search<TT>(CompareType comparer, object value, IEnumerable<TT> list)
+        public override IEnumerable<R> Search<R>(CompareType comparer, object value, IEnumerable<R> list)
         {
             if (value is T typedValue)
                 return Search(comparer, typedValue, list);

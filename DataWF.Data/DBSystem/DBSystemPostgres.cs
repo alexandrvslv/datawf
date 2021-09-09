@@ -322,14 +322,14 @@ namespace DataWF.Data
         private string FormatMessage(PostgresException pex, DBTable table, DBItem dbItem)
         {
             var text = string.IsNullOrEmpty(pex.Detail) ? pex.MessageText : pex.Detail;
-            var refTable = string.IsNullOrEmpty(pex.TableName) ? null : DBService.Schems.ParseTable(pex.TableName);
+            var refTable = string.IsNullOrEmpty(pex.TableName) ? null : table.Schema.ParseTable(pex.TableName);
             var builder = new StringBuilder();
             text = text.Replace("character varying", "Text");
             foreach (var item in text.Split(new char[] { ',', ' ', '"', '(', ')' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 if (table != null)
                 {
-                    var column = refTable?.ParseColumnProperty(item) ?? table?.ParseColumnProperty(item);
+                    var column = refTable?.GetColumnOrProperty(item) ?? table?.GetColumnOrProperty(item);
                     if (column != null)
                     {
                         builder.Append(column.DisplayName);

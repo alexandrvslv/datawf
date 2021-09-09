@@ -41,7 +41,11 @@ namespace DataWF.Data
         DBTable GetTable(Type type, bool generate = false);
         DBTable<T> GetTable<T>(bool generate = false) where T : DBItem;
         IDBTable GetVirtualTable<T>(int itemType) where T : DBItem;
+
         DBTable ParseTable(string code);
+        DBColumn ParseColumn(string code);
+        DBProcedure ParseProcedure(string code, string category = "General");
+
         IEnumerable<DBForeignKey> GetAllForeignConstraints(DBTable target);
     }
 }

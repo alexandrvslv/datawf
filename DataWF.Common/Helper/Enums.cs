@@ -71,10 +71,11 @@ namespace DataWF.Common
     public enum JoinTypes
     {
         Undefined = 0,
-        Join = 1,
+        Inner = 1,
         Left = 2,
-        Right = 4,
-        Outer = 8
+        Right = 4,        
+        Outer = 8,
+        Join = 16
     }
 
     public enum EditListState

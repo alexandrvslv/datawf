@@ -9,9 +9,22 @@ namespace DataWF.Common
 {
     public class ListIndex<T, K> : IListIndex<T, K>
     {
+        public static IEqualityComparer<K> GetComparer(IValuedInvoker<K> invoker)
+        {
+            var comparer = (IEqualityComparer<K>)EqualityComparer<K>.Default;
+            if (invoker.DataType == typeof(string))
+                comparer = (IEqualityComparer<K>)StringComparer.OrdinalIgnoreCase;
+            if (invoker.DataType == typeof(byte[]))
+                comparer = (IEqualityComparer<K>)ByteArrayComparer.Default;
+            return comparer;
+        }
         protected readonly IDictionary<K, ThreadSafeList<T>> Dictionary;
         protected readonly IEqualityComparer<K> Comparer;
         protected K NullKey;
+
+        public ListIndex(IValuedInvoker<K> invoker, K nullKey, bool concurrent = false)
+            : this(invoker, nullKey, GetComparer(invoker), concurrent)
+        { }
 
         public ListIndex(IValuedInvoker<K> invoker, K nullKey, IEqualityComparer<K> comparer = null, bool concurrent = false)
         {

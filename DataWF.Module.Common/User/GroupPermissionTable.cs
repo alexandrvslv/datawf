@@ -158,9 +158,10 @@ namespace DataWF.Module.Common
         {
             var type = GetPermission(obj, out string code, out string name);
 
-            string filter = $"{ CodeKey.SqlName}='{code}' and {ElementTypeKey.SqlName}={type}";
-
-            GroupPermission permission = Select(filter).FirstOrDefault();
+            GroupPermission permission = this.Query()
+                .Where(CodeKey, code)
+                .And(TypeKey, type)
+                .FirstOrDefault();
 
             if (permission == null && generate)
             {
@@ -183,12 +184,10 @@ namespace DataWF.Module.Common
 
         public GroupPermission GetByName(string name, PermissionType type)
         {
-            using (var query = new QQuery(this))
-            {
-                query.BuildParam(ObjectNameKey, name);
-                query.BuildParam(TypeKey, type);
-                return Select(query).FirstOrDefault();
-            }
+            var query = Query(DBLoadParam.None)
+                .Where(ObjectNameKey, name)
+                .And(TypeKey, type);
+            return Select(query).FirstOrDefault();
         }
 
         [ControllerMethod]

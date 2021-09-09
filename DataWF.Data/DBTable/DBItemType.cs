@@ -34,7 +34,6 @@ namespace DataWF.Data
     public class DBItemType
     {
         private Type type;
-        private DBTable table;
 
         public DBItemType()
         { }
@@ -43,15 +42,7 @@ namespace DataWF.Data
         {
             get => type;
             set => type = value;
-        }
-
-        [XmlIgnore, JsonIgnore]
-        public DBTable Table => table ?? (table = DBService.GetTable(Type));
-
-        public DBItem Create()
-        {
-            return Table.NewItem(DBUpdateState.Insert, true, Type);
-        }
+        }        
     }
 
     public class DBItemTypeSerializer : ElementSerializer<DBItemType>

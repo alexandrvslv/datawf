@@ -17,27 +17,58 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF.Common;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+
 namespace DataWF.Data
 {
-    public class QueryList : QItemList<QQuery>
+    public class QInvoker : QItem
     {
-        public QueryList() : base()
+        [NonSerialized()]
+        IInvoker invoker;
+
+        public QInvoker()
         {
+            IsReference = true;
         }
 
-        public override int Add(QQuery item)
+        public QInvoker(IInvoker invoker) : this()
         {
-            item.Order = Count;
-            return base.Add(item);
+            Invoker = invoker;
         }
 
-        public override void Dispose()
+        public override string Name
         {
-            foreach (QQuery q in this)
-                q.Dispose();
-            base.Dispose();
+            get => Invoker?.Name;
+            set { }
         }
+
+        public IInvoker Invoker
+        {
+            get => invoker;
+            set
+            {
+                if (invoker != value)
+                {
+                    invoker = value;
+                    //OnPropertyChanged();
+                }
+            }
+        }
+
+        public override object GetValue(DBItem item = null)
+        {
+            return item == null ? null : Invoker?.GetValue(item);
+        }
+
+        public override string Format(IDbCommand command = null)
+        {
+            return command != null ? string.Empty : Invoker?.Name;
+        }
+
     }
 }
-

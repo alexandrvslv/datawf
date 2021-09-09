@@ -24,7 +24,7 @@ using System.Text;
 
 namespace DataWF.Data
 {
-    public class QExpression : QEnum
+    public class QExpression : QArray
     {
         private readonly List<QMathType> types = new List<QMathType>();
 
@@ -99,7 +99,7 @@ namespace DataWF.Data
 
         public void Parse(string query, IDBTable table)
         {
-            QQuery q = new QQuery("", table);
+            var q = new QQuery<DBItem>(table);
             q.ParseExpression(this, query);
             //Regex exp = new Regex(@"\*|\+|\-|\/", RegexOptions.IgnoreCase);
             //string q = exp.Replace(query, ch => @" " + ch.Value + " ");

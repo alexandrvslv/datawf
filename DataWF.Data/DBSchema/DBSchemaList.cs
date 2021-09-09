@@ -37,6 +37,13 @@ namespace DataWF.Data
         { }
 
         [JsonIgnore, XmlIgnore]
+        public DBProvider Provider
+        {
+            get;
+            set;
+        }
+
+        [JsonIgnore, XmlIgnore]
         public DBSchema DefaultSchema
         {
             get
@@ -143,7 +150,7 @@ namespace DataWF.Data
 
             int index = name.LastIndexOf('.');
             name = index < 0 ? name : name.Substring(index + 1);
-            return table?.ParseColumn(name);
+            return table?.GetColumn(name);
         }
 
         public DBTable ParseTableByTypeName(string code)

@@ -35,7 +35,7 @@ namespace DataWF.Common
     public interface IPullOutIndex<out T, K> : IPullIndex where T : class, IPullHandler
     {
         IEnumerable<T> Search(Predicate<K> comparer);
-        IEnumerable<T> Select(K key);
+        IReadOnlyList<T> Select(K key);
         IEnumerable<T> Select(K key, CompareType compare);
         IEnumerable<T> Select(object value, CompareType compare);
         T SelectOne(K key);

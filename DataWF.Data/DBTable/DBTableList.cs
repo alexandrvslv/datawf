@@ -53,7 +53,7 @@ namespace DataWF.Data
             var index = base.AddInternal(item);
             if (item.IsVirtual)
             {
-                item.ParentTable.AddVirtual(item);
+                item.ParentTable.AddVirtualTable(item);
             }
             if (Schema is IDBSchemaLog
                 && !(item is IDBTableLog))

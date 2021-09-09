@@ -43,7 +43,7 @@ namespace DataWF.WebService.Common
                 if (writer.CurrentDepth > 0 && Factory.referenceSet.Contains(value))
                 {
                     isRef = true;
-                    columns = value.Table.GetRefColumns();
+                    columns = value.Table.GetReferenceColumns();
                 }
                 else
                 {
@@ -82,7 +82,7 @@ namespace DataWF.WebService.Common
             }
             if (settings.Referencing && writer.CurrentDepth <= settings.MaxDepth && !isRef)
             {
-                foreach (var referencing in value.Table.GetReferencing(valueType))
+                foreach (var referencing in value.Table.GetAllReferencing(valueType))
                 {
                     writer.WritePropertyName(referencing.JsonName);
 
@@ -135,13 +135,13 @@ namespace DataWF.WebService.Common
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
                     propertyName = reader.GetString();
-                    column = Table.ParseProperty(propertyName);
+                    column = Table.GetColumnByProperty(propertyName);
                 }
                 else
                 {
                     if (column == null)
                     {
-                        var invoker = Table.ParseReferencing(propertyName)?.PropertyInvoker;
+                        var invoker = Table.GetReferencing(propertyName)?.PropertyInvoker;
                         if (invoker != null)
                         {
                             if (dictionary == null)

@@ -97,7 +97,7 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore]
         public DBColumn ReferenceColumn
         {
-            get => referenceColumn ??= ReferenceTable.ParseColumn(ReferenceColumnName);
+            get => referenceColumn ??= ReferenceTable.GetColumn(ReferenceColumnName);
             set
             {
                 if (referenceColumn != value)

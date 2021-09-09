@@ -36,19 +36,19 @@ namespace DataWF.Data
     [InvokerGenerator(Instance = true)]
     public partial class DBSchema : DBSchemaItem, IFileSerialize, IDBSchema
     {
-        public static DBSchema Generate(string schemaName, params Assembly[] assemblies)
+        public static DBSchema Generate(DBProvider provider, string schemaName, params Assembly[] assemblies)
         {
             var schema = new DBSchema(schemaName);
             schema.Generate(assemblies);
-            DBService.Schems.Add(schema);
+            provider.Schems.Add(schema);
             return schema;
         }
 
-        public static DBSchema Generate(string schemaName, params Type[] types)
+        public static DBSchema Generate(DBProvider provider, string schemaName, params Type[] types)
         {
             var schema = new DBSchema(schemaName);
             schema.Generate(types);
-            DBService.Schems.Add(schema);
+            provider.Schems.Add(schema);
             return schema;
         }
 
@@ -60,6 +60,7 @@ namespace DataWF.Data
         protected string logSchemaName;
         private bool cacheRelation;
         private IDBSchemaLog logSchema;
+        private DBProvider provider;
 
         public DBSchema()
             : this(null)
@@ -86,20 +87,27 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBSchemaList Schems => Containers.FirstOrDefault(p => p is DBSchemaList) as DBSchemaList;
 
+        [XmlIgnore, JsonIgnore]
+        public DBProvider Provider
+        {
+            get => provider ??= Schems.Provider;
+            set => provider = value;
+        }
+
         [Browsable(false)]
         public string ConnectionName { get => connectionName; set => connectionName = value; }
 
         [XmlIgnore, JsonIgnore]
         public DBConnection Connection
         {
-            get => connection ?? (connection = DBService.Connections[ConnectionName]);
+            get => connection ?? (connection = Provider?.Connections[ConnectionName]);
             set
             {
                 connection = value;
                 ConnectionName = connection?.Name;
-                if (value != null && !DBService.Connections.Contains(value))
+                if (value != null && Provider != null && !Provider.Connections.Contains(value))
                 {
-                    DBService.Connections.Add(value);
+                    Provider.Connections.Add(value);
                 }
             }
         }
@@ -121,16 +129,16 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public IDBSchemaLog LogSchema
         {
-            get => logSchema ?? (logSchema = (IDBSchemaLog)DBService.Schems[logSchemaName]);
+            get => logSchema ?? (logSchema = (IDBSchemaLog)Provider?.Schems[logSchemaName]);
             set
             {
                 logSchema = value;
                 LogSchemaName = value?.Name;
                 if (value != null
-                    && DBService.Schems.Contains(this)
-                    && !DBService.Schems.Contains(value.Name))
+                    && (Provider?.Schems.Contains(this) ?? false)
+                    && !Provider.Schems.Contains(value.Name))
                 {
-                    DBService.Schems.Add((DBSchema)value);
+                    Provider.Schems.Add((DBSchema)value);
                 }
             }
         }
@@ -421,6 +429,16 @@ namespace DataWF.Data
             }
         }
 
+        public DBProcedure ParseProcedure(string code, string category = "General")
+        {
+            return Schems.ParseProcedure(code, category);
+        }
+
+        public DBColumn ParseColumn(string code)
+        {
+            return Schems.ParseColumn(code, this);
+        }
+
         public DBTable ParseTable(string code)
         {
             if (string.IsNullOrEmpty(code))
@@ -673,6 +691,11 @@ namespace DataWF.Data
                 foreach (var index in table.Indexes)
                     yield return index;
             }
+        }
+
+        internal void OnChanged(DBSchemaItem item, DDLType type)
+        {
+            Provider?.OnChanged(item, type);
         }
     }
 }

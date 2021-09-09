@@ -67,7 +67,7 @@ namespace DataWF.Data
             }
             generateCache[schema] = table;
 
-            table.Query = $"a.{baseTable.ItemTypeKey.SqlName} = {baseTable.GetTypeIndex(Type)}";
+            table.SubQuery = $"a.{baseTable.ItemTypeKey.SqlName} = {baseTable.GetTypeIndex(Type)}";
             if (!schema.Tables.Contains(Type.Name))
             {
                 schema.Tables.Add(table);
