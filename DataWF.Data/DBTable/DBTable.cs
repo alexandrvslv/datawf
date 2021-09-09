@@ -54,7 +54,7 @@ namespace DataWF.Data
         protected DBTableGroup tableGroup;
         protected DBSequence cacheSequence;
         protected readonly List<DBTable> virtualTables = new List<DBTable>(0);
-        protected readonly ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
+        protected readonly ConcurrentDictionary<string, IQuery> queryChache = new ConcurrentDictionary<string, IQuery>(StringComparer.Ordinal);
         protected DBColumn<string> nameKey = DBColumn<string>.EmptyKey;
         protected DBColumn<byte[]> accessKey = DBColumn<byte[]>.EmptyKey;
         protected DBColumn primaryKey = DBColumn.EmptyKey;
@@ -76,7 +76,7 @@ namespace DataWF.Data
         protected internal ConcurrentQueue<PullHandler> FreeHandlers = new ConcurrentQueue<PullHandler>();
         protected readonly ConcurrentDictionary<Type, List<DBColumn>> mapTypeColumn = new ConcurrentDictionary<Type, List<DBColumn>>();
         protected readonly ConcurrentDictionary<Type, List<DBReferencing>> mapTypeRefing = new ConcurrentDictionary<Type, List<DBReferencing>>();
-        protected string query;
+        protected string subQuery;
         protected string comInsert;
         protected string comUpdate;
         protected string comDelete;
@@ -145,7 +145,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Category("Database")]
-        public abstract QQuery FilterQuery { get; set; }
+        public abstract IQuery FilterQuery { get; set; }
 
         [Browsable(false)]
         public string LogTableName
@@ -209,14 +209,14 @@ namespace DataWF.Data
         public override string FullName => string.Format("{0}.{1}", Schema != null ? Schema.Name : string.Empty, name);
 
         [Category("Database")]
-        public string Query
+        public string SubQuery
         {
-            get => query;
+            get => subQuery;
             set
             {
-                if (query != value)
+                if (subQuery != value)
                 {
-                    query = value;
+                    subQuery = value;
                     OnPropertyChanged(DDLType.Alter);
                 }
             }
@@ -541,6 +541,9 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public List<DBForeignKey> ChildRelations { get; } = new List<DBForeignKey>();
 
+        public event EventHandler<DBItemEventArgs> RowUpdating;
+
+
         public abstract bool Contains(DBItem item);
 
         public abstract bool Remove(DBItem item);
@@ -554,38 +557,29 @@ namespace DataWF.Data
         public abstract void CopyTo(DBItem[] array, int arrayIndex);
 
         protected internal abstract void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value);
+
         protected internal abstract void OnItemChanged<V>(DBItem item, string proeprty, DBColumn<V> column, V value);
+
         public abstract void Trunc();
 
-        public bool IsSerializeableColumn(DBColumn column, Type type)
-        {
-            return column.PropertyName != null
-                && column.PropertyInvoker != null && column.PropertyInvoker != column
-                && column.PropertyInvoker.TargetType.IsAssignableFrom(type)
-                && !TypeHelper.IsNonSerialize(column.PropertyInfo)
-                //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
-                && (column.Keys & DBColumnKeys.Password) != DBColumnKeys.Password
-                && (column.Keys & DBColumnKeys.File) != DBColumnKeys.File;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DBColumn<T> ParseColumn<T>(string property, ref DBColumn<T> cache)
+        public DBColumn<T> GetColumn<T>(string property, ref DBColumn<T> cache)
         {
             return cache ??= (DBColumn<T>)Columns[property];
         }
 
-        public DBColumn<T> ParseColumn<T>(string property)
+        public DBColumn<T> GetColumn<T>(string property)
         {
             return (DBColumn<T>)Columns[property];
         }
 
-        public DBColumn ParseColumnProperty(string property)
+        public DBColumn GetColumnOrProperty(string property)
         {
             return Columns[property]
-                ?? ParseProperty(property);
+                ?? GetColumnByProperty(property);
         }
 
-        public virtual DBColumn ParseColumn(string name)
+        public virtual DBColumn GetColumn(string name)
         {
             DBTable table = this;
             int s = 0, i = name.IndexOf('.');
@@ -603,26 +597,26 @@ namespace DataWF.Data
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DBColumn ParseProperty(string property, ref DBColumn cache)
+        public DBColumn GetColumnByProperty(string property, ref DBColumn cache)
         {
-            return cache ??= ParseProperty(property);
+            return cache ??= GetColumnByProperty(property);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DBColumn<T> ParseProperty<T>(string property, ref DBColumn<T> cache)
+        public DBColumn<T> GetColumnByProperty<T>(string property, ref DBColumn<T> cache)
         {
-            return cache ??= ParseProperty<T>(property);
+            return cache ??= GetColumnByProperty<T>(property);
         }
 
-        public DBColumn ParseProperty(string property)
+        public DBColumn GetColumnByProperty(string property)
         {
             return Columns.GetByProperty(property)
                 ?? Columns.GetByReferenceProperty(property);
         }
 
-        public DBColumn<T> ParseProperty<T>(string property)
+        public DBColumn<T> GetColumnByProperty<T>(string property)
         {
-            return (DBColumn<T>)ParseProperty(property);
+            return (DBColumn<T>)GetColumnByProperty(property);
         }
 
         protected internal void SetItemType(Type type)
@@ -709,9 +703,9 @@ namespace DataWF.Data
                     transaction.ReferencingStack.Add(column);
                     var subCommand = DBCommand.CloneCommand(command, column.ReferenceTable.BuildQuery($@"
     left join {SqlName} {oldAlias} on {oldAlias}.{column.SqlName} = {newAlias}.{column.ReferenceTable.PrimaryKey.SqlName} 
-    {where}", newAlias, null));
+    {where}", newAlias));
                     //Debug.WriteLine($"Load Reference: {subCommand.CommandText}");
-                    column.ReferenceTable.LoadItems(subCommand, DBLoadParam.Referencing, transaction);
+                    column.ReferenceTable.Load<DBItem>(subCommand, DBLoadParam.Referencing, transaction);
                     transaction.ReferencingStack.Remove(column);
                 }
             }
@@ -740,10 +734,10 @@ namespace DataWF.Data
                     transaction.ReferencingStack.Add(referenceColumn);
                     var subCommand = DBCommand.CloneCommand(command, referenceTable.BuildQuery($@"
     left join {SqlName} {oldAlias} on {oldAlias}.{PrimaryKey.SqlName} = {newAlias}.{referenceColumn.SqlName} 
-    {where}", newAlias, null));
+    {where}", newAlias));
                     //Debug.WriteLine($"Load Referencing: {subCommand.CommandText}");
                     var loadParam = reference.ForceLoadReference ? DBLoadParam.Reference | DBLoadParam.Referencing : DBLoadParam.Referencing;
-                    referenceTable.LoadItems(subCommand, loadParam, transaction);
+                    referenceTable.Load<DBItem>(subCommand, loadParam, transaction);
                     transaction.ReferencingStack.Remove(referenceColumn);
                 }
             }
@@ -819,7 +813,7 @@ namespace DataWF.Data
                 string fieldName = transaction.Reader.GetName(i);
                 if (fieldName.Length == 0)
                     fieldName = i.ToString();
-                var column = CheckColumn(fieldName, transaction.Reader.GetFieldType(i), ref newcol);
+                var column = GetOrCreateColumn(fieldName, transaction.Reader.GetFieldType(i), ref newcol);
                 if (column.IsPrimaryKey)
                 {
                     transaction.ReaderPrimaryKey = i;
@@ -840,64 +834,47 @@ namespace DataWF.Data
             }
         }
 
-        public virtual DBColumn CheckColumn(string name, Type type, ref bool newCol)
-        {
-            if (IsVirtual)
-            {
-                var baseColumn = ParentTable.CheckColumn(name, type, ref newCol);
-                if (newCol)
-                    Columns.Add(DBColumnFactory.CreateVirtual(baseColumn, this));
-                return baseColumn;
-            }
-            var column = Columns[name];
-            if (column == null)
-            {
-                column = DBColumnFactory.Create(typeof(Nullable<>).MakeGenericType(type), name: name, size: -1, table: this);
-                Columns.Add(column);
-                newCol = true;
-            }
-            return column;
-        }
-
         public abstract DBItem this[int index] { get; }
 
         public abstract void Add(DBItem item);
 
-        public abstract DBItem LoadItemFromReader(DBTransaction transaction);
+        protected internal abstract DBItem LoadDBItem(DBTransaction transaction);
 
-        public abstract IEnumerable<DBItem> LoadItemsCache(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null);
+        public abstract IEnumerable<T> Load<T>(DBLoadParam param = DBLoadParam.Referencing, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
+        public abstract IEnumerable<T> Load<T>(IQuery query, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
+        public abstract IEnumerable<T> Load<T>(IQuery<T> query, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract IEnumerable<DBItem> LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
+        public abstract IEnumerable<T> Load<T>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract Task<IEnumerable<DBItem>> LoadItemsAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
+        public abstract IEnumerable<T> Load<T>(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract DBItem LoadItemByCode(string code, DBColumn<string> column, DBLoadParam param, DBTransaction transaction = null);
+        public abstract Task<IEnumerable<T>> LoadAsync<T>(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
+        public abstract T LoadByCode<T>(string code, DBColumn<string> column, DBLoadParam param, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract DBItem LoadItemById<K>(K? id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null) where K : struct;
+        public abstract T LoadById<T>(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract DBItem LoadItemByKey(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
+        public abstract T LoadById<T, K>(K? id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem where K : struct;
 
-        public abstract DBItem LoadItemByKey<K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
+        public abstract IEnumerable<T> LoadByKey<T>(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
+        public abstract IEnumerable<T> LoadByKey<T, K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
+
+        public abstract void Reload(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
 
         public abstract void AddView(IDBTableView view);
 
         public abstract void RemoveView(IDBTableView view);
 
-        public List<DBItem> LoadItemsById(List<string> ids, DBTransaction transaction)
+        public List<T> LoadById<T>(List<string> ids, DBTransaction transaction) where T : DBItem
         {
-            var items = new List<DBItem>();
+            var items = new List<T>();
             var primaryKey = PrimaryKey;
             foreach (var id in ids)
             {
-                var item = primaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                var item = primaryKey.Load<T>(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction).FirstOrDefault();
                 if (item != null)
                 {
                     items.Add(item);
@@ -907,9 +884,8 @@ namespace DataWF.Data
             return items;
         }
         public abstract void RefreshVirtualTable(DBTable value);
-        public abstract void OnBaseTableChanged(DBItem item, NotifyCollectionChangedAction type);
 
-        public event EventHandler<DBItemEventArgs> RowUpdating;
+        protected internal abstract void OnBaseTableChanged(DBItem item, NotifyCollectionChangedAction type);
 
         protected internal virtual bool OnUpdating(DBItemEventArgs e)
         {
@@ -948,17 +924,17 @@ namespace DataWF.Data
 
         public void DeleteById(object id)
         {
-            DBItem row = PrimaryKey.LoadByKey(id);
+            DBItem row = LoadById<DBItem>(id);
             row?.Delete();
         }
 
         public abstract IEnumerable<DBItem> GetChangedItems();
 
-        public virtual async Task<bool> SaveItem(DBItem item, DBTransaction transaction)
+        public virtual async Task<bool> Save(DBItem item, DBTransaction transaction)
         {
             if (IsVirtual)
             {
-                return await ParentTable.SaveItem(item, transaction);
+                return await ParentTable.Save(item, transaction);
             }
             if (item.UpdateState == DBUpdateState.Default || (item.UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
@@ -1091,9 +1067,9 @@ namespace DataWF.Data
             Sequence?.Save(transaction);
         }
 
-        public int GetRowCount(DBTransaction transaction, string @where)
+        public int GetCount(DBTransaction transaction, string @where)
         {
-            object val = transaction.ExecuteQuery(transaction.AddCommand(BuildQuery(@where, "a", null, "count(*)")), DBExecuteType.Scalar);
+            object val = transaction.ExecuteQuery(transaction.AddCommand(BuildQuery(@where, "a", DBLoadParam.None, "count(*)")), DBExecuteType.Scalar);
             return val is Exception ? -1 : int.Parse(val.ToString());
         }
 
@@ -1112,7 +1088,7 @@ namespace DataWF.Data
 
         public abstract void Clear();
 
-        public void RejectChanges(IUserIdentity user)
+        public void RejectAll(IUserIdentity user)
         {
             RejectChanges(GetChangedItems().ToList(), user);
         }
@@ -1125,7 +1101,7 @@ namespace DataWF.Data
             }
         }
 
-        public void AcceptChanges(IUserIdentity user)
+        public void AcceptAll(IUserIdentity user)
         {
             foreach (var row in GetChangedItems().ToList())
             {
@@ -1138,7 +1114,7 @@ namespace DataWF.Data
             return (IDBTableView)EmitInvoker.Initialize(typeof(DBTableView<>).MakeGenericType(type), new Type[] { }, true).Create();
         }
 
-        public abstract IDBTableView CreateItemsView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
+        public abstract IDBTableView CreateView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
 
         public abstract DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true);
 
@@ -1169,11 +1145,11 @@ namespace DataWF.Data
             return item;
         }
 
-        public IEnumerable<DBColumn> ParseColumns(ICollection<string> columns)
+        public IEnumerable<DBColumn> GetColumns(ICollection<string> columns)
         {
             foreach (string column in columns)
             {
-                var dbColumn = ParseColumn(column);
+                var dbColumn = GetColumn(column);
                 if (dbColumn != null)
                     yield return dbColumn;
             }
@@ -1181,53 +1157,16 @@ namespace DataWF.Data
 
         #region Use Index
 
-        public IEnumerable SelectValues(DBItem item, QQuery query, CompareType compare)
-        {
-            if (query.Columns.Count == 0)
-            {
-                query.Columns.Add(new QColumn(query.Table.PrimaryKey));
-            }
-            if (query.IsRefence && item != null)
-            {
-                foreach (QParam param in query.GetAllParameters())
-                {
-                    if (param.RightColumn is var column)
-                    {
-                        if (column.Table == this)
-                        {
-                            param.RightQColumn.Temp = item.GetValue(column);
-                        }
-                    }
-                }
-            }
-            if (query.Columns[0] is QColumn qColumn)
-            {
-                return qColumn.Column.Distinct(query.Select());
-            }
-            var objects = new List<object>();
-            foreach (DBItem row in query.Select())
-            {
-                object value = query.Columns[0].GetValue(row);
-                int index = ListHelper.BinarySearch<object>(objects, value, null);
-                if (index < 0)
-                {
-                    objects.Insert(-index - 1, value);
-                }
-            }
-            return objects;
-        }
-        public abstract IEnumerable<DBItem> SelectItems(DBColumn column, CompareType comparer, object val);
 
-        public abstract IEnumerable<DBItem> SelectItems(string qQuery);
+        public abstract IEnumerable<T> Select<T>(IQuery qQuery) where T : DBItem;
 
-        public abstract IEnumerable<DBItem> SelectItems(QQuery qQuery);
-
+        public abstract IEnumerable<T> Select<T>(IQuery<T> qQuery) where T : DBItem;
 
         #endregion
 
         public void GetAllChildTables(List<IDBTable> parents)
         {
-            foreach (var table in GetChildTables())
+            foreach (DBTable table in GetChildTables())
             {
                 if (table != this && !parents.Contains(table))
                 {
@@ -1253,7 +1192,7 @@ namespace DataWF.Data
             virtualTables.Remove((DBTable)view);
         }
 
-        public void AddVirtual(IDBTable view)
+        public void AddVirtualTable(IDBTable view)
         {
             if (!virtualTables.Contains(view))
             {
@@ -1275,20 +1214,9 @@ namespace DataWF.Data
 
         }
 
-        public IEnumerable<DBReferencing> GetPropertyReferencing(Type type)
-        {
-            foreach (var referencing in Referencings)
-            {
-                if (referencing.PropertyInvoker.TargetType.IsAssignableFrom(type))
-                {
-                    yield return referencing;
-                }
-            }
-        }
-
         public void GetAllParentTables(List<IDBTable> parents)
         {
-            foreach (var table in GetParentTables())
+            foreach (DBTable table in GetParentTables())
             {
                 if (table != this && !parents.Contains(table))
                 {
@@ -1314,7 +1242,7 @@ namespace DataWF.Data
         {
         }
 
-        public string BuildQuery(string whereFilter, string alias, IEnumerable<DBColumn> cols = null, string function = null)
+        public string BuildQuery(string whereFilter, string alias, DBLoadParam param = DBLoadParam.None, string function = null)
         {
             var select = new StringBuilder("select ");
             if (!string.IsNullOrEmpty(function))
@@ -1324,7 +1252,8 @@ namespace DataWF.Data
             }
             else
             {
-                if (cols == null)
+                IEnumerable<DBColumn> cols = Columns;
+                if ((param & DBLoadParam.DownloadFiles) != DBLoadParam.DownloadFiles)
                 {
                     cols = Columns.Where(p => (p.Keys & DBColumnKeys.File) != DBColumnKeys.File);// query += "*";// cols = this.columns as IEnumerable;
                 }
@@ -1332,7 +1261,7 @@ namespace DataWF.Data
                 bool f = false;
                 foreach (DBColumn column in cols)
                 {
-                    string temp = FormatQColumn(column, alias);
+                    string temp = System.FormatQColumn(column, alias);
                     if (!string.IsNullOrEmpty(temp))
                     {
                         if (f)
@@ -1346,7 +1275,7 @@ namespace DataWF.Data
                 if (select.ToString()?.Equals("select ", StringComparison.Ordinal) ?? false)
                     select.Append(" * ");
             }
-            string vquery = Query;
+            string vquery = SubQuery;
             if (!string.IsNullOrEmpty(vquery))
             {
                 var isWhere = whereFilter.IndexOf("where", StringComparison.OrdinalIgnoreCase) > -1;
@@ -1357,21 +1286,11 @@ namespace DataWF.Data
                     vquery = $"{(isWhere ? " and (" : " where ")}{vquery}{(isWhere ? ")" : string.Empty)}";
             }
             select.Append("\nfrom ");
-            select.Append(FormatQTable(alias));
+            select.Append(System.FormatQTable(this, alias));
             select.Append(" ");
             select.Append(whereFilter);
             select.Append(vquery);
             return select.ToString();
-        }
-
-        public string FormatQColumn(DBColumn column, string tableAlias)
-        {
-            return System?.FormatQColumn(column, tableAlias);
-        }
-
-        public string FormatQTable(string alias)
-        {
-            return System?.FormatQTable(this, alias);
         }
 
         protected void ClearColumnsData(bool pool)
@@ -1386,32 +1305,32 @@ namespace DataWF.Data
             }
         }
 
-        public IDbCommand CreateKeyCommmand(object key, DBColumn column, IEnumerable<DBColumn> cols = null)
+        public IDbCommand CreateKeyCommmand(object key, DBColumn column, DBLoadParam loadParam)
         {
             string idName = System.ParameterPrefix + column.SqlName;
-            var command = System.CreateCommand(Schema.Connection, BuildQuery($"where a.{column.SqlName}={idName}", "a", cols));
+            var command = System.CreateCommand(Schema.Connection, BuildQuery($"where a.{column.SqlName}={idName}", "a", loadParam));
             System.CreateParameter(command, idName, key, column);
             return command;
         }
 
-        public IDbCommand CreateKeyCommmand<K>(K key, DBColumn<K> column, IEnumerable<DBColumn> cols = null)
+        public IDbCommand CreateKeyCommmand<K>(K key, DBColumn<K> column, DBLoadParam loadParam)
         {
             string idName = System.ParameterPrefix + column.SqlName;
-            var command = System.CreateCommand(Schema.Connection, BuildQuery($"where a.{column.SqlName}={idName}", "a", cols));
+            var command = System.CreateCommand(Schema.Connection, BuildQuery($"where a.{column.SqlName}={idName}", "a", loadParam));
             System.CreateParameter(command, idName, key, column);
             return command;
         }
 
-        public IDbCommand CreatePrimaryKeyCommmand(object id, IEnumerable<DBColumn> cols = null)
+        public IDbCommand CreateCommmand(object id, DBLoadParam loadParam)
         {
-            return CreateKeyCommmand(id, PrimaryKey, cols);
+            return CreateKeyCommmand(id, PrimaryKey, loadParam);
         }
 
-        public string CreateQuery(string whereText, string alias, IEnumerable<DBColumn> cols = null)
+        public string CreateQuery(string whereText, string alias, DBLoadParam loadParam = DBLoadParam.None)
         {
             string rez;
             if (string.IsNullOrEmpty(whereText) || whereText.Trim().StartsWith("where ", StringComparison.OrdinalIgnoreCase))
-                rez = BuildQuery(whereText, alias, cols);
+                rez = BuildQuery(whereText, alias, loadParam);
             else
                 rez = whereText;
 
@@ -1520,7 +1439,7 @@ namespace DataWF.Data
             var table = (DBTable)EmitInvoker.CreateObject(GetType(), true);
             table.name = Name;
             //bc.bname = this.bname;
-            table.query = Query;
+            table.subQuery = SubQuery;
             table.keys = Keys;
             table.type = Type;
             table.groupName = GroupName;
@@ -1563,17 +1482,17 @@ namespace DataWF.Data
             imageKey = DBColumn<byte[]>.EmptyKey;
         }
 
-        public IEnumerable<DBColumn> GetRefColumns()
+        public IEnumerable<DBColumn> GetReferenceColumns()
         {
             return refInvoker ?? (refInvoker = new DBColumn[] { ItemTypeKey, PrimaryKey });
         }
 
-        public IEnumerable<DBReferencing> GetReferencing<T>()
+        public IEnumerable<DBReferencing> GetAllReferencing<T>()
         {
-            return GetReferencing(typeof(T));
+            return GetAllReferencing(typeof(T));
         }
 
-        public IEnumerable<DBReferencing> GetReferencing(Type t)
+        public IEnumerable<DBReferencing> GetAllReferencing(Type t)
         {
             return mapTypeRefing.GetOrAdd(t, CreateInvokers);
             List<DBReferencing> CreateInvokers(Type type)
@@ -1591,7 +1510,18 @@ namespace DataWF.Data
             }
         }
 
-        public DBReferencing ParseReferencing(string property)
+        public IEnumerable<DBReferencing> GetReferencingByProperty(Type type)
+        {
+            foreach (var referencing in Referencings)
+            {
+                if (referencing.PropertyInvoker.TargetType.IsAssignableFrom(type))
+                {
+                    yield return referencing;
+                }
+            }
+        }
+
+        public DBReferencing GetReferencing(string property)
         {
             return Referencings[property];
         }
@@ -1609,7 +1539,7 @@ namespace DataWF.Data
                 var columns = new List<DBColumn>(Columns.Count);
                 foreach (var column in Columns)
                 {
-                    if (!IsSerializeableColumn(column, type))
+                    if (!column.IsSerializeable(type))
                         continue;
 
                     columns.Add(column);
@@ -1652,7 +1582,7 @@ namespace DataWF.Data
                 {
                     var tableGenerator = new LogTableGenerator()
                     {
-                        Attribute = new LogTableAttribute(ItemType.Type, $"{Name}{(IsVirtual ? "Log": "_log")}")
+                        Attribute = new LogTableAttribute(ItemType.Type, $"{Name}{(IsVirtual ? "Log" : "_log")}")
                         {
                             SequenceName = SequenceName + "_log"
                         },
@@ -1706,7 +1636,7 @@ namespace DataWF.Data
             {
                 string name = columnInfo.Name;
                 (Type type, int size, int scale) = columnInfo.GetDataType();
-                var column = InitColumn(type, columnInfo.Name);
+                var column = GetOrCreateColumn(columnInfo.Name, type);
                 column.Size = size;
                 column.Scale = scale;
                 //if (col.Order == 1)
@@ -1730,13 +1660,18 @@ namespace DataWF.Data
 
             foreach (var constraintInfo in tableInfo.Constraints)
             {
-                string name = constraintInfo.Name;
-                var constraint = InitConstraint(name);
-                //if (col.Order == 1)
-                //    col.IsPrimaryKey = true;
                 var column = Columns[constraintInfo.Column];
+                var name = constraintInfo.Name;
+                var type = DBConstraintType.Check;
                 if (column == null)
                     continue;
+                if (constraintInfo.Type.Equals("PRIMARY KEY", StringComparison.OrdinalIgnoreCase))
+                {
+                    type = DBConstraintType.Primary;
+                    column.Keys |= DBColumnKeys.Primary;
+                }
+                var constraint = GetOrCreateConstraint(name, type);
+
                 constraint.Column = column;
                 if (constraintInfo.Type.Equals("PRIMARY KEY", StringComparison.OrdinalIgnoreCase))
                 {
@@ -1761,45 +1696,12 @@ namespace DataWF.Data
 
         public string GetRowText(object id, IEnumerable<DBColumn> parametrs, bool showColumn, string separator)
         {
-            return primaryKey.LoadByKey(id)?.GetRowText(parametrs, showColumn, separator) ?? "<null>";
+            return LoadById<DBItem>(id)?.GetRowText(parametrs, showColumn, separator) ?? "<null>";
         }
 
         public string GetRowText(object id, bool allColumns, bool showColumn, string separator)
         {
-            return primaryKey.LoadByKey(id)?.GetRowText((allColumns ? (IEnumerable<DBColumn>)Columns : Columns.GetIsView()), showColumn, separator);
-        }
-
-        public QEnum GetStatusEnum(DBStatus status)
-        {
-            var qlist = new QEnum();
-            if ((status & DBStatus.Actual) == DBStatus.Actual)
-                qlist.Items.Add(new QValue((int)DBStatus.Actual));
-            if ((status & DBStatus.New) == DBStatus.New)
-                qlist.Items.Add(new QValue((int)DBStatus.New));
-            if ((status & DBStatus.Edit) == DBStatus.Edit)
-                qlist.Items.Add(new QValue((int)DBStatus.Edit));
-            if ((status & DBStatus.Delete) == DBStatus.Delete)
-                qlist.Items.Add(new QValue((int)DBStatus.Delete));
-            if ((status & DBStatus.Archive) == DBStatus.Archive)
-                qlist.Items.Add(new QValue((int)DBStatus.Archive));
-            if ((status & DBStatus.Error) == DBStatus.Error)
-                qlist.Items.Add(new QValue((int)DBStatus.Error));
-
-            return qlist;
-        }
-
-        public QParam GetStatusParam(DBStatus status)
-        {
-            if (StatusKey != null && status != 0 && status != DBStatus.Empty)
-            {
-                return new QParam()
-                {
-                    LeftItem = new QColumn(StatusKey),
-                    Comparer = CompareType.In,
-                    RightItem = GetStatusEnum(status)
-                };
-            }
-            return null;
+            return LoadById<DBItem>(id)?.GetRowText((allColumns ? (IEnumerable<DBColumn>)Columns : Columns.GetIsView()), showColumn, separator);
         }
 
         public virtual DBItemType GetItemType(int typeIndex)
@@ -1825,22 +1727,7 @@ namespace DataWF.Data
             return -1;
         }
 
-        public QParam GetTypeParam(Type type)
-        {
-            var typeIndex = GetTypeIndex(type);
-            if (ItemTypeKey != null && typeIndex > 0)
-            {
-                return new QParam()
-                {
-                    LeftItem = new QColumn(ItemTypeKey),
-                    Comparer = CompareType.Equal,
-                    RightItem = new QValue(typeIndex, ItemTypeKey)
-                };
-            }
-            return null;
-        }
-
-        public DBColumnGroup InitColumnGroup(string code)
+        public DBColumnGroup GetOrCreateColumnGroup(string code)
         {
             DBColumnGroup cs = null;
             cs = ColumnGroups[code];
@@ -1852,14 +1739,34 @@ namespace DataWF.Data
             return cs;
         }
 
-        public DBColumn InitColumn(Type type, string name)
+        public virtual DBColumn GetOrCreateColumn(string name, Type type, ref bool newCol)
         {
-            return Columns[name] ?? DBColumnFactory.Create(type, name: name, table: this);
+            if (IsVirtual)
+            {
+                var baseColumn = ParentTable.GetOrCreateColumn(name, type, ref newCol);
+                if (newCol)
+                    Columns.Add(DBColumnFactory.CreateVirtual(baseColumn, this));
+                return baseColumn;
+            }
+            var column = Columns[name];
+            if (column == null)
+            {
+                column = DBColumnFactory.Create(typeof(Nullable<>).MakeGenericType(type), name: name, size: -1, table: this);
+                Columns.Add(column);
+                newCol = true;
+            }
+            return column;
         }
 
-        private DBConstraint InitConstraint(string name)
+        public DBColumn GetOrCreateColumn(string name, Type type)
         {
-            return Constraints[name] ?? new DBConstraint() { Table = this, Name = name };
+            var isNew = false;
+            return GetOrCreateColumn(name, type, ref isNew);
+        }
+
+        private DBConstraint GetOrCreateConstraint(string name, DBConstraintType type)
+        {
+            return Constraints[name] ?? new DBConstraint() { Table = this, Name = name, Type = type };
         }
 
         public void GenerateDefaultColumns()
@@ -1867,7 +1774,7 @@ namespace DataWF.Data
             Columns.AddRange(new[]
             {
                 DBColumnFactory.Create(typeof(int), name: "type_id", keys: DBColumnKeys.ItemType, table: this ),
-                DBColumnFactory.Create(typeof(int?), name: "unid", keys: DBColumnKeys.Primary, table: this),
+                DBColumnFactory.Create(typeof(long), name: "unid", keys: DBColumnKeys.Primary, table: this),
                 DBColumnFactory.Create(typeof(DateTime?), name: "datec", keys: DBColumnKeys.Date| DBColumnKeys.UtcDate, table:this),
                 DBColumnFactory.Create(typeof(DateTime?), name: "dateu", keys: DBColumnKeys.Stamp| DBColumnKeys.UtcDate, table:this),
                 DBColumnFactory.Create(typeof(DBItemState?), name: "stateid", keys: DBColumnKeys.State,table:this),
@@ -1895,49 +1802,44 @@ namespace DataWF.Data
             }
         }
 
-        public bool ParseQuery(string filter, out QQuery query)
+        public IQuery<T> Query<T>(IQuery baseQuery) where T : DBItem => new QQuery<T>(this) { BaseQuery = baseQuery };
+
+        public IQuery<T> Query<T>(DBLoadParam loadParam = DBLoadParam.None) where T : DBItem => new QQuery<T>(this) { LoadParam = loadParam };
+
+        public IQuery<T> Query<T>(string filter, DBLoadParam loadParam = DBLoadParam.None) where T : DBItem
         {
-            query = null;
-            if (!queryChache.TryGetValue(filter, out query))
+            if (!queryChache.TryGetValue(filter, out var query))
             {
-                query = new QQuery(filter, this);
+                query = new QQuery<T>(this, filter) { LoadParam = loadParam };
                 queryChache.TryAdd(filter, query);
-                return false;
             }
-            return true;
+            return (IQuery<T>)query;
         }
+
 
         public DateTime? GetReplicateMaxStamp()
         {
-            using (var query = new QQuery(this))
-            {
-                query.Columns.Add(new QFunc(QFunctionType.max, new[] { StampKey }));
+            var query = Query<DBItem>().Column(QFunctionType.max, StampKey)
+                .Where(ReplicateStampKey, CompareType.Is, null)
+                .Or(StampKey, CompareType.Greater, ReplicateStampKey);
 
-                var param = query.Add();
-                param.Parameters.Add(query.CreateParam(ReplicateStampKey, CompareType.Is, null));
-                param.Parameters.Add(query.CreateParam(LogicType.Or, StampKey, CompareType.Greater, ReplicateStampKey));
-
-                var max = Connection.ExecuteQuery(query.ToCommand(false), true, DBExecuteType.Scalar);
-                return max == null || max == DBNull.Value
-                    ? (DateTime?)null
-                    : DateTime.SpecifyKind((DateTime)max, DateTimeKind.Utc);
-            }
+            var max = Connection.ExecuteQuery(query.ToCommand(false), true, DBExecuteType.Scalar);
+            return max == null || max == DBNull.Value
+                ? (DateTime?)null
+                : DateTime.SpecifyKind((DateTime)max, DateTimeKind.Utc);
         }
 
         public IEnumerable<DBItem> GetReplicateItems(DateTime? stamp)
         {
-            using (var query = new QQuery(this))
+            var query = Query<DBItem>(DBLoadParam.Referencing);
+            if (stamp != null)
             {
-                if (stamp != null)
-                {
-                    query.BuildParam(StampKey, CompareType.GreaterOrEqual, stamp);
-                }
-                var param = query.Add();
-                param.Parameters.Add(query.CreateParam(ReplicateStampKey, CompareType.Is, null));
-                param.Parameters.Add(query.CreateParam(LogicType.Or, StampKey, CompareType.Greater, ReplicateStampKey));
-
-                return LoadItems(query, DBLoadParam.Referencing);
+                query.Where(StampKey, CompareType.GreaterOrEqual, stamp);
             }
+            query.And(p => p.And(ReplicateStampKey, CompareType.Is, null)
+                            .Or(StampKey, CompareType.Greater, ReplicateStampKey));
+
+            return Load<DBItem>(query);
         }
     }
 }

@@ -174,7 +174,7 @@ namespace DataWF.Data
             base.OnPropertyChanged(propertyName);
             if (type != DDLType.None)
             {
-                DBService.OnDBSchemaChanged(this, type);
+                ((DBSchema)Schema)?.OnChanged(this, type);
             }
         }
 

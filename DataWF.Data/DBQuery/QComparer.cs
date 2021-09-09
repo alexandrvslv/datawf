@@ -39,7 +39,7 @@ namespace DataWF.Data
                 if (type != value)
                 {
                     type = value;
-                    OnPropertyChanged();
+                    //OnPropertyChanged();
                 }
             }
         }

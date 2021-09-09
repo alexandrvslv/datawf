@@ -65,12 +65,27 @@ namespace DataWF.Common
 
         public static ListIndex<T, K> Create<T, K>(IValuedInvoker<K> invoker, bool concurrent)
         {
-            var comparer = (IEqualityComparer<K>)EqualityComparer<K>.Default;
-            if (invoker.DataType == typeof(string))
-                comparer = (IEqualityComparer<K>)StringComparer.OrdinalIgnoreCase;
-            if (invoker.DataType == typeof(byte[]))
-                comparer = (IEqualityComparer<K>)ByteArrayComparer.Default;
-            return new ListIndex<T, K>(invoker, GetNullKey<K>(), comparer, concurrent);
+            return new ListIndex<T, K>(invoker, GetNullKey<K>(), concurrent);
+        }
+
+        public static IListIndex Create(IInvoker invoker, bool concurrent)
+        {
+            return Create(invoker.TargetType, invoker, concurrent);
+        }
+
+        public static IListIndex Create<T>(IInvoker invoker, bool concurrent)
+        {
+            return Create(typeof(T), invoker, concurrent);
+        }
+
+        public static IListIndex Create(Type targetType, IInvoker invoker, bool concurrent)
+        {
+            Type dataType = invoker.DataType;
+
+            var invokerType = typeof(IValuedInvoker<>).MakeGenericType(dataType);
+            var indexType = typeof(ListIndex<,>).MakeGenericType(targetType, dataType);
+
+            return (IListIndex)EmitInvoker.CreateObject(indexType, new[] { invokerType, dataType, typeof(bool) }, new[] { invoker, GetNullKey(dataType), concurrent });
         }
     }
 }

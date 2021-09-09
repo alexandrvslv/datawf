@@ -118,6 +118,7 @@ namespace DataWF.Common
             return Array.BinarySearch(items, 0, _count, item, comparer);//ListHelper.BinarySearch(items, 0, _count - 1, item, comparer, false);//
         }
 
+
         public int IndexOf(T item)
         {
             return Array.IndexOf(items, item, 0, (int)_count);
@@ -138,6 +139,34 @@ namespace DataWF.Common
         {
             return _count > 0 ? items[0] : default(T);
         }
+
+        public ReadOnlySpan<T> AsSpan() => items.AsSpan(0, _count);
+
+        public ReadOnlyList<T> AsReadOnly() => new ReadOnlyList<T>(items, _count);
+    }
+
+    public struct ReadOnlyList<T> : IReadOnlyList<T>
+    {
+        public static IReadOnlyList<T> Empty = new ReadOnlyList<T>(null, 0);
+
+        private readonly T[] array;
+        private readonly int count;
+
+        public ReadOnlyList(T[] array, int count)
+        {
+            this.array = array;
+            this.count = count;
+        }
+        public T this[int index] => array[index];
+
+        public int Count => count;
+
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+
+        public ThreadSafeArrayEnumerator<T> GetEnumerator() => count == 0 ? ThreadSafeArrayEnumerator<T>.Empty : new ThreadSafeArrayEnumerator<T>(array, count);
     }
 }
 

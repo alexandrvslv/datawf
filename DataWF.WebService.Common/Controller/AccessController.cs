@@ -64,7 +64,7 @@ namespace DataWF.WebService.Common
             try
             {
                 var table = GetTable(name);
-                var column = table?.ParseProperty(property);
+                var column = table?.GetColumnByProperty(property);
                 if (column == null)
                 {
                     return NotFound();
@@ -128,7 +128,7 @@ namespace DataWF.WebService.Common
             }
             try
             {
-                var value = table.PrimaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing);
+                var value = table.PrimaryKey.Load(id, DBLoadParam.Load | DBLoadParam.Referencing).FirstOrDefault();
                 if (value == null)
                 {
                     return NotFound();

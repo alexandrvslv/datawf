@@ -319,7 +319,7 @@ namespace DataWF.Common
         {
             var oldValue = default(V);
             var list = items.ToList();
-            ListHelper.QuickSort(list, (IComparer<T>)((IInvokerExtension)Invoker).CreateComparer<T>(ListSortDirection.Descending));
+            ListHelper.QuickSort(list, Invoker.CreateComparer<T>(ListSortDirection.Descending));
             foreach (var item in list)
             {
                 var newValue = Invoker.GetValue(item);

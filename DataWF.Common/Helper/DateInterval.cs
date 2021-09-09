@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace DataWF.Common
 {
-    public struct DateInterval
+    public class DateInterval : IBetween
     {
         public static DateInterval Parse(string s, IFormatProvider format = null)
         {
@@ -37,6 +37,9 @@ namespace DataWF.Common
         private DateTime min;
         private DateTime max;
 
+        public DateInterval()
+        { }
+
         public DateInterval(DateTime date)
             : this(date, date)
         { }
@@ -49,7 +52,7 @@ namespace DataWF.Common
 
         public DateTime Min
         {
-            get { return min; }
+            get => min;
             set
             {
                 if (min == value)
@@ -62,7 +65,7 @@ namespace DataWF.Common
 
         public DateTime Max
         {
-            get { return max; }
+            get => max;
             set
             {
                 if (max == value)
@@ -95,9 +98,16 @@ namespace DataWF.Common
             return false;
         }
 
+        public object MaxValue() => Max;
+
+        public object MinValue() => Min;
+
         public override int GetHashCode()
         {
-            return min.GetHashCode() ^ max.GetHashCode();
+            int hashCode = -897720056;
+            hashCode = hashCode * -1521134295 + min.GetHashCode();
+            hashCode = hashCode * -1521134295 + max.GetHashCode();
+            return hashCode;
         }
     }
 }

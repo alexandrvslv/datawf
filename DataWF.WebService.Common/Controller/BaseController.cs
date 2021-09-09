@@ -75,7 +75,8 @@ namespace DataWF.WebService.Common
                 {
                     return Forbid();
                 }
-                var result = await Table.LoadCacheAsync(filter, DBLoadParam.Referencing);
+                var query = Table.Query(filter, DBLoadParam.Referencing);
+                var result = await Table.LoadAsync();
                 return new ActionResult<IEnumerable<T>>(result.Where(p => p.Access.GetFlag(AccessType.Read, user)
                                                               && !primaryKey.IsEmpty(p)
                                                               && (p.UpdateState & DBUpdateState.Insert) == 0));
@@ -96,26 +97,10 @@ namespace DataWF.WebService.Common
                 {
                     return Forbid();
                 }
-                if (!Table.ParseQuery(filter, out var query))
-                {
-                    await Table.LoadAsync(query, DBLoadParam.Referencing);
-                }
-
-                var result = Table.Select(query).Where(p => p.Access.GetFlag(AccessType.Read, user)
+                var query = Table.Query(filter, DBLoadParam.Referencing | DBLoadParam.Load);
+                var result = (await Table.LoadAsync(query)).Where(p => p.Access.GetFlag(AccessType.Read, user)
                                                          && !primaryKey.IsEmpty(p)
                                                          && (p.UpdateState & DBUpdateState.Insert) == 0);
-                if (query.Orders.Count > 0)
-                {
-                    var list = result.ToList();
-                    query.Sort<T>(list);
-                    result = list;
-                }
-                else if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
-                {
-                    var list = result.ToList();
-                    ListHelper.QuickSort(list, TreeComparer<IGroup>.Default);
-                    result = list;
-                }
                 result = Pagination(result);
 
                 return new ActionResult<IEnumerable<T>>(result);
@@ -339,7 +324,7 @@ namespace DataWF.WebService.Common
                     {
                         return NotFound();
                     }
-                    var items = Table.LoadItemsById(ids, transaction);
+                    var items = Table.LoadById<T>(ids, transaction);
                     foreach (var item in items)
                     {
                         if (!item.Access.GetFlag(AccessType.Delete, transaction.Caller))
@@ -461,7 +446,7 @@ namespace DataWF.WebService.Common
                     return Forbid();
                 }
 
-                if (!logTable.ParseQuery(filter, out var query))
+                logTable.Query(filter)
                 {
                     if (Table.IsVirtual && Table.ItemTypeIndex != 0)
                     {

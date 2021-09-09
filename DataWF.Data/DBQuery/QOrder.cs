@@ -24,10 +24,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 namespace DataWF.Data
 {
-    public class QOrder : QItem, IInvokerExtension
+    public class QOrder : QItem
     {
         protected ListSortDirection direction = ListSortDirection.Ascending;
-        private QItem column;
+        private QItem item;
 
         public QOrder()
             : base()
@@ -35,9 +35,18 @@ namespace DataWF.Data
         }
 
         public QOrder(DBColumn column)
-            : base()
+            : this(new QColumn(column))
         {
-            Column = new QColumn(column);
+        }
+
+        public QOrder(IInvoker invoker)
+            : this(new QInvoker(invoker))
+        {
+        }
+
+        public QOrder(QItem column)
+        {
+            Item = column;
         }
 
         public ListSortDirection Direction
@@ -46,106 +55,63 @@ namespace DataWF.Data
             set
             {
                 direction = value;
-                OnPropertyChanged();
+                //OnPropertyChanged();
             }
         }
 
-        public QItem Column
+        public QItem Item
         {
-            get => column;
+            get => item;
             set
             {
-                if (column != value)
+                if (item != value)
                 {
-                    column = value;
-                    if (column != null)
+                    item = value;
+                    if (item != null)
                     {
-                        column.Holder = this;
+                        item.Holder = this;
                     }
-
-                    OnPropertyChanged();
+                    //OnPropertyChanged();
                 }
             }
         }
 
         public override object GetValue(DBItem row)
         {
-            return column.GetValue(row);
+            return item.GetValue(row);
         }
 
         public override string Format(System.Data.IDbCommand command = null)
         {
-            return Column is QColumn
-                ? string.Format("{0} {1}", Column.Format(command), direction == ListSortDirection.Descending ? "desc" : "asc")
+            return Item is QColumn
+                ? string.Format("{0} {1}", Item.Format(command), direction == ListSortDirection.Descending ? "desc" : "asc")
                 : string.Empty;
         }
 
         public IComparer CreateComparer()
         {
-            if (Column is QColumn column)
+            if (Item is QColumn column)
                 return column.Column.CreateComparer(Direction);
-            if (Column is QReflection reflection
-                && reflection.Invoker is IInvokerExtension invokerExtension)
-                return invokerExtension.CreateComparer(reflection.Invoker.TargetType, Direction);
+            if (Item is QInvoker reflection)
+                return reflection.Invoker.CreateComparer(Direction);
             return null;
         }
 
-        public IListIndex CreateIndex(bool concurrent)
+        public IComparer CreateComparer(Type type)
         {
-            throw new NotImplementedException();
-        }
-
-        public IListIndex CreateIndex<T>(bool concurrent)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter CreateParameter(Type type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter<TT> CreateParameter<TT>()
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter CreateParameter(Type type, CompareType comparer, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter CreateParameter(Type type, LogicType logic, CompareType comparer, object value = null, QueryGroup group = QueryGroup.None)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter<TT> CreateParameter<TT>(CompareType comparer, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter<TT> CreateParameter<TT>(LogicType logic, CompareType comparer, object value = null, QueryGroup group = QueryGroup.None)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
-        {
-            if (Column is QColumn column)
-                return column.Column.CreateComparer(type, direction);
-            if (Column is QReflection reflection
-                && reflection.Invoker is IInvokerExtension invokerExtension)
-                return invokerExtension.CreateComparer(type, direction);
+            if (Item is QColumn column)
+                return column.Column.CreateComparer(type, Direction);
+            if (Item is QInvoker reflection)
+                return reflection.Invoker.CreateComparer(type, Direction);
             return null;
         }
 
-        public IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
+        public IComparer<T> CreateComparer<T>()
         {
-            return (InvokerComparer<TT>)CreateComparer(typeof(TT), direction);
+            return (IComparer<T>)CreateComparer(typeof(T));
         }
 
-       
+
     }
 }
 

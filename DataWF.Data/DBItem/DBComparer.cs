@@ -68,12 +68,12 @@ namespace DataWF.Data
             : this(column.Table, column, column.Name, direction)
         { }
 
-        public DBComparer(string table, string column, ListSortDirection direction = ListSortDirection.Ascending)
-            : this(DBService.Schems.ParseTable(table), column, direction)
+        public DBComparer(DBSchema schema, string table, string column, ListSortDirection direction = ListSortDirection.Ascending)
+            : this(schema.ParseTable(table), column, direction)
         { }
 
         public DBComparer(DBTable table, string column, ListSortDirection direction = ListSortDirection.Ascending)
-            : this(table, table.ParseColumn(column), column, direction)
+            : this(table, table.GetColumn(column), column, direction)
         { }
 
         #region IComparer

@@ -35,38 +35,10 @@ namespace DataWF.Data
     [InvokerGenerator(Instance = true)]
     public partial class QParam : QItem, IComparable, IGroup, IQItemList
     {
-        public static QItem Fabric(object value, DBColumn column)
-        {
-            switch (value)
-            {
-                case QItem qItem:
-                    return qItem;
-                case DBColumn dBColumn:
-                    return new QColumn(dBColumn);
-                case DateInterval dateInterval:
-                    if (dateInterval.IsEqual())
-                    {
-                        return new QBetween(dateInterval.Min.Date, dateInterval.Min.Date.AddDays(1), column);
-                    }
-                    else
-                    {
-                        return new QBetween(dateInterval.Min, dateInterval.Max, column);
-                    }
-                case IInvoker invoker:
-                    return new QReflection(invoker);
-                case string text:
-                    return new QValue(text, column);
-                case IEnumerable enumerable:
-                    return new QEnum(enumerable, column);
-                default:
-                    return new QValue(value, column);
-            }
-        }
-
         public static bool CheckItem(DBItem item, string column, object val, CompareType comparer)
         {
             object val1 = null;
-            DBColumn dbColumn = item.Table.ParseColumn(column);
+            DBColumn dbColumn = item.Table.GetColumn(column);
             if (dbColumn == null)
             {
                 val1 = EmitInvoker.GetValue(typeof(DBItem), column, item);
@@ -108,15 +80,12 @@ namespace DataWF.Data
         public static bool CheckItem(DBItem item, object val1, object val2, CompareType comparer)
         {
             if (item == null)
-                return false;
+                return false; //comparer.Type == CompareTypes.Is && !comparer.Not;
             if (val1 == null)
                 return comparer.Type == CompareTypes.Is ? !comparer.Not : val2 == null;
             else if (val2 == null)
-                return comparer.Type == CompareTypes.Is ? comparer.Not : false;
-            if (val1 is QQuery query1)
-                val1 = item.Table.SelectValues(item, query1, comparer);
-            if (val2 is QQuery query2)
-                val2 = item.Table.SelectValues(item, query2, comparer);
+                return comparer.Type == CompareTypes.Is ? comparer.Not : false;            
+            
             if (val1 is Enum)
                 val1 = (int)val1;
             if (val2 is Enum)
@@ -129,11 +98,11 @@ namespace DataWF.Data
                 case CompareTypes.Equal:
                     return ListHelper.Equal(val1, val2) ? !comparer.Not : comparer.Not;
                 case CompareTypes.Like:
-                    var r = val2 is Regex ? (Regex)val2 : Helper.BuildLike(val2.ToString());
+                    var r = val2 is Regex regexValue ? regexValue : Helper.BuildLike(val2.ToString());
                     return r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
                 case CompareTypes.In:
                     if (val2 is string)
-                        val2 = val2.ToString().Split(QQuery.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
+                        val2 = val2.ToString().Split(Helper.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
                     var list = val2 as IEnumerable;
                     if (list != null)
                     {
@@ -192,7 +161,7 @@ namespace DataWF.Data
 
         public QParam(DBColumn column) : this()
         {
-            SetValue(new QColumn(column));
+            Add(new QColumn(column));
         }
 
         public QParam(DBColumn column, object value) : this(LogicType.And, column, CompareType.Equal, value)
@@ -207,15 +176,13 @@ namespace DataWF.Data
         {
             Logic = logicType;
             Comparer = comparer;
-            SetValue(Fabric(value, column));
+            Add(Fabric(value, column));
         }
 
         public QParam(DBTable table, string viewFilter) : this()
         {
-            using (var query = new QQuery(viewFilter, table))
-            {
-                Parameters.AddRange(query.Parameters.ToArray());
-            }
+            var query = table.Query<DBItem>(viewFilter);
+            Parameters.AddRange(query.Parameters.ToArray());
         }
 
         [XmlIgnore, JsonIgnore]
@@ -258,46 +225,6 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, JsonIgnore]
-        public object LeftValue
-        {
-            get => LeftItem?.GetValue(null);
-            set
-            {
-                if (LeftItem is QValue qValue)
-                {
-                    qValue.Value = value;
-                    OnPropertyChanged(nameof(LeftItem));
-                    return;
-                }
-                if (comparer.Type == CompareTypes.In && value is string str)
-                    value = str.Split(',');
-                LeftItem = Fabric(value, LeftColumn);
-            }
-        }
-
-        [XmlIgnore, JsonIgnore]
-        public object RightValue
-        {
-            get => RightItem?.GetValue(null);
-            set
-            {
-                if (RightItem is QValue qValue)
-                {
-                    qValue.Value = value;
-                    OnPropertyChanged(nameof(RightItem));
-                    return;
-                }
-                if (comparer.Type == CompareTypes.In && value is string str)
-                    value = str.Split(',');
-                RightItem = Fabric(value, LeftColumn);
-            }
-        }
-
-        public bool LeftIsColumn => LeftItem?.GetType() == typeof(QColumn);
-
-        public bool RightIsColumn => RightItem?.GetType() == typeof(QColumn);
-
         public QItem LeftItem
         {
             get => items.Count > 0 ? items[0] : null;
@@ -305,15 +232,15 @@ namespace DataWF.Data
             {
                 if (LeftItem != value)
                 {
-                    if (LeftItem is QQuery oldQuery)
-                        oldQuery.Parameters.CollectionChanged -= ValueListChanged;
+                    //if (LeftItem is IQuery oldQuery)
+                    //    oldQuery.Parameters.CollectionChanged -= ValueListChanged;
 
                     items.Insert(0, value);
 
-                    if (value is QQuery newQuery)
-                        newQuery.Parameters.CollectionChanged += ValueListChanged;
+                    //if (value is IQuery newQuery)
+                    //    newQuery.Parameters.CollectionChanged += ValueListChanged;
 
-                    OnPropertyChanged();
+                    //OnPropertyChanged();
                 }
             }
         }
@@ -325,15 +252,15 @@ namespace DataWF.Data
             {
                 if (RightItem != value)
                 {
-                    if (RightItem is QQuery oldQuery)
-                        oldQuery.Parameters.CollectionChanged -= ValueListChanged;
+                    //if (RightItem is QQuery oldQuery)
+                    //    oldQuery.Parameters.CollectionChanged -= ValueListChanged;
 
                     items.Insert(1, value);
 
-                    if (value is QQuery newQuery)
-                        newQuery.Parameters.CollectionChanged += ValueListChanged;
+                    //if (value is QQuery newQuery)
+                    //    newQuery.Parameters.CollectionChanged += ValueListChanged;
                 }
-                OnPropertyChanged();
+                //OnPropertyChanged();
             }
         }
 
@@ -345,7 +272,7 @@ namespace DataWF.Data
                 if (!comparer.Equals(value))
                 {
                     comparer = value;
-                    OnPropertyChanged();
+                    //OnPropertyChanged();
                 }
             }
         }
@@ -359,7 +286,7 @@ namespace DataWF.Data
                 {
                     logic = value;
                     CheckGroupLogic();
-                    OnPropertyChanged();
+                    //OnPropertyChanged();
                 }
             }
         }
@@ -373,7 +300,7 @@ namespace DataWF.Data
                 if (value != Group && value.Group != this && value != this)
                 {
                     value.Parameters.Add(this);
-                    OnPropertyChanged();
+                    //OnPropertyChanged();
                 }
             }
         }
@@ -426,13 +353,13 @@ namespace DataWF.Data
 
         private void ValueListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            OnPropertyChanged(sender == LeftItem ? nameof(LeftItem) : nameof(RightItem));
+            //OnPropertyChanged(sender == LeftItem ? nameof(LeftItem) : nameof(RightItem));
         }
 
         public bool IsColumn(DBColumn column)
         {
-            return (LeftIsColumn && ((QColumn)LeftItem).Column == column) ||
-                (RightIsColumn && ((QColumn)RightItem).Column == column);
+            return (LeftItem is QColumn lqColumn && lqColumn.Column == column) ||
+                (RightItem is QColumn rqColumn && rqColumn.Column == column);
         }
 
         public bool CheckItem(DBItem item)
@@ -444,13 +371,13 @@ namespace DataWF.Data
                 {
                     result = true;
                 }
-                else if (LeftIsColumn)
+                else if (LeftItem is QColumn leftColumn)
                 {
-                    result = LeftColumn.CheckItem(item, RightItem.GetValue(item), Comparer);
+                    result = leftColumn.Column.CheckItem(item, RightItem.GetValue(item), Comparer);
                 }
-                else if (RightIsColumn)
+                else if (RightItem is QColumn rightColumn)
                 {
-                    result = RightColumn.CheckItem(item, LeftItem.GetValue(item), Comparer);
+                    result = rightColumn.Column.CheckItem(item, LeftItem.GetValue(item), Comparer);
                 }
                 else
                 {
@@ -464,7 +391,23 @@ namespace DataWF.Data
             return result;
         }
 
+        public IEnumerable<T> Search<T>(IEnumerable<T> list) where T : DBItem
+        {
+            foreach (var item in list)
+            {
+                if (QParam.CheckItem(item, LeftItem.GetValue(item), RightItem.GetValue(item), Comparer))
+                    yield return item;
+            }
+        }
 
+        public IEnumerable<DBTuple> Search<T>(IEnumerable<DBTuple> list) where T : DBItem
+        {
+            foreach (var tuple in list)
+            {
+                if (QParam.CheckItem(tuple.LeftItem, LeftItem.GetValue(tuple), RightItem.GetValue(tuple), Comparer))
+                    yield return tuple;
+            }
+        }
 
         public void ParametersListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -479,7 +422,7 @@ namespace DataWF.Data
             //}
             //else
             //{
-            OnPropertyChanged(nameof(Parameters));
+            // OnPropertyChanged(nameof(Parameters));
             //}
         }
 
@@ -496,10 +439,10 @@ namespace DataWF.Data
         {
             if (Value == null)
                 return string.Empty;
-            if (Value is QQuery squery && squery.Table != null)
+            if (Value is IQuery squery && squery.Table != null)
             {
                 if (squery.Columns.Count == 0)
-                    squery.Columns.Add(new QColumn(squery.Table.PrimaryKey));
+                    squery.Column(squery.Table.PrimaryKey);
                 return "(" + squery.Format(command) + ")";
             }
             else if (Value is QExpression)
@@ -540,12 +483,20 @@ namespace DataWF.Data
             base.Dispose();
         }
 
-        public void SetValue(QItem value)
+        public void Add(QItem value)
         {
-            if (LeftItem == null)
+            if (value is QParam param)
+            {
+                Parameters.Add(param);
+            }
+            else if (LeftItem == null)
+            {
                 LeftItem = value;
+            }
             else if (RightItem == null)
+            {
                 RightItem = value;
+            }
             else if (RightItem is QBetween between)
             {
                 if (between.Min == null)
@@ -574,6 +525,46 @@ namespace DataWF.Data
         public override object GetValue(DBItem row)
         {
             return row;
+        }
+
+        public QParam And(Action<QParam> parameterGroup)
+        {
+            var qParam = new QParam() { Logic = LogicType.And };
+            parameterGroup(qParam);
+            Parameters.Add(qParam);
+            return this;
+        }
+
+        public QParam And(IInvoker invoker, object param, QBuildParam buildParam = QBuildParam.None)
+        {
+            Parameters.Add(Query.CreateParam(LogicType.And, invoker, param, buildParam));
+            return this;
+        }
+
+        public QParam And(IInvoker invoker, CompareType compare, object param)
+        {
+            Parameters.Add(Query.CreateParam(LogicType.And, invoker, compare, param));
+            return this;
+        }
+
+        public QParam Or(Action<QParam> parameterGroup)
+        {
+            var qParam = new QParam() { Logic = LogicType.Or };
+            parameterGroup(qParam);
+            Parameters.Add(qParam);
+            return this;
+        }
+
+        public QParam Or(IInvoker invoker, object param, QBuildParam buildParam = QBuildParam.None)
+        {
+            Parameters.Add(Query.CreateParam(LogicType.Or, invoker, param, buildParam));
+            return this;
+        }
+
+        public QParam Or(IInvoker invoker, CompareType compare, object param)
+        {
+            Parameters.Add(Query.CreateParam(LogicType.Or, invoker, compare, param));
+            return this;
         }
 
         public class ColumnNameInvoker : Invoker<QParam, string>

@@ -38,14 +38,22 @@ namespace DataWF.Data
 {
     public class DBConnectionList : SelectableList<DBConnection>
     {
+        IListIndex<DBConnection, string> nameIndex;
         public DBConnectionList()
         {
-            Indexes.Add(DBConnection.NameInvoker.Instance);
+            nameIndex = Indexes.Add(DBConnection.NameInvoker.Instance);
+        }
+
+        [JsonIgnore, XmlIgnore]
+        public DBProvider Provider
+        {
+            get;
+            set;
         }
 
         public DBConnection this[string name]
         {
-            get { return SelectOne(nameof(DBConnection.Name), CompareType.Equal, name); }
+            get => nameIndex.SelectOne(name);
         }
     }
 

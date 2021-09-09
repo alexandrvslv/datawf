@@ -25,6 +25,9 @@ namespace DataWF.Data
 {
     public class SqlDocument
     {
+        [XmlIgnore, JsonIgnore]
+        public static DBProvider Povider { get; set; }
+
         private string text = "";
         private string schemaName;
         private DBSchema schema;
@@ -48,10 +51,11 @@ namespace DataWF.Data
             set { schemaName = value; }
         }
 
+
         [XmlIgnore, JsonIgnore]
         public DBSchema Schema
         {
-            get { return schema ?? (schema = DBService.Schems[schemaName]); }
+            get { return schema ?? (schema = Povider.Schems[schemaName]); }
             set
             {
                 if (schema != value)

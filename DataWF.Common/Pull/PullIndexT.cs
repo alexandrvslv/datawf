@@ -221,20 +221,24 @@ namespace DataWF.Common
                 return default(T);
         }
 
-        public IEnumerable<T> Select(K key)
+        public ReadOnlySpan<T> SelectSpan(K key)
         {
             CheckNull(ref key);
             if (store.TryGetValue(key, out var list))
             {
-                foreach (var item in list)
-                {
-                    yield return item;
-                }
+                return list.AsSpan();
             }
-            else
+            return ReadOnlySpan<T>.Empty;
+        }
+
+        public IReadOnlyList<T> Select(K key)
+        {
+            CheckNull(ref key);
+            if (store.TryGetValue(key, out var list))
             {
-                yield break;
+                return list.AsReadOnly();
             }
+            return ReadOnlyList<T>.Empty;
         }
 
         public IEnumerable<T> Search(Predicate<K> comparer)
@@ -269,9 +273,9 @@ namespace DataWF.Common
                         {
                             object comp = item;
                             if (comp is IValued valued)
-                                comp = valued.GetValue();
-                            if (comp is string stringed)
-                                comp = stringed.Trim(' ', '\'');
+                            {
+                                comp = valued.GetValue<T>();
+                            }
 
                             var temp = Select(CheckNull(comp));
                             if (buf == null)
@@ -292,9 +296,10 @@ namespace DataWF.Common
                             {
                                 object comp = element;
                                 if (comp is IValued valued)
-                                    comp = valued.GetValue();
-                                if (comp is string stringed)
-                                    comp = stringed.Trim(' ', '\'');
+                                {
+                                    comp = valued.GetValue<T>();
+                                }
+
                                 if (item.Equals(comp))
                                     return false;
                             }
@@ -307,10 +312,8 @@ namespace DataWF.Common
                         throw new Exception("Expect QBetween but Get " + value == null ? "null" : value.GetType().FullName);
                     var min = CheckNull(between.MinValue());
                     var max = CheckNull(between.MaxValue());
-                    buf = Select(min);
-                    buf = buf.Concat(Select(max));
-                    buf = buf.Concat(Search((item) => ListHelper.Compare(item, max) > 0
-                                                   && ListHelper.Compare(item, min) < 0));
+                    buf = Search((item) => ListHelper.Compare(item, max) >= 0
+                                        && ListHelper.Compare(item, min) <= 0);
                     break;
                 default:
                     buf = Select(CheckNull(value), compare);

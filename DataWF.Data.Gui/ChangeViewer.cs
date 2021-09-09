@@ -114,7 +114,7 @@ namespace DataWF.Data.Gui
 
         private void LoadData()
         {
-            using (var transaction = new DBTransaction())
+            using (var transaction = new DBTransaction(Table))
             {
                 var command = transaction.AddCommand("");
                 foreach (TableItemNode node in listObjects.Nodes)

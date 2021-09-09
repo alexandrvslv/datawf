@@ -10,7 +10,7 @@ namespace DataWF.Test.Web.Service
 {
     [DataProvider()]
     [SchemaEntry(typeof(FlowSchema))]
-    public class TestDataProvider : DataProviderBase
+    public class TestDataProvider : DBProvider
     {
         public TestDataProvider()
         {

@@ -179,7 +179,7 @@ namespace DataWF.Data
 
         public IEnumerable SelectChilds()
         {
-            return Table.SelectItems(Table.GroupKey, CompareType.Equal, this);
+            return Table.GroupKey.Select<DBItem>(CompareType.Equal, this);
         }
 
         public bool AllParentExpand()

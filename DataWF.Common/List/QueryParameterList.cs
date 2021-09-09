@@ -25,7 +25,7 @@ namespace DataWF.Common
 
         public IQueryParameter<T> Add(IInvoker invoker, CompareType compare, object value)
         {
-            var parameter = ((IInvokerExtension)invoker).CreateParameter<T>(compare, value);
+            var parameter = invoker.CreateParameter<T>(compare, value);
             Add(parameter);
             return parameter;
         }
@@ -33,14 +33,14 @@ namespace DataWF.Common
         public IQueryParameter<T> Add(string property, object value)
         {
             var invoker = EmitInvoker.Initialize<T>(property);
-            var parameter = ((IInvokerExtension)invoker).CreateParameter<T>(CompareType.Equal, value);
+            var parameter = invoker.CreateParameter<T>(CompareType.Equal, value);
             Add(parameter);
             return parameter;
         }
 
         public IQueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
         {
-            var parameter = ((IInvokerExtension)invoker).CreateParameter<T>(logic, comparer, value, group);
+            var parameter = invoker.CreateParameter<T>(logic, comparer, value, group);
             Add(parameter);
             return parameter;
         }

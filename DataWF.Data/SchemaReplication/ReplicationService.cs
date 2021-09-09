@@ -39,14 +39,16 @@ namespace DataWF.Data
         private readonly ManualResetEventSlim loginEvent = new ManualResetEventSlim(false);
         private readonly CancellationTokenSource synchCancel = new CancellationTokenSource();
 
-        public ReplicationService(ReplicationSettings settings, ISocketService socketService)
+        public ReplicationService(ReplicationSettings settings, ISocketService socketService, DBProvider provider)
         {
             Settings = settings;
             SocketService = socketService;
+            Provider = provider;
         }
 
         public ReplicationSettings Settings { get; }
         public ISocketService SocketService { get; }
+        public DBProvider Provider { get; }
 
         public virtual void Dispose()
         {
@@ -93,10 +95,11 @@ namespace DataWF.Data
             await SignIn();
             foreach (var schema in Settings.Schems)
             {
-                schema.Initialize();
+                schema.Initialize(Provider);
             }
             foreach (var instance in Settings.Instances)
             {
+                instance.Provider = Provider;
                 if (instance.Active ?? false)
                 {
                     await Synch(instance);
@@ -237,7 +240,7 @@ namespace DataWF.Data
 
         public object GenerateTableDiff(string schemaName, string tableName, DateTime? stamp)
         {
-            var table = DBService.Schems[schemaName]?.Tables[tableName];
+            var table = Provider.Schems[schemaName]?.Tables[tableName];
             if (table == null)
                 throw new Exception("No such Schema/Table");
             return table.GetReplicateItems(stamp);

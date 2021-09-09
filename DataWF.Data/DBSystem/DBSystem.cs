@@ -196,7 +196,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
         public virtual async Task<bool> DeleteBlobFile(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
         {
             var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            var fileHandler = await table.LoadByIdAsync<long>(id, DBLoadParam.Load, null, transaction);
+            var fileHandler = await table.LoadByIdAsync<long>(id, DBLoadParam.Load, transaction);
             var path = fileHandler?.Path ?? transaction.DbConnection.GetFilePath(id);
             if (fileHandler != null)
                 await fileHandler.Delete(transaction);
@@ -237,7 +237,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
         public virtual async Task<Stream> GetBlobFile(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
         {
             var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            var fileHandler = await table.LoadByIdAsync<long>(id, DBLoadParam.Load, null, transaction);
+            var fileHandler = await table.LoadByIdAsync<long>(id, DBLoadParam.Load, transaction);
             var path = fileHandler?.Path ?? transaction.DbConnection.GetFilePath(id);
             return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, true);
         }
@@ -630,7 +630,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
                 }
                 ddl.Length -= 2;
                 ddl.AppendLine();
-                ddl.AppendLine($"from {virtualTable.ParentTable.SqlName} a where {virtualTable.Query};");
+                ddl.AppendLine($"from {virtualTable.ParentTable.SqlName} a where {virtualTable.SubQuery};");
             }
         }
 
@@ -654,7 +654,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
                     if (table.Type == DBTableType.View)
                     {
                         ddl.AppendLine($"create view {table.SqlName} as");
-                        ddl.Append(table.Query);
+                        ddl.Append(table.SubQuery);
                     }
                     else if (table.Type == DBTableType.Table)
                     {
@@ -922,7 +922,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
 
         public string FormatInsert(DBTable table, bool fill)
         {
-            var rows = fill ? table.LoadItems().ToList() : table.SelectItems("").ToList();
+            var rows = fill ? table.Load<DBItem>().ToList() : ((IEnumerable<DBItem>)table).ToList();
             if (table.GroupKey != null)
             {
                 ListHelper.QuickSort(rows, new TreeComparer<DBGroupItem>());
@@ -1013,7 +1013,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
                 return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}{column.SqlName}";
         }
 
-        public virtual string FormatQTable(DBTable table, string alias)
+        public virtual string FormatQTable(IDBTable table, string alias)
         {
             var schema = table.Schema?.Connection?.Schema;
             if (!string.IsNullOrEmpty(schema))
@@ -1066,7 +1066,8 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
 
         public virtual Stream ReadSequential(DBItem item, DBColumn column, DBTransaction transaction)
         {
-            var command = transaction.AddCommand(item.Table.CreatePrimaryKeyCommmand(item.PrimaryId, new[] { column }));
+            var query = item.Table.Query<DBItem>().Column(column).Where(item.Table.PrimaryKey, item.PrimaryId);
+            var command = transaction.AddCommand(query.ToCommand());
             transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
             if (transaction.Reader.Read())
             {
@@ -1085,7 +1086,8 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
 
         public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, DBTransaction transaction, int bufferSize = 81920)
         {
-            var command = transaction.AddCommand(item.Table.CreatePrimaryKeyCommmand(item.PrimaryId, new[] { column }));
+            var query = item.Table.Query<DBItem>().Column(column).Where(item.Table.PrimaryKey, item.PrimaryId);
+            var command = transaction.AddCommand(query.ToCommand());
             using (transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
             {
                 if (transaction.Reader.Read())

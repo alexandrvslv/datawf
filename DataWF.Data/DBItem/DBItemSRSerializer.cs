@@ -142,7 +142,7 @@ namespace DataWF.Data
                 {
                     var index = reader.ReadSchemaIndex();
                     var propertyName = reader.ReadString();
-                    map[index] = Table.ParseProperty(propertyName) ?? Table.ParseColumn(propertyName);
+                    map[index] = Table.GetColumnByProperty(propertyName) ?? Table.GetColumn(propertyName);
                 }
                 while (reader.ReadToken() == BinaryToken.SchemaEntry);
                 reader.SetMap(type, map);

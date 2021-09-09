@@ -573,7 +573,7 @@ namespace DataWF.Common
         {
             var oldValue = (object)null;
             var list = items.ToList();
-            ListHelper.QuickSort(list, comparer ?? (IComparer)((IInvokerExtension)param).CreateComparer<T>(ListSortDirection.Descending));
+            ListHelper.QuickSort(list, comparer ?? (IComparer)param.CreateComparer<T>(ListSortDirection.Descending));
             foreach (var item in list)
             {
                 var newValue = param.GetValue(item);
@@ -592,7 +592,7 @@ namespace DataWF.Common
         {
             var oldValue = (object)null;
             var list = items.Cast<object>().ToList();
-            ListHelper.QuickSort(list, comparer ?? ((IInvokerExtension)param).CreateComparer(param.TargetType, ListSortDirection.Descending));
+            ListHelper.QuickSort(list, comparer ?? param.CreateComparer(ListSortDirection.Descending));
             foreach (var item in list)
             {
                 var newValue = param.GetValue(item);

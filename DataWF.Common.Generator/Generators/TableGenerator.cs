@@ -348,7 +348,7 @@ namespace {namespaceName}
                         source.Append($@"
         private DBColumn<{propertyType}> {keyFieldName};
         [JsonIgnore]
-        public {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= ParseColumn<{propertyType}>(""{sqlName.Value}_{culture.ToLowerInvariant()}"");
+        public {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= GetColumn<{propertyType}>(""{sqlName.Value}_{culture.ToLowerInvariant()}"");
 ");
                         interfaceSource.Append($@"
         {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
@@ -360,7 +360,7 @@ namespace {namespaceName}
                     source.Append($@"
         private DBColumn<{propertyType}> {keyFieldName};
         [JsonIgnore]
-        public {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= ParseProperty<{propertyType}>(nameof({propertySymbol.ContainingType.Name}.{propertyName}));
+        public {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= GetColumnByProperty<{propertyType}>(nameof({propertySymbol.ContainingType.Name}.{propertyName}));
 ");
                     interfaceSource.Append($@"
         {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");
@@ -374,7 +374,7 @@ namespace {namespaceName}
                 source.Append($@"
         private DBColumn<{propertyType}> {keyFieldName};
         [JsonIgnore]
-        public {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= ParseProperty<{propertyType}>(nameof({propertySymbol.ContainingType.Name}.{propertyName}));
+        public {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} => {keyFieldName} ??= GetColumnByProperty<{propertyType}>(nameof({propertySymbol.ContainingType.Name}.{propertyName}));
 ");
                 interfaceSource.Append($@"
         {(IsNewProperty(keyPropertyName) ? "new " : string.Empty)}DBColumn<{propertyType}> {keyPropertyName} {{ get; }}");

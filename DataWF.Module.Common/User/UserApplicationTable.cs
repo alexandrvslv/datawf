@@ -17,16 +17,13 @@ namespace DataWF.Module.Common
                 throw new ArgumentException($"User with specified email: {application.EMail} already exist!", nameof(UserApplication.EMail));
             }
 
-            using (var query = new QQuery(this))
+            var query = Query().Where(EMailKey, application.EMail)
+                .And(TypeKey, application.Type)
+                .And(StatusKey, CompareType.In, new[] { DBStatus.Actual, DBStatus.New });
+            var exist = Load(query);
+            if (exist.Count() > 0)
             {
-                query.BuildParam(EMailKey, application.EMail);
-                query.BuildParam(TypeKey, application.Type);
-                query.BuildParam(StatusKey, CompareType.In, new[] { DBStatus.Actual, DBStatus.New });
-                var exist = Load(query);
-                if (exist.Count() > 0)
-                {
-                    throw new ArgumentException($"Application with specified email: {application.EMail} already in process!", nameof(UserApplication.EMail));
-                }
+                throw new ArgumentException($"Application with specified email: {application.EMail} already in process!", nameof(UserApplication.EMail));
             }
             await application.Save((IUserIdentity)null);
             _ = application.OnRegistered();

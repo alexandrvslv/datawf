@@ -64,7 +64,7 @@ namespace DataWF.Data
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
                     propertyName = reader.GetString();
-                    column = Table.ParseColumnProperty(propertyName);
+                    column = Table.GetColumnOrProperty(propertyName);
                     if (column == null)
                     {
                         throw new InvalidOperationException($"Property {propertyName} not found!");
@@ -78,7 +78,7 @@ namespace DataWF.Data
 
             if (Table.PrimaryKey != null && dictionary.TryGetValue(Table.PrimaryKey, out var value) && value != null)
             {
-                item = (T)Table.LoadItemById(value, DBLoadParam.Load | DBLoadParam.Referencing);
+                item = Table.LoadById<T>(value, DBLoadParam.Load | DBLoadParam.Referencing);
             }
 
             if (item == null)

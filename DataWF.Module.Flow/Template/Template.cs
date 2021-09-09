@@ -153,21 +153,21 @@ namespace DataWF.Module.Flow
         [Referencing(nameof(TemplateData.TemplateId))]
         public IEnumerable<TemplateData> Datas
         {
-            get => GetReferencing<TemplateData>(Schema.TemplateData.TemplateIdKey, DBLoadParam.None);
+            get => GetReferencing<TemplateData>(base.Schema.TemplateData.TemplateIdKey, DBLoadParam.None);
             set => SetReferencing(value, Schema.TemplateData.TemplateIdKey);
         }
 
         [Referencing(nameof(TemplateReference.TemplateId))]
         public IEnumerable<TemplateReference> References
         {
-            get => GetReferencing<TemplateReference>(Schema.TemplateReference.TemplateIdKey, DBLoadParam.None);
+            get => GetReferencing<TemplateReference>(base.Schema.TemplateReference.TemplateIdKey, DBLoadParam.None);
             set => SetReferencing(value, Schema.TemplateReference.TemplateIdKey);
         }
 
         [Referencing(nameof(TemplateProperty.TemplateId))]
         public IEnumerable<TemplateProperty> Properties
         {
-            get => GetReferencing<TemplateProperty>(Schema.TemplateProperty.TemplateIdKey, DBLoadParam.None);
+            get => GetReferencing<TemplateProperty>(base.Schema.TemplateProperty.TemplateIdKey, DBLoadParam.None);
             set => SetReferencing(value, Schema.TemplateProperty.TemplateIdKey);
         }
 

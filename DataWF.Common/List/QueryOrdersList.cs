@@ -27,15 +27,7 @@ namespace DataWF.Common
 
         public InvokerComparer<T> Add(IInvoker invoker, ListSortDirection direction)
         {
-            var comparer = (InvokerComparer<T>)null;
-            if (invoker is IInvokerExtension invokerExtension)
-            {
-                comparer = (InvokerComparer<T>)invokerExtension.CreateComparer<T>();
-            }
-            else
-            {
-                throw new Exception("Can't create comparer!");
-            };
+            var comparer = (InvokerComparer<T>)invoker.CreateComparer<T>();
             Add(comparer);
             return comparer;
         }

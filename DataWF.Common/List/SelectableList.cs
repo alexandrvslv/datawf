@@ -200,7 +200,7 @@ namespace DataWF.Common
 
         public IEnumerable<T> Select(IInvoker invoker, CompareType comparer, object value)
         {
-            return Select(((IInvokerExtension)invoker).CreateParameter<T>(comparer, value));
+            return Select(invoker.CreateParameter<T>(comparer, value));
         }
 
         public IEnumerable<T> Select(string property, CompareType comparer, object value)
@@ -784,7 +784,7 @@ namespace DataWF.Common
                 if (column.EndsWith(" DESC", StringComparison.OrdinalIgnoreCase))
                     direction = ListSortDirection.Descending;
                 var index = column.IndexOf(" ", StringComparison.Ordinal);
-                var invoker = EmitInvoker.Initialize<T>(index > 0 ? column.Substring(0, index) : column) as IInvokerExtension;
+                var invoker = EmitInvoker.Initialize<T>(index > 0 ? column.Substring(0, index) : column);
                 comparerList.Add(invoker.CreateComparer<T>(direction));
             }
             ApplySortInternal(comparerList);
@@ -792,7 +792,7 @@ namespace DataWF.Common
 
         public void ApplySortInternal(string property, ListSortDirection direction)
         {
-            var invoker = EmitInvoker.Initialize<T>(property) as IInvokerExtension;
+            var invoker = EmitInvoker.Initialize<T>(property);
             ApplySortInternal(invoker.CreateComparer<T>(direction));
         }
 

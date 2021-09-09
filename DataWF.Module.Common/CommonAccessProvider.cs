@@ -40,7 +40,7 @@ namespace DataWF.Module.Common
 
         public virtual IEnumerable<IAccessIdentity> GetGroups()
         {
-            return UserGroupTable.Select("");
+            return UserGroupTable;
         }
 
         public virtual IEnumerable<IAccessIdentity> GetSpecialUserGroups(IUserIdentity user)

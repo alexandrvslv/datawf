@@ -58,6 +58,8 @@ namespace DataWF.Data
             }
         }
 
+        public DBProvider Provider { get; set; }
+
         [XmlIgnore, JsonIgnore]
         public Uri UrlValue { get; set; }
 
@@ -260,9 +262,9 @@ namespace DataWF.Data
             }
         }
 
-        public static async Task ProcessTransaction(RSTransaction srTransaction)
+        public async Task ProcessTransaction(RSTransaction srTransaction)
         {
-            using (var transaction = new DBTransaction(DBService.Connections[srTransaction.Connection], null, true)
+            using (var transaction = new DBTransaction(Provider.Connections[srTransaction.Connection], null, true)
             { Replication = true })
             {
                 try
@@ -273,7 +275,7 @@ namespace DataWF.Data
                         {
                             case DBLogType.Insert:
                             case DBLogType.Update:
-                                await item.Value.Table.SaveItem(item.Value, transaction);
+                                await item.Value.Table.Save(item.Value, transaction);
                                 break;
                             case DBLogType.Delete:
                                 await item.Value.Delete(transaction);

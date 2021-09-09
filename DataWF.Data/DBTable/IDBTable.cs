@@ -31,6 +31,7 @@ namespace DataWF.Data
     public interface IDBTable : IDBSchemaItem, ICollection<DBItem>, IDisposable
     {
         DBItem this[int index] { get; }
+        DBColumn PrimaryKey { get; }
         DBColumn<byte[]> AccessKey { get; }
         DBColumn<string> CodeKey { get; }
         DBColumn<DateTime> DateCreateKey { get; }
@@ -42,7 +43,6 @@ namespace DataWF.Data
         DBColumn GroupKey { get; }
         DBColumn<byte[]> ImageKey { get; }
         DBColumn<int> ItemTypeKey { get; }
-        DBColumn PrimaryKey { get; }
         DBColumn<DateTime> StampKey { get; }
         DBColumn<DateTime?> ReplicateStampKey { get; }
         DBColumn<DBStatus> StatusKey { get; }
@@ -55,9 +55,6 @@ namespace DataWF.Data
         DBConstraintList<DBConstraint> Constraints { get; set; }
         DBForeignList Foreigns { get; set; }
         DBIndexList Indexes { get; set; }
-        string ComDelete { get; set; }
-        string ComInsert { get; set; }
-        string ComUpdate { get; set; }
         DBConnection Connection { get; }
         IDBTableView DefaultItemsView { get; }
         DBTableGroup Group { get; set; }
@@ -66,19 +63,19 @@ namespace DataWF.Data
         bool IsEdited { get; }
         bool IsLoging { get; set; }
         bool IsVirtual { get; }
+        IDBTable ParentTable { get; }
         DBItemType ItemType { get; }
         int ItemTypeIndex { get; set; }
         Dictionary<int, DBItemType> ItemTypes { get; set; }
         IDBTableLog LogTable { get; set; }
-        IDBTable ParentTable { get; }
-        IEnumerable<DBReferencing> GetReferencing(Type valueType);
         string LogTableName { get; set; }
-        string Query { get; set; }
+        string SubQuery { get; set; }
         DBSequence Sequence { get; set; }
         string SequenceName { get; set; }
         string SqlName { get; }
         TableGenerator Generator { get; }
         DBTableType Type { get; set; }
+        IQuery FilterQuery { get; set; }
 
         event EventHandler<DBLoadColumnsEventArgs> LoadColumns;
         event EventHandler<DBLoadCompleteEventArgs> LoadComplete;
@@ -87,92 +84,89 @@ namespace DataWF.Data
         event EventHandler<DBItemEventArgs> RowUpdating;
 
         void Accept(DBItem item);
-        void AcceptChanges(IUserIdentity user);
-        void AddView(IDBTableView view);
-        void AddVirtual(IDBTable view);
-        string BuildQuery(string whereFilter, string alias, IEnumerable<DBColumn> cols, string function = null);
-        DBColumn CheckColumn(string name, Type type, ref bool newCol);
-        void CheckColumns(DBTransaction transaction);
-
-        IEnumerable<DBColumn> GetTypeColumns<T>();
-        IEnumerable<DBColumn> GetTypeColumns(Type t);
-        IEnumerable<DBColumn> GetRefColumns();
-        IEnumerable<DBReferencing> GetPropertyReferencing(Type type);
-        IDbCommand CreatePrimaryKeyCommmand(object id, IEnumerable<DBColumn> cols = null);
-        IDBTableView CreateItemsView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
-        string CreateQuery(string whereText, string alias, IEnumerable<DBColumn> cols = null);
+        void AcceptAll(IUserIdentity user);
+        void RejectAll(IUserIdentity user);
         void DeleteById(object id);
-        string FormatQColumn(DBColumn column, string tableAlias);
-        string FormatQTable(string alias);
-        void Generate(DBTableInfo tableInfo);
-        void GenerateDefaultColumns();
-        IDBTableLog GenerateLogTable();
-        DBSequence GenerateSequence(string sequenceName = null);
-        long GenerateId(DBTransaction transaction);
-        IDBTable GetVirtualTable(Type type);
-        void GetAllChildTables(List<IDBTable> parents);
-        void GetAllParentTables(List<IDBTable> parents);
-        IEnumerable<DBItem> GetChangedItems();
-        IEnumerable<DBForeignKey> GetChildRelations();
-        IEnumerable<IDBTable> GetVirtualTables();
-        IEnumerable<IDBTable> GetChildTables();
-        DBColumn<string> GetCultureColumn(string group, CultureInfo culture);
-        DBItemType GetItemType(int typeIndex);
-        DBColumn<string> GetCultureColumn(string group);
-        IEnumerable<IDBTable> GetParentTables();
-        int GetRowCount(DBTransaction transaction, string where);
-        string GetRowText(object id);
-        string GetRowText(object id, bool allColumns, bool showColumn, string separator);
-        string GetRowText(object id, IEnumerable<DBColumn> parameters);
-        string GetRowText(object id, IEnumerable<DBColumn> parametrs, bool showColumn, string separator);
-        QEnum GetStatusEnum(DBStatus status);
-        QParam GetStatusParam(DBStatus status);
-        int GetTypeIndex(Type type);
-        QParam GetTypeParam(Type type);
-        DBColumn InitColumn(Type type, string code);
-        DBColumnGroup InitColumnGroup(string code);
-        void LoadFile();
-        void LoadFile(string fileName);
-        DBItem LoadItemByCode(string code, DBColumn<string> column, DBLoadParam param, DBTransaction transaction = null);
-        DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
-        List<DBItem> LoadItemsById(List<string> ids, DBTransaction transaction);
-        DBItem LoadItemById<K>(K? id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null) where K : struct;
-        DBItem LoadItemByKey(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
-        DBItem LoadItemByKey<K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
-        DBItem LoadItemFromReader(DBTransaction transaction);
-        IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
-        IEnumerable<DBItem> LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
-        IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
-        IEnumerable<DBItem> LoadItemsCache(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null);
-        void LoadReferenceBlock(IDbCommand command, DBTransaction transaction);
-        void LoadReferencingBlock(IDbCommand command, DBTransaction transaction);
+        void Reload(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
         T NewItem<T>(DBUpdateState state = DBUpdateState.Insert, bool def = true) where T : DBItem;
         DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true);
         DBItem NewItem(DBUpdateState state, bool def, int typeIndex);
-        void OnBaseTableChanged(DBItem item, NotifyCollectionChangedAction type);
-        bool IsSerializeableColumn(DBColumn column, Type type);
-        DBColumn ParseColumn(string name);
-        DBColumn ParseColumnProperty(string property);
-        IEnumerable<DBColumn> ParseColumns(ICollection<string> columns);
-        DBColumn ParseProperty(string property);
-        DBColumn ParseProperty(string property, ref DBColumn cache);
-        void RefreshSequence(bool truncate = false);
-        void RefreshSequence(DBTransaction transaction, bool truncate = false);
-        void RejectChanges(IUserIdentity user);
-        void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
-        void RemoveView(IDBTableView view);
-        void RemoveVirtual(IDBTable view);
+        IEnumerable<DBItem> GetChangedItems();
+        int GetCount(DBTransaction transaction, string where);
         Task Save(IEnumerable<DBItem> rows = null);
         Task Save(DBTransaction transaction, IEnumerable<DBItem> rows = null);
+        Task<bool> Save(DBItem item, DBTransaction transaction);
+
+        void AddVirtualTable(IDBTable view);
+        IDBTable GetVirtualTable(Type type);
+        DBTable<T> GetVirtualTable<T>() where T : DBItem;
+        IEnumerable<IDBTable> GetVirtualTables();
+        void RemoveVirtual(IDBTable view);
+
+        string BuildQuery(string whereFilter, string alias, DBLoadParam loadParam = DBLoadParam.None, string function = null);
+
+        void AddView(IDBTableView view);
+        void RemoveView(IDBTableView view);
+        IDBTableView CreateView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
+
+        DBColumnGroup GetOrCreateColumnGroup(string code);
+        DBColumn GetOrCreateColumn(string name, Type type, ref bool newCol);
+        DBColumn GetOrCreateColumn(string code, Type type);
+        IEnumerable<DBColumn> GetTypeColumns<T>();
+        IEnumerable<DBColumn> GetTypeColumns(Type t);
+        IEnumerable<DBColumn> GetReferenceColumns();
+        DBColumn<string> GetCultureColumn(string group, CultureInfo culture);
+        DBColumn GetColumn(string name);
+        DBColumn<T> GetColumn<T>(string name);
+        DBColumn<T> GetColumn<T>(string property, ref DBColumn<T> cache);
+        DBColumn GetColumnOrProperty(string nameOrProperty);
+        DBColumn GetColumnByProperty(string property);
+        DBColumn GetColumnByProperty(string property, ref DBColumn cache);
+        DBColumn<T> GetColumnByProperty<T>(string property);
+        DBColumn<T> GetColumnByProperty<T>(string property, ref DBColumn<T> cache);
+        IEnumerable<DBColumn> GetColumns(ICollection<string> columns);
+        DBColumn<string> GetCultureColumn(string group);
+        DBReferencing GetReferencing(string property);
+        IEnumerable<DBReferencing> GetReferencingByProperty(Type type);
+        IEnumerable<DBReferencing> GetAllReferencing(Type valueType);
+
+        DBSequence GenerateSequence(string sequenceName = null);
+        long GenerateId(DBTransaction transaction);
+        void RefreshSequence(bool truncate = false);
+        void RefreshSequence(DBTransaction transaction, bool truncate = false);
+
+        void Generate(DBTableInfo tableInfo);
+        IDBTableLog GenerateLogTable();
+
+        IEnumerable<DBForeignKey> GetChildRelations();
+        IEnumerable<IDBTable> GetChildTables();
+        IEnumerable<IDBTable> GetParentTables();
+        DBItemType GetItemType(int typeIndex);
+        int GetTypeIndex(Type type);
+
+
+        T LoadByCode<T>(string code, DBColumn<string> column, DBLoadParam param, DBTransaction transaction = null) where T : DBItem;
+        T LoadById<T>(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
+        List<T> LoadById<T>(List<string> ids, DBTransaction transaction) where T : DBItem;
+        T LoadById<T, K>(K? id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where K : struct where T : DBItem;
+        IEnumerable<T> LoadByKey<T>(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
+        IEnumerable<T> LoadByKey<T, K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
+        IEnumerable<T> Load<T>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
+        IEnumerable<T> Load<T>(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
+        IEnumerable<T> Load<T>(IQuery query, DBTransaction transaction = null) where T : DBItem;
+        IEnumerable<T> Load<T>(IQuery<T> query, DBTransaction transaction = null) where T : DBItem;
+
+        IEnumerable<T> Select<T>(IQuery qQuery) where T : DBItem;
+        IEnumerable<T> Select<T>(IQuery<T> qQuery) where T : DBItem;
+
+        IQuery<T> Query<T>(DBLoadParam loadParam = DBLoadParam.None) where T : DBItem;
+        IQuery<T> Query<T>(string filter, DBLoadParam loadParam = DBLoadParam.None) where T : DBItem;
+        IQuery<T> Query<T>(IQuery baseQuery) where T : DBItem;
+        void Trunc();
+
+        void LoadFile();
+        void LoadFile(string fileName);
         void SaveFile();
         void SaveFile(string fileName);
-        Task<bool> SaveItem(DBItem item, DBTransaction transaction);
-        IEnumerable<DBItem> SelectItems(DBColumn column, CompareType comparer, object val);
-        IEnumerable<DBItem> SelectItems(QQuery qQuery);
-        IEnumerable<DBItem> SelectItems(string qQuery);
-        IEnumerable SelectValues(DBItem item, QQuery query, CompareType compare);
-
-        bool ParseQuery(string filter, out QQuery query);
-        void Trunc();
     }
 }

@@ -222,7 +222,7 @@ namespace DataWF.Data
                 return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}[{column.SqlName}]";
         }
 
-        public override string FormatQTable(DBTable table, string alias)
+        public override string FormatQTable(IDBTable table, string alias)
         {
             var schema = table.Schema?.Connection?.Schema;
             if (!string.IsNullOrEmpty(schema))

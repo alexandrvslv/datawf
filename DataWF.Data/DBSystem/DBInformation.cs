@@ -131,9 +131,9 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU2
                 {
                     var name = item[iName].ToString();
                     var tab = table ?? schema.ParseTable(item[iTable].ToString());
-                    var col = tab?.ParseColumn(item[iName].ToString());
+                    var col = tab?.GetColumn(item[iName].ToString());
                     var rtab = schema.ParseTable(item[iRefTable].ToString());
-                    var rcol = rtab?.ParseColumn(item[iRefColumn].ToString());
+                    var rcol = rtab?.GetColumn(item[iRefColumn].ToString());
                     if (col != null && rcol != null)
                     {
                         var reference = col.Table.Foreigns.GetByColumns(col, rcol);

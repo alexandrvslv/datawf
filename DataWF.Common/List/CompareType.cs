@@ -5,6 +5,24 @@ namespace DataWF.Common
 
     public readonly struct CompareType
     {
+        private const string StrEquals = "=";
+        private const string StrNotEquals = "!=";
+        private const string StrIn = "in";
+        private const string StrNotIn = "not in";
+        private const string StrIs = "is";
+        private const string StrIsNot = "is not";
+        private const string StrLike = "like";
+        private const string StrNotLike = "not like";
+        private const string StrBetween = "between";
+        private const string StrNotBetween = "not between";
+        private const string StrGreater = ">";
+        private const string StrGreaterOrEqual = ">=";
+        private const string StrLess = "<";
+        private const string StrLessOrEqual = "<=";
+        private const string StrAs = "as";
+        private const string StrUsing = "using";
+        private const string StrDistinct = "distinct";
+        private const string StrNot = "not";
         public static readonly CompareType Undefined = new CompareType(CompareTypes.Undefined);
         public static readonly CompareType Like = new CompareType(CompareTypes.Like);
         public static readonly CompareType NotLike = new CompareType(CompareTypes.Like, true);
@@ -54,30 +72,30 @@ namespace DataWF.Common
         {
             switch (type)
             {
-                case (CompareTypes.Equal):
-                    return Not ? "!=" : "=";
-                case (CompareTypes.In):
-                    return Not ? "not in" : "in";
-                case (CompareTypes.Is):
-                    return Not ? "is not" : "is";
-                case (CompareTypes.Like):
-                    return Not ? "not like" : "like";
-                case (CompareTypes.Between):
-                    return Not ? "not between" : "between";
-                case (CompareTypes.Greater):
-                    return ">";
-                case (CompareTypes.GreaterOrEqual):
-                    return ">=";
-                case (CompareTypes.Less):
-                    return "<";
+                case CompareTypes.Equal:
+                    return Not ? StrNotEquals : StrEquals;
+                case CompareTypes.In:
+                    return Not ? StrNotIn : StrIn;
+                case CompareTypes.Is:
+                    return Not ? StrIsNot : StrIs;
+                case CompareTypes.Like:
+                    return Not ? StrNotLike : StrLike;
+                case CompareTypes.Between:
+                    return Not ? StrNotBetween : StrBetween;
+                case CompareTypes.Greater:
+                    return StrGreater;
+                case CompareTypes.GreaterOrEqual:
+                    return StrGreaterOrEqual;
+                case CompareTypes.Less:
+                    return StrLess;
                 case (CompareTypes.LessOrEqual):
-                    return "<=";
-                case (CompareTypes.As):
-                    return "as";
-                case (CompareTypes.Using):
-                    return "using";
-                case (CompareTypes.Distinct):
-                    return "distinct";
+                    return StrLessOrEqual;
+                case CompareTypes.As:
+                    return StrAs;
+                case CompareTypes.Using:
+                    return StrUsing;
+                case CompareTypes.Distinct:
+                    return StrDistinct;
             }
             return "";
         }
@@ -102,32 +120,62 @@ namespace DataWF.Common
             return Not.GetHashCode() ^ Type.GetHashCode();
         }
 
+        public static CompareTypes Parse(ReadOnlySpan<char> code)
+        {
+            CompareTypes type = CompareTypes.Undefined;
+            if (MemoryExtensions.Equals(code, StrEquals.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.Equal;
+            else if (MemoryExtensions.Equals(code, StrGreater.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.Greater;
+            else if (MemoryExtensions.Equals(code, StrGreaterOrEqual.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.GreaterOrEqual;
+            else if (MemoryExtensions.Equals(code, StrLess.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.Less;
+            else if (MemoryExtensions.Equals(code, StrLessOrEqual.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.LessOrEqual;
+            else if (MemoryExtensions.Equals(code, StrIn.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.In;
+            else if (MemoryExtensions.Equals(code, StrLike.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.Like;
+            else if (MemoryExtensions.Equals(code, StrBetween.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.Between;
+            else if (MemoryExtensions.Equals(code, StrIs.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.Is;
+            else if (MemoryExtensions.Equals(code, StrIn.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.In;
+            else if (MemoryExtensions.Equals(code, StrAs.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.As;
+            else if (MemoryExtensions.Equals(code, StrUsing.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.Using;
+            return type;
+        }
+
         public static CompareTypes Parse(string code)
         {
             CompareTypes type = CompareTypes.Undefined;
-            if (code.Equals("=", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(code, StrEquals, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.Equal;
-            else if (code.Equals(">", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(code, StrGreater, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.Greater;
-            else if (code.Equals(">=", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(code, StrGreaterOrEqual, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.GreaterOrEqual;
-            else if (code.Equals("<", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(code, StrLess, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.Less;
-            else if (code.Equals("<=", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(code, StrLessOrEqual, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.LessOrEqual;
-            else if (code.Equals("in", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(code, StrIn, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.In;
-            else if (code.Equals("like", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(code, StrLike, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.Like;
-            else if (code.Equals("between", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(code, StrBetween, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.Between;
-            else if (code.Equals("is", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(code, StrIs, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.Is;
-            else if (code.Equals("in", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(code, StrIn, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.In;
-            else if (code.Equals("as", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(code, StrAs, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.As;
-            else if (code.Equals("using", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(code, StrUsing, StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.Using;
             return type;
         }
@@ -137,7 +185,7 @@ namespace DataWF.Common
             var compareSplit = value.Trim().Split(' ');
             if (compareSplit.Length > 1)
             {
-                var compareValue = string.Equals(compareSplit[0], "not", StringComparison.OrdinalIgnoreCase) ? compareSplit[1] : compareSplit[0];
+                var compareValue = string.Equals(compareSplit[0], StrNot, StringComparison.OrdinalIgnoreCase) ? compareSplit[1] : compareSplit[0];
                 return new CompareType(Parse(compareValue), true);
             }
             else if (compareSplit[0][0] == '!')

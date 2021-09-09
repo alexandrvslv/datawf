@@ -74,7 +74,10 @@ namespace DataWF.Data
         CheckDeleted = 16,
         Reference = 32,
         Referencing = 64,
-        NoAttach = 128
+        NoAttach = 128,
+        NoCache = 256,
+        DownloadFiles = 512
+
     }
 
     public enum DBDataType
@@ -148,7 +151,7 @@ namespace DataWF.Data
         Other
     }
 
-    public enum QParcerState
+    public enum QParserState
     {
         Where,
         Select,

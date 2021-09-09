@@ -29,22 +29,11 @@ namespace DataWF.Data
 
         public QBetween(object val1 = null, object val2 = null, DBColumn column = null)
         {
-            if (val1 is QItem)
-                min = (QItem)val1;
-            else if (val1 is DBColumn)
-                min = new QColumn((DBColumn)val1);
-            else if (val1 != null)
-                min = new QValue(val1, column);
-
-            if (val2 is QItem)
-                max = (QItem)val1;
-            else if (val2 is DBColumn)
-                max = new QColumn((DBColumn)val2);
-            else if (val2 != null)
-                max = new QValue(val2, column);
+            min = QItem.Fabric(val1, column);
+            max = QItem.Fabric(val2, column);
         }
 
-        public override object GetValue(DBItem row = null)
+        public override object GetValue(DBItem row)
         {
             return this;
         }
@@ -72,12 +61,12 @@ namespace DataWF.Data
 
         public object MaxValue()
         {
-            return Max.GetValue();
+            return Max.GetValue((DBItem)null);
         }
 
         public object MinValue()
         {
-            return Min.GetValue();
+            return Min.GetValue((DBItem)null);
         }
 
         public QItem Min

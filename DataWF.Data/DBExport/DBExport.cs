@@ -78,7 +78,7 @@ namespace DataWF.Data
                 builder.AppendLine($"    public class {table.DisplayName.Replace(" ", "")}Generator {{");
                 builder.AppendLine($"        public void Generate() {{");
                 builder.AppendLine($"            using(var transaction = new DBTransaction({table.ItemType.Type.Name}.DBTable.Schema.Connection)){{");
-                var enumer = table.SelectItems("");
+                var enumer = (IEnumerable<DBItem>)table;
                 if (table.GroupKey != null)
                 {
                     var groupList = enumer.Cast<DBGroupItem>().ToList();
@@ -118,7 +118,7 @@ namespace DataWF.Data
 
         public string GeneratePatch(List<DBTable> list)
         {
-            list.Sort(new Comparison<DBTable>(DBService.CompareDBTable));
+            list.Sort(new Comparison<DBTable>(DBProvider.CompareDBTable));
             var builder = new StringBuilder();
 
             if ((Mode & ExportMode.DropTable) == ExportMode.DropTable)
@@ -159,7 +159,7 @@ namespace DataWF.Data
                 {
                     if ((Mode & ExportMode.Patch) == ExportMode.Patch)
                     {
-                        foreach (DBItem row in table.LoadItems())
+                        foreach (DBItem row in table.Load<DBItem>())
                         {
                             if (row.Stamp != null && row.Stamp >= Stamp)//((DateTime)row.Stamp >= param.PatchDate)
                             {
@@ -213,6 +213,8 @@ namespace DataWF.Data
             Name = name;
             this.tables = new DBETableList(this);
         }
+
+        public DBProvider Provider { get; set; }
 
         public override string ToString()
         {
@@ -270,13 +272,13 @@ namespace DataWF.Data
 
         public DBSchema Source
         {
-            get { return dbsource ?? DBService.Schems[source]; }
+            get { return dbsource ?? Provider.Schems[source]; }
             set
             {
                 if (Source != value)
                 {
                     SourceName = value?.Name;
-                    if (value == null || DBService.Schems.Contains(value))
+                    if (value == null || Provider.Schems.Contains(value))
                         dbsource = null;
                     else
                         dbsource = value;
@@ -300,13 +302,13 @@ namespace DataWF.Data
 
         public DBSchema Target
         {
-            get { return dbtarget ?? DBService.Schems[target]; }
+            get { return dbtarget ?? Provider.Schems[target]; }
             set
             {
                 if (Target != value)
                 {
                     TargetName = value?.Name;
-                    if (value == null || DBService.Schems.Contains(value))
+                    if (value == null || Provider.Schems.Contains(value))
                         dbtarget = null;
                     else
                         dbtarget = value;
@@ -485,7 +487,7 @@ namespace DataWF.Data
         {
             DBItem newRow = null;
             if (table.TargetTable.PrimaryKey != null && table.SourceTable.PrimaryKey != null)
-                newRow = table.TargetTable.PrimaryKey.LoadByKey(row.PrimaryId, DBLoadParam.None);
+                newRow = table.TargetTable.PrimaryKey.Load(row.PrimaryId, DBLoadParam.None).FirstOrDefault();
             if (newRow == null)
                 newRow = table.TargetTable.NewItem(DBUpdateState.Insert, false);
 
@@ -520,11 +522,11 @@ namespace DataWF.Data
                 using (var transacton = new DBTransaction(table.SourceTable))
                 {
                     ea.Current = 0;
-                    ea.Count = table.SourceTable.GetRowCount(transacton, table.Query);
+                    ea.Count = table.SourceTable.GetCount(transacton, table.Query);
                     ea.Description = null;
                     OnExportProgress(ea);
 
-                    using (transacton.Reader = (DbDataReader)transacton.ExecuteQuery(table.SourceTable.CreateQuery(table.Query, null), DBExecuteType.Reader))
+                    using (transacton.Reader = (DbDataReader)transacton.ExecuteQuery(table.SourceTable.CreateQuery(table.Query, "a", DBLoadParam.DownloadFiles), DBExecuteType.Reader))
                     {
                         table.SourceTable.CheckColumns(transacton);
                         while (transacton.Reader.Read())
@@ -534,10 +536,10 @@ namespace DataWF.Data
                                 transacton.Cancel();
                                 return;
                             }
-                            var row = table.SourceTable.LoadItemFromReader(transacton);
+                            var row = table.SourceTable.LoadDBItem(transacton);
                             var newRow = ExportRow(table, row);
 
-                            await table.TargetTable.SaveItem(newRow, null);
+                            await table.TargetTable.Save(newRow, null);
 
                             ea.Current++;
                             ea.Row = newRow;

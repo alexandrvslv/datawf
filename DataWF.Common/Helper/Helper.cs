@@ -26,6 +26,8 @@ namespace DataWF.Common
         private static readonly StateInfoList logs = new StateInfoList();
         public static readonly List<IModuleInitialize> ModuleInitializer = new List<IModuleInitialize>();
         private static readonly Dictionary<string, string> words = new Dictionary<string, string>(StringComparer.Ordinal);
+        public static readonly char[] CommaSeparator = new char[] { ',' };
+        public static readonly char[] DotSeparator = { '.' };
         //http://stackoverflow.com/questions/5417070/c-sharp-version-of-sql-likea
         private static readonly Regex likeExp = new Regex(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -247,9 +249,9 @@ namespace DataWF.Common
             logs.Add(entry);
         }
 
-        public static StateInfo Log(object sender, string description,  StatusType type = StatusType.Information, object tag = null, [CallerMemberName]string message = "")
+        public static StateInfo Log(object sender, string description, StatusType type = StatusType.Information, object tag = null, [CallerMemberName] string message = "")
         {
-           return  Log(sender?.GetType().Name ?? "Default", message, description, type, tag);
+            return Log(sender?.GetType().Name ?? "Default", message, description, type, tag);
         }
 
         public static StateInfo Log(string module, string message, string descriprion = null, StatusType type = StatusType.Information, object tag = null)
@@ -334,7 +336,7 @@ namespace DataWF.Common
         public static string DocEdit = "Edit";
 
         //https://stackoverflow.com/a/182924/4682355
-        public static string IntToChar(int val)
+        public static string IntToChar(this int val)
         {
             var sb = new StringBuilder();
             val += 1;
@@ -362,7 +364,7 @@ namespace DataWF.Common
 
         public static Regex BuildLike(string toFind)
         {
-            return new Regex(@"\A" + likeExp.Replace(toFind, ch => @"\" + ch).Replace('_', '.').Replace("%", ".*") + @"\z", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            return new Regex($@"\A{likeExp.Replace(toFind, ch => @"\" + ch).Replace('_', '.').Replace("%", ".*")}\z", RegexOptions.IgnoreCase | RegexOptions.Singleline);
         }
 
         //http://stackoverflow.com/questions/43289/comparing-two-byte-arrays-in-net/8808245#8808245
@@ -1522,6 +1524,15 @@ namespace DataWF.Common
             return rez;
         }
 
+        public static bool IsDecimal(ReadOnlySpan<char> p, out decimal value)
+        {
+#if NETSTANDARD2_0
+            return decimal.TryParse(p.ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out value);
+#else
+            return decimal.TryParse(p, NumberStyles.Number, CultureInfo.InvariantCulture, out value);
+#endif
+        }
+
         public static bool IsDecimal(string p)
         {
             return decimal.TryParse(p, out _);
@@ -1571,6 +1582,54 @@ namespace DataWF.Common
                                   Helper.SizeFormat(proc.PeakWorkingSet64));
             Logs.Add("Memory", status, descript, StatusType.Warning);
             WorkingSet64 = temp;
+        }
+
+        public static ReadOnlySpan<char> GetSubPart(this ReadOnlySpan<char> query, ref int i, char start, char end)
+        {
+            int k = 0;
+            int startIndex = ++i;
+            for (; i < query.Length; i++)
+            {
+                var c = query[i];
+                if (c == end)
+                {
+                    if (k > 0)
+                        k--;
+                    else
+                        break;
+                }
+                else if (c == start)
+                {
+                    k++;
+                }
+            }
+            return query.Slice(startIndex, i - startIndex);
+        }
+
+        public static List<string> Split(this ReadOnlySpan<char> query, ReadOnlySpan<char> separator, StringComparison comparizon = StringComparison.Ordinal)
+        {
+            var list = new List<string>();
+            if (query.Length < separator.Length)
+                return list;
+            var word = ReadOnlySpan<char>.Empty;
+            var startIndex = 0;
+            var separatorLength = separator.Length;
+            for (int i = 0; i < query.Length; i++)
+            {
+                word = i + separatorLength <= query.Length ? query.Slice(i, separatorLength) : ReadOnlySpan<char>.Empty;
+
+                if (MemoryExtensions.Equals(word, separator, comparizon))
+                {
+                    if (startIndex < i)
+                    {
+                        list.Add(query.Slice(startIndex, i - startIndex).ToString());
+                    }
+                    startIndex = i + separatorLength;
+                }
+            }
+            if (startIndex < query.Length)
+                list.Add(query.Slice(startIndex, query.Length - startIndex).ToString());
+            return list;
         }
 
         //https://stackoverflow.com/a/24768641

@@ -33,7 +33,7 @@ namespace DataWF.Data
 
         QParam DefaultParam { get; set; }
 
-        QQuery Query { get; set; }
+        IQuery Query { get; set; }
 
         DBStatus StatusFilter { get; set; }
 
@@ -60,5 +60,10 @@ namespace DataWF.Data
         Task Save();
 
         IList ToList();
+    }
+
+    public interface IDBTableView<T> : IDBTableView where T : DBItem
+    {
+        
     }
 }

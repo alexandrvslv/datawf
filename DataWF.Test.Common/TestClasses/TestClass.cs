@@ -1,8 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using DataWF.Common;
+using System.Runtime.CompilerServices;
 
 namespace DataWF.Test.Common
 {
-    public class TestClass
+    [InvokerGenerator(Instance = true)]
+    public partial class TestClass
     {
         public int Field;
         public string Name { get; set; }

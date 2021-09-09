@@ -95,10 +95,10 @@ namespace DataWF.Data
 
         public void RefreshLogs()
         {
-            QQuery query = new QQuery(string.Empty, (DBTable)Row.Table.LogTable);
-            query.BuildParam(Row.Table.LogTable.BaseKey, CompareType.Equal, row.PrimaryId);
-            query.BuildParam(Row.Table.LogTable.StatusKey, CompareType.Equal, (int)DBStatus.New);
-            Logs.AddRange(Row.Table.LogTable.LoadItems(query, DBLoadParam.Load | DBLoadParam.Synchronize).Cast<DBItemLog>());
+            var query = Row.Table.LogTable.Query<DBItemLog>(DBLoadParam.Load | DBLoadParam.Synchronize)
+                .Where(Row.Table.LogTable.BaseKey, CompareType.Equal, row.PrimaryId)
+                .And(Row.Table.LogTable.StatusKey, CompareType.Equal, (int)DBStatus.New);
+            Logs.AddRange(query);
 
             RefreshChanges();
         }

@@ -98,7 +98,7 @@ namespace DataWF.Test.Common
             var query = new Query<TestClass>(new IQueryParameter<TestClass>[] {
                 new QueryParameter<TestClass, string>()
                 {
-                    Invoker = (IInvoker<TestClass, string>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
+                    Invoker = TestClass.NameInvoker.Instance,
                     Comparer = CompareType.Like,
                     Value = "Threading"
                 },

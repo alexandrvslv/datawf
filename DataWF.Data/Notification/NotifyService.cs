@@ -306,17 +306,17 @@ namespace DataWF.Data
                             switch (item.Command)
                             {
                                 case DBLogType.Insert:
-                                    primaryKey.LoadByKey(item.Id, DBLoadParam.Load, null, transaction);
+                                    primaryKey.Load(item.Id, DBLoadParam.Load, transaction);
                                     break;
                                 case DBLogType.Update:
-                                    var record = primaryKey.LoadByKey(item.Id, DBLoadParam.None);
+                                    var record = primaryKey.Load(item.Id, DBLoadParam.None).FirstOrDefault();
                                     if (record != null)
                                     {
-                                        typeTable.Table.ReloadItem(item.Id, DBLoadParam.Load, transaction);
+                                        typeTable.Table.Reload(item.Id, DBLoadParam.Load, transaction);
                                     }
                                     break;
                                 case DBLogType.Delete:
-                                    var toDelete = primaryKey.LoadByKey(item.Id, DBLoadParam.None);
+                                    var toDelete = primaryKey.Load(item.Id, DBLoadParam.None).FirstOrDefault();
                                     if (item != null)
                                     {
                                         typeTable.Table.Remove(toDelete);

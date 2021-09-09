@@ -55,7 +55,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
-            get { return column ?? DBService.Schems.ParseColumn(columnName, Schema); }
+            get { return column ?? Schema?.ParseColumn(columnName); }
             set
             {
                 if (Column != value)

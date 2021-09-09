@@ -236,7 +236,7 @@ namespace DataWF.Data
                 int pi = 0, i = code.IndexOf('.');
                 while (i > 0)
                 {
-                    var scolumn = row.Table.ParseColumnProperty(code.Substring(pi, i - pi));
+                    var scolumn = row.Table.GetColumnOrProperty(code.Substring(pi, i - pi));
                     if (scolumn == null)
                         return null;
                     var item = row.GetReference(scolumn);
@@ -246,7 +246,7 @@ namespace DataWF.Data
                     pi = i + 1;
                     i = code.IndexOf('.', pi);
                 }
-                return row.GetValue(row.Table.ParseColumnProperty(code.Substring(pi)));
+                return row.GetValue(row.Table.GetColumnOrProperty(code.Substring(pi)));
             }
             set
             {
@@ -254,14 +254,14 @@ namespace DataWF.Data
                 int pi = 0, i = code.IndexOf('.');
                 while (i > 0)
                 {
-                    var item = row.GetReference(row.Table.ParseColumnProperty(code.Substring(pi, i - pi)));
+                    var item = row.GetReference(row.Table.GetColumnOrProperty(code.Substring(pi, i - pi)));
                     if (item == null)
                         return;
                     row = item;
                     pi = i + 1;
                     i = code.IndexOf('.', pi);
                 }
-                row.SetValue(value, row.Table.ParseColumnProperty(code.Substring(pi)));
+                row.SetValue(value, row.Table.GetColumnOrProperty(code.Substring(pi)));
             }
         }
 
@@ -485,7 +485,7 @@ namespace DataWF.Data
 
             foreach (var kvp in values)
             {
-                var column = Table.ParseColumn(kvp.Key);
+                var column = Table.GetColumn(kvp.Key);
 
                 if (column != null)
                 {
@@ -624,15 +624,15 @@ namespace DataWF.Data
         public void SetReferencing<T>(IEnumerable<T> items, string property) where T : DBItem
         {
             var table = Schema.GetTable<T>();
-            SetReferencing<T>(items, table.ParseProperty(property));
+            SetReferencing<T>(items, table.GetColumnByProperty(property));
         }
 
-        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, QQuery query, DBLoadParam param) where T : DBItem
+        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, IQuery query) where T : DBItem
         {
             //query.TypeFilter = typeof(T);
-            if ((param & DBLoadParam.Load) == DBLoadParam.Load)
+            if ((query.LoadParam & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                table.Load(query, param);
+                return table.Load(query);
             }
             return table.Select(query);
         }
@@ -640,34 +640,30 @@ namespace DataWF.Data
         public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem
         {
             var table = Schema.GetTable<T>();
-            return GetReferencing<T>(table, table.ParseProperty(property), param);
+            return GetReferencing<T>(table, table.GetColumnByProperty(property), param);
         }
 
         public IEnumerable<T> GetReferencing<T>(DBColumn column, DBLoadParam param) where T : DBItem
         {
-            return GetReferencing<T>((DBTable<T>)column.Table.GetVirtualTable(typeof(T)), column, param);
+            return GetReferencing(column.Table.GetVirtualTable<T>(), column, param);
         }
 
         public IEnumerable<T> GetReferencing<T>(DBTable<T> table, DBColumn column, DBLoadParam param) where T : DBItem
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                using (var query = new QQuery("", table))
-                {
-                    query.BuildParam(column, CompareType.Equal, PrimaryId);
-                    return GetReferencing<T>(table, query, param);
-                }
+                return column.Load<T>(this, param);
             }
             else
             {
-                return table.Select(column, CompareType.Equal, PrimaryId);
+                return column.Select<T>(CompareType.Equal, PrimaryId);
             }
         }
 
         public IEnumerable<T> GetReferencing<T>(string tableCode, string columnCode, DBLoadParam param) where T : DBItem
         {
             var table = (DBTable<T>)Schema.ParseTable(tableCode);
-            return table != null ? GetReferencing<T>(table, table.ParseColumn(columnCode), param) : null;
+            return table != null ? GetReferencing<T>(table, table.GetColumn(columnCode), param) : null;
         }
 
         public IEnumerable<T> GetReferencing<T>(DBForeignKey relation, DBLoadParam param) where T : DBItem
@@ -684,26 +680,22 @@ namespace DataWF.Data
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                using (var query = new QQuery("", table))
-                {
-                    query.BuildParam(column, CompareType.Equal, PrimaryId);
-                    return GetReferencing(table, query, param);
-                }
+                return column.Load(this, param);
             }
             else
             {
-                return table.SelectItems(column, CompareType.Equal, PrimaryId);
+                return column.Select<DBItem>(CompareType.Equal, PrimaryId);
             }
         }
 
-        public IEnumerable<DBItem> GetReferencing(IDBTable table, QQuery query, DBLoadParam param)
+        public IEnumerable<DBItem> GetReferencing(IDBTable table, IQuery query, DBLoadParam param)
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                return table.LoadItems(query);
+                return table.Load<DBItem>(query);
             }
 
-            return table.SelectItems(query);
+            return table.Select<DBItem>(query);
         }
 
         public IEnumerable<DBItem> GetReferencing(DBForeignKey relation, DBLoadParam param)
@@ -771,7 +763,7 @@ namespace DataWF.Data
             }
             else
             {
-                var temp = cultures.Split(QQuery.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
+                var temp = cultures.Split(Helper.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
                 foreach (string s in temp)
                 {
                     string ts = s.Trim();
@@ -988,7 +980,7 @@ namespace DataWF.Data
         public void Refresh(IUserIdentity user)
         {
             Reject(user);
-            Table.ReloadItem(PrimaryId);
+            Table.Reload(PrimaryId);
         }
 
         public void GenerateId(DBTransaction transaction = null)
@@ -1047,7 +1039,7 @@ namespace DataWF.Data
                 if (await OnSaving(transaction))
                 {
                     await SaveReferenced(transaction);
-                    await Table.SaveItem(this, transaction);
+                    await Table.Save(this, transaction);
                     await SaveReferencing(transaction);
                     await OnSaved(transaction);
                 }
@@ -1235,7 +1227,7 @@ namespace DataWF.Data
 
         public Task Merge(List<string> ids, DBTransaction transaction)
         {
-            var items = Table.LoadItemsById(ids, transaction);
+            var items = Table.LoadById<DBItem>(ids, transaction);
             return Merge(items, transaction);
         }
 
@@ -1291,7 +1283,7 @@ namespace DataWF.Data
                             foreach (DBItem subItem in referencing)
                             {
                                 relation.Column.Copy(this, primaryKey, subItem);
-                                await relation.Table.SaveItem(subItem, transaction);
+                                await relation.Table.Save(subItem, transaction);
                             }
                         }
                     }
@@ -1299,7 +1291,7 @@ namespace DataWF.Data
             }
             foreach (var item in rows)
             {
-                await Table.SaveItem(item, transaction);
+                await Table.Save(item, transaction);
             }
         }
 
@@ -1375,7 +1367,7 @@ namespace DataWF.Data
 
         public IEnumerable<DBItem> GetPropertyReferencing()
         {
-            foreach (var referencing in Table.GetPropertyReferencing(GetType()))
+            foreach (var referencing in Table.GetReferencingByProperty(GetType()))
             {
                 var references = (IEnumerable<DBItem>)referencing.PropertyInvoker.GetValue(this);
                 if (references != null)
@@ -1455,7 +1447,7 @@ namespace DataWF.Data
 
         public DBItem FindAndUpdate(DBLoadParam param = DBLoadParam.None)
         {
-            var exist = (Table.PrimaryKey?.IsEmpty(this) ?? true) ? null : Table.PrimaryKey.LoadByKey(this, param);
+            var exist = (Table.PrimaryKey?.IsEmpty(this) ?? true) ? null : Table.PrimaryKey.Load(this, param).FirstOrDefault();
             if (exist != null)
             {
                 foreach (var column in GetChangeKeys())
@@ -1471,7 +1463,7 @@ namespace DataWF.Data
 
         public DateTime GetDate(string column)
         {
-            return GetDate(Table.ParseColumnProperty(column));
+            return GetDate(Table.GetColumnOrProperty(column));
         }
 
         public DateTime GetDate(DBColumn column)

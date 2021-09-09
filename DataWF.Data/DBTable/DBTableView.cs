@@ -31,11 +31,11 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBTableView<T> : SelectableList<T>, IDBTableView, IIdCollection<T> where T : DBItem
+    public class DBTableView<T> : SelectableList<T>, IDBTableView<T>, IIdCollection<T> where T : DBItem
     {
         protected DBViewKeys keys = DBViewKeys.Lock;
         protected QParam defaultParam;
-        protected QQuery query;
+        protected IQuery query;
 
         protected IDbCommand command;
         protected DBTable<T> table;
@@ -54,7 +54,7 @@ namespace DataWF.Data
             propertyHandler = null;
             this.table = table;
             FilterQuery = new Query<T>();
-            Query = new QQuery();
+            Query = new QQuery<T>(table);
             TypeFilter = typeof(T);
             DefaultParam = defaultFilter;
             StatusFilter = statusFilter;
@@ -137,11 +137,11 @@ namespace DataWF.Data
             {
                 if (table.CodeKey == null)
                     return null;
-                return (T)table.LoadItemByCode(code, table.CodeKey, DBLoadParam.Load);
+                return table.LoadByCode<T>(code, table.CodeKey, DBLoadParam.Load);
             }
         }
 
-        public QQuery Query
+        public IQuery Query
         {
             get => query;
             set
@@ -262,7 +262,8 @@ namespace DataWF.Data
         {
             using (var transaction = new DBTransaction(Table, null, true) { View = this })
             {
-                return table.Load(Query, param, transaction);
+                Query.LoadParam = param;
+                return table.Load(Query, transaction);
             }
         }
 
@@ -276,7 +277,7 @@ namespace DataWF.Data
 
         public void OnSourceItemChanged(object sender, PropertyChangedEventArgs args)
         {
-            OnSourceItemChanged((T)sender, args.PropertyName, Table.ParseColumnProperty(args.PropertyName));
+            OnSourceItemChanged((T)sender, args.PropertyName, Table.GetColumnOrProperty(args.PropertyName));
         }
 
         public void OnSourceItemChanged(DBItem item, string propertyName, DBColumn column)
@@ -392,7 +393,7 @@ namespace DataWF.Data
                 return;
 
             ClearInternal();
-            if (!query.IsEmpty())
+            if (!query.IsNoParameters())
             {
                 AddRangeInternal(table.Select(query), false);
             }
@@ -421,30 +422,34 @@ namespace DataWF.Data
 
                 if (filter.Invoker.Name == nameof(Object.ToString))
                 {
-                    Query.SimpleFilter(filter.Value as string);
+                    Query.Where(filter.Value as string);
                 }
                 else if (pcolumn != null)
                 {
                     string code = pcolumn.Name;
-                    QParam param = new QParam()
+                    var value = pcolumn.ParseValue(filter.Value);
+                    if (value is string strParam && param.Comparer.Type == CompareTypes.Like)
+                    {
+                        if (strParam.IndexOf('%') < 0)
+                            strParam = $"%{strParam}%";
+                        value = strParam;
+                    }
+
+                    var param = new QParam()
                     {
                         LeftColumn = pcolumn,
                         Logic = filter.Logic,
                         Comparer = filter.Comparer,
-                        RightValue = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
+                        RightItem = QItem.Fabric(filter.Comparer.Type != CompareTypes.Is ? value : null, pcolumn)
                     };
-                    if (param.RightValue is string && param.Comparer.Type == CompareTypes.Like)
-                    {
-                        string s = (string)param.RightValue;
-                        if (s.IndexOf('%') < 0)
-                            param.RightValue = string.Format("%{0}%", s);
-                    }
+
+
                     int i = code.IndexOf('.');
                     if (i >= 0)
                     {
                         int s = 0;
-                        QQuery sexpression = Query;
-                        QQuery newQuery = null;
+                        var sexpression = Query;
+                        IQuery newQuery = null;
                         while (i > 0)
                         {
                             string iname = code.Substring(s, i - s);
@@ -457,8 +462,7 @@ namespace DataWF.Data
                             var c = sexpression.Table.Columns[iname];
                             if (c.IsReference)
                             {
-                                newQuery = new QQuery(string.Empty, c.ReferenceTable);
-                                sexpression.BuildParam(c, CompareType.In, newQuery);
+                                newQuery = c.ReferenceTable.Query<DBItem>().Where(c, CompareType.In, newQuery);
                                 sexpression = newQuery;
                             }
                             s = i + 1;
@@ -475,10 +479,10 @@ namespace DataWF.Data
                 {
                     var param = new QParam()
                     {
-                        LeftItem = new QReflection(filter.Invoker),
+                        LeftItem = new QInvoker(filter.Invoker),
                         Logic = filter.Logic,
                         Comparer = filter.Comparer,
-                        RightValue = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
+                        RightItem = QItem.Fabric(filter.Comparer.Type != CompareTypes.Is ? filter.Value : null, pcolumn)
                     };
                     Query.Parameters.Add(param);
                 }
@@ -592,12 +596,11 @@ namespace DataWF.Data
                 table.RemoveView(this);
             }
             base.Dispose();
-            Query?.Dispose();
         }
 
         public IEnumerable<T> GetTop()
         {
-            return (IEnumerable<T>)table.SelectItems(Table.GroupKey, CompareType.Is, null);
+            return table.Select(Table.GroupKey, CompareType.Is, null);
         }
 
         public IEnumerable<T> GetItems()
