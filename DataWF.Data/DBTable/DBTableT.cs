@@ -373,7 +373,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> SelectParents()
         {
-            return Select(GroupKey, CompareType.Is, (object)null);
+            return GroupKey.Select<T>(CompareType.Is, (object)null, null);
         }
 
         #region IEnumerable Members
@@ -550,6 +550,11 @@ namespace DataWF.Data
             return Load(Query(param), transaction);
         }
 
+        public ValueTask<IEnumerable<T>> LoadAsync(DBLoadParam param = DBLoadParam.Referencing, DBTransaction transaction = null)
+        {
+            return LoadAsync(Query(param), transaction);
+        }
+
         public override IEnumerable<TT> Load<TT>(IQuery<TT> query, DBTransaction transaction = null)
         {
             return (IEnumerable<TT>)Load(query, transaction);
@@ -565,17 +570,8 @@ namespace DataWF.Data
             if (query.Table != this)
                 throw new ArgumentException(nameof(query));
 
-            if ((query.LoadParam & DBLoadParam.NoCache) != DBLoadParam.NoCache)
-            {
-                if (queryChache.TryGetValue(query.WhereText, out var cacheQuery))
-                {
-                    query.CacheState = cacheQuery.CacheState;
-                }
-                else
-                {
-                    queryChache[query.WhereText] = query;
-                }
-            }
+            CheckCacheState(query);
+
             if (!IsSynchronized
                 && query.CacheState == DBCacheState.None)
             {
@@ -589,43 +585,13 @@ namespace DataWF.Data
 
                 if (buf != null && (query.LoadParam & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
                 {
-                    CheckDelete(query, buf, query.LoadParam, transaction);
+                    CheckDelete(query, buf, transaction);
                 }
                 if (query.Parameters.Count == 0)
                 {
                     IsSynchronized = true;
                 }
                 query.CacheState = DBCacheState.Actual;
-            }
-            return Select(query);
-
-        }
-
-        public async ValueTask<IEnumerable<T>> LoadAsync(IQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
-        {
-            if (query.Table != this)
-                throw new ArgumentException(nameof(query));
-            if (!IsSynchronized)
-            {
-                if (query.CacheState == DBCacheState.None)
-                {
-                    query.CacheState = DBCacheState.Actualazing;
-                    if (Count == 0)
-                    {
-                        param &= ~DBLoadParam.CheckDeleted;
-                    }
-                    var buf = await LoadAsync(query.ToCommand(true), param, transaction);
-
-                    if (buf != null && (param & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
-                    {
-                        CheckDelete(query, buf, param, transaction);
-                    }
-                    if (query.Parameters.Count == 0)
-                    {
-                        IsSynchronized = true;
-                    }
-                    query.CacheState = DBCacheState.Actual;
-                }
             }
             var result = Select(query);
             if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
@@ -637,6 +603,61 @@ namespace DataWF.Data
             else
             {
                 return result;
+            }
+
+        }
+
+        public async ValueTask<IEnumerable<T>> LoadAsync(IQuery query, DBTransaction transaction = null)
+        {
+            if (query.Table != this)
+                throw new ArgumentException(nameof(query));
+
+            CheckCacheState(query);
+            if (!IsSynchronized
+                && query.CacheState == DBCacheState.None)
+            {
+                query.CacheState = DBCacheState.Actualazing;
+                if (Count == 0)
+                {
+                    query.LoadParam &= ~DBLoadParam.CheckDeleted;
+                }
+                var buf = await LoadAsync(query.ToCommand(true), query.LoadParam, transaction);
+
+                if (buf != null && (query.LoadParam & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
+                {
+                    CheckDelete(query, buf, transaction);
+                }
+                if (query.Parameters.Count == 0)
+                {
+                    IsSynchronized = true;
+                }
+                query.CacheState = DBCacheState.Actual;
+            }
+            var result = Select(query);
+            if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
+            {
+                var temp = result.ToList();
+                ListHelper.QuickSort(temp, TreeComparer<IGroup>.Default);
+                return temp;
+            }
+            else
+            {
+                return result;
+            }
+        }
+
+        private void CheckCacheState(IQuery query)
+        {
+            if ((query.LoadParam & DBLoadParam.NoCache) != DBLoadParam.NoCache)
+            {
+                if (queryChache.TryGetValue(query.WhereText, out var cacheQuery))
+                {
+                    query.CacheState = cacheQuery.CacheState;
+                }
+                else
+                {
+                    queryChache[query.WhereText] = query;
+                }
             }
         }
 
@@ -1032,9 +1053,10 @@ namespace DataWF.Data
             return Load(query.ToCommand(), DBLoadParam.Synchronize, transaction);
         }
 
-        private void CheckDelete(IQuery filter, IEnumerable<T> buf, DBLoadParam param, DBTransaction transaction)
+        private void CheckDelete(IQuery query, IEnumerable<T> buf, DBTransaction transaction)
         {
-            var list = Select(filter).ToList();
+            DBLoadParam param = query.LoadParam;
+            var list = Select(query).ToList();
             var bufList = buf.ToList();
             if (list.Count > bufList.Count)
             {
@@ -1248,7 +1270,7 @@ namespace DataWF.Data
             return buf.Select(p => p.LeftItem as T).Distinct();
         }
 
-        public IEnumerable<T> Select(IEnumerable<QParam> parameters, IEnumerable<T> list = null)
+        private IEnumerable<T> Select(IEnumerable<QParam> parameters, IEnumerable<T> list = null)
         {
             IEnumerable<T> buffer = null;
             foreach (QParam param in parameters)
@@ -1278,7 +1300,7 @@ namespace DataWF.Data
             return buffer;
         }
 
-        public IEnumerable<DBTuple> Select(IEnumerable<QParam> parameters, IEnumerable<DBTuple> joinSourc)
+        private IEnumerable<DBTuple> Select(IEnumerable<QParam> parameters, IEnumerable<DBTuple> joinSourc)
         {
             IEnumerable<DBTuple> buffer = null;
             foreach (QParam param in parameters)
@@ -1308,7 +1330,7 @@ namespace DataWF.Data
             return buffer;
         }
 
-        public IEnumerable<T> Select(QParam param, IEnumerable<T> list = null)
+        private IEnumerable<T> Select(QParam param, IEnumerable<T> list = null)
         {
             if (param.LeftItem is QFunction func
                 && func.Type == QFunctionType.distinct
@@ -1320,13 +1342,14 @@ namespace DataWF.Data
             {
                 return Select(param.Parameters.OfType<QParam>(), list);
             }
-            if (param.LeftItem is QColumn lqColumn)
+            if (param.LeftItem is QColumn lqColumn
+                && param.LeftItem.IsReference)
             {
                 var lColumn = lqColumn.Column;
                 if (param.RightItem is QColumn rqColumn)
                 {
-                    if (rqColumn.Temp != null)
-                        return lColumn.Select(param.Comparer, rqColumn.Temp, list);
+                    if (rqColumn.Value != null)
+                        return lColumn.Select(param.Comparer, rqColumn.Value, list);
 
                     return lColumn.Search(param.Comparer, rqColumn.Column, list ?? this);
                 }
@@ -1339,66 +1362,42 @@ namespace DataWF.Data
                 var rColumn = rqColumn.Column;
                 return rColumn.Select(param.Comparer, param.LeftItem.GetValue<T>(), list);
             }
-            else if (param.LeftItem is QInvoker lReflection
-                && !param.RightItem.IsReference)
-            {
-                return Select(lReflection.Invoker, param.Comparer, param.RightItem.GetValue<T>(), list);
-            }
-            return param.Search(list ?? this);
+            return param.Search<T>(list ?? this);
         }
 
-        public IEnumerable<DBTuple> Select(QParam param, IEnumerable<DBTuple> list)
+        private IEnumerable<DBTuple> Select(QParam param, IEnumerable<DBTuple> list)
         {
             if (param.LeftItem is QFunction func
                && func.Type == QFunctionType.distinct
                && func.Items.FirstOrDefault() is QItem item)
             {
-                return ListHelper.Distinct(list ?? items, item, param.Query?.GetComparer<T>());//
+                return ListHelper.Distinct(list, item, param.Query?.GetComparer<T>());//
             }
             if (param.IsCompaund)
             {
                 return Select(param.Parameters.OfType<QParam>(), list);
             }
-            if (param.LeftItem is QColumn lqColumn)
+            if (param.LeftItem is QColumn lqColumn
+                && param.LeftItem.IsReference)
             {
                 var lColumn = lqColumn.Column;
                 if (param.RightItem is QColumn rqColumn)
                 {
-                    if (rqColumn.Temp != null)
-                        return lColumn.Select(param.Comparer, rqColumn.Temp, list);
+                    if (rqColumn.Value != null)
+                        return lColumn.Select<T>(param.Comparer, rqColumn.Value, lqColumn.QTable, list);
 
-                    return lColumn.Search(param.Comparer, rqColumn.Column, list ?? this);
+                    return lColumn.Search<T>(param.Comparer, rqColumn, lqColumn.QTable, list);
                 }
                 if (!param.RightItem.IsReference)
-                    return lColumn.Select(param.Comparer, param.RightItem.GetValue<T>(), list);
+                    return lColumn.Select<T>(param.Comparer, param.RightItem.GetValue<T>(), lqColumn.QTable, list);
             }
             else if (param.RightItem is QColumn rqColumn
                 && !param.LeftItem.IsReference)
             {
                 var rColumn = rqColumn.Column;
-                return rColumn.Select(param.Comparer, param.LeftItem.GetValue<T>(), list);
+                return rColumn.Select<T>(param.Comparer, param.LeftItem.GetValue<T>(), rqColumn.QTable, list);
             }
-            else if (param.LeftItem is QInvoker lReflection
-                && !param.RightItem.IsReference)
-            {
-                return Select(lReflection.Invoker, param.Comparer, param.RightItem.GetValue<T>(), list);
-            }
-            return param.Search(list);
-        }
-
-        public IEnumerable<T> Select(IInvoker invoker, CompareType comparer, object value, IEnumerable<T> list = null)
-        {
-            list = list ?? this;
-            if (invoker == null)
-                yield break;
-
-            value = QItem.Optimisation(null, comparer, value);
-
-            foreach (T row in list)
-            {
-                if (QParam.CheckItem(row, invoker.GetValue(row), value, comparer))
-                    yield return row;
-            }
+            return param.Search<T>(list);
         }
 
         public QQuery<T> Query(IQuery query) => new QQuery<T>(this) { BaseQuery = query };
@@ -1451,8 +1450,8 @@ namespace DataWF.Data
 
     public enum DBCacheState
     {
-        Actual,
         None,
+        Actual,        
         Actualazing
     }
 }

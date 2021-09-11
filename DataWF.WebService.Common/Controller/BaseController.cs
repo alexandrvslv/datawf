@@ -76,7 +76,7 @@ namespace DataWF.WebService.Common
                     return Forbid();
                 }
                 var query = Table.Query(filter, DBLoadParam.Referencing);
-                var result = await Table.LoadAsync();
+                var result = await Table.LoadAsync(query);
                 return new ActionResult<IEnumerable<T>>(result.Where(p => p.Access.GetFlag(AccessType.Read, user)
                                                               && !primaryKey.IsEmpty(p)
                                                               && (p.UpdateState & DBUpdateState.Insert) == 0));
@@ -352,7 +352,7 @@ namespace DataWF.WebService.Common
             {
                 try
                 {
-                    value = Table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                    value = Table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction);
                     if (value == null)
                     {
                         return NotFound();
@@ -446,24 +446,12 @@ namespace DataWF.WebService.Common
                     return Forbid();
                 }
 
-                logTable.Query(filter)
-                {
-                    if (Table.IsVirtual && Table.ItemTypeIndex != 0)
-                    {
-                        query.BuildParam(logTable.ItemTypeKey, Table.ItemTypeIndex);
-                    }
-                    var buffer = logTable.LoadItems(query, DBLoadParam.Referencing)
-                                     .Where(p => p.Access.GetFlag(AccessType.Read, user)
-                                                 && !primaryKey.IsEmpty(p)
-                                                 && (p.UpdateState & DBUpdateState.Insert) == 0);
-                }
-                var result = logTable.SelectItems(query).OfType<L>();
-                if (query.Orders.Count > 0)
-                {
-                    var list = result.ToList();
-                    query.Sort(list);
-                    result = list;
-                }
+                var result = logTable.Query(filter, DBLoadParam.Referencing)
+                        .Where(p => p.Access.GetFlag(AccessType.Read, user)
+                                && !primaryKey.IsEmpty(p)
+                                && (p.UpdateState & DBUpdateState.Insert) == 0)
+                        .OfType<L>();
+
                 result = Pagination(result);
                 return new ActionResult<IEnumerable<L>>(result);
             }
@@ -663,7 +651,7 @@ namespace DataWF.WebService.Common
                 return BadRequest("No file columns presented!");
             }
 
-            var item = Table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+            var item = Table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction);
             if (item == null)
             {
                 return NotFound();
@@ -829,7 +817,7 @@ namespace DataWF.WebService.Common
             var transaction = new DBTransaction(Table, CurrentUser);
             try
             {
-                var logItem = (DBItemLog)Table.LogTable?.LoadItemById<long>(logId);
+                var logItem = Table.LogTable?.LoadById<DBItemLog, long>(logId);
                 if (logItem == null)
                 {
                     transaction.Dispose();

@@ -16,7 +16,7 @@ namespace DataWF.Common
         void Refresh(IEnumerable items);
         void RefreshItem(object item);
         void RefreshSort(object item);
-        IEnumerable SelectObjects(object value, CompareType compare);
+        IPullIndexCollection SelectObjects(object value, CompareType compare);
         object SelectOneObject(object value);
 
     }
@@ -32,13 +32,24 @@ namespace DataWF.Common
         void RefreshSort(T item);
 
     }
+
     public interface IPullOutIndex<out T, K> : IPullIndex where T : class, IPullHandler
     {
-        IEnumerable<T> Search(Predicate<K> comparer);
-        IReadOnlyList<T> Select(K key);
-        IEnumerable<T> Select(K key, CompareType compare);
-        IEnumerable<T> Select(object value, CompareType compare);
+        IPullIndexCollection<T> Search(Predicate<K> comparer);
+        IPullIndexCollection<T> Select(K key);
+        IPullIndexCollection<T> Select(K key, CompareType compare);
+        IPullIndexCollection<T> Select(object value, CompareType compare);
         T SelectOne(K key);
         T SelectOne(object value);
+    }
+
+    public interface IPullIndexCollection : IEnumerable
+    {
+        int Count { get; }
+        bool Contains(object item);
+    }
+
+    public interface IPullIndexCollection<out T> : IPullIndexCollection, IReadOnlyCollection<T> where T : class, IPullHandler
+    {
     }
 }

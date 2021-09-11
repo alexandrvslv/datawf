@@ -72,13 +72,13 @@ namespace DataWF.Module.Common
                 {
                     var type = Type;
                     if (type == PermissionType.GSchema)
-                        target = DBService.Schems[Code];
+                        target = Schema.Schems[Code];
                     else if (type == PermissionType.GColumn)
-                        target = DBService.Schems.ParseColumn(Code);
+                        target = Schema.Schems.ParseColumn(Code);
                     else if (type == PermissionType.GTable)
-                        target = DBService.Schems.ParseTable(Code);
+                        target = Schema.Schems.ParseTable(Code);
                     else if (type == PermissionType.GBlock)
-                        target = DBService.Schems.ParseTableGroup(Code);
+                        target = Schema.Schems.ParseTableGroup(Code);
                     else if (type == PermissionType.GType)
                         target = GetClass();
                     else if (type == PermissionType.GTypeMember)

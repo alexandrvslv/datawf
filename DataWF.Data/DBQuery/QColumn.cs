@@ -30,8 +30,7 @@ namespace DataWF.Data
     public sealed class QColumn : QItem
     {
         private DBColumn column;
-        private object temp;
-        private string columnAlias;
+        private object value;
 
         public QColumn()
         {
@@ -55,6 +54,12 @@ namespace DataWF.Data
             set { }
         }
 
+        public override bool IsReference
+        {
+            get => base.IsReference && Value == null;
+            set => base.IsReference = value;
+        }
+
         public DBColumn Column
         {
             get => column;
@@ -73,20 +78,7 @@ namespace DataWF.Data
             get => $"{Table}.{Column}";
         }
 
-        public string ColumnAlias
-        {
-            get => columnAlias;
-            set
-            {
-                if (columnAlias != value)
-                {
-                    columnAlias = value;
-                    //OnPropertyChanged(nameof(Prefix));
-                }
-            }
-        }
-
-        public object Temp { get => temp; set => temp = value; }
+        public object Value { get => value; set => this.value = value; }
 
         public override void Dispose()
         {
@@ -106,12 +98,17 @@ namespace DataWF.Data
             else if (Column.ColumnType == DBColumnTypes.Query && Column.Table.Type != DBTableType.View)
                 return $"({Column.Query}) as {Name}";
             else
-                return $"{(TableAlias != null ? (TableAlias + ".") : "")}{Name}{(ColumnAlias != null ? ($" as {ColumnAlias}") : "")}";
+                return $"{(TableAlias != null ? (TableAlias + ".") : "")}{Name}";
         }
 
         public override object GetValue(DBItem item)
         {
-            return temp ?? (item == null ? null : Column.GetValue(item));
+            return value ?? (item == null ? null : Column.GetValue(item));
+        }
+
+        public override bool CheckItem(DBItem item, object val2, CompareType comparer)
+        {
+            return Column.CheckItem(item, val2, comparer);
         }
 
         public override string ToString()

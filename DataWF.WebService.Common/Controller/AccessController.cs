@@ -92,7 +92,7 @@ namespace DataWF.WebService.Common
             }
             try
             {
-                var value = table.LoadItemById(id, DBLoadParam.Load | DBLoadParam.Referencing);
+                var value = table.LoadById<DBItem>(id, DBLoadParam.Load | DBLoadParam.Referencing);
                 if (value == null)
                 {
                     return NotFound();
@@ -174,7 +174,7 @@ namespace DataWF.WebService.Common
             {
                 try
                 {
-                    var value = table.PrimaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                    var value = table.PrimaryKey.Load(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction).FirstOrDefault();
                     if (value == null)
                     {
                         transaction.Rollback();
@@ -228,7 +228,7 @@ namespace DataWF.WebService.Common
                 {
                     foreach (var id in accessPack.Ids)
                     {
-                        var value = table.PrimaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                        var value = table.PrimaryKey.Load(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction).FirstOrDefault();
                         if (value == null)
                         {
                             transaction.Rollback();
@@ -276,7 +276,7 @@ namespace DataWF.WebService.Common
             {
                 try
                 {
-                    var value = table.PrimaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                    var value = table.PrimaryKey.Load(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction).FirstOrDefault();
                     if (value == null)
                     {
                         return NotFound();
@@ -321,7 +321,7 @@ namespace DataWF.WebService.Common
                     var firstItem = (DBItem)null;
                     foreach (var id in ids)
                     {
-                        var value = table.PrimaryKey.LoadByKey(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                        var value = table.PrimaryKey.Load(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction).FirstOrDefault();
                         if (value == null)
                         {
                             return NotFound();

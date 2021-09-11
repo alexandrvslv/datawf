@@ -12,19 +12,23 @@ namespace DataWF.Test.Data
     {
         public const string SchemaName = "test";
         private TestSchema schema;
-        private PositionTable positionTable;
-        private EmployerTable<Employer> employerTable;
+        private PositionTable positions;
+        private EmployerTable<Employer> employers;
 
         [SetUp]
         public async Task Setup()
         {
-           
+            var provider = new TestProvider() { SchemaName = SchemaName };
+            provider.CreateNew();
+            schema = provider.Schema;
+            positions = schema.Position;
+            employers = schema.Employer;
         }
 
         [Test]
         public void BinarySerializePoistions()
         {
-            var positions = ((IEnumerable<Position>)positionTable).ToList();
+            var positions = ((IEnumerable<Position>)this.positions).ToList();
             var serializer = DBBinarySerializer.Instance;
             var buffer = serializer.Serialize(positions);
 
@@ -43,7 +47,7 @@ namespace DataWF.Test.Data
         [Test]
         public void BinarySerializeEmployers()
         {
-            var employers = ((IEnumerable<Employer>)employerTable).ToList();
+            var employers = ((IEnumerable<Employer>)this.employers).ToList();
             var serializer = DBBinarySerializer.Instance;
             var buffer = serializer.Serialize(employers);
 

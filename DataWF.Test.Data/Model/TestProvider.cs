@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
+using DataWF.Common;
 using DataWF.Data;
 
-namespace DataWF.Test.Data.Model
+namespace DataWF.Test.Data
 {
     public class TestProvider : DBProvider
     {
@@ -17,12 +19,13 @@ namespace DataWF.Test.Data.Model
 
         public override async Task CreateNew()
         {
+            Locale.Instance.Culture = CultureInfo.GetCultureInfo("en-US");
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            DBService.Schems.Clear();
+            Schems.Clear();
             TableGenerator.ClearGeneratorCache();
 
-            if (DBService.Connections.Count == 0)
-                Serialization.Deserialize("connections.xml", DBService.Connections);
+            if (Connections.Count == 0)
+                Serialization.Deserialize("connections.xml", Connections);
 
             AccessValue.Provider = new AccessProviderStub
             {
@@ -36,23 +39,24 @@ namespace DataWF.Test.Data.Model
 
             Schema = new TestSchema();
             Schema.Generate("");
-            Schema.Connection = DBService.Connections["TestSqlLite"];
+            Schema.Connection = Connections["TestSqlLite"];
             Schema.ExecuteDropDatabase();
             Schema.ExecuteCreateDatabase();
 
-            positionTable = Schema.Position;
+            var positions = Schema.Position;
 
-            new Position(positionTable) { Id = 1, Code = "1", Name = "First Position" }.Attach();
-            new Position(positionTable) { Id = 2, Code = "2", Name = "Second Position" }.Attach();
-            new Position(positionTable) { Id = 3, Code = "3", Name = "Third Position" }.Attach();
-            new Position(positionTable) { Id = 4, Code = "4", Name = "Sub Position", ParentId = 3 }.Attach();
-            await positionTable.Save();
+            new Position(positions) { Id = 1, Code = "1", Name = "First Position" }.Attach();
+            new Position(positions) { Id = 2, Code = "2", Name = "Second Position" }.Attach();
+            new Position(positions) { Id = 3, Code = "3", Name = "Third Position" }.Attach();
+            new Position(positions) { Id = 4, Code = "4", Name = "Sub Position", ParentId = 3 }.Attach();
+            new Position(positions) { Id = 5, Code = "5", Name = "Sub Sub Position", ParentId = 4 }.Attach();
+            await positions.Save();
 
-            employerTable = Schema.Employer;
+            var employers = Schema.Employer;
             var random = new Random();
-            for (var i = 1; i < 100; i++)
+            for (var i = 1; i <= 100; i++)
             {
-                new Employer(employerTable)
+                new Employer(employers)
                 {
                     Id = i,
                     Identifier = $"{i,8:0}",
@@ -70,7 +74,7 @@ namespace DataWF.Test.Data.Model
                 })
                 }.Attach();
             }
-            await employerTable.Save();
+            await employers.Save();
         }
     }
 }

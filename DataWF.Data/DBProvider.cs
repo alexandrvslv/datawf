@@ -58,7 +58,11 @@ namespace DataWF.Data
         public DBSchema Schema
         {
             get => schema ??= schems[schemaName];
-            set => schems[schemaName] = schema = value;
+            set
+            {
+                value.Provider = this;
+                schems[schemaName] = schema = value;
+            }
         }
 
         public virtual Task CreateNew()
