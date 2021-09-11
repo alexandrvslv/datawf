@@ -453,12 +453,13 @@ namespace DataWF.Data
             bool not = false;
             QParserState state = QParserState.Where;
 
+            QExpression expression = null;
             QParam parametergroup = null;
             QParam parameter = null;
             QTable table = null;
             QColumn column = null;
             QFunction func = null;
-            IQuery sub = null;
+            QQuery<DBItem> sub = null;
             QOrder order = null;
             var joinType = JoinTypes.Undefined;
             var startIndex = 0;
@@ -516,7 +517,7 @@ namespace DataWF.Data
                     word = ReadOnlySpan<char>.Empty;
                     startIndex = i + 1;
                 }
-                else if (c == '\'' || c == ' ' || c == ',' || c == '(' || c == ')' || c == '\n' || c == '\r' || c == '!' || c == '=' || c == '>' || c == '<')
+                else if (c == '\'' || c == '"' || c == ' ' || c == ',' || c == '(' || c == ')' || c == '\n' || c == '\r' || c == '!' || c == '=' || c == '>' || c == '<')
                 {
                     if (MemoryExtensions.Equals(word, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
                     {
@@ -554,21 +555,16 @@ namespace DataWF.Data
                                     {
                                         alias = true;
                                     }
+                                    else if (MemoryExtensions.Equals(word, strNull.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        Columns.Add(new QValue(null));
+                                    }
                                     else
                                     {
                                         wordStr = word.ToString();
                                         if (alias)
                                         {
-                                            if (column != null)
-                                            {
-                                                column.ColumnAlias = wordStr;
-                                                column = null;
-                                            }
-                                            else if (sub != null)
-                                            {
-                                                sub.TableAlias = wordStr;
-                                                sub = null;
-                                            }
+                                            SetColumAlias(wordStr);
                                             alias = false;
                                         }
                                         else
@@ -581,10 +577,10 @@ namespace DataWF.Data
                                             }
                                             else
                                             {
-                                                var scolumn = ParseColumn(wordStr);
-                                                if (scolumn != null)
+                                                var dbColumn = ParseColumn(wordStr);
+                                                if (dbColumn != null)
                                                 {
-                                                    column = new QColumn(scolumn) { TableAlias = prefix.FirstOrDefault() };
+                                                    column = new QColumn(dbColumn) { TableAlias = prefix.FirstOrDefault() };
                                                     Columns.Add(column);
                                                     prefix.Clear();
                                                 }
@@ -595,24 +591,50 @@ namespace DataWF.Data
                                 if (c == '(')
                                 {
                                     var word2 = query.GetSubPart(ref i, '(', ')').Trim();
-                                    if (MemoryExtensions.StartsWith(word2, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                    if (func != null)
+                                    {
+                                        ParseFunc(func, word2);
+                                        func = null;
+                                    }
+                                    else if (MemoryExtensions.StartsWith(word2, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
                                     {
                                         Columns.Add(new QQuery<DBItem>(this, word2));
                                         sub = null;
 
                                     }
-                                    else if (func != null)
+                                    else
                                     {
-                                        ParseFunc(func, word2);
-                                        func = null;
+                                        expression = new QExpression();
+                                        ParseExpression(expression, word2);
+                                        Columns.Add(expression);
+                                    }
+                                }
+                                else if (c == '\'')
+                                {
+                                    wordStr = query.GetSubPart(ref i, '\'', '\'').ToString();
+                                    if (alias)
+                                    {
+                                        SetColumAlias(wordStr);
+                                        alias = false;
                                     }
                                     else
                                     {
-                                        QExpression expression = new QExpression();
-                                        ParseExpression(expression, word2);
+                                        Columns.Add(new QValue(wordStr, null));
                                     }
                                 }
-
+                                else if (c == '"')
+                                {
+                                    wordStr = query.GetSubPart(ref i, '"', '"').ToString();
+                                    if (alias)
+                                    {
+                                        SetColumAlias(wordStr);
+                                        alias = false;
+                                    }
+                                    else
+                                    {
+                                        Columns.Add(new QValue(wordStr, null));
+                                    }
+                                }
                                 break;
                             case QParserState.From:
                                 {
@@ -792,7 +814,6 @@ namespace DataWF.Data
                                         break;
                                     case '\'':
                                         parameter.Add(new QValue(query.GetSubPart(ref i, '\'', '\'').ToString(), column?.Column));
-                                        startIndex = i + 1;
                                         break;
                                     case '(':
                                         int j = i;
@@ -918,6 +939,20 @@ namespace DataWF.Data
                 else
                     word = query.Slice(startIndex, word.Length + 1);
             }
+        }
+
+        private bool SetColumAlias(string wordStr)
+        {
+            if (Columns.Count > 0)
+            {
+                var latestColumn = Columns[Columns.Count - 1];
+                if (string.IsNullOrEmpty(latestColumn.ColumnAlias))
+                {
+                    latestColumn.ColumnAlias = wordStr;
+                    return true;
+                }
+            }
+            return false;
         }
 
         public QParam NewParam() => NewParam(LogicType.Undefined);
@@ -1682,6 +1717,8 @@ namespace DataWF.Data
                         if (!columns.IsFirst(col))
                             cols.Append(", ");
                         cols.Append(temp);
+                        if (ColumnAlias != null)
+                            cols.Append($" as \"{ColumnAlias}\"");
                     }
                 }
             }
@@ -1817,12 +1854,12 @@ namespace DataWF.Data
                     if (param.RightColumn is var rColumn
                         && rColumn.Table == item.Table)
                     {
-                        param.RightQColumn.Temp = item.GetValue(rColumn);
+                        param.RightQColumn.Value = item.GetValue(rColumn);
                     }
                     if (param.LeftColumn is var lColumn
                         && lColumn.Table == item.Table)
                     {
-                        param.LeftQColumn.Temp = item.GetValue(lColumn);
+                        param.LeftQColumn.Value = item.GetValue(lColumn);
                     }
                 }
             }
@@ -1867,6 +1904,11 @@ namespace DataWF.Data
                 return buf;
             }
             return GetValue();
+        }
+
+        public override bool CheckItem(DBItem item, object val2, CompareType comparer)
+        {
+            return QParam.CheckItem(item, Parameters);
         }
 
         public void Add(QItem item)

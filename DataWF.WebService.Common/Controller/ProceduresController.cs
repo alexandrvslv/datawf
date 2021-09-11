@@ -13,16 +13,23 @@ namespace DataWF.WebService.Common
     [LoggerAndFormatter]
     public class ProceduresController : ControllerBase
     {
+        public ProceduresController(DBProvider provider)
+        {
+            Provider = provider;
+        }
+
+        public DBProvider Provider;
+
         [HttpGet]
         public ActionResult<IEnumerable<DBProcedure>> Get()
         {
-            return DBService.Schems.DefaultSchema.Procedures;
+            return Provider.Schems.DefaultSchema.Procedures;
         }
 
         [HttpPut]
         public ActionResult<DBProcedure> Put(DBProcedure value)
         {
-            var procedure = DBService.Schems.DefaultSchema.Procedures[value.Name];
+            var procedure = Provider.Schems.DefaultSchema.Procedures[value.Name];
             if (procedure != null)
             {
                 procedure.DisplayName = value.DisplayName;

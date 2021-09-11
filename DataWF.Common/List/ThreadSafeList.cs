@@ -103,7 +103,7 @@ namespace DataWF.Common
             _count = 0;
         }
 
-        public bool Contains(T item) => Array.IndexOf(items, item) > -1;
+        public bool Contains(T item) => Array.IndexOf<T>(items, item) > -1;
 
         public void CopyTo(T[] array, int arrayIndex) => items.AsSpan(0, _count).CopyTo(array.AsSpan(arrayIndex));
 

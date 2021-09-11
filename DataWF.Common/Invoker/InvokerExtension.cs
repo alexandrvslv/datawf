@@ -28,7 +28,7 @@ namespace DataWF.Common
 
         public static IListIndex CreateIndex<T>(this IInvoker invoker, bool concurrent)
         {
-            return ListIndexFactory.Create(invoker, concurrent);
+            return ListIndexFactory.Create<T>(invoker, concurrent);
         }
 
         public static IQueryParameter CreateParameter(this IInvoker invoker)

@@ -90,7 +90,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBProvider Provider
         {
-            get => provider ??= Schems.Provider;
+            get => provider ??= Schems?.Provider;
             set => provider = value;
         }
 

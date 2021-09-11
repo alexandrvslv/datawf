@@ -69,7 +69,7 @@ namespace DataWF.Module.Common
 
                     //make sure out generic list doesnt already
                     //contain this country
-                    if (locationTable.Select(locationTable.Columns["name_en"], CompareType.Equal, region.EnglishName).Count() == 0)
+                    if (locationTable.NameENKey.Select(CompareType.Equal, region.EnglishName).Count() == 0)
                     {
                         //not there so add the EnglishName (http://msdn.microsoft.com/en-us/library/system.globalization.regioninfo.englishname.aspx)
                         var country = new Country(locationTable)

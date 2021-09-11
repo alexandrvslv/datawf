@@ -27,6 +27,8 @@ namespace DataWF.WebService.Common
         {
             HttpContext = context;
         }
+        
+        public DBSchema Schema { get; set; }
 
         public HttpContext HttpContext
         {

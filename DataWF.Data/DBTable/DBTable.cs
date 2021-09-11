@@ -714,7 +714,7 @@ namespace DataWF.Data
 
         public void LoadReferencingBlock(IDbCommand command, DBTransaction transaction)
         {
-            if (!Generator.Referencings.Any())
+            if (Generator == null || !Generator.Referencings.Any())
                 return;
             var oldAlias = Helper.IntToChar(transaction.ReferencingRecursion).ToLowerInvariant();
             transaction.ReferencingRecursion++;
@@ -1751,7 +1751,8 @@ namespace DataWF.Data
             var column = Columns[name];
             if (column == null)
             {
-                column = DBColumnFactory.Create(typeof(Nullable<>).MakeGenericType(type), name: name, size: -1, table: this);
+                var nullableType = type.IsNullable() || type == typeof(string) ? type : typeof(Nullable<>).MakeGenericType(type);
+                column = DBColumnFactory.Create(nullableType, name: name, size: -1, table: this);
                 Columns.Add(column);
                 newCol = true;
             }

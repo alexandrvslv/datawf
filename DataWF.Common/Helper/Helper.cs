@@ -28,6 +28,8 @@ namespace DataWF.Common
         private static readonly Dictionary<string, string> words = new Dictionary<string, string>(StringComparer.Ordinal);
         public static readonly char[] CommaSeparator = new char[] { ',' };
         public static readonly char[] DotSeparator = { '.' };
+        public static readonly char[] TrimText = new char[] { ' ', '\'' };
+
         //http://stackoverflow.com/questions/5417070/c-sharp-version-of-sql-likea
         private static readonly Regex likeExp = new Regex(@"\.|\$|\^|\{|\[|\(|\||\)|\*|\+|\?|\\", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 

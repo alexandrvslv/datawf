@@ -98,7 +98,7 @@ namespace DataWF.Module.Common
 
         public DBProcedure Procedure
         {
-            get => DBService.Schems.ParseProcedure(ProcedureName);
+            get => Schema.Schems.ParseProcedure(ProcedureName);
             set => ProcedureName = value?.Name;
         }
 

@@ -57,7 +57,7 @@ namespace DataWF.Module.Common
         {
             PermissionType type = GetPermission(item, out string code, out string name);
 
-            var list = Select(CodeKey, CompareType.Equal, code).ToList();
+            var list = CodeKey.Select(CompareType.Equal, code).ToList();
 
             var permission = list.FirstOrDefault();
             if (list.Count > 1)

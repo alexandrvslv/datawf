@@ -231,43 +231,60 @@ namespace DataWF.Common
             return ReadOnlySpan<T>.Empty;
         }
 
-        public IReadOnlyList<T> Select(K key)
+        public IPullIndexCollection<T> Select(K key)
         {
             CheckNull(ref key);
             if (store.TryGetValue(key, out var list))
             {
-                return list.AsReadOnly();
+                return new PullIndexCollection<T>(Enumerable.Repeat(list, 1), valueComparer);
             }
-            return ReadOnlyList<T>.Empty;
+            return PullIndexCollection<T>.Empty;
         }
 
-        public IEnumerable<T> Search(Predicate<K> comparer)
+        protected IEnumerable<ThreadSafeList<T>> SelectInternal(K key)
+        {
+            CheckNull(ref key);
+            if (store.TryGetValue(key, out var list))
+            {
+                return Enumerable.Repeat(list, 1);
+            }
+            return Enumerable.Empty<ThreadSafeList<T>>();
+        }
+
+        public IPullIndexCollection<T> Search(Predicate<K> comparer)
+        {
+            return new PullIndexCollection<T>(SearchInternal(comparer), valueComparer);
+        }
+
+        protected IEnumerable<ThreadSafeList<T>> SearchInternal(Predicate<K> comparer)
         {
             foreach (var entry in store)
             {
                 if (comparer(entry.Key))
                 {
-                    foreach (var item in entry.Value)
-                    {
-                        yield return item;
-                    }
+                    yield return entry.Value;
                 }
             }
         }
 
-        public IEnumerable<T> Select(object value, CompareType compare)
+        public IPullIndexCollection<T> Select(object value, CompareType comparer)
         {
-            IEnumerable<T> buf = null;
+            return new PullIndexCollection<T>(SelectInternal(value, comparer), valueComparer);
+        }
 
-            switch (compare.Type)
+        protected IEnumerable<ThreadSafeList<T>> SelectInternal(object value, CompareType comparer)
+        {
+            IEnumerable<ThreadSafeList<T>> buf = null;
+
+            switch (comparer.Type)
             {
                 case CompareTypes.Like:
                     var regex = value as Regex ?? Helper.BuildLike(value.ToString());
-                    buf = Search((item) => regex.IsMatch(item.ToString()));
+                    buf = SearchInternal((item) => regex.IsMatch(item.ToString()));
                     break;
                 case CompareTypes.In:
                     //&& value is IList
-                    if (!compare.Not)
+                    if (!comparer.Not)
                     {
                         foreach (var item in (IEnumerable)value)
                         {
@@ -277,7 +294,7 @@ namespace DataWF.Common
                                 comp = valued.GetValue<T>();
                             }
 
-                            var temp = Select(CheckNull(comp));
+                            var temp = SelectInternal(CheckNull(comp));
                             if (buf == null)
                             {
                                 buf = temp;
@@ -290,7 +307,7 @@ namespace DataWF.Common
                     }
                     else
                     {
-                        buf = Search((item) =>
+                        buf = SearchInternal((item) =>
                         {
                             foreach (var element in (IEnumerable)value)
                             {
@@ -312,47 +329,52 @@ namespace DataWF.Common
                         throw new Exception("Expect QBetween but Get " + value == null ? "null" : value.GetType().FullName);
                     var min = CheckNull(between.MinValue());
                     var max = CheckNull(between.MaxValue());
-                    buf = Search((item) => ListHelper.Compare(item, max) >= 0
+                    buf = SearchInternal((item) => ListHelper.Compare(item, max) >= 0
                                         && ListHelper.Compare(item, min) <= 0);
                     break;
                 default:
-                    buf = Select(CheckNull(value), compare);
+                    buf = SelectInternal(CheckNull(value), comparer);
                     break;
             }
-            return buf ?? Enumerable.Empty<T>();
+            return buf ?? Enumerable.Empty<ThreadSafeList<T>>();
         }
 
-        public IEnumerable<T> Select(K key, CompareType compare)
+        public IPullIndexCollection<T> Select(K key, CompareType comparer)
+        {
+            return new PullIndexCollection<T>(SelectInternal(key, comparer), valueComparer);
+        }
+
+        protected IEnumerable<ThreadSafeList<T>> SelectInternal(K key, CompareType compare)
         {
             switch (compare.Type)
             {
                 case CompareTypes.Is:
                     if (!compare.Not)
-                        return Select(nullKey);
+                        return SelectInternal(nullKey);
                     else
-                        return Search((item) => !ListHelper.Equal<K>(item, nullKey));
+                        return SearchInternal((item) => !ListHelper.Equal<K>(item, nullKey));
                 case CompareTypes.Equal:
                     if (!compare.Not)
-                        return Select(key);
+                        return SelectInternal(key);
                     else
                     {
                         CheckNull(ref key);
-                        return Search((item) => !ListHelper.Equal<K>(item, key));
+                        return SearchInternal((item) => !ListHelper.Equal<K>(item, key));
                     }
                 case CompareTypes.Greater:
                     CheckNull(ref key);
-                    return Search((item) => ListHelper.Compare(item, key) > 0);
+                    return SearchInternal((item) => ListHelper.Compare(item, key) > 0);
                 case CompareTypes.GreaterOrEqual:
                     CheckNull(ref key);
-                    return Select(key).Concat(Search((item) => ListHelper.Compare(item, key) > 0));
+                    return SelectInternal(key).Concat(SearchInternal((item) => ListHelper.Compare(item, key) > 0));
                 case CompareTypes.Less:
                     CheckNull(ref key);
-                    return Search((item) => ListHelper.Compare(item, key) < 0);
+                    return SearchInternal((item) => ListHelper.Compare(item, key) < 0);
                 case CompareTypes.LessOrEqual:
                     CheckNull(ref key);
-                    return Select(key).Concat(Search((item) => ListHelper.Compare(item, key) < 0));
+                    return SelectInternal(key).Concat(SearchInternal((item) => ListHelper.Compare(item, key) < 0));
             }
-            return Enumerable.Empty<T>();
+            return Enumerable.Empty<ThreadSafeList<T>>();
         }
 
         public override void Clear()
@@ -360,7 +382,7 @@ namespace DataWF.Common
             store.Clear();
         }
 
-        public override IEnumerable SelectObjects(object value, CompareType compare)
+        public override IPullIndexCollection SelectObjects(object value, CompareType compare)
         {
             return Select(value, compare);
         }

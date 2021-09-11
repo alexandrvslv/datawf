@@ -26,6 +26,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
@@ -59,6 +60,7 @@ namespace DataWF.Data
 
         protected int order = -1;
         private string tableAlias;
+        private string columnAlias;
         private QItem holder;
         private IQItemList list;
         protected QTable qTable;
@@ -85,7 +87,7 @@ namespace DataWF.Data
             }
         }
 
-        public bool IsReference
+        public virtual bool IsReference
         {
             get => refmode;
             set => refmode = value;
@@ -100,6 +102,19 @@ namespace DataWF.Data
                 {
                     tableAlias = value;
                     //OnPropertyChanged();
+                }
+            }
+        }
+
+        public string ColumnAlias
+        {
+            get => columnAlias;
+            set
+            {
+                if (columnAlias != value)
+                {
+                    columnAlias = value;
+                    //OnPropertyChanged(nameof(Prefix));
                 }
             }
         }
@@ -175,7 +190,7 @@ namespace DataWF.Data
                 return GetValue(dbItem);
             if (target is DBTuple turple)
                 return GetValue(turple);
-            return null;
+            throw new ArgumentOutOfRangeException(nameof(target));
         }
 
         public object GetValue(DBTuple tuple) => GetValue(tuple.Get(QTable));
@@ -206,9 +221,86 @@ namespace DataWF.Data
             return Format();
         }
 
-        public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
+        public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision = null)
         {
-            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);
+            if (item is DBItem dBItem)
+                return CheckItem(dBItem, typedValue, comparer);
+            if (item is DBTuple dBTuple)
+                return CheckItem(dBTuple, typedValue, comparer);
+            throw new ArgumentOutOfRangeException(nameof(item));
+        }
+
+        public bool CheckItem(DBTuple item, object typedValue, CompareType comparer)
+        {
+            return CheckItem(item.Get(QTable), typedValue, comparer);
+        }
+
+        public virtual bool CheckItem(DBItem item, object val2, CompareType comparer)
+        {
+            var val1 = GetValue(item);
+            if (item == null)
+                return false; //comparer.Type == CompareTypes.Is && !comparer.Not;
+            if (val1 == null)
+                return comparer.Type == CompareTypes.Is ? !comparer.Not : val2 == null;
+            else if (val2 == null)
+                return comparer.Type == CompareTypes.Is ? comparer.Not : false;
+
+            if (val1 is Enum)
+                val1 = (int)val1;
+            if (val2 is Enum)
+                val2 = (int)val1;
+
+            switch (comparer.Type)
+            {
+                //case CompareTypes.Is:
+                //    return val1.Equals(DBNull.Value) ? !comparer.Not : comparer.Not;
+                case CompareTypes.Equal:
+                    return ListHelper.Equal(val1, val2) ? !comparer.Not : comparer.Not;
+                case CompareTypes.Like:
+                    var r = val2 is Regex regexValue ? regexValue : Helper.BuildLike(val2.ToString());
+                    return r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
+                case CompareTypes.In:
+                    var list = val2 as IEnumerable;
+                    if (list != null)
+                    {
+                        foreach (object s in list)
+                        {
+                            object comp = s;
+                            if (comp is QItem qItem)
+                                comp = qItem.GetValue(item);
+                            if (comp.Equals(val1) && !comparer.Not)
+                                return true;
+                        }
+                    }
+                    return comparer.Not;
+                case CompareTypes.Between:
+                    var between = val2 as QBetween;
+                    if (between == null)
+                        throw new Exception($"Expect QBetween but Get {(val2 == null ? "null" : val2.GetType().FullName)}");
+                    return ListHelper.Compare(val1, between.Min.GetValue(item), (IComparer)null) >= 0
+                                     && ListHelper.Compare(val1, between.Max.GetValue(item), (IComparer)null) <= 0;
+                default:
+                    bool f = false;
+                    int rez = ListHelper.Compare(val1, val2, (IComparer)null);
+                    switch (comparer.Type)
+                    {
+                        case CompareTypes.Greater:
+                            f = rez > 0;
+                            break;
+                        case CompareTypes.GreaterOrEqual:
+                            f = rez >= 0;
+                            break;
+                        case CompareTypes.Less:
+                            f = rez < 0;
+                            break;
+                        case CompareTypes.LessOrEqual:
+                            f = rez <= 0;
+                            break;
+                        default:
+                            break;
+                    }
+                    return f;
+            }
         }
 
         public virtual string CreateCommandParameter(IDbCommand command, object value, DBColumn column)
@@ -235,6 +327,6 @@ namespace DataWF.Data
             return param;
         }
 
-        
+
     }
 }

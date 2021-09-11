@@ -35,20 +35,20 @@ namespace DataWF.Data
     [InvokerGenerator(Instance = true)]
     public partial class QParam : QItem, IComparable, IGroup, IQItemList
     {
-        public static bool CheckItem(DBItem item, string column, object val, CompareType comparer)
-        {
-            object val1 = null;
-            DBColumn dbColumn = item.Table.GetColumn(column);
-            if (dbColumn == null)
-            {
-                val1 = EmitInvoker.GetValue(typeof(DBItem), column, item);
-                return CheckItem(item, val1, val, comparer);
-            }
-            else
-            {
-                return dbColumn.CheckItem(item, val, comparer);
-            }
-        }
+        //public static bool CheckItem(DBItem item, string column, object val, CompareType comparer)
+        //{
+        //    object val1 = null;
+        //    DBColumn dbColumn = item.Table.GetColumn(column);
+        //    if (dbColumn == null)
+        //    {
+        //        val1 = EmitInvoker.GetValue(typeof(DBItem), column, item);
+        //        return CheckItem(item, val1, val, comparer);
+        //    }
+        //    else
+        //    {
+        //        return dbColumn.CheckItem(item, val, comparer);
+        //    }
+        //}
 
         public static bool CheckItem(DBItem item, IEnumerable<QParam> parameters)
         {
@@ -58,7 +58,7 @@ namespace DataWF.Data
             {
                 if (!first && !result && param.Logic.Type == LogicTypes.And)
                     break;
-                bool check = param.CheckItem(item);
+                bool check = param.CheckItem(item, null, param.Comparer);
 
                 if (first)
                 {
@@ -75,77 +75,6 @@ namespace DataWF.Data
                 }
             }
             return result;
-        }
-
-        public static bool CheckItem(DBItem item, object val1, object val2, CompareType comparer)
-        {
-            if (item == null)
-                return false; //comparer.Type == CompareTypes.Is && !comparer.Not;
-            if (val1 == null)
-                return comparer.Type == CompareTypes.Is ? !comparer.Not : val2 == null;
-            else if (val2 == null)
-                return comparer.Type == CompareTypes.Is ? comparer.Not : false;            
-            
-            if (val1 is Enum)
-                val1 = (int)val1;
-            if (val2 is Enum)
-                val2 = (int)val1;
-
-            switch (comparer.Type)
-            {
-                //case CompareTypes.Is:
-                //    return val1.Equals(DBNull.Value) ? !comparer.Not : comparer.Not;
-                case CompareTypes.Equal:
-                    return ListHelper.Equal(val1, val2) ? !comparer.Not : comparer.Not;
-                case CompareTypes.Like:
-                    var r = val2 is Regex regexValue ? regexValue : Helper.BuildLike(val2.ToString());
-                    return r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
-                case CompareTypes.In:
-                    if (val2 is string)
-                        val2 = val2.ToString().Split(Helper.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
-                    var list = val2 as IEnumerable;
-                    if (list != null)
-                    {
-                        foreach (object s in list)
-                        {
-                            object comp = s;
-                            if (comp is QItem)
-                                comp = ((QItem)comp).GetValue(item);
-                            if (comp is string)
-                                comp = ((string)comp).Trim(' ', '\'');
-                            if (comp.Equals(val1) && !comparer.Not)
-                                return true;
-                        }
-                    }
-                    return comparer.Not;
-                case CompareTypes.Between:
-                    var between = val2 as QBetween;
-                    if (between == null)
-                        throw new Exception($"Expect QBetween but Get {(val2 == null ? "null" : val2.GetType().FullName)}");
-                    return ListHelper.Compare(val1, between.Min.GetValue(item), (IComparer)null) >= 0
-                                     && ListHelper.Compare(val1, between.Max.GetValue(item), (IComparer)null) <= 0;
-                default:
-                    bool f = false;
-                    int rez = ListHelper.Compare(val1, val2, (IComparer)null);
-                    switch (comparer.Type)
-                    {
-                        case CompareTypes.Greater:
-                            f = rez > 0;
-                            break;
-                        case CompareTypes.GreaterOrEqual:
-                            f = rez >= 0;
-                            break;
-                        case CompareTypes.Less:
-                            f = rez < 0;
-                            break;
-                        case CompareTypes.LessOrEqual:
-                            f = rez <= 0;
-                            break;
-                        default:
-                            break;
-                    }
-                    return f;
-            }
         }
 
         protected QItemList<QItem> items;
@@ -362,26 +291,27 @@ namespace DataWF.Data
                 (RightItem is QColumn rqColumn && rqColumn.Column == column);
         }
 
-        public bool CheckItem(DBItem item)
+        public override bool CheckItem(DBItem item, object val2, CompareType comparer)
         {
             bool result = false;
+
             if (!IsCompaund)
             {
                 if (LeftItem == null || RightItem == null)
                 {
                     result = true;
                 }
-                else if (LeftItem is QColumn leftColumn)
+                else if (!LeftItem.IsReference)
                 {
-                    result = leftColumn.Column.CheckItem(item, RightItem.GetValue(item), Comparer);
+                    result = RightItem.CheckItem(item, LeftItem.GetValue<DBItem>(), Comparer);
                 }
-                else if (RightItem is QColumn rightColumn)
+                else if (!RightItem.IsReference)
                 {
-                    result = rightColumn.Column.CheckItem(item, LeftItem.GetValue(item), Comparer);
+                    result = LeftItem.CheckItem(item, RightItem.GetValue<DBItem>(), Comparer);
                 }
                 else
                 {
-                    result = CheckItem(item, LeftItem.GetValue(item), RightItem.GetValue(item), Comparer);
+                    result = LeftItem.CheckItem(item, RightItem.GetValue(item), Comparer);
                 }
             }
             else
@@ -389,23 +319,71 @@ namespace DataWF.Data
                 result = CheckItem(item, Parameters.OfType<QParam>());
             }
             return result;
+
+        }
+
+        public bool CheckItem(DBItem item)
+        {
+            return CheckItem(item, null, Comparer);
         }
 
         public IEnumerable<T> Search<T>(IEnumerable<T> list) where T : DBItem
         {
-            foreach (var item in list)
+            if (!LeftItem.IsReference)
             {
-                if (QParam.CheckItem(item, LeftItem.GetValue(item), RightItem.GetValue(item), Comparer))
-                    yield return item;
+                var tempLeft = LeftItem.GetValue<T>();
+                foreach (var item in list)
+                {
+                    if (RightItem.CheckItem(item, tempLeft, Comparer))
+                        yield return item;
+                }
+            }
+            else if (!RightItem.IsReference)
+            {
+                var tempRight = RightItem.GetValue<T>();
+                foreach (var item in list)
+                {
+                    if (LeftItem.CheckItem(item, tempRight, Comparer))
+                        yield return item;
+                }
+            }
+            else
+            {
+                foreach (var item in list)
+                {
+                    if (LeftItem.CheckItem(item, RightItem.GetValue(item), Comparer))
+                        yield return item;
+                }
             }
         }
 
         public IEnumerable<DBTuple> Search<T>(IEnumerable<DBTuple> list) where T : DBItem
         {
-            foreach (var tuple in list)
+            if (!LeftItem.IsReference)
             {
-                if (QParam.CheckItem(tuple.LeftItem, LeftItem.GetValue(tuple), RightItem.GetValue(tuple), Comparer))
-                    yield return tuple;
+                var tempLeft = LeftItem.GetValue<T>();
+                foreach (var item in list)
+                {
+                    if (RightItem.CheckItem(item, tempLeft, Comparer))
+                        yield return item;
+                }
+            }
+            else if (!RightItem.IsReference)
+            {
+                var tempRight = RightItem.GetValue<T>();
+                foreach (var item in list)
+                {
+                    if (LeftItem.CheckItem(item, tempRight, Comparer))
+                        yield return item;
+                }
+            }
+            else
+            {
+                foreach (var item in list)
+                {
+                    if (LeftItem.CheckItem(item, RightItem.GetValue(item), Comparer))
+                        yield return item;
+                }
             }
         }
 

@@ -35,7 +35,6 @@ namespace DataWF.Data
     public class DBColumn<T> : DBColumn, IInvoker<DBItem, T>, IValuedInvoker<T>
     {
         public new static readonly DBColumn<T> EmptyKey = new DBColumn<T>();
-        private static readonly char[] trimEntry = new char[] { ' ', '\'' };
         protected GenericPull<T> pull;
         protected IPullOutIndex<DBItem, T> pullIndex;
         private IInvoker propertyInvoker;
@@ -133,9 +132,14 @@ namespace DataWF.Data
             ((IPullInIndex<F, T>)pullIndex)?.Remove(item);
         }
 
-        public override IEnumerable<TT> SelectIndex<TT>(object value, CompareType comparer)
+        public override IPullIndexCollection<R> SelectIndex<R>(CompareType comparer, object value)
         {
-            return ((IPullOutIndex<TT, T>)pullIndex).Select(value, comparer);
+            return ((IPullOutIndex<R, T>)pullIndex).Select(value, comparer);
+        }
+
+        public virtual IPullIndexCollection<R> SelectIndex<R>(CompareType comparer, T value) where R : DBItem
+        {
+            return ((IPullOutIndex<R, T>)pullIndex).Select(value, comparer);
         }
 
         public override bool Equal(object oldValue, object newValue)
@@ -666,19 +670,14 @@ namespace DataWF.Data
             }
         }
 
-        public override bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
-        {
-            return CheckItem(item, GetValue(item), typedValue, comparer);
-        }
-
         public override bool CheckItem(DBItem item, object val2, CompareType comparer)
         {
-            return CheckItem(item, GetValue(item), val2, comparer);
+            return CheckItem(item, item == null ? default(T) : GetValue(item), val2, comparer);
         }
 
         public bool CheckItem(DBItem item, T val2, CompareType comparer)
         {
-            return CheckItem(item, GetValue(item), val2, comparer);
+            return CheckItem(item, item == null ? default(T) : GetValue(item), val2, comparer);
         }
 
         public bool CheckItem(DBItem item, T val1, T val2, CompareType comparer)
@@ -697,6 +696,9 @@ namespace DataWF.Data
                     return ListHelper.Compare<T>(val1, val2) < 0;
                 case CompareTypes.LessOrEqual:
                     return ListHelper.Compare<T>(val1, val2) <= 0;
+                case CompareTypes.Like:
+                    var r = Helper.BuildLike(val2.ToString());
+                    return val1 != null && r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
                 default:
                     return true;
             }
@@ -704,17 +706,12 @@ namespace DataWF.Data
 
         public bool CheckItem(DBItem item, T val1, object val2, CompareType comparer)
         {
-            if (item == null)
-                return false;            
-
             switch (comparer.Type)
             {
                 case CompareTypes.Like:
                     var r = val2 is Regex ? (Regex)val2 : Helper.BuildLike(val2.ToString());
                     return val1 != null && r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
                 case CompareTypes.In:
-                    if (val2 is string)
-                        val2 = val2.ToString().Split(Helper.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
                     return CheckIn(item, val1, val2, comparer.Not);
                 case CompareTypes.Between:
                     var between = val2 as QBetween;
@@ -744,9 +741,8 @@ namespace DataWF.Data
                     object comp = entry;
                     if (comp is QItem qItem)
                         comp = qItem.GetValue(item);
-                    if (comp is string)
-                        comp = ((string)comp).Trim(trimEntry);
-
+                    if (comp is DBItem dbItem)
+                        comp = GetReferenceId(dbItem);
                     if (comp.Equals(val1) && !not)
                         return true;
                 }
@@ -761,15 +757,30 @@ namespace DataWF.Data
 
         public virtual IEnumerable<R> Select<R>(CompareType comparer, T value, IEnumerable<R> list = null) where R : DBItem
         {
-            if (PullIndex is IPullOutIndex<R, T> index)
+            if (PullIndex == null)
             {
-                if (comparer == CompareType.Equal)
-                {
-                    return index.Select(value);
-                }
-                return index.Select(value, comparer);
+                return Search<R>(comparer, value, list ?? (IEnumerable<R>)Table);
             }
-            return Search<R>(comparer, value, list ?? (IEnumerable<R>)Table);
+
+            var indexResult = SelectIndex<R>(comparer, value);
+
+            if (list == null || list == Table)
+            {
+                return indexResult;
+            }
+            return list.Where(p => indexResult.Contains(p));
+        }
+
+        public virtual IEnumerable<DBTuple> Select<R>(CompareType comparer, T value, QTable qTable, IEnumerable<DBTuple> list) where R : DBItem
+        {
+            if (PullIndex == null)
+            {
+                return Search<R>(comparer, value, qTable, list);
+            }
+
+            var indexResult = SelectIndex<R>(comparer, value);
+
+            return list.Where(p => indexResult.Contains((R)p.Get(qTable)));
         }
 
         public override IEnumerable<R> Select<R>(CompareType comparer, object value, IEnumerable<R> list = null)
@@ -779,23 +790,32 @@ namespace DataWF.Data
             return base.Select(comparer, value, list);
         }
 
-        public override R SelectOne<R>(DBItem value, IEnumerable<R> list)
+        public override R SelectOne<R>(DBItem value, IEnumerable<R> list = null)
         {
             return SelectOne<R>(GetReferenceId(value), list);
         }
 
-        public virtual R SelectOne<R>(T value, IEnumerable<R> list) where R : DBItem
+        public virtual R SelectOne<R>(T value, IEnumerable<R> list = null) where R : DBItem
         {
             if (PullIndex is IPullOutIndex<R, T> index)
             {
                 return index.SelectOne(value);
             }
-            return Search<R>(CompareType.Equal, value, list).FirstOrDefault();
+            return Search<R>(CompareType.Equal, value, list ?? (IEnumerable<R>)Table).FirstOrDefault();
         }
 
         public override R SelectOne<R>(object value, IEnumerable<R> list)
         {
             return SelectOne<R>(Parse(value), list);
+        }
+
+        public virtual IEnumerable<DBTuple> Search<R>(CompareType comparer, T value, QTable qTable, IEnumerable<DBTuple> list) where R : DBItem
+        {
+            foreach (var item in list)
+            {
+                if (CheckItem(item.Get(qTable), value, comparer))
+                    yield return item;
+            }
         }
 
         public virtual IEnumerable<R> Search<R>(CompareType comparer, T value, IEnumerable<R> list) where R : DBItem
@@ -830,6 +850,15 @@ namespace DataWF.Data
             if (value == null)
                 return Search(comparer, default(T), list);
             return base.Search(comparer, value, list);
+        }
+
+        public override IEnumerable<DBTuple> Search<R>(CompareType comparer, object value, QTable qTable, IEnumerable<DBTuple> list)
+        {
+            if (value is T typedValue)
+                return Search<R>(comparer, typedValue, qTable, list);
+            if (value == null)
+                return Search<R>(comparer, default(T), qTable, list);
+            return base.Search<R>(comparer, value, qTable, list);
         }
 
         public override IEnumerable Distinct(IEnumerable<DBItem> enumerable)

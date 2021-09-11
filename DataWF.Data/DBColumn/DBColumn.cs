@@ -922,10 +922,6 @@ namespace DataWF.Data
 
         public abstract object ParseValue(object value);
 
-        public abstract bool CheckItem(DBItem item, object val2, CompareType comparer);
-
-        public abstract IEnumerable<T> SelectIndex<T>(object value, CompareType comparer) where T : DBItem;
-
         public abstract IEnumerable Distinct(IEnumerable<DBItem> enumerable);
 
         public bool IsSerializeable(Type type)
@@ -1000,12 +996,19 @@ namespace DataWF.Data
             return base.ToString();
         }
 
-        public abstract bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision);
+        public abstract bool CheckItem(DBItem item, object val2, CompareType comparer);
+
+        public bool CheckItem(DBItem item, object typedValue, CompareType comparer, IComparer comparision)
+        {
+            return CheckItem(item, typedValue, comparer);
+        }
 
         public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
         {
-            return CheckItem((DBItem)item, typedValue, comparer, comparision);
+            return CheckItem((DBItem)item, typedValue, comparer);
         }
+
+        public abstract IPullIndexCollection<T> SelectIndex<T>(CompareType comparer, object value) where T : DBItem;
 
         public abstract R SelectOne<R>(DBItem value, IEnumerable<R> list) where R : DBItem;
 
@@ -1028,11 +1031,29 @@ namespace DataWF.Data
             }
         }
 
+        public virtual IEnumerable<DBTuple> Search<R>(CompareType comparer, QColumn qColumn, QTable qTable, IEnumerable<DBTuple> list) where R : DBItem
+        {
+            foreach (var item in list)
+            {
+                if (CheckItem(item.Get(qTable), qColumn.Column.GetValue(item.Get(qColumn.QTable)), comparer))
+                    yield return item;
+            }
+        }
+
         public virtual IEnumerable<R> Search<R>(CompareType comparer, object value, IEnumerable<R> list = null) where R : DBItem
         {
             foreach (R item in list)
             {
                 if (CheckItem(item, value, comparer))
+                    yield return item;
+            }
+        }
+
+        public virtual IEnumerable<DBTuple> Search<R>(CompareType comparer, object value, QTable qTable, IEnumerable<DBTuple> list) where R : DBItem
+        {
+            foreach (var item in list)
+            {
+                if (CheckItem(item.Get(qTable), value, comparer))
                     yield return item;
             }
         }
@@ -1046,25 +1067,35 @@ namespace DataWF.Data
                 return enumerabble;
             }
 
-            if (list == null && PullIndex != null)
+            if (PullIndex == null)
             {
-                return SelectIndex<R>(value, comparer);
+                return Search(comparer, value, list ?? (IEnumerable<R>)Table);
             }
-            return Search(comparer, value, list ?? (IEnumerable<R>)Table);
+
+            var indexResult = SelectIndex<R>(comparer, value);
+
+            if (list == null || list == Table)
+            {
+                return indexResult;
+            }
+            return list.Where(p => indexResult.Contains(p));
         }
 
-        public virtual IEnumerable<R> Select<R>(CompareType comparer, object value, IEnumerable<DBTuple> list) where R : DBItem
+        public virtual IEnumerable<DBTuple> Select<R>(CompareType comparer, object value, QTable qTable, IEnumerable<DBTuple> list) where R : DBItem
         {
             if (value is IEnumerable<R> enumerabble)
             {
-                return enumerabble;
+                return list.Where(p => enumerabble.Contains((R)p.Get(qTable)));
             }
 
-            if (list == null && PullIndex != null)
+            if (PullIndex == null)
             {
-                return SelectIndex<R>(value, comparer);
+                return Search<R>(comparer, value, qTable, list);
             }
-            return Search(comparer, value, (IEnumerable<R>)Table);
+
+            var indexResult = SelectIndex<R>(comparer, value);
+
+            return list.Where(p => indexResult.Contains(p.Get(qTable)));
         }
 
         public DBColumn GetVirtualColumn(IDBTable table)

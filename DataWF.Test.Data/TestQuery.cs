@@ -1,6 +1,7 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
 using NUnit.Framework;
+using System;
 using System.Linq;
 
 namespace DataWF.Test.Data
@@ -8,146 +9,165 @@ namespace DataWF.Test.Data
     [TestFixture]
     public class TestQuery
     {
-        private SelectableList<TestClass> list;
+        private TestProvider provider;
+        private TestSchema schema;
+        private EmployerTable<Employer> employers;
+        private PositionTable positions;
 
         [SetUp]
         public void Setup()
         {
-            list = new SelectableList<TestClass>();
-            list.Indexes.Add(new ActionInvoker<TestClass, int>(nameof(TestClass.Field),
-                        (item) => item.Field,
-                        (item, value) => item.Field = value));
-            list.AddRange(new[]{
-                new TestClass(){ Name = "System", Field = 1, X = 0, Y = 1 },
-                new TestClass(){ Name = "System.Collections", Field = 2, X = 1, Y = 2 },
-                new TestClass(){ Name = "System.Diagnostics", Field = 3, X = 1, Y = 3 },
-                new TestClass(){ Name = "System.Linq", Field = 4, X = 2, Y = 4 },
-                new TestClass(){ Name = "System.Text", Field = 5, X = 2, Y = 5 },
-                new TestClass(){ Name = "System.Threading", Field = 6, X = 3, Y = 6 },
-                new TestClass(){ Name = "System.Threading.Task", Field = 7, X = 3, Y = 7 }
-            });
+            provider = new TestProvider();
+            provider.CreateNew();
+
+            schema = provider.Schema;
+            employers = schema.Employer;
+            positions = schema.Position;
         }
 
         [Test]
-        public void TestIndex()
+        public void TestColumnIndex()
         {
-            var resultOne = list.SelectOne(nameof(TestClass.Field), 3);
-            Assert.AreEqual("System.Diagnostics", resultOne?.Name, "SelectOne by Index Fail");
+            var resultOne = employers.IdKey.SelectOne<Employer>(1);
+            Assert.IsNotNull(resultOne, "Select by Index Equal Fail");
 
-            var result = list.Select(nameof(TestClass.Field), CompareType.Equal, 2);
-            Assert.AreEqual(1, result.Count(), "Select by Index Field.Equal Fail");
+            var result = employers.IdKey.SelectIndex<Employer>(CompareType.NotEqual, 1);
+            Assert.AreEqual(employers.Count - 1, result.Count(), "Select by Index NotEqual Fail");
 
-            result = list.Select(nameof(TestClass.Field), CompareType.NotEqual, 2);
-            Assert.AreEqual(6, result.Count(), "Select by Index Field.NotEqual Fail");
+            result = employers.IdKey.SelectIndex<Employer>(CompareType.Greater, 1);
+            Assert.AreEqual(employers.Count - 1, result.Count(), "Select by Index Field.Greater Fail");
 
-            result = list.Select(nameof(TestClass.Field), CompareType.Greater, 6);
-            Assert.AreEqual(1, result.Count(), "Select by Index Field.Greater Fail");
+            result = employers.IdKey.SelectIndex<Employer>(CompareType.GreaterOrEqual, 1);
+            Assert.AreEqual(employers.Count, result.Count(), "Select by Index Field.GreaterOrEqual Fail");
 
-            result = list.Select(nameof(TestClass.Field), CompareType.GreaterOrEqual, 6);
-            Assert.AreEqual(2, result.Count(), "Select by Index Field.GreaterOrEqual Fail");
+            result = employers.IdKey.SelectIndex<Employer>(CompareType.Less, 2);
+            Assert.AreEqual(1, result.Count(), "Select by Index Field.Less Fail");
 
-            result = list.Select(nameof(TestClass.Field), CompareType.Less, 6);
-            Assert.AreEqual(5, result.Count(), "Select by Index Field.Less Fail");
+            result = employers.IdKey.SelectIndex<Employer>(CompareType.LessOrEqual, 2);
+            Assert.AreEqual(2, result.Count(), "Select by Index Field.LessOrEqual Fail");
 
-            result = list.Select(nameof(TestClass.Field), CompareType.LessOrEqual, 6);
-            Assert.AreEqual(6, result.Count(), "Select by Index Field.LessOrEqual Fail");
-
-            result = list.Select(nameof(TestClass.Field), CompareType.In, new[] { 2, 5 });
+            result = employers.IdKey.SelectIndex<Employer>(CompareType.In, new[] { 2, 5 });
             Assert.AreEqual(2, result.Count(), "Select by Index Field.In Fail");
 
-            result = list.Select(nameof(TestClass.Field), CompareType.NotIn, new[] { 2, 5 });
-            Assert.AreEqual(5, result.Count(), "Select by Index Field.NotIn Fail");
+            result = employers.IdKey.SelectIndex<Employer>(CompareType.NotIn, new[] { 2, 5 });
+            Assert.AreEqual(employers.Count - 2, result.Count(), "Select by Index Field.NotIn Fail");
         }
 
         [Test]
-        public void TestParameter()
+        public void TestColumnSelect()
         {
-            var result = list.Select(nameof(TestClass.Name), CompareType.Equal, "System.Linq");
+            var result = positions.NameENKey.Select<Position>(CompareType.Equal, "First Position");
             Assert.AreEqual(1, result.Count(), "Select by Name.Equal Fail");
 
-            result = list.Select(nameof(TestClass.Name), CompareType.NotEqual, "System.Linq");
-            Assert.AreEqual(6, result.Count(), "Select by Name.NotEqual Fail");
+            result = positions.NameENKey.Select<Position>(CompareType.NotEqual, "First Position");
+            Assert.AreEqual(4, result.Count(), "Select by Name.NotEqual Fail");
 
-            result = list.Select(nameof(TestClass.Name), CompareType.Like, "Threading");
-            Assert.AreEqual(2, result.Count(), "Select by Name.Like Fail");
+            result = positions.NameENKey.Select<Position>(CompareType.Like, "%Position");
+            Assert.AreEqual(5, result.Count(), "Select by Name.Like Fail");
 
-            result = list.Select(nameof(TestClass.Name), CompareType.NotLike, "Threading");
-            Assert.AreEqual(5, result.Count(), "Select by Name.NotLike Fail");
+            result = positions.NameENKey.Select<Position>(CompareType.NotLike, "Sub%");
+            Assert.AreEqual(3, result.Count(), "Select by Name.NotLike Fail");
 
-            result = list.Select(nameof(TestClass.Name), CompareType.Greater, "System.Text");
-            Assert.AreEqual(2, result.Count(), "Select by Name.Greater Fail");
+            result = positions.NameENKey.Select<Position>(CompareType.Greater, "First Position");
+            Assert.AreEqual(4, result.Count(), "Select by Name.Greater Fail");
 
-            result = list.Select(nameof(TestClass.Name), CompareType.GreaterOrEqual, "System.Text");
-            Assert.AreEqual(3, result.Count(), "Select by Name.GreaterOrEqual Fail");
+            result = positions.NameENKey.Select<Position>(CompareType.GreaterOrEqual, "First Position");
+            Assert.AreEqual(5, result.Count(), "Select by Name.GreaterOrEqual Fail");
 
-            result = list.Select(nameof(TestClass.Name), CompareType.Less, "System.Text");
-            Assert.AreEqual(4, result.Count(), "Select by Name.Less Fail");
+            result = positions.NameENKey.Select<Position>(CompareType.Less, "Second Position");
+            Assert.AreEqual(1, result.Count(), "Select by Name.Less Fail");
 
-            result = list.Select(nameof(TestClass.Name), CompareType.LessOrEqual, "System.Text");
-            Assert.AreEqual(5, result.Count(), "Select by Name.LessOrEqual Fail");
+            result = positions.NameENKey.Select<Position>(CompareType.LessOrEqual, "Second Position");
+            Assert.AreEqual(2, result.Count(), "Select by Name.LessOrEqual Fail");
 
-            result = list.Select(nameof(TestClass.Name), CompareType.In, new[] { "System.Diagnostics", "System.Text" });
+            result = positions.NameENKey.Select<Position>(CompareType.In, new[] { "First Position", "Third Position" });
             Assert.AreEqual(2, result.Count(), "Select by Name.In Fail");
 
-            result = list.Select(nameof(TestClass.Name), CompareType.NotIn, new[] { "System.Diagnostics", "System.Text" });
-            Assert.AreEqual(5, result.Count(), "Select by Name.NotIn Fail");
+            result = positions.NameENKey.Select<Position>(CompareType.NotIn, new[] { "First Position", "Third Position" });
+            Assert.AreEqual(3, result.Count(), "Select by Name.NotIn Fail");
+        }
+        [Test]
+        public void TestParseQuery()
+        {
+            string queryText = $@"
+select emp.Id as emplyer_id
+    , emp.DateCreate as emplyer_date    
+    , (select subPos.NameEN
+        from Position subPos 
+        where subPos.Id = emp.PositionId ) as sub_query_position_name
+    , concat(pos.NameEN, 'bla bla') as join_position_name
+from Employer emp
+    join Position pos on pos.Id = emp.PositionId
+where (emp.Id != 1 or emp.Id = 1)
+    and emp.DateCreate is not null
+    and emp.DateCreate between('2000-01-01' and '3000-01-01')
+    and emp.PositionId in (select subPos2.Id
+                           from Position subPos2 
+                           where subPos2.Code in ('2','3'))";
+            var query = employers.Query(queryText);
+
+            Assert.AreEqual(4, query.Columns.Count, "Parse select columns Fail");
+
+            Assert.IsAssignableFrom<QColumn>(query.Columns[0]);
+            var idColumn = (QColumn)query.Columns[0];
+            Assert.AreEqual(employers.IdKey, idColumn.Column);
+            Assert.AreEqual("emp", idColumn.TableAlias);
+            Assert.AreEqual("emplyer_id", idColumn.ColumnAlias);
+
+            Assert.IsAssignableFrom<QColumn>(query.Columns[1]);
+            var dateColumn = (QColumn)query.Columns[1];
+            Assert.AreEqual(employers.DateCreateKey, dateColumn.Column);
+            Assert.AreEqual("emp", dateColumn.TableAlias);
+            Assert.AreEqual("emplyer_date", dateColumn.ColumnAlias);
+
+            Assert.IsAssignableFrom<QQuery<DBItem>>(query.Columns[2]);
+            var posSubQuery = (QQuery<DBItem>)query.Columns[2];
+            Assert.AreEqual("sub_query_position_name", posSubQuery.ColumnAlias);
+            Assert.AreEqual(positions.NameENKey, posSubQuery.Columns[0]);
+            Assert.AreEqual(positions, posSubQuery.Tables[0].Table);
+            Assert.AreEqual(positions.IdKey, posSubQuery.Parameters[0].LeftColumn);
+            Assert.AreEqual(employers.PositionIdKey, posSubQuery.Parameters[0].RightColumn);
+
+            Assert.IsAssignableFrom<QFunction>(query.Columns[3]);
+            var posFunction = (QFunction)query.Columns[3];
+            Assert.AreEqual(QFunctionType.concat, posFunction.Type);
+            Assert.AreEqual(1, posFunction.Items.Count);
+            Assert.IsAssignableFrom<QColumn>(posFunction.Items[0]);
+            var posArgColumn = (QColumn)posFunction.Items[0];
+            Assert.AreEqual(positions.NameENKey, posArgColumn.Column);
+            Assert.IsAssignableFrom<QValue>(posFunction.Items[1]);
+            var posArgString = (QValue)posFunction.Items[1];
+            Assert.AreEqual("bla bla", posArgString.Value);
+
+
+            Assert.AreEqual(2, query.Tables.Count);
+            var baseTable = query.Tables[0];
+            Assert.AreEqual(employers, baseTable.Table);
+            Assert.AreEqual("emp", baseTable.TableAlias);
+            var joinTable = query.Tables[1];
         }
 
         [Test]
-        public void TestQuery()
+        public void TestBuildQuery()
         {
-            var query = new Query<TestClass>(new IQueryParameter<TestClass>[] {
-                new QueryParameter<TestClass, string>()
-                {
-                    Invoker = TestClass.NameInvoker.Instance,
-                    Comparer = CompareType.Like,
-                    Value = "Threading"
-                },
-                new QueryParameter<TestClass, int>()
-                {
-                    Invoker = (IInvoker<TestClass, int>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),
-                    Comparer = CompareType.NotEqual,
-                    Value = 6
-                }
-            });
-            var result = list.Select(query);
-            Assert.AreEqual(1, result.Count(), "Select by Query Name and Field Fail");
+            var query = employers.Query();
 
-            query = new Query<TestClass>(new IQueryParameter<TestClass>[]{
-                new QueryParameter<TestClass, string>()
-                {
-                    Invoker = (IInvoker<TestClass, string>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
-                    Comparer = CompareType.Like,
-                    Value = "Threading"
-                },
-                new QueryParameter<TestClass, int>()
-                {
-                    Logic = LogicType.AndNot,
-                    Invoker = (IInvoker<TestClass, int>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),
-                    Comparer = CompareType.Equal,
-                    Value = 6
-                }
-            });
-            result = list.Select(query);
-            Assert.AreEqual(1, result.Count(), "Select by Query Name and not Field Fail");
+            query.Column(employers.IdKey)
+                .Column(employers.DateCreateKey)
+                .Column(positions.Query(query)
+                                .Column(positions.NameENKey)
+                                .Where(positions.IdKey, CompareType.Equal, employers.PositionIdKey))
+                .Join(employers.PositionIdKey)
+                .Column(QFunctionType.concat, positions.NameENKey, "bla bla")
+                .Where(pGoup => pGoup.And(employers.IdKey, CompareType.NotEqual, 1)
+                                    .Or(employers.IdKey, CompareType.Equal, 1))
+                .And(employers.DateCreateKey, CompareType.IsNot, null)
+                .And(employers.DateCreateKey, CompareType.Between, new DateInterval(new DateTime(2000, 01, 01), new DateTime(3000, 01, 01)))
+                .And(employers.PositionIdKey, CompareType.In, positions.Query(query)
+                                                                    .Column(positions.IdKey)
+                                                                    .Where(positions.CodeKey, CompareType.In, new[] { "2", "3" }));
 
-            query = new Query<TestClass>(new IQueryParameter<TestClass>[] {
-                new QueryParameter<TestClass, string>()
-                {
-                    Invoker = (IInvoker<TestClass, string>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
-                    Comparer = CompareType.Like,
-                    Value = "Threading"
-                },
-                new QueryParameter<TestClass, int>()
-                {
-                    Logic = LogicType.Or,
-                    Invoker = (IInvoker<TestClass, int>)EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),
-                    Comparer = CompareType.Less,
-                    Value = 3
-                }
-            });
-            result = list.Select(query);
-            Assert.AreEqual(4, result.Count(), "Select by Query Name or Field Fail");
+
         }
     }
 }

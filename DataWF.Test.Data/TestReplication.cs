@@ -16,12 +16,14 @@ namespace DataWF.Test.Data
         private TestSchema schema2;
         private ReplicationService rService1;
         private ReplicationService rService2;
+        private TestProvider provider;
 
         [SetUp]
         public void SetUp()
         {
-            schema1 = GenerateSchema("test_schema1");
-            schema2 = GenerateSchema("test_schema2");
+            provider = new TestProvider();
+            schema1 = GenerateSchema(provider, "test_schema1");
+            schema2 = GenerateSchema(provider, "test_schema2");
             rService1 = new ReplicationService(new ReplicationSettings
             {
                 Instance = new RSInstance
@@ -37,7 +39,8 @@ namespace DataWF.Test.Data
                 },
                 Schems = new SelectableList<RSSchema>(new[] { new RSSchema { SchemaName = schema1.Name } })
             },
-            new TcpSocketService { });
+            new TcpSocketService { },
+            provider);
 
             rService2 = new ReplicationService(new ReplicationSettings
             {
@@ -54,7 +57,8 @@ namespace DataWF.Test.Data
                 },
                 Schems = new SelectableList<RSSchema>(new[] { new RSSchema { SchemaName = schema2.Name } })
             },
-            new TcpSocketService { });
+            new TcpSocketService { },
+            provider);
         }
 
         [Test]
@@ -74,11 +78,12 @@ namespace DataWF.Test.Data
             Assert.AreEqual(6, schema2.Position.Count, "Fail Synch");
         }
 
-        private static TestSchema GenerateSchema(string name)
+        private static TestSchema GenerateSchema(TestProvider provider, string name)
         {
             var schema = new TestSchema()
             {
                 Name = name,
+                Provider = provider,
                 Connection = new DBConnection
                 {
                     System = DBSystem.SQLite,
@@ -87,7 +92,7 @@ namespace DataWF.Test.Data
                 }
             };
             schema.Generate(name);
-            DBService.Schems.Add(schema);
+            provider.Schems.Add(schema);
             try { schema.ExecuteDropDatabase(); } catch { }
             schema.ExecuteCreateDatabase();
             return schema;

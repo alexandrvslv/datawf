@@ -271,7 +271,8 @@ namespace DataWF.Data
         {
             using (var transaction = new DBTransaction(Table, null, true) { View = this })
             {
-                var items = await table.LoadAsync(Query, param, transaction).ConfigureAwait(false);
+                Query.LoadParam = param;
+                var items = await table.LoadAsync(Query, transaction).ConfigureAwait(false);
             }
         }
 
@@ -428,7 +429,7 @@ namespace DataWF.Data
                 {
                     string code = pcolumn.Name;
                     var value = pcolumn.ParseValue(filter.Value);
-                    if (value is string strParam && param.Comparer.Type == CompareTypes.Like)
+                    if (value is string strParam && filter.Comparer.Type == CompareTypes.Like)
                     {
                         if (strParam.IndexOf('%') < 0)
                             strParam = $"%{strParam}%";
@@ -600,7 +601,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetTop()
         {
-            return table.Select(Table.GroupKey, CompareType.Is, null);
+            return Table.GroupKey.Select<T>(CompareType.Is, (object)null);
         }
 
         public IEnumerable<T> GetItems()
