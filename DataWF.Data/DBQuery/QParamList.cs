@@ -27,7 +27,7 @@ namespace DataWF.Data
         {
         }
 
-        public QParamList(IQItemList owner) : base(owner)
+        public QParamList(IQItem owner) : base(owner)
         {
             //Indexes.Add(groupInvoker);
         }

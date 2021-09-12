@@ -22,7 +22,7 @@ using System.Collections.Generic;
 
 namespace DataWF.Data
 {
-    public interface IDBSchema: IDBSchemaItem
+    public interface IDBSchema : IDBSchemaItem
     {
         Version Version { get; set; }
         DBConnection Connection { get; set; }
@@ -31,6 +31,9 @@ namespace DataWF.Data
         DBTableGroupList TableGroups { get; set; }
         DBSequenceList Sequences { get; set; }
         DBProcedureList Procedures { get; set; }
+        DBProvider Provider { get; }
+        DBSchemaList Schems { get; }
+
         IDBSchemaLog LogSchema { get; set; }
         bool IsSynchronizing { get; }
 

@@ -16,13 +16,13 @@ namespace DataWF.Module.Flow
             {
                 sequence = new DBSequence(name) { };
                 transaction.Schema.Sequences.Add(sequence);
-                try { DBService.CommitChanges(); }
+                try { transaction.Schema.Provider.CommitChanges(); }
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
-                    DBService.Changes.Clear();
+                    transaction.Schema.Provider.Changes.Clear();
                 }
-                DBService.Save();
+                transaction.Schema.Provider.Save();
             }
             //return DBService.ExecuteQuery(FlowEnvironment.Config.Schema, FlowEnvironment.Config.Schema.Sequence.Create(name, 0, 1));
             return sequence.GetNext(transaction);

@@ -2,7 +2,6 @@
 using DataWF.Data;
 using DataWF.Module.Common;
 using DataWF.Module.Flow;
-using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 
@@ -16,16 +15,16 @@ namespace DataWF.Test.Web.Service
         {
             SchemaName = "test";
         }
-        
-        public new FlowSchema Schema 
+
+        public new FlowSchema Schema
         {
             get => (FlowSchema)base.Schema;
             set => base.Schema = value;
         }
-        
+
         public override void Load()
         {
-            DBService.Load();
+            base.Load("data.xml");
 
             if (Schema == null || Schema.Connection == null)
             {
@@ -36,7 +35,7 @@ namespace DataWF.Test.Web.Service
                 throw new Exception("Check Connection FAIL!");
             }
             Generate();
-            DBService.CommitChanges();
+            CommitChanges();
 
             Helper.Log(this, "Generate Data");
 
@@ -45,7 +44,7 @@ namespace DataWF.Test.Web.Service
                 initializer.Initialize(new[] { Schema });
             }
 
-            _ = new UserGroup(Schema.GetTable<UserGroup>())
+            _ = new UserGroup(Schema.UserGroup)
             {
                 Id = 1,
                 NameEN = "admin",
@@ -67,6 +66,7 @@ namespace DataWF.Test.Web.Service
             Schema = new FlowSchema()
             {
                 Name = schemaName,
+                Provider = this,
                 Connection = new DBConnection
                 {
                     Name = schemaName,
@@ -89,34 +89,6 @@ namespace DataWF.Test.Web.Service
             return Users.GetByEmail(email);
         }
     }
-    public class Class1
-    {
-        public int ItemType { get; set; }
-    }
 
-    public class Class2 : Class1
-    {
-        public string Class2Property { get; set; }
-    }
-
-    public abstract class Class3 : Class2
-    {
-        public string Class3Property { get; set; }
-    }
-
-    public class Class4 : Class3
-    {
-        public string Class4Property { get; set; }
-    }
-
-    [Route("api/[controller]")]
-    [ApiController]
-    public class TestController : ControllerBase
-    {
-        [HttpGet]
-        public Class4 Get()
-        {
-            return new Class4();
-        }
-    }
+    
 }

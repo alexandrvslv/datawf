@@ -33,7 +33,8 @@ namespace DataWF.WebService.Common
             connections.Indexes.Add(WebNotifyConnection.UserInvoker.Instance.Name,
                 new ListIndex<WebNotifyConnection, IUserIdentity>(
                     WebNotifyConnection.UserInvoker.Instance,
-                    NullUser.Value));
+                    NullUser.Value,
+                    true));
         }
 
         public event EventHandler<WebNotifyEventArgs> ReceiveMessage;
@@ -103,7 +104,7 @@ namespace DataWF.WebService.Common
 
         public virtual void SetCurrentAction(ActionExecutingContext context)
         {
-            var user = context.HttpContext.User?.GetCommonUser();            
+            var user = context.HttpContext.User?.GetCommonUser();
             SetCurrentAction(user, context);
         }
 

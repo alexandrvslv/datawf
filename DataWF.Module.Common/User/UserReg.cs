@@ -8,24 +8,6 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
-    public enum UserRegType
-    {
-        None,
-        Password,
-        Authorization,
-        Start,
-        Stop,
-        Execute,
-        Transaction,
-        Reject
-    }
-
-    public enum UserRegStrategy
-    {
-        ByItem,
-        ByTransaction,
-        BySession
-    }
 
     [Table("duser_log", "User", BlockSize = 500, Keys = DBTableKeys.NoLogs)]
     public sealed partial class UserReg : DBUserReg
@@ -44,7 +26,7 @@ namespace DataWF.Module.Common
         [Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
         public UserRegType? RegType
         {
-            get => GetValue<UserRegType?>(Table.RegTypeKey);
+            get => GetValue(Table.RegTypeKey);
             set => SetValue(value, Table.RegTypeKey);
         }
 
@@ -67,21 +49,21 @@ namespace DataWF.Module.Common
         [Column("redo_id")]
         public long? RedoId
         {
-            get => GetValue<long?>(Table.RedoIdKey);
+            get => GetValue(Table.RedoIdKey);
             set => SetValue(value, Table.RedoIdKey);
         }
 
         [Reference(nameof(RedoId))]
         public UserReg Redo
         {
-            get => GetReference((DBColumn)Table.RedoIdKey, ref redo);
+            get => GetReference(Table.RedoIdKey, ref redo);
             set => SetReference(redo = value, Table.RedoIdKey);
         }
 
         [Column("text_data")]
         public string TextData
         {
-            get => GetValue<string>(Table.TextDataKey);
+            get => GetValue(Table.TextDataKey);
             set => SetValue(value, Table.TextDataKey);
         }
 
@@ -114,7 +96,7 @@ namespace DataWF.Module.Common
         //    return listmap;
         //}
 
-      
+
 
 
     }

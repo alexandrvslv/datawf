@@ -45,9 +45,16 @@ namespace DataWF.Module.Flow
             return result;
         }
 
-        public QQuery CreateRefsFilter(object id)
+        public QQuery<DocumentReference> CreateRefsFilter(object id)
         {
             return Schema.DocumentReference.Query().Where(p => CreateRefsParam(p, id));
+        }
+
+        public QParam CreateRefsParam(object id)
+        {
+            var param = new QParam();
+            CreateRefsParam(param, id);
+            return param;
         }
 
         public void CreateRefsParam(QParam param, object id)
@@ -61,8 +68,8 @@ namespace DataWF.Module.Flow
                   .Column(Schema.DocumentReference.ReferenceIdKey)
                   .Where(Schema.DocumentReference.DocumentIdKey, id);
 
-            param.And(IdKey, CompareType.In, qrefed)
-                 .Or(IdKey, CompareType.In, qrefing);
+            param.Parameters.Add(new QParam(Schema.DocumentReference.IdKey, CompareType.In, qrefed));
+            param.Parameters.Add(new QParam(Schema.DocumentReference.IdKey, CompareType.In, qrefing));
         }
 
         public void LoadDocuments(User user)

@@ -58,7 +58,7 @@ namespace DataWF.Data
 
                 }
                 else
-                    value = Column.ParseValue(value);
+                    value = value == null ? null : Column.ParseValue(value);
                 if (_value != value)
                 {
                     _value = value;
@@ -100,7 +100,7 @@ namespace DataWF.Data
         public override object GetValue<T>()
         {
             var value = GetValue((DBItem)null);
-            var param = Holder as QParam ?? List as QParam;
+            var param = Holder as QParam ?? Container as QParam;
             var comparer = param.Comparer;
 
             if (value is string stringValue)

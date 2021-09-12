@@ -62,7 +62,7 @@ namespace DataWF.Data
         private string tableAlias;
         private string columnAlias;
         private QItem holder;
-        private IQItemList list;
+        private IQItemList container;
         protected QTable qTable;
         private bool refmode;
 
@@ -71,10 +71,10 @@ namespace DataWF.Data
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public IQItemList List
+        public virtual IQItemList Container
         {
-            get => list;
-            set => list = value;
+            get => container;
+            set => container = value;
         }
 
         public int Order
@@ -120,7 +120,7 @@ namespace DataWF.Data
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public QItem Holder
+        public virtual QItem Holder
         {
             get => holder;
             set
@@ -134,7 +134,7 @@ namespace DataWF.Data
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual IQuery Query => Holder?.Query ?? List?.Query;
+        public virtual IQuery Query => Holder?.Query ?? Container?.Query;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual IDBTable Table
@@ -147,7 +147,14 @@ namespace DataWF.Data
         public virtual QTable QTable
         {
             get => qTable ??= Query?.GetTableByAlias(tableAlias);
-            set => qTable = value;
+            set
+            {
+                qTable = value;
+                if (qTable != null)
+                {
+                    TableAlias = qTable.TableAlias;
+                }
+            }
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]

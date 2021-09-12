@@ -9,12 +9,12 @@ namespace DataWF.Common.Generator
         private const string prUser = "CurrentUser";
         private const string prTransaction = "transaction";
         
-        public MethodParametrInfo(IParameterSymbol info)
+        public MethodParametrInfo(CompilationContext compilationContext, IParameterSymbol info)
         {
             Info = info;
             Type = info.Type;
             ValueName = info?.Name;
-            Attribute = Info.GetAttribute(BaseGenerator.Attributes.ControllerParameter);
+            Attribute = Info.GetAttribute(compilationContext.Attributes.ControllerParameter);
             AttributeValue = (int?)(Attribute?.ConstructorArguments.FirstOrDefault().Value ?? null);
             if (AttributeValue != null)
             {
@@ -29,7 +29,7 @@ namespace DataWF.Common.Generator
                 && (Attribute == null || AttributeValue != 2))
             {
                 Table = true;
-                var primaryKey = Type.GetPrimaryKey();
+                var primaryKey = Type.GetPrimaryKey(compilationContext);
                 if (primaryKey != null)
                 {
                     Type = primaryKey.Type;

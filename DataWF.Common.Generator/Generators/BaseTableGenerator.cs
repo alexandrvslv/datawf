@@ -9,7 +9,7 @@ namespace DataWF.Common.Generator
         protected List<string> cultures;
         protected List<IPropertySymbol> properties;
 
-        public BaseTableGenerator(ref GeneratorExecutionContext context, InvokerGenerator invokerGenerator) : base(ref context)
+        public BaseTableGenerator(CompilationContext compilationContext, InvokerGenerator invokerGenerator) : base(compilationContext)
         {
             InvokerGenerator = invokerGenerator;
         }

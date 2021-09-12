@@ -34,8 +34,7 @@ namespace DataWF.Common.Generator
             true);
 
         private static readonly Dictionary<Assembly, Dictionary<string, Type>> cacheAssemblyTypes = new Dictionary<Assembly, Dictionary<string, Type>>();
-        private static readonly Dictionary<IAssemblySymbol, Dictionary<string, INamedTypeSymbol>> cacheAssemblySymbolTypes = new Dictionary<IAssemblySymbol, Dictionary<string, INamedTypeSymbol>>();
-
+        
         public static void LaunchDebugger()
         {
             if (!System.Diagnostics.Debugger.IsAttached)
@@ -74,46 +73,7 @@ namespace DataWF.Common.Generator
             return new string(charArray.ToArray());
         }
 
-        public static INamedTypeSymbol ParseType(Type value, IEnumerable<IAssemblySymbol> assemblies)
-        {
-            return ParseType(value.FullName, assemblies);
-        }
-
-        public static INamedTypeSymbol ParseType(string value, IEnumerable<IAssemblySymbol> assemblies)
-        {
-            foreach (var assembly in assemblies)
-            {
-                var type = ParseType(value, assembly);
-                if (type != null)
-                    return type;
-            }
-            return null;
-        }
-
-        public static INamedTypeSymbol ParseType(string value, IAssemblySymbol assembly)
-        {
-            var byName = value.IndexOf('.') < 0;
-            if (byName)
-            {
-                if (!cacheAssemblySymbolTypes.TryGetValue(assembly, out var cache))
-                {
-                    var definedTypes = assembly.GlobalNamespace.GetTypes();
-                    cacheAssemblySymbolTypes[assembly] =
-                        cache = new Dictionary<string, INamedTypeSymbol>(StringComparer.Ordinal);
-                    foreach (var defined in definedTypes)
-                    {
-                        if(defined.DeclaredAccessibility == Accessibility.Public)
-                            cache[defined.Name] = defined;
-                    }
-                }
-
-                return cache.TryGetValue(value, out var type) ? type : null;
-            }
-            else
-            {
-                return assembly.GetTypeByMetadataName(value);
-            }
-        }
+        
 
         public static Type ParseType(string value, Assembly assembly)
         {
@@ -224,7 +184,7 @@ namespace DataWF.Common.Generator
             return false;
         }
 
-        public static IPropertySymbol GetPrimaryKey(this ITypeSymbol type)
+        public static IPropertySymbol GetPrimaryKey(this ITypeSymbol type, CompilationContext compilationContext)
         {
             var property = GetPrimaryKey(type.GetMembers().OfType<IPropertySymbol>());
             if (property != null)
@@ -242,7 +202,7 @@ namespace DataWF.Common.Generator
             {
                 foreach (var property in properties)
                 {
-                    var columnAttribute = property.GetAttribute(BaseGenerator.Attributes.Column);
+                    var columnAttribute = property.GetAttribute(compilationContext.Attributes.Column);
                     if (columnAttribute != null)
                     {
                         var keys = columnAttribute.NamedArguments.FirstOrDefault(p => p.Key == "Keys").Value;

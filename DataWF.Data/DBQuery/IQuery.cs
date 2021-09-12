@@ -75,8 +75,9 @@ namespace DataWF.Data
         bool Contains(DBColumn column);
 
         QTable GetTableByAlias(string alias);
+        QTable GetTable(IDBTable table);
 
-        DBColumn ParseColumn(string name, string prefix = null);
+        DBColumn ParseColumn(string name, string prefix, out QTable qTable);
         DBTable ParseTable(string name);
 
         bool CheckItem(DBItem item);

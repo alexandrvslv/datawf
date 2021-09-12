@@ -7,20 +7,17 @@ namespace DataWF.Module.Common
     [Table("rbook", "Reference Book", BlockSize = 100, Type = typeof(BookTable<>))]
     public partial class Book : DBGroupItem
     {
-        public Book(DBTable table) : base(table)
-        { }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
         [Column("code", 512, Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
@@ -48,28 +45,28 @@ namespace DataWF.Module.Common
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(Table.NameENKey);
+            get => GetValue(Table.NameENKey);
             set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(Table.NameRUKey);
+            get => GetValue(Table.NameRUKey);
             set => SetValue(value, Table.NameRUKey);
         }
 
         [Column("book_value")]
         public string Value
         {
-            get => GetValue<string>(Table.ValueKey);
+            get => GetValue(Table.ValueKey);
             set => SetValue(value, Table.ValueKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(Table.ExternalIdKey);
+            get => GetValue(Table.ExternalIdKey);
             set => SetValue(value, Table.ExternalIdKey);
         }
     }

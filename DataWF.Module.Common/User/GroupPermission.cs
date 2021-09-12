@@ -15,14 +15,11 @@ namespace DataWF.Module.Common
     public sealed partial class GroupPermission : DBGroupItem
     {
         private object target;
-        public GroupPermission(DBTable table) : base(table)
-        {
-        }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -43,7 +40,7 @@ namespace DataWF.Module.Common
         [DefaultValue(PermissionType.GTable), Column("type_id", Keys = DBColumnKeys.ElementType)]
         public PermissionType? Type
         {
-            get => GetValue<PermissionType?>(Table.TypeKey);
+            get => GetValue(Table.TypeKey);
             set => SetValue(value, Table.TypeKey);
         }
 
@@ -51,14 +48,14 @@ namespace DataWF.Module.Common
         [Index("rgroup_permission_code", true)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
         [Column("object_name", 1024, Keys = DBColumnKeys.Indexing)]
         public string ObjectName
         {
-            get => GetValue<string>(Table.ObjectNameKey);
+            get => GetValue(Table.ObjectNameKey);
             set => SetValue(value, Table.ObjectNameKey);
         }
 
@@ -120,25 +117,13 @@ namespace DataWF.Module.Common
             throw new NotImplementedException();
         }
 
-        private object GetClass()
-        {
-            return System.Type.GetType(Code);
-        }
+        private object GetClass() => System.Type.GetType(Code);
 
-        public DBSchema GetSchema()
-        {
-            return DBService.Schems[Code];
-        }
+        public DBSchema GetSchema() => Schema?.Provider?.Schems[Code];
 
-        public DBTable GetTable()
-        {
-            return DBService.Schems.ParseTable(Code);
-        }
+        public DBTable GetTable() => Schema?.Schems?.ParseTable(Code);
 
-        public DBColumn GetColumn()
-        {
-            return DBService.Schems.ParseColumn(Code);
-        }
+        public DBColumn GetColumn() => Schema?.Schems?.ParseColumn(Code);
 
         public override string ToString()
         {

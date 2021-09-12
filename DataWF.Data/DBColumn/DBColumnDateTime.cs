@@ -50,6 +50,8 @@ namespace DataWF.Data
 
         public override string FormatQuery(DateTime value)
         {
+            if (value == default(DateTime))
+                return "null";
             if (value.TimeOfDay == TimeSpan.Zero)
                 return $"'{value:yyyy-MM-dd}'";
             else
@@ -68,7 +70,7 @@ namespace DataWF.Data
             if (value is DateTime typedValue)
                 return typedValue;
             if (value == null || value == DBNull.Value)
-                return DateTime.MinValue;
+                return default(DateTime);
             if (value is DBItem item)
                 return GetReferenceId(item);
 

@@ -12,14 +12,10 @@ namespace DataWF.Module.Common
     {
         private Scheduler scheduler;
 
-        public Statistic(DBTable table) : base(table)
-        {
-        }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -41,21 +37,21 @@ namespace DataWF.Module.Common
         [Column("scheduler_id")]
         public int? SchedulerId
         {
-            get => GetValue<int?>(Table.SchedulerIdKey);
+            get => GetValue(Table.SchedulerIdKey);
             set => SetValue(value, Table.SchedulerIdKey);
         }
 
         [Reference(nameof(SchedulerId))]
         public Scheduler Scheduler
         {
-            get => GetReference((DBColumn)Table.SchedulerIdKey, ref scheduler);
+            get => GetReference(Table.SchedulerIdKey, ref scheduler);
             set => SetReference(scheduler = value, Table.SchedulerIdKey);
         }
 
         [Column("stat_result")]
         public decimal? Result
         {
-            get => GetValue<decimal?>(Table.ResultKey);
+            get => GetValue(Table.ResultKey);
             set => SetValue(value, Table.ResultKey);
         }
     }

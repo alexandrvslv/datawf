@@ -12,10 +12,10 @@ namespace DataWF.Common.Generator
 {
     internal class TableLogGenerator : BaseTableGenerator
     {
-        public TableLogGenerator(ref GeneratorExecutionContext context, InvokerGenerator invokerGenerator)
-            : base(ref context, invokerGenerator)
+        public TableLogGenerator(CompilationContext compilationContext, InvokerGenerator invokerGenerator)
+            : base(compilationContext, invokerGenerator)
         {
-            TableGenerator = new TableGenerator(ref context, invokerGenerator);
+            TableGenerator = new TableGenerator(compilationContext, invokerGenerator);
         }
 
         public TableGenerator TableGenerator { get; set; }
@@ -28,12 +28,12 @@ namespace DataWF.Common.Generator
             if (logClassSource != null)
             {
                 var logItemSource = SourceText.From(logClassSource, Encoding.UTF8);
-                Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}LogGen.cs", logItemSource);
+                CompilationContext.Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}LogGen.cs", logItemSource);
 
                 var logItemSyntax = CSharpSyntaxTree.ParseText(logItemSource, (CSharpParseOptions)Options);
 
                 TableGenerator.Cultures = Cultures;
-                Compilation = TableGenerator.Compilation.AddSyntaxTrees(logItemSyntax);
+                CompilationContext.Compilation = TableGenerator.Compilation.AddSyntaxTrees(logItemSyntax);
 
                 var unitSyntax = (CompilationUnitSyntax)logItemSyntax.GetRoot();
                 var logClassSyntax = unitSyntax.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault()?.Members.OfType<ClassDeclarationSyntax>().FirstOrDefault();

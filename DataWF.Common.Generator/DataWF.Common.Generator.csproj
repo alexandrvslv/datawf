@@ -3,15 +3,15 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8.0</LangVersion>
-    <VersionPrefix>1.0.0</VersionPrefix>
-    <!--<PackageId>DataWF.Common.Generator</PackageId>
+
+    <!--<VersionPrefix>1.0.0</VersionPrefix>
+    <PackageId>DataWF.Common.Generator</PackageId>
     <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/alexandrvslv/datawf</PackageProjectUrl>
     <RepositoryUrl>https://github.com/alexandrvslv/datawf.git</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>-->
-    <IsRoslynComponent>true</IsRoslynComponent>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,36 +20,51 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.9.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.0" PrivateAssets="all" />
-    <PackageReference Include="NSwag.Core" Version="13.13.2" PrivateAssets="all" />
-    <!--<PackageReference Include="Microsoft.CSharp" Version="4.7.0" PrivateAssets="all" />-->
-    <!--<PackageReference Include="Namotion.Reflection" Version="2.0.3" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="NJsonSchema" Version="10.5.2" PrivateAssets="all" GeneratePathProperty="true" />
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgMicrosoft_CSharp)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgNamotion_Reflection)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgNewtonsoft_Json)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgNJsonSchema)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgNSwag_Core)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
   </ItemGroup>
-  <PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NSwag.Core" Version="13.13.2" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="NJsonSchema" Version="10.5.2" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Namotion.Reflection" Version="2.0.3" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" GeneratePathProperty="true" PrivateAssets="all" />
+  </ItemGroup>
+  <!--<ItemGroup>
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(PKGNSwag_Core)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(PKGNJsonSchema)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(PKGNewtonsoft_Json)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(PKGNamotion_Reflection)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(PKGMicrosoft_CSharp)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>-->
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(PKGNSwag_Core)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+    <EmbeddedResource Include="$(PKGNewtonsoft_Json)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+    <EmbeddedResource Include="$(PKGNJsonSchema)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+    <EmbeddedResource Include="$(PKGNamotion_Reflection)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+    <EmbeddedResource Include="$(PKGMicrosoft_CSharp)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+  </ItemGroup>
+
+  <!--hot work for me <PropertyGroup>
     <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
   </PropertyGroup>
-  <Target Name="GetDependencyTargetPaths" AfterTargets="ResolvePackageDependenciesForBuild">
+  <Target Name="GetDependencyTargetPaths">
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGNSwag_Core)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGNewtonsoft_Json)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGNJsonSchema)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGNamotion_Reflection)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGMicrosoft_CSharp)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+    </ItemGroup>
+  </Target>-->
+  
+  <!--work bot usntable <Target Name="GetDependencyTargetPaths" AfterTargets="ResolvePackageDependenciesForBuild">
     <ItemGroup>
       <TargetPathWithTargetPlatformMoniker Include="@(ResolvedCompileFileDefinitions)" IncludeRuntimeDependency="false" />
     </ItemGroup>
-  </Target>
-  <!--<Target Name="GetDependencyTargetPaths">
-    <ItemGroup>
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_CSharp)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgNamotion_Reflection)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgNewtonsoft_Json)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgNJsonSchema)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
-      <TargetPathWithTargetPlatformMoniker Include="$(PkgNSwag_Core)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
-    </ItemGroup>
   </Target>-->
+
 </Project>
- 

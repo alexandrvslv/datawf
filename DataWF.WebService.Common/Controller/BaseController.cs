@@ -768,7 +768,7 @@ namespace DataWF.WebService.Common
             {
                 try
                 {
-                    var item = Table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                    var item = Table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction);
                     if (item == null)
                     {
                         return NotFound();

@@ -251,7 +251,7 @@ namespace DataWF.Common
             logs.Add(entry);
         }
 
-        public static StateInfo Log(object sender, string description, StatusType type = StatusType.Information, object tag = null, [CallerMemberName] string message = "")
+        public static StateInfo Log(this object sender, string description, StatusType type = StatusType.Information, object tag = null, [CallerMemberName] string message = "")
         {
             return Log(sender?.GetType().Name ?? "Default", message, description, type, tag);
         }
@@ -1526,6 +1526,8 @@ namespace DataWF.Common
             return rez;
         }
 
+        public static bool IsDecimal(ReadOnlySpan<char> p) => IsDecimal(p, out _);
+
         public static bool IsDecimal(ReadOnlySpan<char> p, out decimal value)
         {
 #if NETSTANDARD2_0
@@ -1535,9 +1537,11 @@ namespace DataWF.Common
 #endif
         }
 
-        public static bool IsDecimal(string p)
+        public static bool IsDecimal(string p) => IsDecimal(p, out _);
+
+        public static bool IsDecimal(string p, out decimal value)
         {
-            return decimal.TryParse(p, out _);
+            return decimal.TryParse(p, out value);
         }
 
         public static void OnSerializeNotify(object sender, SerializationNotifyEventArgs arg)

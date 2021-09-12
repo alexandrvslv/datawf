@@ -32,7 +32,7 @@ namespace DataWF.Data
         {
         }
 
-        public List<QMathType> Types
+        public List<QMathType> Operations
         {
             get { return types; }
         }

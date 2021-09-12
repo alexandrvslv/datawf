@@ -1,8 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 
 namespace DataWF.Common.Generator
-{ 
-    internal class AttributesCache
+{
+    public class AttributesCache
     {
         public INamedTypeSymbol Table;
         public INamedTypeSymbol AbstractTable;

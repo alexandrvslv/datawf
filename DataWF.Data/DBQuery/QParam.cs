@@ -117,6 +117,11 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public QColumn LeftQColumn => LeftItem as QColumn;
 
+        public void SetRightValue(object value)
+        {
+            RightItem = QItem.Fabric(value, LeftColumn);
+        }
+
         [XmlIgnore, JsonIgnore]
         public DBColumn LeftColumn
         {
@@ -221,9 +226,12 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
+        public IQItem Owner => Container?.Owner;
+
+        [XmlIgnore, JsonIgnore]
         public QParam Group
         {
-            get => List?.Container as QParam;
+            get => Container?.Owner as QParam;
             set
             {
                 if (value != Group && value.Group != this && value != this)
@@ -265,9 +273,6 @@ namespace DataWF.Data
                 }
             }
         }
-
-        [XmlIgnore, JsonIgnore]
-        public IQItemList Container => throw new NotImplementedException();
 
         public bool IsDefault { get; set; }
 
@@ -451,7 +456,7 @@ namespace DataWF.Data
             {
                 return string.Empty;
             }
-            string rightArg = FormatValue(RightItem, command);
+            string rightArg = comparer.Type == CompareTypes.Is ? "null" : FormatValue(RightItem, command);
             return string.IsNullOrEmpty(rightArg) ? string.Empty : string.Format("{0} {1} {2}", leftArg, comparer.Format(), rightArg);
         }
 

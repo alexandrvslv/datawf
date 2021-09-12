@@ -9,13 +9,10 @@ namespace DataWF.Module.Common
     {
         private UserReg userReg;
 
-        public LogItem(IDBTableLog table) : base(table)
-        { }
-
         [Reference(nameof(UserRegId))]
         public UserReg UserReg
         {
-            get => userReg ?? (GetReference<UserReg>(LogTable.UserLogKey, ref userReg));
+            get => GetReference(LogTable.UserLogKey, ref userReg);
             set => SetReference(userReg = value, LogTable.UserLogKey);
         }
 

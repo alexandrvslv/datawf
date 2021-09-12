@@ -18,7 +18,7 @@ namespace DataWF.Module.Common
         [XmlIgnore]
         public IDBTable Table
         {
-            get => cacheTargetTable ?? (cacheTargetTable = DBService.Schems.ParseTable(TableName));
+            get => cacheTargetTable ?? (cacheTargetTable = DBProvider.Default.Schems.ParseTable(TableName));
             set
             {
                 cacheTargetTable = value;

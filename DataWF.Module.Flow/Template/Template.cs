@@ -25,7 +25,7 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -39,7 +39,7 @@ namespace DataWF.Module.Flow
         [Column("code", 250, Keys = DBColumnKeys.Code)]
         public virtual string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
@@ -53,42 +53,42 @@ namespace DataWF.Module.Flow
         [CultureKey(nameof(Name))]
         public virtual string NameEN
         {
-            get => GetValue<string>(Table.NameENKey);
+            get => GetValue(Table.NameENKey);
             set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public virtual string NameRU
         {
-            get => GetValue<string>(Table.NameRUKey);
+            get => GetValue(Table.NameRUKey);
             set => SetValue(value, Table.NameRUKey);
         }
 
         [Column("alter_name1", 1024)]
         public virtual string AlterName1
         {
-            get => GetValue<string>(Table.AlterName1Key);
+            get => GetValue(Table.AlterName1Key);
             set => SetValue(value, Table.AlterName1Key);
         }
 
         [Column("alter_name2", 1024)]
         public virtual string AlterName2
         {
-            get => GetValue<string>(Table.AlterName2Key);
+            get => GetValue(Table.AlterName2Key);
             set => SetValue(value, Table.AlterName2Key);
         }
 
         [Column("alter_name3", 1024)]
         public virtual string AlterName3
         {
-            get => GetValue<string>(Table.AlterName3Key);
+            get => GetValue(Table.AlterName3Key);
             set => SetValue(value, Table.AlterName3Key);
         }
 
         [DefaultValue(0), Column("document_type", 250)]
         public int? DocumentType
         {
-            get => GetValue<int?>(Table.DocumentTypeKey);
+            get => GetValue(Table.DocumentTypeKey);
             set => SetValue(value, Table.DocumentTypeKey);
         }
 
@@ -118,7 +118,7 @@ namespace DataWF.Module.Flow
         [Column("work_id")]
         public int? WorkId
         {
-            get => GetValue<int?>(Table.WorkIdKey);
+            get => GetValue(Table.WorkIdKey);
             set => SetValue(value, Table.WorkIdKey);
         }
 
@@ -137,37 +137,33 @@ namespace DataWF.Module.Flow
         [DefaultValue(false), Column("is_file")]
         public bool? IsFile
         {
-            get => GetValue<bool?>(Table.IsFileKey);
+            get => GetValue(Table.IsFileKey);
             set => SetValue(value, Table.IsFileKey);
         }
 
         public override AccessValue Access
         {
-            get
-            {
-                return base.Access != Table.Access ? base.Access
-                  : Parent?.Access ?? base.Access;
-            }
+            get => InternalAccess ?? Parent.Access ?? Table.Access;
         }
 
         [Referencing(nameof(TemplateData.TemplateId))]
         public IEnumerable<TemplateData> Datas
         {
-            get => GetReferencing<TemplateData>(base.Schema.TemplateData.TemplateIdKey, DBLoadParam.None);
+            get => GetReferencing<TemplateData>(Schema.TemplateData.TemplateIdKey, DBLoadParam.None);
             set => SetReferencing(value, Schema.TemplateData.TemplateIdKey);
         }
 
         [Referencing(nameof(TemplateReference.TemplateId))]
         public IEnumerable<TemplateReference> References
         {
-            get => GetReferencing<TemplateReference>(base.Schema.TemplateReference.TemplateIdKey, DBLoadParam.None);
+            get => GetReferencing<TemplateReference>(Schema.TemplateReference.TemplateIdKey, DBLoadParam.None);
             set => SetReferencing(value, Schema.TemplateReference.TemplateIdKey);
         }
 
         [Referencing(nameof(TemplateProperty.TemplateId))]
         public IEnumerable<TemplateProperty> Properties
         {
-            get => GetReferencing<TemplateProperty>(base.Schema.TemplateProperty.TemplateIdKey, DBLoadParam.None);
+            get => GetReferencing<TemplateProperty>(Schema.TemplateProperty.TemplateIdKey, DBLoadParam.None);
             set => SetReferencing(value, Schema.TemplateProperty.TemplateIdKey);
         }
 
@@ -224,23 +220,19 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public TemplateReference GetTemplateReference(int referenceId)
         {
-            using (var query = new QQuery(Schema.TemplateReference))
-            {
-                query.BuildParam(Schema.TemplateReference.TemplateIdKey, Id);
-                query.BuildParam(Schema.TemplateReference.ReferenceIdKey, referenceId);
-                return Schema.TemplateReference.Select(query).FirstOrDefault();
-            }
+            return Schema.TemplateReference.Query()
+                .Where(Schema.TemplateReference.TemplateIdKey, Id)
+                .And(Schema.TemplateReference.ReferenceIdKey, referenceId)
+                .Select().FirstOrDefault();
         }
 
         [ControllerMethod]
         public TemplateProperty GetTemplateProperty(string propertyName)
         {
-            using (var query = new QQuery(Schema.TemplateProperty))
-            {
-                query.BuildParam(Schema.TemplateProperty.TemplateIdKey, Id);
-                query.BuildParam(Schema.TemplateProperty.PropertyNameKey, propertyName);
-                return Schema.TemplateProperty.Select(query).FirstOrDefault();
-            }
+            return Schema.TemplateProperty.Query()
+                .Where(Schema.TemplateProperty.TemplateIdKey, Id)
+                .And(Schema.TemplateProperty.PropertyNameKey, propertyName)
+                .Select().FirstOrDefault();
         }
 
         public bool CheckName(string name)

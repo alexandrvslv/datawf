@@ -25,6 +25,7 @@ namespace DataWF.Data
     {
         int Order { get; }
         IQuery Query { get; }
+        IQItemList Container { get; }
         IDBTable Table { get; set; }
         string TableAlias { get; set; }
         IDBSchema Schema { get; }
