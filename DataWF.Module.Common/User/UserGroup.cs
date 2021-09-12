@@ -23,21 +23,18 @@ namespace DataWF.Module.Common
         //[NonSerialized()]
         //private GroupUserList _gusers;
 
-        public UserGroup(DBTable table) : base(table)
-        { }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
         [Column("parent_id", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
-            get => GetValue<int?>(Table.ParentIdKey);
-            set => SetValue<int?>(value, Table.ParentIdKey);
+            get => GetValue(Table.ParentIdKey);
+            set => SetValue(value, Table.ParentIdKey);
         }
 
         [Reference(nameof(ParentId))]
@@ -50,7 +47,7 @@ namespace DataWF.Module.Common
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(Table.CompanyIdKey);
+            get => GetValue(Table.CompanyIdKey);
             set => SetValue(value, Table.CompanyIdKey);
         }
 
@@ -64,7 +61,7 @@ namespace DataWF.Module.Common
         [Column("group_number", 512, Keys = DBColumnKeys.Code), Index("rgroup_group_number")]
         public string Number
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
@@ -78,14 +75,14 @@ namespace DataWF.Module.Common
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(Table.NameENKey);
+            get => GetValue(Table.NameENKey);
             set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(Table.NameRUKey);
+            get => GetValue(Table.NameRUKey);
             set => SetValue(value, Table.NameRUKey);
         }
 
@@ -98,8 +95,7 @@ namespace DataWF.Module.Common
         [ControllerMethod]
         public IEnumerable<User> GetUsers(DBTransaction transaction)
         {
-            var userTable = Schema.GetTable<User>();
-            foreach (User user in userTable)
+            foreach (User user in Schema.User)
             {
                 if (user.Access.Get(this, false).Create
                     && user.Access.GetFlag(AccessType.Read, transaction.Caller))

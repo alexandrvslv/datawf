@@ -24,7 +24,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [Table("file_data", "General", Keys = DBTableKeys.NoLogs | DBTableKeys.Private, Type = typeof(FileDataTable))]
+    [Table("file_data", "General", Keys = DBTableKeys.NoLogs | DBTableKeys.Private)]
     public sealed partial class FileData : DBItem
     {
         [Column("unid", Keys = DBColumnKeys.Primary)]

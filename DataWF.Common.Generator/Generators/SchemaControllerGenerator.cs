@@ -20,8 +20,8 @@ namespace DataWF.Common.Generator
         private readonly HashSet<string> generated = new HashSet<string>(StringComparer.Ordinal);
         private INamedTypeSymbol[] tableAttributes;
 
-        public SchemaControllerGenerator(ref GeneratorExecutionContext context) : base(ref context)
-        { 
+        public SchemaControllerGenerator(CompilationContext compilationContext) : base(compilationContext)
+        {
         }
 
         public string Namespace { get; private set; }
@@ -142,7 +142,7 @@ namespace {Namespace}
             }
             else
             {
-                var primaryKey = type.GetPrimaryKey();
+                var primaryKey = type.GetPrimaryKey(CompilationContext);
                 if (primaryKey == null)
                 {
                     return;
@@ -189,7 +189,7 @@ namespace {Namespace}
     }");
             if (!type.IsAbstract && !type.IsSealed)
             {
-                var primaryKey = type.GetPrimaryKey();
+                var primaryKey = type.GetPrimaryKey(CompilationContext);
                 if (primaryKey != null)
                 {
                     source.Append($@"
@@ -205,7 +205,7 @@ namespace {Namespace}
             }
             source.Append(@"
 }");
-            Context.AddSource($"{type.Name}Controller", SourceText.From(source.ToString(), Encoding.UTF8));
+            CompilationContext.Context.AddSource($"{type.Name}Controller", SourceText.From(source.ToString(), Encoding.UTF8));
             generated.Add(type.Name);
         }
 
@@ -441,7 +441,7 @@ namespace {Namespace}
             var parametersInfo = new List<MethodParametrInfo>();
             foreach (var parameter in method.Parameters)
             {
-                parametersInfo.Add(new MethodParametrInfo(parameter));
+                parametersInfo.Add(new MethodParametrInfo(CompilationContext, parameter));
             }
             return parametersInfo;
         }

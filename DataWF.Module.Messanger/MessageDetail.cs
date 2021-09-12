@@ -10,14 +10,11 @@ namespace DataWF.Module.Messanger
     {
         private Message message;
 
-        public MessageDetail(DBTable table) : base(table)
-        { }
-
         [Browsable(false)]
         [DataMember, Column("message_id")]
         public long? MessageId
         {
-            get => GetValue<long?>(Table.MessageIdKey);
+            get => GetValue(Table.MessageIdKey);
             set => SetValue(value, Table.MessageIdKey);
         }
 

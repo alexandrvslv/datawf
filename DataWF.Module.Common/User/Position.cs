@@ -14,43 +14,40 @@ namespace DataWF.Module.Common
         private Department department;
         private Company company;
 
-        public Position(DBTable table):base(table)
-        { }
-
         public PositionTable PositionTable => (PositionTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(Table.CompanyIdKey);
+            get => GetValue(Table.CompanyIdKey);
             set => SetValue(value, Table.CompanyIdKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference((DBColumn)Table.CompanyIdKey, ref company);
+            get => GetReference(Table.CompanyIdKey, ref company);
             set => SetReference(company = value, Table.CompanyIdKey);
         }
 
         [Column("department_id"), Index("rposition_department_id"), Browsable(false)]
         public int? DepartmentId
         {
-            get => GetValue<int?>(Table.DepartmentIdKey);
+            get => GetValue(Table.DepartmentIdKey);
             set => SetValue(value, Table.DepartmentIdKey);
         }
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get => GetReference((DBColumn)Table.DepartmentIdKey, ref department);
+            get => GetReference(Table.DepartmentIdKey, ref department);
             set => SetReference(department = value, Table.DepartmentIdKey);
         }
 
@@ -72,14 +69,14 @@ namespace DataWF.Module.Common
         [Index("rposition_code", true)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(Table.ExternalIdKey);
+            get => GetValue(Table.ExternalIdKey);
             set => SetValue(value, Table.ExternalIdKey);
         }
 
@@ -93,21 +90,20 @@ namespace DataWF.Module.Common
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(Table.NameENKey);
+            get => GetValue(Table.NameENKey);
             set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(Table.NameRUKey);
+            get => GetValue(Table.NameRUKey);
             set => SetValue(value, Table.NameRUKey);
         }
 
         public override AccessValue Access
         {
-            get => base.Access != Table.Access ? base.Access
-                  : Department?.Access ?? Parent?.Access ?? Table.Access;
+            get => InternalAccess ?? Parent?.InternalAccess ?? Department?.InternalAccess ?? Table.Access;
         }
 
         [ControllerMethod]

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using System.Reflection;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace DataWF.Common.Generator
@@ -10,6 +11,29 @@ namespace DataWF.Common.Generator
     [Generator]
     public partial class SourceGenerator : ISourceGenerator
     {
+        //https://stackoverflow.com/a/67074009/4682355
+        static SourceGenerator()
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
+            {
+                var name = new AssemblyName(args.Name);
+                Assembly loadedAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().FullName == name.FullName);
+                if (loadedAssembly != null)
+                {
+                    return loadedAssembly;
+                }
+
+                string resourceName = $"DataWF.Common.Generator.{name.Name}.dll";
+                using Stream resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+                if (resourceStream == null)
+                {
+                    return null;
+                }
+                var buffer = new byte[resourceStream.Length];
+                resourceStream.Read(buffer, 0, buffer.Length);
+                return Assembly.Load(buffer);
+            };
+        }
 
         public void Initialize(GeneratorInitializationContext context)
         {
@@ -27,10 +51,10 @@ namespace DataWF.Common.Generator
             }
             try
             {
-                BaseGenerator.Compilation = context.Compilation;
+                var compilationContext = new CompilationContext(ref context);
                 var cultures = new List<string>(new[] { "RU", "EN" });//TODO Pass as argument in destination project
 
-                var invokerGenerator = new InvokerGenerator(ref context);
+                var invokerGenerator = new InvokerGenerator(compilationContext);
 
                 // loop over the candidate fields, and keep the ones that are actually annotated
                 foreach (var invokerClass in receiver.IvokerCandidates)
@@ -42,10 +66,10 @@ namespace DataWF.Common.Generator
 
                 if (receiver.TableCandidates.Any())
                 {
-                    var tableCodeGenerator = new TableGenerator(ref context, invokerGenerator)
+                    var tableCodeGenerator = new TableGenerator(compilationContext, invokerGenerator)
                     {
                         Cultures = cultures,
-                        TableLogGenerator = new TableLogGenerator(ref context, invokerGenerator)
+                        TableLogGenerator = new TableLogGenerator(compilationContext, invokerGenerator)
                         {
                             Cultures = cultures
                         }
@@ -61,10 +85,10 @@ namespace DataWF.Common.Generator
 
                 if (receiver.SchemaCandidates.Any())
                 {
-                    var schemaCodeGenerator = new SchemaGenerator(ref context, invokerGenerator)
+                    var schemaCodeGenerator = new SchemaGenerator(compilationContext, invokerGenerator)
                     {
                         Cultures = cultures,
-                        SchemaLogCodeGenerator = new SchemaLogGenerator(ref context, invokerGenerator)
+                        SchemaLogCodeGenerator = new SchemaLogGenerator(compilationContext, invokerGenerator)
                         {
                             Cultures = cultures
                         }
@@ -80,7 +104,7 @@ namespace DataWF.Common.Generator
 
                 if (receiver.ClientProviderCandidate.Any())
                 {
-                    var clientGenerator = new ClientProviderGenerator(ref context)
+                    var clientGenerator = new ClientProviderGenerator(compilationContext)
                     {
                         InvokerGenerator = invokerGenerator
                     };
@@ -95,7 +119,7 @@ namespace DataWF.Common.Generator
 
                 if (receiver.SchemaControllerCandidate.Any())
                 {
-                    var controllerGenerator = new SchemaControllerGenerator(ref context) { };
+                    var controllerGenerator = new SchemaControllerGenerator(compilationContext) { };
 
                     foreach (var serviceClass in receiver.SchemaControllerCandidate)
                     {

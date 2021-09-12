@@ -12,10 +12,10 @@ namespace DataWF.Common.Generator
 {
     internal class SchemaLogGenerator : BaseTableGenerator
     {
-        public SchemaLogGenerator(ref GeneratorExecutionContext context, InvokerGenerator invokerGenerator)
-            : base(ref context, invokerGenerator)
+        public SchemaLogGenerator(CompilationContext compilationContext, InvokerGenerator invokerGenerator)
+            : base(compilationContext, invokerGenerator)
         {
-            SchemaGenerator = new SchemaGenerator(ref context, invokerGenerator);
+            SchemaGenerator = new SchemaGenerator(compilationContext, invokerGenerator);
         }
         public SchemaGenerator SchemaGenerator { get; }
 
@@ -25,12 +25,12 @@ namespace DataWF.Common.Generator
             if (classSource != null)
             {
                 var logSchemaSource = SourceText.From(classSource, Encoding.UTF8);
-                Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}SchemaLogGen.cs", logSchemaSource);
+                CompilationContext.Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}SchemaLogGen.cs", logSchemaSource);
 
                 var logSchemaSyntax = CSharpSyntaxTree.ParseText(logSchemaSource, (CSharpParseOptions)Options);
 
                 SchemaGenerator.Cultures = Cultures;
-                Compilation = SchemaGenerator.Compilation.AddSyntaxTrees(logSchemaSyntax);
+                CompilationContext.Compilation = SchemaGenerator.Compilation.AddSyntaxTrees(logSchemaSyntax);
 
                 var unitSyntax = (CompilationUnitSyntax)logSchemaSyntax.GetRoot();
                 var logClassSyntax = unitSyntax.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault()?.Members.OfType<ClassDeclarationSyntax>().FirstOrDefault();

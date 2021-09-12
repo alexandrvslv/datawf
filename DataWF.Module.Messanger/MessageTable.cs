@@ -51,7 +51,7 @@ namespace DataWF.Module.Messanger
                     {
                         if (staff != message.User)//&& user.Status == DBStatus.Actual
                         {
-                            var address = new MessageAddress(Schema.GetTable<MessageAddress>())
+                            var address = new MessageAddress(Schema.MessageAddress)
                             {
                                 Message = message,
                                 Staff = staff

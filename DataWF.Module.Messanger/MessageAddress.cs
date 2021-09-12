@@ -15,14 +15,10 @@ namespace DataWF.Module.Messanger
         private Position position;
         private Department department;
 
-        public MessageAddress(DBTable table) : base(table)
-        {
-        }
-
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -30,7 +26,7 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("user_id"), Index("dmessage_address_user_id")]
         public int? UserId
         {
-            get => GetValue<int?>(Table.UserIdKey);
+            get => GetValue(Table.UserIdKey);
             set => SetValue(value, Table.UserIdKey);
         }
 
@@ -49,7 +45,7 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("position_id", Keys = DBColumnKeys.View), Index("dmessage_address_position_id")]
         public int? PositionId
         {
-            get => GetValue<int?>(Table.PositionIdKey);
+            get => GetValue(Table.PositionIdKey);
             set => SetValue(value, Table.PositionIdKey);
         }
 
@@ -68,7 +64,7 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("department_id", Keys = DBColumnKeys.View), Index("dmessage_address_department_id")]
         public int? DepartmentId
         {
-            get => GetValue<int?>(Table.DepartmentIdKey);
+            get => GetValue(Table.DepartmentIdKey);
             set => SetValue(value, Table.DepartmentIdKey);
         }
 
@@ -82,7 +78,7 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("date_read")]
         public DateTime? DateRead
         {
-            get => GetValue<DateTime?>(Table.DateReadKey);
+            get => GetValue(Table.DateReadKey);
             set => SetValue(value, Table.DateReadKey);
         }
 
@@ -92,12 +88,12 @@ namespace DataWF.Module.Messanger
             get => (DBItem)User ?? (DBItem)Position ?? (DBItem)Department;
             set
             {
-                if (value is Department)
-                    Department = (Department)value;
-                else if (value is Position)
-                    Position = (Position)value;
-                else if (value is User)
-                    User = (User)value;
+                if (value is Department department)
+                    Department = department;
+                else if (value is Position position)
+                    Position = position;
+                else if (value is User user)
+                    User = user;
             }
         }
     }

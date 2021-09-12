@@ -9,25 +9,24 @@ using System.Diagnostics;
 namespace DataWF.Module.Flow
 {
 
-    public sealed class FlowEnvironment : IDisposable
+    public sealed class FlowProvider : DBProvider
     {
-        private static FlowEnvironment instance = new FlowEnvironment();
-        private string schemaCode = "new";
+        private static FlowProvider instance = new FlowProvider();
 
-        public DBSchemaList Schems
+        public new IFlowSchema Schema
         {
-            get { return DBService.Schems; }
+            get => (IFlowSchema)base.Schema;
+            set => base.Schema = (DBSchema)value;
         }
-
         public bool LogUpdate { get; set; } = true;
 
         public bool LogExecute { get; set; } = true;
 
         public bool LogProcedure { get; set; }
 
-        public static void OnDBServiceExecute(DBExecuteEventArg arg)
+        public void OnDBServiceExecute(DBExecuteEventArg arg)
         {
-            if (Config.LogExecute || arg.Rezult is Exception)
+            if (LogExecute || arg.Rezult is Exception)
             {
                 string message = string.Format("in {0} ms ({1})", arg.Time.TotalMilliseconds, arg.Rezult is IDataReader
                                                ? ((IDataReader)arg.Rezult).RecordsAffected + "*" + ((IDataReader)arg.Rezult).FieldCount : (arg.Rezult is Exception
@@ -38,11 +37,11 @@ namespace DataWF.Module.Flow
                 Helper.OnException((Exception)arg.Rezult);
         }
 
-        public static void OnDBRowChanged(DBItemEventArgs arg)
+        public void OnDBRowChanged(DBItemEventArgs arg)
         {
-            if (arg.Item.Table == Schema.GetTable<UserReg>()) //|| arg.Row.Table == FlowEnvir.Config.Document.Table)
+            if (arg.Item.Table == Schema.UserReg) //|| arg.Row.Table == FlowEnvir.Config.Document.Table)
                 return;
-            var documentTable = (DocumentTable<Document>)Schema.GetTable<Document>();
+            var documentTable = Schema.Document;
             if (!arg.Item.Table.IsVirtual)
             {
                 var cols = arg.Item.Table.Columns.GetByReference(documentTable);
@@ -56,9 +55,9 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public static void LoadBooks(IFlowSchema schema)
+        public void LoadBooks()
         {
-            Schema = schema;
+            var schema = Schema;
             Helper.Log(schema, "Start", StatusType.Information);
             Stopwatch watch = new Stopwatch();
             watch.Start();
@@ -87,69 +86,27 @@ namespace DataWF.Module.Flow
 
             Helper.Log(schema, $"Success in {watch.ElapsedMilliseconds} ms", StatusType.Information);
 
-            var workTable = (DocumentWorkTable)schema.GetTable<DocumentWork>();
+            var workTable = schema.DocumentWork;
             workTable.DefaultComparer = new DBComparer<DocumentWork, long>(workTable.IdKey) { Hash = true };
             //Logs.Add(new StateInfo("Flow Check", "Config Falil", "AccountInfo", StatusType.Warning));
         }
 
-        public static void LoadConfig()
+        public override void Load()
         {
-            Helper.LogWorkingSet("DataBase Info");
-            LoadEnvir();
+            base.Load();
             Helper.LogWorkingSet("Flow Config");
-            LoadBooks((IFlowSchema)DBService.Schems.DefaultSchema);
+            LoadBooks();
             Helper.LogWorkingSet("Books");
             //FlowEnvironment.LoadDocuments();
             //Helper.LogWorkingSet("Documents");
             //FlowEnvironment.Compiler();
         }
 
-        public static void SaveConfig()
-        {
-            FlowEnvironment.SaveEnvir();
-        }
-
-        public static void SaveEnvir()
-        {
-            instance.Save();
-        }
-
-        public void Save()
-        {
-            Save("flow.xml");
-        }
-
-        public void Save(string file)
-        {
-            Serialization.Serialize(this, file);
-        }
-
-        public static void LoadEnvir()
-        {
-            instance.Load();
-        }
-
-        public void Load()
-        {
-            Load("flow.xml");
-        }
-
-        public void Load(string file)
-        {
-            Serialization.Deserialize(file, this);
-        }
-
-        public static FlowEnvironment Config
-        {
-            get => instance;
-            set => instance = value;
-        }
-
         public void Initialize()
         {
             //DBService.Execute += FlowEnvironment.OnDBServiceExecute;
 
-            FlowEnvironment.Config.LogUpdate = true;
+            LogUpdate = true;
 
             //DBService.RowStateEdited += FlowEnvironment.OnDBRowChanged;
             //DBService.RowAdded += FlowEnvir.OnDBRowChanged;
@@ -164,20 +121,6 @@ namespace DataWF.Module.Flow
             //DBService.RowAdded -= FlowEnvir.OnDBRowChanged;
             //DBService.RowRemoved -= FlowEnvir.OnDBRowChanged;
         }
-
-        public string SchemaCode
-        {
-            get => schemaCode;
-            set => schemaCode = value;
-        }
-
-        public static IFlowSchema Schema { get; private set; }
-
-        //public DBSchema Schema
-        //{
-        //    get { return DBService.Schems[schemaCode]; }
-        //    set { schemaCode = value == null ? null : value.Name; }
-        //}
 
         public static void CheckScheduler()
         {

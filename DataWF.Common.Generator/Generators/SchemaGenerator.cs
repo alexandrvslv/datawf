@@ -19,8 +19,8 @@ namespace DataWF.Common.Generator
         private IEnumerable<ITypeSymbol> allSchemaEntries;
         private string baseInterface;
 
-        public SchemaGenerator(ref GeneratorExecutionContext context, InvokerGenerator invokerGenerator)
-            : base(ref context, invokerGenerator)
+        public SchemaGenerator(CompilationContext compilationContext, InvokerGenerator invokerGenerator)
+            : base(compilationContext, invokerGenerator)
         {
         }
 
@@ -31,7 +31,7 @@ namespace DataWF.Common.Generator
             string classSource = Generate();
             if (classSource != null)
             {
-                Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}SchemaGen.cs", SourceText.From(classSource, Encoding.UTF8));
+                CompilationContext.Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}SchemaGen.cs", SourceText.From(classSource, Encoding.UTF8));
 
                 var invokerAttribute = TypeSymbol.GetAttribute(Attributes.Invoker);
                 if (invokerAttribute == null)

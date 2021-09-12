@@ -7,10 +7,6 @@ namespace DataWF.Module.Finance
     [VirtualTable(500)]
     public sealed partial class AccountType : Book
     {
-        public AccountType(DBTable table) : base(table)
-        {
-            ItemType = 500;
-        }
 
     }
 }

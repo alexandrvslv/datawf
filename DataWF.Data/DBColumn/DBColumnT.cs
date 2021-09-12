@@ -730,8 +730,8 @@ namespace DataWF.Data
             {
                 foreach (T entry in typedList)
                 {
-                    if (Equal(entry, val1) && !not)
-                        return true;
+                    if (Equal(entry, val1))
+                        return !not;
                 }
             }
             else if (val2 is IEnumerable list)
@@ -743,8 +743,8 @@ namespace DataWF.Data
                         comp = qItem.GetValue(item);
                     if (comp is DBItem dbItem)
                         comp = GetReferenceId(dbItem);
-                    if (comp.Equals(val1) && !not)
-                        return true;
+                    if (comp.Equals(val1))
+                        return !not;
                 }
             }
             return not;

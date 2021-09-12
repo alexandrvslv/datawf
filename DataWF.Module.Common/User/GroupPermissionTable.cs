@@ -57,7 +57,7 @@ namespace DataWF.Module.Common
         {
             PermissionType type = GetPermission(item, out string code, out string name);
 
-            var list = CodeKey.Select(CompareType.Equal, code).ToList();
+            var list = Select(CodeKey, CompareType.Equal, code).ToList();
 
             var permission = list.FirstOrDefault();
             if (list.Count > 1)
@@ -136,7 +136,7 @@ namespace DataWF.Module.Common
             if (AccessValue.Provider == null || !AccessValue.Provider.GetGroups().Any())
                 return;
 
-            foreach (DBSchema schema in DBService.Schems)
+            foreach (DBSchema schema in Schema.Schems)
             {
                 var permission = await Get(null, schema);
                 var groups = schema.TableGroups.GetTopParents();
@@ -203,7 +203,7 @@ namespace DataWF.Module.Common
 
         public void BeginHandleSchema()
         {
-            DBService.DBSchemaChanged += OnDBSchemaChanged;
+            Schema.Provider.DBSchemaChanged += OnDBSchemaChanged;
         }
 
         private async void OnDBSchemaChanged(object sender, DBSchemaChangedArgs e)

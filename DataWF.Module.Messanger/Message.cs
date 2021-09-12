@@ -17,21 +17,17 @@ namespace DataWF.Module.Messanger
         private MessageAddressList addresses;
         private User user;
 
-        public Message(DBTable table) : base(table)
-        {
-        }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get => GetValue<long?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false), Column("user_id", Keys = DBColumnKeys.View)]
         public int? UserId
         {
-            get => GetValue<int?>(Table.UserIdKey);
+            get => GetValue(Table.UserIdKey);
             set => SetValue(value, Table.UserIdKey);
         }
 
@@ -45,7 +41,7 @@ namespace DataWF.Module.Messanger
         [Column("text_data")]
         public string Data
         {
-            get => GetValue<string>(Table.DataKey);
+            get => GetValue(Table.DataKey);
             set => SetValue(value, Table.DataKey);
         }
 
@@ -54,7 +50,7 @@ namespace DataWF.Module.Messanger
             get
             {
                 if (addresses == null && Id != null)
-                    addresses = new MessageAddressList((MessageAddressTable<MessageAddress>)Schema.GetTable<MessageAddress>(), this);
+                    addresses = new MessageAddressList(Schema.MessageAddress, this);
                 return addresses;
             }
         }

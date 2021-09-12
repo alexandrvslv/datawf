@@ -12,7 +12,7 @@ namespace DataWF.Common.Generator
     {
         protected IEnumerable<IPropertySymbol> properties;
 
-        public InvokerGenerator(ref GeneratorExecutionContext context) : base(ref context)
+        public InvokerGenerator(CompilationContext compilationContext) : base(compilationContext)
         {
         }
 
@@ -36,7 +36,7 @@ namespace DataWF.Common.Generator
             }
 
             var source = Generate();
-            Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}{(TypeSymbol.TypeParameters.Count())}InvokersGen.cs", 
+            CompilationContext.Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}{(TypeSymbol.TypeParameters.Count())}InvokersGen.cs", 
                 SourceText.From(source, Encoding.UTF8));
             return true;
         }

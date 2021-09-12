@@ -100,7 +100,7 @@ from Employer emp
     join Position pos on pos.Id = emp.PositionId
 where (emp.Id != 1 or emp.Id = 1)
     and emp.DateCreate is not null
-    and emp.DateCreate between('2000-01-01' and '3000-01-01')
+    and emp.DateCreate '2000-01-01' and '3000-01-01'
     and emp.PositionId in (select subPos2.Id
                            from Position subPos2 
                            where subPos2.Code in ('2','3'))";
@@ -123,7 +123,7 @@ where (emp.Id != 1 or emp.Id = 1)
             Assert.IsAssignableFrom<QQuery<DBItem>>(query.Columns[2]);
             var posSubQuery = (QQuery<DBItem>)query.Columns[2];
             Assert.AreEqual("sub_query_position_name", posSubQuery.ColumnAlias);
-            Assert.AreEqual(positions.NameENKey, posSubQuery.Columns[0]);
+            Assert.AreEqual(positions.NameENKey, ((QColumn)posSubQuery.Columns[0]).Column);
             Assert.AreEqual(positions, posSubQuery.Tables[0].Table);
             Assert.AreEqual(positions.IdKey, posSubQuery.Parameters[0].LeftColumn);
             Assert.AreEqual(employers.PositionIdKey, posSubQuery.Parameters[0].RightColumn);
@@ -131,7 +131,7 @@ where (emp.Id != 1 or emp.Id = 1)
             Assert.IsAssignableFrom<QFunction>(query.Columns[3]);
             var posFunction = (QFunction)query.Columns[3];
             Assert.AreEqual(QFunctionType.concat, posFunction.Type);
-            Assert.AreEqual(1, posFunction.Items.Count);
+            Assert.AreEqual(2, posFunction.Items.Count);
             Assert.IsAssignableFrom<QColumn>(posFunction.Items[0]);
             var posArgColumn = (QColumn)posFunction.Items[0];
             Assert.AreEqual(positions.NameENKey, posArgColumn.Column);
@@ -145,6 +145,9 @@ where (emp.Id != 1 or emp.Id = 1)
             Assert.AreEqual(employers, baseTable.Table);
             Assert.AreEqual("emp", baseTable.TableAlias);
             var joinTable = query.Tables[1];
+            Assert.AreEqual(positions, joinTable.Table);
+            Assert.AreEqual("pos", joinTable.TableAlias);
+            Assert.AreEqual(JoinType.Join, joinTable.Join);
         }
 
         [Test]
@@ -167,6 +170,7 @@ where (emp.Id != 1 or emp.Id = 1)
                                                                     .Column(positions.IdKey)
                                                                     .Where(positions.CodeKey, CompareType.In, new[] { "2", "3" }));
 
+            Console.WriteLine(query.FormatAll());
 
         }
     }

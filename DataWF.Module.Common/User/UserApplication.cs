@@ -167,7 +167,7 @@ namespace DataWF.Module.Common
                     Department = department,
                     Position = position,
                 };
-                var check = users.Select(users.CodeKey, CompareType.Equal, user.Login).ToList();
+                var check = users.Select(users.LoginKey, CompareType.Equal, user.Login).ToList();
                 if (check.Count > 1)
                 {
                     user.Login = $"{user.Login}.{Helper.IntToChar(check.Count).ToLowerInvariant()}";

@@ -21,6 +21,8 @@ using System.Data;
 using System.Collections;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -60,11 +62,33 @@ namespace DataWF.Data
             {
                 items = value;
                 items.Indexes.Clear();
-                items.Container = this;
+                items.Owner = this;
             }
         }
 
-        public IQItemList Container => null;
+        [XmlIgnore, JsonIgnore]
+        public IQItem Owner => Container?.Owner;
+
+        public override IQItemList Container
+        {
+            get => base.Container;
+            set
+            {
+                base.Container = value;
+                if (Query != null)
+                {
+                    foreach (var item in items)
+                    {
+                        if (item is QColumn column
+                            && column.QTable == null
+                            && column.Table != null)
+                        {
+                            column.QTable = Query.GetTable(column.Table);
+                        }
+                    }
+                }
+            }
+        }
 
         public override object GetValue(DBItem row = null)
         {

@@ -41,7 +41,7 @@ namespace DataWF.Data
             connections.Provider = this;
         }
 
-        public static event EventHandler<DBSchemaChangedArgs> DBSchemaChanged;
+        public event EventHandler<DBSchemaChangedArgs> DBSchemaChanged;
 
         public SelectableList<DBSchemaChange> Changes = new SelectableList<DBSchemaChange>();
 
@@ -134,6 +134,7 @@ namespace DataWF.Data
 
         public void Load(string file)
         {
+            this.Log("Start Load config");
             Serialization.Deserialize("connections.xml", connections);
             Serialization.Deserialize(file, schems);
             foreach (var schema in schems)
@@ -142,6 +143,7 @@ namespace DataWF.Data
             }
             Helper.LogWorkingSet("Schema");
             Changes.Clear();
+            this.Log("End Load config");
         }
 
         internal void OnChanged(DBSchemaItem item, DDLType type)

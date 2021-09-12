@@ -23,7 +23,7 @@ namespace DataWF.Data
     public interface IQItemList
     {
         IQuery Query { get; }
-        IQItemList Container { get; }
+        IQItem Owner { get; }
         void Add(QItem item);
         void Delete(QItem item);
     }

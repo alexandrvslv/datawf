@@ -38,20 +38,20 @@ namespace DataWF.Data
             AddRangeInternal(items, false);
         }
 
-        public QItemList(IQItemList owner) : this()
+        public QItemList(IQItem owner) : this()
         {
-            Container = owner;
+            Owner = owner;
         }
 
-        public QItemList(IQItemList owner, int capacity) : this(capacity)
+        public QItemList(IQItem owner, int capacity) : this(capacity)
         {
-            Container = owner;
+            Owner = owner;
         }
 
-        public IQItemList Container { get; set; }
+        public IQItem Owner { get; set; }
 
-        public IQuery Query => Container.Query;
-        
+        public IQuery Query => Owner.Query;
+
         void IQItemList.Add(QItem item)
         {
             this.Add((T)item);
@@ -70,12 +70,12 @@ namespace DataWF.Data
 
         public override void InsertInternal(int index, T item)
         {
-            var itemList = item.List;
+            var itemList = item.Container;
             if (itemList != this && itemList != null)
             {
                 itemList.Delete(item);
             }
-            item.List = this;
+            item.Container = this;
             if (item.Order == -1)
                 item.Order = index;
 

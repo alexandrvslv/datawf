@@ -25,7 +25,7 @@ namespace DataWF.Common.Generator
         private const string constFileNameKey = "FileNameKey";
         private const string constFileLastWriteKey = "FileLastWriteKey";
 
-        protected static string GetTableClassName(INamedTypeSymbol classSymbol, out TableCodeGeneratorMode mode)
+        protected string GetTableClassName(INamedTypeSymbol classSymbol, out TableCodeGeneratorMode mode)
         {
             mode = TableCodeGeneratorMode.Default;
             string className = null;
@@ -67,12 +67,12 @@ namespace DataWF.Common.Generator
             return className;
         }
 
-        private static AttributeData GetDefaultTableAttribute(INamedTypeSymbol classSymbol)
+        private AttributeData GetDefaultTableAttribute(INamedTypeSymbol classSymbol)
         {
             return classSymbol.GetAttribute(Attributes.Table);
         }
 
-        private static AttributeData GetVirtualTableAttribute(INamedTypeSymbol classSymbol)
+        private AttributeData GetVirtualTableAttribute(INamedTypeSymbol classSymbol)
         {
             return classSymbol.GetAttribute(Attributes.VirtualTable);
         }
@@ -96,8 +96,8 @@ namespace DataWF.Common.Generator
         private string genericArg;
         protected StringBuilder interfaceSource;
 
-        public TableGenerator(ref GeneratorExecutionContext context, InvokerGenerator invokerGenerator)
-            : base(ref context, invokerGenerator)
+        public TableGenerator(CompilationContext compilationContext, InvokerGenerator invokerGenerator)
+            : base(compilationContext, invokerGenerator)
         {
         }
 
@@ -109,7 +109,7 @@ namespace DataWF.Common.Generator
             string classSource = Generate();
             if (classSource != null)
             {
-                Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}TableGen.cs", SourceText.From(classSource, Encoding.UTF8));
+                CompilationContext.Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}TableGen.cs", SourceText.From(classSource, Encoding.UTF8));
 
                 var invokerAttribute = TypeSymbol.GetAttribute(Attributes.Invoker);
                 if (invokerAttribute == null)

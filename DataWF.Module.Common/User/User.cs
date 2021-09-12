@@ -36,14 +36,14 @@ namespace DataWF.Module.Common
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(Table.ExternalIdKey);
+            get => GetValue(Table.ExternalIdKey);
             set => SetValue(value, Table.ExternalIdKey);
         }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(Table.CompanyIdKey);
+            get => GetValue(Table.CompanyIdKey);
             set => SetValue(value, Table.CompanyIdKey);
         }
 
@@ -57,14 +57,14 @@ namespace DataWF.Module.Common
         [Column("abbreviation", 4, Keys = DBColumnKeys.Indexing), Index("ruser_abbreviation", true)]
         public string Abbreviation
         {
-            get => GetValue<string>(Table.AbbreviationKey);
+            get => GetValue(Table.AbbreviationKey);
             set => SetValue(value, Table.AbbreviationKey);
         }
 
         [Column("department_id"), Browsable(false)]
         public int? DepartmentId
         {
-            get => GetValue<int?>(Table.DepartmentIdKey);
+            get => GetValue(Table.DepartmentIdKey);
             set => SetValue(value, Table.DepartmentIdKey);
         }
 
@@ -78,14 +78,14 @@ namespace DataWF.Module.Common
         [Column("position_id"), Browsable(false)]
         public int? PositionId
         {
-            get => GetValue<int?>(Table.PositionIdKey);
+            get => GetValue(Table.PositionIdKey);
             set => SetValue(value, Table.PositionIdKey);
         }
 
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get => GetReference<Position>(Table.PositionIdKey, ref position);
+            get => GetReference(Table.PositionIdKey, ref position);
             set
             {
                 SetReference(position = value, Table.PositionIdKey);
@@ -97,7 +97,7 @@ namespace DataWF.Module.Common
         [DefaultValue(false), Column("super")]
         public bool? Super
         {
-            get => GetValue<bool?>(Table.SuperKey);
+            get => GetValue(Table.SuperKey);
             set => SetValue(value, Table.SuperKey);
         }
 
@@ -117,7 +117,7 @@ namespace DataWF.Module.Common
         [Column("phone", 1024), Index("ruser_phone", false)]
         public string Phone
         {
-            get => GetValue<string>(Table.PhoneKey);
+            get => GetValue(Table.PhoneKey);
             set => SetValue(value, Table.PhoneKey);
         }
 
@@ -130,14 +130,14 @@ namespace DataWF.Module.Common
         [Column("is_temp_pass")]
         public bool? IsTempPassword
         {
-            get => GetValue<bool?>(Table.IsTempPasswordKey);
+            get => GetValue(Table.IsTempPasswordKey);
             set => SetValue(value, Table.IsTempPasswordKey);
         }
 
         [Column("password", 512, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
         public string Password
         {
-            get => GetValue<string>(Table.PasswordKey);
+            get => GetValue(Table.PasswordKey);
             set
             {
                 if (value == null)
@@ -158,8 +158,7 @@ namespace DataWF.Module.Common
         [Browsable(false)]
         public override AccessValue Access
         {
-            get => base.Access != Table.Access ? base.Access
-                  : Department?.Access ?? Position?.Access ?? Table.Access;
+            get => InternalAccess ?? Position?.InternalAccess ?? Table.Access;
         }
 
         [Browsable(false)]
@@ -168,14 +167,14 @@ namespace DataWF.Module.Common
         [Browsable(false), Column("token_refresh", 2048, Keys = DBColumnKeys.Password | DBColumnKeys.NoLog)]
         public string RefreshToken
         {
-            get => GetValue<string>(Table.RefreshTokenKey);
+            get => GetValue(Table.RefreshTokenKey);
             set => SetValue(value, Table.RefreshTokenKey);
         }
 
         [Column("auth_type")]
         public UserAuthType? AuthType
         {
-            get => GetValue<UserAuthType?>(Table.AuthTypeKey) ?? UserAuthType.SMTP;
+            get => GetValue(Table.AuthTypeKey) ?? UserAuthType.SMTP;
             set => SetValue(value, Table.AuthTypeKey);
         }
 
@@ -187,21 +186,21 @@ namespace DataWF.Module.Common
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(Table.NameRUKey);
+            get => GetValue(Table.NameRUKey);
             set => SetValue(value, Table.NameRUKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(Table.NameENKey);
+            get => GetValue(Table.NameENKey);
             set => SetValue(value, Table.NameENKey);
         }
 
         [Column("address_id"), Browsable(false)]
         public int? AddressId
         {
-            get => GetValue<int?>(Table.AddressIdKey);
+            get => GetValue(Table.AddressIdKey);
             set => SetValue(value, Table.AddressIdKey);
         }
 
@@ -222,7 +221,7 @@ namespace DataWF.Module.Common
                 {
                     cacheAccess = access;
                     identities = new HashSet<IAccessIdentity>(Super ?? false
-                            ? (IEnumerable<IAccessIdentity>)Schema.GetTable<UserGroup>()
+                            ? (IEnumerable<IAccessIdentity>)Schema.UserGroup
                             : access.Items.Where(p => p.Create).Select(p => p.Identity));
                     identities.Add(this);
                 }
@@ -239,7 +238,7 @@ namespace DataWF.Module.Common
             identities.Clear();
             identities.Add(this);
             foreach (var group in Super ?? false
-                ? (IEnumerable<IAccessIdentity>)Schema.GetTable<UserGroup>()
+                ? (IEnumerable<IAccessIdentity>)Schema.UserGroup
                 : cacheAccess.Items.Where(p => p.Create).Select(p => p.Identity))
             {
                 identities.Add(group);

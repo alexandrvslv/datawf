@@ -8,34 +8,22 @@ namespace DataWF.Common.Generator
 {
     internal abstract class BaseGenerator
     {
-
-        public static Compilation compilation;
-        public static Compilation Compilation
-        {
-            get => compilation;
-            set
-            {
-                if (compilation != value)
-                {
-                    compilation = value;
-                    Options = (compilation as CSharpCompilation).SyntaxTrees[0].Options as CSharpParseOptions;
-                    Attributes = new AttributesCache(Compilation);
-                }
-            }
-        }
-        public static CSharpParseOptions Options { get; set; }
-        public static AttributesCache Attributes { get; set; }
-
-        public readonly GeneratorExecutionContext Context;
-
         protected StringBuilder source;
         private INamedTypeSymbol typeSymbol;
         private ClassDeclarationSyntax classSyntax;
 
-        public BaseGenerator(ref GeneratorExecutionContext context)
+        public BaseGenerator(CompilationContext compilationContext)
         {
-            Context = context;
+            CompilationContext = compilationContext;
         }
+
+        public CompilationContext CompilationContext { get; }
+
+        public Compilation Compilation => CompilationContext.Compilation;
+
+        public AttributesCache Attributes => CompilationContext.Attributes;
+
+        public CSharpParseOptions Options => CompilationContext.Options;
 
         public StringBuilder Source
         {
@@ -78,13 +66,13 @@ namespace DataWF.Common.Generator
                 var result = Process();
                 if (result)
                 {
-                    try { Context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDSuccessGeneration, Location.None, GetType().Name, TypeSymbol.Name)); } catch { }
+                    try { CompilationContext.Context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDSuccessGeneration, Location.None, GetType().Name, TypeSymbol.Name)); } catch { }
                 }
                 return result;
             }
             catch (Exception ex)
             {
-                try { Context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDFailGeneration, Location.None, GetType().Name, TypeSymbol.Name, ex.Message, ex.StackTrace)); } catch { }
+                try { CompilationContext.Context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDFailGeneration, Location.None, GetType().Name, TypeSymbol.Name, ex.Message, ex.StackTrace)); } catch { }
                 return false;
             }
         }
@@ -103,8 +91,11 @@ namespace DataWF.Common.Generator
                 SemanticModel model = Compilation.GetSemanticModel(syntax.SyntaxTree);
                 return model.GetDeclaredSymbol(syntax) as INamedTypeSymbol;
             }
-            catch
-            { return null; }
+            catch (Exception ex)
+            {
+                try { CompilationContext.Context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDFailGeneration, Location.None, GetType().Name, syntax.Identifier.ValueText, ex.Message, ex.StackTrace)); } catch { }
+                return null;
+            }
         }
     }
 

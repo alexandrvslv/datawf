@@ -38,13 +38,14 @@ namespace DataWF.Common.Generator
         private readonly Dictionary<string, StringBuilder> cacheClients = new Dictionary<string, StringBuilder>(StringComparer.Ordinal);
         private readonly Dictionary<string, HashSet<string>> cacheUsings = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
         private readonly Dictionary<string, List<AttributeListSyntax>> cacheAttributes = new Dictionary<string, List<AttributeListSyntax>>(StringComparer.Ordinal);
+        private readonly Dictionary<IAssemblySymbol, Dictionary<string, INamedTypeSymbol>> cacheAssemblySymbolTypes = new Dictionary<IAssemblySymbol, Dictionary<string, INamedTypeSymbol>>(SymbolEqualityComparer.Default);
 
         private readonly Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
         private OpenApiDocument document;
         private List<IAssemblySymbol> usingReferences = new List<IAssemblySymbol>();
 
-        public ClientProviderGenerator(ref GeneratorExecutionContext context)
-            : base(ref context)
+        public ClientProviderGenerator(CompilationContext compilationContext)
+            : base(compilationContext)
         {
         }
 
@@ -53,7 +54,7 @@ namespace DataWF.Common.Generator
         public string DocumentSource { get; set; }
         public AttributeData Attribute { get; private set; }
         public string Namespace { get; set; }
-        public HashSet<IAssemblySymbol> References { get; } = new HashSet<IAssemblySymbol>();
+        public HashSet<IAssemblySymbol> References { get; } = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
         public string ProviderName { get; set; }
 
         public override bool Process()
@@ -644,7 +645,7 @@ namespace DataWF.Common.Generator
                     {
                         try
                         {
-                            var parsedType = SyntaxHelper.ParseType(definitionName, reference);
+                            var parsedType = ParseType(definitionName, reference);
                             if (parsedType != null)
                             {
                                 if (parsedType.EnumUnderlyingType != null)
@@ -1296,7 +1297,7 @@ namespace {Namespace}
             unitSource.Append($@"
 }}");
             var sourceText = SourceText.From(unitSource.ToString(), Encoding.UTF8);
-            Context.AddSource(name, sourceText);
+            CompilationContext.Context.AddSource(name, sourceText);
 
             return CSharpSyntaxTree.ParseText(sourceText, (CSharpParseOptions)Options);
         }
@@ -1306,7 +1307,7 @@ namespace {Namespace}
             if (syntaxTree == null)
                 return null;
 
-            Compilation = Compilation.AddSyntaxTrees(syntaxTree);
+            CompilationContext.Compilation = Compilation.AddSyntaxTrees(syntaxTree);
             var unitSyntax = (CompilationUnitSyntax)syntaxTree.GetRoot();
             var nameSpaceSyntax = unitSyntax.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
             var classSyntax = nameSpaceSyntax.Members.OfType<ClassDeclarationSyntax>().FirstOrDefault();
@@ -1321,6 +1322,47 @@ namespace {Namespace}
                 return GetSymbol(enumSyntax);
             }
             return null;
+        }
+
+        public INamedTypeSymbol ParseType(Type value, IEnumerable<IAssemblySymbol> assemblies)
+        {
+            return ParseType(value.FullName, assemblies);
+        }
+
+        public INamedTypeSymbol ParseType(string value, IEnumerable<IAssemblySymbol> assemblies)
+        {
+            foreach (var assembly in assemblies)
+            {
+                var type = ParseType(value, assembly);
+                if (type != null)
+                    return type;
+            }
+            return null;
+        }
+
+        public INamedTypeSymbol ParseType(string value, IAssemblySymbol assembly)
+        {
+            var byName = value.IndexOf('.') < 0;
+            if (byName)
+            {
+                if (!cacheAssemblySymbolTypes.TryGetValue(assembly, out var cache))
+                {
+                    var definedTypes = assembly.GlobalNamespace.GetTypes();
+                    cacheAssemblySymbolTypes[assembly] =
+                        cache = new Dictionary<string, INamedTypeSymbol>(StringComparer.Ordinal);
+                    foreach (var defined in definedTypes)
+                    {
+                        if (defined.DeclaredAccessibility == Accessibility.Public)
+                            cache[defined.Name] = defined;
+                    }
+                }
+
+                return cache.TryGetValue(value, out var type) ? type : null;
+            }
+            else
+            {
+                return assembly.GetTypeByMetadataName(value);
+            }
         }
 
         private class RefField

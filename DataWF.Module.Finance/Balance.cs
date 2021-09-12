@@ -8,24 +8,14 @@ using DataWF.Module.Counterpart;
 
 namespace DataWF.Module.Finance
 {
-    public class BalanceList : DBTableView<Balance>
-    {
-        public BalanceList(BalanceTable<Balance> table) : base(table)
-        {
-        }
-    }
 
-    [Table("dbalance", "Finance", BlockSize = 5000), InvokerGenerator]
+    [Table("dbalance", "Finance", BlockSize = 5000)]
     public partial class Balance : DBItem
     {
         private Currency currency;
         private Account account;
         private BalanceType balanceType;
         private Balance parent;
-
-        public Balance(DBTable table) : base(table)
-        {
-        }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id

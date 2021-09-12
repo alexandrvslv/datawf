@@ -29,7 +29,7 @@ namespace DataWF.Module.Flow
             if (_cacheAllTemplates == null)
             {
                 _cacheAllTemplates = new TemplateList(table);
-                _cacheAllTemplates.Query.BuildParam(table.ParseProperty(nameof(Template.ParentId)), template.GetSubGroupFullIds());
+                _cacheAllTemplates.Query.Where(table.ParentIdKey, template.GetSubGroupFullIds());
             }
             return _cacheAllTemplates;
         }

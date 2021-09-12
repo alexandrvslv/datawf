@@ -1207,6 +1207,16 @@ namespace DataWF.Data
 
         }
 
+        public IEnumerable<T> Select(DBColumn column, CompareType comparer, object value)
+        {
+            return column.Select<T>(comparer, value);
+        }
+
+        public IEnumerable<T> Select<V>(DBColumn<V> column, CompareType comparer, V value)
+        {
+            return column.Select<T>(comparer, value);
+        }
+
         public override IEnumerable<TT> Select<TT>(IQuery query)
         {
             return Select(query).Cast<TT>();
@@ -1451,7 +1461,7 @@ namespace DataWF.Data
     public enum DBCacheState
     {
         None,
-        Actual,        
+        Actual,
         Actualazing
     }
 }
