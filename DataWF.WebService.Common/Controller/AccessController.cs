@@ -98,7 +98,8 @@ namespace DataWF.WebService.Common
                 {
                     return Forbid();
                 }
-
+                if (value == value.Access.Owner)
+                    return new ActionResult<string>("Own Access!");
                 return new ActionResult<string>(value.Access.OwnerName);
             }
             catch (Exception ex)
