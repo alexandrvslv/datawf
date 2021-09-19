@@ -19,8 +19,8 @@ namespace DataWF.Test.Common
 
         [Test, Combinatorial]
         public async Task TestPipeStream(
-            [Values(1, 1000)] int packageCount,
-            [Values(1, 1000)] int itemsCount,
+            [Values(1, 100)] int packageCount,
+            [Values(1, 100)] int itemsCount,
             [Values(SocketCompressionMode.None, SocketCompressionMode.Brotli, SocketCompressionMode.GZip)] SocketCompressionMode compressionMode)
         {
             var serializer = new BinarySerializer();

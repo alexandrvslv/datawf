@@ -43,10 +43,13 @@ namespace DataWF.Data
             set
             {
                 item = value;
-                Schema = item.Schema?.Name;
-                if (item is IDBTableContent tableContent)
+                if (item.Schema != null)
                 {
-                    Table = tableContent.Table?.Name;
+                    Schema = item.Schema?.Name;
+                    if (item is IDBTableContent tableContent)
+                    {
+                        Table = tableContent.Table?.Name;
+                    }
                 }
             }
         }

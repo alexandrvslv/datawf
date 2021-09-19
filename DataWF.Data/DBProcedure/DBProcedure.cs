@@ -482,7 +482,7 @@ namespace DataWF.Data
 
         public object ExecuteObject(object obj, ExecuteArgs param)
         {
-            Helper.Log(this, $"{Name} {param.ToString()}", StatusType.Information);
+            this.Log($"{Name} {param.ToString()}", StatusType.Information);
 
             //if (FlowEnvir.Config.LogProcedure)
             //DocumentLog.LogUser(FlowEnvir.Personal.User, DocumentLogType.Execute, this.ToString(), this, param.Document);
@@ -793,7 +793,7 @@ namespace DataWF.Data
             Helper.SetDirectory(Environment.SpecialFolder.LocalApplicationData);
 
             //var appDir = Tool.GetDirectory();
-            Helper.Log(schema, "Procedures");
+            schema.Log("Procedures");
 
 
             var groups = schema.Procedures.Select(ProcedureTypeInvoker.Instance,

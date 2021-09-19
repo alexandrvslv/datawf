@@ -15,9 +15,12 @@ namespace DataWF.Test.Module.Common
         public async Task Initialize()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var schema = new CommonSchema();
-            schema.Generate("common_database");
-            DBService.Schems.Add(schema);
+            var provider = new DBProvider<CommonSchema>()
+            {
+                SchemaName = "common_database"
+            };
+
+            var schema = await provider.CreateNew<CommonSchema>();
 
             var bookTable = schema.Book;
             var userGroupTable = schema.UserGroup;
@@ -34,7 +37,7 @@ namespace DataWF.Test.Module.Common
             Assert.IsNotNull(positionTable);
             Assert.IsNotNull(userRegTable);
             Assert.IsNotNull(companyTable);
-            DBService.Save();
+
             schema.Connection = new DBConnection
             {
                 Name = "test.common",
@@ -73,5 +76,7 @@ namespace DataWF.Test.Module.Common
             await groupPermissionTable.CachePermission();
 
         }
+
+
     }
 }

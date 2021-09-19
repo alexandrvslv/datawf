@@ -69,7 +69,6 @@ namespace DataWF.Data
         public DBSchema(string name) : base(name)
         {
             Name = name;
-            DataBase = name;
             Sequences = new DBSequenceList(this);
             Tables = new DBTableList(this);
             TableGroups = new DBTableGroupList(this);
@@ -160,8 +159,7 @@ namespace DataWF.Data
             set
             {
                 base.Name = value;
-                if (DataBase == null)
-                    DataBase = value;
+                DataBase = name;
                 if (LogSchema != null)
                 {
                     LogSchema.Name = Name + "_log";
@@ -171,7 +169,7 @@ namespace DataWF.Data
 
         public string DataBase
         {
-            get => dataBase;
+            get => dataBase ?? Connection?.DataBase ?? Name;
             set
             {
                 if (dataBase != value)
@@ -273,18 +271,18 @@ namespace DataWF.Data
         {
             if (Connection == null)
                 throw new InvalidOperationException("Connection is not defined!");
-            Helper.Log(this, "Start");
+            this.Log("Start");
             System.DropDatabase(this);
-            Helper.Log(this, "Success");
+            this.Log("Success");
         }
 
         public void ExecuteCreateDatabase()
         {
             if (Connection == null)
                 throw new InvalidOperationException("Connection is not defined!");
-            Helper.Log(this, "Start");
+            this.Log("Start");
             System.CreateDatabase(this, Connection);
-            Helper.Log(this, "Success");
+            this.Log("Success");
             if (LogSchema != null)
             {
                 if (LogSchema.Connection == null)
@@ -307,9 +305,9 @@ namespace DataWF.Data
         {
             if (Connection == null)
                 throw new InvalidOperationException("Connection is not defined!");
-            Helper.Log(this, "Start");
+            this.Log("Start");
             System.CreateSchema(this, Connection);
-            Helper.Log(this, "Success");
+            this.Log("Success");
         }
 
         public virtual IDBSchemaLog GetLogSchema()
@@ -582,7 +580,7 @@ namespace DataWF.Data
         public void Generate(IEnumerable<Type> types)
         {
             var logSchema = (IDBSchema)GetLogSchema() ?? this;
-            Helper.Log(this, $"Start generate {types.Count()} type(s)");
+            this.Log($"Start generate {types.Count()} type(s)");
             var assemblies = new HashSet<Assembly>();
             var tableGenerators = new HashSet<TableGenerator>();
             var logTableGenerators = new HashSet<LogTableGenerator>();

@@ -17,7 +17,7 @@ namespace DataWF.Test.Data
             set => base.Schema = value;
         }
 
-        public override async Task CreateNew()
+        public override async Task<DBSchema> CreateNew()
         {
             Locale.Instance.Culture = CultureInfo.GetCultureInfo("en-US");
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -37,8 +37,8 @@ namespace DataWF.Test.Data
                 }
             };
 
-            Schema = new TestSchema();
-            Schema.Generate("");
+            Schema = await CreateNew<TestSchema>();
+
             Schema.Connection = Connections["TestSqlLite"];
             Schema.ExecuteDropDatabase();
             Schema.ExecuteCreateDatabase();
@@ -75,6 +75,8 @@ namespace DataWF.Test.Data
                 }.Attach();
             }
             await employers.Save();
+
+            return Schema;
         }
     }
 }
