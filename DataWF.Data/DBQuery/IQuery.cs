@@ -27,7 +27,7 @@ using System.ComponentModel;
 namespace DataWF.Data
 {
     public interface IQuery<T> : IQuery, IEnumerable<T> where T : DBItem
-    {
+    {        
         IEnumerable<T> Select();
 
         new IQuery<T> Column(QFunctionType function, params object[] args);
@@ -53,7 +53,7 @@ namespace DataWF.Data
         new IQuery<T> OrderBy(IInvoker column, ListSortDirection direction = ListSortDirection.Ascending);
     }
 
-    public interface IQuery : IQItem, IEnumerable
+    public interface IQuery : IQItem, IQItemList, IEnumerable
     {
         QParamList Parameters { get; }
         QItemList<QItem> Columns { get; }
@@ -75,6 +75,7 @@ namespace DataWF.Data
         bool Contains(string columnName);
         bool Contains(DBColumn column);
 
+        string GenerateTableAlias(IDBTable Table);
         QTable GetTableByAlias(string alias);
         QTable GetTable(IDBTable table);
 

@@ -77,6 +77,8 @@ namespace DataWF.Data
         DBTableType Type { get; set; }
         IQuery FilterQuery { get; set; }
 
+        string ItemTypeName { get; }
+
         event EventHandler<DBLoadColumnsEventArgs> LoadColumns;
         event EventHandler<DBLoadCompleteEventArgs> LoadComplete;
         event EventHandler<DBLoadProgressEventArgs> LoadProgress;

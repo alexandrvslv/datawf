@@ -18,19 +18,55 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using System;
+using System.Collections.Generic;
 using System.Data;
 
 namespace DataWF.Data
 {
-    public class QBetween : QItem, IBetween
+    public class QBetween : QItem, IBetween, IQItemList
     {
         private QItem min;
         private QItem max;
+        public QBetween()
+        { }
 
         public QBetween(object val1 = null, object val2 = null, DBColumn column = null)
         {
-            min = QItem.Fabric(val1, column);
-            max = QItem.Fabric(val2, column);
+            Min = QItem.Fabric(val1, column);
+            Max = QItem.Fabric(val2, column);
+        }
+
+        public IQItem Owner => Container.Owner;
+
+        public QItem Min
+        {
+            get => min;
+            set
+            {
+                min = value;
+                if (min != null)
+                {
+                    if (min is QColumn)
+                        IsReference = true;
+                    min.Holder = this;
+                }
+            }
+        }
+
+        public QItem Max
+        {
+            get => max;
+            set
+            {
+                max = value;
+                if (max != null)
+                {
+                    if (max is QColumn)
+                        IsReference = true;
+                    max.Holder = this;
+                }
+            }
         }
 
         public override object GetValue(DBItem row)
@@ -59,26 +95,42 @@ namespace DataWF.Data
                 return string.Format("({0}, {1})", f1, f2);
         }
 
-        public object MaxValue()
-        {
-            return Max.GetValue((DBItem)null);
-        }
-
         public object MinValue()
         {
-            return Min.GetValue((DBItem)null);
+            return Min.GetValue<DBItem>();
         }
 
-        public QItem Min
+        public object MaxValue()
         {
-            get => min;
-            set => min = value;
+            return Max.GetValue<DBItem>();
         }
 
-        public QItem Max
+        public void Add(QItem value)
         {
-            get => max;
-            set => max = value;
+            if (min == null || MinValue() == null)
+                Min = value;
+            else if (max == null || MaxValue() == null)
+                Max = value;
+        }
+
+        public void Delete(QItem item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<IT> GetAllQItems<IT>() where IT : IQItem
+        {
+            if (min is IT minTyped)
+                yield return minTyped;
+            else if (min is IQItemList minList)
+                foreach (var minItem in minList.GetAllQItems<IT>())
+                    yield return minItem;
+            if (max is IT maxTyped)
+                yield return maxTyped;
+            else if (max is IQItemList maxList)
+                foreach (var maxItem in maxList.GetAllQItems<IT>())
+                    yield return maxItem;
+
         }
 
     }

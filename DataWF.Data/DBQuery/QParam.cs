@@ -79,13 +79,14 @@ namespace DataWF.Data
 
         protected QItemList<QItem> items;
         protected CompareType comparer = CompareType.Undefined;
-        protected LogicType logic = LogicType.And;
+        protected LogicType logic = LogicType.Undefined;
         private bool expand = true;
+        private bool? isCompaund = null;
 
         public QParam() : base()
         {
             items = new QItemList<QItem>(this, 2);
-            items.CollectionChanged += ParametersListChanged;
+            //items.CollectionChanged += ParametersListChanged;
         }
 
         public QParam(DBColumn column) : this()
@@ -116,6 +117,9 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore]
         public QColumn LeftQColumn => LeftItem as QColumn;
+
+        [XmlIgnore, JsonIgnore]
+        public bool IsNotExpression { get; set; }
 
         public void SetRightValue(object value)
         {
@@ -246,7 +250,15 @@ namespace DataWF.Data
         public string ValueLeftText => LeftQColumn?.FullName;
 
         [XmlIgnore, JsonIgnore]
-        public bool IsCompaund => items.Count > 0 && items[0] is QParam;
+        public bool IsCompaund
+        {
+            get => isCompaund ?? (items.Count > 0 && items[0] is QParam);
+            set => isCompaund = value;
+        }
+
+        [XmlIgnore, JsonIgnore]
+        public bool IsFilled => (RightItem != null && Comparer.Type != CompareTypes.Between)
+            || (RightItem is QBetween qBetween && qBetween.Max != null);
 
         public QItemList<QItem> Parameters
         {
@@ -413,7 +425,7 @@ namespace DataWF.Data
         {
             if (IsCompaund)
             {
-                return $"({string.Join(" ", items.Select(p => p.ToString()))})";
+                return $"{Logic} ({string.Join(" ", items.Select(p => p.ToString()))})";
             }
             return $"{Logic} {LeftItem} {Comparer} {RightItem}";
         }
@@ -480,27 +492,28 @@ namespace DataWF.Data
             {
                 RightItem = value;
             }
-            else if (RightItem is QBetween between)
+            else if (RightItem is IQItemList list)
             {
-                if (between.Min == null)
-                    between.Min = value;
-                else if (between.Max == null)
-                    between.Max = value;
+                list.Add(value);                
             }
         }
-
+        
         public void Delete(QItem item)
         {
             throw new NotImplementedException();
+        }
+
+        public IEnumerable<IT> GetAllQItems<IT>() where IT : IQItem
+        {
+            return items.GetAllQItems<IT>();
         }
 
         public IEnumerable<IGroup> GetGroups()
         {
             if (IsCompaund)
             {
-                foreach (IGroup item in items)
+                foreach (IGroup item in items.OfType<IGroup>())
                     yield return item;
-
             }
             yield break;
         }
@@ -508,6 +521,13 @@ namespace DataWF.Data
         public override object GetValue(DBItem row)
         {
             return row;
+        }
+
+        public QParam And(QParam qParam)
+        {
+            qParam.Logic = LogicType.And;
+            Parameters.Add(qParam);
+            return this;
         }
 
         public QParam And(Action<QParam> parameterGroup)
@@ -527,6 +547,13 @@ namespace DataWF.Data
         public QParam And(IInvoker invoker, CompareType compare, object param)
         {
             Parameters.Add(Query.CreateParam(LogicType.And, invoker, compare, param));
+            return this;
+        }
+
+        public QParam Or(QParam qParam)
+        {
+            qParam.Logic = LogicType.Or;
+            Parameters.Add(qParam);
             return this;
         }
 

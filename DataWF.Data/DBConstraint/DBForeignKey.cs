@@ -68,7 +68,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn Reference
         {
-            get => References.GetFirst()?.Column;
+            get => References.FirstOrDefault()?.Column;
             set
             {
                 if (References.Contains(value))
@@ -83,7 +83,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public string ReferenceName
         {
-            get => References.GetFirst()?.ColumnName;
+            get => References.FirstOrDefault()?.ColumnName;
             set
             {
                 if (References.Contains(value))

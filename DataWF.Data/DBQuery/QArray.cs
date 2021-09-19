@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 using System.Data;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -125,6 +126,11 @@ namespace DataWF.Data
         public void Delete(QItem item)
         {
             Items.Delete(item);
+        }
+
+        public IEnumerable<IT> GetAllQItems<IT>() where IT : IQItem
+        {
+            return Items.GetAllQItems<IT>();
         }
     }
 }

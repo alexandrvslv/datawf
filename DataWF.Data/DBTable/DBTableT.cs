@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -1344,7 +1345,7 @@ namespace DataWF.Data
         {
             if (param.LeftItem is QFunction func
                 && func.Type == QFunctionType.distinct
-                && func.Items.FirstOrDefault() is QItem item)
+                && Enumerable.FirstOrDefault(func.Items) is QItem item)
             {
                 return ListHelper.Distinct(list ?? items, item, param.Query?.GetComparer<T>());//
             }
@@ -1379,7 +1380,7 @@ namespace DataWF.Data
         {
             if (param.LeftItem is QFunction func
                && func.Type == QFunctionType.distinct
-               && func.Items.FirstOrDefault() is QItem item)
+               && Enumerable.FirstOrDefault(func.Items) is QItem item)
             {
                 return ListHelper.Distinct(list, item, param.Query?.GetComparer<T>());//
             }
@@ -1455,6 +1456,77 @@ namespace DataWF.Data
             item.Build(this, def, ItemTypeIndex);
             item.update = state;
             return item;
+        }
+
+        public override void SaveFile(string fileName)
+        {
+            if (Count == 0)
+                return;
+
+            if (File.Exists(fileName))
+                File.Delete(fileName);
+
+            string directory = Path.GetDirectoryName(fileName);
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+            File.Create(fileName).Close();
+
+            using (var file = File.Open(fileName, FileMode.Open, FileAccess.Write))
+            {
+                using (var writer = new BinaryWriter(file))
+                using (var invokerWriter = new BinaryInvokerWriter(writer))
+                {
+                    invokerWriter.WriteArrayBegin();
+                    invokerWriter.WriteArrayLength(Count);
+                    var itemSerializer = new DBItemSerializer<T>(this);
+                    var map = itemSerializer.WriteMap(invokerWriter, ItemType.Type);
+                    foreach (var item in this)
+                    {
+                        invokerWriter.WriteArrayEntry();
+                        itemSerializer.Write(invokerWriter, item, null, map);
+                    }
+                    invokerWriter.WriteArrayEnd();
+                }
+            }
+        }
+
+        public override void LoadFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName) || !File.Exists(fileName))
+                return;
+            using (var file = File.Open(fileName, FileMode.Open, FileAccess.Read))
+            {
+                using (var reader = new BinaryReader(file))
+                using (var invokerReader = new BinaryInvokerReader(reader))
+                {
+                    var itemSerializer = new DBItemSerializer<T>(this);
+                    invokerReader.ReadToken();
+                    if (invokerReader.CurrentToken == BinaryToken.ArrayBegin)
+                    {
+                        invokerReader.ReadToken();
+                    }
+                    if (invokerReader.CurrentToken == BinaryToken.ArrayLength)
+                    {
+                        var count = Int32Serializer.Instance.Read(invokerReader.Reader);
+                        invokerReader.ReadToken();
+                    }
+                    var type = ItemType.Type;
+                    var map = (Dictionary<ushort, IPropertySerializeInfo>)null;
+                    if (invokerReader.CurrentToken == BinaryToken.SchemaBegin)
+                    {
+                        map = itemSerializer.ReadMap(invokerReader, out type);
+                        invokerReader.ReadToken();
+                    }
+
+                    while (invokerReader.CurrentToken == BinaryToken.ArrayEntry)
+                    {
+                        var item = (T)NewItem(DBUpdateState.Default, false, type);
+                        itemSerializer.Read(invokerReader, item, null, map);
+                        Add(item);
+                        item.Accept((IUserIdentity)null);
+                    }
+                }
+            }
         }
     }
 

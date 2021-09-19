@@ -27,7 +27,12 @@ namespace DataWF.Data
 {
     public class DBBinarySerializer : BinarySerializer
     {
-        public new static readonly DBBinarySerializer Instance = new DBBinarySerializer();
+        public DBBinarySerializer(DBSchema schema)
+        {
+            Schema = schema;
+        }
+
+        public DBSchema Schema { get; }
 
         private Dictionary<Type, TypeSerializeInfo> cache = new Dictionary<Type, TypeSerializeInfo>();
 
@@ -37,7 +42,9 @@ namespace DataWF.Data
             {
                 if (!cache.TryGetValue(type, out var typeInfo))
                 {
-                    var serializer = (IElementSerializer)EmitInvoker.GetValue(typeof(DBItemSerializer<>).MakeGenericType(type), "Instance", null);
+                    var serializer = (IElementSerializer)EmitInvoker.CreateObject(typeof(DBItemSerializer<>).MakeGenericType(type),
+                        new Type[] { typeof(DBTable<>).MakeGenericType(type) },
+                        new object[] { Schema.GetTable(type) });
                     cache[type] = typeInfo = new TypeSerializeInfo(type, serializer, Enumerable.Empty<PropertyInfo>());
                 }
                 return typeInfo;

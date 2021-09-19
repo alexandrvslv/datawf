@@ -32,7 +32,7 @@ namespace DataWF.Test.Data
         public void BinarySerializePoistions()
         {
             var positions = ((IEnumerable<Position>)this.positions).ToList();
-            var serializer = DBBinarySerializer.Instance;
+            var serializer = new DBBinarySerializer(schema);
             var buffer = serializer.Serialize(positions);
 
             var newList = serializer.Deserialize<List<Position>>(buffer, null);
@@ -51,7 +51,7 @@ namespace DataWF.Test.Data
         public void BinarySerializeEmployers()
         {
             var employers = ((IEnumerable<Employer>)this.employers).ToList();
-            var serializer = DBBinarySerializer.Instance;
+            var serializer = new DBBinarySerializer(schema);
             var buffer = serializer.Serialize(employers);
 
             var newList = serializer.Deserialize<List<Employer>>(buffer, null);

@@ -100,8 +100,8 @@ namespace DataWF.Data
         public override object GetValue<T>()
         {
             var value = GetValue((DBItem)null);
-            var param = Holder as QParam ?? Container as QParam;
-            var comparer = param.Comparer;
+            var param = Holder as QParam ?? Container?.Owner as QParam;
+            var comparer = param?.Comparer ?? CompareType.Equal;
 
             if (value is string stringValue)
             {

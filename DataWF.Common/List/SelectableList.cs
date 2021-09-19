@@ -884,12 +884,12 @@ namespace DataWF.Common
             return items[++index];
         }
 
-        public T GetFirst()
+        public T FirstOrDefault()
         {
             return items.Count == 0 ? default(T) : items[0];
         }
 
-        public T GetLast()
+        public T LastOrDefault()
         {
             return items.Count == 0 ? default(T) : items[items.Count - 1];
         }
