@@ -16,8 +16,6 @@ namespace DataWF.Test.Data
     [TestFixture]
     public partial class TestORM
     {
-        public const string SchemaName = "test";
-        public const string EmployerTableName = "tb_employer";
         public const string TestColumnsTableName = "tb_test_column";
         public const string PositionTableName = "tb_position";
         public const string FigureTableName = "tb_figure";
@@ -26,11 +24,11 @@ namespace DataWF.Test.Data
         private TestProvider provider;
 
         [SetUp]
-        public void Setup()
+        public async Task Setup()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            provider = new TestProvider();
-            provider.Schema = schema = new TestSchema();
+            provider = new TestProvider { SchemaName = "test" };
+            schema = await provider.CreateNew<TestSchema>();
 
             if (provider.Connections.Count == 0)
                 Serialization.Deserialize("connections.xml", provider.Connections);
@@ -88,54 +86,9 @@ namespace DataWF.Test.Data
             await Generate(provider.Connections["TestMSSql"]);
         }
 
-
-
-        [Test]
-        public void SchemaSerialization()
-        {
-            provider.Schems.Clear();
-            provider.Schems.Add(schema);
-
-            var buffer = Serialization.Instance.Serialize(provider.Schems);
-            PrintBuffer(buffer);
-
-            provider.Schems.Clear();
-            Serialization.Instance.Deserialize(buffer, provider.Schems);
-
-            Assert.AreEqual(2, provider.Schems.Count);
-            Assert.AreEqual(6, schema.Tables.Count);
-
-            var table = schema.Tables[EmployerTableName];
-
-            Assert.IsNotNull(table);
-            Assert.IsInstanceOf<DBTable<Employer>>(table);
-
-            var column = table.Columns["id"];
-
-            Assert.IsNotNull(column);
-            Assert.AreEqual(typeof(int?), column.DataType);
-
-            void PrintBuffer(ArraySegment<byte> buffer)
-            {
-                var text = System.Text.Encoding.UTF8.GetString(buffer);
-                using (var reader = new StringReader(text))
-                {
-                    for (; ; )
-                    {
-                        var line = reader.ReadLine();
-                        if (line != null)
-                            Debug.WriteLine(line);
-                        else
-                            break;
-                    }
-                }
-            }
-        }
-
         public async Task Generate(DBConnection connection)
         {
             Assert.AreEqual(true, connection.CheckConnection(true), $"Connection Fail!");
-            schema.Generate(SchemaName);
 
             var employerTable = schema.Employer;
             var positionTable = schema.Position;
@@ -200,7 +153,7 @@ namespace DataWF.Test.Data
             schema.ExecuteDropDatabase();
             schema.ExecuteCreateDatabase();
 
-            var result = schema.GetTablesInfo(connection.Schema, EmployerTableName);
+            var result = schema.GetTablesInfo(connection.Schema, Employer.TableName);
             Assert.IsTrue(result.Count() == 1, "Generate Sql Table / Get Information Fail.");
             result = schema.GetTablesInfo(connection.Schema, PositionTableName);
             Assert.IsTrue(result.Count() == 1, "Generate Sql Table / Get Information Fail.");
@@ -315,7 +268,7 @@ namespace DataWF.Test.Data
             Assert.NotNull(employer.Id, "Id Generator Fail");
 
             await employer.Save();
-            var qresult = schema.Connection.ExecuteQResult($"select * from {EmployerTableName}");
+            var qresult = schema.Connection.ExecuteQResult($"select * from {Employer.TableName}");
             Assert.AreEqual(1, qresult.Values.Count, "Insert sql Fail");
             Assert.AreEqual(employer.Id, qresult.Get(0, "id"), "Insert sql Fail Int");
             Assert.AreEqual(employer.Identifier, qresult.Get(0, "identifier"), "Insert sql Fail String");
@@ -356,7 +309,7 @@ namespace DataWF.Test.Data
             employer.Position = position;
             await employer.Save();
 
-            qresult = schema.Connection.ExecuteQResult($"select * from {EmployerTableName}");
+            qresult = schema.Connection.ExecuteQResult($"select * from {Employer.TableName}");
             Assert.AreEqual(4, qresult.Get(0, "positionid"), "Update sql Fail");
 
             //Insert Geometry

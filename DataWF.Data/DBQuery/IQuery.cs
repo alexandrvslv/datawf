@@ -62,6 +62,7 @@ namespace DataWF.Data
         DBLoadParam LoadParam { get; set; }
         DBCacheState CacheState { get; set; }
         DBStatus StatusFilter { get; set; }
+        IQuery BaseQuery { get; set; }
         Type TypeFilter { get; set; }
         string WhereText { get; }
         string QueryText { get; }

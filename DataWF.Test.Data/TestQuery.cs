@@ -3,6 +3,7 @@ using DataWF.Data;
 using NUnit.Framework;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataWF.Test.Data
 {
@@ -15,10 +16,10 @@ namespace DataWF.Test.Data
         private PositionTable positions;
 
         [SetUp]
-        public void Setup()
+        public async Task Setup()
         {
             provider = new TestProvider();
-            provider.CreateNew();
+            await provider.CreateNew();
 
             schema = provider.Schema;
             employers = schema.Employer;

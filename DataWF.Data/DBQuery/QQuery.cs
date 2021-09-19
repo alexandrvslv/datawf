@@ -53,6 +53,7 @@ namespace DataWF.Data
         protected QItemList<QOrder> orders;
         protected QItemList<QColumn> groups;
         protected QItemList<QTable> tables;
+        private IQuery baseQuery;
         private DBStatus status = DBStatus.Empty;
         private IDBSchema schema;
         private Type type;
@@ -159,12 +160,12 @@ namespace DataWF.Data
 
         public IQuery BaseQuery
         {
-            get => Holder as IQuery;
+            get => baseQuery ?? Container?.Query;
             set
             {
-                if (Holder != value)
+                if (baseQuery != value)
                 {
-                    Holder = (QItem)value;
+                    baseQuery = value;
                     if (value != null)
                     {
                         order = value.Order + 1;
@@ -177,7 +178,7 @@ namespace DataWF.Data
         public IQItem Owner => Container?.Owner ?? this;
 
         [JsonIgnore]
-        public override IQuery Query => Container?.Query ?? this;
+        public override IQuery Query => BaseQuery ?? this;
 
         public Type TypeFilter
         {
@@ -400,8 +401,8 @@ namespace DataWF.Data
                     }
                 }
             }
-            var q = (IQuery)this;
-            while (q != q.Query)
+            var q = BaseQuery;
+            while (q != null)
             {
                 var column = q.ParseColumn(word, prefix, out qTable);
                 if (column != null)
@@ -409,7 +410,7 @@ namespace DataWF.Data
                     IsReference = true;
                     return column;
                 }
-                q = q.Query;
+                q = q.BaseQuery;
             }
             return null;
         }
@@ -417,11 +418,11 @@ namespace DataWF.Data
         protected int GetSubQueryLevel()
         {
             int i = 0;
-            var q = (IQuery)this;
-            while (q != q.Query)
+            var q = BaseQuery;
+            while (q != null)
             {
                 i++;
-                q = q.Query;
+                q = q.BaseQuery;
             }
             return i;
         }

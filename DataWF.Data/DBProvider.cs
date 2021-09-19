@@ -27,6 +27,20 @@ using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
+    public class DBProvider<T> : DBProvider where T : DBSchema, new()
+    {
+        public new T Schema
+        {
+            get => (T)base.Schema;
+            set => base.Schema = value;
+        }
+
+        public override async Task<DBSchema> CreateNew()
+        {
+            return await base.CreateNew<T>();
+        }
+    }
+
     public class DBProvider : IDBProvider
     {
         public static DBProvider Default;
@@ -65,27 +79,33 @@ namespace DataWF.Data
             }
         }
 
-        public virtual Task CreateNew()
+        public virtual Task<DBSchema> CreateNew()
         {
-            Schema = new DBSchema()
-            {
-                Name = schemaName,
-                Provider = this,
-                Connection = new DBConnection
-                {
-                    Name = schemaName,
-                    System = DBSystem.SQLite,
-                    DataBase = $"{schemaName}.sqlite"
-                }
-            };
+            return CreateNew<DBSchema>();
+        }
 
+        public Task<T> CreateNew<T>() where T : DBSchema, new()
+        {
+            var schema = new T()
+            {
+                Name = SchemaName,
+                Provider = this,
+                //Connection = new DBConnection
+                //{
+                //    Name = SchemaName,
+                //    System = DBSystem.SQLite,
+                //    DataBase = $"{SchemaName}.sqlite"
+                //}
+            };
+            Schema = schema;
             Generate();
 
-            //Schema.DropDatabase();
-
-            Schema.ExecuteCreateDatabase();
-            Save();
-            return null;
+            if (schema.Connection?.CheckConnection() ?? false)
+            {
+                Schema.ExecuteCreateDatabase();
+                Save();
+            }
+            return Task.FromResult(schema);
         }
 
         public virtual void Generate()
@@ -95,7 +115,7 @@ namespace DataWF.Data
 
         public virtual void Load()
         {
-            Helper.Log(this, "Start");
+            this.Log("Start");
             Load("data.xml");
 
             if (Schema == null || Schema.Connection == null)
@@ -109,7 +129,7 @@ namespace DataWF.Data
             Generate();
             CommitChanges();
 
-            Helper.Log(this, "Load & Generate Success");
+            this.Log("Load & Generate Success");
 
             foreach (var initializer in Helper.ModuleInitializer)
             {

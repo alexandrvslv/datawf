@@ -4,9 +4,11 @@ using System.ComponentModel;
 
 namespace DataWF.Test.Data
 {
-    [Table(TestORM.EmployerTableName, "Default")]
+    [Table(Employer.TableName, "Default")]
     public partial class Employer : DBItem
     {
+        public const string TableName = "tb_employer";
+
         private Position position;
 
         [Column("id", Keys = DBColumnKeys.Primary)]
@@ -51,7 +53,7 @@ namespace DataWF.Test.Data
             set => SetValue(value);
         }
 
-       [Column("salary", 23, 3)]
+        [Column("salary", 23, 3)]
         public decimal? Salary
         {
             get => GetValue<decimal?>();

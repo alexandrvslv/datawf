@@ -61,7 +61,7 @@ namespace DataWF.Test.Web.Service
             }.SaveOrUpdate((IUserIdentity)null);
         }
 
-        public override Task CreateNew()
+        public override Task<DBSchema> CreateNew()
         {
             Schema = new FlowSchema()
             {
@@ -79,7 +79,7 @@ namespace DataWF.Test.Web.Service
             Schema.ExecuteDropDatabase();
             Schema.ExecuteCreateDatabase();
             Save();
-            return Task.CompletedTask;
+            return Task.FromResult<DBSchema>(Schema);
         }
 
         public UserTable Users => Schema.User;
@@ -90,5 +90,5 @@ namespace DataWF.Test.Web.Service
         }
     }
 
-    
+
 }

@@ -38,12 +38,12 @@ namespace DataWF.Data
         {
             foreach (var generator in cacheTableGenerators.Values)
             {
-                generator.ClearCache();
+                generator?.ClearCache();
             }
             cacheTableGenerators.Clear();
             foreach (var generator in cacheItemTypeGenerator.Values)
             {
-                generator.ClearCache();
+                generator?.ClearCache();
             }
             cacheItemTypeGenerator.Clear();
         }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace DataWF.Common
@@ -195,7 +196,7 @@ namespace DataWF.Common
 
                 if (element == null || element.GetType() != info.Type)
                 {
-                    element = (T)info.Constructor?.Create();
+                    element = (T)(info.Constructor?.Create() ?? FormatterServices.GetUninitializedObject(info.Type));
                 }
                 if (token == BinaryToken.ObjectEntry)
                 {

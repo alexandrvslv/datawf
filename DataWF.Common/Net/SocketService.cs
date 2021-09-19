@@ -146,7 +146,7 @@ namespace DataWF.Common
             {
                 var message = $"{arg.Mode} R:{arg.ReaderState} W:{arg.WriterState}";
                 var description = $"Service: {Address} Connection: {arg.Connection.Address} Transferred: { Helper.SizeFormat(arg.Transfered)} ({arg.PartsCount})";
-                Helper.Log(this, description, message: message);
+                this.Log(description, message: message);
             }
         }
 
@@ -214,14 +214,14 @@ namespace DataWF.Common
         {
             Started?.Invoke(this, EventArgs.Empty);
 
-            Helper.Log(this, Address.ToString());
+            this.Log(Address.ToString());
         }
 
         protected virtual void OnStop()
         {
             Stopped?.Invoke(this, EventArgs.Empty);
 
-            Helper.Log(this, Address.ToString());
+            this.Log(Address.ToString());
         }
 
         public virtual void Dispose()
