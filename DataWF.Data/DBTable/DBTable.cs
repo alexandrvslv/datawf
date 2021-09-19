@@ -1357,37 +1357,7 @@ namespace DataWF.Data
             SaveFile(fileName);
         }
 
-        public void SaveFile(string fileName)
-        {
-            if (Count == 0)
-                return;
-
-            if (File.Exists(fileName))
-                File.Delete(fileName);
-
-            string directory = Path.GetDirectoryName(fileName);
-            if (!Directory.Exists(directory))
-                Directory.CreateDirectory(directory);
-            File.Create(fileName).Close();
-
-            using (var file = File.Open(fileName, FileMode.Open, FileAccess.Write))
-            {
-                using (var writer = new BinaryWriter(file))
-                using (var invokerWriter = new BinaryInvokerWriter(writer))
-                {
-                    invokerWriter.WriteArrayBegin();
-                    invokerWriter.WriteArrayLength(Count);
-                    var itemSerializer = new DBItemSerializer(this);
-                    var map = itemSerializer.WriteMap(invokerWriter, ItemType.Type);
-                    foreach (DBItem item in this)
-                    {
-                        invokerWriter.WriteArrayEntry();
-                        itemSerializer.Write(invokerWriter, item, null, map);
-                    }
-                    invokerWriter.WriteArrayEnd();
-                }
-            }
-        }
+        public abstract void SaveFile(string fileName);
 
         public void LoadFile()
         {
@@ -1395,44 +1365,7 @@ namespace DataWF.Data
             LoadFile(fileName);
         }
 
-        public void LoadFile(string fileName)
-        {
-            if (string.IsNullOrEmpty(fileName) || !File.Exists(fileName))
-                return;
-            using (var file = File.Open(fileName, FileMode.Open, FileAccess.Read))
-            {
-                using (var reader = new BinaryReader(file))
-                using (var invokerReader = new BinaryInvokerReader(reader))
-                {
-                    var itemSerializer = new DBItemSerializer(this);
-                    invokerReader.ReadToken();
-                    if (invokerReader.CurrentToken == BinaryToken.ArrayBegin)
-                    {
-                        invokerReader.ReadToken();
-                    }
-                    if (invokerReader.CurrentToken == BinaryToken.ArrayLength)
-                    {
-                        var count = Int32Serializer.Instance.Read(invokerReader.Reader);
-                        invokerReader.ReadToken();
-                    }
-                    var type = ItemType.Type;
-                    var map = (Dictionary<ushort, IPropertySerializeInfo>)null;
-                    if (invokerReader.CurrentToken == BinaryToken.SchemaBegin)
-                    {
-                        map = itemSerializer.ReadMap(invokerReader, out type);
-                        invokerReader.ReadToken();
-                    }
-
-                    while (invokerReader.CurrentToken == BinaryToken.ArrayEntry)
-                    {
-                        DBItem item = NewItem(DBUpdateState.Default, false, type);
-                        itemSerializer.Read(invokerReader, item, null, map);
-                        Add(item);
-                        item.Accept((IUserIdentity)null);
-                    }
-                }
-            }
-        }
+        public abstract void LoadFile(string fileName);
 
         public override object Clone()
         {

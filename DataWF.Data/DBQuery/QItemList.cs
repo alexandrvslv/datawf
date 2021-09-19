@@ -89,5 +89,22 @@ namespace DataWF.Data
                 c.Dispose();
             base.Dispose();
         }
+
+        public IEnumerable<IT> GetAllQItems<IT>() where IT : IQItem
+        {
+            foreach (var item in this)
+            {
+                if (item is IT typeItem)
+                    yield return typeItem;
+                else if (item is IQItemList list)
+                {
+                    foreach (var subItem in list.GetAllQItems<IT>())
+                    {
+                        yield return subItem;
+                    }
+                }
+
+            }
+        }
     }
 }

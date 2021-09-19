@@ -109,7 +109,7 @@ namespace DataWF.Common
                 var item = this[Locale.Instance.Culture];
                 if (item == null)
                 {
-                    item = new LocaleString(GetFirst()?.Value ?? Name, Locale.Instance.Culture);
+                    item = new LocaleString(FirstOrDefault()?.Value ?? Name, Locale.Instance.Culture);
                     Add(item);
                     Locale.IsChanged = true;
                 }

@@ -71,7 +71,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
-            get { return Columns.GetFirst()?.Column; }
+            get { return Columns.FirstOrDefault()?.Column; }
             set
             {
                 var exist = Columns.Get(value?.FullName);
@@ -94,7 +94,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public string ColumnName
         {
-            get { return Columns.GetFirst().ColumnName; }
+            get { return Columns.FirstOrDefault().ColumnName; }
             set
             {
                 if (Columns.Contains(value))

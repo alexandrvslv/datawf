@@ -27,7 +27,7 @@ namespace DataWF.Test.Data
         }
 
         [Test]
-        public void TestColumnIndex()
+        public void ColumnIndex()
         {
             var resultOne = employers.IdKey.SelectOne<Employer>(1);
             Assert.IsNotNull(resultOne, "Select by Index Equal Fail");
@@ -55,7 +55,7 @@ namespace DataWF.Test.Data
         }
 
         [Test]
-        public void TestColumnSelect()
+        public void ColumnSelect()
         {
             var result = positions.NameENKey.Select<Position>(CompareType.Equal, "First Position");
             Assert.AreEqual(1, result.Count(), "Select by Name.Equal Fail");
@@ -87,8 +87,68 @@ namespace DataWF.Test.Data
             result = positions.NameENKey.Select<Position>(CompareType.NotIn, new[] { "First Position", "Third Position" });
             Assert.AreEqual(3, result.Count(), "Select by Name.NotIn Fail");
         }
+
+        public void ParseQueryAutoJoin()
+        {
+            string queryText = $@"
+select *
+from Employer    
+where (Id != 1 or Id = 1)
+    and DateCreate is not null
+    and DateCreate between '2000-01-01' and '3000-01-01'
+    and Position.Code in ('2','3')";
+            var query = employers.Query(queryText);
+
+            Assert.AreEqual(2, query.Tables.Count);
+            var baseTable = query.Tables[0];
+            Assert.AreEqual(employers, baseTable.Table);
+            var joinTable = query.Tables[1];
+            Assert.AreEqual(positions, joinTable.Table);
+            //Assert.IsNot(JoinType., joinTable.Join);
+        }
+
+        public void ParseQueryNoPrefix()
+        {
+            string queryText = $@"
+select Id
+    , DateCreate
+    , (select NameEN
+        from Position
+        where Id = Employer.PositionId )    
+from Employer    
+where (emp.Id != 1 or emp.Id = 1)
+    and DateCreate is not null
+    and DateCreate between '2000-01-01' and '3000-01-01'
+    and PositionId in (select Id
+                           from Position
+                           where Code in ('2','3'))";
+            var query = employers.Query(queryText);
+
+            Assert.AreEqual(3, query.Columns.Count, "Parse select columns Fail");
+
+            Assert.IsAssignableFrom<QColumn>(query.Columns[0]);
+            var idColumn = (QColumn)query.Columns[0];
+            Assert.AreEqual(employers.IdKey, idColumn.Column);
+
+            Assert.IsAssignableFrom<QColumn>(query.Columns[1]);
+            var dateColumn = (QColumn)query.Columns[1];
+            Assert.AreEqual(employers.DateCreateKey, dateColumn.Column);
+
+            Assert.IsAssignableFrom<QQuery<DBItem>>(query.Columns[2]);
+            var posSubQuery = (QQuery<DBItem>)query.Columns[2];
+            Assert.AreEqual(positions.NameENKey, ((QColumn)posSubQuery.Columns[0]).Column);
+            Assert.AreEqual(positions, posSubQuery.Tables[0].Table);
+            Assert.AreEqual(positions.IdKey, posSubQuery.Parameters[0].LeftColumn);
+            Assert.AreEqual(employers.PositionIdKey, posSubQuery.Parameters[0].RightColumn);
+
+            Assert.AreEqual(1, query.Tables.Count);
+            var baseTable = query.Tables[0];
+            Assert.AreEqual(employers, baseTable.Table);
+
+        }
+
         [Test]
-        public void TestParseQuery()
+        public void ParseQuery()
         {
             string queryText = $@"
 select emp.Id as emplyer_id
@@ -99,15 +159,15 @@ select emp.Id as emplyer_id
     , concat(pos.NameEN, 'bla bla') as join_position_name
 from Employer emp
     join Position pos on pos.Id = emp.PositionId
-where (emp.Id != 1 or emp.Id = 1)
+where ((Id != 1 or Id = 1) and (Id <= 5 or Id >= 5))
     and emp.DateCreate is not null
-    and emp.DateCreate '2000-01-01' and '3000-01-01'
+    and emp.DateCreate between '2000-01-01' and '3000-01-01'
     and emp.PositionId in (select subPos2.Id
                            from Position subPos2 
                            where subPos2.Code in ('2','3'))";
             var query = employers.Query(queryText);
 
-            Assert.AreEqual(4, query.Columns.Count, "Parse select columns Fail");
+            Assert.AreEqual(4, query.Columns.Count);
 
             Assert.IsAssignableFrom<QColumn>(query.Columns[0]);
             var idColumn = (QColumn)query.Columns[0];
@@ -140,15 +200,94 @@ where (emp.Id != 1 or emp.Id = 1)
             var posArgString = (QValue)posFunction.Items[1];
             Assert.AreEqual("bla bla", posArgString.Value);
 
-
             Assert.AreEqual(2, query.Tables.Count);
             var baseTable = query.Tables[0];
             Assert.AreEqual(employers, baseTable.Table);
             Assert.AreEqual("emp", baseTable.TableAlias);
+
             var joinTable = query.Tables[1];
             Assert.AreEqual(positions, joinTable.Table);
             Assert.AreEqual("pos", joinTable.TableAlias);
             Assert.AreEqual(JoinType.Join, joinTable.Join);
+            Assert.IsAssignableFrom<QParam>(joinTable.On);
+
+            var onParam = joinTable.On;
+            Assert.IsAssignableFrom<QColumn>(onParam.LeftItem);
+            Assert.AreEqual("pos", onParam.LeftItem.TableAlias);
+            var onLeftColumn = onParam.LeftQColumn.Column;
+            Assert.AreEqual(positions.IdKey, onLeftColumn);
+
+            Assert.AreEqual(CompareType.Equal, onParam.Comparer);
+
+            Assert.IsAssignableFrom<QColumn>(onParam.RightItem);
+            Assert.AreEqual("emp", onParam.RightItem.TableAlias);
+            var onRightColumn = onParam.RightQColumn.Column;
+            Assert.AreEqual(employers.PositionIdKey, onRightColumn);
+
+            Assert.AreEqual(4, query.Parameters.Count);
+
+            var groupParam = query.Parameters[0];
+            Assert.AreEqual(true, groupParam.IsCompaund);
+            Assert.AreEqual(2, groupParam.Parameters.OfType<QParam>().Count());
+
+            var subGroup = (QParam)groupParam.Parameters[0];
+            Assert.AreEqual(true, subGroup.IsCompaund);
+            Assert.AreEqual(2, subGroup.Parameters.OfType<QParam>().Count());
+
+            var groupParam1 = (QParam)subGroup.Parameters[0];
+            Assert.AreEqual("emp", groupParam1.LeftItem.TableAlias);
+            Assert.AreEqual(employers.IdKey, groupParam1.LeftColumn);
+            Assert.AreEqual(CompareType.NotEqual, groupParam1.Comparer);
+            Assert.IsAssignableFrom<QValue>(groupParam1.RightItem);
+            Assert.AreEqual(1, groupParam1.RightItem.GetValue<Employer>());
+
+            var groupParam2 = (QParam)subGroup.Parameters[1];
+            Assert.AreEqual(LogicType.Or, groupParam2.Logic);
+            Assert.AreEqual("emp", groupParam2.LeftItem.TableAlias);
+            Assert.AreEqual(employers.IdKey, groupParam2.LeftColumn);
+            Assert.AreEqual(CompareType.Equal, groupParam2.Comparer);
+            Assert.IsAssignableFrom<QValue>(groupParam2.RightItem);
+            Assert.AreEqual(1, groupParam2.RightItem.GetValue<Employer>());
+
+            var param2 = query.Parameters[1];
+            Assert.AreEqual(false, param2.IsCompaund);
+            Assert.AreEqual(LogicType.And, param2.Logic);
+            Assert.AreEqual("emp", param2.LeftItem.TableAlias);
+            Assert.AreEqual(employers.DateCreateKey, param2.LeftColumn);
+            Assert.AreEqual(CompareType.IsNot, param2.Comparer);
+
+            var param3 = query.Parameters[2];
+            Assert.AreEqual(false, param3.IsCompaund);
+            Assert.AreEqual(LogicType.And, param3.Logic);
+            Assert.AreEqual("emp", param3.LeftItem.TableAlias);
+            Assert.AreEqual(employers.DateCreateKey, param3.LeftColumn);
+            Assert.AreEqual(CompareType.Between, param3.Comparer);
+            Assert.IsAssignableFrom<QBetween>(param3.RightItem);
+            var between = (QBetween)param3.RightItem;
+            Assert.AreEqual(new DateTime(2000, 01, 01), between.MinValue());
+            Assert.AreEqual(new DateTime(3000, 01, 01), between.MaxValue());
+
+            var param4 = query.Parameters[3];
+            Assert.AreEqual(false, param4.IsCompaund);
+            Assert.AreEqual(LogicType.And, param4.Logic);
+            Assert.AreEqual("emp", param4.LeftItem.TableAlias);
+            Assert.AreEqual(employers.PositionIdKey, param4.LeftColumn);
+            Assert.AreEqual(CompareType.In, param4.Comparer);
+            Assert.IsAssignableFrom<QQuery<DBItem>>(param4.RightItem);
+
+            var paramQuery = (QQuery<DBItem>)param4.RightItem;
+            Assert.AreEqual(positions.IdKey, ((QColumn)paramQuery.Columns[0]).Column);
+            Assert.AreEqual("subPos2", paramQuery.Columns[0].TableAlias);
+            Assert.AreEqual(positions, paramQuery.Tables[0].Table);
+            Assert.AreEqual("subPos2", paramQuery.Tables[0].TableAlias);
+            Assert.AreEqual(positions.CodeKey, paramQuery.Parameters[0].LeftColumn);
+            Assert.AreEqual(CompareType.In, paramQuery.Parameters[0].Comparer);
+            Assert.AreEqual("subPos2", paramQuery.Parameters[0].LeftItem.TableAlias);
+            Assert.IsAssignableFrom<QArray>(paramQuery.Parameters[0].RightItem);
+            Assert.AreEqual(2, ((QArray)paramQuery.Parameters[0].RightItem).Items.OfType<QValue>().Count());
+            Assert.AreEqual("2", ((QArray)paramQuery.Parameters[0].RightItem).Items[0].GetValue<Position>());
+            Assert.AreEqual("3", ((QArray)paramQuery.Parameters[0].RightItem).Items[1].GetValue<Position>());
+
         }
 
         [Test]

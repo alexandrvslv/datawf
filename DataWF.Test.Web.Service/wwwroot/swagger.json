@@ -5,6 +5,328 @@
     "version": "v1"
   },
   "paths": {
+    "/api/Access/Get/{name}": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessValue"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/GetProperty/{name}/{property}": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "GetProperty",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "property",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessValue"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/GetOwnerName/{name}/{id}": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "GetOwnerName",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/GetItems/{name}/{id}": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/SetItems/{name}/{id}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Set",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AccessItem"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/SetItems/{name}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Set",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessUpdatePackage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/ClearAccess/{name}/{id}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Clear",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Access/ClearAccess/{name}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "Clear",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Address": {
       "get": {
         "tags": [
@@ -8786,6 +9108,32 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/Diagnostics/collect": {
+      "get": {
+        "tags": [
+          "Diagnostics"
+        ],
+        "operationId": "GetCollect",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Diagnostics/diagnostics": {
+      "get": {
+        "tags": [
+          "Diagnostics"
+        ],
+        "operationId": "GetDiagnostics",
+        "responses": {
+          "200": {
+            "description": "Success"
           }
         }
       }
@@ -20528,6 +20876,56 @@
                 "schema": {
                   "type": "string",
                   "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Procedures": {
+      "get": {
+        "tags": [
+          "Procedures"
+        ],
+        "operationId": "Get",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DBProcedure"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Procedures"
+        ],
+        "operationId": "Put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DBProcedure"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DBProcedure"
                 }
               }
             }
@@ -34748,6 +35146,65 @@
         }
       }
     },
+    "/api/WebNotify": {
+      "get": {
+        "tags": [
+          "WebNotify"
+        ],
+        "operationId": "Get",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/WebNotify/Connections": {
+      "get": {
+        "tags": [
+          "WebNotify"
+        ],
+        "operationId": "GetConnections",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WebNotifyConnection"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/WebNotify/Logs": {
+      "get": {
+        "tags": [
+          "WebNotify"
+        ],
+        "operationId": "GetLogs",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StateInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Work/GetTemplates/{id}": {
       "get": {
         "tags": [
@@ -35745,6 +36202,23 @@
           "Full"
         ],
         "x-flags": 0
+      },
+      "AccessUpdatePackage": {
+        "type": "object",
+        "properties": {
+          "Ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccessItem"
+            }
+          }
+        }
       },
       "AccessValue": {
         "type": "object",
@@ -41240,6 +41714,110 @@
           "Execute",
           "Transaction",
           "Reject"
+        ]
+      },
+      "WebNotifyConnection": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DefaultItem"
+          }
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Date": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "UserEmail": {
+            "type": "string",
+            "readOnly": true
+          },
+          "State": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebSocketState"
+              }
+            ],
+            "readOnly": true
+          },
+          "Address": {
+            "type": "string"
+          },
+          "Action": {
+            "type": "string"
+          },
+          "Platform": {
+            "type": "string"
+          },
+          "Application": {
+            "type": "string"
+          },
+          "Version": {
+            "type": "string"
+          },
+          "ReceiveCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ReceiveLength": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "SendCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SendLength": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "SendErrors": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SendError": {
+            "type": "string"
+          },
+          "SendingCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "WebSocketState": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer",
+        "format": "int32",
+        "x-enumNames": [
+          "None",
+          "Connecting",
+          "Open",
+          "CloseSent",
+          "CloseReceived",
+          "Closed",
+          "Aborted"
+        ],
+        "x-enumMembers": [
+          "None",
+          "Connecting",
+          "Open",
+          "CloseSent",
+          "CloseReceived",
+          "Closed",
+          "Aborted"
         ]
       },
       "Work": {

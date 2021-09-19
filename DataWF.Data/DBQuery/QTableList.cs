@@ -17,17 +17,23 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using System.Collections.Generic;
 
 namespace DataWF.Data
 {
-    public interface IQItemList
+    public class QTableList : QItemList<QTable>
     {
-        IQuery Query { get; }
-        IQItem Owner { get; }
-        void Add(QItem item);
-        void Delete(QItem item);
+        public QTableList()
+        { }
 
-        IEnumerable<T> GetAllQItems<T>() where T : IQItem;
+        public QTableList(IQItem owner) : base(owner)
+        {
+        }
+
+        public override void InsertInternal(int index, QTable item)
+        {
+            base.InsertInternal(index, item);
+            if (string.IsNullOrEmpty(item.TableAlias))
+                item.TableAlias = Query?.GenerateTableAlias(item.Table);
+        }
     }
 }
