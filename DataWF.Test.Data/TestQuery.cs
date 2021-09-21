@@ -2,6 +2,7 @@
 using DataWF.Data;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -88,15 +89,13 @@ namespace DataWF.Test.Data
             Assert.AreEqual(3, result.Count(), "Select by Name.NotIn Fail");
         }
 
+        [Test]
         public void ParseQueryAutoJoin()
         {
             string queryText = $@"
 select *
 from Employer    
-where (Id != 1 or Id = 1)
-    and DateCreate is not null
-    and DateCreate between '2000-01-01' and '3000-01-01'
-    and Position.Code in ('2','3')";
+where Position.Code in ('2','3')";
             var query = employers.Query(queryText);
 
             Assert.AreEqual(2, query.Tables.Count);
@@ -104,9 +103,14 @@ where (Id != 1 or Id = 1)
             Assert.AreEqual(employers, baseTable.Table);
             var joinTable = query.Tables[1];
             Assert.AreEqual(positions, joinTable.Table);
-            //Assert.IsNot(JoinType., joinTable.Join);
+            Assert.AreEqual(JoinType.Left, joinTable.Join);
+
+            Assert.AreEqual(1, query.Parameters.Count);
+
+            Assert.AreEqual(positions.CodeKey, query.Parameters[0].LeftColumn);
         }
 
+        [Test]
         public void ParseQueryNoPrefix()
         {
             string queryText = $@"
@@ -294,23 +298,51 @@ where ((Id != 1 or Id = 1) and (Id <= 5 or Id >= 5))
         public void TestBuildQuery()
         {
             var query = employers.Query();
-
+            var posCodes = new[] { "2", "3" };
             query.Column(employers.IdKey)
                 .Column(employers.DateCreateKey)
                 .Column(positions.Query(query)
                                 .Column(positions.NameENKey)
                                 .Where(positions.IdKey, CompareType.Equal, employers.PositionIdKey))
                 .Join(employers.PositionIdKey)
-                .Column(QFunctionType.concat, positions.NameENKey, "bla bla")
-                .Where(pGoup => pGoup.And(employers.IdKey, CompareType.NotEqual, 1)
-                                    .Or(employers.IdKey, CompareType.Equal, 1))
+                .Column(QFunctionType.trim, positions.NameENKey)
+                .Where(pTopGoup => pTopGoup.And(pGoup => pGoup.And(employers.IdKey, CompareType.NotEqual, 1)
+                                                                .Or(employers.IdKey, CompareType.Equal, 1))
+                                           .And(pGoup => pGoup.And(employers.IdKey, CompareType.LessOrEqual, 5)
+                                                                .Or(employers.IdKey, CompareType.GreaterOrEqual, 5)))
                 .And(employers.DateCreateKey, CompareType.IsNot, null)
                 .And(employers.DateCreateKey, CompareType.Between, new DateInterval(new DateTime(2000, 01, 01), new DateTime(3000, 01, 01)))
                 .And(employers.PositionIdKey, CompareType.In, positions.Query(query)
                                                                     .Column(positions.IdKey)
-                                                                    .Where(positions.CodeKey, CompareType.In, new[] { "2", "3" }));
+                                                                    .Where(positions.CodeKey, CompareType.In, posCodes));
 
             Console.WriteLine(query.FormatAll());
+
+
+            var posSubQuery = ((IEnumerable<Position>)positions).Where(p => posCodes.Contains(p.Code)).Select(p => p.Id);
+            var linqQuery = from emp in ((IEnumerable<Employer>)employers)
+                            join pos in ((IEnumerable<Position>)positions) on emp.PositionId equals pos.Id
+                            where ((emp.Id != 1 || emp.Id == 1) && (emp.Id <= 5 || emp.Id >= 5))
+                                && emp.DateCreate != default(DateTime)
+                                && (emp.DateCreate >= new DateTime(2000, 01, 01) && emp.DateCreate <= new DateTime(3000, 01, 01)
+                                && posSubQuery.Contains(emp.PositionId))
+                            select new
+                            {
+                                ID = emp.Id,
+                                DateCerate = emp.DateCreate,
+                                SubPosName = ((IEnumerable<Position>)positions).FirstOrDefault(p => p.Id == emp.Id)?.Name,
+                                PosName = pos.Name.Trim()
+                            };
+
+
+            var command = query.ToCommand();
+            var list = schema.Connection.ExecuteQResult(command);
+
+            var linqCount = linqQuery.Count();
+            var queryExecuteCount = list.Values.Count;
+            var qqueryCount = query.Select().Count();
+            Assert.AreEqual(linqCount, queryExecuteCount);
+            Assert.AreEqual(linqQuery.Count(), qqueryCount);
 
         }
     }

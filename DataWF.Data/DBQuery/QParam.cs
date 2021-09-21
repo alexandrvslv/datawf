@@ -533,8 +533,8 @@ namespace DataWF.Data
         public QParam And(Action<QParam> parameterGroup)
         {
             var qParam = new QParam() { Logic = LogicType.And };
-            parameterGroup(qParam);
             Parameters.Add(qParam);
+            parameterGroup(qParam);
             return this;
         }
 
@@ -560,8 +560,8 @@ namespace DataWF.Data
         public QParam Or(Action<QParam> parameterGroup)
         {
             var qParam = new QParam() { Logic = LogicType.Or };
-            parameterGroup(qParam);
             Parameters.Add(qParam);
+            parameterGroup(qParam);
             return this;
         }
 

@@ -58,7 +58,7 @@ namespace DataWF.Data
         QParamList Parameters { get; }
         QItemList<QItem> Columns { get; }
         QItemList<QOrder> Orders { get; }
-        QItemList<QTable> Tables { get; }
+        QTableList Tables { get; }
         DBLoadParam LoadParam { get; set; }
         DBCacheState CacheState { get; set; }
         DBStatus StatusFilter { get; set; }

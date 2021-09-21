@@ -183,12 +183,8 @@ namespace DataWF.Data
 
         public virtual object GetValue<T>()
         {
-            var value = GetValue((DBItem)null);
-            if (value == null || value is DBColumn)
-                return value;
-            if (value is QItem qItem)
-                value = qItem.GetValue<T>();
-            return value;
+            return GetValue((DBItem)null);
+            
         }
 
         public object GetValue(object target)
