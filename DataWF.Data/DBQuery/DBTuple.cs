@@ -24,25 +24,42 @@ using System.Linq;
 
 namespace DataWF.Data
 {
-    public class DBTuple<T> : DBTuple where T : DBItem
+    public struct DBTuple<T> where T : DBItem
     {
-        public new T LeftItem { get => (T)base.LeftItem; set => base.LeftItem = value; }
-    }
-    
-    public struct DBValueTuple
-    {
-        public DBItem LeftItem;
-        public DBTuple RightItem;
+        public T LeftItem;
+        public DBTuple? RightItem;
     }
 
-    public class DBTuple
+    public struct DBTuple
     {
-        public DBTuple()
-        { }
+        public DBTuple(DBItem leftItem)
+        {
+            Item0 = leftItem;
+            Item1 = null;
+            Item2 = null;
+            Item3 = null;
+            Item4 = null;
+            Item5 = null;
+            Item6 = null;
+            Item7 = null;
+            Count = 1;
+        }
 
-        public DBItem LeftItem { get; set; }
+        public DBItem Item0;
+        public DBItem Item1;
+        public DBItem Item2;
+        public DBItem Item3;
+        public DBItem Item4;
+        public DBItem Item5;
+        public DBItem Item6;
+        public DBItem Item7;
+        public int Count;
 
-        public DBTuple RightItem;
+        public DBItem this[int order]
+        {
+            get => Get(order);
+            set => Set(order, value);
+        }
 
         public DBItem Get(QTable qTable) => Get(qTable.Order) ?? Get(qTable.Table);
 
@@ -50,64 +67,59 @@ namespace DataWF.Data
 
         public DBItem Get(IDBTable table)
         {
-            var tuple = this;
-            while (tuple != null)
-            {
-                if (tuple.LeftItem.Table == table)
-                    return tuple.LeftItem;
-                tuple = tuple.RightItem;
-            }
+            if (Item0?.Table == table) return Item0;
+            if (Item1?.Table == table) return Item1;
+            if (Item2?.Table == table) return Item2;
+            if (Item3?.Table == table) return Item3;
+            if (Item4?.Table == table) return Item4;
+            if (Item5?.Table == table) return Item5;
+            if (Item6?.Table == table) return Item6;
+            if (Item7?.Table == table) return Item7;
             return null;
-        }
-        public DBItem this[int order]
-        {
-            get => Get(order);
-            set => Set(order, value);
         }
 
         private void Set(int order, DBItem value)
         {
             if (order < 0)
                 throw new ArgumentOutOfRangeException(nameof(order));
-            var tuple = this;
-            int index = 0;
-            while (true)
+            switch (order)
             {
-                if (index == order)
-                {
-                    tuple.LeftItem = value;
-                    return;
-                }
-                tuple = tuple.RightItem ??= new DBTuple();
-                index++;
+                case 0: Item0 = value; break;
+                case 1: Item1 = value; break;
+                case 2: Item2 = value; break;
+                case 3: Item3 = value; break;
+                case 4: Item4 = value; break;
+                case 5: Item5 = value; break;
+                case 6: Item6 = value; break;
+                case 7: Item7 = value; break;
+                default: throw new IndexOutOfRangeException();
             }
+            Count = Math.Max(Count, order + 1);
         }
 
         private DBItem Get(int order)
         {
-            var tuple = this;
-            int index = 0;
-            while (tuple != null)
+            if (order < 0)
+                throw new ArgumentOutOfRangeException(nameof(order));
+            switch (order)
             {
-                if (index == order)
-                    return tuple.LeftItem;
-                tuple = tuple.RightItem;
-                index++;
+                case 0: return Item0;
+                case 1: return Item1;
+                case 2: return Item2;
+                case 3: return Item3;
+                case 4: return Item4;
+                case 5: return Item5;
+                case 6: return Item6;
+                case 7: return Item7;
+                default: throw new IndexOutOfRangeException();
             }
-            return null;
         }
 
         public DBTuple Clone()
         {
             var newTuple = new DBTuple();
-            var tuple = this;
-            int index = 0;
-            while (tuple != null)
-            {
-                newTuple.Set(index, tuple.LeftItem);
-                tuple = tuple.RightItem;
-                index++;
-            }
+            for (int i = 0; i < Count; i++)
+                newTuple.Set(i, Get(i));
             return newTuple;
         }
     }

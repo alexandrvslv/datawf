@@ -53,7 +53,7 @@ namespace DataWF.Data
         protected QItemList<QItem> columns;
         protected QItemList<QOrder> orders;
         protected QItemList<QColumn> groups;
-        protected QItemList<QTable> tables;
+        protected QTableList tables;
         private IQuery baseQuery;
         private DBStatus status = DBStatus.Empty;
         private IDBSchema schema;
@@ -149,7 +149,7 @@ namespace DataWF.Data
             }
         }
 
-        public QItemList<QTable> Tables => tables ??= new QItemList<QTable>(this);
+        public QTableList Tables => tables ??= new QTableList(this);
 
         public QItemList<QItem> Columns => columns ??= new QItemList<QItem>(this);
 
@@ -269,7 +269,7 @@ namespace DataWF.Data
 
         public string WhereText
         {
-            get => whereText ??= FormatWhere(null);
+            get => whereText ??= FormatWhere(null).ToString();
             set => whereText = value;
         }
 
@@ -912,8 +912,8 @@ namespace DataWF.Data
                     else
                     {
                         i = tempIndex;
-                        if (parameter != null 
-                            && parameter.LeftItem == null 
+                        if (parameter != null
+                            && parameter.LeftItem == null
                             && parameter.Logic != LogicType.Undefined)
                         {
                             parameter.IsCompaund = true;
@@ -1820,10 +1820,61 @@ namespace DataWF.Data
 
         public string FormatAll(IDbCommand command = null, bool defColumns = false)
         {
-            var cols = FormatSelect(command, defColumns);
-            var order = new StringBuilder();
+            var subQueryLevel = GetSubQueryLevel();
+            var subSpace = subQueryLevel == 0 ? string.Empty : new string(' ', subQueryLevel * 8);
+
+            var cols = FormatSelect(command, defColumns, subSpace);
+            var partOrder = FormatOrders(command, subSpace);
+            var partFrom = FormatFrom(command, subSpace);
+            var partWhere = FormatWhere(command, subSpace);            
+
+            var resultBuilder = new StringBuilder();
+            resultBuilder.Append(StrSelect);
+            resultBuilder.Append(' ');
+            resultBuilder.Append(cols);
+            resultBuilder.Append('\n');
+            resultBuilder.Append(subSpace);
+            resultBuilder.Append(StrFrom);
+            resultBuilder.Append(partFrom);
+            if (partWhere.Length > 0)
+            {
+                resultBuilder.Append('\n');
+                resultBuilder.Append(subSpace);
+                resultBuilder.Append(StrWhere);
+                resultBuilder.Append(' ');
+                resultBuilder.Append(partWhere);
+            }
+            if (partOrder.Length > 0)
+            {
+                resultBuilder.Append('\n');
+                resultBuilder.Append(subSpace);
+                resultBuilder.Append(StrOrder);
+                resultBuilder.Append(' ');
+                resultBuilder.Append(StrBy);
+                resultBuilder.Append(' ');
+                resultBuilder.Append(partOrder);
+            }
+            return resultBuilder.ToString();
+        }
+
+        private StringBuilder FormatFrom(IDbCommand command, string subSpace)
+        {
             var from = new StringBuilder();
-            var whr = FormatWhere(command);
+            foreach (QTable table in Tables)
+            {                
+                from.Append(table.Format(command));
+                if (!Tables.IsLast(table))
+                {
+                    from.Append("\n    ");
+                    from.Append(subSpace);
+                }
+            }
+            return from;
+        }
+
+        private StringBuilder FormatOrders(IDbCommand command, string subSpace)
+        {
+            var order = new StringBuilder();
             if (orders != null)
             {
                 foreach (QOrder col in Orders)
@@ -1833,26 +1884,18 @@ namespace DataWF.Data
                     {
                         order.Append(formatOrder);
                         if (!orders.IsLast(col))
+                        {
                             order.Append("\n    ,");
+                            order.Append(subSpace);
+                        }
                     }
                 }
             }
-            foreach (QTable table in Tables)
-            {
-                from.Append(table.Format(command));
-                if (!Tables.IsLast(table))
-                    from.Append("\n    ");
-            }
-            return $@"select {cols.ToString()}
-from {from} 
-{(whr.Length > 0 ? "where " : string.Empty)}{whr}
-{(order.Length > 0 ? "order by " : string.Empty)}{order}";
+            return order;
         }
 
-        private StringBuilder FormatSelect(IDbCommand command, bool defColumns)
+        private StringBuilder FormatSelect(IDbCommand command, bool defColumns, string subSpace)
         {
-            var subQueryLevel = GetSubQueryLevel();
-            var subSpace = subQueryLevel == 0 ? string.Empty : new string(' ', subQueryLevel * 8);
             var cols = new StringBuilder();
             if (defColumns)
             {
@@ -1868,7 +1911,7 @@ from {from}
                     {
                         if (cols.Length > 0)
                         {
-                            cols.AppendLine();
+                            cols.Append('\n');
                             cols.Append(subSpace);
                             cols.Append("    ,");
                         }
@@ -1885,7 +1928,7 @@ from {from}
                     {
                         if (cols.Length > 0)
                         {
-                            cols.AppendLine();
+                            cols.Append('\n');
                             cols.Append(subSpace);
                             cols.Append("    ,");
                         }
@@ -1906,10 +1949,8 @@ from {from}
             return cols;
         }
 
-        public string FormatWhere(IDbCommand command = null)
+        public StringBuilder FormatWhere(IDbCommand command = null, string subSpace = null)
         {
-            var subQueryLevel = GetSubQueryLevel();
-            var subSpace = subQueryLevel == 0 ? string.Empty : new string(' ', subQueryLevel * 8);
             var wbuf = new StringBuilder();
             for (int i = 0; i < Parameters.Count; i++)
             {
@@ -1919,8 +1960,8 @@ from {from}
                 {
                     if (wbuf.Length > 0 || i > 0)
                     {
-                        wbuf.AppendLine();
-                        wbuf.Append(subSpace);
+                        wbuf.Append('\n');
+                        wbuf.Append(subSpace ?? string.Empty);
                         wbuf.Append("    ");
                         wbuf.Append(param.Logic.Format());
                         wbuf.Append(' ');
@@ -1950,7 +1991,7 @@ from {from}
                 if (wbuf.Length > 0)
                 {
                     buf.Append(")");
-                    buf.AppendLine();
+                    buf.Append('\n');
                     buf.Append(subSpace);
                     buf.Append("    and(");
                 }
@@ -1958,7 +1999,7 @@ from {from}
             buf.Append(wbuf);
             if (Table.IsVirtual && command != null && wbuf.Length > 0)
                 buf.Append(")");
-            return buf.ToString();
+            return buf;
         }
 
         public IDbCommand ToCommand(bool defcolumns = false)

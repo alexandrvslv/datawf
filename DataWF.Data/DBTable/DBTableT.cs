@@ -1121,20 +1121,20 @@ namespace DataWF.Data
             return item;
         }
 
-        private IEnumerable<DBTuple> AsTuple(IEnumerable<T> items)
+        private IEnumerable<DBTuple> AsTuple(IEnumerable<T> items = null)
         {
-            if (items == this || items == this.items)
+            if (items == null || items == this || items == this.items)
             {
                 for (int i = 0; i < this.items.Count; i++)
                 {
-                    yield return new DBTuple { LeftItem = this.items[i] };
+                    yield return new DBTuple { Item0 = this.items[i] };
                 }
             }
             else
             {
                 foreach (var item in items)
                 {
-                    yield return new DBTuple { LeftItem = item };
+                    yield return new DBTuple { Item0 = item };
                 }
             }
         }
@@ -1278,7 +1278,7 @@ namespace DataWF.Data
                 buf = Select(query.Parameters, joinSource);
             }
 
-            return buf.Select(p => p.LeftItem as T).Distinct();
+            return buf.Select(p => p.Item0 as T).Distinct();
         }
 
         private IEnumerable<T> Select(IEnumerable<QParam> parameters, IEnumerable<T> list = null)
@@ -1411,7 +1411,7 @@ namespace DataWF.Data
             return param.Search<T>(list);
         }
 
-        public QQuery<T> Query(IQuery query) => new QQuery<T>(this) { BaseQuery = query };
+        public QQuery<T> Query(IQuery query) => new QQuery<T>(query, string.Empty) { Table = this };
 
         public QQuery<T> Query(DBLoadParam loadParam = DBLoadParam.Load) => new QQuery<T>(this) { LoadParam = loadParam };
 
