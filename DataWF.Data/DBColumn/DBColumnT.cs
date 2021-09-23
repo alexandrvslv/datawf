@@ -22,6 +22,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -486,16 +487,23 @@ namespace DataWF.Data
             Pull?.Clear();
         }
 
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? default(T) : transaction.Reader.GetFieldValue<T>(i);
+            var value = reader.IsDBNull(i) ? default(T) : reader.GetFieldValue<T>(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
         {
-            var value = transaction.Reader.GetFieldValue<T>(i);
-            return ((IPullOutIndex<F, T>)pullIndex).SelectOne(value);
+            var value = reader.GetFieldValue<T>(i);
+            return pullIndex.SelectOne(value) ?? CreateLoadItem(typeIndex, value);
+        }
+
+        protected DBItem CreateLoadItem(int typeIndex, T value)
+        {
+            var item = Table.NewItem(DBUpdateState.Default, false, typeIndex);
+            SetValue(item, value, DBSetValueMode.Loading);
+            return item;
         }
 
         public override void Write(BinaryInvokerWriter writer, object element)

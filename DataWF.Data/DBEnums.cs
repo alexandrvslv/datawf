@@ -69,7 +69,6 @@ namespace DataWF.Data
     {
         None = 0,
         Load = 2,
-        Synchronize = 4,
         GetCount = 8,
         CheckDeleted = 16,
         Reference = 32,

@@ -18,18 +18,24 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
-using DataWF.Data;
 using System;
+using System.Data.Common;
 using System.Globalization;
 
 namespace DataWF.Data
 {
     public class DBColumnTimeSpan : DBColumn<TimeSpan>
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? default(TimeSpan) : transaction.GetTimeSpan(i);
+            var value = reader.IsDBNull(i) ? default(TimeSpan) : DBSystem.GetTimeSpan(reader, i);
             SetValue(row, value, DBSetValueMode.Loading);
+        }
+
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
+        {
+            var value = DBSystem.GetTimeSpan(reader, i);
+            return pullIndex.SelectOne(value);
         }
 
         public override string FormatQuery(TimeSpan value)
@@ -40,12 +46,6 @@ namespace DataWF.Data
         public override string FormatDisplay(TimeSpan value)
         {
             return value.ToString(Format, CultureInfo.InvariantCulture);
-        }
-
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
-        {
-            var value = transaction.GetTimeSpan(i);
-            return ((IPullOutIndex<F, TimeSpan>)pullIndex).SelectOne(value);
         }
 
         public override TimeSpan Parse(object value)

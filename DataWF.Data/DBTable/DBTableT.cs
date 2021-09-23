@@ -32,6 +32,7 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using System.Linq.Expressions;
 
 namespace DataWF.Data
 {
@@ -60,10 +61,10 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public override bool IsSynchronized
+        public override bool IsSynch
         {
-            get => base.IsSynchronized || (IsVirtual && (ParentTable?.IsSynchronized ?? false));
-            set => base.IsSynchronized = value;
+            get => base.IsSynch || (IsVirtual && (ParentTable?.IsSynch ?? false));
+            set => base.IsSynch = value;
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
@@ -87,6 +88,9 @@ namespace DataWF.Data
         {
             get => GetChanged().Any();
         }
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public override object SyncRoot => items;
 
         public override DBItem this[int index]
         {
@@ -340,6 +344,11 @@ namespace DataWF.Data
             items.CopyTo((T[])array, arrayIndex);
         }
 
+        public override void CopyTo(Array array, int arrayIndex)
+        {
+            items.CopyTo((T[])array, arrayIndex);
+        }
+
         public override void Clear()
         {
             if (IsVirtual)
@@ -364,7 +373,7 @@ namespace DataWF.Data
                 }
                 GC.Collect();
             }
-            IsSynchronized = false;
+            IsSynch = false;
         }
 
         //public IEnumerable<T> SelectParents() where T : DBGroupItem
@@ -573,7 +582,7 @@ namespace DataWF.Data
 
             CheckCacheState(query);
 
-            if (!IsSynchronized
+            if (!IsSynch
                 && query.CacheState == DBCacheState.None)
             {
                 query.CacheState = DBCacheState.Actualazing;
@@ -590,7 +599,7 @@ namespace DataWF.Data
                 }
                 if (query.Parameters.Count == 0)
                 {
-                    IsSynchronized = true;
+                    IsSynch = true;
                 }
                 query.CacheState = DBCacheState.Actual;
             }
@@ -614,7 +623,7 @@ namespace DataWF.Data
                 throw new ArgumentException(nameof(query));
 
             CheckCacheState(query);
-            if (!IsSynchronized
+            if (!IsSynch
                 && query.CacheState == DBCacheState.None)
             {
                 query.CacheState = DBCacheState.Actualazing;
@@ -630,7 +639,7 @@ namespace DataWF.Data
                 }
                 if (query.Parameters.Count == 0)
                 {
-                    IsSynchronized = true;
+                    IsSynch = true;
                 }
                 query.CacheState = DBCacheState.Actual;
             }
@@ -720,21 +729,13 @@ namespace DataWF.Data
                     return list;
                 }
 
-                using (transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader))
+                using (transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
                 {
                     CheckColumns(transaction);
                     while (transaction.State == DBTransactionState.Default && transaction.Reader.Read())
                     {
-                        T row = null;
-                        lock (Lock)
-                        {
-                            row = LoadItem(transaction);
+                        T row = LoadItem(transaction);
 
-                            if (!row.Attached && (transaction.ReaderParam & DBLoadParam.NoAttach) != DBLoadParam.NoAttach)
-                            {
-                                Add(row);
-                            }
-                        }
                         if (arg.TotalCount > 0)
                         {
                             arg.Current++;
@@ -756,7 +757,7 @@ namespace DataWF.Data
 
                 if (whereInd < 0)
                 {
-                    IsSynchronized = true;
+                    IsSynch = true;
                 }
                 //return buffer;
             }
@@ -820,21 +821,13 @@ namespace DataWF.Data
                     return list;
                 }
 
-                using (transaction.Reader = (DbDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader))
+                using (transaction.Reader = (DbDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
                 {
                     CheckColumns(transaction);
                     while (transaction.State == DBTransactionState.Default && await transaction.Reader.ReadAsync())
                     {
-                        T row = null;
-                        lock (Lock)
-                        {
-                            row = LoadItem(transaction);
+                        T row = LoadItem(transaction);
 
-                            if (!row.Attached && (transaction.ReaderParam & DBLoadParam.NoAttach) != DBLoadParam.NoAttach)
-                            {
-                                Add(row);
-                            }
-                        }
                         if (arg.TotalCount > 0)
                         {
                             arg.Current++;
@@ -856,7 +849,7 @@ namespace DataWF.Data
 
                 if (whereInd < 0)
                 {
-                    IsSynchronized = true;
+                    IsSynch = true;
                 }
                 //return buffer;
             }
@@ -1042,18 +1035,6 @@ namespace DataWF.Data
             return row;
         }
 
-        public IEnumerable<T> LoadByStamp(IQuery query, DBTransaction transaction = null)
-        {
-            if (items.Count == 0)
-                return Load(query);
-
-            query.Columns.Clear();
-            query.Column(PrimaryKey);
-            query.Column(StampKey);
-
-            return Load(query.ToCommand(), DBLoadParam.Synchronize, transaction);
-        }
-
         private void CheckDelete(IQuery query, IEnumerable<T> buf, DBTransaction transaction)
         {
             DBLoadParam param = query.LoadParam;
@@ -1078,45 +1059,21 @@ namespace DataWF.Data
             return LoadItem(transaction);
         }
 
-        protected virtual T LoadItem(DBTransaction transaction)
+        protected internal T LoadItem(DBTransaction transaction)
         {
             T item = null;
-            if (transaction.ReaderPrimaryKey > -1)
+            foreach (var readerFields in transaction.ReaderFields)
             {
-                item = PrimaryKey.ReadAndSelect<T>(transaction, transaction.ReaderPrimaryKey);
-            }
-            if (transaction.ReaderStampKey > -1 && !transaction.Reader.IsDBNull(transaction.ReaderStampKey))
-            {
-                var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
-                stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
-
-                if (item != null && item.Stamp >= stamp)
+                lock (readerFields.Table.Lock)
                 {
-                    return item;
+                    var dbItem = readerFields.Table.LoadDBItem(transaction.Reader, readerFields);
+                    if (dbItem is T typedItem)
+                        item = typedItem;
+                    if (!dbItem.Attached && (transaction.ReaderParam & DBLoadParam.NoAttach) != DBLoadParam.NoAttach)
+                    {
+                        readerFields.Table.Add(dbItem);
+                    }
                 }
-
-                if ((transaction.ReaderParam & DBLoadParam.Synchronize) != 0 && transaction.ReaderColumns.Count < 4)
-                {
-                    return LoadById(transaction.Reader.GetValue(transaction.ReaderPrimaryKey));
-                }
-            }
-            if (item == null)
-            {
-                var typeIndex = 0;
-                if (transaction.ReaderItemTypeKey >= 0)
-                    typeIndex = transaction.Reader.IsDBNull(transaction.ReaderItemTypeKey) ? 0 : transaction.Reader.GetInt32(transaction.ReaderItemTypeKey);
-                item = (T)NewItem(transaction.ReaderState, false, typeIndex);
-            }
-
-            for (int i = 0; i < transaction.ReaderColumns.Count; i++)
-            {
-                var column = transaction.ReaderColumns[i];
-                if (item.Attached && item.UpdateState != DBUpdateState.Default && item.IsChangedKey(column))
-                {
-                    continue;
-                }
-
-                column.Read(transaction, item, i);
             }
             return item;
         }
@@ -1411,9 +1368,20 @@ namespace DataWF.Data
             return param.Search<T>(list);
         }
 
-        public QQuery<T> Query(IQuery query) => new QQuery<T>(query, string.Empty) { Table = this };
+        public QQuery<T> Query(IQuery query) => new QQuery<T>(query, string.Empty)
+        {
+            Table = this
+        };
 
-        public QQuery<T> Query(DBLoadParam loadParam = DBLoadParam.Load) => new QQuery<T>(this) { LoadParam = loadParam };
+        public QQuery<T> Query(DBLoadParam loadParam = DBLoadParam.Load) => new QQuery<T>(this)
+        {
+            LoadParam = loadParam
+        };
+
+        public QQuery<T> Query(Expression<Func<T, bool>> expression, DBLoadParam loadParam = DBLoadParam.Load) => new QQuery<T>(this, expression)
+        {
+            LoadParam = loadParam
+        };
 
         public QQuery<T> Query(string filter, DBLoadParam loadParam = DBLoadParam.Load)
         {

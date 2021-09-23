@@ -104,10 +104,44 @@ where Position.Code in ('2','3')";
             var joinTable = query.Tables[1];
             Assert.AreEqual(positions, joinTable.Table);
             Assert.AreEqual(JoinType.Left, joinTable.Join);
-
             Assert.AreEqual(1, query.Parameters.Count);
-
             Assert.AreEqual(positions.CodeKey, query.Parameters[0].LeftColumn);
+        }
+
+        [Test]
+        public void QueryTextParam()
+        {
+            var query = employers.Query()
+                .Where("PositionId in (1,2,3) or Id > 90");
+            var parameters = query.GetAllQItems<QParam>().ToList();
+            Assert.AreEqual(3, parameters.Count());
+            Assert.AreEqual(true, parameters[0].IsCompaund);
+            Assert.AreEqual(employers.PositionIdKey, parameters[1].LeftColumn);
+            Assert.AreEqual(employers.IdKey, parameters[2].LeftColumn);
+            Assert.IsAssignableFrom<QArray>(parameters[1].RightItem);
+            Assert.IsAssignableFrom<QValue>(parameters[2].RightItem);
+        }
+
+        [Test]
+        public void QueryExpressionParam()
+        {
+            var query = employers.Query()
+                .Where(p => p.Id > 90 && p.PositionId != null);
+            var parameters = query.Parameters.GetAllQItems<QParam>()
+                                                .Where(p => !p.IsCompaund)
+                                                .ToList();
+
+            Assert.AreEqual(2, parameters.Count);
+
+            Assert.AreEqual(LogicType.Undefined, parameters[0].Logic);
+            Assert.AreEqual(employers.IdKey, parameters[0].LeftColumn);
+            Assert.AreEqual(CompareType.Greater, parameters[0].Comparer);
+            Assert.AreEqual(90, parameters[0].RightItem.GetValue<Employer>());
+
+            Assert.AreEqual(LogicType.Or, parameters[1].Logic);
+            Assert.AreEqual(employers.PositionIdKey, parameters[1].LeftColumn);
+            Assert.AreEqual(CompareType.NotEqual, parameters[1].Comparer);
+            Assert.AreEqual(null, parameters[1].RightItem.GetValue<Employer>());
         }
 
         [Test]
@@ -319,9 +353,9 @@ where ((Id != 1 or Id = 1) and (Id <= 5 or Id >= 5))
             Console.WriteLine(query.FormatAll());
 
 
-            var posSubQuery = ((IEnumerable<Position>)positions).Where(p => posCodes.Contains(p.Code)).Select(p => p.Id);
-            var linqQuery = from emp in ((IEnumerable<Employer>)employers)
-                            join pos in ((IEnumerable<Position>)positions) on emp.PositionId equals pos.Id
+            var posSubQuery = positions.Where(p => posCodes.Contains(p.Code)).Select(p => p.Id);
+            var linqQuery = from emp in employers
+                            join pos in positions on emp.PositionId equals pos.Id
                             where ((emp.Id != 1 || emp.Id == 1) && (emp.Id <= 5 || emp.Id >= 5))
                                 && emp.DateCreate != default(DateTime)
                                 && (emp.DateCreate >= new DateTime(2000, 01, 01) && emp.DateCreate <= new DateTime(3000, 01, 01)
@@ -330,7 +364,7 @@ where ((Id != 1 or Id = 1) and (Id <= 5 or Id >= 5))
                             {
                                 ID = emp.Id,
                                 DateCerate = emp.DateCreate,
-                                SubPosName = ((IEnumerable<Position>)positions).FirstOrDefault(p => p.Id == emp.Id)?.Name,
+                                SubPosName = positions.FirstOrDefault(p => p.Id == emp.Id)?.Name,
                                 PosName = pos.Name.Trim()
                             };
 
@@ -340,9 +374,20 @@ where ((Id != 1 or Id = 1) and (Id <= 5 or Id >= 5))
 
             var linqCount = linqQuery.Count();
             var queryExecuteCount = list.Values.Count;
-            var qqueryCount = query.Select().Count();
+            var querySelectCount = query.Select().Count();
+
+            employers.Clear();
+            positions.Clear();
+
+            var tableCommand = query.ToCommand(true);
+            Console.WriteLine(tableCommand.CommandText);
+
+            var queryLoadCount = employers.Load(tableCommand).Count();
+
+            Assert.AreEqual(posCodes.Length, positions.Count);
+            Assert.AreEqual(linqCount, employers.Count);
             Assert.AreEqual(linqCount, queryExecuteCount);
-            Assert.AreEqual(linqQuery.Count(), qqueryCount);
+            Assert.AreEqual(linqCount, querySelectCount);
 
         }
     }

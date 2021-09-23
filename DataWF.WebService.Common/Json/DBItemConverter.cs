@@ -183,7 +183,7 @@ namespace DataWF.WebService.Common
                 }
             }
 
-            item = (T)item.AttachOrUpdate(DBLoadParam.Load | DBLoadParam.Synchronize);
+            item = (T)item.AttachOrUpdate(DBLoadParam.Load | DBLoadParam.Referencing);
 
             if (dictionary != null)
             {

@@ -20,6 +20,7 @@
 
 using DataWF.Common;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
 
@@ -27,10 +28,16 @@ namespace DataWF.Data
 {
     public class DBColumnNUInt8 : DBColumnNullable<byte>
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? (byte?)null : transaction.Reader.GetByte(i);
+            var value = reader.IsDBNull(i) ? (byte?)null : reader.GetByte(i);
             SetValue(row, value, DBSetValueMode.Loading);
+        }
+
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
+        {
+            var value = reader.GetByte(i);
+            return pullIndex.SelectOne(value) ?? CreateLoadItem(typeIndex, value);
         }
 
         public override string FormatQuery(byte? value)
@@ -41,12 +48,6 @@ namespace DataWF.Data
         public override string FormatDisplay(byte? value)
         {
             return value?.ToString(Format, CultureInfo.InvariantCulture) ?? string.Empty;
-        }
-
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
-        {
-            var value = transaction.Reader.GetByte(i);
-            return ((IPullOutIndex<F, byte?>)pullIndex).SelectOne(value);
         }
 
         public override byte? Parse(object value)

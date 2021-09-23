@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
 
@@ -27,16 +28,10 @@ namespace DataWF.Data
 {
     public class DBColumnNBool : DBColumnNullable<bool>
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? (bool?)null : transaction.Reader.GetBoolean(i);
+            var value = reader.IsDBNull(i) ? (bool?)null : reader.GetBoolean(i);
             SetValue(row, value, DBSetValueMode.Loading);
-        }
-
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
-        {
-            var value = transaction.Reader.GetBoolean(i);
-            return ((IPullOutIndex<F, bool?>)pullIndex).SelectOne(value);
         }
 
         public override string FormatQuery(bool? value)

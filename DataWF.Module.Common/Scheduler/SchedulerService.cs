@@ -32,7 +32,7 @@ namespace DataWF.Module.Common
             Table = (SchedulerTable)schema.GetTable<Scheduler>();
             items = new SchedulerList(Table);
             this.timer = timer;
-            Table.Query(DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+            Table.Query(DBLoadParam.NoCache);
         }
 
         public SchedulerTable Table { get; private set; }

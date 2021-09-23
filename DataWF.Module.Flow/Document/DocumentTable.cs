@@ -75,11 +75,11 @@ namespace DataWF.Module.Flow
         public void LoadDocuments(User user)
         {
             var worksTable = Schema.DocumentWork;
-            var qWork = worksTable.Query(DBLoadParam.Synchronize).Column(worksTable.DocumentIdKey)
+            var qWork = worksTable.Query(DBLoadParam.Reference).Column(worksTable.DocumentIdKey)
                 .Where(worksTable.IsCompleteKey, CompareType.Equal, false)
                 .And(worksTable.UserIdKey, CompareType.Equal, user);
 
-            var qDocs = this.Query(DBLoadParam.Synchronize)
+            var qDocs = this.Query(DBLoadParam.Referencing)
                 .Where(IdKey, CompareType.In, qWork);
 
             Load(qDocs);

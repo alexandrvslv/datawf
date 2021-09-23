@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
 
@@ -27,16 +28,16 @@ namespace DataWF.Data
 {
     public class DBColumnInt16 : DBColumn<short>
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? (short)0 : transaction.Reader.GetInt16(i);
+            var value = reader.IsDBNull(i) ? (short)0 : reader.GetInt16(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
         {
-            var value = transaction.Reader.GetInt16(i);
-            return ((IPullOutIndex<F, short>)pullIndex).SelectOne(value);
+            var value = reader.GetInt16(i);
+            return pullIndex.SelectOne(value) ?? CreateLoadItem(typeIndex, value);
         }
 
         public override string FormatQuery(short value)
@@ -55,9 +56,9 @@ namespace DataWF.Data
                 return typedValue;
             if (value == null || value == DBNull.Value)
                 return (short)0;
-            if (value is DBItem item)            
+            if (value is DBItem item)
                 return GetReferenceId(item);
-            
+
             return Convert.ToInt16(value, CultureInfo.InvariantCulture);
         }
 

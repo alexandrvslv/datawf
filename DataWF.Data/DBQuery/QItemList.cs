@@ -96,7 +96,7 @@ namespace DataWF.Data
             {
                 if (item is IT typeItem)
                     yield return typeItem;
-                else if (item is IQItemList list)
+                if (item is IQItemList list)
                 {
                     foreach (var subItem in list.GetAllQItems<IT>())
                     {

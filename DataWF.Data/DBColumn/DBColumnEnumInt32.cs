@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
@@ -26,18 +27,18 @@ namespace DataWF.Data
 {
     public class DBColumnEnumInt32<T> : DBColumn<T> where T : struct
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? default(int) : transaction.Reader.GetInt32(i);
+            var value = reader.IsDBNull(i) ? default(int) : reader.GetInt32(i);
             var enumValue = Unsafe.As<int, T>(ref value);
             SetValue(row, enumValue, DBSetValueMode.Loading);
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
         {
-            var value = transaction.Reader.GetInt32(i);
+            var value = reader.GetInt32(i);
             var enumValue = Unsafe.As<int, T>(ref value);
-            return ((IPullOutIndex<F, T>)pullIndex).SelectOne(value);
+            return pullIndex.SelectOne(value) ?? CreateLoadItem(typeIndex, enumValue);
         }
 
         public override string FormatQuery(T value)

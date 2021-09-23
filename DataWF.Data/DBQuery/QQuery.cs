@@ -26,6 +26,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -74,6 +75,12 @@ namespace DataWF.Data
         {
             Table = (DBTable)table;
             Parse(queryText);
+        }
+
+        public QQuery(IDBTable table, Expression<Func<T, bool>> expression) : this(table.Schema)
+        {
+            Table = (DBTable)table;
+            Where(expression);
         }
 
         public QQuery(IDBSchema schema, string queryText, IDBTable table = null)
@@ -306,13 +313,112 @@ namespace DataWF.Data
             return null;
         }
 
-        public QQuery<T> Where(string filter, QBuildParam param = QBuildParam.AutoLike)
+        public QQuery<T> Where(Expression<Func<T, bool>> expression)
         {
-            //Parameters.Clear();
-            if (Table != null)
+            Parameters.Add(CreateParam(expression.Body, LogicType.Undefined));
+            return this;
+        }
+
+        private QParam CreateParam(Expression expression, LogicType logicType)
+        {
+            switch (expression)
             {
-                Where(p => p.Parameters.AddRange(WhereViewColumns(filter, Table, param)));
+                case BinaryExpression binaryExpression:
+                    return CreateParam(binaryExpression, logicType);
+                default:
+                    throw new NotImplementedException("TODO");
             }
+        }
+
+        private QParam CreateParam(BinaryExpression binaryExpression, LogicType logicType)
+        {
+            var qParam = new QParam();
+            qParam.Logic = logicType;
+            var logiC = ParseLogic(binaryExpression.NodeType);
+            if (logiC == LogicType.Undefined)
+            {
+                qParam.Comparer = ParseComparer(binaryExpression.NodeType);
+                qParam.Add(ParseBinaryMember(binaryExpression.Left));
+                qParam.Add(ParseBinaryMember(binaryExpression.Right));
+                return qParam;
+            }
+            else
+            {
+                qParam.Add(CreateParam(binaryExpression.Left, LogicType.Undefined));
+                qParam.Add(CreateParam(binaryExpression.Right, logiC));
+            }
+            return qParam;
+        }
+
+        private CompareType ParseComparer(ExpressionType nodeType)
+        {
+            switch (nodeType)
+            {
+                case ExpressionType.Equal: return CompareType.Equal;
+                case ExpressionType.NotEqual: return CompareType.NotEqual;
+                case ExpressionType.GreaterThan: return CompareType.Greater;
+                case ExpressionType.GreaterThanOrEqual: return CompareType.GreaterOrEqual;
+                case ExpressionType.LessThanOrEqual: return CompareType.LessOrEqual;
+                case ExpressionType.LessThan: return CompareType.Less;
+
+                default: throw new NotImplementedException("TODO");
+            }
+        }
+
+        private LogicType ParseLogic(ExpressionType nodeType)
+        {
+            switch (nodeType)
+            {
+                case ExpressionType.Or:
+                case ExpressionType.OrElse: return LogicType.Or;
+                case ExpressionType.And:
+                case ExpressionType.AndAlso: return LogicType.Or;
+
+                default: return LogicType.Undefined;
+            }
+        }
+
+        private QItem ParseBinaryMember(Expression expression)
+        {
+            switch (expression)
+            {
+                case MemberExpression memberExpression:
+                    var column = ParseColumn(memberExpression.Member.Name, null, out var qTable);
+                    if (column != null)
+                    {
+                        return new QColumn(column) { QTable = qTable };
+                    }
+                    else
+                    {
+                        return new QInvoker(EmitInvoker.Initialize(memberExpression.Member));
+                    }
+                case ConstantExpression constExpression:
+                    return new QValue(constExpression.Value);
+                case UnaryExpression unaryExpression:
+                    return ParseBinaryMember(unaryExpression.Operand);
+                default:
+                    throw new NotImplementedException("TODO");
+            }
+        }
+
+        public QQuery<T> Where(string filter)
+        {
+            if (Table == null)
+                throw new InvalidOperationException();
+            //Parameters.Clear();
+            var parameter = new QParam() { IsCompaund = true };
+            Parameters.Add(parameter);
+            ParseParameters(filter.AsSpan(), parameter);
+
+            return this;
+        }
+
+        public QQuery<T> WhereViewColumns(string filter, QBuildParam param = QBuildParam.AutoLike)
+        {
+            if (Table == null)
+                throw new InvalidOperationException();
+            //Parameters.Clear();
+            Where(p => p.Parameters.AddRange(WhereViewColumns(filter, Table, param)));
             return this;
         }
 
@@ -492,19 +598,15 @@ namespace DataWF.Data
             if (query.Length == 0)
                 return;
             bool alias = false;
-            //bool not = false;
+
+            ParseFrom(query);
+
             QParserState state = QParserState.Where;
-
-            //QParam parametergroup = null;
             QParam parameter = null;
-
             QOrder order = null;
-
             var startIndex = 0;
             var prefix = new List<string>();
             var word = ReadOnlySpan<char>.Empty;
-
-            ParseFrom(query);
 
             for (int i = 0; i <= query.Length; i++)
             {
@@ -1281,6 +1383,12 @@ namespace DataWF.Data
             return this;
         }
 
+        public QQuery<T> Join(DBReferencing referencing)
+        {
+            Tables.Add(CreateJoin(referencing));
+            return this;
+        }
+
         public QQuery<T> Join(DBColumn column, DBColumn refColumn)
         {
             Tables.Add(CreateJoin(column, refColumn));
@@ -1526,6 +1634,11 @@ namespace DataWF.Data
             {
                 Direction = direction
             };
+        }
+
+        public QTable CreateJoin(DBReferencing referencing)
+        {
+            return CreateJoin(referencing.ReferenceColumn, Table.PrimaryKey);
         }
 
         public QTable CreateJoin(DBColumn refColumn)
@@ -1826,7 +1939,7 @@ namespace DataWF.Data
             var cols = FormatSelect(command, defColumns, subSpace);
             var partOrder = FormatOrders(command, subSpace);
             var partFrom = FormatFrom(command, subSpace);
-            var partWhere = FormatWhere(command, subSpace);            
+            var partWhere = FormatWhere(command, subSpace);
 
             var resultBuilder = new StringBuilder();
             resultBuilder.Append(StrSelect);
@@ -1861,7 +1974,7 @@ namespace DataWF.Data
         {
             var from = new StringBuilder();
             foreach (QTable table in Tables)
-            {                
+            {
                 from.Append(table.Format(command));
                 if (!Tables.IsLast(table))
                 {
@@ -1897,25 +2010,25 @@ namespace DataWF.Data
         private StringBuilder FormatSelect(IDbCommand command, bool defColumns, string subSpace)
         {
             var cols = new StringBuilder();
-            if (defColumns)
+            if (defColumns || (columns?.Count ?? 0) == 0)
             {
-                cols.Append("*");
-            }
-            else if ((columns?.Count ?? 0) == 0)
-            {
-                var table = Enumerable.FirstOrDefault(Tables);
-                foreach (var col in table.Table.Columns.Where(p => !p.IsFile))
+                foreach (var table in Tables)
                 {
-                    string temp = System.FormatQColumn(col, table.TableAlias);
-                    if (!string.IsNullOrEmpty(temp))
+                    var tableIndex = table.Schema.Tables.IndexOf(table.Table);
+                    foreach (var col in table.Table.GetQueryColumns(LoadParam))
                     {
-                        if (cols.Length > 0)
+                        var columnAlias = $"{tableIndex}.{col.Name}";
+                        string temp = System.FormatQColumn(col, table.TableAlias, columnAlias);
+                        if (!string.IsNullOrEmpty(temp))
                         {
-                            cols.Append('\n');
-                            cols.Append(subSpace);
-                            cols.Append("    ,");
+                            if (cols.Length > 0)
+                            {
+                                cols.Append('\n');
+                                cols.Append(subSpace);
+                                cols.Append("    ,");
+                            }
+                            cols.Append(temp);
                         }
-                        cols.Append(temp);
                     }
                 }
             }
@@ -2170,6 +2283,8 @@ namespace DataWF.Data
 
         public IEnumerable<T> Select() => TTable.Select(this);
 
+        public IEnumerable<T> Load() => TTable.Load(this);
+
         public IEnumerator<TT> GetYieldEnumerator<TT>() where TT : DBItem
         {
             foreach (var item in Table.Load<TT>(this))
@@ -2197,7 +2312,9 @@ namespace DataWF.Data
 
         IQuery IQuery.Column(IInvoker invoker) => Column(invoker);
 
-        IQuery IQuery.Where(string text, QBuildParam param) => Where(text, param);
+        IQuery IQuery.Where(string text) => Where(text);
+
+        IQuery IQuery.WhereViewColumns(string text, QBuildParam param) => WhereViewColumns(text, param);
 
         IQuery IQuery.Where(Type typeFilter) => Where(typeFilter);
 
@@ -2231,7 +2348,11 @@ namespace DataWF.Data
 
         IQuery<T> IQuery<T>.Column(IInvoker invoker) => Column(invoker);
 
-        IQuery<T> IQuery<T>.Where(string text, QBuildParam param) => Where(text, param);
+        IQuery<T> IQuery<T>.Where(string text) => Where(text);
+
+        IQuery<T> IQuery<T>.Where(Expression<Func<T, bool>> expression) => Where(expression);
+
+        IQuery<T> IQuery<T>.WhereViewColumns(string text, QBuildParam param) => WhereViewColumns(text, param);
 
         IQuery<T> IQuery<T>.Where(Type typeFilter) => Where(typeFilter);
 
@@ -2281,3 +2402,4 @@ namespace DataWF.Data
     }
 
 }
+

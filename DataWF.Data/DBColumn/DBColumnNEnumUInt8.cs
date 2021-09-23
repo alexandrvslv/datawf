@@ -20,6 +20,7 @@
 
 using DataWF.Common;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
@@ -27,25 +28,25 @@ namespace DataWF.Data
 {
     public class DBColumnNEnumUInt8<T> : DBColumnNullable<T> where T : struct
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            if (transaction.Reader.IsDBNull(i))
+            if (reader.IsDBNull(i))
             {
                 SetValue(row, (T?)null, DBSetValueMode.Loading);
             }
             else
             {
-                var value = transaction.Reader.GetByte(i);
+                var value = reader.GetByte(i);
                 var enumValue = Unsafe.As<byte, T>(ref value);
                 SetValue(row, (T?)enumValue, DBSetValueMode.Loading);
             }
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
         {
-            var value = transaction.Reader.GetByte(i);
+            var value = reader.GetByte(i);
             var enumValue = Unsafe.As<byte, T>(ref value);
-            return ((IPullOutIndex<F, T?>)pullIndex).SelectOne(enumValue);
+            return pullIndex.SelectOne(enumValue) ?? CreateLoadItem(typeIndex, enumValue);
         }
 
         public override string FormatQuery(T? value)
