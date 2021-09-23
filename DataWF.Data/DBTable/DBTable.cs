@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -541,8 +542,13 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public List<DBForeignKey> ChildRelations { get; } = new List<DBForeignKey>();
 
-        public event EventHandler<DBItemEventArgs> RowUpdating;
+        [XmlIgnore, JsonIgnore]
+        public bool IsSynchronized => IsSynch;
 
+        [XmlIgnore, JsonIgnore]
+        public abstract object SyncRoot { get; }
+
+        public event EventHandler<DBItemEventArgs> RowUpdating;
 
         public abstract bool Contains(DBItem item);
 
@@ -550,11 +556,11 @@ namespace DataWF.Data
 
         public abstract IEnumerator<DBItem> GetItemEnumerator();
 
-        IEnumerator<DBItem> IEnumerable<DBItem>.GetEnumerator() => GetItemEnumerator();
-
         IEnumerator IEnumerable.GetEnumerator() => GetItemEnumerator();
 
         public abstract void CopyTo(DBItem[] array, int arrayIndex);
+
+        public abstract void CopyTo(Array array, int index);
 
         protected internal abstract void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value);
 
@@ -728,7 +734,7 @@ namespace DataWF.Data
                 if (!transaction.ReferencingStack.Contains(referenceColumn)
                     && (referenceColumn.Keys & DBColumnKeys.Group) != DBColumnKeys.Group
                     && referenceTable != this
-                    && !referenceTable.IsSynchronized
+                    && !referenceTable.IsSynch
                     && !(referenceTable.IsVirtual))
                 {
                     transaction.ReferencingStack.Add(referenceColumn);
@@ -804,34 +810,113 @@ namespace DataWF.Data
             LoadColumns?.Invoke(this, arg);
         }
 
-        public void CheckColumns(DBTransaction transaction)
+        protected internal virtual DBItem LoadDBItem(DbDataReader reader, DBReaderFields fields)
+        {
+            DBItem item;
+            var typeIndex = fields.ItemTypeKey > -1
+                ? reader.IsDBNull(fields.ItemTypeKey) ? 0
+                : reader.GetInt32(fields.ItemTypeKey) : 0;
+
+            if (fields.PrimaryKey > -1)
+            {
+                item = PrimaryKey.GetOrCreate(reader, fields.PrimaryKey, typeIndex);
+            }
+            else
+            {
+                item = NewItem(DBUpdateState.Default, false, typeIndex);
+            }
+            if (fields.StampKey > -1 && !reader.IsDBNull(fields.StampKey))
+            {
+                var stamp = reader.GetDateTime(fields.StampKey);
+                stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
+
+                if (item.Stamp >= stamp)
+                {
+                    return item;
+                }
+                else
+                {
+                    item.Stamp = stamp;
+                }
+            }
+
+            for (int i = 0; i < fields.Columns.Count; i++)
+            {
+                var columnIndex = fields.Columns[i];
+                if (item.Attached && item.UpdateState != DBUpdateState.Default && columnIndex.Column.IsChanged(item))
+                {
+                    continue;
+                }
+
+                columnIndex.Column.Read(reader, item, columnIndex.Index);
+            }
+            return item;
+        }
+
+        public List<DBReaderFields> CheckColumns(DBTransaction transaction)
         {
             bool newcol = false;
-            transaction.ReaderColumns = new List<DBColumn>(transaction.Reader.FieldCount);
-            for (int i = 0; i < transaction.ReaderColumns.Capacity; i++)
+            var reader = transaction.Reader;
+            var fieldsCount = reader.FieldCount;
+            var readerFieldsList = new List<DBReaderFields>(1);
+            var fields = new DBReaderFields();
+            for (int i = 0; i < fieldsCount; i++)
             {
-                string fieldName = transaction.Reader.GetName(i);
+                string fieldName = reader.GetName(i);
                 if (fieldName.Length == 0)
                     fieldName = i.ToString();
-                var column = GetOrCreateColumn(fieldName, transaction.Reader.GetFieldType(i), ref newcol);
+                var table = (DBTable)this;
+                var dotIndex = fieldName.IndexOf('.');
+                if (dotIndex > -1)
+                {
+                    var tableIndex = fieldName.Substring(0, dotIndex);
+                    fieldName = fieldName.Substring(dotIndex + 1);
+                    if (int.TryParse(tableIndex, out int tableIntIndex))
+                        table = Schema.Tables[tableIntIndex];
+                    else
+                        table = Schema.ParseTable(tableIndex) ?? this;
+                }
+
+                var column = table.GetOrCreateColumn(fieldName, reader.GetFieldType(i), ref newcol);
+
+                if (fields.Table == null)
+                {
+                    fields.Table = table;
+                    fields.Columns = new List<(int, DBColumn)>(table.Columns.Count);
+                    readerFieldsList.Add(fields);
+                }
+                else if (fields.Table != table)
+                {
+                    fields = new DBReaderFields
+                    {
+                        Table = table,
+                        Columns = new List<(int, DBColumn)>(table.Columns.Count)
+                    };
+                    readerFieldsList.Add(fields);
+                }
+
                 if (column.IsPrimaryKey)
                 {
-                    transaction.ReaderPrimaryKey = i;
+                    fields.PrimaryKey = i;
                 }
-                if ((column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp)
+                else if ((column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp)
                 {
-                    transaction.ReaderStampKey = i;
+                    fields.StampKey = i;
                 }
-                if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
+                else if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
                 {
-                    transaction.ReaderItemTypeKey = i;
+                    fields.ItemTypeKey = i;
                 }
-                transaction.ReaderColumns.Add(column);
+                else
+                {
+                    fields.Columns.Add((i, column));
+                }
             }
             if (newcol)
             {
                 RaiseLoadColumns(new DBLoadColumnsEventArgs(transaction.View));
             }
+            return transaction.ReaderFields = readerFieldsList;
         }
 
         public abstract DBItem this[int index] { get; }
@@ -1242,6 +1327,28 @@ namespace DataWF.Data
         {
         }
 
+        public IEnumerable<DBColumn> GetQueryColumns(DBLoadParam param = DBLoadParam.None)
+        {
+            if (ItemTypeKey != null)
+                yield return itemTypeKey;
+            if (PrimaryKey != null)
+                yield return primaryKey;
+            if (StampKey != null)
+                yield return stampKey;
+            foreach (var column in Columns)
+            {
+                if ((param & DBLoadParam.DownloadFiles) != DBLoadParam.DownloadFiles
+                    && column.IsFile)
+                    continue;
+                if (column != itemTypeKey
+                    && column != primaryKey
+                    && column != stampKey)
+                {
+                    yield return column;
+                }
+            }
+        }
+
         public string BuildQuery(string whereFilter, string alias, DBLoadParam param = DBLoadParam.None, string function = null)
         {
             var select = new StringBuilder("select ");
@@ -1252,14 +1359,8 @@ namespace DataWF.Data
             }
             else
             {
-                IEnumerable<DBColumn> cols = Columns;
-                if ((param & DBLoadParam.DownloadFiles) != DBLoadParam.DownloadFiles)
-                {
-                    cols = Columns.Where(p => (p.Keys & DBColumnKeys.File) != DBColumnKeys.File);// query += "*";// cols = this.columns as IEnumerable;
-                }
-
                 bool f = false;
-                foreach (DBColumn column in cols)
+                foreach (DBColumn column in GetQueryColumns(param))
                 {
                     string temp = System.FormatQColumn(column, alias);
                     if (!string.IsNullOrEmpty(temp))
@@ -1271,9 +1372,6 @@ namespace DataWF.Data
                         select.Append(temp);
                     }
                 }
-
-                if (select.ToString()?.Equals("select ", StringComparison.Ordinal) ?? false)
-                    select.Append(" * ");
             }
             string vquery = SubQuery;
             if (!string.IsNullOrEmpty(vquery))
@@ -1684,7 +1782,9 @@ namespace DataWF.Data
             var column = Columns[name];
             if (column == null)
             {
-                var nullableType = type.IsNullable() || type == typeof(string) ? type : typeof(Nullable<>).MakeGenericType(type);
+                var nullableType = type.IsNullable() || type == typeof(string) || type == typeof(byte[])
+                    ? type
+                    : typeof(Nullable<>).MakeGenericType(type);
                 column = DBColumnFactory.Create(nullableType, name: name, size: -1, table: this);
                 Columns.Add(column);
                 newCol = true;
@@ -1774,6 +1874,6 @@ namespace DataWF.Data
                             .Or(StampKey, CompareType.Greater, ReplicateStampKey));
 
             return Load<DBItem>(query);
-        }
+        }        
     }
 }

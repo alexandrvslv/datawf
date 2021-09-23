@@ -20,6 +20,7 @@
 
 using DataWF.Common;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
 
@@ -27,16 +28,16 @@ namespace DataWF.Data
 {
     public class DBColumnInt8 : DBColumn<sbyte>
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? default(sbyte) : (sbyte)transaction.Reader.GetByte(i);
+            var value = reader.IsDBNull(i) ? default(sbyte) : (sbyte)reader.GetByte(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
         {
-            var value = (sbyte)transaction.Reader.GetByte(i);
-            return ((IPullOutIndex<F, sbyte>)pullIndex).SelectOne(value);
+            var value = (sbyte)reader.GetByte(i);
+            return pullIndex.SelectOne(value) ?? CreateLoadItem(typeIndex, value);
         }
 
         public override string FormatQuery(sbyte value)

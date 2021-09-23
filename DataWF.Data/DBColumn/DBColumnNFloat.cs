@@ -18,8 +18,8 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
-using DataWF.Data;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
 
@@ -27,9 +27,9 @@ namespace DataWF.Data
 {
     public class DBColumnNFloat : DBColumnNullable<float>
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? (float?)null : transaction.Reader.GetFloat(i);
+            var value = reader.IsDBNull(i) ? (float?)null : reader.GetFloat(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
@@ -43,10 +43,10 @@ namespace DataWF.Data
             return value?.ToString(Format, CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
         {
-            var value = transaction.Reader.GetFloat(i);
-            return ((IPullOutIndex<F, float?>)pullIndex).SelectOne(value);
+            var value = reader.GetFloat(i);
+            return pullIndex.SelectOne(value) ?? CreateLoadItem(typeIndex, value);
         }
 
         public override float? Parse(object value)

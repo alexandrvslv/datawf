@@ -37,7 +37,7 @@ namespace DataWF.Data
         private IDBSchema schema;
         protected LocaleItem litem;
         protected AccessValue access;
-        private bool isSynchronized;
+        private bool isSynch;
 
         public DBSchemaItem()
         { }
@@ -151,14 +151,14 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public virtual bool IsSynchronized
+        public virtual bool IsSynch
         {
-            get => isSynchronized;
+            get => isSynch;
             set
             {
-                if (isSynchronized == value)
+                if (isSynch == value)
                     return;
-                isSynchronized = value;
+                isSynch = value;
             }
         }
 

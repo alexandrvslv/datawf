@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
 
@@ -27,16 +28,16 @@ namespace DataWF.Data
 {
     public class DBColumnDecimal : DBColumn<decimal>
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? default(decimal) : transaction.Reader.GetDecimal(i);
+            var value = reader.IsDBNull(i) ? default(decimal) : reader.GetDecimal(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
         {
-            var value = transaction.Reader.GetDecimal(i);
-            return ((IPullOutIndex<F, decimal>)pullIndex).SelectOne(value);
+            var value = reader.GetDecimal(i);
+            return pullIndex.SelectOne(value) ?? CreateLoadItem(typeIndex, value);
         }
 
         public override string FormatQuery(decimal value)

@@ -210,7 +210,7 @@ namespace DataWF.Data
             return base.FillParameter(command, parameter, value, column);
         }
 
-        public override string FormatQColumn(DBColumn column, string tableAlias)
+        public override string FormatQColumn(DBColumn column, string tableAlias, string columnAlias = null)
         {
             if (column.ColumnType == DBColumnTypes.Internal
                 || column.ColumnType == DBColumnTypes.Expression
@@ -219,7 +219,7 @@ namespace DataWF.Data
             else if (column.ColumnType == DBColumnTypes.Query && column.Table.Type != DBTableType.View)
                 return base.FormatQColumn(column, tableAlias);
             else
-                return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}[{column.SqlName}]";
+                return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}[{column.SqlName}]{(columnAlias != null ? " as \"" : string.Empty)}{columnAlias}{(columnAlias != null ? "\"" : string.Empty)}";
         }
 
         public override string FormatQTable(IDBTable table, string alias)

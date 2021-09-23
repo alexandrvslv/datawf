@@ -95,7 +95,7 @@ namespace DataWF.Data
 
         public void RefreshLogs()
         {
-            var query = Row.Table.LogTable.Query<DBItemLog>(DBLoadParam.Load | DBLoadParam.Synchronize)
+            var query = Row.Table.LogTable.Query<DBItemLog>(DBLoadParam.Load | DBLoadParam.NoCache)
                 .Where(Row.Table.LogTable.BaseKey, CompareType.Equal, row.PrimaryId)
                 .And(Row.Table.LogTable.StatusKey, CompareType.Equal, (int)DBStatus.New);
             Logs.AddRange(query);

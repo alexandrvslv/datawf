@@ -1001,7 +1001,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
             return value;
         }
 
-        public virtual string FormatQColumn(DBColumn column, string tableAlias)
+        public virtual string FormatQColumn(DBColumn column, string tableAlias, string columnAlias = null)
         {
             if (column.ColumnType == DBColumnTypes.Internal
                 || column.ColumnType == DBColumnTypes.Expression
@@ -1010,7 +1010,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
             else if (column.ColumnType == DBColumnTypes.Query && column.Table.Type != DBTableType.View)
                 return string.Format("({0}) as \"{1}\"", column.Query, column.SqlName);
             else
-                return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}{column.SqlName}";
+                return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}{column.SqlName}{(columnAlias != null ? " as \"" : string.Empty)}{columnAlias}{(columnAlias != null ? "\"" : string.Empty)}";
         }
 
         public virtual string FormatQTable(IDBTable table, string alias)
@@ -1096,7 +1096,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
                     {
                         throw new Exception("No Data Found!");
                     }
-                    //using (var dbStream = transaction.Reader.GetStream(1))
+                    //using (var dbStream = reader.GetStream(1))
                     //{
                     //    dbStream.CopyTo(stream, bufferSize);
                     //}

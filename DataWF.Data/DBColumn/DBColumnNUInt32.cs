@@ -20,6 +20,7 @@
 
 using DataWF.Common;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
 
@@ -27,9 +28,9 @@ namespace DataWF.Data
 {
     public class DBColumnNUInt32 : DBColumnNullable<uint>
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? (uint?)null : (uint)transaction.Reader.GetInt64(i);
+            var value = reader.IsDBNull(i) ? (uint?)null : (uint)reader.GetInt64(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
@@ -38,10 +39,10 @@ namespace DataWF.Data
             SetValue(item, (uint)id, DBSetValueMode.Default);
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
         {
-            var value = (uint)transaction.Reader.GetInt32(i);
-            return ((IPullOutIndex<F, uint?>)pullIndex).SelectOne(value);
+            var value = (uint)reader.GetInt32(i);
+            return pullIndex.SelectOne(value) ?? CreateLoadItem(typeIndex, value);
         }
 
         public override string FormatQuery(uint? value)

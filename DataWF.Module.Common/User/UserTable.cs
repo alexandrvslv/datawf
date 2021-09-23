@@ -134,7 +134,7 @@ namespace DataWF.Module.Common
         public IEnumerable<UserReg> GetOld(User User)
         {
             var regTable = Schema.UserReg;
-            var query = regTable.Query(DBLoadParam.Load | DBLoadParam.Synchronize)
+            var query = regTable.Query(DBLoadParam.Load | DBLoadParam.NoCache)
                 .Where(regTable.UserIdKey, CompareType.Equal, User.PrimaryId)
                 .And(regTable.RegTypeKey, CompareType.Equal, UserRegType.Password)
                 .OrderBy(regTable.PrimaryKey, ListSortDirection.Descending);

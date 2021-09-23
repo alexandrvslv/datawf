@@ -18,24 +18,24 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
-using DataWF.Data;
 using System;
+using System.Data.Common;
 using System.Globalization;
 
 namespace DataWF.Data
 {
     public class DBColumnNTimeSpan : DBColumnNullable<TimeSpan>
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? (TimeSpan?)null : transaction.GetTimeSpan(i);
+            var value = reader.IsDBNull(i) ? (TimeSpan?)null : DBSystem.GetTimeSpan(reader, i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
         {
-            var value = transaction.GetTimeSpan(i);
-            return ((IPullOutIndex<F, TimeSpan?>)pullIndex).SelectOne(value);
+            var value = DBSystem.GetTimeSpan(reader, i);
+            return pullIndex.SelectOne(value) ?? CreateLoadItem(typeIndex, value);
         }
 
         public override string FormatQuery(TimeSpan? value)

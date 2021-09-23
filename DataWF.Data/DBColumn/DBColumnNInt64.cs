@@ -18,8 +18,8 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
-using DataWF.Data;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
 
@@ -27,11 +27,18 @@ namespace DataWF.Data
 {
     public class DBColumnNInt64 : DBColumnNullable<long>
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? (long?)null : transaction.Reader.GetInt64(i);
+            var value = reader.IsDBNull(i) ? (long?)null : reader.GetInt64(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
+
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
+        {
+            var value = reader.GetInt64(i);
+            return pullIndex.SelectOne(value) ?? CreateLoadItem(typeIndex, value);
+        }
+
         public override void SetId(DBItem item, long id)
         {
             SetValue(item, id, DBSetValueMode.Default);
@@ -45,12 +52,6 @@ namespace DataWF.Data
         public override string FormatDisplay(long? value)
         {
             return value?.ToString(Format, CultureInfo.InvariantCulture) ?? string.Empty;
-        }
-
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
-        {
-            var value = transaction.Reader.GetInt64(i);
-            return ((IPullOutIndex<F, long?>)pullIndex).SelectOne(value);
         }
 
         public override long? Parse(object value)

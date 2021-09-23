@@ -24,6 +24,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -705,9 +706,11 @@ namespace DataWF.Data
             return (IComparer<T>)CreateComparer(typeof(T), direction);
         }
 
-        public abstract void Read(DBTransaction transaction, DBItem row, int i);
+        public abstract void Read(DbDataReader reader, DBItem row, int i);
 
-        public abstract F ReadAndSelect<F>(DBTransaction transaction, int i) where F : DBItem;
+        //public F ReadAndSelect<F>(DBTransaction transaction, int i) where F : DBItem => ReadAndSelect<F>(transaction.Reader, i);
+
+        public abstract DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex);
 
         public QExpression GetExpression()
         {

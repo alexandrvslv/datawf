@@ -28,7 +28,7 @@ using DataWF.Common;
 
 namespace DataWF.Data
 {
-    public interface IDBTable : IDBSchemaItem, ICollection<DBItem>, IDisposable
+    public interface IDBTable : IDBSchemaItem, ICollection, IDisposable
     {
         DBItem this[int index] { get; }
         DBColumn PrimaryKey { get; }
@@ -76,7 +76,7 @@ namespace DataWF.Data
         TableGenerator Generator { get; }
         DBTableType Type { get; set; }
         IQuery FilterQuery { get; set; }
-
+        //bool IsSynchronized { get; }
         string ItemTypeName { get; }
 
         event EventHandler<DBLoadColumnsEventArgs> LoadColumns;
@@ -86,9 +86,11 @@ namespace DataWF.Data
         event EventHandler<DBItemEventArgs> RowUpdating;
 
         void Accept(DBItem item);
+        void Add(DBItem item);
         void AcceptAll(IUserIdentity user);
         void RejectAll(IUserIdentity user);
         void DeleteById(object id);
+        bool Remove(DBItem item);
         void Reload(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
         T NewItem<T>(DBUpdateState state = DBUpdateState.Insert, bool def = true) where T : DBItem;
         DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true);
@@ -126,6 +128,7 @@ namespace DataWF.Data
         DBColumn GetColumnByProperty(string property, ref DBColumn cache);
         DBColumn<T> GetColumnByProperty<T>(string property);
         DBColumn<T> GetColumnByProperty<T>(string property, ref DBColumn<T> cache);
+        IEnumerable<DBColumn> GetQueryColumns(DBLoadParam param = DBLoadParam.None);
         IEnumerable<DBColumn> GetColumns(ICollection<string> columns);
         DBColumn<string> GetCultureColumn(string group);
         DBReferencing GetReferencing(string property);

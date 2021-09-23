@@ -61,7 +61,7 @@ namespace DataWF.Module.Flow
             Helper.Log(schema, "Start", StatusType.Information);
             Stopwatch watch = new Stopwatch();
             watch.Start();
-            using (var transaction = new DBTransaction(schema) { ReaderParam = DBLoadParam.Synchronize | DBLoadParam.CheckDeleted })
+            using (var transaction = new DBTransaction(schema) { ReaderParam = DBLoadParam.CheckDeleted })
             {
                 schema.Book.Load();
                 //cache groups

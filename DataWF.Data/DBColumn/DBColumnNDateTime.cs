@@ -18,8 +18,8 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
-using DataWF.Data;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
 
@@ -27,10 +27,10 @@ namespace DataWF.Data
 {
     public class DBColumnNDateTime : DBColumnNullable<DateTime>
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var isNull = transaction.Reader.IsDBNull(i);
-            var value = isNull ? (DateTime?)null : transaction.Reader.GetDateTime(i);
+            var isNull = reader.IsDBNull(i);
+            var value = isNull ? (DateTime?)null : reader.GetDateTime(i);
             if (!isNull && (Keys & DBColumnKeys.UtcDate) != 0)
             {
                 value = DateTime.SpecifyKind((DateTime)value, DateTimeKind.Utc);
@@ -38,14 +38,14 @@ namespace DataWF.Data
             SetValue(row, value, DBSetValueMode.Loading);
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
         {
-            var value = transaction.Reader.GetDateTime(i);
+            var value = reader.GetDateTime(i);
             if ((Keys & DBColumnKeys.UtcDate) != 0)
             {
                 value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
             }
-            return ((IPullOutIndex<F, DateTime?>)pullIndex).SelectOne(value);
+            return pullIndex.SelectOne(value) ?? CreateLoadItem(typeIndex, value);
         }
 
         public override string FormatQuery(DateTime? value)

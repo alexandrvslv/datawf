@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Data.Common;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -32,9 +33,9 @@ namespace DataWF.Data
             return ByteArrayComparer.Default.Equals(oldValue, newValue);
         }
 
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            var value = transaction.Reader.IsDBNull(i) ? null : (byte[])transaction.Reader.GetValue(i);
+            var value = reader.IsDBNull(i) ? null : (byte[])reader.GetValue(i);
             SetValue(row, value, DBSetValueMode.Loading);
         }
 

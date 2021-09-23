@@ -19,17 +19,18 @@
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
 using System;
+using System.Data.Common;
 using System.Runtime.Serialization;
 
 namespace DataWF.Data
 {
     public class DBColumnNBinarySerializable<T> : DBColumnNullable<T> where T : struct, IBinarySerializable
     {
-        public override void Read(DBTransaction transaction, DBItem row, int i)
+        public override void Read(DbDataReader reader, DBItem row, int i)
         {
-            if (!transaction.Reader.IsDBNull(i))
+            if (!reader.IsDBNull(i))
             {
-                var byteArray = (byte[])transaction.Reader.GetValue(i);
+                var byteArray = (byte[])reader.GetValue(i);
                 var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
                 serializable.Deserialize(byteArray);
                 SetValue(row, serializable, DBSetValueMode.Loading);
@@ -40,12 +41,12 @@ namespace DataWF.Data
             }
         }
 
-        public override F ReadAndSelect<F>(DBTransaction transaction, int i)
+        public override DBItem GetOrCreate(DbDataReader reader, int i, int typeIndex)
         {
-            var byteArray = (byte[])transaction.Reader.GetValue(i);
+            var byteArray = (byte[])reader.GetValue(i);
             var serializable = (T)FormatterServices.GetUninitializedObject(DataType);
             serializable.Deserialize(byteArray);
-            return ((IPullOutIndex<F, T?>)pullIndex).SelectOne(serializable);
+            return pullIndex.SelectOne(serializable) ?? CreateLoadItem(typeIndex, serializable);
         }
 
         public override object GetParameterValue(T? value)

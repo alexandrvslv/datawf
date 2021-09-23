@@ -23,17 +23,22 @@ using System.Data;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq.Expressions;
 
 namespace DataWF.Data
 {
     public interface IQuery<T> : IQuery, IEnumerable<T> where T : DBItem
     {        
         IEnumerable<T> Select();
+        IEnumerable<T> Load();
 
         new IQuery<T> Column(QFunctionType function, params object[] args);
         new IQuery<T> Column(IInvoker invoker);
 
-        new IQuery<T> Where(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
+        new IQuery<T> WhereViewColumns(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
+        new IQuery<T> Where(string filter);
+
+        IQuery<T> Where(Expression<Func<T, bool>> expression);
         new IQuery<T> Where(Type typeFilter);
         new IQuery<T> Where(QParam parameter);
         new IQuery<T> Where(Action<QParam> parameter);
@@ -92,7 +97,8 @@ namespace DataWF.Data
         IQuery Column(QFunctionType function, params object[] args);
         IQuery Column(IInvoker invoker);
 
-        IQuery Where(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
+        IQuery WhereViewColumns(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
+        IQuery Where(string filter);
         IQuery Where(Type typeFilter);
         IQuery Where(QParam parameter);
         IQuery Where(Action<QParam> parameter);

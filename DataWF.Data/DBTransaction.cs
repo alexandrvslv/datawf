@@ -93,18 +93,12 @@ namespace DataWF.Data
 
         public DbDataReader Reader { get; set; }
 
-        public List<DBColumn> ReaderColumns { get; set; }
-
         public DBLoadParam ReaderParam { get; set; }
 
         public DBUpdateState ReaderState { get; set; }
 
-        public int ReaderPrimaryKey { get; internal set; } = -1;
-
-        public int ReaderStampKey { get; internal set; } = -1;
-
-        public int ReaderItemTypeKey { get; internal set; } = -1;
-
+        public List<DBReaderFields> ReaderFields { get; set; }
+        
         public IDBTableView View { get; set; }
 
         public DBItem UserLog { get; set; }
@@ -238,7 +232,7 @@ namespace DataWF.Data
                 transaction = null;
                 Connection = null;
                 command = null;
-                ReaderColumns = null;
+                ReaderFields = null;
                 items.Clear();
             }
             //Debug.WriteLine($"Dispose DBTransaction owner:{Owner} connection:{DbConnection}");
