@@ -35,7 +35,7 @@ namespace DataWF.Data
     {
         protected DBViewKeys keys = DBViewKeys.Lock;
         protected QParam defaultParam;
-        protected IQuery query;
+        protected IQQuery query;
 
         protected IDbCommand command;
         protected DBTable<T> table;
@@ -141,7 +141,7 @@ namespace DataWF.Data
             }
         }
 
-        public IQuery Query
+        public IQQuery Query
         {
             get => query;
             set
@@ -232,15 +232,21 @@ namespace DataWF.Data
 
         public bool IsEdited => GetEdited().Any();
 
+        public IEnumerable Source { get => table; set { return; } }
+        
         public IDBSchema Schema => Table?.Schema;
 
-        public IDBTable Table
+        public DBTable<T> Table
         {
             get => table;
             set => table = value as DBTable<T>;
         }
 
-        public IEnumerable Source { get => table; set { return; } }
+        IDBTable IDBTableContent.Table
+        {
+            get => Table;
+            set => Table = (DBTable<T>)value;
+        }
 
         public event EventHandler DefaultFilterChanged;
         public event EventHandler FilterChanged;
@@ -450,7 +456,7 @@ namespace DataWF.Data
                     {
                         int s = 0;
                         var sexpression = Query;
-                        IQuery newQuery = null;
+                        IQQuery newQuery = null;
                         while (i > 0)
                         {
                             string iname = code.Substring(s, i - s);

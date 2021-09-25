@@ -33,7 +33,7 @@ namespace DataWF.Data
 
         QParam DefaultParam { get; set; }
 
-        IQuery Query { get; set; }
+        IQQuery Query { get; set; }
 
         DBStatus StatusFilter { get; set; }
 

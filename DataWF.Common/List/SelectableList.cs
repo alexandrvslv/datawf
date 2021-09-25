@@ -884,9 +884,19 @@ namespace DataWF.Common
             return items[++index];
         }
 
+        public T First()
+        {
+            return items.Count == 0 ? throw new IndexOutOfRangeException() : items[0];
+        }
+
         public T FirstOrDefault()
         {
             return items.Count == 0 ? default(T) : items[0];
+        }
+
+        public T Last()
+        {
+            return items.Count == 0 ? throw new IndexOutOfRangeException() : items[items.Count - 1];
         }
 
         public T LastOrDefault()

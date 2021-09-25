@@ -627,16 +627,6 @@ namespace DataWF.Data
             SetReferencing<T>(items, table.GetColumnByProperty(property));
         }
 
-        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, IQuery query) where T : DBItem
-        {
-            //query.TypeFilter = typeof(T);
-            if ((query.LoadParam & DBLoadParam.Load) == DBLoadParam.Load)
-            {
-                return table.Load(query);
-            }
-            return table.Select(query);
-        }
-
         public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem
         {
             var table = Schema.GetTable<T>();
@@ -686,16 +676,6 @@ namespace DataWF.Data
             {
                 return column.Select<DBItem>(CompareType.Equal, PrimaryId);
             }
-        }
-
-        public IEnumerable<DBItem> GetReferencing(IDBTable table, IQuery query, DBLoadParam param)
-        {
-            if ((param & DBLoadParam.Load) == DBLoadParam.Load)
-            {
-                return table.Load<DBItem>(query);
-            }
-
-            return table.Select<DBItem>(query);
         }
 
         public IEnumerable<DBItem> GetReferencing(DBForeignKey relation, DBLoadParam param)

@@ -31,5 +31,15 @@ namespace DataWF.Data
         {
             //Indexes.Add(groupInvoker);
         }
+
+        public override void InsertInternal(int index, QParam item)
+        {
+            if (item.Logic == LogicType.Undefined
+                && Count > 0)
+            {
+                item.Logic = LogicType.And;
+            }
+            base.InsertInternal(index, item);
+        }
     }
 }

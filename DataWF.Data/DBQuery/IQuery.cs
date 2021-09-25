@@ -27,38 +27,44 @@ using System.Linq.Expressions;
 
 namespace DataWF.Data
 {
-    public interface IQuery<T> : IQuery, IEnumerable<T> where T : DBItem
-    {        
+    public interface IQQuery<T> : IQQuery, IEnumerable<T> where T : DBItem
+    {
         IEnumerable<T> Select();
-        IEnumerable<T> Load();
+        IEnumerable<T> Load(DBTransaction transaction = null);
 
-        new IQuery<T> Column(QFunctionType function, params object[] args);
-        new IQuery<T> Column(IInvoker invoker);
+        new IQQuery<T> Column(QFunctionType function, params object[] args);
+        new IQQuery<T> Column(IInvoker invoker);
+        IQQuery<T> Column<K>(Expression<Func<T, K>> keySelector);
 
-        new IQuery<T> WhereViewColumns(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
-        new IQuery<T> Where(string filter);
+        new IQQuery<T> WhereViewColumns(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
+        new IQQuery<T> Where(string filter);
 
-        IQuery<T> Where(Expression<Func<T, bool>> expression);
-        new IQuery<T> Where(Type typeFilter);
-        new IQuery<T> Where(QParam parameter);
-        new IQuery<T> Where(Action<QParam> parameter);
-        new IQuery<T> Where(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
-        new IQuery<T> Where(IInvoker column, CompareType comparer, object value);
+        IQQuery<T> Where(Expression<Func<T, bool>> expression);
+        new IQQuery<T> Where(Type typeFilter);
+        new IQQuery<T> Where(QParam parameter);
+        new IQQuery<T> Where(Action<QParam> parameter);
+        new IQQuery<T> Where(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+        new IQQuery<T> Where(IInvoker column, CompareType comparer, object value);
+        new IQQuery<T> Where(string column, CompareType comparer, object value);
 
-        new IQuery<T> And(QParam parameter);
-        new IQuery<T> And(Action<QParam> parameter);
-        new IQuery<T> And(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
-        new IQuery<T> And(IInvoker column, CompareType comparer, object value);
+        new IQQuery<T> And(QParam parameter);
+        new IQQuery<T> And(Action<QParam> parameter);
+        new IQQuery<T> And(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+        new IQQuery<T> And(IInvoker column, CompareType comparer, object value);
+        new IQQuery<T> And(string column, CompareType comparer, object value);
 
-        new IQuery<T> Or(QParam parameter);
-        new IQuery<T> Or(Action<QParam> parameter);
-        new IQuery<T> Or(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
-        new IQuery<T> Or(IInvoker column, CompareType comparer, object value);
+        new IQQuery<T> Or(QParam parameter);
+        new IQQuery<T> Or(Action<QParam> parameter);
+        new IQQuery<T> Or(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+        new IQQuery<T> Or(IInvoker column, CompareType comparer, object value);
+        new IQQuery<T> Or(string column, CompareType comparer, object value);
 
-        new IQuery<T> OrderBy(IInvoker column, ListSortDirection direction = ListSortDirection.Ascending);
+        new IQQuery<T> OrderBy(IInvoker column, ListSortDirection direction = ListSortDirection.Ascending);
+        IQQuery<T> OrderBy<K>(Expression<Func<T, K>> keySelector);
+        IQQuery<T> OrderByDescending<K>(Expression<Func<T, K>> keySelector);
     }
 
-    public interface IQuery : IQItem, IQItemList, IEnumerable
+    public interface IQQuery : IQItem, IQItemList, IEnumerable
     {
         QParamList Parameters { get; }
         QItemList<QItem> Columns { get; }
@@ -67,7 +73,7 @@ namespace DataWF.Data
         DBLoadParam LoadParam { get; set; }
         DBCacheState CacheState { get; set; }
         DBStatus StatusFilter { get; set; }
-        IQuery BaseQuery { get; set; }
+        IQQuery BaseQuery { get; set; }
         Type TypeFilter { get; set; }
         string WhereText { get; }
         string QueryText { get; }
@@ -94,28 +100,31 @@ namespace DataWF.Data
         QParam CreateParam(LogicType logic, IInvoker invoker, object value, QBuildParam buildParam = QBuildParam.None);
         QParam CreateParam(LogicType logic, IInvoker invoker, CompareType comparer, object value);
 
-        IQuery Column(QFunctionType function, params object[] args);
-        IQuery Column(IInvoker invoker);
+        IQQuery Column(QFunctionType function, params object[] args);
+        IQQuery Column(IInvoker invoker);
 
-        IQuery WhereViewColumns(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
-        IQuery Where(string filter);
-        IQuery Where(Type typeFilter);
-        IQuery Where(QParam parameter);
-        IQuery Where(Action<QParam> parameter);
-        IQuery Where(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
-        IQuery Where(IInvoker column, CompareType comparer, object value);
+        IQQuery WhereViewColumns(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
+        IQQuery Where(string filter);
+        IQQuery Where(Type typeFilter);
+        IQQuery Where(QParam parameter);
+        IQQuery Where(Action<QParam> parameter);
+        IQQuery Where(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+        IQQuery Where(IInvoker column, CompareType comparer, object value);
+        IQQuery Where(string column, CompareType comparer, object value);
 
-        IQuery And(QParam parameter);
-        IQuery And(Action<QParam> parameter);
-        IQuery And(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
-        IQuery And(IInvoker column, CompareType comparer, object value);
+        IQQuery And(QParam parameter);
+        IQQuery And(Action<QParam> parameter);
+        IQQuery And(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+        IQQuery And(IInvoker column, CompareType comparer, object value);
+        IQQuery And(string column, CompareType comparer, object value);
 
-        IQuery Or(QParam parameter);
-        IQuery Or(Action<QParam> parameter);
-        IQuery Or(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
-        IQuery Or(IInvoker column, CompareType comparer, object value);
+        IQQuery Or(QParam parameter);
+        IQQuery Or(Action<QParam> parameter);
+        IQQuery Or(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+        IQQuery Or(IInvoker column, CompareType comparer, object value);
+        IQQuery Or(string column, CompareType comparer, object value);
 
-        IQuery OrderBy(IInvoker column, ListSortDirection direction = ListSortDirection.Ascending);
+        IQQuery OrderBy(IInvoker column, ListSortDirection direction = ListSortDirection.Ascending);
 
         DBComparerList<T> GetComparer<T>() where T : DBItem;
         List<T> Sort<T>(List<T> ts) where T : DBItem;

@@ -798,12 +798,12 @@ namespace DataWF.Data
             return base.Select(comparer, value, list);
         }
 
-        public override R SelectOne<R>(DBItem value, IEnumerable<R> list = null)
+        public override R FirstOrDefault<R>(DBItem value, IEnumerable<R> list = null)
         {
-            return SelectOne<R>(GetReferenceId(value), list);
+            return FirstOrDefault<R>(GetReferenceId(value), list);
         }
 
-        public virtual R SelectOne<R>(T value, IEnumerable<R> list = null) where R : DBItem
+        public virtual R FirstOrDefault<R>(T value, IEnumerable<R> list = null) where R : DBItem
         {
             if (PullIndex is IPullOutIndex<R, T> index)
             {
@@ -812,9 +812,9 @@ namespace DataWF.Data
             return Search<R>(CompareType.Equal, value, list ?? (IEnumerable<R>)Table).FirstOrDefault();
         }
 
-        public override R SelectOne<R>(object value, IEnumerable<R> list)
+        public override R FirstOrDefault<R>(object value, IEnumerable<R> list)
         {
-            return SelectOne<R>(Parse(value), list);
+            return FirstOrDefault<R>(Parse(value), list);
         }
 
         public virtual IEnumerable<DBTuple> Search<R>(CompareType comparer, T value, QTable qTable, IEnumerable<DBTuple> list) where R : DBItem

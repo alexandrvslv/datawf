@@ -42,7 +42,7 @@ namespace DataWF.Data
         protected readonly List<T> items = new List<T>();
         protected readonly List<T> insertItems = new List<T>();
         protected readonly List<IDBTableView> queryViews = new List<IDBTableView>(1);
-        private IQuery filterQuery;
+        private IQQuery filterQuery;
 
         public DBTable() : this(null)
         { }
@@ -54,7 +54,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public override IQuery FilterQuery
+        public override IQQuery FilterQuery
         {
             get => ParentTable == null ? null : (filterQuery ??= ParentTable.Query<DBItem>(subQuery).Where(typeof(T)));
             set => filterQuery = value;
@@ -565,17 +565,17 @@ namespace DataWF.Data
             return LoadAsync(Query(param), transaction);
         }
 
-        public override IEnumerable<TT> Load<TT>(IQuery<TT> query, DBTransaction transaction = null)
+        public override IEnumerable<TT> Load<TT>(IQQuery<TT> query, DBTransaction transaction = null)
         {
             return (IEnumerable<TT>)Load(query, transaction);
         }
 
-        public override IEnumerable<TT> Load<TT>(IQuery query, DBTransaction transaction = null)
+        public override IEnumerable<TT> Load<TT>(IQQuery query, DBTransaction transaction = null)
         {
             return (IEnumerable<TT>)Load(query, transaction);
         }
 
-        public IEnumerable<T> Load(IQuery query, DBTransaction transaction = null)
+        public IEnumerable<T> Load(IQQuery query, DBTransaction transaction = null)
         {
             if (query.Table != this)
                 throw new ArgumentException(nameof(query));
@@ -617,7 +617,7 @@ namespace DataWF.Data
 
         }
 
-        public async ValueTask<IEnumerable<T>> LoadAsync(IQuery query, DBTransaction transaction = null)
+        public async ValueTask<IEnumerable<T>> LoadAsync(IQQuery query, DBTransaction transaction = null)
         {
             if (query.Table != this)
                 throw new ArgumentException(nameof(query));
@@ -656,7 +656,7 @@ namespace DataWF.Data
             }
         }
 
-        private void CheckCacheState(IQuery query)
+        private void CheckCacheState(IQQuery query)
         {
             if ((query.LoadParam & DBLoadParam.NoCache) != DBLoadParam.NoCache)
             {
@@ -1025,7 +1025,7 @@ namespace DataWF.Data
 
         public T LoadByCode(string code, DBColumn<string> column, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
-            var row = column.SelectOne<T>(code, this);
+            var row = column.FirstOrDefault<T>(code, this);
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)//&& !IsSynchronized
             {
                 var command = System.CreateCommand(Schema.Connection, CreateQuery($"where a.{column.SqlName}={Schema.System.ParameterPrefix}{column.SqlName}", "a", param));
@@ -1035,7 +1035,7 @@ namespace DataWF.Data
             return row;
         }
 
-        private void CheckDelete(IQuery query, IEnumerable<T> buf, DBTransaction transaction)
+        private void CheckDelete(IQQuery query, IEnumerable<T> buf, DBTransaction transaction)
         {
             DBLoadParam param = query.LoadParam;
             var list = Select(query).ToList();
@@ -1175,17 +1175,17 @@ namespace DataWF.Data
             return column.Select<T>(comparer, value);
         }
 
-        public override IEnumerable<TT> Select<TT>(IQuery query)
+        public override IEnumerable<TT> Select<TT>(IQQuery query)
         {
             return Select(query).Cast<TT>();
         }
 
-        public override IEnumerable<TT> Select<TT>(IQuery<TT> query)
+        public override IEnumerable<TT> Select<TT>(IQQuery<TT> query)
         {
             return Select(query).Cast<TT>();
         }
 
-        public IEnumerable<T> Select(IQuery query, IEnumerable<T> list = null)
+        public IEnumerable<T> Select(IQQuery query, IEnumerable<T> list = null)
         {
             IEnumerable<T> buf = null;
             if (query.Tables.Count > 1)
@@ -1219,7 +1219,7 @@ namespace DataWF.Data
             return buf;
         }
 
-        private IEnumerable<T> Select(IQuery query, IEnumerable<DBTuple> joinSource)
+        private IEnumerable<T> Select(IQQuery query, IEnumerable<DBTuple> joinSource)
         {
             IEnumerable<DBTuple> buf = null;
             if (query.Parameters.Count == 0)
@@ -1368,7 +1368,7 @@ namespace DataWF.Data
             return param.Search<T>(list);
         }
 
-        public QQuery<T> Query(IQuery query) => new QQuery<T>(query, string.Empty)
+        public QQuery<T> Query(IQQuery query) => new QQuery<T>(query, string.Empty)
         {
             Table = this
         };

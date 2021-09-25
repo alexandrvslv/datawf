@@ -75,7 +75,7 @@ namespace DataWF.Data
         string SqlName { get; }
         TableGenerator Generator { get; }
         DBTableType Type { get; set; }
-        IQuery FilterQuery { get; set; }
+        IQQuery FilterQuery { get; set; }
         //bool IsSynchronized { get; }
         string ItemTypeName { get; }
 
@@ -158,15 +158,15 @@ namespace DataWF.Data
         IEnumerable<T> LoadByKey<T, K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
         IEnumerable<T> Load<T>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
         IEnumerable<T> Load<T>(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
-        IEnumerable<T> Load<T>(IQuery query, DBTransaction transaction = null) where T : DBItem;
-        IEnumerable<T> Load<T>(IQuery<T> query, DBTransaction transaction = null) where T : DBItem;
+        IEnumerable<T> Load<T>(IQQuery query, DBTransaction transaction = null) where T : DBItem;
+        IEnumerable<T> Load<T>(IQQuery<T> query, DBTransaction transaction = null) where T : DBItem;
 
-        IEnumerable<T> Select<T>(IQuery qQuery) where T : DBItem;
-        IEnumerable<T> Select<T>(IQuery<T> qQuery) where T : DBItem;
+        IEnumerable<T> Select<T>(IQQuery qQuery) where T : DBItem;
+        IEnumerable<T> Select<T>(IQQuery<T> qQuery) where T : DBItem;
 
-        IQuery<T> Query<T>(DBLoadParam loadParam = DBLoadParam.None) where T : DBItem;
-        IQuery<T> Query<T>(string filter, DBLoadParam loadParam = DBLoadParam.None) where T : DBItem;
-        IQuery<T> Query<T>(IQuery baseQuery) where T : DBItem;
+        IQQuery<T> Query<T>(DBLoadParam loadParam = DBLoadParam.None) where T : DBItem;
+        IQQuery<T> Query<T>(string filter, DBLoadParam loadParam = DBLoadParam.None) where T : DBItem;
+        IQQuery<T> Query<T>(IQQuery baseQuery) where T : DBItem;
         void Trunc();
 
         void LoadFile();

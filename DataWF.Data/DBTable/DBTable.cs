@@ -55,7 +55,7 @@ namespace DataWF.Data
         protected DBTableGroup tableGroup;
         protected DBSequence cacheSequence;
         protected readonly List<DBTable> virtualTables = new List<DBTable>(0);
-        protected readonly ConcurrentDictionary<string, IQuery> queryChache = new ConcurrentDictionary<string, IQuery>(StringComparer.Ordinal);
+        protected readonly ConcurrentDictionary<string, IQQuery> queryChache = new ConcurrentDictionary<string, IQQuery>(StringComparer.Ordinal);
         protected DBColumn<string> nameKey = DBColumn<string>.EmptyKey;
         protected DBColumn<byte[]> accessKey = DBColumn<byte[]>.EmptyKey;
         protected DBColumn primaryKey = DBColumn.EmptyKey;
@@ -146,7 +146,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Category("Database")]
-        public abstract IQuery FilterQuery { get; set; }
+        public abstract IQQuery FilterQuery { get; set; }
 
         [Browsable(false)]
         public string LogTableName
@@ -927,9 +927,9 @@ namespace DataWF.Data
 
         public abstract IEnumerable<T> Load<T>(DBLoadParam param = DBLoadParam.Referencing, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract IEnumerable<T> Load<T>(IQuery query, DBTransaction transaction = null) where T : DBItem;
+        public abstract IEnumerable<T> Load<T>(IQQuery query, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract IEnumerable<T> Load<T>(IQuery<T> query, DBTransaction transaction = null) where T : DBItem;
+        public abstract IEnumerable<T> Load<T>(IQQuery<T> query, DBTransaction transaction = null) where T : DBItem;
 
         public abstract IEnumerable<T> Load<T>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
 
@@ -1243,9 +1243,9 @@ namespace DataWF.Data
         #region Use Index
 
 
-        public abstract IEnumerable<T> Select<T>(IQuery qQuery) where T : DBItem;
+        public abstract IEnumerable<T> Select<T>(IQQuery qQuery) where T : DBItem;
 
-        public abstract IEnumerable<T> Select<T>(IQuery<T> qQuery) where T : DBItem;
+        public abstract IEnumerable<T> Select<T>(IQQuery<T> qQuery) where T : DBItem;
 
         #endregion
 
@@ -1836,18 +1836,18 @@ namespace DataWF.Data
             }
         }
 
-        public IQuery<T> Query<T>(IQuery baseQuery) where T : DBItem => new QQuery<T>(this) { BaseQuery = baseQuery };
+        public IQQuery<T> Query<T>(IQQuery baseQuery) where T : DBItem => new QQuery<T>(this) { BaseQuery = baseQuery };
 
-        public IQuery<T> Query<T>(DBLoadParam loadParam = DBLoadParam.None) where T : DBItem => new QQuery<T>(this) { LoadParam = loadParam };
+        public IQQuery<T> Query<T>(DBLoadParam loadParam = DBLoadParam.None) where T : DBItem => new QQuery<T>(this) { LoadParam = loadParam };
 
-        public IQuery<T> Query<T>(string filter, DBLoadParam loadParam = DBLoadParam.None) where T : DBItem
+        public IQQuery<T> Query<T>(string filter, DBLoadParam loadParam = DBLoadParam.None) where T : DBItem
         {
             if (!queryChache.TryGetValue(filter, out var query))
             {
                 query = new QQuery<T>(this, filter) { LoadParam = loadParam };
                 queryChache.TryAdd(filter, query);
             }
-            return (IQuery<T>)query;
+            return (IQQuery<T>)query;
         }
 
 

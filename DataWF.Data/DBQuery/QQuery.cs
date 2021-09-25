@@ -29,11 +29,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
 
-    public class QQuery<T> : QItem, IQuery<T>, IDisposable where T : DBItem
+    public class QQuery<T> : QItem, IQQuery<T>, IDisposable where T : DBItem
     {
         private const string StrFrom = "from";
         private const string StrOn = "on";
@@ -55,7 +56,7 @@ namespace DataWF.Data
         protected QItemList<QOrder> orders;
         protected QItemList<QColumn> groups;
         protected QTableList tables;
-        private IQuery baseQuery;
+        private IQQuery baseQuery;
         private DBStatus status = DBStatus.Empty;
         private IDBSchema schema;
         private Type type;
@@ -97,14 +98,14 @@ namespace DataWF.Data
             Parse(queryText);
         }
 
-        public QQuery(IQuery query, string queryText)
+        public QQuery(IQQuery query, string queryText)
             : this(query.Schema)
         {
             BaseQuery = query;
             Parse(queryText);
         }
 
-        public QQuery(IQuery query, ReadOnlySpan<char> queryText)
+        public QQuery(IQQuery query, ReadOnlySpan<char> queryText)
            : this(query.Schema)
         {
             BaseQuery = query;
@@ -166,7 +167,7 @@ namespace DataWF.Data
 
         public QItemList<QColumn> Groups => groups ??= new QItemList<QColumn>(this);
 
-        public IQuery BaseQuery
+        public IQQuery BaseQuery
         {
             get => baseQuery ?? Container?.Query;
             set
@@ -186,7 +187,7 @@ namespace DataWF.Data
         public IQItem Owner => Container?.Owner ?? this;
 
         [JsonIgnore]
-        public override IQuery Query => BaseQuery ?? this;
+        public override IQQuery Query => BaseQuery ?? this;
 
         public Type TypeFilter
         {
@@ -319,88 +320,6 @@ namespace DataWF.Data
             return this;
         }
 
-        private QParam CreateParam(Expression expression, LogicType logicType)
-        {
-            switch (expression)
-            {
-                case BinaryExpression binaryExpression:
-                    return CreateParam(binaryExpression, logicType);
-                default:
-                    throw new NotImplementedException("TODO");
-            }
-        }
-
-        private QParam CreateParam(BinaryExpression binaryExpression, LogicType logicType)
-        {
-            var qParam = new QParam();
-            qParam.Logic = logicType;
-            var logiC = ParseLogic(binaryExpression.NodeType);
-            if (logiC == LogicType.Undefined)
-            {
-                qParam.Comparer = ParseComparer(binaryExpression.NodeType);
-                qParam.Add(ParseBinaryMember(binaryExpression.Left));
-                qParam.Add(ParseBinaryMember(binaryExpression.Right));
-                return qParam;
-            }
-            else
-            {
-                qParam.Add(CreateParam(binaryExpression.Left, LogicType.Undefined));
-                qParam.Add(CreateParam(binaryExpression.Right, logiC));
-            }
-            return qParam;
-        }
-
-        private CompareType ParseComparer(ExpressionType nodeType)
-        {
-            switch (nodeType)
-            {
-                case ExpressionType.Equal: return CompareType.Equal;
-                case ExpressionType.NotEqual: return CompareType.NotEqual;
-                case ExpressionType.GreaterThan: return CompareType.Greater;
-                case ExpressionType.GreaterThanOrEqual: return CompareType.GreaterOrEqual;
-                case ExpressionType.LessThanOrEqual: return CompareType.LessOrEqual;
-                case ExpressionType.LessThan: return CompareType.Less;
-
-                default: throw new NotImplementedException("TODO");
-            }
-        }
-
-        private LogicType ParseLogic(ExpressionType nodeType)
-        {
-            switch (nodeType)
-            {
-                case ExpressionType.Or:
-                case ExpressionType.OrElse: return LogicType.Or;
-                case ExpressionType.And:
-                case ExpressionType.AndAlso: return LogicType.Or;
-
-                default: return LogicType.Undefined;
-            }
-        }
-
-        private QItem ParseBinaryMember(Expression expression)
-        {
-            switch (expression)
-            {
-                case MemberExpression memberExpression:
-                    var column = ParseColumn(memberExpression.Member.Name, null, out var qTable);
-                    if (column != null)
-                    {
-                        return new QColumn(column) { QTable = qTable };
-                    }
-                    else
-                    {
-                        return new QInvoker(EmitInvoker.Initialize(memberExpression.Member));
-                    }
-                case ConstantExpression constExpression:
-                    return new QValue(constExpression.Value);
-                case UnaryExpression unaryExpression:
-                    return ParseBinaryMember(unaryExpression.Operand);
-                default:
-                    throw new NotImplementedException("TODO");
-            }
-        }
-
         public QQuery<T> Where(string filter)
         {
             if (Table == null)
@@ -523,9 +442,9 @@ namespace DataWF.Data
             return null;
         }
 
-        public IQuery GetTopQuery()
+        public IQQuery GetTopQuery()
         {
-            var q = (IQuery)this;
+            var q = (IQQuery)this;
             while (q.BaseQuery != null)
             {
                 q = q.BaseQuery;
@@ -1362,12 +1281,13 @@ namespace DataWF.Data
 
         public QQuery<T> Column(IInvoker invoker, string prefix = null)
         {
-            if (invoker is DBColumn column)
-                Columns.Add(CreateColumn(column, prefix));
-            else if (invoker is QItem qItem)
-                Columns.Add(qItem);
-            else
-                Columns.Add(CreateInvoker(invoker, prefix));
+            Columns.Add(CreateColumn(invoker, prefix));
+            return this;
+        }
+
+        public QQuery<T> Column<K>(Expression<Func<T, K>> keySelector)
+        {
+            Columns.Add(CreateColumn(keySelector.Body));
             return this;
         }
 
@@ -1404,6 +1324,18 @@ namespace DataWF.Data
         public QQuery<T> OrderBy(IInvoker invoker, ListSortDirection direction = ListSortDirection.Ascending)
         {
             Orders.Add(CreateOrderBy(invoker, direction));
+            return this;
+        }
+
+        public QQuery<T> OrderBy<V>(Expression<Func<T, V>> keySelector)
+        {
+            Orders.Add(CreateOrderBy(keySelector.Body, ListSortDirection.Ascending));
+            return this;
+        }
+
+        public QQuery<T> OrderByDescending<V>(Expression<Func<T, V>> keySelector)
+        {
+            Orders.Add(CreateOrderBy(keySelector.Body, ListSortDirection.Descending));
             return this;
         }
 
@@ -1618,6 +1550,58 @@ namespace DataWF.Data
             };
         }
 
+        private QItem CreateColumn(IInvoker invoker, string prefix)
+        {
+            if (invoker is DBColumn column)
+                return CreateColumn(column, prefix);
+            else if (invoker is QItem qItem)
+                return qItem;
+            else
+                return CreateInvoker(invoker, prefix);
+        }
+
+        public QItem CreateColumn(Expression expression)
+        {
+            if (expression is MemberExpression memberExpression)
+            {
+                var column = ParseColumn(memberExpression.Member.Name, null, out var qTable);
+                if (column != null)
+                {
+                    return CreateColumn(column, qTable.TableAlias);
+                }
+                else
+                {
+                    var invoker = EmitInvoker.Initialize(memberExpression.Member);
+                    return CreateInvoker(invoker, GetTable(memberExpression.Member.ReflectedType)?.TableAlias);
+                }
+            }
+            else
+            {
+                throw new NotSupportedException(expression.GetType().Name);
+            }
+        }
+
+        public QOrder CreateOrderBy(Expression expression, ListSortDirection direction)
+        {
+            if (expression is MemberExpression memberExpression)
+            {
+                var column = ParseColumn(memberExpression.Member.Name, null, out var qTable);
+                if (column != null)
+                {
+                    return CreateOrderBy(column, direction, qTable.TableAlias);
+                }
+                else
+                {
+                    var invoker = EmitInvoker.Initialize(memberExpression.Member);
+                    return CreateOrderBy(invoker, direction, GetTable(memberExpression.Member.ReflectedType)?.TableAlias);
+                }
+            }
+            else
+            {
+                throw new NotSupportedException(expression.GetType().Name);
+            }
+        }
+
         public QOrder CreateOrderBy(DBColumn column, ListSortDirection direction, string tableAlias = null)
         {
             return new QOrder(CreateColumn(column, tableAlias))
@@ -1806,12 +1790,96 @@ namespace DataWF.Data
             return CreateParam(logic, column, p, buildParam);
         }
 
+        private QParam CreateParam(Expression expression, LogicType logicType)
+        {
+            switch (expression)
+            {
+                case BinaryExpression binaryExpression:
+                    return CreateParam(binaryExpression, logicType);
+                default:
+                    throw new NotImplementedException("TODO");
+            }
+        }
+
+        private QParam CreateParam(BinaryExpression binaryExpression, LogicType logicType)
+        {
+            var qParam = new QParam();
+            qParam.Logic = logicType;
+            var logiC = ParseLogic(binaryExpression.NodeType);
+            if (logiC == LogicType.Undefined)
+            {
+                qParam.Comparer = ParseComparer(binaryExpression.NodeType);
+                qParam.Add(ParseBinaryMember(binaryExpression.Left));
+                qParam.Add(ParseBinaryMember(binaryExpression.Right));
+                return qParam;
+            }
+            else
+            {
+                qParam.Add(CreateParam(binaryExpression.Left, LogicType.Undefined));
+                qParam.Add(CreateParam(binaryExpression.Right, logiC));
+            }
+            return qParam;
+        }
+
+        private CompareType ParseComparer(ExpressionType nodeType)
+        {
+            switch (nodeType)
+            {
+                case ExpressionType.Equal: return CompareType.Equal;
+                case ExpressionType.NotEqual: return CompareType.NotEqual;
+                case ExpressionType.GreaterThan: return CompareType.Greater;
+                case ExpressionType.GreaterThanOrEqual: return CompareType.GreaterOrEqual;
+                case ExpressionType.LessThanOrEqual: return CompareType.LessOrEqual;
+                case ExpressionType.LessThan: return CompareType.Less;
+
+                default: throw new NotImplementedException("TODO");
+            }
+        }
+
+        private LogicType ParseLogic(ExpressionType nodeType)
+        {
+            switch (nodeType)
+            {
+                case ExpressionType.Or:
+                case ExpressionType.OrElse: return LogicType.Or;
+                case ExpressionType.And:
+                case ExpressionType.AndAlso: return LogicType.Or;
+
+                default: return LogicType.Undefined;
+            }
+        }
+
+        private QItem ParseBinaryMember(Expression expression)
+        {
+            switch (expression)
+            {
+                case MemberExpression memberExpression:
+                    var column = ParseColumn(memberExpression.Member.Name, null, out var qTable);
+                    if (column != null)
+                    {
+                        return new QColumn(column) { QTable = qTable };
+                    }
+                    else
+                    {
+                        return new QInvoker(EmitInvoker.Initialize(memberExpression.Member));
+                    }
+                case ConstantExpression constExpression:
+                    return new QValue(constExpression.Value);
+                case UnaryExpression unaryExpression:
+                    return ParseBinaryMember(unaryExpression.Operand);
+                default:
+                    throw new NotImplementedException("TODO");
+            }
+        }
+
+
+
         protected CompareType DetectComparer(IInvoker column, ref object value, QBuildParam buildParam)
         {
             var valueType = value?.GetType();
             var type = column?.DataType ?? valueType;
             var comparer = CompareType.Equal;
-            if (value is IQuery)
+            if (value is IQQuery)
             {
                 comparer = CompareType.In;
             }
@@ -1905,14 +1973,14 @@ namespace DataWF.Data
                 }
                 yield break;
             }
-            if (param.LeftItem is IQuery leftQuery)
+            if (param.LeftItem is IQQuery leftQuery)
             {
                 foreach (var subParam in leftQuery.GetAllParameters())
                 {
                     yield return subParam;
                 }
             }
-            if (param.RightItem is IQuery rightQuery)
+            if (param.RightItem is IQQuery rightQuery)
             {
                 foreach (var subParam in rightQuery.GetAllParameters())
                 {
@@ -2045,12 +2113,12 @@ namespace DataWF.Data
                             cols.Append(subSpace);
                             cols.Append("    ,");
                         }
-                        if (col is IQuery)
+                        if (col is IQQuery)
                         {
                             cols.Append("(");
                         }
                         cols.Append(temp);
-                        if (col is IQuery)
+                        if (col is IQQuery)
                         {
                             cols.Append(")");
                         }
@@ -2283,7 +2351,9 @@ namespace DataWF.Data
 
         public IEnumerable<T> Select() => TTable.Select(this);
 
-        public IEnumerable<T> Load() => TTable.Load(this);
+        public IEnumerable<T> Load(DBTransaction transaction = null) => TTable.Load(this, transaction);
+
+        public ValueTask<IEnumerable<T>> LoadAsync(DBTransaction transaction = null) => TTable.LoadAsync(this, transaction);
 
         public IEnumerator<TT> GetYieldEnumerator<TT>() where TT : DBItem
         {
@@ -2303,84 +2373,72 @@ namespace DataWF.Data
             return GetYieldEnumerator<T>();
         }
 
-        public T FirstOrDefault()
+        public T FirstOrDefault(DBTransaction transaction = null)
         {
-            return TTable.Select(this).FirstOrDefault() ?? TTable.Load(this).FirstOrDefault();
+            return TTable.Select(this).FirstOrDefault() ?? TTable.Load(this, transaction).FirstOrDefault();
+        }
+        
+        public T FirstOrDefault(Func<T,bool> predicate, DBTransaction transaction = null)
+        {
+            return TTable.Select(this).FirstOrDefault() ?? TTable.Load(this, transaction).FirstOrDefault();
         }
 
-        IQuery IQuery.Column(QFunctionType function, params object[] args) => Column(function, args);
+        IQQuery IQQuery.Column(QFunctionType function, params object[] args) => Column(function, args);
+        IQQuery IQQuery.Column(IInvoker invoker) => Column(invoker);
 
-        IQuery IQuery.Column(IInvoker invoker) => Column(invoker);
+        IQQuery IQQuery.Where(string text) => Where(text);
+        IQQuery IQQuery.WhereViewColumns(string text, QBuildParam param) => WhereViewColumns(text, param);
+        IQQuery IQQuery.Where(Type typeFilter) => Where(typeFilter);
+        IQQuery IQQuery.Where(QParam qParam) => Where(qParam);
 
-        IQuery IQuery.Where(string text) => Where(text);
+        IQQuery IQQuery.Where(Action<QParam> qParam) => Where(qParam);
+        IQQuery IQQuery.Where(IInvoker invoker, object value, QBuildParam param) => Where(invoker, value, param);
+        IQQuery IQQuery.Where(IInvoker invoker, CompareType comparer, object value) => Where(invoker, comparer, value);
+        IQQuery IQQuery.Where(string column, CompareType comparer, object value) => Where(column, comparer, value);
 
-        IQuery IQuery.WhereViewColumns(string text, QBuildParam param) => WhereViewColumns(text, param);
+        IQQuery IQQuery.And(QParam qParam) => And(qParam);
+        IQQuery IQQuery.And(Action<QParam> qParam) => And(qParam);
+        IQQuery IQQuery.And(IInvoker invoker, object value, QBuildParam param) => And(invoker, value, param);
+        IQQuery IQQuery.And(IInvoker invoker, CompareType comparer, object value) => And(invoker, comparer, value);
+        IQQuery IQQuery.And(string column, CompareType comparer, object value) => And(column, comparer, value);
 
-        IQuery IQuery.Where(Type typeFilter) => Where(typeFilter);
+        IQQuery IQQuery.Or(QParam qParam) => Or(qParam);
+        IQQuery IQQuery.Or(Action<QParam> qParam) => Or(qParam);
+        IQQuery IQQuery.Or(IInvoker invoker, object value, QBuildParam param) => Or(invoker, value, param);
+        IQQuery IQQuery.Or(IInvoker invoker, CompareType comparer, object value) => Or(invoker, comparer, value);
+        IQQuery IQQuery.Or(string column, CompareType comparer, object value) => Or(column, comparer, value);
 
-        IQuery IQuery.Where(QParam qParam) => Where(qParam);
+        IQQuery IQQuery.OrderBy(IInvoker invoker, ListSortDirection direction) => OrderBy(invoker, direction);
 
-        IQuery IQuery.Where(Action<QParam> qParam) => Where(qParam);
+        IQQuery<T> IQQuery<T>.Column(QFunctionType function, params object[] args) => Column(function, args);
+        IQQuery<T> IQQuery<T>.Column(IInvoker invoker) => Column(invoker);
+        IQQuery<T> IQQuery<T>.Column<K>(Expression<Func<T, K>> keySelector) => Column(keySelector);
 
-        IQuery IQuery.Where(IInvoker invoker, object value, QBuildParam param) => Where(invoker, value, param);
+        IQQuery<T> IQQuery<T>.Where(string text) => Where(text);
+        IQQuery<T> IQQuery<T>.Where(Expression<Func<T, bool>> expression) => Where(expression);
+        IQQuery<T> IQQuery<T>.WhereViewColumns(string text, QBuildParam param) => WhereViewColumns(text, param);
+        IQQuery<T> IQQuery<T>.Where(Type typeFilter) => Where(typeFilter);
+        IQQuery<T> IQQuery<T>.Where(QParam qParam) => Where(qParam);
+        IQQuery<T> IQQuery<T>.Where(Action<QParam> qParam) => Where(qParam);
+        IQQuery<T> IQQuery<T>.Where(IInvoker invoker, object value, QBuildParam param) => Where(invoker, value, param);
+        IQQuery<T> IQQuery<T>.Where(IInvoker invoker, CompareType comparer, object value) => Where(invoker, comparer, value);
+        IQQuery<T> IQQuery<T>.Where(string invoker, CompareType comparer, object value) => Where(invoker, comparer, value);
 
-        IQuery IQuery.Where(IInvoker invoker, CompareType comparer, object value) => Where(invoker, comparer, value);
+        IQQuery<T> IQQuery<T>.And(QParam qParam) => And(qParam);
+        IQQuery<T> IQQuery<T>.And(Action<QParam> qParam) => And(qParam);
+        IQQuery<T> IQQuery<T>.And(IInvoker invoker, object value, QBuildParam param) => And(invoker, value, param);
+        IQQuery<T> IQQuery<T>.And(IInvoker invoker, CompareType comparer, object value) => And(invoker, comparer, value);
+        IQQuery<T> IQQuery<T>.And(string invoker, CompareType comparer, object value) => And(invoker, comparer, value);
 
-        IQuery IQuery.And(QParam qParam) => And(qParam);
+        IQQuery<T> IQQuery<T>.Or(QParam qParam) => Or(qParam);
+        IQQuery<T> IQQuery<T>.Or(Action<QParam> qParam) => Or(qParam);
+        IQQuery<T> IQQuery<T>.Or(IInvoker invoker, object value, QBuildParam param) => Or(invoker, value, param);
+        IQQuery<T> IQQuery<T>.Or(IInvoker invoker, CompareType comparer, object value) => Or(invoker, comparer, value);
+        IQQuery<T> IQQuery<T>.Or(string invoker, CompareType comparer, object value) => Or(invoker, comparer, value);
 
-        IQuery IQuery.And(Action<QParam> qParam) => And(qParam);
-
-        IQuery IQuery.And(IInvoker invoker, object value, QBuildParam param) => And(invoker, value, param);
-
-        IQuery IQuery.And(IInvoker invoker, CompareType comparer, object value) => And(invoker, comparer, value);
-
-        IQuery IQuery.Or(QParam qParam) => Or(qParam);
-
-        IQuery IQuery.Or(Action<QParam> qParam) => Or(qParam);
-
-        IQuery IQuery.Or(IInvoker invoker, object value, QBuildParam param) => Or(invoker, value, param);
-
-        IQuery IQuery.Or(IInvoker invoker, CompareType comparer, object value) => Or(invoker, comparer, value);
-
-        IQuery IQuery.OrderBy(IInvoker invoker, ListSortDirection direction) => OrderBy(invoker, direction);
-
-        IQuery<T> IQuery<T>.Column(QFunctionType function, params object[] args) => Column(function, args);
-
-        IQuery<T> IQuery<T>.Column(IInvoker invoker) => Column(invoker);
-
-        IQuery<T> IQuery<T>.Where(string text) => Where(text);
-
-        IQuery<T> IQuery<T>.Where(Expression<Func<T, bool>> expression) => Where(expression);
-
-        IQuery<T> IQuery<T>.WhereViewColumns(string text, QBuildParam param) => WhereViewColumns(text, param);
-
-        IQuery<T> IQuery<T>.Where(Type typeFilter) => Where(typeFilter);
-
-        IQuery<T> IQuery<T>.Where(QParam qParam) => Where(qParam);
-
-        IQuery<T> IQuery<T>.Where(Action<QParam> qParam) => Where(qParam);
-
-        IQuery<T> IQuery<T>.Where(IInvoker invoker, object value, QBuildParam param) => Where(invoker, value, param);
-
-        IQuery<T> IQuery<T>.Where(IInvoker invoker, CompareType comparer, object value) => Where(invoker, comparer, value);
-
-        IQuery<T> IQuery<T>.And(QParam qParam) => And(qParam);
-
-        IQuery<T> IQuery<T>.And(Action<QParam> qParam) => And(qParam);
-
-        IQuery<T> IQuery<T>.And(IInvoker invoker, object value, QBuildParam param) => And(invoker, value, param);
-
-        IQuery<T> IQuery<T>.And(IInvoker invoker, CompareType comparer, object value) => And(invoker, comparer, value);
-
-        IQuery<T> IQuery<T>.Or(QParam qParam) => Or(qParam);
-
-        IQuery<T> IQuery<T>.Or(Action<QParam> qParam) => Or(qParam);
-
-        IQuery<T> IQuery<T>.Or(IInvoker invoker, object value, QBuildParam param) => Or(invoker, value, param);
-
-        IQuery<T> IQuery<T>.Or(IInvoker invoker, CompareType comparer, object value) => Or(invoker, comparer, value);
-
-        IQuery<T> IQuery<T>.OrderBy(IInvoker invoker, ListSortDirection direction) => OrderBy(invoker, direction);
+        IQQuery<T> IQQuery<T>.OrderBy(IInvoker invoker, ListSortDirection direction) => OrderBy(invoker, direction);
+        IQQuery<T> IQQuery<T>.OrderBy<K>(Expression<Func<T, K>> keySelector) => OrderBy(keySelector);
+        IQQuery<T> IQQuery<T>.OrderByDescending<K>(Expression<Func<T, K>> keySelector) => OrderByDescending(keySelector);
 
     }
 

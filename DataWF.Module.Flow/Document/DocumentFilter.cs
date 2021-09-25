@@ -148,7 +148,7 @@ namespace DataWF.Module.Flow
                     {
                         foreach (var param in paramReferencing.Parameters.OfType<QParam>())
                         {
-                            ((DataWF.Data.IQuery)param.RightItem).Parameters.First().SetRightValue(value.Id);
+                            ((IQQuery)param.RightItem).Parameters.First().SetRightValue(value.Id);
                         }
                     }
                 }

@@ -434,7 +434,7 @@ namespace DataWF.Data
         {
             if (Value == null)
                 return string.Empty;
-            if (Value is IQuery squery && squery.Table != null)
+            if (Value is IQQuery squery && squery.Table != null)
             {
                 if (squery.Columns.Count == 0)
                     squery.Column(squery.Table.PrimaryKey);
