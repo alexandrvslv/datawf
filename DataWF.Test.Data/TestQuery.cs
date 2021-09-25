@@ -15,6 +15,8 @@ namespace DataWF.Test.Data
         private TestSchema schema;
         private EmployerTable<Employer> employers;
         private PositionTable positions;
+        private int ClassField = 1;
+        private int ClassProperty => 1;
 
         [SetUp]
         public async Task Setup()
@@ -116,7 +118,7 @@ where Position.Code in ('2','3')";
             var parameters = query.GetAllQItems<QParam>().ToList();
             Assert.AreEqual(3, parameters.Count());
             Assert.AreEqual(true, parameters[0].IsCompaund);
-            
+
             Assert.AreEqual(employers.PositionIdKey, parameters[1].LeftColumn);
             Assert.IsAssignableFrom<QArray>(parameters[1].RightItem);
 
@@ -127,10 +129,14 @@ where Position.Code in ('2','3')";
         [Test]
         public void QueryExpressionParam()
         {
+            int localVariable = 1;
             var query = employers.Query()
                 .Column(p => p.Id)
                 .Column(p => p.DateCreate)
                 .Where(p => p.Id > 90 && p.PositionId != null)
+                .Where(p => p.Id == localVariable || p.Id == ClassField || p.Id == ClassProperty)
+                .Where(p => p.IsActive)
+                .Where(p => !p.IsActive)
                 .OrderBy(p => p.Identifier);
 
             Assert.AreEqual(2, query.Columns.Count);
@@ -146,17 +152,38 @@ where Position.Code in ('2','3')";
             var parameters = query.Parameters.GetAllQItems<QParam>()
                                                 .Where(p => !p.IsCompaund)
                                                 .ToList();
-            Assert.AreEqual(2, parameters.Count);
+            Assert.AreEqual(7, parameters.Count);
 
             Assert.AreEqual(LogicType.Undefined, parameters[0].Logic);
             Assert.AreEqual(employers.IdKey, parameters[0].LeftColumn);
             Assert.AreEqual(CompareType.Greater, parameters[0].Comparer);
-            Assert.AreEqual(90, parameters[0].RightItem.GetValue<Employer>());
+            Assert.AreEqual(90, parameters[0].RightItem.GetValue());
 
             Assert.AreEqual(LogicType.Or, parameters[1].Logic);
             Assert.AreEqual(employers.PositionIdKey, parameters[1].LeftColumn);
             Assert.AreEqual(CompareType.NotEqual, parameters[1].Comparer);
-            Assert.AreEqual(null, parameters[1].RightItem.GetValue<Employer>());
+            Assert.AreEqual(null, parameters[1].RightItem.GetValue());
+
+            
+            Assert.AreEqual(employers.IdKey, parameters[2].LeftColumn);
+            Assert.AreEqual(CompareType.Equal, parameters[2].Comparer);
+            Assert.AreEqual(1, parameters[2].RightItem.GetValue());
+
+            Assert.AreEqual(employers.IdKey, parameters[3].LeftColumn);
+            Assert.AreEqual(CompareType.Equal, parameters[3].Comparer);
+            Assert.AreEqual(1, parameters[3].RightItem.GetValue());
+
+            Assert.AreEqual(employers.IdKey, parameters[4].LeftColumn);
+            Assert.AreEqual(CompareType.Equal, parameters[4].Comparer);
+            Assert.AreEqual(1, parameters[4].RightItem.GetValue());
+
+            Assert.AreEqual(employers.IsActiveKey, parameters[5].LeftColumn);
+            Assert.AreEqual(CompareType.Equal, parameters[5].Comparer);
+            Assert.AreEqual(true, parameters[5].RightItem.GetValue());
+
+            Assert.AreEqual(employers.IsActiveKey, parameters[6].LeftColumn);
+            Assert.AreEqual(CompareType.NotEqual, parameters[6].Comparer);
+            Assert.AreEqual(true, parameters[6].RightItem.GetValue());
         }
 
         [Test]

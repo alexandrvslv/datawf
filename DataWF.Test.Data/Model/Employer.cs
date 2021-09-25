@@ -68,9 +68,9 @@ namespace DataWF.Test.Data
         }
 
         [Column("is_active")]
-        public bool? IsActive
+        public bool IsActive
         {
-            get => GetValue<bool?>();
+            get => GetValue<bool>();
             set => SetValue(value);
         }
 
