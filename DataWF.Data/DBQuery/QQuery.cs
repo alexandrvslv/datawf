@@ -1790,37 +1790,6 @@ namespace DataWF.Data
             return CreateParam(logic, column, p, buildParam);
         }
 
-        private QParam CreateParam(Expression expression, LogicType logicType)
-        {
-            switch (expression)
-            {
-                case BinaryExpression binaryExpression:
-                    return CreateParam(binaryExpression, logicType);
-                default:
-                    throw new NotImplementedException("TODO");
-            }
-        }
-
-        private QParam CreateParam(BinaryExpression binaryExpression, LogicType logicType)
-        {
-            var qParam = new QParam();
-            qParam.Logic = logicType;
-            var logiC = ParseLogic(binaryExpression.NodeType);
-            if (logiC == LogicType.Undefined)
-            {
-                qParam.Comparer = ParseComparer(binaryExpression.NodeType);
-                qParam.Add(ParseBinaryMember(binaryExpression.Left));
-                qParam.Add(ParseBinaryMember(binaryExpression.Right));
-                return qParam;
-            }
-            else
-            {
-                qParam.Add(CreateParam(binaryExpression.Left, LogicType.Undefined));
-                qParam.Add(CreateParam(binaryExpression.Right, logiC));
-            }
-            return qParam;
-        }
-
         private CompareType ParseComparer(ExpressionType nodeType)
         {
             switch (nodeType)
@@ -1849,30 +1818,106 @@ namespace DataWF.Data
             }
         }
 
-        private QItem ParseBinaryMember(Expression expression)
+        private QParam CreateParam(Expression expression, LogicType logicType)
         {
             switch (expression)
             {
+                case BinaryExpression binaryExpression:
+                    return CreateParam(binaryExpression, logicType);
                 case MemberExpression memberExpression:
-                    var column = ParseColumn(memberExpression.Member.Name, null, out var qTable);
-                    if (column != null)
-                    {
-                        return new QColumn(column) { QTable = qTable };
-                    }
-                    else
-                    {
-                        return new QInvoker(EmitInvoker.Initialize(memberExpression.Member));
-                    }
-                case ConstantExpression constExpression:
-                    return new QValue(constExpression.Value);
+                    return CreateParam(memberExpression, logicType);
                 case UnaryExpression unaryExpression:
-                    return ParseBinaryMember(unaryExpression.Operand);
+                    return CreateParam(unaryExpression, logicType);
                 default:
                     throw new NotImplementedException("TODO");
             }
         }
 
+        private QParam CreateParam(UnaryExpression unaryExpression, LogicType logicType)
+        {
+            switch (unaryExpression.NodeType)
+            {
+                case ExpressionType.Not:
+                    if (unaryExpression.Operand is MemberExpression memberExpression)
+                    {
+                        var param = CreateParam(memberExpression, logicType);
+                        param.Comparer = CompareType.NotEqual;
+                        return param;
+                    }
+                    throw new NotImplementedException("TODO");                    
+            }
+            throw new NotImplementedException("TODO");
+        }
 
+        private QParam CreateParam(MemberExpression memberExpression, LogicType logicType)
+        {
+            if (TypeHelper.GetMemberType(memberExpression.Member) == typeof(bool))
+            {
+                return new QParam
+                {
+                    Logic = logicType,
+                    LeftItem = CreateParamItem(memberExpression),
+                    Comparer = CompareType.Equal,
+                    RightItem = new QValue(true),
+                };
+            }
+            throw new NotImplementedException("TODO");
+        }
+
+        private QParam CreateParam(BinaryExpression binaryExpression, LogicType logicType)
+        {
+            var qParam = new QParam();
+            qParam.Logic = logicType;
+            var logiC = ParseLogic(binaryExpression.NodeType);
+            if (logiC == LogicType.Undefined)
+            {
+                qParam.Comparer = ParseComparer(binaryExpression.NodeType);
+                qParam.Add(ParseBinaryMember(binaryExpression.Left, binaryExpression));
+                qParam.Add(ParseBinaryMember(binaryExpression.Right, binaryExpression));
+                return qParam;
+            }
+            else
+            {
+                qParam.Add(CreateParam(binaryExpression.Left, LogicType.Undefined));
+                qParam.Add(CreateParam(binaryExpression.Right, logiC));
+            }
+            return qParam;
+        }
+
+        private QItem ParseBinaryMember(Expression expression, Expression baseExpression)
+        {
+            switch (expression)
+            {
+                case MemberExpression memberExpression:
+                    if (memberExpression.Expression is not ParameterExpression)
+                        return ParseBinaryMember(memberExpression.Expression, expression);
+                    return CreateParamItem(memberExpression);
+                case ConstantExpression constExpression:
+                    if (baseExpression is UnaryExpression
+                        || baseExpression is BinaryExpression)
+                        return new QValue(constExpression.Value);
+                    else if (baseExpression is MemberExpression constMemberExpression)
+                        return new QValue(EmitInvoker.GetValue(constMemberExpression.Member, constExpression.Value));
+                    throw new NotImplementedException("TODO");
+                case UnaryExpression unaryExpression:
+                    return ParseBinaryMember(unaryExpression.Operand, unaryExpression);
+                default:
+                    throw new NotImplementedException("TODO");
+            }
+        }
+
+        private QItem CreateParamItem(MemberExpression memberExpression)
+        {
+            var column = ParseColumn(memberExpression.Member.Name, null, out var qTable);
+            if (column != null)
+            {
+                return new QColumn(column) { QTable = qTable };
+            }
+            else
+            {
+                return new QInvoker(EmitInvoker.Initialize(memberExpression.Member));
+            }
+        }
 
         protected CompareType DetectComparer(IInvoker column, ref object value, QBuildParam buildParam)
         {
