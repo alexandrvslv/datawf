@@ -3,12 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-[assembly: Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Comparer), typeof(DictionaryComparerInvoker<,>))]
-[assembly: Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Count), typeof(DictionaryCountInvoker<,>))]
-[assembly: Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Keys), typeof(DictionaryKeysInvoker<,>))]
-[assembly: Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Values), typeof(DictionaryValuesInvoker<,>))]
-[assembly: Invoker(typeof(List<>), nameof(List<object>.Count), typeof(ListCountInvoker<>))]
-[assembly: Invoker(typeof(List<>), nameof(List<object>.Capacity), typeof(ListCapacityInvoker<>))]
+
 namespace DataWF.Common
 {
     [InvokerGenerator]
@@ -46,9 +41,10 @@ namespace DataWF.Common
         {
             Key = default(K);
             Value = default(V);
-        }       
+        }
     }
 
+    [Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Comparer))]
     public class DictionaryComparerInvoker<K, V> : Invoker<Dictionary<K, V>, IEqualityComparer<K>>
     {
         public override string Name => nameof(Dictionary<K, V>.Comparer);
@@ -60,6 +56,7 @@ namespace DataWF.Common
         public override void SetValue(Dictionary<K, V> target, IEqualityComparer<K> value) { }
     }
 
+    [Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Count))]
     public class DictionaryCountInvoker<K, V> : Invoker<Dictionary<K, V>, int>
     {
         public override string Name => nameof(Dictionary<K, V>.Count);
@@ -71,6 +68,7 @@ namespace DataWF.Common
         public override void SetValue(Dictionary<K, V> target, int value) { }
     }
 
+    [Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Keys))]
     public class DictionaryKeysInvoker<K, V> : Invoker<Dictionary<K, V>, Dictionary<K, V>.KeyCollection>
     {
         public override string Name => nameof(Dictionary<K, V>.Keys);
@@ -82,6 +80,7 @@ namespace DataWF.Common
         public override void SetValue(Dictionary<K, V> target, Dictionary<K, V>.KeyCollection value) { }
     }
 
+    [Invoker(typeof(Dictionary<,>), nameof(Dictionary<object, object>.Values))]
     public class DictionaryValuesInvoker<K, V> : Invoker<Dictionary<K, V>, Dictionary<K, V>.ValueCollection>
     {
         public override string Name => nameof(Dictionary<K, V>.Values);
@@ -93,6 +92,7 @@ namespace DataWF.Common
         public override void SetValue(Dictionary<K, V> target, Dictionary<K, V>.ValueCollection value) { }
     }
 
+    [Invoker(typeof(List<>), nameof(List<object>.Count))]
     public class ListCountInvoker<T> : Invoker<List<T>, int>
     {
         public override string Name => nameof(List<T>.Count);
@@ -104,6 +104,7 @@ namespace DataWF.Common
         public override void SetValue(List<T> target, int value) { }
     }
 
+    [Invoker(typeof(List<>), nameof(List<object>.Capacity))]
     public class ListCapacityInvoker<T> : Invoker<List<T>, int>
     {
         public override string Name => nameof(List<T>.Capacity);

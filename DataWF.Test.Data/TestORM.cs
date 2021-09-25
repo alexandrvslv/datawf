@@ -397,7 +397,7 @@ namespace DataWF.Test.Data
 
             table.Clear();
 
-            table.Load(string.Empty);
+            table.Load();
             Assert.AreEqual(1000, table.Count, "Read/Write Geometry Rectangle Fail!");
         }
 

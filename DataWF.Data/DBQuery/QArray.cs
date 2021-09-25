@@ -30,6 +30,7 @@ namespace DataWF.Data
     public class QArray : QItem, IQItemList
     {
         protected QItemList<QItem> items;
+        protected DBColumn column;
 
         public QArray()
         {
@@ -54,7 +55,23 @@ namespace DataWF.Data
             }
         }
 
-        public DBColumn Column { get; set; }
+        public DBColumn Column
+        {
+            get => column;
+            set
+            {
+                if (column != value)
+                {
+                    column = value;
+                    foreach (var item in items)
+                    {
+                        if (item is QValue qValue
+                            && qValue.Column == null)
+                            qValue.Column = column;
+                    }
+                }
+            }
+        }
 
         public QItemList<QItem> Items
         {

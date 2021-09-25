@@ -20,14 +20,14 @@ namespace DataWF.Module.Flow
         private readonly HashSet<Document> saving = new HashSet<Document>();
         [JsonIgnore]
         public HashSet<Document> SaveStack => saving;
+
         public Document FindDocument(Template template, object p)
         {
             if (template == null)
                 return null;
             string filter = $"{TemplateIdKey.Name}={template.Id} and {CustomerIdKey.Name}={p}";
-            return Load(filter, DBLoadParam.Load).FirstOrDefault();
+            return Query(filter, DBLoadParam.Load).FirstOrDefault();
         }
-
 
         public object ExecuteProcedures(DocumentExecuteArgs param, IEnumerable<StageProcedure> enumer)
         {
@@ -61,12 +61,12 @@ namespace DataWF.Module.Flow
         {
             //string.Format("select {0} from {1} where {2} = {3}"
             var qrefing = Schema.DocumentReference.Query()
-                  .Column(Schema.DocumentReference.DocumentIdKey)
-                  .Where(Schema.DocumentReference.ReferenceIdKey, id);
+                  .Column(p => p.DocumentId)
+                  .Where(p => p.Reference == id);
             //string.Format("select {2} from {1} where {0} = {3}",
             var qrefed = Schema.DocumentReference.Query()
-                  .Column(Schema.DocumentReference.ReferenceIdKey)
-                  .Where(Schema.DocumentReference.DocumentIdKey, id);
+                  .Column(p => p.ReferenceId)
+                  .Where(p => p.Document == id);
 
             param.Parameters.Add(new QParam(Schema.DocumentReference.IdKey, CompareType.In, qrefed));
             param.Parameters.Add(new QParam(Schema.DocumentReference.IdKey, CompareType.In, qrefing));

@@ -181,7 +181,7 @@ namespace DataWF.Data
 
         public abstract string Format(IDbCommand command = null);
 
-        public virtual object GetValue() => GetValue<DBItem>();
+        public object GetValue() => GetValue<DBItem>();
         
         public virtual object GetValue<T>()
         {

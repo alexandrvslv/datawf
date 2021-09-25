@@ -25,7 +25,7 @@ namespace DataWf.Test.Module.Counterparty
             Assert.IsNotNull(schema.CustomerAddress);
             Assert.IsNotNull(schema.PersoneIdentify);
             Assert.IsNotNull(schema.CustomerReference);
-            DBService.Save();
+            
             schema.Connection = new DBConnection
             {
                 Name = "test.common",

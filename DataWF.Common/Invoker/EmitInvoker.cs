@@ -12,17 +12,13 @@ namespace DataWF.Common
     /// <summary>
     /// EmitInvoker.
     /// Dynamic method + delegate container 
-    /// for System.Reflection property, method and constru
-    /// <summary>
-    /// EmitInvoker.
-    /// Dynamic method + delegate container 
     /// for System.Reflection property, method and constructor.
     /// <see href="http://www.codeproject.com/KB/cs/FastMethodInvoker.aspx"/>
     /// <see href="http://www.codeproject.com/KB/cs/FastInvokerWrapper.aspx"/>
     /// </summary>
     public static class EmitInvoker
     {
-        private static readonly Dictionary<MetadataToken, Type> cacheGenericInvokers = new Dictionary<MetadataToken, Type>(300);
+        private static readonly Dictionary<MetadataToken, Type> cacheInvokersType = new Dictionary<MetadataToken, Type>(300);
         private static readonly Dictionary<MetadataToken, IInvoker> cacheInvokers = new Dictionary<MetadataToken, IInvoker>(500);
         private static readonly Dictionary<MetadataToken, EmitConstructor> cacheCtors = new Dictionary<MetadataToken, EmitConstructor>(500);
 
@@ -30,6 +26,16 @@ namespace DataWF.Common
         {
             var methoInfo = TypeHelper.GetMemberInfo(typeof(object), nameof(ToString), out _, false);
             cacheInvokers[MetadataToken.GetToken(methoInfo)] = ToStringInvoker<object>.Instance;
+
+            RegisterInvoker(typeof(DictionaryComparerInvoker<,>), typeof(Dictionary<,>), nameof(Dictionary<object, object>.Comparer));
+            RegisterInvoker(typeof(DictionaryCountInvoker<,>), typeof(Dictionary<,>), nameof(Dictionary<object, object>.Count));
+            RegisterInvoker(typeof(DictionaryKeysInvoker<,>), typeof(Dictionary<,>), nameof(Dictionary<object, object>.Keys));
+            RegisterInvoker(typeof(DictionaryValuesInvoker<,>), typeof(Dictionary<,>), nameof(Dictionary<object, object>.Values));
+
+            RegisterInvoker(typeof(ListCountInvoker<>), typeof(List<>), nameof(List<object>.Count));
+            RegisterInvoker(typeof(ListCapacityInvoker<>), typeof(List<>), nameof(List<object>.Capacity));
+
+            RegisterInvoker(typeof(NamedNameInvoker<>), typeof(INamed), nameof(INamed.Name));
         }
         public static void DeleteCache()
         {
@@ -62,21 +68,20 @@ namespace DataWF.Common
             cacheInvokers.Remove(token);
         }
 
-
-        public static void RegisterInvoker(InvokerAttribute invoker)
+        public static void RegisterInvoker(Type invokerType, Type targetType, string name)
         {
-            var propertyInfo = TypeHelper.GetPropertyInfo(invoker.TargetType, invoker.PropertyName);
+            var propertyInfo = TypeHelper.GetPropertyInfo(targetType, name);
             if (propertyInfo != null)
             {
-                if (invoker.InvokerType.IsGenericType
-                    || invoker.TargetType.IsGenericTypeDefinition)
+                if (invokerType.IsGenericType
+                    || targetType.IsGenericTypeDefinition)
                 {
                     var token = MetadataToken.GetToken(propertyInfo);
-                    cacheGenericInvokers[token] = invoker.InvokerType;
+                    cacheInvokersType[token] = invokerType;
                 }
                 else
                 {
-                    RegisterInvoker(propertyInfo, (IInvoker)Activator.CreateInstance(invoker.InvokerType));
+                    RegisterInvoker(propertyInfo, (IInvoker)Activator.CreateInstance(invokerType));
                 }
             }
         }
@@ -158,24 +163,49 @@ namespace DataWF.Common
                 {
                     return invoker;
                 }
+                Type invokerType = GetNestedInvokerType(baseInfo);
+
                 if (baseInfo.DeclaringType.IsGenericType && !baseInfo.DeclaringType.IsGenericTypeDefinition)
                 {
                     var genericType = baseInfo.DeclaringType.GetGenericTypeDefinition();
                     var genericInfo = TypeHelper.GetMemberInfo(genericType, baseInfo.Name, out index, false);
-                    var genericToken = MetadataToken.GetToken(genericInfo);
-                    if (cacheGenericInvokers.TryGetValue(genericToken, out var genericInvokerType))
+                    invokerType = GetNestedInvokerType(genericInfo);
+                    if (invokerType != null)
                     {
-                        var type = genericInvokerType.MakeGenericType(info.DeclaringType.GetGenericArguments());
-                        return CacheInvokers(token, (IInvoker)Activator.CreateInstance(type), info);
+                        invokerType = invokerType.MakeGenericType(info.DeclaringType.GetGenericArguments());
                     }
                 }
-                else if (cacheGenericInvokers.TryGetValue(baseToken, out var genericInvokerType))
+
+                if (invokerType != null)
                 {
-                    var type = genericInvokerType.MakeGenericType(info.DeclaringType);
-                    return CacheInvokers(token, (IInvoker)Activator.CreateInstance(type), info);
+                    if (invokerType.IsGenericTypeDefinition)
+                    {
+                        invokerType = invokerType.MakeGenericType(info.DeclaringType);
+                    }
+                    return CacheInvokers(token, (IInvoker)Activator.CreateInstance(invokerType), info);
                 }
             }
             return CacheInvokers(token, Initialize(info, index), info);
+        }
+
+        private static Type GetNestedInvokerType(MemberInfo info)
+        {
+            var infoToken = MetadataToken.GetToken(info);
+            if (!cacheInvokersType.TryGetValue(infoToken, out var invokerType))
+            {
+                //if (baseInfo.DeclaringType.GetCustomAttribute<InvokerGeneratorAttribute>() != null)
+                foreach (var nestedType in info.DeclaringType.GetNestedTypes())
+                {
+                    if (nestedType.GetCustomAttribute<InvokerAttribute>() is InvokerAttribute invokerAttribute
+                        && string.Equals(invokerAttribute.PropertyName, info.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        invokerType = nestedType;
+                        break;
+                    }
+                }
+                cacheInvokersType[infoToken] = invokerType;
+            }
+            return invokerType;
         }
 
         private static IInvoker CacheInvokers(MetadataToken token, IInvoker invoker, MemberInfo info)

@@ -20,7 +20,7 @@ namespace DataWF.Module.Finance
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -28,7 +28,7 @@ namespace DataWF.Module.Finance
         [Column("typeid", Keys = DBColumnKeys.ElementType), Index("daccountbalance_typeid")]
         public int? TypeId
         {
-            get => GetValue<int?>(Table.TypeIdKey);
+            get => GetValue(Table.TypeIdKey);
             set => SetValue(value, Table.TypeIdKey);
         }
 
@@ -44,28 +44,28 @@ namespace DataWF.Module.Finance
         [Index("daccountbalance_parentid")]
         public int? ParentId
         {
-            get => GetValue<int?>(Table.ParentIdKey);
+            get => GetValue(Table.ParentIdKey);
             set => SetValue(value, Table.ParentIdKey);
         }
 
         [Reference(nameof(ParentId))]
         public Balance Parent
         {
-            get => GetReference<Balance>(Table.ParentIdKey, ref parent);
+            get => GetReference(Table.ParentIdKey, ref parent);
             set => SetReference(parent = value, Table.ParentIdKey);
         }
 
         [Column("balancedate"), Index("daccountbalance_balancedate")]
         public DateTime? BalanceDate
         {
-            get => GetValue<DateTime?>(Table.BalanceDateKey);
+            get => GetValue(Table.BalanceDateKey);
             set => SetValue(value, Table.BalanceDateKey);
         }
 
         [Column("accountid"), Index("daccountbalance_accountid")]
         public int? AccountId
         {
-            get => GetValue<int?>(Table.AccountIdKey);
+            get => GetValue(Table.AccountIdKey);
             set => SetValue(value, Table.AccountIdKey);
         }
 
@@ -79,14 +79,14 @@ namespace DataWF.Module.Finance
         [Column("amount")]
         public decimal? Amount
         {
-            get => GetValue<decimal?>(Table.AmountKey);
+            get => GetValue(Table.AmountKey);
             set => SetValue(value, Table.AmountKey);
         }
 
         [Column("currencyid"), Index("daccountbalance_currencyid")]
         public int? CurrencyId
         {
-            get => GetValue<int?>(Table.CurrencyIdKey);
+            get => GetValue(Table.CurrencyIdKey);
             set => SetValue(value, Table.CurrencyIdKey);
         }
 
