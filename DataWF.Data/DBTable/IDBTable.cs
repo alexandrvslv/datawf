@@ -156,7 +156,7 @@ namespace DataWF.Data
         T LoadById<T, K>(K? id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where K : struct where T : DBItem;
         IEnumerable<T> LoadByKey<T>(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
         IEnumerable<T> LoadByKey<T, K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
-        IEnumerable<T> Load<T>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
+        //IEnumerable<T> Load<T>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
         IEnumerable<T> Load<T>(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
         IEnumerable<T> Load<T>(IQQuery query, DBTransaction transaction = null) where T : DBItem;
         IEnumerable<T> Load<T>(IQQuery<T> query, DBTransaction transaction = null) where T : DBItem;

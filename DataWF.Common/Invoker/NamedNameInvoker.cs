@@ -1,9 +1,9 @@
 ﻿using DataWF.Common;
 
-[assembly: Invoker(typeof(INamed), nameof(INamed.Name), typeof(NamedNameInvoker<>))]
+
 namespace DataWF.Common
 {
-
+    [Invoker(typeof(INamed), nameof(INamed.Name))]
     public class NamedNameInvoker<T> : Invoker<T, string> where T : INamed
     {
         public static readonly NamedNameInvoker<T> Instance = new NamedNameInvoker<T>();

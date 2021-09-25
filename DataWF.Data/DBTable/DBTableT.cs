@@ -521,34 +521,34 @@ namespace DataWF.Data
             return new DBTableView<T>(this, query, mode, filter);
         }
 
-        public override IEnumerable<TT> Load<TT>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
-        {
-            return (IEnumerable<TT>)Load(whereText, param, transaction);
-        }
+        //public override IEnumerable<TT> Load<TT>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        //{
+        //    return (IEnumerable<TT>)Load(whereText, param, transaction);
+        //}
 
-        public IEnumerable<T> Load(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
-        {
-            if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
-                whereText = string.Empty;
-            else if (whereText.Length > 3
-                     && whereText.IndexOf("where", StringComparison.OrdinalIgnoreCase) < 0
-                     && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
-                whereText = "where " + whereText;
+        //public IEnumerable<T> Load(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        //{
+        //    if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
+        //        whereText = string.Empty;
+        //    else if (whereText.Length > 3
+        //             && whereText.IndexOf("where", StringComparison.OrdinalIgnoreCase) < 0
+        //             && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
+        //        whereText = "where " + whereText;
 
-            return Load(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", param)), param, transaction);
-        }
+        //    return Load(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", param)), param, transaction);
+        //}
 
-        public Task<IEnumerable<T>> LoadAsync(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
-        {
-            if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
-                whereText = string.Empty;
-            else if (whereText.Length > 3
-                     && whereText.IndexOf("where", StringComparison.OrdinalIgnoreCase) < 0
-                     && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
-                whereText = "where " + whereText;
+        //public Task<IEnumerable<T>> LoadAsync(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        //{
+        //    if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
+        //        whereText = string.Empty;
+        //    else if (whereText.Length > 3
+        //             && whereText.IndexOf("where", StringComparison.OrdinalIgnoreCase) < 0
+        //             && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
+        //        whereText = "where " + whereText;
 
-            return LoadAsync(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", param)), param, transaction);
-        }
+        //    return LoadAsync(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", param)), param, transaction);
+        //}
 
         public override IEnumerable<TT> Load<TT>(DBLoadParam param = DBLoadParam.Referencing, DBTransaction transaction = null)
         {

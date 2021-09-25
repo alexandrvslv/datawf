@@ -2239,7 +2239,7 @@ namespace DataWF.Data
             }
         }
 
-        public override object GetValue(DBItem item = null)
+        public override object GetValue(DBItem item)
         {
             if (Columns.Count == 0)
             {
@@ -2301,7 +2301,7 @@ namespace DataWF.Data
                 }
                 return buf;
             }
-            return GetValue();
+            return GetValue((DBItem)null);
         }
 
         public override bool CheckItem(DBItem item, object val2, CompareType comparer)
@@ -2373,14 +2373,19 @@ namespace DataWF.Data
             return GetYieldEnumerator<T>();
         }
 
+        public async ValueTask<T> FirstOrDefaultAsync(DBTransaction transaction = null)
+        {
+            return TTable.Select(this).FirstOrDefault() ?? (await TTable.LoadAsync(this, transaction)).FirstOrDefault();
+        }
+
         public T FirstOrDefault(DBTransaction transaction = null)
         {
             return TTable.Select(this).FirstOrDefault() ?? TTable.Load(this, transaction).FirstOrDefault();
         }
-        
-        public T FirstOrDefault(Func<T,bool> predicate, DBTransaction transaction = null)
+
+        public T FirstOrDefault(Func<T, bool> predicate, DBTransaction transaction = null)
         {
-            return TTable.Select(this).FirstOrDefault() ?? TTable.Load(this, transaction).FirstOrDefault();
+            return TTable.Select(this).FirstOrDefault(predicate) ?? TTable.Load(this, transaction).FirstOrDefault(predicate);
         }
 
         IQQuery IQQuery.Column(QFunctionType function, params object[] args) => Column(function, args);

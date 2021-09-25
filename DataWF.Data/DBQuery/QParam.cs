@@ -29,7 +29,7 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(QParam), "Column.Name", typeof(QParam.ColumnNameInvoker))]
+
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
@@ -194,6 +194,15 @@ namespace DataWF.Data
                     //    oldQuery.Parameters.CollectionChanged -= ValueListChanged;
 
                     items.Insert(1, value);
+                    if (LeftColumn != null)
+                    {
+                        if (value is QValue qValue
+                            && qValue.Column == null)
+                            qValue.Column = LeftColumn;
+                        else if (value is QArray qArray
+                            && qArray.Column == null)
+                            qArray.Column = LeftColumn;
+                    }
 
                     //if (value is QQuery newQuery)
                     //    newQuery.Parameters.CollectionChanged += ValueListChanged;
@@ -494,10 +503,10 @@ namespace DataWF.Data
             }
             else if (RightItem is IQItemList list)
             {
-                list.Add(value);                
+                list.Add(value);
             }
         }
-        
+
         public void Delete(QItem item)
         {
             throw new NotImplementedException();
@@ -577,6 +586,7 @@ namespace DataWF.Data
             return this;
         }
 
+        [Invoker(typeof(QParam), "Column.Name")]
         public class ColumnNameInvoker : Invoker<QParam, string>
         {
             public static readonly ColumnNameInvoker Instance = new ColumnNameInvoker();

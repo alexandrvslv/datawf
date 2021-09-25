@@ -55,10 +55,10 @@ namespace DataWF.Common.Generator
 using {namespaceName};
 ");
 
-            foreach (IPropertySymbol propertySymbol in properties)
-            {
-                ProcessInvokerAttributes(propertySymbol);
-            }
+            //foreach (IPropertySymbol propertySymbol in properties)
+            //{
+            //    ProcessInvokerAttributes(propertySymbol);
+            //}
 
             source.Append($@"
 namespace {namespaceName}
@@ -88,6 +88,8 @@ namespace {namespaceName}
             ITypeSymbol propertyType = propertySymbol.Type;
 
             var invokerName = $"{propertyName}Invoker";
+
+            ProcessInvokerAttributes(propertySymbol);
             var instanceCache = instance ? $@"
             public static readonly {invokerName} Instance = new {invokerName}();" : "";
             source.Append($@"
@@ -108,8 +110,8 @@ namespace {namespaceName}
             ITypeSymbol propertyType = propertySymbol.Type;
             string genericArgs = TypeSymbol.IsGenericType ? $"<{string.Join("", Enumerable.Repeat(",", TypeSymbol.TypeParameters.Length - 1))}>" : "";
             string nameGenericArgs = TypeSymbol.IsGenericType ? "<object>" : "";
-            source.Append($@"[assembly: Invoker(typeof({TypeSymbol.Name}{genericArgs}), ""{propertyName}"", typeof({TypeSymbol.Name}{genericArgs}.{propertyName}Invoker))]
-");
+            source.Append($@"
+        [Invoker(typeof({TypeSymbol.Name}{genericArgs}), nameof({propertyName}))]");
         }
     }
 

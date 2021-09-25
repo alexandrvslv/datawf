@@ -40980,6 +40980,16 @@
             ],
             "nullable": true
           },
+          "NameEN": {
+            "maxLength": 1024,
+            "type": "string",
+            "x-culture": "en-US"
+          },
+          "NameRU": {
+            "maxLength": 1024,
+            "type": "string",
+            "x-culture": "ru-RU"
+          },
           "AddressId": {
             "type": "integer",
             "format": "int32",
@@ -40992,16 +41002,6 @@
               }
             ],
             "x-id": "AddressId"
-          },
-          "NameRU": {
-            "maxLength": 1024,
-            "type": "string",
-            "x-culture": "ru-RU"
-          },
-          "NameEN": {
-            "maxLength": 1024,
-            "type": "string",
-            "x-culture": "en-US"
           }
         },
         "x-type-id": 0
@@ -41652,9 +41652,7 @@
           },
           "LogTable": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DBItem"
-            },
+            "items": { },
             "readOnly": true
           },
           "LogId": {

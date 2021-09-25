@@ -22,7 +22,7 @@ namespace DataWF.Test.Data
         public async Task Setup()
         {
             provider = new TestProvider() { SchemaName = SchemaName };
-            provider.CreateNew();
+            await provider.CreateNew();
             schema = provider.Schema;
             positions = schema.Position;
             employers = schema.Employer;

@@ -82,17 +82,17 @@ namespace DataWF.Common
                 {
                     Helper.OnException(ex);
                 }
-                try
-                {
-                    foreach (var invokerAttribute in e.LoadedAssembly.GetCustomAttributes<InvokerAttribute>())
-                    {
-                        EmitInvoker.RegisterInvoker(invokerAttribute);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Helper.OnException(ex);
-                }
+                //try
+                //{
+                //    foreach (var invokerAttribute in e.LoadedAssembly.GetCustomAttributes<InvokerAttribute>())
+                //    {
+                //        EmitInvoker.RegisterInvoker(invokerAttribute);
+                //    }
+                //}
+                //catch (Exception ex)
+                //{
+                //    Helper.OnException(ex);
+                //}
             }
 
         }

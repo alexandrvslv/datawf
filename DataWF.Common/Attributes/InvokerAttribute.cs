@@ -2,18 +2,21 @@
 
 namespace DataWF.Common
 {
-    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class InvokerAttribute : Attribute
     {
-        public InvokerAttribute(Type targetType, string propertyName, Type invokerType)
+        public InvokerAttribute(string propertyName)
         {
-            TargetType = targetType;
             PropertyName = propertyName;
-            InvokerType = invokerType;
         }
 
-        public Type TargetType { get; }
-        public Type InvokerType { get; }
+        public InvokerAttribute(Type targetType, string propertyName) : this(propertyName)
+        {
+            TargetType = targetType;
+        }
+
         public string PropertyName { get; }
+
+        public Type TargetType { get; }
     }
 }

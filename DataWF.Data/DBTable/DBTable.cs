@@ -931,7 +931,7 @@ namespace DataWF.Data
 
         public abstract IEnumerable<T> Load<T>(IQQuery<T> query, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract IEnumerable<T> Load<T>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
+        //public abstract IEnumerable<T> Load<T>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
 
         public abstract IEnumerable<T> Load<T>(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
 
