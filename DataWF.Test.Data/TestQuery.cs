@@ -30,7 +30,7 @@ namespace DataWF.Test.Data
         [Test]
         public void ColumnIndex()
         {
-            var resultOne = employers.IdKey.SelectOne<Employer>(1);
+            var resultOne = employers.IdKey.FirstOrDefault<Employer>(1);
             Assert.IsNotNull(resultOne, "Select by Index Equal Fail");
 
             var result = employers.IdKey.SelectIndex<Employer>(CompareType.NotEqual, 1);
@@ -116,9 +116,11 @@ where Position.Code in ('2','3')";
             var parameters = query.GetAllQItems<QParam>().ToList();
             Assert.AreEqual(3, parameters.Count());
             Assert.AreEqual(true, parameters[0].IsCompaund);
+            
             Assert.AreEqual(employers.PositionIdKey, parameters[1].LeftColumn);
-            Assert.AreEqual(employers.IdKey, parameters[2].LeftColumn);
             Assert.IsAssignableFrom<QArray>(parameters[1].RightItem);
+
+            Assert.AreEqual(employers.IdKey, parameters[2].LeftColumn);
             Assert.IsAssignableFrom<QValue>(parameters[2].RightItem);
         }
 
@@ -126,11 +128,24 @@ where Position.Code in ('2','3')";
         public void QueryExpressionParam()
         {
             var query = employers.Query()
-                .Where(p => p.Id > 90 && p.PositionId != null);
+                .Column(p => p.Id)
+                .Column(p => p.DateCreate)
+                .Where(p => p.Id > 90 && p.PositionId != null)
+                .OrderBy(p => p.Identifier);
+
+            Assert.AreEqual(2, query.Columns.Count);
+            Assert.IsAssignableFrom<QColumn>(query.Columns[0]);
+            Assert.AreEqual(employers.IdKey, ((QColumn)query.Columns[0]).Column);
+            Assert.IsAssignableFrom<QColumn>(query.Columns[1]);
+            Assert.AreEqual(employers.DateCreateKey, ((QColumn)query.Columns[1]).Column);
+
+            Assert.AreEqual(1, query.Orders.Count);
+            Assert.IsAssignableFrom<QColumn>(query.Orders[0].Item);
+            Assert.AreEqual(employers.IdentifierKey, ((QColumn)query.Orders[0].Item).Column);
+
             var parameters = query.Parameters.GetAllQItems<QParam>()
                                                 .Where(p => !p.IsCompaund)
                                                 .ToList();
-
             Assert.AreEqual(2, parameters.Count);
 
             Assert.AreEqual(LogicType.Undefined, parameters[0].Logic);

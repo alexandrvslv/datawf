@@ -7,7 +7,9 @@ namespace DataWF.Common
     public readonly struct LogicType
     {
         public const string StrAnd = "and";
+        public const string StrAndElse = "&&";
         public const string StrOr = "or";
+        public const string StrOrElse = "||";
         public const string StrAndNot = "and not";
         public const string StrOrNot = "or not";
         public static readonly LogicType Undefined = new LogicType(LogicTypes.Undefined);
@@ -33,6 +35,10 @@ namespace DataWF.Common
                 type = LogicTypes.And;
             else if (MemoryExtensions.Equals(code, StrOr.AsSpan(), StringComparison.OrdinalIgnoreCase))
                 type = LogicTypes.Or;
+            else if (MemoryExtensions.Equals(code, StrAndElse.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = LogicTypes.And;
+            else if (MemoryExtensions.Equals(code, StrOrElse.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                type = LogicTypes.Or;
             return type;
         }
 
@@ -42,6 +48,10 @@ namespace DataWF.Common
             if (string.Equals(code, StrAnd, StringComparison.OrdinalIgnoreCase))
                 type = LogicTypes.And;
             else if (string.Equals(code, StrOr, StringComparison.OrdinalIgnoreCase))
+                type = LogicTypes.Or;
+            else if (string.Equals(code, StrAndElse, StringComparison.OrdinalIgnoreCase))
+                type = LogicTypes.And;
+            else if (string.Equals(code, StrOrElse, StringComparison.OrdinalIgnoreCase))
                 type = LogicTypes.Or;
             return type;
         }

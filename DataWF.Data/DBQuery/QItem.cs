@@ -134,7 +134,7 @@ namespace DataWF.Data
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual IQuery Query => Holder?.Query ?? Container?.Query;
+        public virtual IQQuery Query => Holder?.Query ?? Container?.Query;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public virtual IDBTable Table
@@ -181,10 +181,11 @@ namespace DataWF.Data
 
         public abstract string Format(IDbCommand command = null);
 
+        public virtual object GetValue() => GetValue<DBItem>();
+        
         public virtual object GetValue<T>()
         {
-            return GetValue((DBItem)null);
-            
+            return GetValue((DBItem)null);            
         }
 
         public object GetValue(object target)

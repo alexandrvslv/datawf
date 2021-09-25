@@ -18,12 +18,12 @@ namespace DataWF.Module.Common
 
         public User GetByEmail(string email)
         {
-            return EMailKey.SelectOne<User>(email);
+            return EMailKey.FirstOrDefault<User>(email);
         }
 
         public User GetByLogin(string login)
         {
-            return LoginKey.SelectOne<User>(login);
+            return LoginKey.FirstOrDefault<User>(login);
         }
 
         public User GetByEnvironment()

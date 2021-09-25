@@ -50,7 +50,7 @@ namespace DataWF.Data
 
         public IQItem Owner { get; set; }
 
-        public IQuery Query => Owner.Query;
+        public IQQuery Query => Owner.Query;
 
         void IQItemList.Add(QItem item)
         {

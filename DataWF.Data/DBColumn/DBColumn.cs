@@ -1013,9 +1013,9 @@ namespace DataWF.Data
 
         public abstract IPullIndexCollection<T> SelectIndex<T>(CompareType comparer, object value) where T : DBItem;
 
-        public abstract R SelectOne<R>(DBItem value, IEnumerable<R> list) where R : DBItem;
+        public abstract R FirstOrDefault<R>(DBItem value, IEnumerable<R> list) where R : DBItem;
 
-        public virtual R SelectOne<R>(object value, IEnumerable<R> list) where R : DBItem
+        public virtual R FirstOrDefault<R>(object value, IEnumerable<R> list) where R : DBItem
         {
             value = ParseValue(value);
             if (PullIndex is IPullIndex index)
