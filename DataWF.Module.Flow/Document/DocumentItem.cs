@@ -13,7 +13,7 @@ namespace DataWF.Module.Flow
         [Column("document_id")]
         public virtual long? DocumentId
         {
-            get => GetValue<long?>(Table.DocumentIdKey);
+            get => GetValue(Table.DocumentIdKey);
             set => SetValue(value, Table.DocumentIdKey);
         }
 

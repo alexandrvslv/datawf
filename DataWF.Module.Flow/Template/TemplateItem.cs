@@ -15,7 +15,7 @@ namespace DataWF.Module.Flow
         [Column("template_id"), Browsable(false)]
         public virtual int? TemplateId
         {
-            get => GetValue<int?>(Table.TemplateIdKey);
+            get => GetValue(Table.TemplateIdKey);
             set => SetValue(value, Table.TemplateIdKey);
         }
 

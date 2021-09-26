@@ -14,28 +14,24 @@ namespace DataWF.Module.Flow
     {
         private Work work;
 
-        public Stage(DBTable table) : base(table)
-        {
-        }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
         [Column("code", 512, Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
         [Column("export_code", 512)]
         public string ExportCode
         {
-            get => GetValue<string>(Table.ExportCodeKey);
+            get => GetValue(Table.ExportCodeKey);
             set => SetValue(value, Table.ExportCodeKey);
         }
 
@@ -49,14 +45,14 @@ namespace DataWF.Module.Flow
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(Table.NameENKey);
+            get => GetValue(Table.NameENKey);
             set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(Table.NameRUKey);
+            get => GetValue(Table.NameRUKey);
             set => SetValue(value, Table.NameRUKey);
         }
 
@@ -64,7 +60,7 @@ namespace DataWF.Module.Flow
         [Column("work_id")]
         public int? WorkId
         {
-            get => GetValue<int?>(Table.WorkIdKey);
+            get => GetValue(Table.WorkIdKey);
             set => SetValue(value, Table.WorkIdKey);
         }
 
@@ -78,14 +74,14 @@ namespace DataWF.Module.Flow
         [Column("keys")]
         public StageKey? Keys
         {
-            get => GetValue<StageKey?>(Table.KeysKey);
+            get => GetValue(Table.KeysKey);
             set => SetValue(value, Table.KeysKey);
         }
 
         [Column("time_limit")]
         public TimeSpan? TimeLimit
         {
-            get => GetValue<TimeSpan?>(Table.TimeLimitKey);
+            get => GetValue(Table.TimeLimitKey);
             set => SetValue(value, Table.TimeLimitKey);
         }
 

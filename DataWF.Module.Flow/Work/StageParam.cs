@@ -17,7 +17,7 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -25,7 +25,7 @@ namespace DataWF.Module.Flow
         [Column("stage_id")]
         public int? StageId
         {
-            get => GetValue<int?>(Table.StageIdKey);
+            get => GetValue(Table.StageIdKey);
             set => SetValue(value, Table.StageIdKey);
         }
 
@@ -39,14 +39,14 @@ namespace DataWF.Module.Flow
         [Column("code", 1024)]
         public string ParamCode
         {
-            get => GetValue<string>(Table.ParamCodeKey);
+            get => GetValue(Table.ParamCodeKey);
             set => SetValue(value, Table.ParamCodeKey);
         }
 
         [Column("name", 1024)]
         public string Name
         {
-            get => GetValue<string>(Table.NameKey);
+            get => GetValue(Table.NameKey);
             set => SetValue(value, Table.NameKey);
         }
 

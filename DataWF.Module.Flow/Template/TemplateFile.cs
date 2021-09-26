@@ -12,28 +12,28 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
         [Column("template_file", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
-            get => GetValue<byte[]>(Table.DataKey);
+            get => GetValue(Table.DataKey);
             set => SetValue(value, Table.DataKey);
         }
 
         [Column("template_file_name", 1024, Keys = DBColumnKeys.FileName | DBColumnKeys.View | DBColumnKeys.Code)]
         public string DataName
         {
-            get => GetValue<string>(Table.DataNameKey);
+            get => GetValue(Table.DataNameKey);
             set => SetValue(value, Table.DataNameKey);
         }
 
         [Column("template_last_write", Keys = DBColumnKeys.FileLastWrite)]
         public DateTime? DataLastWrite
         {
-            get => GetValue<DateTime?>(Table.DataLastWriteKey) ?? Stamp;
+            get => GetValue(Table.DataLastWriteKey) ?? Stamp;
             set => SetValue(value, Table.DataLastWriteKey);
         }
 

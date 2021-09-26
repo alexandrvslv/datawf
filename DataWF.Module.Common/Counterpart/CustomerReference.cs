@@ -16,9 +16,9 @@ namespace DataWF.Module.Counterpart
         }
         
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -26,14 +26,14 @@ namespace DataWF.Module.Counterpart
         [Column("company_id")]
         public int? CompanyId
         {
-            get => GetValue<int?>(Table.CompanyIdKey);
+            get => GetValue(Table.CompanyIdKey);
             set => SetValue(value, Table.CompanyIdKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get => GetReference((DBColumn)Table.CompanyIdKey, ref company);
+            get => GetReference(Table.CompanyIdKey, ref company);
             set => SetReference(company = value, Table.CompanyIdKey);
         }
 
@@ -41,14 +41,14 @@ namespace DataWF.Module.Counterpart
         [Column("persone_id")]
         public int? PersoneId
         {
-            get => GetValue<int?>(Table.PersoneIdKey);
+            get => GetValue(Table.PersoneIdKey);
             set => SetValue(value, Table.PersoneIdKey);
         }
 
         [Reference(nameof(PersoneId))]
         public Persone Persone
         {
-            get => GetReference((DBColumn)Table.PersoneIdKey, ref persone);
+            get => GetReference(Table.PersoneIdKey, ref persone);
             set
             {
                 SetReference(persone = value, Table.PersoneIdKey);
@@ -63,21 +63,21 @@ namespace DataWF.Module.Counterpart
         [Column("email", 1024)]
         public string EMail
         {
-            get => GetValue<string>(Table.EMailKey);
+            get => GetValue(Table.EMailKey);
             set => SetValue(value, Table.EMailKey);
         }
 
         [Column("phone", 1024)]
         public string Phone
         {
-            get => GetValue<string>(Table.PhoneKey);
+            get => GetValue(Table.PhoneKey);
             set => SetValue(value, Table.PhoneKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(Table.ExternalIdKey);
+            get => GetValue(Table.ExternalIdKey);
             set => SetValue(value, Table.ExternalIdKey);
         }
     }

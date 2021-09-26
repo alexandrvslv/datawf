@@ -16,7 +16,7 @@ namespace DataWF.Module.Counterpart
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -28,7 +28,7 @@ namespace DataWF.Module.Counterpart
         [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rlocation_typeid_code", false)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
@@ -36,7 +36,7 @@ namespace DataWF.Module.Counterpart
         [Index("rlocation_codei")]
         public string CodeI
         {
-            get => GetValue<string>(Table.CodeIKey);
+            get => GetValue(Table.CodeIKey);
             set => SetValue(value, Table.CodeIKey);
         }
 
@@ -65,21 +65,21 @@ namespace DataWF.Module.Counterpart
         [CultureKey(nameof(Name), CultureName = "ru_RU")]
         public string NameRU
         {
-            get => GetValue<string>(Table.NameRUKey);
+            get => GetValue(Table.NameRUKey);
             set => SetValue(value, Table.NameRUKey);
         }
 
         [CultureKey(nameof(Name), CultureName = "en_US")]
         public string NameEN
         {
-            get => GetValue<string>(Table.NameENKey);
+            get => GetValue(Table.NameENKey);
             set => SetValue(value, Table.NameENKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(Table.ExternalIdKey);
+            get => GetValue(Table.ExternalIdKey);
             set => SetValue(value, Table.ExternalIdKey);
         }
 

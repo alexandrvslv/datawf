@@ -17,7 +17,7 @@ namespace DataWF.Module.Common
         public PositionTable PositionTable => (PositionTable)Table;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
             get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);

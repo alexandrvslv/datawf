@@ -23,9 +23,9 @@ namespace DataWF.Module.Counterpart
         }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -33,7 +33,7 @@ namespace DataWF.Module.Counterpart
         [Column("customer_id")]
         public int? CustomerId
         {
-            get => GetValue<int?>(Table.CustomerIdKey);
+            get => GetValue(Table.CustomerIdKey);
             set => SetValue(value, Table.CustomerIdKey);
         }
 
@@ -48,7 +48,7 @@ namespace DataWF.Module.Counterpart
         [Column("address_id")]
         public int? AddressId
         {
-            get => GetValue<int?>(Table.AddressIdKey);
+            get => GetValue(Table.AddressIdKey);
             set => SetValue(value, Table.AddressIdKey);
         }
 

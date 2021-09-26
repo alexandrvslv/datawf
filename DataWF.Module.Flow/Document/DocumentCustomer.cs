@@ -15,7 +15,7 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -23,7 +23,7 @@ namespace DataWF.Module.Flow
         [Column("customer_id", Keys = DBColumnKeys.View)]
         public int? CustomerId
         {
-            get => GetValue<int?>(Table.CustomerIdKey);
+            get => GetValue(Table.CustomerIdKey);
             set => SetValue(value, Table.CustomerIdKey);
         }
 
@@ -44,7 +44,7 @@ namespace DataWF.Module.Flow
         [Column("address_id")]
         public int? AddressId
         {
-            get => GetValue<int?>(Table.AddressIdKey);
+            get => GetValue(Table.AddressIdKey);
             set => SetValue(value, Table.AddressIdKey);
         }
 
@@ -58,14 +58,14 @@ namespace DataWF.Module.Flow
         [Column("email", 1024)]
         public string EMail
         {
-            get => GetValue<string>(Table.EMailKey);
+            get => GetValue(Table.EMailKey);
             set => SetValue(value, Table.EMailKey);
         }
 
         [Column("phone", 1024)]
         public string Phone
         {
-            get => GetValue<string>(Table.PhoneKey);
+            get => GetValue(Table.PhoneKey);
             set => SetValue(value, Table.PhoneKey);
         }
 

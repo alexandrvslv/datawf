@@ -11,21 +11,17 @@ namespace DataWF.Module.Flow
     [Table("rwork", "Template", BlockSize = 20), InvokerGenerator]
     public sealed partial class Work : DBItem, IDisposable
     {
-        public Work(DBTable table) : base(table)
-        {
-        }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
         [Column("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
@@ -39,30 +35,28 @@ namespace DataWF.Module.Flow
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(Table.NameENKey);
+            get => GetValue(Table.NameENKey);
             set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(Table.NameRUKey);
+            get => GetValue(Table.NameRUKey);
             set => SetValue(value, Table.NameRUKey);
         }
 
         [ControllerMethod]
         public IEnumerable<Template> GetTemplates()
         {
-            var templateTable = (TemplateTable<Template>)Schema.GetTable<Template>();
-            return GetReferencing<Template>(templateTable, templateTable.WorkIdKey, DBLoadParam.None)
+            return GetReferencing<Template>(Schema.Template.WorkIdKey, DBLoadParam.None)
                 .OrderBy(p => p.Code);
         }
 
         [ControllerMethod]
         public IEnumerable<Stage> GetStages()
         {
-            var stageTable = (StageTable)Schema.GetTable<Stage>();
-            return GetReferencing<Stage>(stageTable.WorkIdKey, DBLoadParam.None)
+            return GetReferencing<Stage>(Schema.Stage.WorkIdKey, DBLoadParam.None)
             .OrderBy(p => p.Code);
         }
 

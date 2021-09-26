@@ -23,7 +23,7 @@ namespace DataWF.Module.Flow
         private Work work;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
             get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
@@ -182,8 +182,7 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public virtual Document CreateDocument()
         {
-            var documents = Table.Schema.GetTable<Document>();
-            var document = (Document)documents.NewItem(DBUpdateState.Insert, true, DocumentType ?? 0);
+            var document = (Document)Schema.Document.NewItem(DBUpdateState.Insert, true, DocumentType ?? 0);
             document.Template = this;
             return document;
         }
@@ -220,18 +219,14 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public TemplateReference GetTemplateReference(int referenceId)
         {
-            return Schema.TemplateReference.Query()
-                .Where(Schema.TemplateReference.TemplateIdKey, Id)
-                .And(Schema.TemplateReference.ReferenceIdKey, referenceId)
+            return Schema.TemplateReference.Query(p => p.TemplateId == Id && p.ReferenceId == referenceId)
                 .Select().FirstOrDefault();
         }
 
         [ControllerMethod]
         public TemplateProperty GetTemplateProperty(string propertyName)
         {
-            return Schema.TemplateProperty.Query()
-                .Where(Schema.TemplateProperty.TemplateIdKey, Id)
-                .And(Schema.TemplateProperty.PropertyNameKey, propertyName)
+            return Schema.TemplateProperty.Query(p => p.TemplateId == Id && p.PropertyName == propertyName)
                 .Select().FirstOrDefault();
         }
 
