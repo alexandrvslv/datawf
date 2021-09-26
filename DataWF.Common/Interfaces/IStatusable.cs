@@ -8,7 +8,7 @@
 
     public class StatusableStatusInvoker<T> : Invoker<T, DBStatus> where T : IStatusable
     {
-        public static readonly StatusableStatusInvoker<T> Default = new StatusableStatusInvoker<T>();
+        public static readonly StatusableStatusInvoker<T> Instance = new StatusableStatusInvoker<T>();
         public override string Name => nameof(IStatusable.Status);
         public override bool CanWrite => true;
 

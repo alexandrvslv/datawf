@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace DataWF.Common
 {
     //https://www.codeproject.com/Articles/356297/Copy-a-Stream-with-Progress-Reporting
-    [InvokerGenerator]
+    [InvokerGenerator(Instance = true)]
     public partial class CopyProcess : DefaultItem
     {
         public static Action<CopyProcess> DownloadStart;
