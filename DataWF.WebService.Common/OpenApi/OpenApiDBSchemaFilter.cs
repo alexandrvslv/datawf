@@ -34,7 +34,7 @@ namespace DataWF.WebService.Common
                 schema.Type = "object";
                 schema.Properties.Clear();
                 schema.AdditionalPropertiesAllowed = true;
-                
+
                 OpenApiSchema baseSchema = GetBaseSchema(context);
                 if (baseSchema != null)
                 {
@@ -152,6 +152,12 @@ namespace DataWF.WebService.Common
                 if (referenceAttribute != null)
                 {
                     propertySchema.Extensions.Add("x-id", new OpenApiString(referenceAttribute.ColumnProperty));
+                    if (propertyType.IsAbstract)
+                    {
+                        var tablGen = TableGenerator.GetDerived(propertyType).FirstOrDefault();
+                        if (tablGen != null)
+                            propertySchema.Extensions.Add("x-derived", new OpenApiString(tablGen.ItemType.Name));
+                    }
                 }
                 if (property.Default != null)
                 {
@@ -265,6 +271,12 @@ namespace DataWF.WebService.Common
             var referenceSchema = context.SchemaGenerator.GenerateSchema(refPropertyType, context.SchemaRepository);
             var propertySchema = new OpenApiSchema() { AllOf = new List<OpenApiSchema> { referenceSchema } };
             propertySchema.Extensions.Add("x-id", new OpenApiString(column.PropertyName));
+            if (refPropertyType.IsAbstract)
+            {
+                var tablGen = TableGenerator.GetDerived(refPropertyType).FirstOrDefault();
+                if (tablGen != null)
+                    propertySchema.Extensions.Add("x-derived", new OpenApiString(tablGen.ItemType.Name));
+            }
             schema.Properties.Add(column.ReferencePropertyInfo.Name, propertySchema);
         }
 

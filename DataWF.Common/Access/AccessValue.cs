@@ -9,7 +9,8 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public class AccessValue : IAccessValue, IBinarySerializable//, IEnumerable<AccessItem>
+    [InvokerGenerator]
+    public partial class AccessValue : IAccessValue, IBinarySerializable//, IEnumerable<AccessItem>
     {
         public static IAccessProvider Provider = new AccessProviderStub { Groups = new IdCollection<IGroupIdentity>() };
         public static readonly AccessValue Empty = new AccessValue();

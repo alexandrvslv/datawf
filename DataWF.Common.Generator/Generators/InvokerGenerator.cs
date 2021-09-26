@@ -11,13 +11,14 @@ namespace DataWF.Common.Generator
     internal class InvokerGenerator : BaseGenerator
     {
         protected IEnumerable<IPropertySymbol> properties;
+        private HashSet<string> baseInvokers;
 
         public InvokerGenerator(CompilationContext compilationContext) : base(compilationContext)
         {
         }
 
         public IEnumerable<IPropertySymbol> Properties { get => properties; set => properties = value; }
-        
+
         public bool ForceInstance { get; set; }
 
         public override bool Process()
@@ -36,7 +37,7 @@ namespace DataWF.Common.Generator
             }
 
             var source = Generate();
-            CompilationContext.Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}{(TypeSymbol.TypeParameters.Count())}InvokersGen.cs", 
+            CompilationContext.Context.AddSource($"{TypeSymbol.ContainingNamespace.ToDisplayString()}.{TypeSymbol.Name}{(TypeSymbol.TypeParameters.Count())}InvokersGen.cs",
                 SourceText.From(source, Encoding.UTF8));
             return true;
         }
@@ -55,10 +56,7 @@ namespace DataWF.Common.Generator
 using {namespaceName};
 ");
 
-            //foreach (IPropertySymbol propertySymbol in properties)
-            //{
-            //    ProcessInvokerAttributes(propertySymbol);
-            //}
+            baseInvokers = new HashSet<string>(GetBaseInvokers(TypeSymbol).Select(p => p.Name));
 
             source.Append($@"
 namespace {namespaceName}
@@ -87,7 +85,12 @@ namespace {namespaceName}
             string propertyName = propertySymbol.Name;
             ITypeSymbol propertyType = propertySymbol.Type;
 
-            var invokerName = $"{propertyName}Invoker";
+            var invokerName = $"{ propertyName }Invoker";
+            int nameIndex = 1;
+            while (baseInvokers.Contains(invokerName))
+            {
+                invokerName = $"{ propertyName }New{ nameIndex++ }Invoker";
+            }
 
             ProcessInvokerAttributes(propertySymbol);
             var instanceCache = instance ? $@"
@@ -103,6 +106,18 @@ namespace {namespaceName}
 ");
         }
 
+        private IEnumerable<INamedTypeSymbol> GetBaseInvokers(INamedTypeSymbol containingType)
+        {
+            while (containingType != null)
+            {
+                foreach (var type in containingType.GetMembers().OfType<INamedTypeSymbol>())
+                {
+                    yield return type;
+                }
+                containingType = containingType.BaseType;
+            }
+        }
+
         private void ProcessInvokerAttributes(IPropertySymbol propertySymbol)
         {
             // get the name and type of the field
@@ -111,7 +126,7 @@ namespace {namespaceName}
             string genericArgs = TypeSymbol.IsGenericType ? $"<{string.Join("", Enumerable.Repeat(",", TypeSymbol.TypeParameters.Length - 1))}>" : "";
             string nameGenericArgs = TypeSymbol.IsGenericType ? "<object>" : "";
             source.Append($@"
-        [Invoker(typeof({TypeSymbol.Name}{genericArgs}), nameof({propertyName}))]");
+        [Invoker(nameof({propertyName}))]");//typeof({TypeSymbol.Name}{genericArgs}), 
         }
     }
 

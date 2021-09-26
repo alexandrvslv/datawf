@@ -165,7 +165,7 @@ namespace DataWF.Common.Generator
             foreach (var client in cacheClients.Keys)
             {
                 source.Append($@"
-            Add({client} = new {client}Client(this);");
+            Add({client} = new {client}Client(this));");
             }
             source.Append($@"
             RefreshTypedCache();
@@ -185,6 +185,7 @@ namespace DataWF.Common.Generator
                     "System.Collections.Generic",
                     "System.Net.Http",
                     "System.Threading.Tasks",
+                    "System.Text.Json.Serialization",
                 };
             }
             if (!cacheClients.TryGetValue(clientName, out var clientSource))
@@ -218,6 +219,15 @@ namespace DataWF.Common.Generator
             var cache = clientSchema != null ? GetClientReferences(clientSchema) : new HashSet<RefField>();
 
             GenClientConstructor(clientSource, clientName, idKey, typeKey, typeId, cache);
+
+            clientSource.Append($@"
+        [JsonIgnore]
+        public new {ProviderName} Provider
+        {{
+            get => ({ProviderName})base.Provider;
+            set => base.Provider = value;
+        }}");
+
             if (cache.Count > 0)
             {
                 SyntaxHelper.AddUsing("System.Collections", usings);
@@ -232,8 +242,8 @@ namespace DataWF.Common.Generator
         {
             var idName = idKey == null ? null : GetPropertyName(idKey);
             var typeName = typeKey == null ? null : GetPropertyName(typeKey);
-            var baseCtor = idKey == null ? "" : $@"{clientName}.{idName}Invoker.Default,
-                  {clientName}.{typeName}Invoker.Default,
+            var baseCtor = idKey == null ? "" : $@"{clientName}.{idName}Invoker.Instance,
+                  {clientName}.{typeName}Invoker.Instance,
                   {typeId}";
             clientSource.Append($@"
         public {clientName}Client({ProviderName} provider)
@@ -864,7 +874,7 @@ namespace DataWF.Common.Generator
                 refField.ValueType = GetTypeString(refField.ValueProperty, null);
                 refField.ValueFieldName = GetFieldName(refField.ValueProperty);
 
-                refField.InvokerName = $"{refField.TypeName}.{refkey}Invoker.Default";
+                refField.InvokerName = $"{refField.TypeName}.{refkey}Invoker.Instance";
 
                 //refField.ParameterType = $"QueryParameter<{refField.TypeName}>";
                 //refField.ParameterName = refField.TypeName + refkey + "Parameter";
@@ -1112,10 +1122,13 @@ namespace DataWF.Common.Generator
                 if (objectProperty != null)
                 {
                     var objectFieldName = GetFieldName(objectProperty);
+                    var clientName = GetTypeString(objectProperty, usings, "List");
+                    if (objectProperty.ExtensionData != null && objectProperty.ExtensionData.TryGetValue("x-derived", out var derivedClass))
+                        clientName = derivedClass.ToString();
                     source.Append($@"
                 if ({objectFieldName}?.Id != value)
                 {{
-                    {objectFieldName} = value == default({type}) ? null : Provider.{GetTypeString(objectProperty, usings, "List")}.Select(value{(type.EndsWith("?") ? ".Value" : "")});
+                    {objectFieldName} = value == default({type}) ? null : Provider.{clientName}.Select(value{(type.EndsWith("?") ? ".Value" : "")});
                     OnPropertyChanged(nameof({GetPropertyName(objectProperty)}));
                 }}");
                 }
@@ -1192,90 +1205,99 @@ namespace DataWF.Common.Generator
 
         private string GetTypeString(JsonSchema schema, HashSet<string> usings, string listType = "SelectableList")
         {
-            var nullable = schema.IsNullableRaw ?? false;
-            switch (schema.Type)
+            if(schema == null)
+                return "string";
+            try
             {
-                case JsonObjectType.Integer:
-                    if (schema.IsEnumeration)
-                    {
-                        goto case JsonObjectType.Object;
-                    }
-                    if (schema.Format == "int64")
-                    {
-                        return "long" + (nullable ? "?" : string.Empty);
-                    }
-                    return "int" + (nullable ? "?" : string.Empty);
-                case JsonObjectType.Boolean:
-                    return "bool" + (nullable ? "?" : string.Empty);
-                case JsonObjectType.Number:
-                    if (schema.IsEnumeration)
-                    {
-                        goto case JsonObjectType.Object;
-                    }
-                    if (string.IsNullOrEmpty(schema.Format))
-                    {
-                        return "decimal" + (nullable ? "?" : string.Empty);
-                    }
-                    return schema.Format + (nullable ? "?" : string.Empty);
-                case JsonObjectType.String:
-                    if (schema.IsEnumeration)
-                    {
-                        goto case JsonObjectType.Object;
-                    }
-                    switch (schema.Format)
-                    {
-                        case "byte":
-                            return "byte[]";
-                        case "binary":
-                            SyntaxHelper.AddUsing("System.IO", usings);
-                            return "Stream";
-                        case "date":
-                        case "date-time":
-                            return "DateTime" + (nullable ? "?" : string.Empty);
-                        default:
-                            return "string";
-                    }
-                case JsonObjectType.Array:
-                    return $"{listType}<{GetTypeString(schema.Item, usings, listType)}>";
-                case JsonObjectType.None:
-                    if (schema.ActualTypeSchema != schema)
-                    {
-                        return GetTypeString(schema.ActualTypeSchema, usings, listType);
-                    }
-                    else if (schema is JsonSchemaProperty propertySchema)
-                    {
-                        return GetTypeString(propertySchema.AllOf.FirstOrDefault()?.Reference
-                            ?? propertySchema.AnyOf.FirstOrDefault()?.Reference, usings, listType);
-                    }
-                    else
-                    {
-                        goto case JsonObjectType.Object;
-                    }
-                case JsonObjectType.Object:
-                    if (schema.Id != null)
-                    {
-                        if (!GetOrGenDefinion(schema, out var type) && type != null)
-                        {
-                            SyntaxHelper.AddUsing(type, usings);
-                        }
+                var nullable = schema.IsNullableRaw ?? false;
+                switch (schema.Type)
+                {
+                    case JsonObjectType.Integer:
                         if (schema.IsEnumeration)
                         {
-                            return GetDefinitionName(schema) + (nullable ? "?" : string.Empty);
+                            goto case JsonObjectType.Object;
+                        }
+                        if (schema.Format == "int64")
+                        {
+                            return "long" + (nullable ? "?" : string.Empty);
+                        }
+                        return "int" + (nullable ? "?" : string.Empty);
+                    case JsonObjectType.Boolean:
+                        return "bool" + (nullable ? "?" : string.Empty);
+                    case JsonObjectType.Number:
+                        if (schema.IsEnumeration)
+                        {
+                            goto case JsonObjectType.Object;
+                        }
+                        if (string.IsNullOrEmpty(schema.Format))
+                        {
+                            return "decimal" + (nullable ? "?" : string.Empty);
+                        }
+                        return schema.Format + (nullable ? "?" : string.Empty);
+                    case JsonObjectType.String:
+                        if (schema.IsEnumeration)
+                        {
+                            goto case JsonObjectType.Object;
+                        }
+                        switch (schema.Format)
+                        {
+                            case "byte":
+                                return "byte[]";
+                            case "binary":
+                                SyntaxHelper.AddUsing("System.IO", usings);
+                                return "Stream";
+                            case "date":
+                            case "date-time":
+                                return "DateTime" + (nullable ? "?" : string.Empty);
+                            default:
+                                return "string";
+                        }
+                    case JsonObjectType.Array:
+                        return $"{listType}<{GetTypeString(schema.Item, usings, listType)}>";
+                    case JsonObjectType.None:
+                        if (schema.ActualTypeSchema != schema)
+                        {
+                            return GetTypeString(schema.ActualTypeSchema, usings, listType);
+                        }
+                        else if (schema is JsonSchemaProperty propertySchema)
+                        {
+                            return GetTypeString(propertySchema.AllOf.FirstOrDefault()?.Reference
+                                ?? propertySchema.AnyOf.FirstOrDefault()?.Reference, usings, listType);
                         }
                         else
                         {
-                            return GetDefinitionName(schema) + (nullable && (type?.IsValueType ?? false) ? "?" : string.Empty);
+                            goto case JsonObjectType.Object;
                         }
-                    }
-                    else if (schema.Properties.ContainsKey("file"))
-                    {
-                        //SyntaxHelper.AddUsing("System.IO", usings);
-                        return "object";
-                    }
-                    break;
-                case JsonObjectType.File:
-                    SyntaxHelper.AddUsing("System.IO", usings);
-                    return "Stream";
+                    case JsonObjectType.Object:
+                        if (schema.Id != null)
+                        {
+                            if (!GetOrGenDefinion(schema, out var type) && type != null)
+                            {
+                                SyntaxHelper.AddUsing(type, usings);
+                            }
+                            if (schema.IsEnumeration)
+                            {
+                                return GetDefinitionName(schema) + (nullable ? "?" : string.Empty);
+                            }
+                            else
+                            {
+                                return GetDefinitionName(schema) + (nullable && (type?.IsValueType ?? false) ? "?" : string.Empty);
+                            }
+                        }
+                        else if (schema.Properties.ContainsKey("file"))
+                        {
+                            //SyntaxHelper.AddUsing("System.IO", usings);
+                            return "object";
+                        }
+                        break;
+                    case JsonObjectType.File:
+                        SyntaxHelper.AddUsing("System.IO", usings);
+                        return "Stream";
+                }
+            }
+            catch (Exception ex)
+            {
+                SyntaxHelper.LaunchDebugger();
             }
             return "string";
         }
