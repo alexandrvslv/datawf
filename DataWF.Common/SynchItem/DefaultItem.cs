@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
@@ -11,6 +12,14 @@ namespace DataWF.Common
     {
         public static Action<PropertyChangedEventHandler, object, PropertyChangedEventArgs> GlogalChangedHook;
         protected ThreadSafeList<PropertyChangedEventHandler> propertyChanged;
+        protected IClientItemList clientContainer = null;
+
+        [Newtonsoft.Json.JsonIgnore, JsonIgnore, XmlIgnore, Browsable(false)]
+        public IClientItemList ClientContainer => clientContainer ?? (clientContainer = TypeHelper.GetContainers<IClientItemList, PropertyChangedEventHandler>(propertyChanged).FirstOrDefault());
+
+        [Newtonsoft.Json.JsonIgnore, JsonIgnore, XmlIgnore, Browsable(false)]
+        public IClientProvider Provider => ClientContainer?.Client.Provider;
+
 
         [Newtonsoft.Json.JsonIgnore, JsonIgnore, XmlIgnore, Browsable(false)]
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged, PropertyChangedEventHandler>(propertyChanged);

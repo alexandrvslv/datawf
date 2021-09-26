@@ -31,6 +31,8 @@ namespace DataWF.Common
         IEnumerable Select(IEnumerable items, IListIndexes indexes = null);
 
         IEnumerable Distinct(IEnumerable items);
+
+        IQueryParameter WithTag(object tag);
     }
 
     public interface IQueryParameter<T> : IQueryParameter
@@ -42,14 +44,16 @@ namespace DataWF.Common
         IEnumerable<T> Select(IEnumerable<T> items, IListIndexes<T> indexes = null);
 
         IEnumerable<T> Distinct(IEnumerable<T> items);
+
+        new IQueryParameter<T> WithTag(object tag);
     }
 
     public interface IQueryParameter<T, V> : IQueryParameter<T>
     {
         new IInvoker<T, V> Invoker { get; set; }
-
-
         bool CheckValue(V value);
+
+        new IQueryParameter<T, V> WithTag(object tag);
     }
 
     public interface IQueryFormatable

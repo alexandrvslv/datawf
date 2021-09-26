@@ -44,11 +44,7 @@ namespace DataWF.Common
 
         public static IQueryParameter CreateParameter(this IInvoker invoker, Type type, CompareType compare, object value)
         {
-            type = type ?? invoker.TargetType;
-            var parameter = CreateParameter(invoker, type);
-            parameter.Comparer = compare;
-            parameter.Value = value;
-            return parameter;
+            return CreateParameter(invoker, type, LogicType.And, compare, value);
         }
 
         public static IQueryParameter CreateParameter(this IInvoker invoker, Type type, LogicType logic, CompareType compare, object value = null, QueryGroup group = QueryGroup.None)
@@ -62,19 +58,51 @@ namespace DataWF.Common
             return parameter;
         }
 
+        public static QueryParameter<T, V> CreateParameter<T, V>(this IInvoker<T, V> invoker)
+        {
+            return CreateParameter<T, V>(invoker, LogicType.And, CompareType.Equal, null);
+        }
+
+        public static QueryParameter<T, V> CreateParameter<T, V>(this IInvoker<T, V> invoker, object value)
+        {
+            return CreateParameter(invoker, LogicType.And, CompareType.Equal, value);
+        }
+
+        public static QueryParameter<T, V> CreateParameter<T, V>(this IInvoker<T, V> invoker, CompareType compare, object value)
+        {
+            return CreateParameter(invoker, LogicType.And, compare, value);
+        }
+
+        public static QueryParameter<T, V> CreateParameter<T, V>(this IInvoker<T, V> invoker, LogicType logic, CompareType compare, object value = null, QueryGroup group = QueryGroup.None)
+        {
+            return new QueryParameter<T, V>
+            {
+                Logic = logic,
+                Invoker = invoker,
+                Comparer = compare,
+                Value = value,
+                Group = group
+            };
+        }
+
         public static IQueryParameter<T> CreateParameter<T>(this IInvoker invoker)
         {
             return CreateParameter<T>(invoker, CompareType.Equal, null);
         }
 
+        public static IQueryParameter<T> CreateParameter<T>(this IInvoker invoker, object value)
+        {
+            return CreateParameter<T>(invoker, CompareType.Equal, value);
+        }
+
         public static IQueryParameter<T> CreateParameter<T>(this IInvoker invoker, CompareType compare, object value)
         {
-            return (IQueryParameter<T>)invoker.CreateParameter(typeof(T), compare, value);
+            return CreateParameter<T>(invoker, LogicType.And, compare, value);
         }
 
         public static IQueryParameter<T> CreateParameter<T>(this IInvoker invoker, LogicType logic, CompareType compare, object value = null, QueryGroup group = QueryGroup.None)
         {
-            return (IQueryParameter<T>)invoker.CreateParameter(typeof(T), logic, compare, value, group);
+            return (IQueryParameter<T>)CreateParameter(invoker, typeof(T), logic, compare, value, group);
         }
 
         public static IComparer CreateComparer(this IInvoker invoker, ListSortDirection direction = ListSortDirection.Ascending)

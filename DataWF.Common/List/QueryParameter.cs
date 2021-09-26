@@ -330,6 +330,18 @@ namespace DataWF.Common
                 }
             }
         }
+
+        public QueryParameter<T, V> WithTag(object tag)
+        {
+            Tag = tag;
+            return this;
+        }
+
+        IQueryParameter<T, V> IQueryParameter<T, V>.WithTag(object tag) => WithTag(tag);
+
+        IQueryParameter<T> IQueryParameter<T>.WithTag(object tag) => WithTag(tag);
+
+        IQueryParameter IQueryParameter.WithTag(object tag) => WithTag(tag);
     }
 
     [Flags]

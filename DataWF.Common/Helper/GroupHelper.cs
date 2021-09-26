@@ -9,8 +9,8 @@ namespace DataWF.Common
     {
         public static void ApplyFilter(IFilterable filterable)
         {
-            filterable.FilterQuery.Parameters.Add(TreeInvoker.Instance.CreateParameter(null));
-            filterable.FilterQuery.Orders.Add(TreeInvoker.Instance.CreateComparer(null));
+            filterable.FilterQuery.Parameters.Add(TreeInvoker.Instance.CreateParameter());
+            filterable.FilterQuery.Orders.Add(TreeInvoker.Instance.CreateComparer());
         }
 
         public static void ApplyFilter<T>(IFilterable<T> filterable) where T : IGroup

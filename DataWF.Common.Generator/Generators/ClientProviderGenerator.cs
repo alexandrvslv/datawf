@@ -799,7 +799,7 @@ namespace DataWF.Common.Generator
             var typeKey = GetTypeKey(schema);
             var typeId = GetTypeId(schema);
             var definition = GetDefinitionName(schema);
-            if (schema.InheritedSchema == null)
+            if (schema.InheritedSchema == null || GetTypeString(schema.InheritedSchema, usings) == "DefaultItem")
             {
                 source.Append($@"
         [JsonIgnore]    
@@ -1209,13 +1209,13 @@ namespace DataWF.Common.Generator
                 : null;
         }
 
-        private string GetTypeString(JsonSchema schema, HashSet<string> usings, string listType = "SelectableList")
+        private string GetTypeString(JsonSchema schema, HashSet<string> usings, string listType = "SelectableList", bool? baseNullable = null)
         {
             if (schema == null)
                 return "string";
             try
             {
-                var nullable = schema.IsNullableRaw ?? false;
+                var nullable = baseNullable ?? schema.IsNullableRaw ?? false;
                 switch (schema.Type)
                 {
                     case JsonObjectType.Integer:
@@ -1263,12 +1263,12 @@ namespace DataWF.Common.Generator
                     case JsonObjectType.None:
                         if (schema.ActualTypeSchema != schema)
                         {
-                            return GetTypeString(schema.ActualTypeSchema, usings, listType);
+                            return GetTypeString(schema.ActualTypeSchema, usings, listType, nullable);
                         }
                         else if (schema is JsonSchemaProperty propertySchema)
                         {
                             return GetTypeString(propertySchema.AllOf.FirstOrDefault()?.Reference
-                                ?? propertySchema.AnyOf.FirstOrDefault()?.Reference, usings, listType);
+                                ?? propertySchema.AnyOf.FirstOrDefault()?.Reference, usings, listType, nullable);
                         }
                         else
                         {
