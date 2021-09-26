@@ -15,14 +15,14 @@ namespace DataWF.Common
             SerializationInfo = Serialization.Instance.GetTypeInfo(typeof(T));
         }
 
-        public NewtonJsonClientConverter(Client<T, K> client) : this()
+        public NewtonJsonClientConverter(WebClient<T, K> client) : this()
         {
             Client = client;
         }
 
         ICrudClient IClientConverter.Client => Client;
 
-        public Client<T, K> Client { get; set; }
+        public WebClient<T, K> Client { get; set; }
 
         public TypeSerializeInfo SerializationInfo { get; }
 

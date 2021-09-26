@@ -73,15 +73,21 @@ namespace DataWF.Common.Generator
             }
             foreach (var definition in document.Definitions)
             {
+                if (CompilationContext.Context.CancellationToken.IsCancellationRequested)
+                    return false;
                 GetOrGenDefinion(definition.Value, out _);
             }
             foreach (var operation in document.Operations)
             {
+                if (CompilationContext.Context.CancellationToken.IsCancellationRequested)
+                    return false;
                 AddClientOperation(operation);
             }
 
             foreach (var entry in cacheClients)
             {
+                if (CompilationContext.Context.CancellationToken.IsCancellationRequested)
+                    return false;
                 var name = entry.Key;
                 var source = entry.Value;
                 source.Append($@"
@@ -107,7 +113,7 @@ namespace DataWF.Common.Generator
                 var mainSyntaxTree = Compilation.SyntaxTrees
                           .First(x => x.HasCompilationUnitRoot);
 
-                var projectDirectory = Path.GetDirectoryName(mainSyntaxTree.FilePath);
+                var projectDirectory = mainSyntaxTree.FilePath.Substring(0, mainSyntaxTree.FilePath.IndexOf(Compilation.AssemblyName) + Compilation.AssemblyName.Length);
                 DocumentSource = Path.GetFullPath(Path.Combine(projectDirectory, DocumentSource));
             }
             var url = new Uri(DocumentSource);
@@ -310,7 +316,7 @@ namespace DataWF.Common.Generator
             var operationName = GetOperationName(descriptor, out var clientName);
             var actualName = $"{operationName}Async";
             var baseType = GetClientBaseType(clientName, usings, out _, out _, out _);
-            var isOverride = baseType != "ClientBase" && VirtualOperations.Contains(actualName);
+            var isOverride = baseType != "WebClientBase" && VirtualOperations.Contains(actualName);
             var returnType = GetReturningTypeCheck(descriptor, operationName, usings);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
 
@@ -490,9 +496,9 @@ namespace DataWF.Common.Generator
                 typeKey = GetTypeKey(schema);
                 typeId = GetTypeId(schema);
 
-                return $"{(loggedTypeName != null ? "Logged" : "")}Client<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, usings, "List"))}{(logged != null ? $", {loggedTypeName}" : "")}>";
+                return $"{(loggedTypeName != null ? "Logged" : "")}WebClient<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, usings, "List"))}{(logged != null ? $", {loggedTypeName}" : "")}>";
             }
-            return $"ClientBase";
+            return $"WebClientBase";
         }
 
         private JsonSchemaProperty GetProperty(JsonSchema schema, string propertyName)
@@ -1205,7 +1211,7 @@ namespace DataWF.Common.Generator
 
         private string GetTypeString(JsonSchema schema, HashSet<string> usings, string listType = "SelectableList")
         {
-            if(schema == null)
+            if (schema == null)
                 return "string";
             try
             {

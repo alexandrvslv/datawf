@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public abstract partial class Client<T, K> : ClientBase, ICrudClient<T>
+    public abstract partial class WebClient<T, K> : WebClientBase, ICrudClient<T>
         where T : class, new()
         where K : struct
     {
@@ -22,7 +22,7 @@ namespace DataWF.Common
         private ICrudClient baseClient;
         private SemaphoreSlim getActionSemaphore;
 
-        public Client(IInvoker<T, K> idInvoker, IInvoker<T, int> typeInvoker, int typeId = 0)
+        public WebClient(IInvoker<T, K> idInvoker, IInvoker<T, int> typeInvoker, int typeId = 0)
         {
             IdInvoker = idInvoker;
             Items = new ClientItemList<T>(this) { AsyncNotification = true };

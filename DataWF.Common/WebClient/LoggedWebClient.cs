@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public abstract class LoggedClient<T, K, L> : Client<T, K>, ILoggedClient<T, L>
+    public abstract class LoggedWebClient<T, K, L> : WebClient<T, K>, ILoggedClient<T, L>
         where T : class, new()
         where K : struct
         where L : class, new()
     {
-        public LoggedClient(IInvoker<T, K> idInvoker, IInvoker<T, int> typeInvoker, int typeId = 0)
+        public LoggedWebClient(IInvoker<T, K> idInvoker, IInvoker<T, int> typeInvoker, int typeId = 0)
             : base(idInvoker, typeInvoker, typeId)
         { }
 

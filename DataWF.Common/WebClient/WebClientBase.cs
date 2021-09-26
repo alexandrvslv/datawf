@@ -22,7 +22,7 @@ namespace DataWF.Common
     /// Concept from https://github.com/RSuter/NSwag/wiki/SwaggerToCSharpClientGenerator
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public partial class ClientBase : IClient
+    public partial class WebClientBase : IClient
     {
         private const string fileNameUTFToken = "filename*=UTF-8";
         private const string fileNameToken = "filename=";
@@ -31,7 +31,7 @@ namespace DataWF.Common
         private IClientProvider provider;
         private Environment.SpecialFolder defaultFolder = Environment.SpecialFolder.LocalApplicationData;
 
-        public ClientBase()
+        public WebClientBase()
         {
         }
 
