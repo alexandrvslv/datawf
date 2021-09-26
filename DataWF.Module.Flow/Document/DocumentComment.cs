@@ -14,7 +14,7 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -22,7 +22,7 @@ namespace DataWF.Module.Flow
         [Column("message_id")]
         public long? MessageId
         {
-            get => GetValue<long?>(Table.MessageIdKey);
+            get => GetValue(Table.MessageIdKey);
             set => SetValue(value, Table.MessageIdKey);
         }
 

@@ -17,118 +17,115 @@ namespace DataWF.Module.Common
         public static Func<UserApplication, Task> Verified;
         private User user;
 
-        public UserApplication(DBTable table) : base(table)
-        { }
-
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
         [Column("app_type", 1024, Keys = DBColumnKeys.ElementType | DBColumnKeys.Notnull)]
         public UserApplicationType? Type
         {
-            get => GetValue<UserApplicationType?>(Table.TypeKey);
+            get => GetValue(Table.TypeKey);
             set => SetValue(value, Table.TypeKey);
         }
 
         [Column("email", 1024, Keys = DBColumnKeys.Code | DBColumnKeys.Notnull)]//Index("duser_request_email", true)
         public string EMail
         {
-            get => GetValue<string>(Table.EMailKey);
+            get => GetValue(Table.EMailKey);
             set => SetValue(value?.Trim(), Table.EMailKey);
         }
 
         [Column("password", Keys = DBColumnKeys.Notnull)]//Index("duser_request_email", true)
         public string Password
         {
-            get => GetValue<string>(Table.PasswordKey);
+            get => GetValue(Table.PasswordKey);
             set => SetValue(value, Table.PasswordKey);
         }
 
         [Column("temp_password")]//Index("duser_request_email", true)
         public string TemporaryPassword
         {
-            get => GetValue<string>(Table.TemporaryPasswordKey);
+            get => GetValue(Table.TemporaryPasswordKey);
             set => SetValue(value, Table.TemporaryPasswordKey);
         }
 
         [Column("email_verified", Keys = DBColumnKeys.System), DefaultValue(false)]
         public bool? EmailVerified
         {
-            get => GetValue<bool?>(Table.EmailVerifiedKey);
+            get => GetValue(Table.EmailVerifiedKey);
             set => SetValue(value, Table.EmailVerifiedKey);
         }
 
         [Column("phone", 30)]
         public string Phone
         {
-            get => GetValue<string>(Table.PhoneKey);
+            get => GetValue(Table.PhoneKey);
             set => SetValue(value?.Trim(), Table.PhoneKey);
         }
 
         [Column("phone_verified", Keys = DBColumnKeys.System), DefaultValue(false)]
         public bool? PhoneVerified
         {
-            get => GetValue<bool?>(Table.PhoneVerifiedKey);
+            get => GetValue(Table.PhoneVerifiedKey);
             set => SetValue(value, Table.PhoneVerifiedKey);
         }
 
         [Column("name_first", 50, Keys = DBColumnKeys.Notnull)]
         public string FirstName
         {
-            get => GetValue<string>(Table.FirstNameKey);
+            get => GetValue(Table.FirstNameKey);
             set => SetValue(value?.Trim(), Table.FirstNameKey);
         }
 
         [Column("name_last", 50, Keys = DBColumnKeys.Notnull)]
         public string LastName
         {
-            get => GetValue<string>(Table.LastNameKey);
+            get => GetValue(Table.LastNameKey);
             set => SetValue(value?.Trim(), Table.LastNameKey);
         }
 
         [Column("name_middle", 50)]
         public string MiddleName
         {
-            get => GetValue<string>(Table.MiddleNameKey);
+            get => GetValue(Table.MiddleNameKey);
             set => SetValue(value?.Trim(), Table.MiddleNameKey);
         }
 
         [Column("company", 100, Keys = DBColumnKeys.Notnull)]
         public string Company
         {
-            get => GetValue<string>(Table.CompanyKey);
+            get => GetValue(Table.CompanyKey);
             set => SetValue(value?.Trim(), Table.CompanyKey);
         }
 
         [Column("department", 100, Keys = DBColumnKeys.Notnull)]
         public string Department
         {
-            get => GetValue<string>(Table.DepartmentKey);
+            get => GetValue(Table.DepartmentKey);
             set => SetValue(value?.Trim(), Table.DepartmentKey);
         }
 
         [Column("position", 100, Keys = DBColumnKeys.Notnull)]
         public string Position
         {
-            get => GetValue<string>(Table.PositionKey);
+            get => GetValue(Table.PositionKey);
             set => SetValue(value?.Trim(), Table.PositionKey);
         }
 
         [Column("user_id", Keys = DBColumnKeys.System)]
         public int? UserId
         {
-            get => GetValue<int?>(Table.UserIdKey);
+            get => GetValue(Table.UserIdKey);
             set => SetValue(value, Table.UserIdKey);
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get => GetReference((DBColumn)Table.UserIdKey, ref user);
+            get => GetReference(Table.UserIdKey, ref user);
             set => SetReference(user = value, Table.UserIdKey);
         }
 

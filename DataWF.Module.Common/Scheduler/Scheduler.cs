@@ -21,14 +21,14 @@ namespace DataWF.Module.Common
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
         [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get => GetValue<int?>(Table.CompanyIdKey);
+            get => GetValue(Table.CompanyIdKey);
             set => SetValue(value, Table.CompanyIdKey);
         }
 
@@ -42,7 +42,7 @@ namespace DataWF.Module.Common
         [Column("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
@@ -56,21 +56,21 @@ namespace DataWF.Module.Common
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(Table.NameENKey);
+            get => GetValue(Table.NameENKey);
             set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(Table.NameRUKey);
+            get => GetValue(Table.NameRUKey);
             set => SetValue(value, Table.NameRUKey);
         }
 
         [Column("orderid")]
         public int? Order
         {
-            get => GetValue<int?>(Table.OrderKey);
+            get => GetValue(Table.OrderKey);
             set => SetValue(value, Table.OrderKey);
         }
 
@@ -92,7 +92,7 @@ namespace DataWF.Module.Common
         [Column("procedure_name")]
         public string ProcedureName
         {
-            get => GetValue<string>(Table.ProcedureNameKey);
+            get => GetValue(Table.ProcedureNameKey);
             set => SetValue(value, Table.ProcedureNameKey);
         }
 

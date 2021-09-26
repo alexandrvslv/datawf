@@ -10,7 +10,7 @@ namespace DataWF.Module.Messanger
     public partial class MessageData : MessageDetail
     {
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public long Id
         {
             get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);

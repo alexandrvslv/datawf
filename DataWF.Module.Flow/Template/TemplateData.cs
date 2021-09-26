@@ -12,9 +12,9 @@ namespace DataWF.Module.Flow
         private TemplateFile templateFile;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -25,7 +25,7 @@ namespace DataWF.Module.Flow
         [Column("file_id", Keys = DBColumnKeys.View), Index("rtemplate_data_index", true)]
         public int? FileId
         {
-            get => GetValue<int?>(Table.FileIdKey);
+            get => GetValue(Table.FileIdKey);
             set => SetValue(value, Table.FileIdKey);
         }
 

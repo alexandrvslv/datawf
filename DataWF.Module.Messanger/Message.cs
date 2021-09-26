@@ -18,7 +18,7 @@ namespace DataWF.Module.Messanger
         private User user;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public long? Id
+        public long Id
         {
             get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
@@ -49,7 +49,7 @@ namespace DataWF.Module.Messanger
         {
             get
             {
-                if (addresses == null && Id != null)
+                if (addresses == null && Id != 0)
                     addresses = new MessageAddressList(Schema.MessageAddress, this);
                 return addresses;
             }

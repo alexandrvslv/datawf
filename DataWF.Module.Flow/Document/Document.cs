@@ -69,10 +69,6 @@ namespace DataWF.Module.Flow
             ReferenceChanged?.Invoke(this, new DBItemEventArgs(item));
         }
 
-        public Document(DBTable table) : base(table)
-        {
-        }
-
         public override string ParametersCategory
         {
             get => Template?.Code ?? base.ParametersCategory;
@@ -80,9 +76,9 @@ namespace DataWF.Module.Flow
         }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public long? Id
+        public long Id
         {
-            get => GetValue<long?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -97,7 +93,7 @@ namespace DataWF.Module.Flow
         [Column("template_id", Keys = DBColumnKeys.View | DBColumnKeys.Notnull), Index("ddocument_template_id", Unique = false)]
         public virtual int? TemplateId
         {
-            get => GetValue<int?>(Table.TemplateIdKey);
+            get => GetValue(Table.TemplateIdKey);
             set => SetValue(value, Table.TemplateIdKey);
         }
 
@@ -135,14 +131,14 @@ namespace DataWF.Module.Flow
         [Column("document_date")]
         public DateTime? DocumentDate
         {
-            get => GetValue<DateTime?>(Table.DocumentDateKey);
+            get => GetValue(Table.DocumentDateKey);
             set => SetValue(value, Table.DocumentDateKey);
         }
 
         [Column("document_number", 80, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("ddocuument_document_number")]
         public virtual string Number
         {
-            get => GetValue<string>(Table.NumberKey);
+            get => GetValue(Table.NumberKey);
             set
             {
                 SetValue(value, Table.NumberKey);
@@ -157,7 +153,7 @@ namespace DataWF.Module.Flow
         [Column("customer_id")]
         public int? CustomerId
         {
-            get => GetValue<int?>(Table.CustomerIdKey);
+            get => GetValue(Table.CustomerIdKey);
             set => SetValue(value, Table.CustomerIdKey);
         }
 
@@ -193,14 +189,14 @@ namespace DataWF.Module.Flow
         [CultureKey(nameof(Title))]
         public virtual string TitleEN
         {
-            get => GetValue<string>(Table.TitleENKey);
+            get => GetValue(Table.TitleENKey);
             set => SetValue(value, Table.TitleENKey);
         }
 
         [CultureKey(nameof(Title))]
         public virtual string TitleRU
         {
-            get => GetValue<string>(Table.TitleRUKey);
+            get => GetValue(Table.TitleRUKey);
             set => SetValue(value, Table.TitleRUKey);
         }
 
@@ -275,7 +271,7 @@ namespace DataWF.Module.Flow
         [Column("work_user", ColumnType = DBColumnTypes.Internal)]
         public string WorkUser
         {
-            get => GetValue<string>(Table.WorkUserKey);
+            get => GetValue(Table.WorkUserKey);
             private set => SetValue(value, Table.WorkUserKey);
         }
 
@@ -283,7 +279,7 @@ namespace DataWF.Module.Flow
         [Column("work_stage", ColumnType = DBColumnTypes.Internal)]
         public string WorkStage
         {
-            get => GetValue<string>(Table.WorkStageKey);
+            get => GetValue(Table.WorkStageKey);
             private set => SetValue(value, Table.WorkStageKey);
         }
 

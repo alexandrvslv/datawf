@@ -18,7 +18,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
             get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);

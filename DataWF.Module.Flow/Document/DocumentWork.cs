@@ -28,7 +28,7 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -36,7 +36,7 @@ namespace DataWF.Module.Flow
         [Column("stage_id", Keys = DBColumnKeys.View), Index("ddocument_work_stage_id")]
         public int? StageId
         {
-            get => GetValue<int?>(Table.StageIdKey);
+            get => GetValue(Table.StageIdKey);
             set => SetValue(value, Table.StageIdKey);
         }
 
@@ -58,7 +58,7 @@ namespace DataWF.Module.Flow
         [Column("work_id"), Index("ddocument_work_work_id")]
         public int? WorkId
         {
-            get => GetValue<int?>(Table.WorkIdKey);
+            get => GetValue(Table.WorkIdKey);
             set => SetValue(value, Table.WorkIdKey);
         }
 
@@ -73,7 +73,7 @@ namespace DataWF.Module.Flow
         [Column("user_id", Keys = DBColumnKeys.View), Index("ddocument_work_user_id")]
         public int? UserId
         {
-            get => GetValue<int?>(Table.UserIdKey);
+            get => GetValue(Table.UserIdKey);
             set => SetValue(value, Table.UserIdKey);
         }
 
@@ -93,7 +93,7 @@ namespace DataWF.Module.Flow
         [Column("position_id", Keys = DBColumnKeys.View), Index("ddocument_work_position_id")]
         public int? PositionId
         {
-            get => GetValue<int?>(Table.PositionIdKey);
+            get => GetValue(Table.PositionIdKey);
             set => SetValue(value, Table.PositionIdKey);
         }
 
@@ -112,7 +112,7 @@ namespace DataWF.Module.Flow
         [Column("department_id", Keys = DBColumnKeys.View), Index("ddocument_work_department_id")]
         public int? DepartmentId
         {
-            get => GetValue<int?>(Table.DepartmentIdKey);
+            get => GetValue(Table.DepartmentIdKey);
             set => SetValue(value, Table.DepartmentIdKey);
         }
 
@@ -129,7 +129,7 @@ namespace DataWF.Module.Flow
         [Column("from_id"), Index("ddocument_work_from_id")]
         public long? FromId
         {
-            get => GetValue<long?>(Table.FromIdKey);
+            get => GetValue(Table.FromIdKey);
             set => SetValue(value, Table.FromIdKey);
         }
 
@@ -144,21 +144,21 @@ namespace DataWF.Module.Flow
         [Column("date_read")]
         public DateTime? DateRead
         {
-            get => GetValue<DateTime?>(Table.DateReadKey);
+            get => GetValue(Table.DateReadKey);
             set => SetValue(value, Table.DateReadKey);
         }
 
         [Column("date_limit")]
         public DateTime? DateLimit
         {
-            get => GetValue<DateTime?>(Table.DateLimitKey);
+            get => GetValue(Table.DateLimitKey);
             set => SetValue(value, Table.DateLimitKey);
         }
 
         [Column("date_complete"), Index("ddocument_work_date_complete")]
         public DateTime? DateComplete
         {
-            get => GetValue<DateTime?>(Table.DateCompleteKey);
+            get => GetValue(Table.DateCompleteKey);
             set
             {
                 SetValue(value, Table.DateCompleteKey);
@@ -211,7 +211,7 @@ namespace DataWF.Module.Flow
         [Column("description", 2048)]
         public string Description
         {
-            get => GetValue<string>(Table.DescriptionKey);
+            get => GetValue(Table.DescriptionKey);
             set => SetValue(value, Table.DescriptionKey);
         }
 

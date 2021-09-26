@@ -20,9 +20,9 @@ namespace DataWF.Module.Flow
         private TemplateData template;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public long? Id
+        public long Id
         {
-            get => GetValue<long?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -39,7 +39,7 @@ namespace DataWF.Module.Flow
         [Column("template_data_id")]
         public int? TemplateDataId
         {
-            get => GetValue<int?>(Table.TemplateDataIdKey);
+            get => GetValue(Table.TemplateDataIdKey);
             set => SetValue(value, Table.TemplateDataIdKey);
         }
 
@@ -53,21 +53,21 @@ namespace DataWF.Module.Flow
         [Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]
         public virtual string FileName
         {
-            get => GetValue<string>(Table.FileNameKey);
+            get => GetValue(Table.FileNameKey);
             set => SetValue(value, Table.FileNameKey);
         }
 
         [Column("file_url", 1024)]
         public string FileUrl
         {
-            get => GetValue<string>(Table.FileUrlKey);
+            get => GetValue(Table.FileUrlKey);
             set => SetValue(value, Table.FileUrlKey);
         }
 
         [Column("file_last_write", Keys = DBColumnKeys.FileLastWrite)]
         public DateTime? FileLastWrite
         {
-            get => GetValue<DateTime?>(Table.FileLastWriteKey) ?? Stamp;
+            get => GetValue(Table.FileLastWriteKey) ?? Stamp;
             set => SetValue(value, Table.FileLastWriteKey);
         }
 
@@ -81,7 +81,7 @@ namespace DataWF.Module.Flow
         [Column("file_lob", Keys = DBColumnKeys.FileOID)]
         public virtual long? FileLOB
         {
-            get => GetValue<long?>(Table.FileLOBKey);
+            get => GetValue(Table.FileLOBKey);
             set => SetValue(value, Table.FileLOBKey);
         }
 
@@ -220,7 +220,7 @@ namespace DataWF.Module.Flow
                     FileName = RefreshName();
                 }
                 var templateFileTable = (TemplateFileTable<TemplateFile>)Schema.GetTable<TemplateFile>();
-                filePath = Helper.GetDocumentsFullPath(FileName, "ParserNew" + (Id ?? TemplateData.Id));
+                filePath = Helper.GetDocumentsFullPath(FileName, "ParserNew" + (Id == 0 ? TemplateData.Id : Id));
                 using (var stream = TemplateData.File.GetZipFileStream(templateFileTable.FileKey, filePath, param.Transaction))
                 {
                     filePath = Execute(param, stream);
@@ -228,7 +228,7 @@ namespace DataWF.Module.Flow
             }
             else
             {
-                filePath = Helper.GetDocumentsFullPath(FileName, "Parser" + (Id ?? TemplateData.Id));
+                filePath = Helper.GetDocumentsFullPath(FileName, "Parser" + (Id == 0 ? TemplateData.Id : Id));
                 using (var stream = await GetData(filePath, param.Transaction))
                 {
                     if (stream.Length == 0)

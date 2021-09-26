@@ -16,7 +16,7 @@ namespace DataWF.Module.Messanger
         private Department department;
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public long Id
         {
             get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);

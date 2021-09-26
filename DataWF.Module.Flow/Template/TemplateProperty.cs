@@ -8,9 +8,9 @@ namespace DataWF.Module.Flow
     {
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public int Id
         {
-            get => GetValue<int?>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -20,7 +20,7 @@ namespace DataWF.Module.Flow
         [Column("property_name", 1024), Index("rtemplate_property_index", true)]
         public string PropertyName
         {
-            get => GetValue<string>(Table.PropertyNameKey);
+            get => GetValue(Table.PropertyNameKey);
             set => SetValue(value, Table.PropertyNameKey);
         }
 

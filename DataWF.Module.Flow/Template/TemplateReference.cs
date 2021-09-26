@@ -12,7 +12,7 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -22,7 +22,7 @@ namespace DataWF.Module.Flow
         [Column("reference_id"), Index("rtemplate_reference_index", true)]
         public int? ReferenceId
         {
-            get => GetValue<int?>(Table.ReferenceIdKey);
+            get => GetValue(Table.ReferenceIdKey);
             set => SetValue(value, Table.ReferenceIdKey);
         }
 

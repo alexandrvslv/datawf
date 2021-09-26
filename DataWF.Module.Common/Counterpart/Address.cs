@@ -13,7 +13,7 @@ namespace DataWF.Module.Counterpart
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -21,7 +21,7 @@ namespace DataWF.Module.Counterpart
         [Column("location_id", Keys = DBColumnKeys.View), Index("daddress_location_id")]
         public int? LocationId
         {
-            get => GetValue<int?>(Table.LocationIdKey);
+            get => GetValue(Table.LocationIdKey);
             set => SetValue(value, Table.LocationIdKey);
         }
 
@@ -41,7 +41,7 @@ namespace DataWF.Module.Counterpart
         [Column("post_index", 20, Keys = DBColumnKeys.View), Index("daddress_post_index")]
         public string PostIndex
         {
-            get => GetValue<string>(Table.PostIndexKey);
+            get => GetValue(Table.PostIndexKey);
             set => SetValue(value, Table.PostIndexKey);
         }
 
@@ -55,28 +55,28 @@ namespace DataWF.Module.Counterpart
         [CultureKey(nameof(Street), CultureName = "en_US")]
         public string StreetEN
         {
-            get => GetValue<string>(Table.StreetENKey);
+            get => GetValue(Table.StreetENKey);
             set => SetValue(value, Table.StreetENKey);
         }
 
         [CultureKey(nameof(Street), CultureName = "ru_RU")]
         public string StreetRU
         {
-            get => GetValue<string>(Table.StreetRUKey);
+            get => GetValue(Table.StreetRUKey);
             set => SetValue(value, Table.StreetRUKey);
         }
 
         [Column("floor")]
         public string Floor
         {
-            get => GetValue<string>(Table.FloorKey);
+            get => GetValue(Table.FloorKey);
             set => SetValue(value, Table.FloorKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(Table.ExternalIdKey);
+            get => GetValue(Table.ExternalIdKey);
             set => SetValue(value, Table.ExternalIdKey);
         }
     }

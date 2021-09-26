@@ -31,7 +31,7 @@ namespace DataWF.Module.Counterpart
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -46,7 +46,7 @@ namespace DataWF.Module.Counterpart
         [Index("dcustomer_inn", true)]
         public string INN
         {
-            get => GetValue<string>(Table.INNKey);
+            get => GetValue(Table.INNKey);
             set => SetValue(value, Table.INNKey);
         }
 
@@ -54,7 +54,7 @@ namespace DataWF.Module.Counterpart
         [Index("dcustomer_code", true)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
@@ -68,14 +68,14 @@ namespace DataWF.Module.Counterpart
         [CultureKey(nameof(ShortName))]
         public string ShortNameEN
         {
-            get => GetValue<string>(Table.ShortNameENKey);
+            get => GetValue(Table.ShortNameENKey);
             set => SetValue(value, Table.ShortNameENKey);
         }
 
         [CultureKey(nameof(ShortName))]
         public string ShortNameRU
         {
-            get => GetValue<string>(Table.ShortNameRUKey);
+            get => GetValue(Table.ShortNameRUKey);
             set => SetValue(value, Table.ShortNameRUKey);
         }
 
@@ -89,28 +89,28 @@ namespace DataWF.Module.Counterpart
         [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(Table.NameENKey);
+            get => GetValue(Table.NameENKey);
             set => SetValue(value, Table.NameENKey);
         }
 
         [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(Table.NameRUKey);
+            get => GetValue(Table.NameRUKey);
             set => SetValue(value, Table.NameRUKey);
         }
 
         [Column("email", 1024), Index("dcustomer_email")]
         public string EMail
         {
-            get => GetValue<string>(Table.EMailKey);
+            get => GetValue(Table.EMailKey);
             set => SetValue(value, Table.EMailKey);
         }
 
         [Column("phone", 1024)]
         public string Phone
         {
-            get => GetValue<string>(Table.PhoneKey);
+            get => GetValue(Table.PhoneKey);
             set => SetValue(value, Table.PhoneKey);
         }
 
@@ -118,7 +118,7 @@ namespace DataWF.Module.Counterpart
         [Column("country_id")]
         public int? CountryId
         {
-            get => GetValue<int?>(Table.CountryIdKey);
+            get => GetValue(Table.CountryIdKey);
             set => SetValue(value, Table.CountryIdKey);
         }
 
@@ -133,7 +133,7 @@ namespace DataWF.Module.Counterpart
         [Column("address_id")]
         public int? AddressId
         {
-            get => GetValue<int?>(Table.AddressIdKey);
+            get => GetValue(Table.AddressIdKey);
             set => SetValue(value, Table.AddressIdKey);
         }
 
@@ -164,14 +164,14 @@ namespace DataWF.Module.Counterpart
         [Column("sign_key", 1024, Keys = DBColumnKeys.Password | DBColumnKeys.System)]
         public string Sign
         {
-            get => GetValue<string>(Table.SignKey);
+            get => GetValue(Table.SignKey);
             set => SetValue(value, Table.SignKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(Table.ExternalIdKey);
+            get => GetValue(Table.ExternalIdKey);
             set => SetValue(value, Table.ExternalIdKey);
         }
     }

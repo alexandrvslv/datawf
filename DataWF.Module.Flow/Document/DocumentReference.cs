@@ -14,7 +14,7 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -30,7 +30,7 @@ namespace DataWF.Module.Flow
         [Index("ddocument_reference_unique", true)]
         public long? ReferenceId
         {
-            get => GetValue<long?>(Table.ReferenceIdKey);
+            get => GetValue(Table.ReferenceIdKey);
             set => SetValue(value, Table.ReferenceIdKey);
         }
 
