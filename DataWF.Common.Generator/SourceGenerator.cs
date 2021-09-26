@@ -102,8 +102,21 @@ namespace DataWF.Common.Generator
                     }
                 }
 
+                if (receiver.SchemaControllerCandidate.Any())
+                {
+                    var controllerGenerator = new SchemaControllerGenerator(compilationContext) { };
+
+                    foreach (var serviceClass in receiver.SchemaControllerCandidate)
+                    {
+                        if (context.CancellationToken.IsCancellationRequested)
+                            return;
+                        controllerGenerator.Process(serviceClass);
+                    }
+                }
+
                 if (receiver.ClientProviderCandidate.Any())
                 {
+                    invokerGenerator.ForceInstance = true;
                     var clientGenerator = new ClientProviderGenerator(compilationContext)
                     {
                         InvokerGenerator = invokerGenerator
@@ -114,18 +127,6 @@ namespace DataWF.Common.Generator
                         if (context.CancellationToken.IsCancellationRequested)
                             return;
                         clientGenerator.Process(clientClass);
-                    }
-                }
-
-                if (receiver.SchemaControllerCandidate.Any())
-                {
-                    var controllerGenerator = new SchemaControllerGenerator(compilationContext) { };
-
-                    foreach (var serviceClass in receiver.SchemaControllerCandidate)
-                    {
-                        if (context.CancellationToken.IsCancellationRequested)
-                            return;
-                        controllerGenerator.Process(serviceClass);
                     }
                 }
             }
