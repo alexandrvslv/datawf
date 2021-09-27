@@ -27,42 +27,6 @@ using System.Linq.Expressions;
 
 namespace DataWF.Data
 {
-    public interface IQQuery<T> : IQQuery, IEnumerable<T> where T : DBItem
-    {
-        IEnumerable<T> Select();
-        IEnumerable<T> Load(DBTransaction transaction = null);
-
-        new IQQuery<T> Column(QFunctionType function, params object[] args);
-        new IQQuery<T> Column(IInvoker invoker);
-        IQQuery<T> Column<K>(Expression<Func<T, K>> keySelector);
-
-        new IQQuery<T> WhereViewColumns(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
-        new IQQuery<T> Where(string filter);
-
-        IQQuery<T> Where(Expression<Func<T, bool>> expression);
-        new IQQuery<T> Where(Type typeFilter);
-        new IQQuery<T> Where(QParam parameter);
-        new IQQuery<T> Where(Action<QParam> parameter);
-        new IQQuery<T> Where(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
-        new IQQuery<T> Where(IInvoker column, CompareType comparer, object value);
-        new IQQuery<T> Where(string column, CompareType comparer, object value);
-
-        new IQQuery<T> And(QParam parameter);
-        new IQQuery<T> And(Action<QParam> parameter);
-        new IQQuery<T> And(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
-        new IQQuery<T> And(IInvoker column, CompareType comparer, object value);
-        new IQQuery<T> And(string column, CompareType comparer, object value);
-
-        new IQQuery<T> Or(QParam parameter);
-        new IQQuery<T> Or(Action<QParam> parameter);
-        new IQQuery<T> Or(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
-        new IQQuery<T> Or(IInvoker column, CompareType comparer, object value);
-        new IQQuery<T> Or(string column, CompareType comparer, object value);
-
-        new IQQuery<T> OrderBy(IInvoker column, ListSortDirection direction = ListSortDirection.Ascending);
-        IQQuery<T> OrderBy<K>(Expression<Func<T, K>> keySelector);
-        IQQuery<T> OrderByDescending<K>(Expression<Func<T, K>> keySelector);
-    }
 
     public interface IQQuery : IQItem, IQItemList, IEnumerable
     {
@@ -94,9 +58,6 @@ namespace DataWF.Data
         DBTable ParseTable(string name);
 
         bool CheckItem(DBItem item);
-
-        IEnumerable<T> Select<T>() where T : DBItem;
-
         QParam CreateParam(LogicType logic, IInvoker invoker, object value, QBuildParam buildParam = QBuildParam.None);
         QParam CreateParam(LogicType logic, IInvoker invoker, CompareType comparer, object value);
 
@@ -128,6 +89,14 @@ namespace DataWF.Data
 
         DBComparerList<T> GetComparer<T>() where T : DBItem;
         List<T> Sort<T>(List<T> ts) where T : DBItem;
+
+        IEnumerable<T> Select<T>() where T : DBItem;
+
+        IEnumerable<T> Load<T>(DBTransaction transaction = null) where T : DBItem;
+
+        T FirstOrDefault<T>(DBTransaction transaction = null) where T : DBItem;
+
+        T FirstOrDefault<T>(Func<T, bool> predicate, DBTransaction transaction = null) where T : DBItem;
     }
 
 }

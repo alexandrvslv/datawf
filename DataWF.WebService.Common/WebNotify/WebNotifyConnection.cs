@@ -19,13 +19,26 @@ namespace DataWF.WebService.Common
     {
         private static uint IdSequence = 0;
 
-        public WebNotifyConnection()
+        public WebNotifyConnection(IDBProvider provider)
         {
             if (IdSequence == uint.MaxValue)
                 IdSequence = 0;
             Id = ++IdSequence;
             Date = DateTime.Now;
+            Provider = provider;
         }
+
+        [JsonIgnore]
+        public WebSocket Socket { get; set; }
+
+        [JsonIgnore]
+        public IUserIdentity User { get; set; }
+
+        [JsonIgnore]
+        public Version VersionValue { get; set; }
+
+        [JsonIgnore]
+        public IDBProvider Provider { get; }
 
         public uint Id { get; set; }
 
@@ -39,20 +52,11 @@ namespace DataWF.WebService.Common
 
         public string Action { get; set; }
 
-        [JsonIgnore]
-        public WebSocket Socket { get; set; }
-
-        [JsonIgnore]
-        public IUserIdentity User { get; set; }
-
         public string Platform { get; set; }
 
         public string Application { get; set; }
 
         public string Version { get; set; }
-
-        [JsonIgnore]
-        public Version VersionValue { get; set; }
 
         public int ReceiveCount { get; set; }
 
@@ -67,6 +71,8 @@ namespace DataWF.WebService.Common
         public string SendError { get; set; }
 
         public int SendingCount { get; internal set; }
+
+
 
         public bool CheckConnection()
         {
@@ -141,7 +147,7 @@ namespace DataWF.WebService.Common
         protected MemoryStream WriteData(object data, IUserIdentity user)
         {
             var jsonOptions = new JsonSerializerOptions();
-            jsonOptions.InitDefaults(new DBItemConverterFactory
+            jsonOptions.InitDefaults(new DBItemConverterFactory(Provider)
             {
                 CurrentUser = user,
                 HttpJsonSettings = HttpJsonSettings.None,
@@ -168,7 +174,7 @@ namespace DataWF.WebService.Common
         {
             bool haveValue = false;
             var jsonOptions = new JsonSerializerOptions();
-            jsonOptions.InitDefaults(new DBItemConverterFactory
+            jsonOptions.InitDefaults(new DBItemConverterFactory(Provider)
             {
                 CurrentUser = User,
                 HttpJsonSettings = HttpJsonSettings.None,
@@ -241,7 +247,10 @@ namespace DataWF.WebService.Common
         {
             stream.Position = 0;
             var jsonOptions = new JsonSerializerOptions();
-            jsonOptions.InitDefaults(new DBItemConverterFactory { CurrentUser = User });
+            jsonOptions.InitDefaults(new DBItemConverterFactory(Provider)
+            {
+                CurrentUser = User
+            });
             var property = (string)null;
             var type = (Type)null;
             var obj = (object)null;

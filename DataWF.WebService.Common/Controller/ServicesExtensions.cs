@@ -54,28 +54,6 @@ namespace DataWF.WebService.Common
             return app.UseResponseCompression();
         }
 
-        public static IServiceCollection AddDBProvider(this IServiceCollection services, IDBProvider dataProvider, bool load = false)
-        {
-            FindUser = dataProvider.FindUser;
-            if (load)
-            {
-                dataProvider.Load();
-            }
-            
-            foreach (var interfaceType in TypeHelper.GetDerivedInterfaces<IDBSchema>(dataProvider.Schema.GetType()))
-                services.AddSingleton(interfaceType, dataProvider.Schema);
-
-            services.AddSingleton<DBProvider>((DBProvider)dataProvider);
-            return services.AddSingleton(dataProvider);
-        }
-
-        public static IApplicationBuilder UseDBProvider(this IApplicationBuilder app)
-        {
-            var service = app.ApplicationServices.GetService<IDBProvider>();
-            service.Load();
-            return app;
-        }
-
         public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
             var jwtConfig = new JwtSetting();
@@ -114,8 +92,22 @@ namespace DataWF.WebService.Common
                 .UseAuthorization();
         }
 
-        public static IServiceCollection AddDefaults(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddDefaults(this IServiceCollection services, IConfiguration configuration, IDBProvider dataProvider)
         {
+            FindUser = dataProvider.FindUser;
+            dataProvider.Load();
+
+            services.AddSingleton<DBSchema>(dataProvider.Schema);
+            foreach (var interfaceType in TypeHelper.GetDerivedInterfaces<IDBSchema>(dataProvider.Schema.GetType()))
+                services.AddSingleton(interfaceType, dataProvider.Schema);
+
+            if (dataProvider.GetType() != typeof(DBProvider))
+                services.AddSingleton(dataProvider.GetType(), dataProvider);
+            if (dataProvider is DBProvider)
+                services.AddSingleton<DBProvider>((DBProvider)dataProvider);
+
+            services.AddSingleton<IDBProvider>(dataProvider);
+
             var protocolSetting = new ProtocolSetting();
             var protocolSection = configuration.GetSection("ProtocolSetting");
             if (protocolSection != null)
@@ -140,6 +132,7 @@ namespace DataWF.WebService.Common
             }
             services.Configure<SMTPSetting>(ldapSection);
 
+            var formatter = new DBItemOutputFormatter(dataProvider);
             services.AddControllers(options =>
             {
                 options.CacheProfiles.Add("Never", new CacheProfile()
@@ -149,10 +142,10 @@ namespace DataWF.WebService.Common
                     Duration = 0
                 });
                 options.SuppressOutputFormatterBuffering = true;
-                options.OutputFormatters.Insert(0, new DBItemOutputFormatter());
+                options.OutputFormatters.Insert(0, formatter);
             }).AddJsonOptions(options =>
             {
-                options.JsonSerializerOptions.InitDefaults();
+                options.JsonSerializerOptions.InitDefaults(formatter.GetFactory());
             });
 
 
@@ -228,20 +221,19 @@ namespace DataWF.WebService.Common
             });
         }
 
-        public static IServiceCollection AddWebSocketNotify(this IServiceCollection services, EventHandler<WebNotifyEventArgs> removeHandler = null)
+        public static IServiceCollection AddWebSocketNotify(this IServiceCollection services)
         {
-            var service = new WebNotifyService();
+            return services.AddSingleton<IWebNotifyService, WebNotifyService>();
+        }
+
+        public static IApplicationBuilder UseWebSocketNotify(this IApplicationBuilder app, EventHandler<WebNotifyEventArgs> removeHandler = null)
+        {
+            var service = (WebNotifyService)app.ApplicationServices.GetService<IWebNotifyService>();
+            service.Start();
             if (removeHandler != null)
             {
                 service.RemoveConnection += removeHandler;
             }
-            return services.AddSingleton<IWebNotifyService>(service);
-        }
-
-        public static IApplicationBuilder UseWebSocketNotify(this IApplicationBuilder app)
-        {
-            var service = app.ApplicationServices.GetService<IWebNotifyService>();
-            service.Start();
 
             var webSocketOptions = new WebSocketOptions()
             {

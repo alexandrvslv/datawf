@@ -1066,7 +1066,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
 
         public virtual Stream ReadSequential(DBItem item, DBColumn column, DBTransaction transaction)
         {
-            var query = item.Table.Query<DBItem>().Column(column).Where(item.Table.PrimaryKey, item.PrimaryId);
+            var query = item.Table.QQuery().Column(column).Where(item.Table.PrimaryKey, item.PrimaryId);
             var command = transaction.AddCommand(query.ToCommand());
             transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
             if (transaction.Reader.Read())
@@ -1086,7 +1086,7 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
 
         public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, DBTransaction transaction, int bufferSize = 81920)
         {
-            var query = item.Table.Query<DBItem>().Column(column).Where(item.Table.PrimaryKey, item.PrimaryId);
+            var query = item.Table.QQuery().Column(column).Where(item.Table.PrimaryKey, item.PrimaryId);
             var command = transaction.AddCommand(query.ToCommand());
             using (transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
             {

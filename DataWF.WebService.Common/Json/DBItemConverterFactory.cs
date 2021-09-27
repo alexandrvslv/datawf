@@ -12,23 +12,25 @@ namespace DataWF.WebService.Common
     {
         //private readonly Dictionary<Type, JsonConverter> cache = new Dictionary<Type, JsonConverter>();
 
-        private readonly Type[] types = new Type[] { typeof(DBItemConverterFactory) };
+        private static readonly Type[] types = new Type[] { typeof(DBItemConverterFactory) };
         private HttpContext context;
         private IUserIdentity user;
         private HttpJsonSettings? httpJsonSettings;
 
         internal HashSet<DBItem> referenceSet = new HashSet<DBItem>();
 
-        public DBItemConverterFactory()
+        public DBItemConverterFactory(IDBProvider provider)
         {
+            Provider = provider;
         }
 
-        public DBItemConverterFactory(HttpContext context)
+        public DBItemConverterFactory(HttpContext context, IDBProvider provider)
+            : this(provider)
         {
             HttpContext = context;
         }
-        
-        public DBSchema Schema { get; set; }
+
+        public IDBProvider Provider { get; set; }
 
         public HttpContext HttpContext
         {

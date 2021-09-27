@@ -18,7 +18,6 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
-using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -87,7 +86,7 @@ namespace DataWF.Data
         public DBSchemaList Schems => Containers.FirstOrDefault(p => p is DBSchemaList) as DBSchemaList;
 
         [XmlIgnore, JsonIgnore]
-        public DBProvider Provider
+        public new DBProvider Provider
         {
             get => provider ??= Schems?.Provider;
             set => provider = value;

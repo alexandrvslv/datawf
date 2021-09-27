@@ -909,7 +909,7 @@ namespace DataWF.WebService.Common
                     }
                     else if (MultipartRequestHelper.HasModel(contentDisposition))
                     {
-                        using (var factory = new DBItemConverterFactory(HttpContext))
+                        using (var factory = new DBItemConverterFactory(HttpContext, Schema.Provider))
                         {
                             var option = new JsonSerializerOptions();
                             option.InitDefaults(factory);

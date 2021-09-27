@@ -1844,7 +1844,7 @@ namespace DataWF.Data
                         param.Comparer = CompareType.NotEqual;
                         return param;
                     }
-                    throw new NotImplementedException("TODO");                    
+                    throw new NotImplementedException("TODO");
             }
             throw new NotImplementedException("TODO");
         }
@@ -2396,6 +2396,8 @@ namespace DataWF.Data
 
         public IEnumerable<T> Select() => TTable.Select(this);
 
+        public IEnumerable<R> Load<R>(DBTransaction transaction = null) where R : DBItem => TTable.Load<R>(this, transaction);
+
         public IEnumerable<T> Load(DBTransaction transaction = null) => TTable.Load(this, transaction);
 
         public ValueTask<IEnumerable<T>> LoadAsync(DBTransaction transaction = null) => TTable.LoadAsync(this, transaction);
@@ -2428,9 +2430,19 @@ namespace DataWF.Data
             return TTable.Select(this).FirstOrDefault() ?? TTable.Load(this, transaction).FirstOrDefault();
         }
 
+        public R FirstOrDefault<R>(DBTransaction transaction = null) where R : DBItem
+        {
+            return TTable.Select<R>(this).FirstOrDefault() ?? TTable.Load<R>(this, transaction).FirstOrDefault();
+        }
+
         public T FirstOrDefault(Func<T, bool> predicate, DBTransaction transaction = null)
         {
             return TTable.Select(this).FirstOrDefault(predicate) ?? TTable.Load(this, transaction).FirstOrDefault(predicate);
+        }
+
+        public R FirstOrDefault<R>(Func<R, bool> predicate, DBTransaction transaction = null) where R : DBItem
+        {
+            return TTable.Select<R>(this).FirstOrDefault(predicate) ?? TTable.Load<R>(this, transaction).FirstOrDefault(predicate);
         }
 
         IQQuery IQQuery.Column(QFunctionType function, params object[] args) => Column(function, args);

@@ -469,7 +469,7 @@ namespace DataWF.Data
                             var c = sexpression.Table.Columns[iname];
                             if (c.IsReference)
                             {
-                                newQuery = c.ReferenceTable.Query<DBItem>().Where(c, CompareType.In, newQuery);
+                                newQuery = c.ReferenceTable.QQuery().Where(c, CompareType.In, newQuery);
                                 sexpression = newQuery;
                             }
                             s = i + 1;

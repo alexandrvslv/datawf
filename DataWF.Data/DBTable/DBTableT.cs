@@ -56,7 +56,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public override IQQuery FilterQuery
         {
-            get => ParentTable == null ? null : (filterQuery ??= ParentTable.Query<DBItem>(subQuery).Where(typeof(T)));
+            get => ParentTable == null ? null : (filterQuery ??= ParentTable.QQuery(subQuery).Where(typeof(T)));
             set => filterQuery = value;
         }
 
@@ -1366,6 +1366,21 @@ namespace DataWF.Data
                 return rColumn.Select<T>(param.Comparer, param.LeftItem.GetValue<T>(), rqColumn.QTable, list);
             }
             return param.Search<T>(list);
+        }
+
+        public override IQQuery QQuery(DBLoadParam loadParam = DBLoadParam.None)
+        {
+            return Query(loadParam);
+        }
+
+        public override IQQuery QQuery(IQQuery baseQuery)
+        {
+            return Query(baseQuery);
+        }
+
+        public override IQQuery QQuery(string filter, DBLoadParam loadParam = DBLoadParam.None)
+        {
+            return Query(filter, loadParam);
         }
 
         public QQuery<T> Query(IQQuery query) => new QQuery<T>(query, string.Empty)

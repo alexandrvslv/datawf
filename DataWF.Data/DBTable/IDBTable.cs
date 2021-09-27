@@ -164,9 +164,10 @@ namespace DataWF.Data
         IEnumerable<T> Select<T>(IQQuery qQuery) where T : DBItem;
         IEnumerable<T> Select<T>(IQQuery<T> qQuery) where T : DBItem;
 
-        IQQuery<T> Query<T>(DBLoadParam loadParam = DBLoadParam.None) where T : DBItem;
-        IQQuery<T> Query<T>(string filter, DBLoadParam loadParam = DBLoadParam.None) where T : DBItem;
-        IQQuery<T> Query<T>(IQQuery baseQuery) where T : DBItem;
+        IQQuery QQuery(DBLoadParam loadParam = DBLoadParam.None);
+        IQQuery QQuery(string filter, DBLoadParam loadParam = DBLoadParam.None);
+        IQQuery QQuery(IQQuery baseQuery);
+
         void Trunc();
 
         void LoadFile();

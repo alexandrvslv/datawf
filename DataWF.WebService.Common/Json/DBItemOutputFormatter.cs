@@ -1,4 +1,6 @@
 ﻿using DataWF.Common;
+using DataWF.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Net.Http.Headers;
@@ -31,13 +33,16 @@ namespace DataWF.WebService.Common
         public static readonly MediaTypeHeaderValue ApplicationAnyJsonSyntax
             = MediaTypeHeaderValue.Parse("application/*+json").CopyAsReadOnly();
 
-        public DBItemOutputFormatter()
+        public DBItemOutputFormatter(IDBProvider provider)
         {
             SupportedEncodings.Add(Encoding.UTF8);
             SupportedMediaTypes.Add(ApplicationJson);
             SupportedMediaTypes.Add(TextJson);
             SupportedMediaTypes.Add(ApplicationAnyJsonSyntax);
+            Provider = provider;
         }
+
+        public IDBProvider Provider { get; }
 
         public sealed override async Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding)
         {
@@ -56,9 +61,8 @@ namespace DataWF.WebService.Common
 
             var objectType = context.Object?.GetType() ?? context.ObjectType ?? typeof(object);
 
-
             var option = new JsonSerializerOptions();
-            using (var factory = new DBItemConverterFactory(httpContext))
+            using (var factory = GetFactory(httpContext))
             {
                 option.InitDefaults(factory);
 
@@ -78,6 +82,11 @@ namespace DataWF.WebService.Common
                     await pipeWriter.FlushAsync();
                 }
             }
+        }
+
+        public DBItemConverterFactory GetFactory(HttpContext httpContext = null)
+        {
+            return new DBItemConverterFactory(httpContext, Provider);
         }
 
         private async Task WriteArray(PipeWriter pipeWriter, IEnumerable enumerable, Type objectType, JsonSerializerOptions option)

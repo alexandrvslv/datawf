@@ -27,8 +27,9 @@ namespace DataWF.WebService.Common
         private readonly ManualResetEventSlim runEvent = new ManualResetEventSlim(false);
         private const int timer = 2000;
 
-        public WebNotifyService()
+        public WebNotifyService(DBProvider provider)
         {
+            Provider = provider;
             Instance = this;
             connections.Indexes.Add(WebNotifyConnection.UserInvoker.Instance.Name,
                 new ListIndex<WebNotifyConnection, IUserIdentity>(
@@ -36,6 +37,8 @@ namespace DataWF.WebService.Common
                     NullUser.Value,
                     true));
         }
+
+        public DBProvider Provider { get; }
 
         public event EventHandler<WebNotifyEventArgs> ReceiveMessage;
         public event EventHandler<WebNotifyEventArgs> RemoveConnection;
@@ -130,7 +133,7 @@ namespace DataWF.WebService.Common
             var connection = GetBySocket(socket);
             if (connection == null)
             {
-                connection = new WebNotifyConnection
+                connection = new WebNotifyConnection(Provider)
                 {
                     Socket = socket,
                     User = user,

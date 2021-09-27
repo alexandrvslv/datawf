@@ -836,7 +836,7 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    item.Stamp = stamp;
+                    StampKey.SetValue(item, stamp, DBSetValueMode.Loading);
                 }
             }
 
@@ -1836,24 +1836,16 @@ namespace DataWF.Data
             }
         }
 
-        public IQQuery<T> Query<T>(IQQuery baseQuery) where T : DBItem => new QQuery<T>(this) { BaseQuery = baseQuery };
+        public abstract IQQuery QQuery(IQQuery baseQuery);
 
-        public IQQuery<T> Query<T>(DBLoadParam loadParam = DBLoadParam.None) where T : DBItem => new QQuery<T>(this) { LoadParam = loadParam };
+        public abstract IQQuery QQuery(DBLoadParam loadParam = DBLoadParam.None);
 
-        public IQQuery<T> Query<T>(string filter, DBLoadParam loadParam = DBLoadParam.None) where T : DBItem
-        {
-            if (!queryChache.TryGetValue(filter, out var query))
-            {
-                query = new QQuery<T>(this, filter) { LoadParam = loadParam };
-                queryChache.TryAdd(filter, query);
-            }
-            return (IQQuery<T>)query;
-        }
+        public abstract IQQuery QQuery(string filter, DBLoadParam loadParam = DBLoadParam.None);
 
 
         public DateTime? GetReplicateMaxStamp()
         {
-            var query = Query<DBItem>().Column(QFunctionType.max, StampKey)
+            var query = QQuery().Column(QFunctionType.max, StampKey)
                 .Where(ReplicateStampKey, CompareType.Is, null)
                 .Or(StampKey, CompareType.Greater, ReplicateStampKey);
 
@@ -1865,7 +1857,7 @@ namespace DataWF.Data
 
         public IEnumerable<DBItem> GetReplicateItems(DateTime? stamp)
         {
-            var query = Query<DBItem>(DBLoadParam.Referencing);
+            var query = QQuery(DBLoadParam.Referencing);
             if (stamp != null)
             {
                 query.Where(StampKey, CompareType.GreaterOrEqual, stamp);
@@ -1874,6 +1866,6 @@ namespace DataWF.Data
                             .Or(StampKey, CompareType.Greater, ReplicateStampKey));
 
             return Load<DBItem>(query);
-        }        
+        }
     }
 }

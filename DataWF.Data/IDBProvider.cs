@@ -19,6 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using DataWF.Common;
+using System;
 
 namespace DataWF.Data
 {
@@ -33,5 +34,9 @@ namespace DataWF.Data
         DBConnectionList Connections { get; }
 
         DBSchemaList Schems { get; }
+
+        DBTable<T> GetTable<T>() where T : DBItem;
+
+        DBTable GetTable(Type ItemType);
     }
 }

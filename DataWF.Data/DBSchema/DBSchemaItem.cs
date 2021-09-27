@@ -30,7 +30,7 @@ using System.Runtime.CompilerServices;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public abstract partial class DBSchemaItem : DefaultItem, IComparable, ICloneable, IAccessable, IDBSchemaItem
+    public abstract partial class DBSchemaItem : SynchronizedItem, IComparable, ICloneable, IAccessable, IDBSchemaItem
     {
         protected string name;
         protected string oldname;
@@ -40,7 +40,9 @@ namespace DataWF.Data
         private bool isSynch;
 
         public DBSchemaItem()
-        { }
+        {
+            SyncStatus = SynchronizedStatus.Load; 
+        }
 
         public DBSchemaItem(string name)
         {

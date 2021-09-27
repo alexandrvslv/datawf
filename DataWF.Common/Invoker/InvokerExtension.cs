@@ -121,6 +121,11 @@ namespace DataWF.Common
             return (IComparer<T>)invoker.CreateComparer(typeof(T), direction);
         }
 
+        public static IQueryParameter CreateTreeParameter(this IInvoker invoker)
+        {
+            return CreateTreeParameter(invoker, invoker.TargetType);
+        }
+
         public static IQueryParameter CreateTreeParameter(this IInvoker invoker, Type type)
         {
             var parameter = invoker.CreateParameter(type);
@@ -139,15 +144,20 @@ namespace DataWF.Common
             return parameter;
         }
 
-        public static IComparer CreateTreeComparer(this IInvoker invoker, Type type, ListSortDirection direction = ListSortDirection.Ascending)
+        public static ITreeComparer CreateTreeComparer(this IInvoker invoker, ListSortDirection direction = ListSortDirection.Ascending)
         {
-            type = type ?? invoker.TargetType;
-            return (InvokerComparer)Activator.CreateInstance(typeof(TreeComparer<>).MakeGenericType(type));
+            return CreateTreeComparer(invoker, invoker.TargetType, direction);
         }
 
-        public static IComparer<T> CreateTreeComparer<T>(this IInvoker invoker, ListSortDirection direction = ListSortDirection.Ascending)
+        public static ITreeComparer CreateTreeComparer(this IInvoker invoker, Type type, ListSortDirection direction = ListSortDirection.Ascending)
         {
-            return (InvokerComparer<T>)invoker.CreateTreeComparer(typeof(T), direction);
+            type = type ?? invoker.TargetType;
+            return (ITreeComparer)Activator.CreateInstance(typeof(TreeComparer<>).MakeGenericType(type));
+        }
+
+        public static ITreeComparer<T> CreateTreeComparer<T>(this IInvoker invoker, ListSortDirection direction = ListSortDirection.Ascending) where T : IGroup
+        {
+            return (ITreeComparer<T>)CreateTreeComparer(invoker, typeof(T), direction);
         }
     }
 }

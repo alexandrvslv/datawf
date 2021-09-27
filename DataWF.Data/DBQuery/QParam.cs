@@ -111,7 +111,7 @@ namespace DataWF.Data
 
         public QParam(DBTable table, string viewFilter) : this()
         {
-            var query = table.Query<DBItem>(viewFilter);
+            var query = table.QQuery(viewFilter);
             Parameters.AddRange(query.Parameters.ToArray());
         }
 

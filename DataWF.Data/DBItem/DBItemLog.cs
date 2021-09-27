@@ -199,7 +199,7 @@ namespace DataWF.Data
 
         public DBItemLog GetPrevius(DBTransaction transaction)
         {
-            var query = LogTable.Query<DBItemLog>()
+            var query = LogTable.QQuery()
                 .Column(QFunctionType.max, LogTable.PrimaryKey)
                 .Where(LogTable.PrimaryKey, CompareType.Less, LogId)
                 .And(LogTable.BaseKey, CompareType.Equal, GetValue(LogTable.BaseKey));
@@ -249,7 +249,7 @@ namespace DataWF.Data
                 if (referenceTable?.LogTable == null || referenceColumn?.LogColumn == null)
                     continue;
                 var stack = new HashSet<object>();
-                var query = referenceTable.LogTable.Query<DBItemLog>()
+                var query = referenceTable.LogTable.QQuery()
                     .Where(referenceColumn.LogColumn, CompareType.Equal, BaseId)
                     .And(referenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete)
                     .OrderBy(referenceTable.LogTable.DateCreateKey);
@@ -277,7 +277,7 @@ namespace DataWF.Data
                 {
                     if (column.ReferenceTable.IsLoging)
                     {
-                        var query = column.ReferenceTable.LogTable.Query<DBItemLog>()
+                        var query = column.ReferenceTable.LogTable.QQuery()
                             .Where(column.ReferenceTable.LogTable.BaseKey, CompareType.Equal, BaseItem.GetValue(column))
                             .And(column.ReferenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
                         var logItem = column.ReferenceTable.LogTable.Load<DBItemLog>(query).OrderByDescending(p => p.DateCreate).FirstOrDefault();

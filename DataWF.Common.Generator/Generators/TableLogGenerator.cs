@@ -120,7 +120,7 @@ namespace {namespaceName}
                 }
                 else if (abstractTableAttribute != null)
                 {
-                    source.Append($"[AbstractTable, InvokerGenerator]");
+                    source.Append($"[AbstractTable]");
                 }
                 else if (virtualTableAttribute != null)
                 {
