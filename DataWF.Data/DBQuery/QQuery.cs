@@ -554,13 +554,15 @@ namespace DataWF.Data
                     }
                     else if (MemoryExtensions.Equals(word, StrOrder.AsSpan(), StringComparison.OrdinalIgnoreCase))
                     {
-                        i = MemoryExtensions.IndexOf(query.Slice(i), StrBy.AsSpan(), StringComparison.OrdinalIgnoreCase) + 1;
                         state = QParserState.OrderBy;
                     }
                     else if (MemoryExtensions.Equals(word, StrGroup.AsSpan(), StringComparison.OrdinalIgnoreCase))
                     {
-                        i = MemoryExtensions.IndexOf(query.Slice(i), StrBy.AsSpan(), StringComparison.OrdinalIgnoreCase) + 1;
                         state = QParserState.GroupBy;
+                    }
+                    else if (MemoryExtensions.Equals(word, StrBy.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        
                     }
                     else
                     {
