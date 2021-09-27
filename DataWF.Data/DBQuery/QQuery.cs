@@ -653,68 +653,69 @@ namespace DataWF.Data
                                     Parameters.Add(parameter);
                                 break;
                             case QParserState.OrderBy:
-                                if (word.Length == 0)
-                                    continue;
+                                if (word.Length > 0)
+                                {
 
-                                if (MemoryExtensions.Equals(word, StrAsc.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                                {
-                                    if (order != null)
+                                    if (MemoryExtensions.Equals(word, StrAsc.AsSpan(), StringComparison.OrdinalIgnoreCase))
                                     {
-                                        order.Direction = ListSortDirection.Ascending;
-                                        order = null;
-                                    }
-                                }
-                                else if (MemoryExtensions.Equals(word, StrDesc.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                                {
-                                    if (order != null)
-                                    {
-                                        order.Direction = ListSortDirection.Descending;
-                                        order = null;
-                                    }
-                                }
-                                else
-                                {
-                                    var wordStr = word.ToString();
-                                    var dbColumn = ParseColumn(wordStr, prefix.LastOrDefault(), out var qTable);
-                                    if (dbColumn != null)
-                                    {
-                                        order = new QOrder
+                                        if (order != null)
                                         {
-                                            Item = new QColumn(dbColumn)
-                                            {
-                                                TableAlias = prefix.FirstOrDefault(),
-                                                QTable = qTable
-                                            }
-                                        };
-                                        Orders.Add(order);
-                                        prefix.Clear();
+                                            order.Direction = ListSortDirection.Ascending;
+                                            order = null;
+                                        }
                                     }
-                                    else if (prefix.Count > 0)
+                                    else if (MemoryExtensions.Equals(word, StrDesc.AsSpan(), StringComparison.OrdinalIgnoreCase))
                                     {
-                                        var property = $"{string.Join(".", prefix)}.{wordStr}";
-                                        prefix.Clear();
-                                        var invoker = EmitInvoker.Initialize(Table.ItemType.Type, property);
-                                        if (invoker != null)
+                                        if (order != null)
                                         {
-                                            order = new QOrder
-                                            {
-                                                Item = new QInvoker(invoker) { QTable = QTable }
-                                            };
-                                            Orders.Add(order);
-                                            prefix.Clear();
+                                            order.Direction = ListSortDirection.Descending;
+                                            order = null;
                                         }
                                     }
                                     else
                                     {
-                                        var invoker = EmitInvoker.Initialize(Table.ItemType.Type, wordStr);
-                                        if (invoker != null)
+                                        var wordStr = word.ToString();
+                                        var dbColumn = ParseColumn(wordStr, prefix.LastOrDefault(), out var qTable);
+                                        if (dbColumn != null)
                                         {
                                             order = new QOrder
                                             {
-                                                Item = new QInvoker(invoker)
+                                                Item = new QColumn(dbColumn)
+                                                {
+                                                    TableAlias = prefix.FirstOrDefault(),
+                                                    QTable = qTable
+                                                }
                                             };
                                             Orders.Add(order);
                                             prefix.Clear();
+                                        }
+                                        else if (prefix.Count > 0)
+                                        {
+                                            var property = $"{string.Join(".", prefix)}.{wordStr}";
+                                            prefix.Clear();
+                                            var invoker = EmitInvoker.Initialize(Table.ItemType.Type, property);
+                                            if (invoker != null)
+                                            {
+                                                order = new QOrder
+                                                {
+                                                    Item = new QInvoker(invoker) { QTable = QTable }
+                                                };
+                                                Orders.Add(order);
+                                                prefix.Clear();
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var invoker = EmitInvoker.Initialize(Table.ItemType.Type, wordStr);
+                                            if (invoker != null)
+                                            {
+                                                order = new QOrder
+                                                {
+                                                    Item = new QInvoker(invoker)
+                                                };
+                                                Orders.Add(order);
+                                                prefix.Clear();
+                                            }
                                         }
                                     }
                                 }
