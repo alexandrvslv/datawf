@@ -167,7 +167,7 @@ namespace {namespaceName}
             if (columnAttribute != null)
             {
                 TypedConstant columnType = columnAttribute.GetNamedValue("ColumnType");
-                if (!columnType.IsNull && (int)columnType.Value != 0)
+                if (!columnType.IsNull && (byte)columnType.Value != 0)
                     return;
 
                 TypedConstant keys = columnAttribute.GetNamedValue("Keys");
@@ -231,7 +231,7 @@ namespace {namespaceName}
                     if (columnAttribute != null)
                     {
                         TypedConstant columnType = columnAttribute.GetNamedValue("ColumnType");
-                        if (!columnType.IsNull && (int)columnType.Value != 0)
+                        if (!columnType.IsNull && (byte)columnType.Value != 0)
                             return;
 
                         TypedConstant keys = columnAttribute.GetNamedValue("Keys");

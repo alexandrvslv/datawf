@@ -20,4 +20,9 @@ namespace DataWF.Common
 
         public override string ToString(CultureInfo value) => value?.Name;
     }
+
+    public static class CultureInfoExtensions
+    {
+        public static CultureInfo ToCulture(this string cultureName) => CultureInfo.GetCultureInfo(cultureName);
+    }
 }

@@ -22,7 +22,7 @@ using System;
 namespace DataWF.Data
 {
     [Flags]
-    public enum DBViewKeys
+    public enum DBViewKeys : byte
     {
         None = 0,
         Static = 2,
@@ -33,22 +33,22 @@ namespace DataWF.Data
         Lock = 64
     }
 
-    public enum DDLType
+    public enum DDLType : byte
     {
         None,
         Alter,
         Create,
-        Drop        
+        Drop
     }
 
-    public enum DBExecuteType
+    public enum DBExecuteType : byte
     {
         Scalar,
         Reader,
         NoReader
     }
 
-    public enum DBConstraintType
+    public enum DBConstraintType : byte
     {
         Primary,
         Foreign,
@@ -57,7 +57,7 @@ namespace DataWF.Data
         Check
     }
 
-    public enum DBTableType
+    public enum DBTableType : byte
     {
         Table,
         View,
@@ -65,7 +65,7 @@ namespace DataWF.Data
     }
 
     [Flags()]
-    public enum DBLoadParam
+    public enum DBLoadParam : short
     {
         None = 0,
         Load = 2,
@@ -79,7 +79,7 @@ namespace DataWF.Data
 
     }
 
-    public enum DBDataType
+    public enum DBDataType : byte
     {
         None,
         String,
@@ -102,7 +102,7 @@ namespace DataWF.Data
         ByteSerializable,
     }
 
-    public enum DBCommandTypes
+    public enum DBCommandTypes : byte
     {
         Insert,
         InsertSequence,
@@ -111,7 +111,7 @@ namespace DataWF.Data
         Query
     }
 
-    public enum DBColumnTypes
+    public enum DBColumnTypes : byte
     {
         Default,
         Query,
@@ -121,7 +121,7 @@ namespace DataWF.Data
     }
 
     [Flags()]
-    public enum DBUpdateState
+    public enum DBUpdateState : byte
     {
         Default = 0,
         Commit = 1,
@@ -134,7 +134,7 @@ namespace DataWF.Data
     }
 
     [Flags()]
-    public enum DBItemState
+    public enum DBItemState : byte
     {
         New = 0,
         Attached = 1,
@@ -143,14 +143,7 @@ namespace DataWF.Data
         Load = 8,
     }
 
-    public enum DBQueryTarget
-    {
-        UserDefined,
-        TableSearch,
-        Other
-    }
-
-    public enum QParserState
+    public enum QParserState : byte
     {
         Where,
         Select,
@@ -159,7 +152,7 @@ namespace DataWF.Data
         GroupBy
     }
 
-    public enum QFunctionType
+    public enum QFunctionType : byte
     {
         none,
         avg,
@@ -187,7 +180,7 @@ namespace DataWF.Data
         count
     }
 
-    public enum DBLogType
+    public enum DBLogType : byte
     {
         None,
         Insert,
@@ -195,7 +188,7 @@ namespace DataWF.Data
         Delete
     }
 
-    public enum DBSetValueMode
+    public enum DBSetValueMode : byte
     {
         Default,
         Loading

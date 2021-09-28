@@ -115,7 +115,7 @@ namespace DataWF.Common
         {
             if (Dictionary.TryGetValue(key, out var list))
             {
-                return list[0];
+                return list.FirstOrDefault();
             }
             return default(T);
         }

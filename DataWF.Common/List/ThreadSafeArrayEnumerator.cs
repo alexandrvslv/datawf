@@ -11,15 +11,24 @@ namespace DataWF.Common
         private int i;
         private uint count;
         private T[] items;
+        private T single;
+        public ThreadSafeArrayEnumerator(T single, int count)
+        {
+            i = -1;
+            this.count = (uint)count;
+            items = null;
+            this.single = single;
+        }
 
         public ThreadSafeArrayEnumerator(T[] items, int count)
         {
             i = -1;
             this.count = (uint)count;
             this.items = items;
+            single = default(T);
         }
 
-        public T Current => items[i];
+        public T Current => items != null ? items[i] : single;
 
         object IEnumerator.Current => Current;
 
@@ -28,8 +37,7 @@ namespace DataWF.Common
 
         public bool MoveNext()
         {
-            i++;
-            return (uint)i < count;
+            return (uint)++i < count;
         }
 
         public void Reset()
@@ -38,5 +46,5 @@ namespace DataWF.Common
         }
     }
 
-    
+
 }

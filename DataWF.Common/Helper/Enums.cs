@@ -41,14 +41,14 @@ namespace DataWF.Common
         Modal
     }
 
-    public enum LogicTypes
+    public enum LogicTypes : byte
     {
         Undefined,
         And,
         Or
-    }   
+    }
 
-    public enum CompareTypes
+    public enum CompareTypes : byte
     {
         Undefined,
         Equal,
@@ -68,12 +68,12 @@ namespace DataWF.Common
     }
 
     [Flags]
-    public enum JoinTypes
+    public enum JoinTypes : byte
     {
         Undefined = 0,
         Inner = 1,
         Left = 2,
-        Right = 4,        
+        Right = 4,
         Outer = 8,
         Join = 16
     }
@@ -94,7 +94,7 @@ namespace DataWF.Common
         Pressed
     }
 
-    public enum StatusType
+    public enum StatusType : byte
     {
         Information,
         Warning,
@@ -109,7 +109,7 @@ namespace DataWF.Common
     }
 
     //[Flags]
-    public enum DBStatus
+    public enum DBStatus : byte
     {
         Empty = 0,
         Actual = 1,

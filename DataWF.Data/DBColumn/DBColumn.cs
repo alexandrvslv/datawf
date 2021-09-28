@@ -49,7 +49,7 @@ namespace DataWF.Data
         #region Variable
         private QExpression expression;
         protected IDBTable cacheReferenceTable;
-        CultureInfo cacheCulture;
+        CultureInfo culture;
         DBColumnGroup cacheGroup;
         protected DBColumnKeys keys = DBColumnKeys.None;
         protected int size;
@@ -60,9 +60,6 @@ namespace DataWF.Data
         protected string gname;
         protected string property;
         protected string referenceProperty;
-        protected string culture;
-        protected string btrue;
-        protected string bfalse;
         protected string format;
         protected int order = -1;
         protected string cdefault;
@@ -76,7 +73,6 @@ namespace DataWF.Data
         private PropertyInfo referencePropertyInfo;
         private JsonEncodedText? jsonName;
         private JsonEncodedText? jsonReferenceName;
-        private const int bufferSize = 4048;
 
         #endregion
 
@@ -227,8 +223,8 @@ namespace DataWF.Data
             set => subList = value;
         }
 
-        [Browsable(false), Category("Add")]
-        public virtual string CultureCode
+        [Category("Add")]
+        public CultureInfo Culture
         {
             get => culture;
             set
@@ -236,27 +232,9 @@ namespace DataWF.Data
                 if (value == culture)
                     return;
                 culture = value;
-                if (!string.IsNullOrEmpty(value))
+                if (culture != null)
                     keys |= DBColumnKeys.View;
-                cacheCulture = null;
                 OnPropertyChanged();
-            }
-        }
-
-        [XmlIgnore, JsonIgnore, Category("Add")]
-        public CultureInfo Culture
-        {
-            get
-            {
-                if (cacheCulture == null && !string.IsNullOrEmpty(CultureCode))
-                    cacheCulture = CultureInfo.GetCultureInfo(CultureCode);
-                return cacheCulture;
-            }
-            set
-            {
-                if (value == cacheCulture)
-                    return;
-                CultureCode = value?.Name;
             }
         }
 
@@ -767,8 +745,6 @@ namespace DataWF.Data
             column.scale = scale;
             column.culture = culture;
             column.keys = keys;
-            column.btrue = btrue;
-            column.bfalse = bfalse;
             column.format = format;
             column.ctype = ctype;
             column.type = type;
