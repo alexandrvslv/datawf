@@ -53,7 +53,7 @@ namespace DataWF.Data
         [Column("logid", Keys = DBColumnKeys.Primary)]
         public long LogId
         {
-            get => GetValue<long>(Table.PrimaryKey);
+            get => GetValue((DBColumn<long>)Table.PrimaryKey);
             set => SetValue(value, Table.PrimaryKey);
         }
 
@@ -67,7 +67,7 @@ namespace DataWF.Data
         [Column("userlog_id")]
         public long? UserRegId
         {
-            get => GetValue<long?>(LogTable.UserLogKey);
+            get => GetValue((DBColumn<long>)LogTable.UserLogKey);
             set => SetValue(value, LogTable.UserLogKey);
         }
 

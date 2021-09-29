@@ -39,14 +39,14 @@ namespace DataWF.Data
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int Id
         {
-            get => GetValue<int>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
         [Column("instance_url", 1024, Keys = DBColumnKeys.View)]
         public string Url
         {
-            get => GetValue<string>(Table.UrlKey);
+            get => GetValue(Table.UrlKey);
             set => SetValue(value, Table.UrlKey);
         }
 

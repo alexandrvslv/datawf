@@ -30,14 +30,14 @@ namespace DataWF.Data
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
         [Column("user_id", Keys = DBColumnKeys.View)]
         public int? UserId
         {
-            get => GetValue<int?>(Table.UserIdKey);
+            get => GetValue(Table.UserIdKey);
             set => SetValue(value, Table.UserIdKey);
         }
 

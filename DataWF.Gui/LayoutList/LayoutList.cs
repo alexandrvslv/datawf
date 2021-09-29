@@ -3036,7 +3036,7 @@ namespace DataWF.Gui
 
         protected virtual IComparer OnColumnCreateComparer(LayoutColumn column, ListSortDirection direction)
         {
-            return ((IInvokerExtension)column.Invoker).CreateComparer(column.Invoker.DataType, direction);
+            return column.Invoker.CreateComparer(direction);
         }
 
         protected void OnCellEditBegin()
@@ -3680,9 +3680,9 @@ namespace DataWF.Gui
                 }
                 else if (TreeMode && TypeHelper.IsInterface(listType, typeof(IGroup)))
                 {
-                    var parameter = TreeInvoker<IGroup>.Instance.CreateParameter(ListType);
+                    var parameter = TreeInvoker<IGroup>.Instance.CreateTreeParameter(ListType);
                     filtered.FilterQuery.Parameters.Add(parameter);
-                    var comparer = TreeInvoker<IGroup>.Instance.CreateComparer(ListType);
+                    var comparer = TreeInvoker<IGroup>.Instance.CreateTreeComparer(ListType);
                     filtered.FilterQuery.Orders.Add(comparer);
                 }
             }

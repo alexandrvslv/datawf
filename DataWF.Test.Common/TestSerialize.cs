@@ -82,7 +82,7 @@ namespace DataWF.Test.Common
                 case Serializer.Xml:
                     {
                         var list = GenerateList(listLength);
-                        var serializer = new XMLTextSerializer(typeof(List<TestSerializeClass>));
+                        var serializer = new XmlTextSerializer(typeof(List<TestSerializeClass>));
                         if (direction == SerializeDirection.Write)
                         {
                             for (var i = 0; i < iteration; i++)
@@ -154,7 +154,7 @@ namespace DataWF.Test.Common
         [Test]
         public void TestXMLGenericList()
         {
-            TestGenericList(new XMLTextSerializer(typeof(List<string>)));
+            TestGenericList(new XmlTextSerializer(typeof(List<string>)));
         }
 
         [Test]
@@ -197,7 +197,7 @@ namespace DataWF.Test.Common
         [Test]
         public void TestXMLStringArray()
         {
-            TestStringArray(new XMLTextSerializer(typeof(string[])));
+            TestStringArray(new XmlTextSerializer(typeof(string[])));
         }
 
         [Test]
@@ -221,7 +221,7 @@ namespace DataWF.Test.Common
         [Test]
         public void TestXMLArrayList()
         {
-            TestArrayList(new XMLTextSerializer());
+            TestArrayList(new XmlTextSerializer());
         }
 
         [Test]
@@ -247,7 +247,7 @@ namespace DataWF.Test.Common
         [Test]
         public void TestXMLDictionary()
         {
-            TestDictionary(new XMLTextSerializer());
+            TestDictionary(new XmlTextSerializer());
         }
 
         [Test]
@@ -272,7 +272,7 @@ namespace DataWF.Test.Common
         [Test]
         public void TestXMLHashtable()
         {
-            TestHashtable(new XMLTextSerializer());
+            TestHashtable(new XmlTextSerializer());
         }
 
         [Test]
@@ -296,7 +296,7 @@ namespace DataWF.Test.Common
         [Test]
         public void TestXMLClass()
         {
-            TestClass(new XMLTextSerializer());
+            TestClass(new XmlTextSerializer());
         }
 
         [Test]
@@ -324,7 +324,7 @@ namespace DataWF.Test.Common
         [Test]
         public void TestXMLClassList()
         {
-            TestClassList(new XMLTextSerializer());
+            TestClassList(new XmlTextSerializer());
         }
 
         [Test]
@@ -354,7 +354,7 @@ namespace DataWF.Test.Common
         public void TestXMLSerializeableElementList()
         {
             List<TestSerializableElement> items = GenerateSEList();
-            var serialiser = new XMLTextSerializer();
+            var serialiser = new XmlTextSerializer();
             var buffer = TestWrite(serialiser, items);
 #if DEBUG
             PrintBuffer(buffer);

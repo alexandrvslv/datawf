@@ -16,11 +16,11 @@ namespace DataWF.Data.Gui
         Reference
     }
 
-    [Project(typeof(QQuery), ".dbq")]
+    [Project(typeof(IQQuery), ".dbq")]
     public class QueryEditor : VPanel, IProjectEditor, ILocalizable
     {
         private DBTable table;
-        private QQuery query;
+        private IQQuery query;
         private QParam owner;
         private SearchState state;
         private ProjectHandler project;

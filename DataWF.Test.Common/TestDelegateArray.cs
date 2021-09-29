@@ -55,7 +55,7 @@ namespace DataWF.Test.Common
 
         [SetUp]
         public void Setup()
-        {            
+        {
         }
 
         [Test, Combinatorial]
@@ -72,16 +72,13 @@ namespace DataWF.Test.Common
             defaultHandler = null;
             var call = 0;
             for (int i = 0; i < callbackCount; i++)
-                DefaultHandler += new EventHandler(Callback);
+                DefaultHandler += (sender, args) => call++;
             for (int i = 0; i < callCount; i++)
             {
                 defaultHandler(this, EventArgs.Empty);
             }
             Assert.AreEqual(callbackCount * callCount, call);
-            void Callback(object sender, EventArgs args)
-            {
-                call++;
-            }
+
         }
 
         [Test, Combinatorial]
@@ -98,17 +95,14 @@ namespace DataWF.Test.Common
             defaultHandler = null;
             var call = 0;
             for (int i = 0; i < callbackCount; i++)
-                DefaultHandler += new EventHandler(Callback);
+                DefaultHandler += (sender, args) => call++;
             for (int i = 0; i < callCount; i++)
             {
-                foreach(EventHandler handler in defaultHandler.GetInvocationList())
+                foreach (EventHandler handler in defaultHandler.GetInvocationList())
                     handler(this, EventArgs.Empty);
             }
             Assert.AreEqual(callbackCount * callCount, call);
-            void Callback(object sender, EventArgs args)
-            {
-                call++;
-            }
+
         }
 
         [Test, Combinatorial]
@@ -125,17 +119,14 @@ namespace DataWF.Test.Common
             listHandler = null;
             var call = 0;
             for (int i = 0; i < callbackCount; i++)
-                ListHandler += new EventHandler(Callback);
+                ListHandler += (sender, args) => call++;
             for (int i = 0; i < callCount; i++)
             {
                 foreach (var handler in listHandler)
                     handler(this, EventArgs.Empty);
             }
             Assert.AreEqual(callbackCount * callCount, call);
-            void Callback(object sender, EventArgs args)
-            {
-                call++;
-            }
+
         }
 
         [Test, Combinatorial]
@@ -152,23 +143,20 @@ namespace DataWF.Test.Common
             safeListHandler = null;
             var call = 0;
             for (int i = 0; i < callbackCount; i++)
-                SafeListHandler += new EventHandler(Callback);
+                SafeListHandler += (sender, args) => call++;
             for (int i = 0; i < callCount; i++)
             {
                 foreach (var handler in safeListHandler)
                     handler(this, EventArgs.Empty);
             }
             Assert.AreEqual(callbackCount * callCount, call);
-            void Callback(object sender, EventArgs args)
-            {
-                call++;
-            }
+
         }
 
         [Test, Combinatorial]
         public void CallHashSet(
-            [Values(1, 300)] int callbackCount,
-            [Values(1000, 100000)] int callCount)
+            [Values(1)] int callbackCount,
+            [Values(1000, 100000, 1000 * 300, 100000 * 300)] int callCount)
         {
             hashSetHandler = null;
             HashSetHandler += Callback1;
@@ -179,17 +167,14 @@ namespace DataWF.Test.Common
             hashSetHandler = null;
             var call = 0;
             for (int i = 0; i < callbackCount; i++)
-                HashSetHandler += new EventHandler(Callback);
+                HashSetHandler += new EventHandler((sender, args) => call++);
             for (int i = 0; i < callCount; i++)
             {
                 foreach (var handler in hashSetHandler)
                     handler(this, EventArgs.Empty);
             }
-            Assert.AreEqual(callCount, call);
-            void Callback(object sender, EventArgs args)
-            {
-                call++;
-            }
+            Assert.AreEqual(callbackCount * callCount, call);
+
         }
 
 

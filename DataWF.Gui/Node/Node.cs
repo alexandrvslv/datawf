@@ -276,6 +276,7 @@ namespace DataWF.Gui
                 }
             }
         }
+        #endregion
 
         [DefaultValue(GlyphType.None)]
         public GlyphType Glyph

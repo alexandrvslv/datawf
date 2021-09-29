@@ -37148,7 +37148,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/DefaultItem"
+            "$ref": "#/components/schemas/SynchronizedItem"
           }
         ],
         "properties": {
@@ -40171,6 +40171,14 @@
           "Information",
           "Warning",
           "Error"
+        ]
+      },
+      "SynchronizedItem": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DefaultItem"
+          }
         ]
       },
       "Template": {

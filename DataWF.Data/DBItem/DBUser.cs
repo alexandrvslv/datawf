@@ -38,14 +38,14 @@ namespace DataWF.Data
         [Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
         public string Login
         {
-            get => GetValue<string>(Table.LoginKey);
+            get => GetValue(Table.LoginKey);
             set => SetValue(value, Table.LoginKey);
         }
 
         [Column("email", 1024, Keys = DBColumnKeys.Indexing), Index("ruser_email", true)]
         public string EMail
         {
-            get => GetValue<string>(Table.EMailKey);
+            get => GetValue(Table.EMailKey);
             set => SetValue(value, Table.EMailKey);
         }
 

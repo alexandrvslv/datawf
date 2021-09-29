@@ -70,7 +70,7 @@ namespace DataWF.Gui
         {
             var temp = FileSerialize;
             FileSerialize = false;
-            using (var serializer = new XMLTextSerializer())
+            using (var serializer = new XmlTextSerializer())
             {
                 serializer.Serialize(file, this);
             }
@@ -111,7 +111,7 @@ namespace DataWF.Gui
         {
             var temp = FileSerialize;
             FileSerialize = false;
-            using (var serializer = new XMLTextSerializer())
+            using (var serializer = new XmlTextSerializer())
             {
                 serializer.Deserialize(file, this, false);
             }

@@ -30,7 +30,7 @@ namespace DataWF.Data
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long Id
         {
-            get => GetValue<long>(Table.IdKey);
+            get => GetValue(Table.IdKey);
             set => SetValue(value, Table.IdKey);
         }
 
@@ -44,7 +44,7 @@ namespace DataWF.Data
         [Column("file_size")]
         public int? Size
         {
-            get => GetValue<int?>(Table.SizeKey);
+            get => GetValue(Table.SizeKey);
             set => SetValue(value, Table.SizeKey);
         }
 
@@ -58,14 +58,14 @@ namespace DataWF.Data
         [Column("file_storage")]
         public FileStorage Storage
         {
-            get => GetValue<FileStorage>(Table.StorageKey);
+            get => GetValue(Table.StorageKey);
             set => SetValue(value, Table.StorageKey);
         }
 
         [Column("file_path", size: 2048)]
         public string Path
         {
-            get => GetValue<string>(Table.PathKey);
+            get => GetValue(Table.PathKey);
             set => SetValue(value, Table.PathKey);
         }
     }
