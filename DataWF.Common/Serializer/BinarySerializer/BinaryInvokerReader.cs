@@ -246,7 +246,7 @@ namespace DataWF.Common
                 }
                 else if (element is IDictionary dictionary)
                 {
-                    var item = XMLTextSerializer.CreateDictionaryItem(info.Type);
+                    var item = BaseSerializer.CreateDictionaryItem(info.Type);
                     var itemTypeInfo = Serializer.GetTypeInfo(item.GetType());
                     do
                     {

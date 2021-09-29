@@ -177,7 +177,7 @@ namespace DataWF.Common
 
         public static IEnumerable<Type> GetDerivedInterfaces<T>(this Type type)
         {
-            return GetDerivedInterfaces(type, typeof(T));            
+            return GetDerivedInterfaces(type, typeof(T));
         }
 
         public static IEnumerable<Type> GetDerivedInterfaces(this Type type, Type interfaceType)
@@ -199,7 +199,7 @@ namespace DataWF.Common
             }
             return false;
         }
-        
+
         public static bool IsBaseType(this Type type, Type filterType)
         {
             return type == filterType || type.IsSubclassOf(filterType);
@@ -786,7 +786,7 @@ namespace DataWF.Common
             }
         }
 
-        public static IEnumerable<PropertyInfo> GetPropertiesByHierarchi(Type type, bool onlyXmlAttributes = false)
+        public static IEnumerable<PropertyInfo> GetXmlAttributePropertiesByHierarchi(Type type)
         {
             foreach (var btype in GetTypeHierarchi(type))
             {
@@ -794,8 +794,7 @@ namespace DataWF.Common
                     continue;
                 foreach (var property in btype.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
                 {
-                    if (onlyXmlAttributes
-                        && (property.GetCustomAttribute<XmlAttributeAttribute>() == null
+                    if ((property.GetCustomAttribute<XmlAttributeAttribute>() == null
                         && property.GetCustomAttribute<XmlTextAttribute>() == null
                         && property.GetCustomAttribute<XmlElementAttribute>() == null
                         && property.GetCustomAttribute<XmlEnumAttribute>() == null))
@@ -803,6 +802,19 @@ namespace DataWF.Common
                         continue;
                     }
 
+                    yield return property;
+                }
+            }
+        }
+
+        public static IEnumerable<PropertyInfo> GetPropertiesByHierarchi(Type type)
+        {
+            foreach (var btype in GetTypeHierarchi(type))
+            {
+                if (btype == typeof(object))
+                    continue;
+                foreach (var property in btype.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+                {
                     yield return property;
                 }
             }

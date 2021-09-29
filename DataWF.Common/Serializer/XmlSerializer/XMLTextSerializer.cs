@@ -4,18 +4,17 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class XMLTextSerializer : BaseSerializer
+    public class XmlTextSerializer : BaseSerializer
     {
-        public XMLTextSerializer()
+        public XmlTextSerializer()
         { }
 
-        public XMLTextSerializer(Type type) : base(type)
+        public XmlTextSerializer(Type type) : base(type)
         { }
 
         public bool CheckIFile { get; set; }
 
         public bool Indent { get; set; } = true;
-
 
         public override ISerializeWriter GetWriter(Stream stream)
         {
@@ -28,3 +27,4 @@ namespace DataWF.Common
         }
     }
 }
+

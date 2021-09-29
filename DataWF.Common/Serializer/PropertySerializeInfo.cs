@@ -1,8 +1,5 @@
-﻿using Portable.Xaml.Markup;
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.Reflection;
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 

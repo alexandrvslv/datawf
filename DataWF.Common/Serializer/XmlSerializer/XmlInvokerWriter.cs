@@ -7,13 +7,13 @@ namespace DataWF.Common
 {
     public class XmlInvokerWriter : IDisposable, ISerializeWriter
     {
-        public XmlInvokerWriter(Stream stream, XMLTextSerializer serializer)
+        public XmlInvokerWriter(Stream stream, XmlTextSerializer serializer)
         {
             Writer = XmlWriter.Create(stream, new XmlWriterSettings { Indent = serializer.Indent, CloseOutput = false });
             Serializer = serializer;
         }
 
-        public XMLTextSerializer Serializer { get; }
+        public XmlTextSerializer Serializer { get; }
 
         public XmlWriter Writer { get; }
 
@@ -40,7 +40,7 @@ namespace DataWF.Common
         {
             WriteObject(dictionary, typeInfo);
             //var dictionary = element as IEnumerable;
-            var item = XMLTextSerializer.CreateDictionaryItem(typeInfo.Type);
+            var item = XmlTextSerializer.CreateDictionaryItem(typeInfo.Type);
             var itemInfo = Serializer.GetTypeInfo(item.GetType());
             foreach (var entry in (IEnumerable)dictionary)
             {

@@ -34,8 +34,6 @@ namespace DataWF.Common
 
         public bool ByProperty { get; set; } = true;
 
-        public bool OnlyXmlAttributes { get; set; } = false;
-
         public TypeSerializeInfo GetTypeInfo<T>()
         {
             return GetTypeInfo(typeof(T));

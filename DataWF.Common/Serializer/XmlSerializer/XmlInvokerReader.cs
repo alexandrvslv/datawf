@@ -8,13 +8,13 @@ namespace DataWF.Common
 {
     public class XmlInvokerReader : IDisposable, ISerializeReader
     {
-        public XmlInvokerReader(Stream stream, XMLTextSerializer serializer)
+        public XmlInvokerReader(Stream stream, XmlTextSerializer serializer)
         {
             Serializer = serializer;
             Reader = XmlReader.Create(stream, new XmlReaderSettings { CloseInput = false });
         }
 
-        public XMLTextSerializer Serializer { get; }
+        public XmlTextSerializer Serializer { get; }
 
         public XmlReader Reader { get; }
 
@@ -254,7 +254,7 @@ namespace DataWF.Common
             {
                 dictionary = (IDictionary)typeInfo.Constructor?.Create();
             }
-            var item = XMLTextSerializer.CreateDictionaryItem(typeInfo.Type);
+            var item = XmlTextSerializer.CreateDictionaryItem(typeInfo.Type);
             var itemInfo = GetTypeInfo(item.GetType());
             while (ReadNextElement())
             {

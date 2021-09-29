@@ -7,8 +7,8 @@ namespace DataWF.Common
 {
     public class TypeSerializeInfo
     {
-        public TypeSerializeInfo(Type type, bool onlyXmlAttributes = false)
-            : this(type, TypeHelper.GetPropertiesByHierarchi(type, onlyXmlAttributes))
+        public TypeSerializeInfo(Type type)
+            : this(type, TypeHelper.GetPropertiesByHierarchi(type))
         { }
 
         public TypeSerializeInfo(Type type, IEnumerable<string> properties)
@@ -129,6 +129,7 @@ namespace DataWF.Common
         public bool ListIsTyped { get => (Keys & TypeSerializationInfoKeys.ListIsTyped) != 0; }
         public bool ListItemIsAttribute { get => (Keys & TypeSerializationInfoKeys.ListItemIsAttribute) != 0; }
 
+
         public Type ListItemType { get; }
 
         public EmitConstructor ListConstructor { get; }
@@ -196,7 +197,7 @@ namespace DataWF.Common
     }
 
     [Flags]
-    public enum TypeSerializationInfoKeys
+    public enum TypeSerializationInfoKeys : byte
     {
         None = 0,
         IsAttribute = 1,
@@ -206,5 +207,6 @@ namespace DataWF.Common
         ListIsArray = 16,
         ListIsTyped = 32,
         ListItemIsAttribute = 64
+
     }
 }
