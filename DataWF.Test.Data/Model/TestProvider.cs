@@ -64,8 +64,8 @@ namespace DataWF.Test.Data
                     IsActive = true,
                     Age = (byte)random.Next(18, 60),
                     LongId = 120321312321L,
-                    Salary = 231323.32M,
-                    Name = $"Ivan{i,3:0}",
+                    Salary = 231323.32M / random.Next(1, 5),
+                    Name = $"Name{i,3:0}",
                     Access = new AccessValue(new[]
                    {
                     new AccessItem(AccessValue.Provider.GetAccessIdentity(1, IdentityType.Group), AccessType.Read | AccessType.Download),
@@ -76,6 +76,28 @@ namespace DataWF.Test.Data
             }
             await employers.Save();
 
+            var employerReferences = Schema.EmployerReference;
+            foreach (var employer in employers)
+            {
+                employer.SubEmployers = new[] {
+                    new EmployerReference(employerReferences)
+                    {
+                        Employer = employer,
+                        Reference = employers.GetById(random.Next(1, 99))
+                    },
+                    new EmployerReference(employerReferences)
+                    {
+                        Employer = employer,
+                        Reference = employers.GetById(random.Next(1, 99))
+                    },
+                    new EmployerReference(employerReferences)
+                    {
+                        Employer = employer,
+                        Reference = employers.GetById(random.Next(1, 99))
+                    }
+                };
+            }
+            await employerReferences.Save();
             return Schema;
         }
     }

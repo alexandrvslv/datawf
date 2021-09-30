@@ -1,9 +1,11 @@
 ﻿using DataWF.Data;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace DataWF.Test.Data
 {
+
     [Table(Employer.TableName, "Default")]
     public partial class Employer : DBItem
     {
@@ -80,5 +82,21 @@ namespace DataWF.Test.Data
             get => GetName();
             set => SetName(value);
         }
+
+        [Referencing(nameof(EmployerReference.EmployerId))]
+        public IEnumerable<EmployerReference> SubEmployers
+        {
+            get => GetReferencing<EmployerReference>(Schema.EmployerReference.EmployerIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.EmployerReference.EmployerIdKey);
+        }
+
+        [Referencing(nameof(EmployerReference.ReferenceId))]
+        public IEnumerable<EmployerReference> TopEmployers
+        {
+            get => GetReferencing<EmployerReference>(Schema.EmployerReference.ReferenceIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.EmployerReference.ReferenceIdKey);
+        }
+
     }
+
 }

@@ -314,6 +314,26 @@ namespace DataWF.Data
                 }
             }
 
+            foreach (DBReferencing reference in ParentTable.Referencings)
+            {
+                if (!(reference.PropertyInfo?.DeclaringType.IsAssignableFrom(type) ?? true))
+                    continue;                
+                var exist = Referencings[reference.PropertyInfo.Name];
+                if (exist == null)
+                {
+                    exist = new DBReferencing()
+                    {
+                        Name = reference.PropertyInfo.Name,
+                        PropertyInfo = reference.PropertyInfo,
+                        ReferenceTable = reference.ReferenceTable,
+                        ReferenceColumn = reference.ReferenceColumn,
+                        ForceLoadReference = reference.ForceLoadReference
+                    };
+                    
+                    Referencings.Add(exist);
+                }
+            }
+
             foreach (DBConstraint constraint in ParentTable.Constraints)
             {
                 var existColumn = Columns[constraint.Column.Name];

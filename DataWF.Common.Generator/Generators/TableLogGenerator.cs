@@ -95,6 +95,7 @@ namespace DataWF.Common.Generator
                 string baseClassName = "DBItemLog";
 
                 if (TypeSymbol.BaseType.Name != "DBItem"
+                    && TypeSymbol.BaseType.Name != "Object"
                     && TypeSymbol.BaseType.Name != "DBGroupItem")
                 {
                     var baseNamespace = $"{TypeSymbol.BaseType.ContainingNamespace.ToDisplayString()}";

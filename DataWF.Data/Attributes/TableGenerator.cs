@@ -246,7 +246,7 @@ namespace DataWF.Data
                 schema.Tables.Add(table);
             }
             GenerateReferences(table);
-            Generateindexes(table);
+            GenerateIndexes(table);
             GenerateVirtualTables(table);
 
             table.IsLoging = (Attribute.Keys & DBTableKeys.NoLogs) == 0;
@@ -272,7 +272,7 @@ namespace DataWF.Data
             }
         }
 
-        private void Generateindexes(DBTable table)
+        private void GenerateIndexes(DBTable table)
         {
             foreach (var index in cacheIndexes)
             {
@@ -288,6 +288,11 @@ namespace DataWF.Data
             }
 
             foreach (var reference in cacheReferences)
+            {
+                reference.Generate(table);
+            }
+
+            foreach (var reference in cacheReferencings)
             {
                 reference.Generate(table);
             }

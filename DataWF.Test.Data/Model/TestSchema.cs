@@ -11,6 +11,7 @@ namespace DataWF.Test.Data
     [SchemaEntry(typeof(TestColumns))]
     [SchemaEntry(typeof(Position))]
     [SchemaEntry(typeof(Employer))]
+    [SchemaEntry(typeof(EmployerReference))]
     [SchemaEntry(typeof(Figure))]
     [SchemaEntry(typeof(FileStore))]
     [SchemaEntry(typeof(FileData))]

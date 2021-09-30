@@ -80,7 +80,7 @@ namespace DataWF.Test.Data
             Serialization.Instance.Deserialize(buffer, provider.Schems);
 
             Assert.AreEqual(2, provider.Schems.Count);
-            Assert.AreEqual(6, schema.Tables.Count);
+            Assert.AreEqual(7, schema.Tables.Count);
 
             var table = schema.Tables[Employer.TableName];
 

@@ -24,6 +24,7 @@ namespace DataWF.Common.Generator
         private const string constCodeKey = "CodeKey";
         private const string constFileNameKey = "FileNameKey";
         private const string constFileLastWriteKey = "FileLastWriteKey";
+        private const string constIDBTable = "IDBTable";
 
         protected string GetTableClassName(INamedTypeSymbol classSymbol, out TableCodeGeneratorMode mode)
         {
@@ -137,7 +138,7 @@ namespace DataWF.Common.Generator
             isLogType = mode == TableCodeGeneratorMode.Log || TypeSymbol.Name.EndsWith("Log", StringComparison.Ordinal);
 
             baseClassName = constDBTable;
-            baseInterfaceName = "IDBTable";
+            baseInterfaceName = constIDBTable;
 
             namespaceName = TypeSymbol.ContainingNamespace.ToDisplayString();
 
@@ -169,9 +170,10 @@ namespace DataWF.Common.Generator
             {
                 baseClassName = "DBTableLog";
                 baseInterfaceName = "IDBTableLog";
-            }
+            }            
             else //&& classSymbol.BaseType.Name != "DBGroupItem"
-            if (TypeSymbol.BaseType.Name != "DBItem")
+            if (TypeSymbol.BaseType.Name != "DBItem"
+                && TypeSymbol.BaseType.Name != "Object")
             {
                 var baseNamespace = TypeSymbol.BaseType.ContainingNamespace.ToDisplayString();
                 if (baseNamespace == namespaceName
@@ -266,8 +268,11 @@ namespace {namespaceName}
 
         private void ProcessClassPartial()
         {
+            var baseTypeDeclaration = string.Empty;
+            if (TypeSymbol.BaseType?.Name == "Object")
+                baseTypeDeclaration = $": DBItem";
             source.Append($@"
-    public partial class {TypeSymbol.Name}
+    public partial class {TypeSymbol.Name}{baseTypeDeclaration}
     {{
         public {TypeSymbol.Name}(IDBSchema schema):base(schema)
         {{}}");

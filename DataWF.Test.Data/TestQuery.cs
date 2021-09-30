@@ -14,6 +14,7 @@ namespace DataWF.Test.Data
         private TestProvider provider;
         private TestSchema schema;
         private EmployerTable<Employer> employers;
+        private EmployerReferenceTable employerReferences;
         private PositionTable positions;
         private int ClassField = 1;
         private int ClassProperty => 1;
@@ -26,6 +27,7 @@ namespace DataWF.Test.Data
 
             schema = provider.Schema;
             employers = schema.Employer;
+            employerReferences = schema.EmployerReference;
             positions = schema.Position;
         }
 
@@ -92,12 +94,25 @@ namespace DataWF.Test.Data
         }
 
         [Test]
-        public void ParseQueryAutoJoin()
+        public void ParseQueryAutoJoinReferencing()
         {
-            string queryText = $@"
-select *
-from Employer    
-where Position.Code in ('2','3')";
+            string queryText = $@"SubEmployers.EmployerId in (2,3)";
+            var query = employers.Query(queryText);
+
+            Assert.AreEqual(2, query.Tables.Count);
+            var baseTable = query.Tables[0];
+            Assert.AreEqual(employers, baseTable.Table);
+            var joinTable = query.Tables[1];
+            Assert.AreEqual(employerReferences, joinTable.Table);
+            Assert.AreEqual(JoinType.Left, joinTable.Join);
+            Assert.AreEqual(1, query.Parameters.Count);
+            Assert.AreEqual(employerReferences.EmployerIdKey, query.Parameters[0].LeftColumn);
+        }
+
+        [Test]
+        public void ParseQueryAutoJoinReference()
+        {
+            string queryText = $@"Position.Code in ('2','3')";
             var query = employers.Query(queryText);
 
             Assert.AreEqual(2, query.Tables.Count);
@@ -244,7 +259,8 @@ where ((Id != 1 or Id = 1) and (Id <= 5 or Id >= 5))
     and emp.DateCreate between '2000-01-01' and '3000-01-01'
     and emp.PositionId in (select subPos2.Id
                            from Position subPos2 
-                           where subPos2.Code in ('2','3'))";
+                           where subPos2.Code in ('2','3'))
+order by emp.DateCreate desc";
             var query = employers.Query(queryText);
 
             Assert.AreEqual(4, query.Columns.Count);

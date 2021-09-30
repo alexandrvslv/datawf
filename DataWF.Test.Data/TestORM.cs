@@ -91,6 +91,7 @@ namespace DataWF.Test.Data
             Assert.AreEqual(true, connection.CheckConnection(true), $"Connection Fail!");
 
             var employerTable = schema.Employer;
+            var employerReferenceTable = schema.EmployerReference;
             var positionTable = schema.Position;
             var figureTable = schema.Figure;
             var fileDataTable = schema.FileData;

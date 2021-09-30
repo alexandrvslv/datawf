@@ -68,7 +68,7 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore]
         public DBTable ReferenceTable
         {
-            get => referenceTable ??= Schema.ParseTable(ReferenceTableName);
+            get => referenceTable ??= Schema?.ParseTable(ReferenceTableName);
             set
             {
                 if (referenceTable != value)
@@ -97,7 +97,7 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore]
         public DBColumn ReferenceColumn
         {
-            get => referenceColumn ??= ReferenceTable.GetColumn(ReferenceColumnName);
+            get => referenceColumn ??= ReferenceTable?.GetColumn(ReferenceColumnName);
             set
             {
                 if (referenceColumn != value)

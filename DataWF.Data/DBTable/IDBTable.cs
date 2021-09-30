@@ -55,6 +55,7 @@ namespace DataWF.Data
         DBConstraintList<DBConstraint> Constraints { get; set; }
         DBForeignList Foreigns { get; set; }
         DBIndexList Indexes { get; set; }
+        DBTableItemList<DBReferencing> Referencings { get; set; }
         DBConnection Connection { get; }
         IDBTableView DefaultItemsView { get; }
         DBTableGroup Group { get; set; }
