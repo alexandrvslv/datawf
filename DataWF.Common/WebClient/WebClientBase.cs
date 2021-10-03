@@ -104,6 +104,7 @@ namespace DataWF.Common
             params object[] routeParams)
         {
             var client = GetHttpClient();
+            var pages = progressToken.Pages;
             try
             {
                 using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, routeParams))
@@ -161,7 +162,7 @@ namespace DataWF.Common
                                         }
                                         else
                                         {
-                                            if (value is HttpPageSettings pages)
+                                            if (pages != null)
                                             {
                                                 ReadPageSettings(response, pages);
                                             }
@@ -175,10 +176,10 @@ namespace DataWF.Common
 #else
                                             result = await System.Text.Json.JsonSerializer.DeserializeAsync<R>(encodedStream, Provider.JsonSettings).ConfigureAwait(false);
 #endif
-                                            if (value is HttpPageSettings rPages && rPages.ListCount == 0
+                                            if (pages != null && pages.ListCount == 0
                                                 && result is IList rlist && rlist.Count > 0)
                                             {
-                                                rPages.ListCount = rlist.Count;
+                                                pages.ListCount = rlist.Count;
                                             }
                                         }
                                     }
@@ -315,7 +316,7 @@ namespace DataWF.Common
         public virtual HttpRequestMessage CreateRequest(ProgressToken progressToken,
             HttpMethod httpMethod,
             string commandUrl,
-            string mediaType,            
+            string mediaType,
             object value = null,
             params object[] parameters)
         {
@@ -362,7 +363,7 @@ namespace DataWF.Common
                     { new ProgressStreamContent(progressToken, stream, 81920), Path.GetFileNameWithoutExtension(fileName), fileName }
                 };
                 request.Content = content;
-            }            
+            }
             else if (value != null)
             {
                 IFileModel fileModel = null;
