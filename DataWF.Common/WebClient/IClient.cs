@@ -54,16 +54,20 @@ namespace DataWF.Common
         object Select(object id);
         object ParseId(object id);
         IEnumerable GetChanges();
-        Task<object> GenerateId();
-        Task<bool> DeleteAsync(object id);
-        Task<IEnumerable> SearchAsync(string filter, HttpPageSettings list);
-        Task<IEnumerable> GetAsync(HttpPageSettings list);
-        Task<object> GetAsync(object id);
-        Task<object> CopyAsync(object id);
-        Task<object> PostAsync(object value);
-        Task<IList> PostPackageAsync(IList value);
-        Task<object> PutAsync(object value);
-        Task<object> MergeAsync(object id, List<string> ids);
+        
+        Task<object> Reload(object item, ProgressToken token);
+        Task<IEnumerable> Load(string filter, ProgressToken token);
+        ILoadProgress LoadCache(string filter, ProgressToken token);
+        Task<object> GenerateId(ProgressToken token);
+        Task<bool> Delete(object id, ProgressToken token);
+        Task<IEnumerable> Search(string filter, ProgressToken token);
+        Task<IEnumerable> Get(ProgressToken token);
+        Task<object> Get(object id, ProgressToken token);
+        Task<object> Copy(object id, ProgressToken token);
+        Task<object> Post(object value, ProgressToken token);
+        Task<IList> PostPackage(IList value, ProgressToken token);
+        Task<object> Put(object value, ProgressToken token);
+        Task<object> Merge(object id, List<string> ids, ProgressToken token);
         object NewItem();
         IEnumerable<object> SearchByValue(IInvoker valueInvoker, object value);
 
@@ -75,55 +79,54 @@ namespace DataWF.Common
         new ClientItemList<T> Items { get; }
         bool Add(T item);
         bool Remove(T item);
-        Task<T> Get(T item);
         T Get(object id);
+        Task<T> Reload(T item, ProgressToken token);
         new ICollection<T> GetChanges();
-        Task<bool> Delete(T item);
-        LoadProgress<T> Load(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<List<T>> SearchAsync(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<List<T>> GetAsync(HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<T> GetAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<T> CopyAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<T> PostAsync(T value, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<List<T>> PostPackageAsync(List<T> value, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<T> PutAsync(T value, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<bool> DeleteAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<T> MergeAsync(T value, List<string> ids, HttpJsonSettings settings, ProgressToken progressToken);
-
+        new Task<List<T>> Load(string filter, ProgressToken token);
+        new LoadProgress<T> LoadCache(string filter, ProgressToken token);
+        new Task<List<T>> Search(string filter, ProgressToken token);
+        new Task<List<T>> Get(ProgressToken token);
+        new Task<T> Get(object id, ProgressToken token);
+        new Task<T> Copy(object id, ProgressToken token);
+        Task<T> Post(T value, ProgressToken token);
+        Task<List<T>> PostPackage(List<T> value, ProgressToken token);
+        Task<T> Put(T value, ProgressToken token);
+        new Task<bool> Delete(object id, ProgressToken token);
+        Task<bool> Delete(T item, ProgressToken token);
+        Task<T> Merge(T value, List<string> ids, ProgressToken token);
     }
 
     public interface ILoggedClient
     {
-        Task<IEnumerable> GetLogsAsync(string filter, HttpPageSettings list);
-        Task<IEnumerable> GetItemLogsAsync(object id, HttpPageSettings list);
+        Task<IEnumerable> GetLogs(string filter, ProgressToken token);
+        Task<IEnumerable> GetItemLogs(object id, ProgressToken token);
 
-        Task<object> UndoLogAsync(long logId);
-        Task<object> RedoLogAsync(long logId);
-        Task<bool> RemoveLogAsync(long logId);
+        Task<object> UndoLog(long logId, ProgressToken token);
+        Task<object> RedoLog(long logId, ProgressToken token);
+        Task<bool> RemoveLog(long logId, ProgressToken token);
     }
 
     public interface ILoggedClient<T, L> : ILoggedClient
     {
-        Task<List<L>> GetLogsAsync(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<List<L>> GetItemLogsAsync(object id, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
+        new Task<List<L>> GetLogs(string filter, ProgressToken token);
+        new Task<List<L>> GetItemLogs(object id, ProgressToken token);
 
-        Task<T> UndoLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<T> RedoLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<bool> RemoveLogAsync(long logId, HttpJsonSettings settings, ProgressToken progressToken);
+        new Task<T> UndoLog(long logId, ProgressToken token);
+        new Task<T> RedoLog(long logId, ProgressToken token);        
     }
 
     public interface IFileClient
     {
         string GetFilePath(IFileModel model);
-        Task<Stream> DownloadFileAsync(object id, ProgressToken progressToken);
-        Task<Stream> DownloadFilesAsync(IEnumerable ids, ProgressToken progressToken);
-        Task<object> UploadFileAsync(object id, Stream file, ProgressToken progressToken);
-        Task<object> UploadFileModelAsync(object model, ProgressToken progressToken);
+        Task<Stream> DownloadFile(object id, ProgressToken token);
+        Task<Stream> DownloadFiles(IEnumerable ids, ProgressToken token);
+        Task<object> UploadFile(object id, Stream file, ProgressToken token);
+        Task<object> UploadFileModel(object model, ProgressToken token);
     }
 
     public interface ILoggedFileClient : IFileClient
     {
-        Task<Stream> DownloadLogFileAsync(long logId, ProgressToken progressToken);
+        Task<Stream> DownloadLogFile(long logId, ProgressToken token);
     }
 
     public interface IClientItemList : IList

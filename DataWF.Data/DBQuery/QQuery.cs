@@ -562,7 +562,7 @@ namespace DataWF.Data
                     }
                     else if (MemoryExtensions.Equals(word, StrBy.AsSpan(), StringComparison.OrdinalIgnoreCase))
                     {
-                        
+
                     }
                     else
                     {
@@ -1302,25 +1302,40 @@ namespace DataWF.Data
 
         public QQuery<T> Join(DBColumn column)
         {
-            Tables.Add(CreateJoin(column));
+            var join = CreateJoin(column);
+            if (!Tables.Contains(join))
+                Tables.Add(join);
             return this;
         }
 
         public QQuery<T> Join(DBReferencing referencing)
         {
-            Tables.Add(CreateJoin(referencing));
+            var join = CreateJoin(referencing);
+            if (!Tables.Contains(join))
+                Tables.Add(join);
+            return this;
+        }
+
+        public QQuery<T> JoinAllReferencing()
+        {
+            foreach (var referencing in Table.Referencings)
+                Join(referencing);
             return this;
         }
 
         public QQuery<T> Join(DBColumn column, DBColumn refColumn)
         {
-            Tables.Add(CreateJoin(column, refColumn));
+            var join = CreateJoin(column, refColumn);
+            if (!Tables.Contains(join))
+                Tables.Add(join);
             return this;
         }
 
         public QQuery<T> Join(JoinType type, DBColumn column, string alias, DBColumn refColumn, string refAlias)
         {
-            Tables.Add(CreateJoin(type, column, alias, refColumn, refAlias));
+            var join = CreateJoin(type, column, alias, refColumn, refAlias);
+            if (!Tables.Contains(join))
+                Tables.Add(join);
             return this;
         }
 
@@ -1995,46 +2010,9 @@ namespace DataWF.Data
             return "";
         }
 
-        public IEnumerable<QParam> GetAllParameters()
+        public IEnumerable<QParam> GetAllParameters(Func<QParam, bool> predicate = null)
         {
-            foreach (var param in Parameters)
-            {
-                foreach (var item in GetParameters(param))
-                {
-                    yield return item;
-                }
-            }
-        }
-
-        private IEnumerable<QParam> GetParameters(QParam param)
-        {
-            yield return param;
-
-            if (param.IsCompaund)
-            {
-                foreach (QParam parameter in param.Parameters)
-                {
-                    foreach (var subParam in GetParameters(parameter))
-                    {
-                        yield return subParam;
-                    }
-                }
-                yield break;
-            }
-            if (param.LeftItem is IQQuery leftQuery)
-            {
-                foreach (var subParam in leftQuery.GetAllParameters())
-                {
-                    yield return subParam;
-                }
-            }
-            if (param.RightItem is IQQuery rightQuery)
-            {
-                foreach (var subParam in rightQuery.GetAllParameters())
-                {
-                    yield return subParam;
-                }
-            }
+            return Parameters.GetAllQItems<QParam>(predicate);
         }
 
         public bool CheckItem(DBItem item)
@@ -2128,25 +2106,10 @@ namespace DataWF.Data
             var cols = new StringBuilder();
             if (defColumns || (columns?.Count ?? 0) == 0)
             {
-                foreach (var table in Tables)
-                {
-                    var tableIndex = table.Schema.Tables.IndexOf(table.Table);
-                    foreach (var col in table.Table.GetQueryColumns(LoadParam))
-                    {
-                        var columnAlias = $"{tableIndex}.{col.Name}";
-                        string temp = System.FormatQColumn(col, table.TableAlias, columnAlias);
-                        if (!string.IsNullOrEmpty(temp))
-                        {
-                            if (cols.Length > 0)
-                            {
-                                cols.Append('\n');
-                                cols.Append(subSpace);
-                                cols.Append("    ,");
-                            }
-                            cols.Append(temp);
-                        }
-                    }
-                }
+                if (Tables.Count > 1)
+                    FormatJoinSelect(subSpace, cols);
+                else
+                    FormatSelect(subSpace, cols);
             }
             else
             {
@@ -2176,6 +2139,47 @@ namespace DataWF.Data
                 }
             }
             return cols;
+        }
+
+        private void FormatSelect(string subSpace, StringBuilder cols)
+        {
+            foreach (var col in Table.GetQueryColumns(LoadParam))
+            {
+                string temp = System.FormatQColumn(col, QTable.TableAlias);
+                if (!string.IsNullOrEmpty(temp))
+                {
+                    if (cols.Length > 0)
+                    {
+                        cols.Append('\n');
+                        cols.Append(subSpace);
+                        cols.Append("    ,");
+                    }
+                    cols.Append(temp);
+                }
+            }
+        }
+
+        private void FormatJoinSelect(string subSpace, StringBuilder cols)
+        {
+            foreach (var table in Tables)
+            {
+                var tableIndex = table.Order;
+                foreach (var col in table.Table.GetQueryColumns(LoadParam))
+                {
+                    var columnAlias = $"{tableIndex}.{col.Name}";
+                    string temp = System.FormatQColumn(col, table.TableAlias, columnAlias);
+                    if (!string.IsNullOrEmpty(temp))
+                    {
+                        if (cols.Length > 0)
+                        {
+                            cols.Append('\n');
+                            cols.Append(subSpace);
+                            cols.Append("    ,");
+                        }
+                        cols.Append(temp);
+                    }
+                }
+            }
         }
 
         public StringBuilder FormatWhere(IDbCommand command = null, string subSpace = null)
@@ -2381,17 +2385,17 @@ namespace DataWF.Data
                 Tables.Remove(table);
         }
 
-        public IEnumerable<IT> GetAllQItems<IT>() where IT : IQItem
+        public IEnumerable<IT> GetAllQItems<IT>(Func<IT, bool> predicate = null) where IT : IQItem
         {
             var result = Enumerable.Empty<IT>();
             if (columns != null)
-                result = columns.GetAllQItems<IT>();
+                result = columns.GetAllQItems<IT>(predicate);
             if (tables != null)
-                result = result.Concat(tables.GetAllQItems<IT>());
+                result = result.Concat(tables.GetAllQItems<IT>(predicate));
             if (parameters != null)
-                result = result.Concat(parameters.GetAllQItems<IT>());
+                result = result.Concat(parameters.GetAllQItems<IT>(predicate));
             if (orders != null)
-                result = result.Concat(orders.GetAllQItems<IT>());
+                result = result.Concat(orders.GetAllQItems<IT>(predicate));
             return result;
         }
 
@@ -2451,6 +2455,11 @@ namespace DataWF.Data
         IQQuery IQQuery.Column(QFunctionType function, params object[] args) => Column(function, args);
         IQQuery IQQuery.Column(IInvoker invoker) => Column(invoker);
 
+        IQQuery IQQuery.Join(DBColumn column) => Join(column);
+        IQQuery IQQuery.Join(DBReferencing referencing) => Join(referencing);
+        IQQuery IQQuery.JoinAllReferencing() => JoinAllReferencing();
+        IQQuery IQQuery.Join(DBColumn column, DBColumn refColumn) => Join(column, refColumn);
+
         IQQuery IQQuery.Where(string text) => Where(text);
         IQQuery IQQuery.WhereViewColumns(string text, QBuildParam param) => WhereViewColumns(text, param);
         IQQuery IQQuery.Where(Type typeFilter) => Where(typeFilter);
@@ -2478,6 +2487,11 @@ namespace DataWF.Data
         IQQuery<T> IQQuery<T>.Column(QFunctionType function, params object[] args) => Column(function, args);
         IQQuery<T> IQQuery<T>.Column(IInvoker invoker) => Column(invoker);
         IQQuery<T> IQQuery<T>.Column<K>(Expression<Func<T, K>> keySelector) => Column(keySelector);
+
+        IQQuery<T> IQQuery<T>.Join(DBColumn column) => Join(column);
+        IQQuery<T> IQQuery<T>.Join(DBReferencing referencing) => Join(referencing);
+        IQQuery<T> IQQuery<T>.JoinAllReferencing() => JoinAllReferencing();
+        IQQuery<T> IQQuery<T>.Join(DBColumn column, DBColumn refColumn) => Join(column, refColumn);
 
         IQQuery<T> IQQuery<T>.Where(string text) => Where(text);
         IQQuery<T> IQQuery<T>.Where(Expression<Func<T, bool>> expression) => Where(expression);

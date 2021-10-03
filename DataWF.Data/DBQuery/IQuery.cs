@@ -46,7 +46,7 @@ namespace DataWF.Data
         IDbCommand ToCommand(bool defcolumns = false);
 
         bool IsNoParameters();
-        IEnumerable<QParam> GetAllParameters();
+        IEnumerable<QParam> GetAllParameters(Func<QParam, bool> predicate = null);
         bool Contains(string columnName);
         bool Contains(DBColumn column);
 
@@ -63,6 +63,11 @@ namespace DataWF.Data
 
         IQQuery Column(QFunctionType function, params object[] args);
         IQQuery Column(IInvoker invoker);
+
+        IQQuery Join(DBColumn column);
+        IQQuery Join(DBReferencing referencing);
+        IQQuery JoinAllReferencing();
+        IQQuery Join(DBColumn column, DBColumn refColumn);
 
         IQQuery WhereViewColumns(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
         IQQuery Where(string filter);
@@ -97,6 +102,7 @@ namespace DataWF.Data
         T FirstOrDefault<T>(DBTransaction transaction = null) where T : DBItem;
 
         T FirstOrDefault<T>(Func<T, bool> predicate, DBTransaction transaction = null) where T : DBItem;
+
     }
 
 }

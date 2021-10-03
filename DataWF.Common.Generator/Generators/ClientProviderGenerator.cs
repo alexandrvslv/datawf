@@ -18,29 +18,28 @@ namespace DataWF.Common.Generator
     {
         private readonly HashSet<string> VirtualOperations = new HashSet<string>
         {
-            "GetAsync",
-            "PutAsync",
-            "PostAsync",
-            "PostPackageAsync",
-            "SearchAsync",
-            "DeleteAsync",
-            "CopyAsync",
-            "GenerateIdAsync",
-            "MergeAsync",
-            "GetItemLogsAsync",
-            "GetLogsAsync",
-            "RedoLogAsync",
-            "RemoveLogAsync",
-            "UndoLogAsync"
+            "Get",
+            "Put",
+            "Post",
+            "PostPackage",
+            "Search",
+            "Delete",
+            "Copy",
+            "GenerateId",
+            "Merge",
+            "GetItemLogs",
+            "GetLogs",
+            "RedoLog",
+            "RemoveLog",
+            "UndoLog"
         };
-        private readonly Dictionary<string, INamedTypeSymbol> cacheModels = new Dictionary<string, INamedTypeSymbol>(StringComparer.Ordinal);
-        private readonly Dictionary<string, INamedTypeSymbol> cacheReferences = new Dictionary<string, INamedTypeSymbol>(StringComparer.Ordinal);
-        private readonly Dictionary<string, StringBuilder> cacheClients = new Dictionary<string, StringBuilder>(StringComparer.Ordinal);
-        private readonly Dictionary<string, HashSet<string>> cacheUsings = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
-        private readonly Dictionary<string, List<AttributeListSyntax>> cacheAttributes = new Dictionary<string, List<AttributeListSyntax>>(StringComparer.Ordinal);
-        private readonly Dictionary<IAssemblySymbol, Dictionary<string, INamedTypeSymbol>> cacheAssemblySymbolTypes = new Dictionary<IAssemblySymbol, Dictionary<string, INamedTypeSymbol>>(SymbolEqualityComparer.Default);
-
-        private readonly Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
+        private Dictionary<string, INamedTypeSymbol> cacheModels = new Dictionary<string, INamedTypeSymbol>(StringComparer.Ordinal);
+        private Dictionary<string, INamedTypeSymbol> cacheReferences = new Dictionary<string, INamedTypeSymbol>(StringComparer.Ordinal);
+        private Dictionary<string, Dictionary<string, INamedTypeSymbol>> cacheAssemblySymbolTypes = new Dictionary<string, Dictionary<string, INamedTypeSymbol>>(StringComparer.Ordinal);
+        private string clientName = string.Empty;
+        private HashSet<string> clients = new HashSet<string>(StringComparer.Ordinal);
+        private HashSet<string> usings = new HashSet<string>(StringComparer.Ordinal);
+        private Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
         private OpenApiDocument document;
         private List<IAssemblySymbol> usingReferences = new List<IAssemblySymbol>();
 
@@ -54,7 +53,6 @@ namespace DataWF.Common.Generator
         public string DocumentSource { get; set; }
         public AttributeData Attribute { get; private set; }
         public string Namespace { get; set; }
-        public HashSet<IAssemblySymbol> References { get; } = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
         public string ProviderName { get; set; }
 
         public override bool Process()
@@ -62,7 +60,7 @@ namespace DataWF.Common.Generator
             Attribute = TypeSymbol.GetAttribute(Attributes.ClientProvider);
             Namespace = TypeSymbol.ContainingNamespace.ToDisplayString();
             ProviderName = TypeSymbol.Name;
-
+            source = new StringBuilder();
             LoadDocument();
 
             LoadReferences();
@@ -79,30 +77,30 @@ namespace DataWF.Common.Generator
             }
             foreach (var operation in document.Operations)
             {
-                if (CompilationContext.Context.CancellationToken.IsCancellationRequested)
-                    return false;
                 AddClientOperation(operation);
             }
+            CompileClient();
 
-            foreach (var entry in cacheClients)
-            {
-                if (CompilationContext.Context.CancellationToken.IsCancellationRequested)
-                    return false;
-                var name = entry.Key;
-                var source = entry.Value;
-                source.Append($@"
-    }}");
-                var usings = cacheUsings[entry.Key];
-                GenUnit($"{Namespace}.{name}Gen.cs", source, usings.OrderBy(p => p));
-            }
+            if (CompilationContext.Context.CancellationToken.IsCancellationRequested)
+                return false;
 
-            GenUnit($"{Namespace}.{TypeSymbol.Name}.Gen.cs", GenProvider(), usings: new List<string>()
-            {
-                "DataWF.Common",
-                "System"
-            });
+            usings.Add("DataWF.Common");
+            usings.Add("System");
+            GenUnit($"{Namespace}.{TypeSymbol.Name}.Gen.cs", GenProvider(), usings);
 
             return true;
+        }
+
+        private void CompileClient()
+        {
+            if (source.Length > 0)
+            {
+                clients.Add(clientName);
+                source.Append($@"
+    }}");
+                GenUnit($"{Namespace}.{clientName}ClientGen.cs", source, usings);
+            }
+            clientName = string.Empty;
         }
 
         private void LoadDocument()
@@ -134,7 +132,6 @@ namespace DataWF.Common.Generator
                 var assembly = Compilation.GetAssemblyOrModuleSymbol(assemblyReference);
                 if (assembly is IAssemblySymbol assemblySymbol)
                 {
-                    References.Add(assemblySymbol);
                     if (usingReferenceNames?.Contains(assemblySymbol.Name) ?? false)
                     {
                         usingReferences.Add(assemblySymbol);
@@ -145,14 +142,15 @@ namespace DataWF.Common.Generator
 
         private StringBuilder GenProvider()
         {
-            source = new StringBuilder($@"
+            source.Clear();
+            source.Append($@"
     public partial class {ProviderName} {(TypeSymbol.BaseType?.Name != "ClientProviderBase" ? ": ClientProviderBase" : "")}
     {{
-        public static {ProviderName} Default = new {ProviderName}();");
+        //public static {ProviderName} Default = new {ProviderName}();");
 
             GenProviderConstructor();
 
-            foreach (var client in cacheClients.Keys)
+            foreach (var client in clients)
             {
                 source.Append($@"
         public {client}Client {client} {{ get; }}");
@@ -168,7 +166,7 @@ namespace DataWF.Common.Generator
         public {ProviderName}()
         {{");
 
-            foreach (var client in cacheClients.Keys)
+            foreach (var client in clients)
             {
                 source.Append($@"
             Add({client} = new {client}Client(this));");
@@ -181,39 +179,30 @@ namespace DataWF.Common.Generator
         private void AddClientOperation(OpenApiOperationDescription descriptor)
         {
             GetOperationName(descriptor, out var clientName);
-            if (!cacheUsings.TryGetValue(clientName, out var usings))
+            if (!string.Equals(clientName, this.clientName, StringComparison.Ordinal))
             {
-                cacheUsings[clientName] =
-                    usings = new HashSet<string>(StringComparer.Ordinal)
-                {
-                    "DataWF.Common" ,
-                    "System",
-                    "System.Collections.Generic",
-                    "System.Net.Http",
-                    "System.Threading.Tasks",
-                    "System.Text.Json.Serialization",
-                };
-            }
-            if (!cacheClients.TryGetValue(clientName, out var clientSource))
-            {
-                cacheClients[clientName] =
-                    clientSource = GenClient(clientName, usings);
+                CompileClient();
+                GenClient(clientName, usings);
             }
 
-            GenOperation(clientSource, descriptor, usings);
+            GenOperation(source, descriptor, usings);
         }
 
-        private StringBuilder GenClient(string clientName, HashSet<string> usings)
+        private void GenClient(string clientName, HashSet<string> usings)
         {
-            //System.Diagnostics.Debugger.Launch();
+            this.clientName = clientName;
+            usings.Add("DataWF.Common");
+            usings.Add("System");
+            usings.Add("System.Collections.Generic");
+            usings.Add("System.Net.Http");
+            usings.Add("System.Threading.Tasks");
+            usings.Add("System.Text.Json.Serialization");
             var baseType = GetClientBaseType(clientName, usings, out var idKey, out var typeKey, out var typeId);
-            var clientSource = new StringBuilder();
-            clientSource.Append($@"
+            source.Clear();
+            source.Append($@"
     public partial class {clientName}Client: {baseType}
     {{");
-            GenClientMembers(clientSource, clientName, idKey, typeKey, typeId, usings);
-
-            return clientSource;
+            GenClientMembers(source, clientName, idKey, typeKey, typeId, usings);
         }
 
         private void GenClientMembers(StringBuilder clientSource, string clientName, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId,
@@ -314,7 +303,7 @@ namespace DataWF.Common.Generator
         private void GenOperation(StringBuilder source, OpenApiOperationDescription descriptor, HashSet<string> usings)
         {
             var operationName = GetOperationName(descriptor, out var clientName);
-            var actualName = $"{operationName}Async";
+            var actualName = operationName;
             var baseType = GetClientBaseType(clientName, usings, out _, out _, out _);
             var isOverride = baseType != "WebClientBase" && VirtualOperations.Contains(actualName);
             var returnType = GetReturningTypeCheck(descriptor, operationName, usings);
@@ -340,11 +329,11 @@ namespace DataWF.Common.Generator
             }
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             var returnType = GetReturningType(descriptor, usings);
-            if (bodyParameter == null && returnType.StartsWith("List<", StringComparison.Ordinal))
-            {
-                source.Append($"HttpPageSettings pages, ");
-            }
-            source.Append($"HttpJsonSettings settings, ");
+            //if (bodyParameter == null && returnType.StartsWith("List<", StringComparison.Ordinal))
+            //{
+            //    source.Append($"HttpPageSettings pages, ");
+            //}
+            //source.Append($"HttpJsonSettings settings, ");
             source.Append($"ProgressToken progressToken");
         }
 
@@ -376,18 +365,16 @@ namespace DataWF.Common.Generator
             var returnType = GetReturningType(descriptor, usings);
 
             source.Append($@"
-            return await Request<{returnType}>(progressToken, HttpMethod.{method.ToInitcap()}, ""{path}"", ""{mediatype}"", settings");
+            return await Request<{returnType}>(progressToken, HttpMethod.{method.ToInitcap()}, ""{path}"", ""{mediatype}"" ");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             if (bodyParameter == null)
             {
-                if (returnType.StartsWith("List<", StringComparison.Ordinal))
-                {
-                    source.Append(", pages");
-                }
-                else
-                {
-                    source.Append(", null");
-                }
+                //if (returnType.StartsWith("List<", StringComparison.Ordinal))
+                //{
+                //    source.Append(", pages");
+                //}
+                //else
+                source.Append(", null");
             }
             else
             {
@@ -400,10 +387,10 @@ namespace DataWF.Common.Generator
             source.Append(").ConfigureAwait(false);");
         }
 
-        private bool GetOrGenDefinion(string key, out INamedTypeSymbol type)
-        {
-            return GetOrGenDefinion(document.Definitions[key], out type);
-        }
+        //private bool GetOrGenDefinion(string key, out INamedTypeSymbol type)
+        //{
+        //    return GetOrGenDefinion(document.Definitions[key], out type);
+        //}
 
         private bool GetOrGenDefinion(JsonSchema definition, out INamedTypeSymbol type)
         {
@@ -648,7 +635,11 @@ namespace DataWF.Common.Generator
 
         private INamedTypeSymbol GetReferenceType(JsonSchema definition)
         {
-            var definitionName = GetDefinitionName(definition);
+            return GetReferenceType(GetDefinitionName(definition), definition);
+        }
+
+        private INamedTypeSymbol GetReferenceType(string definitionName, JsonSchema definition)
+        {
             if (!cacheReferences.TryGetValue(definitionName, out var type))
             {
                 if (definitionName.Equals(nameof(TimeSpan), StringComparison.OrdinalIgnoreCase))
@@ -707,15 +698,13 @@ namespace DataWF.Common.Generator
 
         private INamedTypeSymbol GenDefinition(JsonSchema schema)
         {
-            var usings = new HashSet<string>(StringComparer.Ordinal)
-            {
-                "DataWF.Common",
-                "System",
-            };
+            usings.Clear();
+            usings.Add("DataWF.Common");
+            usings.Add("System");
 
-            var @class = schema.IsEnumeration ? GenDefinitionEnum(schema, usings) : GenDefinitionClass(schema, usings);
+            var source = schema.IsEnumeration ? GenDefinitionEnum(schema, usings) : GenDefinitionClass(schema, usings);
 
-            var syntaxTree = GenUnit($"{Namespace}.{GetDefinitionName(schema)}DefenitionGen.cs", @class, usings.OrderBy(p => p));
+            var syntaxTree = GenUnit($"{Namespace}.{GetDefinitionName(schema)}DefenitionGen.cs", source, usings);
             return GenUnit(syntaxTree);
         }
 
@@ -723,7 +712,8 @@ namespace DataWF.Common.Generator
         {
             SyntaxHelper.AddUsing("System.Runtime.Serialization", usings);
 
-            var source = new StringBuilder($@"
+            source.Clear();
+            source.Append($@"
     {((schema.ExtensionData?.TryGetValue("x-flags", out _) ?? false) ? "[Flags]" : "")}
     public enum {GetDefinitionName(schema)}
     {{");
@@ -760,7 +750,8 @@ namespace DataWF.Common.Generator
         {
             usings.Add("System.Text.Json.Serialization");
             var refFields = referenceFields[schema] = new List<RefField>();
-            var source = new StringBuilder($@"
+            source.Clear();
+            source.Append($@"
     public partial class {GetDefinitionName(schema)}: {string.Join(", ", GenDefinitionClassBases(schema, usings))}
     {{");
             GenDefinitionClassMemebers(source, schema, refFields, usings);
@@ -774,11 +765,13 @@ namespace DataWF.Common.Generator
         {
             if (schema.InheritedSchema != null)
             {
-                if (!GetOrGenDefinion(schema.InheritedSchema, out var type) && type != null)
+                var name = GetDefinitionName(schema.InheritedSchema);
+                var type = GetReferenceType(name, schema.InheritedSchema);
+                if (type != null)
                 {
                     SyntaxHelper.AddUsing(type, usings);
                 }
-                yield return GetDefinitionName(schema.InheritedSchema);
+                yield return name;
             }
             else
             {
@@ -928,7 +921,7 @@ namespace DataWF.Common.Generator
             {
                 //yield return SF.ParseStatement($@"{refField.FieldName} = new {refField.FieldType}(
                 //new Query<{refField.TypeName}>(new[]{{{refField.ParameterName}}}),
-                //ClientProvider.Default.{refField.TypeName}.Items,
+                //Provider.{refField.TypeName}.Items,
                 //false);");
                 source.Append($@"
             {refField.FieldName} = new {refField.FieldType} (this, nameof({refField.PropertyName}));");
@@ -1162,12 +1155,12 @@ namespace DataWF.Common.Generator
 
         private string GetPropertyName(JsonSchemaProperty property)
         {
-            return GetDefinitionName(property.Name);
+            return property.Name;
         }
 
         private string GetDefinitionName(JsonSchema schema)
         {
-            return GetDefinitionName(schema.Id);
+            return schema.Id;
         }
 
         private string GetDefinitionName(string name)
@@ -1279,7 +1272,8 @@ namespace DataWF.Common.Generator
                 case JsonObjectType.Object:
                     if (schema.Id != null)
                     {
-                        if (!GetOrGenDefinion(schema, out var type) && type != null)
+                        var type = GetReferenceType(schema);
+                        if (type != null)
                         {
                             SyntaxHelper.AddUsing(type, usings);
                         }
@@ -1306,10 +1300,10 @@ namespace DataWF.Common.Generator
             return "string";
         }
 
-        public SyntaxTree GenUnit(string name, StringBuilder @class, IEnumerable<string> usings)
+        public SyntaxTree GenUnit(string name, StringBuilder source, HashSet<string> usings)
         {
             var unitSource = new StringBuilder();
-            foreach (var item in usings)
+            foreach (var item in usings.OrderBy(p => p))
             {
                 unitSource.Append($@"
 using {item};");
@@ -1319,12 +1313,13 @@ using {item};");
 namespace {Namespace}
 {{
 ");
-            unitSource.Append(@class);
-            unitSource.Append($@"
+            source.Insert(0, unitSource);
+            source.Append($@"
 }}");
-            var sourceText = SourceText.From(unitSource.ToString(), Encoding.UTF8);
+            var sourceText = SourceText.From(source.ToString(), Encoding.UTF8);
             CompilationContext.Context.AddSource(name, sourceText);
-
+            usings.Clear();
+            base.source.Clear();
             return CSharpSyntaxTree.ParseText(sourceText, (CSharpParseOptions)Options);
         }
 
@@ -1371,10 +1366,10 @@ namespace {Namespace}
             var byName = value.IndexOf('.') < 0;
             if (byName)
             {
-                if (!cacheAssemblySymbolTypes.TryGetValue(assembly, out var cache))
+                if (!cacheAssemblySymbolTypes.TryGetValue(assembly.Name, out var cache))
                 {
                     var definedTypes = assembly.GlobalNamespace.GetTypes();
-                    cacheAssemblySymbolTypes[assembly] =
+                    cacheAssemblySymbolTypes[assembly.Name] =
                         cache = new Dictionary<string, INamedTypeSymbol>(StringComparer.Ordinal);
                     foreach (var defined in definedTypes)
                     {

@@ -5,14 +5,14 @@ namespace DataWF.Common
 {
     public class ProgressToken : IDisposable
     {
-        public static readonly ProgressToken None = new ProgressToken(null);
+        public static readonly ProgressToken None = new ProgressToken();
 
         public CancellationToken CancellationToken = CancellationToken.None;
         public CancellationTokenSource CancellationTokenSource = null;
 
         private CopyProcess process;
 
-        public ProgressToken(IProgressable prograssable)
+        public ProgressToken(IProgressable prograssable = null)
         {
             Progressable = prograssable;
             if (Progressable != null)
@@ -24,7 +24,12 @@ namespace DataWF.Common
                 };
                 CancellationToken = CancellationTokenSource.Token;
             }
+            JsonSettings = HttpJsonSettings.Default;
         }
+
+        public HttpPageSettings Pages { get; set; }
+
+        public HttpJsonSettings JsonSettings { get; set; }
 
         public CopyProcess Process
         {

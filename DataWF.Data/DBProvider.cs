@@ -171,14 +171,14 @@ namespace DataWF.Data
             if (type == DDLType.None
                 || !item.Containers.Any()
                 || item.Schema == null
-                || !item.Schema.Containers.Any()
+                || item.Schema.Schems == null
                 || item.Schema.IsSynchronizing)
                 return;
             if (item is IDBTableContent tabled)
             {
-                if (tabled.Table.IsVirtual || !tabled.Table.Containers.Any())
-                    return;
-                if (item is DBColumn column && column.ColumnType != DBColumnTypes.Default)
+                if ((tabled.Table.IsVirtual || !tabled.Table.Containers.Any())
+                    || (item is DBColumn column && column.ColumnType != DBColumnTypes.Default)
+                    || item is DBReferencing)
                     return;
             }
             DBSchemaChange change = null;

@@ -118,17 +118,21 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public IEnumerable<IT> GetAllQItems<IT>() where IT : IQItem
+        public IEnumerable<IT> GetAllQItems<IT>(Func<IT, bool> predicate = null) where IT : IQItem
         {
-            if (min is IT minTyped)
+            if (min is IT minTyped
+                && (predicate == null
+                    || predicate(minTyped)))
                 yield return minTyped;
             else if (min is IQItemList minList)
-                foreach (var minItem in minList.GetAllQItems<IT>())
+                foreach (var minItem in minList.GetAllQItems<IT>(predicate))
                     yield return minItem;
-            if (max is IT maxTyped)
+            if (max is IT maxTyped
+                && (predicate == null
+                    || predicate(maxTyped)))
                 yield return maxTyped;
             else if (max is IQItemList maxList)
-                foreach (var maxItem in maxList.GetAllQItems<IT>())
+                foreach (var maxItem in maxList.GetAllQItems<IT>(predicate))
                     yield return maxItem;
 
         }

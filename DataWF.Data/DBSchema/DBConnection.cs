@@ -516,7 +516,7 @@ namespace DataWF.Data
             var table = new DBTable<T>(tableName) { Schema = schema };
             using (var transaction = new DBTransaction(this, null, true))
             {
-                table.Load(transaction.AddCommand(query));
+                table.Load(transaction.AddCommand(query), null);
             }
             return table;
         }
@@ -542,7 +542,7 @@ namespace DataWF.Data
             using (var transaction = new DBTransaction(this, null, true))
             {
                 var list = new List<List<KeyValuePair<string, object>>>();
-                using (var reader = transaction.ExecuteQuery(transaction.AddCommand(query), DBExecuteType.Reader) as IDataReader)
+                using (var reader = transaction.ExecuteReader(transaction.AddCommand(query)))
                 {
                     int fCount = reader.FieldCount;
                     while (reader.Read())

@@ -13,7 +13,7 @@ namespace DataWF.Common
         private int _capacity;//TODO REMOVE
         public ThreadSafeList()
         {
-            //items = SmallArrayPool<T>.Shared.Rent(capacity);// new List<T>(capacity);
+            //items = SmallArrayPool<T>.Instance.Rent(capacity);// new List<T>(capacity);
             _capacity = 1;
         }
 
@@ -26,7 +26,7 @@ namespace DataWF.Common
         ~ThreadSafeList()
         {
             if (items != null)
-                SmallArrayPool<T>.Shared.Return(items);
+                SmallArrayPool<T>.Instance.Return(items);
         }
 
         public int Count => _count;

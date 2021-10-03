@@ -31,6 +31,11 @@ namespace DataWF.Data
         new IQQuery<T> Column(IInvoker invoker);
         IQQuery<T> Column<K>(Expression<Func<T, K>> keySelector);
 
+        new IQQuery<T> Join(DBColumn column);
+        new IQQuery<T> Join(DBReferencing referencing);
+        new IQQuery<T> JoinAllReferencing();
+        new IQQuery<T> Join(DBColumn column, DBColumn refColumn);
+
         new IQQuery<T> WhereViewColumns(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
         new IQQuery<T> Where(string filter);
 

@@ -99,15 +99,14 @@ namespace DataWF.Common
         public virtual async Task<R> Request<R>(ProgressToken progressToken,
             HttpMethod httpMethod,
             string commandUrl,// = "/api"
-            string mediaType,// = "application/json"
-            HttpJsonSettings jsonSettings,
+            string mediaType,// = "application/json"            
             object value,
             params object[] routeParams)
         {
             var client = GetHttpClient();
             try
             {
-                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, jsonSettings, value, routeParams))
+                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, routeParams))
                 {
                     System.Diagnostics.Debug.WriteLine($"{request.RequestUri} {value}");
 
@@ -188,7 +187,7 @@ namespace DataWF.Common
                             case System.Net.HttpStatusCode.Unauthorized:
                                 if (await Provider?.OnUnauthorized())
                                 {
-                                    return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, jsonSettings, value, routeParams).ConfigureAwait(false);
+                                    return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, value, routeParams).ConfigureAwait(false);
                                 }
                                 else
                                 {
@@ -316,12 +315,11 @@ namespace DataWF.Common
         public virtual HttpRequestMessage CreateRequest(ProgressToken progressToken,
             HttpMethod httpMethod,
             string commandUrl,
-            string mediaType,
-            HttpJsonSettings jsonSettings,
+            string mediaType,            
             object value = null,
             params object[] parameters)
         {
-
+            HttpJsonSettings jsonSettings = progressToken.JsonSettings;
             var request = new HttpRequestMessage()
             {
                 RequestUri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute),
@@ -329,6 +327,11 @@ namespace DataWF.Common
             };
             request.Headers.Add(HttpJsonSettings.XJsonKeys, jsonSettings.Keys.ToString());
             request.Headers.Add(HttpJsonSettings.XJsonMaxDepth, jsonSettings.MaxDepth.ToString());
+            if (progressToken.Pages is HttpPageSettings listSettings)
+            {
+                request.Headers.Add(HttpPageSettings.XListFrom, listSettings.ListFrom.ToString());
+                request.Headers.Add(HttpPageSettings.XListTo, listSettings.ListTo.ToString());
+            }
             if (httpMethod.Method.Equals("GET", StringComparison.OrdinalIgnoreCase))
             {
                 Status = ClientStatus.Get;
@@ -359,12 +362,7 @@ namespace DataWF.Common
                     { new ProgressStreamContent(progressToken, stream, 81920), Path.GetFileNameWithoutExtension(fileName), fileName }
                 };
                 request.Content = content;
-            }
-            else if (value is HttpPageSettings listSettings)
-            {
-                request.Headers.Add(HttpPageSettings.XListFrom, listSettings.ListFrom.ToString());
-                request.Headers.Add(HttpPageSettings.XListTo, listSettings.ListTo.ToString());
-            }
+            }            
             else if (value != null)
             {
                 IFileModel fileModel = null;

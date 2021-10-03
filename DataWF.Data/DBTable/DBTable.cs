@@ -711,7 +711,7 @@ namespace DataWF.Data
     left join {SqlName} {oldAlias} on {oldAlias}.{column.SqlName} = {newAlias}.{column.ReferenceTable.PrimaryKey.SqlName} 
     {where}", newAlias));
                     //Debug.WriteLine($"Load Reference: {subCommand.CommandText}");
-                    column.ReferenceTable.Load<DBItem>(subCommand, DBLoadParam.Referencing, transaction);
+                    column.ReferenceTable.Load<DBItem>(subCommand, null, DBLoadParam.Referencing, transaction);
                     transaction.ReferencingStack.Remove(column);
                 }
             }
@@ -743,7 +743,7 @@ namespace DataWF.Data
     {where}", newAlias));
                     //Debug.WriteLine($"Load Referencing: {subCommand.CommandText}");
                     var loadParam = reference.ForceLoadReference ? DBLoadParam.Reference | DBLoadParam.Referencing : DBLoadParam.Referencing;
-                    referenceTable.Load<DBItem>(subCommand, loadParam, transaction);
+                    referenceTable.Load<DBItem>(subCommand, null, loadParam, transaction);
                     transaction.ReferencingStack.Remove(referenceColumn);
                 }
             }
@@ -783,14 +783,14 @@ namespace DataWF.Data
 
         public event EventHandler<DBLoadProgressEventArgs> LoadProgress;
 
-        protected void RaiseLoadProgress(DBLoadProgressEventArgs arg)
+        internal void RaiseLoadProgress(DBLoadProgressEventArgs arg)
         {
             LoadProgress?.Invoke(this, arg);
         }
 
         public event EventHandler<DBLoadCompleteEventArgs> LoadComplete;
 
-        protected void RaiseLoadCompleate(DBTransaction transaction)
+        internal void RaiseLoadCompleate(DBTransaction transaction)
         {
             LoadComplete?.Invoke(this, new DBLoadCompleteEventArgs(transaction.View, null));
         }
@@ -810,120 +810,9 @@ namespace DataWF.Data
             LoadColumns?.Invoke(this, arg);
         }
 
-        protected internal virtual DBItem LoadDBItem(DbDataReader reader, DBReaderFields fields)
-        {
-            DBItem item;
-            var typeIndex = fields.ItemTypeKey > -1
-                ? reader.IsDBNull(fields.ItemTypeKey) ? 0
-                : reader.GetInt32(fields.ItemTypeKey) : 0;
-
-            if (fields.PrimaryKey > -1)
-            {
-                item = PrimaryKey.GetOrCreate(reader, fields.PrimaryKey, typeIndex);
-            }
-            else
-            {
-                item = NewItem(DBUpdateState.Default, false, typeIndex);
-            }
-            if (fields.StampKey > -1 && !reader.IsDBNull(fields.StampKey))
-            {
-                var stamp = reader.GetDateTime(fields.StampKey);
-                stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
-
-                if (item.Stamp >= stamp)
-                {
-                    return item;
-                }
-                else
-                {
-                    StampKey.SetValue(item, stamp, DBSetValueMode.Loading);
-                }
-            }
-
-            for (int i = 0; i < fields.Columns.Count; i++)
-            {
-                var columnIndex = fields.Columns[i];
-                if (item.Attached && item.UpdateState != DBUpdateState.Default && columnIndex.Column.IsChanged(item))
-                {
-                    continue;
-                }
-
-                columnIndex.Column.Read(reader, item, columnIndex.Index);
-            }
-            return item;
-        }
-
-        public List<DBReaderFields> CheckColumns(DBTransaction transaction)
-        {
-            bool newcol = false;
-            var reader = transaction.Reader;
-            var fieldsCount = reader.FieldCount;
-            var readerFieldsList = new List<DBReaderFields>(1);
-            var fields = new DBReaderFields();
-            for (int i = 0; i < fieldsCount; i++)
-            {
-                string fieldName = reader.GetName(i);
-                if (fieldName.Length == 0)
-                    fieldName = i.ToString();
-                var table = (DBTable)this;
-                var dotIndex = fieldName.IndexOf('.');
-                if (dotIndex > -1)
-                {
-                    var tableIndex = fieldName.Substring(0, dotIndex);
-                    fieldName = fieldName.Substring(dotIndex + 1);
-                    if (int.TryParse(tableIndex, out int tableIntIndex))
-                        table = Schema.Tables[tableIntIndex];
-                    else
-                        table = Schema.ParseTable(tableIndex) ?? this;
-                }
-
-                var column = table.GetOrCreateColumn(fieldName, reader.GetFieldType(i), ref newcol);
-
-                if (fields.Table == null)
-                {
-                    fields.Table = table;
-                    fields.Columns = new List<(int, DBColumn)>(table.Columns.Count);
-                    readerFieldsList.Add(fields);
-                }
-                else if (fields.Table != table)
-                {
-                    fields = new DBReaderFields
-                    {
-                        Table = table,
-                        Columns = new List<(int, DBColumn)>(table.Columns.Count)
-                    };
-                    readerFieldsList.Add(fields);
-                }
-
-                if (column.IsPrimaryKey)
-                {
-                    fields.PrimaryKey = i;
-                }
-                else if ((column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp)
-                {
-                    fields.StampKey = i;
-                }
-                else if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
-                {
-                    fields.ItemTypeKey = i;
-                }
-                else
-                {
-                    fields.Columns.Add((i, column));
-                }
-            }
-            if (newcol)
-            {
-                RaiseLoadColumns(new DBLoadColumnsEventArgs(transaction.View));
-            }
-            return transaction.ReaderFields = readerFieldsList;
-        }
-
         public abstract DBItem this[int index] { get; }
 
         public abstract void Add(DBItem item);
-
-        protected internal abstract DBItem LoadDBItem(DBTransaction transaction);
 
         public abstract IEnumerable<T> Load<T>(DBLoadParam param = DBLoadParam.Referencing, DBTransaction transaction = null) where T : DBItem;
 
@@ -933,9 +822,9 @@ namespace DataWF.Data
 
         //public abstract IEnumerable<T> Load<T>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract IEnumerable<T> Load<T>(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
+        public abstract IEnumerable<T> Load<T>(IDbCommand command, IQQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
 
-        public abstract Task<IEnumerable<T>> LoadAsync<T>(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
+        public abstract Task<IEnumerable<T>> LoadAsync<T>(IDbCommand command, IQQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
 
         public abstract T LoadByCode<T>(string code, DBColumn<string> column, DBLoadParam param, DBTransaction transaction = null) where T : DBItem;
 

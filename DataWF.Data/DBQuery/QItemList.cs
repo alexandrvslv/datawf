@@ -18,6 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
@@ -90,15 +91,17 @@ namespace DataWF.Data
             base.Dispose();
         }
 
-        public IEnumerable<IT> GetAllQItems<IT>() where IT : IQItem
+        public IEnumerable<IT> GetAllQItems<IT>(Func<IT, bool> predicate = null) where IT : IQItem
         {
             foreach (var item in this)
             {
-                if (item is IT typeItem)
+                if (item is IT typeItem
+                    && (predicate == null 
+                        || predicate(typeItem)))
                     yield return typeItem;
                 if (item is IQItemList list)
                 {
-                    foreach (var subItem in list.GetAllQItems<IT>())
+                    foreach (var subItem in list.GetAllQItems<IT>(predicate))
                     {
                         yield return subItem;
                     }

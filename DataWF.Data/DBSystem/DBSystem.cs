@@ -247,10 +247,10 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
             var command = transaction.AddCommand($"select {table.DataKey.SqlName} from {table.Name} where {table.IdKey.SqlName} = {ParameterPrefix}{table.IdKey.SqlName}");
             CreateParameter(command, $"{ParameterPrefix}{table.IdKey.SqlName}", id, table.IdKey);
-            transaction.Reader = (DbDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (await transaction.Reader.ReadAsync())
+            var reader = await transaction.ExecuteReaderAsync(command, CommandBehavior.SequentialAccess);
+            if (await reader.ReadAsync())
             {
-                return transaction.Reader.GetStream(0);
+                return reader.GetStream(0);
             }
             throw new Exception("No Data Found!");
         }
@@ -1068,10 +1068,10 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
         {
             var query = item.Table.QQuery().Column(column).Where(item.Table.PrimaryKey, item.PrimaryId);
             var command = transaction.AddCommand(query.ToCommand());
-            transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (transaction.Reader.Read())
+            var reader = transaction.ExecuteReader(command, CommandBehavior.SequentialAccess);
+            if (reader.Read())
             {
-                return new DataReaderStream(transaction.Reader, false);
+                return new DataReaderStream(reader, false);
             }
             return null;
         }
@@ -1088,11 +1088,11 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
         {
             var query = item.Table.QQuery().Column(column).Where(item.Table.PrimaryKey, item.PrimaryId);
             var command = transaction.AddCommand(query.ToCommand());
-            using (transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
+            using (var reader = transaction.ExecuteReader(command, CommandBehavior.SequentialAccess))
             {
-                if (transaction.Reader.Read())
+                if (reader.Read())
                 {
-                    if (transaction.Reader.IsDBNull(0))
+                    if (reader.IsDBNull(0))
                     {
                         throw new Exception("No Data Found!");
                     }
@@ -1103,15 +1103,15 @@ values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.
                     var buffer = new byte[bufferSize];
                     int position = 0;
                     int readed;
-                    while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                    while ((readed = (int)reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
                     {
                         stream.Write(buffer, 0, readed);
                         position += readed;
                     }
                 }
-                transaction.Reader.Close();
+                reader.Close();
             }
-            transaction.Reader = null;
+            transaction.CurrentReader = null;
             stream.Position = 0;
         }
 

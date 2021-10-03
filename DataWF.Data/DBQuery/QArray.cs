@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
+using System;
 
 namespace DataWF.Data
 {
@@ -145,9 +146,9 @@ namespace DataWF.Data
             Items.Delete(item);
         }
 
-        public IEnumerable<IT> GetAllQItems<IT>() where IT : IQItem
+        public IEnumerable<IT> GetAllQItems<IT>(Func<IT, bool> predicate = null) where IT : IQItem
         {
-            return Items.GetAllQItems<IT>();
+            return Items.GetAllQItems<IT>(predicate);
         }
     }
 }

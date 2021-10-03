@@ -512,9 +512,9 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public IEnumerable<IT> GetAllQItems<IT>() where IT : IQItem
+        public IEnumerable<IT> GetAllQItems<IT>(Func<IT, bool> predicate = null) where IT : IQItem
         {
-            return items.GetAllQItems<IT>();
+            return items.GetAllQItems<IT>(predicate);
         }
 
         public IEnumerable<IGroup> GetGroups()

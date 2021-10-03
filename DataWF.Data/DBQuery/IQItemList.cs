@@ -17,6 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using System;
 using System.Collections.Generic;
 
 namespace DataWF.Data
@@ -28,6 +29,6 @@ namespace DataWF.Data
         void Add(QItem item);
         void Delete(QItem item);
 
-        IEnumerable<T> GetAllQItems<T>() where T : IQItem;
+        IEnumerable<T> GetAllQItems<T>(Func<T, bool> predicate = null) where T : IQItem;
     }
 }

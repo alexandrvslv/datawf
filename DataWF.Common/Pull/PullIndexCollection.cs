@@ -25,6 +25,8 @@ namespace DataWF.Common
 
         public bool Contains(T item)
         {
+            if (item == null)
+                return false;
             var comparer = this.comparer;
             return items.Any(p => p.BinarySearch(item, comparer) > -1);
         }

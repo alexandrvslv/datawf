@@ -108,7 +108,7 @@ namespace DataWF.Data
             base.OnItemPropertyChanged(sender, e);
             if (Schema != null
                 && !Schema.IsSynchronizing
-                && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
+                && Schema.Schems is DBSchemaList schemaList)
             {
                 schemaList.OnItemsListChanged(this, e);
             }
@@ -119,7 +119,7 @@ namespace DataWF.Data
             var args = base.OnCollectionChanged(type, item, index, oldIndex, oldItem);
             if (Schema != null
                 && !Schema.IsSynchronizing
-                && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
+                && Schema.Schems is DBSchemaList schemaList)
             {
                 schemaList.OnItemsListChanged(this, args ?? ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
             }
