@@ -22,7 +22,7 @@ namespace DataWF.Common
 
         ICrudClient IClientConverter.Client => Client;
 
-        public WebClient<T, K> Client { get; set; }
+        public WebClient<T, K> Client { get; }
 
         public TypeSerializeInfo SerializationInfo { get; }
 
