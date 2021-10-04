@@ -7,9 +7,20 @@ namespace DataWF.Common
 {
     public static class GroupHelper
     {
-        public static void ApplyFilter(IFilterable filterable)
+        private static Dictionary<Type, IInvoker> cacheTreeInvokers = new Dictionary<Type, IInvoker>();
+
+        public static IInvoker GetTreeInvoker(Type type)
         {
-            filterable.FilterQuery.Parameters.Add(TreeInvoker.Instance.CreateTreeParameter());
+            if (!cacheTreeInvokers.TryGetValue(type, out var treeInvoker))
+            {
+                treeInvoker = (IInvoker)EmitInvoker.CreateObject(typeof(TreeInvoker<>).MakeGenericType(type));
+            }
+            return treeInvoker;
+        }
+
+        public static void ApplyFilter(IFilterable filterable, Type itemType)
+        {
+            filterable.FilterQuery.Parameters.Add(TreeInvoker.Instance.CreateTreeParameter(itemType));
             filterable.FilterQuery.Orders.Add(TreeInvoker.Instance.CreateTreeComparer());
         }
 

@@ -373,8 +373,7 @@ namespace DataWF.Data
         {
             if (column is DBColumn<T> typedColumn)
                 return typedColumn.GetValue(this);
-            else
-                return default(T);
+            throw new Exception($"Wrong Type {typeof(T)} for column {column}");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

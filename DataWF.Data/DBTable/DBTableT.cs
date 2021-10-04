@@ -1173,17 +1173,21 @@ namespace DataWF.Data
             {
                 buf = Select(query.Parameters, list);
             }
-
-            if (query.Orders.Count > 0)
+            var comparers = query.GetComparer<T>();
+            if (query.TreeComparer is ITreeComparer treeComparer)
             {
-                buf = query.Sort(buf.ToList());
+                treeComparer.Comparer = comparers;
+                var bufList = buf.ToList();
+                buf = bufList;
+                ListHelper.QuickSort<T>(bufList, (IComparer<T>)treeComparer);
             }
-            else if (typeof(T).IsInterface(typeof(IGroup)))
-            {
-                var temp = buf.ToList();
-                ListHelper.QuickSort(temp, TreeComparer<IGroup>.Default);
-                return temp;
+            else if (comparers != null)
+            {                
+                var bufList = buf.ToList();
+                buf = bufList;
+                ListHelper.QuickSort<T>(bufList, comparers);
             }
+            
             return buf;
         }
 

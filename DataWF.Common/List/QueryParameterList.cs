@@ -70,7 +70,8 @@ namespace DataWF.Common
 
         void ICollection<IQueryParameter>.Add(IQueryParameter item)
         {
-            Add((IQueryParameter<T>)item);
+            if (!Contains(item))
+                Add((IQueryParameter<T>)item);
         }
 
         bool ICollection<IQueryParameter>.Contains(IQueryParameter item)

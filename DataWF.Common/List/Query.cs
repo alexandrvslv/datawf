@@ -92,6 +92,8 @@ namespace DataWF.Common
 
         public bool IsEnabled => ((IEnumerable<IQueryParameter<T>>)Parameters).Any(p => p.IsEnabled);
 
+        public bool HasOrderBy => Orders.Count > 0 || TreeComparer != null;
+
         public event EventHandler OrdersChanged;
 
         public event EventHandler ParametersChanged;
@@ -234,38 +236,6 @@ namespace DataWF.Common
             }
         }
 
-        public string Format(bool ckeckEmpty = true, bool formatOrder = false)
-        {
-            var logic = false;
-            var builder = new StringBuilder();
-            foreach (var parametr in GetEnabled().Where(p => !p.FormatIgnore))
-            {
-                if (ckeckEmpty && parametr.FormatEmpty)
-                {
-                    continue;
-                }
-                parametr.Format(builder, logic);
-                logic = true;
-            }
-            if (formatOrder)
-            {
-                builder.Append(Orders.Format());
-            }
-            return builder.ToString();
-        }
-
-        public string FormatEnabled()
-        {
-            var logic = false;
-            var builder = new StringBuilder();
-            foreach (var parametr in GetEnabled())
-            {
-                parametr.Format(builder, logic);
-                logic = true;
-            }
-            return builder.ToString();
-        }
-
         public IEnumerable<IQueryParameter<T>> GetEnabled()
         {
             return ((IEnumerable<IQueryParameter<T>>)Parameters).Where(p => p.IsEnabled);
@@ -402,7 +372,53 @@ namespace DataWF.Common
             public IQueryParameter<T> Parameter;
         }
 
+        public string Format(bool ckeckEmpty = true, bool formatOrder = false)
+        {
+            var logic = false;
+            var builder = new StringBuilder();
+            foreach (var parametr in GetEnabled().Where(p => !p.FormatIgnore))
+            {
+                if (ckeckEmpty && parametr.FormatEmpty)
+                {
+                    continue;
+                }
+                parametr.Format(builder, logic);
+                logic = true;
+            }
+            if (formatOrder)
+            {
+                return FormatOrders(builder);
+            }
+            return builder.ToString();
+        }
 
+        public string FormatEnabled()
+        {
+            var logic = false;
+            var builder = new StringBuilder();
+            foreach (var parametr in GetEnabled())
+            {
+                parametr.Format(builder, logic);
+                logic = true;
+            }
+            return builder.ToString();
+        }
+
+        public string FormatOrders(StringBuilder builder = null)
+        {
+            builder = builder ?? new StringBuilder();
+            builder.Append(Orders.Format());
+            if (TreeComparer != null)
+            {
+                if (Orders.Count > 0)
+                    builder.Append(',');
+                else
+                    builder.Append(" order by");
+                builder.Append(' ');
+                builder.Append(nameof(IGroup));
+            }
+            return builder.ToString();
+        }
     }
 }
 

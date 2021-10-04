@@ -41,6 +41,7 @@ namespace DataWF.Data
         Type TypeFilter { get; set; }
         string WhereText { get; }
         string QueryText { get; }
+        ITreeComparer TreeComparer { get; set; }
 
         string Format(IDbCommand command = null);
         IDbCommand ToCommand(bool defcolumns = false);
