@@ -27,7 +27,9 @@ namespace DataWF.Data
         DBColumn BaseKey { get; }
         string TargetTableName { get; set; }
         IDBTable TargetTable { get; set; }
-        DBColumn UserLogKey { get; }
+        DBColumn<long?> UserLogKey { get; }
+        DBColumn<long> LogIdKey { get; }
+        DBColumn<DBLogType?> LogTypeKey { get; }
 
         DBColumn GetLogColumn(DBColumn column);
         IEnumerable<DBColumn> GetLogColumns();

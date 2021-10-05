@@ -37038,7 +37038,7 @@
             "format": "int64",
             "nullable": true
           },
-          "DBUserReg": {
+          "UserReg": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/DBUserReg"

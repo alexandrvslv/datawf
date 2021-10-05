@@ -50,32 +50,39 @@ namespace DataWF.Data
             BaseItem = item;
         }
 
+        [XmlIgnore, JsonIgnore]
+        public new IDBTableLog Table
+        {
+            get => (IDBTableLog)base.Table;
+            set => base.Table = value;
+        }
+
         [Column("logid", Keys = DBColumnKeys.Primary)]
         public long LogId
         {
-            get => GetValue((DBColumn<long>)Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue(Table.LogIdKey);
+            set => SetValue(value, Table.LogIdKey);
         }
 
         [Column("logtype", Keys = DBColumnKeys.ElementType)]
         public DBLogType? LogType
         {
-            get => GetValue<DBLogType?>(Table.ElementTypeKey);
-            set => SetValue(value, Table.ElementTypeKey);
+            get => GetValue(Table.LogTypeKey);
+            set => SetValue(value, Table.LogTypeKey);
         }
 
         [Column("userlog_id")]
         public long? UserRegId
         {
-            get => GetValue((DBColumn<long>)LogTable.UserLogKey);
-            set => SetValue(value, LogTable.UserLogKey);
+            get => GetValue(Table.UserLogKey);
+            set => SetValue(value, Table.UserLogKey);
         }
 
         [Reference(nameof(UserRegId))]
-        public DBUserReg DBUserReg
+        public DBUserReg UserReg
         {
-            get => GetReference(LogTable.UserLogKey, ref dbUserReg);
-            set => SetReference(dbUserReg = value, LogTable.UserLogKey);
+            get => GetReference(Table.UserLogKey, ref dbUserReg);
+            set => SetReference(dbUserReg = value, Table.UserLogKey);
         }
 
         [LogColumn("item_type", "item_type_log", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0), DefaultValue(0)]
@@ -103,14 +110,14 @@ namespace DataWF.Data
         [Column("base_id", ColumnType = DBColumnTypes.Code, Keys = DBColumnKeys.System)]
         public string BaseId
         {
-            get => GetValue(LogTable.BaseKey)?.ToString();
+            get => GetValue(Table.BaseKey)?.ToString();
             set { }
         }
 
         [XmlIgnore, JsonIgnore]
         public DBItem BaseItem
         {
-            get => baseItem ??= (BaseTable.PrimaryKey.Load(GetValue(LogTable.BaseKey)).FirstOrDefault() ?? DBItem.EmptyItem);
+            get => baseItem ??= (BaseTable.PrimaryKey.Load(GetValue(Table.BaseKey)).FirstOrDefault() ?? DBItem.EmptyItem);
             set
             {
                 baseItem = value;
@@ -119,7 +126,7 @@ namespace DataWF.Data
                               ? DBLogType.Insert : value.UpdateState.HasFlag(DBUpdateState.Update)
                               ? DBLogType.Update : value.UpdateState.HasFlag(DBUpdateState.Delete)
                               ? DBLogType.Delete : DBLogType.None;
-                foreach (var column in LogTable.GetLogColumns())
+                foreach (var column in Table.GetLogColumns())
                 {
                     column.Copy(value, column.TargetColumn, this);
                 }
@@ -127,7 +134,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public IDBTable BaseTable => LogTable?.TargetTable;
+        public IDBTable BaseTable => Table?.TargetTable;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public IDBTableLog LogTable => (IDBTableLog)Table;
@@ -183,7 +190,7 @@ namespace DataWF.Data
 
         public void Upload(DBItem value)
         {
-            foreach (var logColumn in LogTable.GetLogColumns())
+            foreach (var logColumn in Table.GetLogColumns())
             {
                 logColumn.TargetColumn.Copy(this, logColumn, value);
             }

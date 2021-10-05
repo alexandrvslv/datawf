@@ -61,23 +61,24 @@ namespace DataWF.Module.Flow
             Helper.Log(schema, "Start", StatusType.Information);
             Stopwatch watch = new Stopwatch();
             watch.Start();
-            using (var transaction = new DBTransaction(schema) { ReaderParam = DBLoadParam.CheckDeleted })
+
+            using (var transaction = new DBTransaction(schema))
             {
-                schema.Book.Load();
+                schema.Book.Load(transaction: transaction);
                 //cache groups
                 var groups = schema.GetTable<UserGroup>();
-                groups.Load();
+                groups.Load(transaction: transaction);
                 var users = schema.GetTable<User>();
-                users.Load();
+                users.Load(transaction: transaction);
 
-                schema.Location.Load();
-                schema.Template.Load();
-                schema.TemplateData.Load();
-                schema.Work.Load();
-                schema.Stage.Load();
-                schema.StageParam.Load();
-                schema.GroupPermission.Load();
-                schema.Scheduler.Load();
+                schema.Location.Load(transaction: transaction);
+                schema.Template.Load(transaction: transaction);
+                schema.TemplateData.Load(transaction: transaction);
+                schema.Work.Load(transaction: transaction);
+                schema.Stage.Load(transaction: transaction);
+                schema.StageParam.Load(transaction: transaction);
+                schema.GroupPermission.Load(transaction: transaction);
+                schema.Scheduler.Load(transaction: transaction);
 
                 AccessValue.Provider = new CommonAccessProvider(schema);
 

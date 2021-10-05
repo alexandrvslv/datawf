@@ -84,7 +84,7 @@ namespace DataWF.Module.MessangerGui
                                    MessageExplorer.Schema.Message.Name,
                                    MessageExplorer.Schema.Message.UserIdKey.Name,
                                    GuiEnvironment.User.Id);
-                var items = await MessageExplorer.Schema.MessageAddress.LoadAsync(query, DBLoadParam.Load | DBLoadParam.Synchronize, null, null);
+                var items = await MessageExplorer.Schema.MessageAddress.LoadAsync(query, DBLoadParam.Load | DBLoadParam.NoCache, null, null);
                 items.LastOrDefault();
             }
         }

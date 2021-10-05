@@ -447,6 +447,7 @@ namespace DataWF.WebService.Common
                 }
 
                 var result = logTable.Query(filter, DBLoadParam.Referencing)
+                        .Load()
                         .Where(p => p.Access.GetFlag(AccessType.Read, user)
                                 && !primaryKey.IsEmpty(p)
                                 && (p.UpdateState & DBUpdateState.Insert) == 0)

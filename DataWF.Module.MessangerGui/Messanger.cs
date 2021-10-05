@@ -46,7 +46,7 @@ namespace DataWF.Module.MessangerGui
         public void Sync()
         {
             if (list != null)
-                list.Load(DBLoadParam.Load | DBLoadParam.Synchronize);
+                list.Load(DBLoadParam.Load | DBLoadParam.NoCache);
         }
 
         public async Task SyncAsync()

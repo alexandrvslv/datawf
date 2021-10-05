@@ -34,7 +34,7 @@ namespace DataWF.Data
         private IDBTable targetTable;
         private string targetTableName;
         private DBColumn basekey = DBColumn.EmptyKey;
-        private DBColumn userLogkey = DBColumn.EmptyKey;
+        private DBColumn<long?> userLogkey = DBColumn<long?>.EmptyKey;
 
         public DBTableLog()
         { }
@@ -47,27 +47,25 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn BaseKey
         {
-            get
-            {
-                if (basekey == DBColumn.EmptyKey && TargetTable != null)
-                {
-                    basekey = GetLogColumn(TargetTable.PrimaryKey);
-                }
-                return basekey;
-            }
+            get => basekey == DBColumn.EmptyKey && TargetTable != null ? (basekey = GetLogColumn(TargetTable.PrimaryKey)) : basekey;
         }
 
         [XmlIgnore, JsonIgnore]
-        public DBColumn UserLogKey
+        public DBColumn<long?> UserLogKey
         {
-            get
-            {
-                if (userLogkey == DBColumn.EmptyKey)
-                {
-                    userLogkey = Columns[DBItemLog.UserLogKeyName];
-                }
-                return userLogkey;
-            }
+            get => userLogkey == DBColumn<long?>.EmptyKey ? (userLogkey = (DBColumn<long?>)Columns[DBItemLog.UserLogKeyName]) : userLogkey;
+        }
+
+        [XmlIgnore, JsonIgnore]
+        public DBColumn<long> LogIdKey
+        {
+            get => (DBColumn<long>)PrimaryKey;
+        }
+
+        [XmlIgnore, JsonIgnore]
+        public DBColumn<DBLogType?> LogTypeKey
+        {
+            get => (DBColumn<DBLogType?>)ElementTypeKey;
         }
 
         public string TargetTableName
