@@ -37260,7 +37260,7 @@
             "format": "int32",
             "nullable": true
           },
-          "DBUser": {
+          "User": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/DBUser"
@@ -37289,7 +37289,7 @@
             "format": "int32",
             "nullable": true
           },
-          "DBUser": {
+          "User": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/DBUser"

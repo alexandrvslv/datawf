@@ -142,7 +142,7 @@ namespace DataWF.Data
         public virtual DBUser GetUser()
         {
             var reg = UserRegTable?.LoadById<DBUserReg>(UserRegId);
-            return reg?.DBUser;
+            return reg?.User;
         }
 
         public async Task<DBItem> Redo(DBTransaction transaction)
