@@ -75,8 +75,8 @@ namespace DataWF.Common.Generator
             if (abstractTableAttribute != null)
             {
                 className = $"{TypeSymbol.Name}Log";
-                if (string.Equals(TypeSymbol.Name, "DBItemLog", StringComparison.Ordinal)
-                    || string.Equals(TypeSymbol.BaseType?.Name, "DBItemLog", StringComparison.Ordinal))
+                if (string.Equals(TypeSymbol.Name, Helper.cDBItemLog, StringComparison.Ordinal)
+                    || string.Equals(TypeSymbol.BaseType?.Name, Helper.cDBItemLog, StringComparison.Ordinal))
                 {
                     return null;
                 }
@@ -90,13 +90,13 @@ namespace DataWF.Common.Generator
 
             if (className != null)
             {
-                var tableName = "Table";// $"{className}Table";
+                var tableName = Helper.cTable;// $"{className}Table";
                 var tableTypeName = $"I{className}Table";
-                string baseClassName = "DBItemLog";
+                string baseClassName = Helper.cDBItemLog;
 
-                if (TypeSymbol.BaseType.Name != "DBItem"
-                    && TypeSymbol.BaseType.Name != "Object"
-                    && TypeSymbol.BaseType.Name != "DBGroupItem")
+                if (!string.Equals(TypeSymbol.BaseType.Name, Helper.cDBItem, StringComparison.Ordinal)
+                    && !string.Equals(TypeSymbol.BaseType.Name, Helper.cObject, StringComparison.Ordinal)
+                    && !string.Equals(TypeSymbol.BaseType.Name, Helper.cDBGroupItem, StringComparison.Ordinal))
                 {
                     var baseNamespace = $"{TypeSymbol.BaseType.ContainingNamespace.ToDisplayString()}";
                     baseClassName = $"{TypeSymbol.BaseType.Name}Log";

@@ -51,7 +51,8 @@ namespace DataWF.Common.Generator
                 if (assembly is IAssemblySymbol assemblySymbol)
                 {
                     var moduleInitialize = assemblySymbol.GetAttribute(Attributes.ModuleInitialize);
-                    if (moduleInitialize != null || assemblySymbol.Name == "DataWF.Data")
+                    if (moduleInitialize != null
+                        || string.Equals(assemblySymbol.Name, "DataWF.Data", StringComparison.Ordinal))
                     {
                         foreach (var type in assemblySymbol.GlobalNamespace.GetTypes())
                         {
@@ -68,10 +69,10 @@ namespace DataWF.Common.Generator
 
         private void ProcessController(INamedTypeSymbol type)
         {
-            if (type.BaseType.Name.Equals("DBItemLog", StringComparison.Ordinal)
-                || type.Name.Equals("DBItem", StringComparison.Ordinal)
-                || type.Name.Equals("DBGroupItem", StringComparison.Ordinal)
-                || type.Name.EndsWith("Log", StringComparison.Ordinal)
+            if (type.BaseType.Name.Equals(Helper.cDBItemLog, StringComparison.Ordinal)
+                || type.Name.Equals(Helper.cDBItem, StringComparison.Ordinal)
+                || type.Name.Equals(Helper.cDBGroupItem, StringComparison.Ordinal)
+                || type.Name.EndsWith(Helper.cLog, StringComparison.Ordinal)
                 || generated.Contains(type.Name))
             {
                 return;
@@ -83,14 +84,15 @@ namespace DataWF.Common.Generator
             var controllerClassName = $"{type.Name}Controller";
 
 
-            if (attribute.AttributeClass.Name == "TableAttribute")
+            if (string.Equals(attribute.AttributeClass.Name, Helper.cTableAttribute, StringComparison.Ordinal))
             {
-                var keysArg = attribute.GetNamedValue("Keys");
+                var keysArg = attribute.GetNamedValue(Helper.cKeys);
                 if (!keysArg.IsNull && ((int)keysArg.Value & (1 << 3)) != 0)
                     return;
             }
             string baseName = $"BaseController";
-            if (type.BaseType.Name != "DBItem" && type.BaseType.Name != "DBGroupItem")
+            if (!string.Equals(type.BaseType.Name, Helper.cDBItem, StringComparison.Ordinal)
+                && !string.Equals(type.BaseType.Name, Helper.cDBGroupItem, StringComparison.Ordinal))
             {
                 baseName = $"{type.BaseType.Name}Controller";
             }
@@ -114,7 +116,7 @@ namespace DataWF.Common.Generator
                 return;
             }
             var tableDeclareType = $"{tableType.Name}{(tableIsGeneric ? "<T>" : string.Empty)}";
-            var schemaType = "IDBSchema";
+            var schemaType = Helper.cIDBSchema;
             var keyType = "K";
 
             var source = new StringBuilder($@"//Source generator for {type.Name}
@@ -211,9 +213,9 @@ namespace {Namespace}
 
         private void ProcessControllerMethod(StringBuilder source, IMethodSymbol method, AttributeData controllerMethodAttribute, string keyType, bool inLine)
         {
-            var isHtmlArg = controllerMethodAttribute.NamedArguments.FirstOrDefault(p => p.Key == "ReturnHtml").Value;
+            var isHtmlArg = controllerMethodAttribute.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, "ReturnHtml", StringComparison.Ordinal)).Value;
             var isHtml = !isHtmlArg.IsNull && (bool)isHtmlArg.Value;
-            var isAnonArg = controllerMethodAttribute.NamedArguments.FirstOrDefault(p => p.Key == "Anonymous").Value;
+            var isAnonArg = controllerMethodAttribute.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, "Anonymous", StringComparison.Ordinal)).Value;
             var isAnon = !isAnonArg.IsNull && (bool)isAnonArg.Value;
             var isVoid = method.ReturnsVoid;
             var returnResultType = method.ReturnType;
@@ -242,7 +244,7 @@ namespace {Namespace}
             }
 
             var parameters = GetParametersInfo(method);
-            var isTransact = method.Parameters.Any(p => p.Type.Name == "DBTransaction");
+            var isTransact = method.Parameters.Any(p => string.Equals(p.Type.Name, Helper.cDBTransaction, StringComparison.Ordinal));
 
             source.Append($@"
         [");
@@ -296,7 +298,7 @@ namespace {Namespace}
                     source.Append($@"
                     var {parameter.ValueName} = Schema.GetTable<{parameter.Info.Type}>().LoadById({parameter.Info.Name}, DBLoadParam.Load | DBLoadParam.Referencing);");
                 }
-                else if (parameter.ValueName == prStream)
+                else if (string.Equals(parameter.ValueName, prStream, StringComparison.Ordinal))
                 {
                     if (isAsync)
                     {
@@ -316,10 +318,10 @@ namespace {Namespace}
                 parametersBuilder.Length -= 2;
             }
 
-            if (returnResultType.IsBaseType("Stream"))
+            if (returnResultType.IsBaseType(Helper.cStream))
             {
                 source.Append($@"
-                    var exportStream = {(isAsync ? "(await " : "")}{(!inLine ? "Table" : " idValue")}.{method.Name}({parametersBuilder}){(isAsync ? ")" : "")} as FileStream;");
+                    var exportStream = {(isAsync ? "(await " : "")}{(!inLine ? Helper.cTable : " idValue")}.{method.Name}({parametersBuilder}){(isAsync ? ")" : "")} as FileStream;");
                 if (isTransact)
                 {
                     source.Append($@"
@@ -408,15 +410,15 @@ namespace {Namespace}
             var post = false;
             foreach (var parameter in parametersList)
             {
-                if (parameter.Info.Type.Name == "DBTransaction")
+                if (string.Equals(parameter.Info.Type.Name, Helper.cDBTransaction, StringComparison.Ordinal))
                     continue;
-                if (parameter.ValueName == prStream)
+                if (string.Equals(parameter.ValueName, prStream, StringComparison.Ordinal))
                 {
                     source.Append("DisableFormValueModelBinding, ");
                     post = true;
                     continue;
                 }
-                if (parameter.Type.Name != "string"
+                if (!string.Equals(parameter.Type.Name, Helper.cString, StringComparison.Ordinal)
                     && !parameter.Type.IsValueType)
                 {
                     post = true;
@@ -445,8 +447,5 @@ namespace {Namespace}
             }
             return parametersInfo;
         }
-
-
-
     }
 }

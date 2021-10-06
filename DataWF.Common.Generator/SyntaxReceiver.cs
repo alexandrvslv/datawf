@@ -11,6 +11,7 @@ namespace DataWF.Common.Generator
     /// </summary>
     internal class SyntaxReceiver : ISyntaxReceiver
     {
+
         private readonly GeneratorInitializationContext context;
 
         public SyntaxReceiver(ref GeneratorInitializationContext context)
@@ -41,37 +42,28 @@ namespace DataWF.Common.Generator
                     {
                         if (context.CancellationToken.IsCancellationRequested)
                             return;
-                        if (string.Equals(attribute, "InvokerGenerator", StringComparison.Ordinal)
-                            || string.Equals(attribute, "InvokerGeneratorAttribute", StringComparison.Ordinal))
+                        if (attribute.StartsWith(Helper.cInvokerGenerator, StringComparison.Ordinal))
                         {
                             IvokerCandidates.Add(classDeclarationSyntax);
                         }
 
-                        if (string.Equals(attribute, "Table", StringComparison.Ordinal)
-                            || string.Equals(attribute, "TableAttribute", StringComparison.Ordinal)
-                            || string.Equals(attribute, "AbstractTable", StringComparison.Ordinal)
-                            || string.Equals(attribute, "AbstractTableAttribute", StringComparison.Ordinal)
-                            || string.Equals(attribute, "VirtualTable", StringComparison.Ordinal)
-                            || string.Equals(attribute, "VirtualTableAttribute", StringComparison.Ordinal)
-                            || string.Equals(attribute, "LogTable", StringComparison.Ordinal)
-                            || string.Equals(attribute, "LogTableAttribute", StringComparison.Ordinal)
-                            )
+                        if (attribute.StartsWith(Helper.cTable, StringComparison.Ordinal)
+                            || attribute.StartsWith(Helper.cAbstractTable, StringComparison.Ordinal)
+                            || attribute.StartsWith(Helper.cVirtualTable, StringComparison.Ordinal)
+                            || attribute.StartsWith(Helper.cLogTable, StringComparison.Ordinal))
                         {
                             TableCandidates.Add(classDeclarationSyntax);
                         }
-                        else if (string.Equals(attribute, "Schema", StringComparison.Ordinal)
-                            || string.Equals(attribute, "SchemaAttribute", StringComparison.Ordinal)
-                        )
+                        else if (attribute.Equals(Helper.cSchema, StringComparison.Ordinal)
+                            || attribute.Equals(Helper.cSchemaAttribute, StringComparison.Ordinal))
                         {
                             SchemaCandidates.Add(classDeclarationSyntax);
                         }
-                        else if (string.Equals(attribute, "ClientProvider", StringComparison.Ordinal)
-                            || string.Equals(attribute, "ClientProviderAttribute", StringComparison.Ordinal))
+                        else if (attribute.StartsWith(Helper.cClientProvider, StringComparison.Ordinal))
                         {
                             ClientProviderCandidate.Add(classDeclarationSyntax);
                         }
-                        else if (string.Equals(attribute, "SchemaController", StringComparison.Ordinal)
-                           || string.Equals(attribute, "SchemaControllerAttribute", StringComparison.Ordinal))
+                        else if (attribute.StartsWith(Helper.cSchemaController, StringComparison.Ordinal))
                         {
                             SchemaControllerCandidate.Add(classDeclarationSyntax);
                         }
@@ -80,7 +72,7 @@ namespace DataWF.Common.Generator
             }
             catch (Exception ex)
             {
-                SyntaxHelper.LaunchDebugger();
+                Helper.LaunchDebugger();
                 Console.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
             }
         }

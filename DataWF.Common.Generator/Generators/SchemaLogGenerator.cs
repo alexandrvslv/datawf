@@ -54,19 +54,21 @@ namespace DataWF.Common.Generator
             var schemaEntries = TypeSymbol.GetAttributes(Attributes.SchemaEntry)
                                 .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
                                 .Where(p => p != null && !p.IsAbstract);
-            var baseInterface = "IDBSchemaLog";
-            if (TypeSymbol.BaseType != null && TypeSymbol.BaseType.Name != "DBSchema")
+            var baseInterface = Helper.cIDBSchemaLog;
+            if (TypeSymbol.BaseType != null
+                && !string.Equals(TypeSymbol.BaseType.Name, Helper.cDBSchema, StringComparison.Ordinal))
             {
                 baseInterface = $"{TypeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{TypeSymbol.BaseType.Name}Log";
             }
 
-            var baseClass = "DBSchemaLog";
-            if (TypeSymbol.BaseType != null && TypeSymbol.BaseType.Name != "DBSchema")
+            var baseClass = Helper.cDBSchemaLog;
+            if (TypeSymbol.BaseType != null
+                && !string.Equals(TypeSymbol.BaseType.Name, Helper.cDBSchema, StringComparison.Ordinal))
             {
                 baseClass = $"{TypeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.{TypeSymbol.BaseType.Name}Log";
             }
             var namespaces = schemaEntries.Select(p => p.ContainingNamespace.ToDisplayString())
-                .Union(new[] { "System", "System.Text.Json.Serialization", "DataWF.Data" })
+                .Union(new[] { Helper.cSystem, "System.Text.Json.Serialization", "DataWF.Data" })
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(p => p, StringComparer.Ordinal);
 

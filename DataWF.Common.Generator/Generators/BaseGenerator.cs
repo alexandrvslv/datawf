@@ -66,13 +66,13 @@ namespace DataWF.Common.Generator
                 var result = Process();
                 if (result)
                 {
-                    try { CompilationContext.Context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDSuccessGeneration, Location.None, GetType().Name, TypeSymbol.Name)); } catch { }
+                    try { CompilationContext.Context.ReportDiagnostic(Diagnostic.Create(Helper.DDSuccessGeneration, Location.None, GetType().Name, TypeSymbol.Name)); } catch { }
                 }
                 return result;
             }
             catch (Exception ex)
             {
-                try { CompilationContext.Context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDFailGeneration, Location.None, GetType().Name, TypeSymbol.Name, ex.Message, ex.StackTrace)); } catch { }
+                try { CompilationContext.Context.ReportDiagnostic(Diagnostic.Create(Helper.DDFailGeneration, Location.None, GetType().Name, TypeSymbol.Name, ex.Message, ex.StackTrace)); } catch { }
                 return false;
             }
         }
@@ -93,7 +93,7 @@ namespace DataWF.Common.Generator
             }
             catch (Exception ex)
             {
-                try { CompilationContext.Context.ReportDiagnostic(Diagnostic.Create(SyntaxHelper.DDFailGeneration, Location.None, GetType().Name, syntax.Identifier.ValueText, ex.Message, ex.StackTrace)); } catch { }
+                try { CompilationContext.Context.ReportDiagnostic(Diagnostic.Create(Helper.DDFailGeneration, Location.None, GetType().Name, syntax.Identifier.ValueText, ex.Message, ex.StackTrace)); } catch { }
                 return null;
             }
         }

@@ -58,13 +58,14 @@ namespace DataWF.Common.Generator
                                 .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
                                 .Where(p => p != null && !p.IsAbstract);
             allSchemaEntries = GetAllSchemaEntries();
-            baseInterface = "IDBSchema";
-            if (TypeSymbol.BaseType != null && TypeSymbol.BaseType.Name != "DBSchema")
+            baseInterface = Helper.cIDBSchema;
+            if (TypeSymbol.BaseType != null
+                && !string.Equals(TypeSymbol.BaseType.Name, Helper.cDBSchema, StringComparison.Ordinal))
             {
                 baseInterface = $"{TypeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.I{TypeSymbol.BaseType.Name}";
             }
             var namespaces = schemaEntries.Select(p => p.ContainingNamespace.ToDisplayString())
-                .Union(new[] { "System", "System.Text.Json.Serialization", "DataWF.Data" })
+                .Union(new[] { Helper.cSystem, "System.Text.Json.Serialization", "DataWF.Data" })
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(p => p, StringComparer.Ordinal);
 

@@ -10,8 +10,51 @@ using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace DataWF.Common.Generator
 {
-    public static class SyntaxHelper
+    public static class Helper
     {
+        public const string cCodeKey = "CodeKey";
+        public const string cFileNameKey = "FileNameKey";
+        public const string cFileLastWriteKey = "FileLastWriteKey";
+        public const string cDBSchema = "DBSchema";
+        public const string cDBSchemaLog = "DBSchemaLog";
+        public const string cIDBSchema = "IDBSchema";
+        public const string cIDBSchemaLog = "IDBSchemaLog";
+        public const string cDBTable = "DBTable";
+        public const string cIDBTable = "IDBTable";
+        public const string cDBTableLog = "DBTableLog";
+        public const string cIDBTableLog = "IDBTableLog";
+        public const string cDBItem = "DBItem";
+        public const string cDBItemLog = "DBItemLog";
+        public const string cDBGroupItem = "DBGroupItem";
+        public const string cDBTransaction = "DBTransaction";
+        public const string cType = "Type";
+        public const string cObject = "Object";
+        public const string cSystem = "System";
+        public const string cStream = "Stream";
+        public const string cString = "string";
+        public const string cLog = "Log";
+        public const string cKeys = "Keys";
+        public const string cSchema = "Schema";
+        public const string cSchemaAttribute = "SchemaAttribute";
+        public const string cTable = "Table";
+        public const string cTableAttribute = "TableAttribute";
+        public const string cLogTable = "LogTable";
+        public const string cLogTableAttribute = "LogTableAttribute";
+        public const string cAbstractTable = "AbstractTable";
+        public const string cAbstractTableAttribute = "AbstractTableAttribute";
+        public const string cVirtualTable = "VirtualTable";
+        public const string cVirtualTableAttribute = "VirtualTableAttribute";
+        public const string cColumn = "Column";
+        public const string cColumnAttribute = "ColumnAttribute";
+        public const string cReference = "Reference";
+        public const string cReferenceAttribute = "ReferenceAttribute";
+        public const string cInvokerGenerator = "InvokerGenerator";
+        public const string cInvokerGeneratorAttribute = "InvokerGeneratorAttribute";
+        public const string cClientProvider = "ClientProvider";
+        public const string cClientProviderAttribute = "ClientProviderAttribute";
+        public const string cSchemaController = "SchemaController";
+        public const string cSchemaControllerAttribute = "SchemaControllerAttribute";
+
         public static readonly DiagnosticDescriptor DDCommonLibrary = new DiagnosticDescriptor("DWFG001",
             "DataWF.Common references not found",
             "DataWF.Common references not found",
@@ -34,11 +77,30 @@ namespace DataWF.Common.Generator
             true);
 
         private static readonly Dictionary<Assembly, Dictionary<string, Type>> cacheAssemblyTypes = new Dictionary<Assembly, Dictionary<string, Type>>();
-        
+
         public static void LaunchDebugger()
         {
             if (!System.Diagnostics.Debugger.IsAttached)
                 System.Diagnostics.Debugger.Launch();
+        }
+
+        public static IEnumerable<ReadOnlyMemory<char>> SpanSplit(this string value, char splitter)
+        {
+            var word = ReadOnlyMemory<char>.Empty;
+            var startIndex = 0;
+            for (int i = 0; i < value.Length; i++)
+            {
+                char c = value[i];
+                if (c == splitter)
+                {
+                    if (word.Length > 0)
+                        yield return word;
+                    startIndex = i + 1;
+                }
+                word = value.AsMemory(startIndex, (i - startIndex) + 1);
+            }
+            if (word.Length > 0)
+                yield return word;
         }
 
         //https://stackoverflow.com/a/24768641
@@ -73,7 +135,7 @@ namespace DataWF.Common.Generator
             return new string(charArray.ToArray());
         }
 
-        
+
 
         public static Type ParseType(string value, Assembly assembly)
         {
@@ -272,7 +334,7 @@ namespace DataWF.Common.Generator
         {
             if (!usings.TryGetValue(usingName, out var syntax))
             {
-                usings.Add(usingName, SyntaxHelper.CreateUsingDirective(usingName));
+                usings.Add(usingName, Helper.CreateUsingDirective(usingName));
             }
         }
 

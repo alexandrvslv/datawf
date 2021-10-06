@@ -9,22 +9,9 @@ using System.Diagnostics;
 
 namespace DataWF.Common.Generator
 {
-    internal enum TableCodeGeneratorMode
-    {
-        Default,
-        Virtual,
-        Abstract,
-        Log
-    }
     internal class TableGenerator : BaseTableGenerator
     {
-        private const string constTable = "Table";
-        private const string constDBLogItem = "DBItemLog";
-        private const string constDBTable = "DBTable";
-        private const string constCodeKey = "CodeKey";
-        private const string constFileNameKey = "FileNameKey";
-        private const string constFileLastWriteKey = "FileLastWriteKey";
-        private const string constIDBTable = "IDBTable";
+
 
         protected string GetTableClassName(INamedTypeSymbol classSymbol, out TableCodeGeneratorMode mode)
         {
@@ -33,14 +20,14 @@ namespace DataWF.Common.Generator
             var tableAttribyte = GetDefaultTableAttribute(classSymbol);
             if (tableAttribyte != null)
             {
-                var typeName = tableAttribyte.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, "Type", StringComparison.Ordinal)).Value;
+                var typeName = tableAttribyte.NamedArguments.FirstOrDefault(p => string.Equals(p.Key, Helper.cType, StringComparison.Ordinal)).Value;
                 if (!typeName.IsNull && typeName.Value is ITypeSymbol typeSymbol)
                 {
                     className = typeSymbol.Name;
                 }
                 else
                 {
-                    className = classSymbol.Name + constTable;
+                    className = classSymbol.Name + Helper.cTable;
                 }
             }
 
@@ -48,21 +35,21 @@ namespace DataWF.Common.Generator
             if (itemTypeAttribute != null)
             {
                 mode = TableCodeGeneratorMode.Virtual;
-                className = classSymbol.Name + constTable;
+                className = classSymbol.Name + Helper.cTable;
             }
 
             var logTableAttribute = classSymbol.GetAttribute(Attributes.LogTable);
             if (logTableAttribute != null)
             {
                 mode = TableCodeGeneratorMode.Log;
-                className = classSymbol.Name + constTable;
+                className = classSymbol.Name + Helper.cTable;
             }
 
             var abstractAttribute = classSymbol.GetAttribute(Attributes.AbstractTable);
             if (abstractAttribute != null)
             {
                 mode = TableCodeGeneratorMode.Abstract;
-                className = classSymbol.Name + constTable;
+                className = classSymbol.Name + Helper.cTable;
             }
 
             return className;
@@ -80,9 +67,9 @@ namespace DataWF.Common.Generator
 
         protected static bool IsNewProperty(string keyPropertyName)
         {
-            return string.Equals(keyPropertyName, constCodeKey, StringComparison.Ordinal)
-                || string.Equals(keyPropertyName, constFileNameKey, StringComparison.Ordinal)
-                || string.Equals(keyPropertyName, constFileLastWriteKey, StringComparison.Ordinal);
+            return string.Equals(keyPropertyName, Helper.cCodeKey, StringComparison.Ordinal)
+                || string.Equals(keyPropertyName, Helper.cFileNameKey, StringComparison.Ordinal)
+                || string.Equals(keyPropertyName, Helper.cFileLastWriteKey, StringComparison.Ordinal);
         }
 
         private string baseClassName;
@@ -137,8 +124,8 @@ namespace DataWF.Common.Generator
             interfaceName = "I" + className;
             isLogType = mode == TableCodeGeneratorMode.Log || TypeSymbol.Name.EndsWith("Log", StringComparison.Ordinal);
 
-            baseClassName = constDBTable;
-            baseInterfaceName = constIDBTable;
+            baseClassName = Helper.cDBTable;
+            baseInterfaceName = Helper.cIDBTable;
 
             namespaceName = TypeSymbol.ContainingNamespace.ToDisplayString();
 
@@ -146,10 +133,10 @@ namespace DataWF.Common.Generator
             foreach (var type in TypeSymbol.ContainingNamespace.GetTypeMembers())
             {
                 if (type.TypeKind == TypeKind.Class
-                    && type.AllInterfaces.Any(p => p.Name == "IDBSchema"))
+                    && type.AllInterfaces.Any(p => string.Equals(p.Name, Helper.cIDBSchema, StringComparison.Ordinal)))
                 {
-                    var isLogSchema = type.AllInterfaces.Any(p => p.Name == "IDBSchemaLog");
-                    if ((isLogSchema == isLogType || isLogType) && type.Name != "DBSchema")
+                    var isLogSchema = type.AllInterfaces.Any(p => string.Equals(p.Name, Helper.cIDBSchemaLog, StringComparison.Ordinal));
+                    if ((isLogSchema == isLogType || isLogType) && !string.Equals(type.Name, Helper.cDBSchema, StringComparison.Ordinal))
                     {
                         containerSchema = $"{type.Name}{(isLogType && !isLogSchema ? "Log" : "")}";
                         break;
@@ -166,20 +153,20 @@ namespace DataWF.Common.Generator
                 whereName = $"where T: {TypeSymbol.Name}";
             }
 
-            if (TypeSymbol.BaseType.Name == constDBLogItem)
+            if (string.Equals(TypeSymbol.BaseType.Name, Helper.cDBItemLog, StringComparison.Ordinal))
             {
-                baseClassName = "DBTableLog";
-                baseInterfaceName = "IDBTableLog";
-            }            
+                baseClassName = Helper.cDBTableLog;
+                baseInterfaceName = Helper.cIDBTableLog;
+            }
             else //&& classSymbol.BaseType.Name != "DBGroupItem"
-            if (TypeSymbol.BaseType.Name != "DBItem"
-                && TypeSymbol.BaseType.Name != "Object")
+            if (!string.Equals(TypeSymbol.BaseType.Name, Helper.cDBItem, StringComparison.Ordinal)
+                && !string.Equals(TypeSymbol.BaseType.Name, Helper.cObject, StringComparison.Ordinal))
             {
                 var baseNamespace = TypeSymbol.BaseType.ContainingNamespace.ToDisplayString();
                 if (baseNamespace == namespaceName
                     || baseNamespace == "<global namespace>")
                 {
-                    baseClassName = TypeSymbol.BaseType.Name + constTable;
+                    baseClassName = TypeSymbol.BaseType.Name + Helper.cTable;
                     baseInterfaceName = "I" + baseClassName;
                 }
                 else
@@ -269,7 +256,7 @@ namespace {namespaceName}
         private void ProcessClassPartial()
         {
             var baseTypeDeclaration = string.Empty;
-            if (TypeSymbol.BaseType?.Name == "Object")
+            if (string.Equals(TypeSymbol.BaseType?.Name, Helper.cObject, StringComparison.Ordinal))
                 baseTypeDeclaration = $": DBItem";
             source.Append($@"
     public partial class {TypeSymbol.Name}{baseTypeDeclaration}

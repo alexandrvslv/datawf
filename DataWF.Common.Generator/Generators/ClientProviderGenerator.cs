@@ -16,7 +16,12 @@ namespace DataWF.Common.Generator
 {
     internal class ClientProviderGenerator : BaseGenerator
     {
-        private readonly HashSet<string> VirtualOperations = new HashSet<string>
+        private const string cList = "List";
+        private const string cApi = "api";
+        private const string cXId = "x-id";
+        private const string cXType = "x-type";
+        private const string c200 = "200";
+        private readonly HashSet<string> VirtualOperations = new HashSet<string>(StringComparer.Ordinal)
         {
             "Get",
             "Put",
@@ -106,7 +111,7 @@ namespace DataWF.Common.Generator
         private void LoadDocument()
         {
             DocumentSource = Attribute.ConstructorArguments.FirstOrDefault().Value.ToString();
-            if (!DocumentSource.StartsWith("http"))
+            if (!DocumentSource.StartsWith("http", StringComparison.Ordinal))
             {
                 var mainSyntaxTree = Compilation.SyntaxTrees
                           .First(x => x.HasCompilationUnitRoot);
@@ -115,9 +120,10 @@ namespace DataWF.Common.Generator
                 DocumentSource = Path.GetFullPath(Path.Combine(projectDirectory, DocumentSource));
             }
             var url = new Uri(DocumentSource);
-            if (url.Scheme == "http" || url.Scheme == "https")
+            if (string.Equals(url.Scheme, "http", StringComparison.Ordinal)
+                || string.Equals(url.Scheme, "https", StringComparison.Ordinal))
                 document = OpenApiDocument.FromUrlAsync(url.OriginalString).GetAwaiter().GetResult();
-            else if (url.Scheme == "file")
+            else if (string.Equals(url.Scheme, "file", StringComparison.Ordinal))
                 document = OpenApiDocument.FromFileAsync(url.LocalPath).GetAwaiter().GetResult();
         }
 
@@ -225,7 +231,7 @@ namespace DataWF.Common.Generator
 
             if (cache.Count > 0)
             {
-                SyntaxHelper.AddUsing("System.Collections", usings);
+                Helper.AddUsing("System.Collections", usings);
 
                 GenClientRemoveOverrideBody(clientSource, clientName, idKey, typeKey, typeId, cache);
 
@@ -305,7 +311,8 @@ namespace DataWF.Common.Generator
             var operationName = GetOperationName(descriptor, out var clientName);
             var actualName = operationName;
             var baseType = GetClientBaseType(clientName, usings, out _, out _, out _);
-            var isOverride = baseType != "WebClientBase" && VirtualOperations.Contains(actualName);
+            var isOverride = !string.Equals(baseType, "WebClientBase", StringComparison.Ordinal)
+                            && VirtualOperations.Contains(actualName);
             var returnType = GetReturningTypeCheck(descriptor, operationName, usings);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
 
@@ -325,7 +332,7 @@ namespace DataWF.Common.Generator
             {
                 if (parameter.Kind == OpenApiParameterKind.Header)
                     continue;
-                source.Append($"{GetTypeString(parameter, usings, "List")} {parameter.Name}, ");
+                source.Append($"{GetTypeString(parameter, usings, cList)} {parameter.Name}, ");
             }
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             var returnType = GetReturningType(descriptor, usings);
@@ -342,7 +349,7 @@ namespace DataWF.Common.Generator
             var method = descriptor.Method.ToString().ToUpperInvariant();
             var responceSchema = (JsonSchema)null;
             var mediatype = "application/json";
-            if (descriptor.Operation.Responses.TryGetValue("200", out var responce))
+            if (descriptor.Operation.Responses.TryGetValue(c200, out var responce))
             {
                 responceSchema = responce.Schema;
                 mediatype = responce.Content.Keys.FirstOrDefault() ?? "application/json";
@@ -420,11 +427,12 @@ namespace DataWF.Common.Generator
                 return decriptor.Operation.Tags[0];
             else
             {
-                foreach (var step in decriptor.Path.Split('/'))
+                foreach (var step in decriptor.Path.SpanSplit('/'))
                 {
-                    if (step == "api" || step.StartsWith("{"))
+                    if (MemoryExtensions.Equals(step.Span, cApi.AsSpan(), StringComparison.Ordinal)
+                        || (step.Length > 0 && step.Span[0] == '{'))
                         continue;
-                    return step;
+                    return step.Span.ToString();
                 }
                 return decriptor.Path.Replace("/", "").Replace("{", "").Replace("}", "");
             }
@@ -433,19 +441,18 @@ namespace DataWF.Common.Generator
         public string GetOperationName(OpenApiOperationDescription descriptor, out string clientName)
         {
             clientName = GetClientName(descriptor);
-            var name = new StringBuilder();
-            foreach (var step in descriptor.Path.Split('/'))
+            string name = string.Empty;
+            foreach (var step in descriptor.Path.SpanSplit('/'))
             {
-                if (step == "api"
-                    || step == clientName
-                    || step.StartsWith("{"))
+                if (MemoryExtensions.Equals(step.Span, cApi.AsSpan(), StringComparison.Ordinal)
+                    || MemoryExtensions.Equals(step.Span, clientName.AsSpan(), StringComparison.Ordinal)
+                    || (step.Length > 0 && step.Span[0] == '{'))
                     continue;
-                name.Append(step);
+                name = step.Span.ToString();
             }
             if (name.Length == 0)
-                name.Append(descriptor.Method.ToString());
-            name[0] = char.ToUpperInvariant(name[0]);
-            return name.ToString();
+                name = descriptor.Method.ToInitcap();
+            return name;
         }
 
         private HashSet<RefField> GetClientReferences(JsonSchema clientSchema)
@@ -483,7 +490,7 @@ namespace DataWF.Common.Generator
                 typeKey = GetTypeKey(schema);
                 typeId = GetTypeId(schema);
 
-                return $"{(loggedTypeName != null ? "Logged" : "")}WebClient<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, usings, "List"))}{(logged != null ? $", {loggedTypeName}" : "")}>";
+                return $"{(loggedTypeName != null ? "Logged" : "")}WebClient<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, usings, cList))}{(logged != null ? $", {loggedTypeName}" : "")}>";
             }
             return $"WebClientBase";
         }
@@ -507,7 +514,7 @@ namespace DataWF.Common.Generator
 
         private JsonSchemaProperty GetPrimaryKey(JsonSchema schema, bool inherit = true)
         {
-            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-id", out var propertyName))
+            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue(cXId, out var propertyName))
             {
                 return schema.Properties[propertyName.ToString()];
             }
@@ -515,7 +522,7 @@ namespace DataWF.Common.Generator
             {
                 foreach (var baseClass in schema.AllInheritedSchemas)
                 {
-                    if (baseClass.ExtensionData != null && baseClass.ExtensionData.TryGetValue("x-id", out propertyName))
+                    if (baseClass.ExtensionData != null && baseClass.ExtensionData.TryGetValue(cXId, out propertyName))
                     {
                         return baseClass.Properties[propertyName.ToString()];
                     }
@@ -523,7 +530,7 @@ namespace DataWF.Common.Generator
                 var parentSchema = schema.ParentSchema;
                 while (parentSchema != null)
                 {
-                    if (parentSchema.ExtensionData != null && parentSchema.ExtensionData.TryGetValue("x-id", out propertyName))
+                    if (parentSchema.ExtensionData != null && parentSchema.ExtensionData.TryGetValue(cXId, out propertyName))
                     {
                         return parentSchema.Properties[propertyName.ToString()];
                     }
@@ -537,7 +544,7 @@ namespace DataWF.Common.Generator
         private JsonSchemaProperty GetReferenceProperty(JsonSchema schema, string name, bool inherit = true)
         {
             var find = schema.Properties.Values.FirstOrDefault(p => p.ExtensionData != null
-                 && p.ExtensionData.TryGetValue("x-id", out var propertyName)
+                 && p.ExtensionData.TryGetValue(cXId, out var propertyName)
                  && string.Equals(propertyName.ToString(), name, StringComparison.Ordinal));
             if (find != null)
             {
@@ -548,7 +555,7 @@ namespace DataWF.Common.Generator
                 foreach (var baseClass in schema.AllInheritedSchemas)
                 {
                     find = baseClass.Properties.Values.FirstOrDefault(p => p.ExtensionData != null
-                 && p.ExtensionData.TryGetValue("x-id", out var propertyName)
+                 && p.ExtensionData.TryGetValue(cXId, out var propertyName)
                  && propertyName.Equals(name));
                     if (find != null)
                     {
@@ -561,7 +568,7 @@ namespace DataWF.Common.Generator
 
         private JsonSchemaProperty GetReferenceIdProperty(JsonSchemaProperty property, bool inherit = true)
         {
-            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var propertyName))
+            if (property.ExtensionData != null && property.ExtensionData.TryGetValue(cXId, out var propertyName))
             {
                 return GetProperty(property.ParentSchema, (string)propertyName);
             }
@@ -570,13 +577,13 @@ namespace DataWF.Common.Generator
 
         private JsonSchemaProperty GetTypeKey(JsonSchema schema)
         {
-            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-type", out var propertyName))
+            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue(cXType, out var propertyName))
             {
                 return schema.Properties[propertyName.ToString()];
             }
 
             foreach (var baseClass in schema.AllInheritedSchemas)
-                if (baseClass.ExtensionData != null && baseClass.ExtensionData.TryGetValue("x-type", out propertyName))
+                if (baseClass.ExtensionData != null && baseClass.ExtensionData.TryGetValue(cXType, out propertyName))
                 {
                     return baseClass.Properties[propertyName.ToString()];
                 }
@@ -607,16 +614,16 @@ namespace DataWF.Common.Generator
 
         private JsonSchema GetReturningTypeSchema(OpenApiOperationDescription descriptor)
         {
-            return descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce != null
+            return descriptor.Operation.Responses.TryGetValue(c200, out var responce) && responce != null
                 ? responce.Schema : null;
         }
 
         private string GetReturningType(OpenApiOperationDescription descriptor, HashSet<string> usings)
         {
-            var returnType = "string";
-            if (descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce != null)
+            var returnType = Helper.cString;
+            if (descriptor.Operation.Responses.TryGetValue(c200, out var responce) && responce != null)
             {
-                returnType = $"{GetTypeString(responce.Schema, usings, "List")}";
+                returnType = $"{GetTypeString(responce.Schema, usings, cList)}";
             }
             return returnType;
         }
@@ -687,7 +694,7 @@ namespace DataWF.Common.Generator
                         }
                         catch (Exception ex)
                         {
-                            SyntaxHelper.ConsoleWarning($"Can't Check Type {definitionName} on {reference}. {ex.GetType().Name} {ex.Message}");
+                            Helper.ConsoleWarning($"Can't Check Type {definitionName} on {reference}. {ex.GetType().Name} {ex.Message}");
                         }
                     }
                 }
@@ -710,7 +717,7 @@ namespace DataWF.Common.Generator
 
         private StringBuilder GenDefinitionEnum(JsonSchema schema, HashSet<string> usings)
         {
-            SyntaxHelper.AddUsing("System.Runtime.Serialization", usings);
+            Helper.AddUsing("System.Runtime.Serialization", usings);
 
             source.Clear();
             source.Append($@"
@@ -769,7 +776,7 @@ namespace DataWF.Common.Generator
                 var type = GetReferenceType(name, schema.InheritedSchema);
                 if (type != null)
                 {
-                    SyntaxHelper.AddUsing(type, usings);
+                    Helper.AddUsing(type, usings);
                 }
                 yield return name;
             }
@@ -793,7 +800,7 @@ namespace DataWF.Common.Generator
             var typeId = GetTypeId(schema);
             var definition = GetDefinitionName(schema);
             var inheritedName = GetTypeString(schema.InheritedSchema, usings);
-            if (inheritedName == "string"
+            if (inheritedName == Helper.cString
                 //|| inheritedName == "DefaultItem"
                 || inheritedName == "SynchronizedItem")
             {
@@ -824,7 +831,7 @@ namespace DataWF.Common.Generator
             if (GetPrimaryKey(schema, false) != null)
             {
                 var converter = "";
-                var idType = GetTypeString(idKey, usings, "List");
+                var idType = GetTypeString(idKey, usings, cList);
                 if (idType == "long")
                     converter = "Convert.ToInt64(value)";
                 else if (idType == "int")
@@ -835,7 +842,7 @@ namespace DataWF.Common.Generator
                     converter = "Convert.ToDecimal(value)";
                 else
                     converter = $"({idType})value";
-                SyntaxHelper.AddUsing("System.Text.Json.Serialization", usings);
+                Helper.AddUsing("System.Text.Json.Serialization", usings);
                 source.Append($@"
         [JsonIgnore]    
         public object PrimaryKey 
@@ -965,7 +972,7 @@ namespace DataWF.Common.Generator
                             SF.Attribute(
                                 SF.IdentifierName("CallerMemberName")))) }),
                 modifiers: SF.TokenList(),
-                type: SF.ParseTypeName("string"),
+                type: SF.ParseTypeName(Helper.cString),
                 identifier: SF.Identifier("propertyName"),
                 @default: @default);
         }
@@ -993,12 +1000,12 @@ namespace DataWF.Common.Generator
             }
             else if (property == typeKey)
             {
-                SyntaxHelper.AddUsing("System.ComponentModel.DataAnnotations", usings);
+                Helper.AddUsing("System.ComponentModel.DataAnnotations", usings);
                 yield return $"Display(Order = -3)";
             }
             else if (property == idKey)
             {
-                SyntaxHelper.AddUsing("System.ComponentModel.DataAnnotations", usings);
+                Helper.AddUsing("System.ComponentModel.DataAnnotations", usings);
                 yield return $"Display(Order = -2)";
             }
             else if ((property.Type == JsonObjectType.Object
@@ -1033,7 +1040,7 @@ namespace DataWF.Common.Generator
 
             if (property.IsRequired)
             {
-                SyntaxHelper.AddUsing("System.ComponentModel.DataAnnotations", usings);
+                Helper.AddUsing("System.ComponentModel.DataAnnotations", usings);
                 if (property == idKey || property == typeKey)
                 {
                     yield return $"Required(AllowEmptyStrings = true)";
@@ -1046,7 +1053,7 @@ namespace DataWF.Common.Generator
 
             if (property.MaxLength != null)
             {
-                SyntaxHelper.AddUsing("System.ComponentModel.DataAnnotations", usings);
+                Helper.AddUsing("System.ComponentModel.DataAnnotations", usings);
                 yield return $"MaxLength({property.MaxLength}, ErrorMessage = \"{propertyName} only max {property.MaxLength} letters allowed.\")";
             }
             var idProperty = GetReferenceIdProperty(property);
@@ -1094,7 +1101,7 @@ namespace DataWF.Common.Generator
             if (!isOverride)
             {
                 var type = GetTypeString(property, usings, "SelectableList");
-                if (type.Equals("string", StringComparison.Ordinal))
+                if (type.Equals(Helper.cString, StringComparison.Ordinal))
                 {
                     source.Append($@"
                 if (string.Equals({GetFieldName(property)}, value, StringComparison.Ordinal)) return;");
@@ -1107,7 +1114,7 @@ namespace DataWF.Common.Generator
                 source.Append($@"
                 var temp = {GetFieldName(property)};
                 {GetFieldName(property)} = value;");
-                if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var refPropertyName))
+                if (property.ExtensionData != null && property.ExtensionData.TryGetValue(cXId, out var refPropertyName))
                 {
                     var idProperty = GetPrimaryKey(property.Reference ?? property.AllOf.FirstOrDefault()?.Reference ?? property.AnyOf.FirstOrDefault()?.Reference);
                     var refProperty = GetProperty((JsonSchema)property.Parent, (string)refPropertyName);
@@ -1124,7 +1131,7 @@ namespace DataWF.Common.Generator
                 if (objectProperty != null)
                 {
                     var objectFieldName = GetFieldName(objectProperty);
-                    var clientName = GetTypeString(objectProperty, usings, "List");
+                    var clientName = GetTypeString(objectProperty, usings, cList);
                     if (objectProperty.ExtensionData != null && objectProperty.ExtensionData.TryGetValue("x-derived", out var derivedClass))
                         clientName = derivedClass.ToString();
                     source.Append($@"
@@ -1189,9 +1196,9 @@ namespace DataWF.Common.Generator
         {
             var text = property.Default.ToString();
             var type = GetTypeString(property, usings).TrimEnd('?');
-            if (type == "bool")
+            if (string.Equals(type, "bool", StringComparison.Ordinal))
                 text = text.ToLowerInvariant();
-            else if (type == "string")
+            else if (string.Equals(type, Helper.cString, StringComparison.Ordinal))
                 text = $"\"{text}\"";
             else if (property.ActualSchema != null && property.ActualSchema.IsEnumeration)
                 text = $"{type}.{text}";
@@ -1201,14 +1208,14 @@ namespace DataWF.Common.Generator
         private string GetArrayElementTypeString(JsonSchema schema, HashSet<string> usings)
         {
             return schema.Type == JsonObjectType.Array
-                ? GetTypeString(schema.Item, usings, "List")
+                ? GetTypeString(schema.Item, usings, cList)
                 : null;
         }
 
         private string GetTypeString(JsonSchema schema, HashSet<string> usings, string listType = "SelectableList", bool? baseNullable = null)
         {
             if (schema == null)
-                return "string";
+                return Helper.cString;
 
             var nullable = baseNullable ?? schema.IsNullableRaw ?? false;
             switch (schema.Type)
@@ -1245,13 +1252,13 @@ namespace DataWF.Common.Generator
                         case "byte":
                             return "byte[]";
                         case "binary":
-                            SyntaxHelper.AddUsing("System.IO", usings);
-                            return "Stream";
+                            Helper.AddUsing("System.IO", usings);
+                            return Helper.cStream;
                         case "date":
                         case "date-time":
                             return "DateTime" + (nullable ? "?" : string.Empty);
                         default:
-                            return "string";
+                            return Helper.cString;
                     }
                 case JsonObjectType.Array:
                     return $"{listType}<{GetTypeString(schema.Item, usings, listType)}>";
@@ -1275,7 +1282,7 @@ namespace DataWF.Common.Generator
                         var type = GetReferenceType(schema);
                         if (type != null)
                         {
-                            SyntaxHelper.AddUsing(type, usings);
+                            Helper.AddUsing(type, usings);
                         }
                         if (schema.IsEnumeration)
                         {
@@ -1293,11 +1300,11 @@ namespace DataWF.Common.Generator
                     }
                     break;
                 case JsonObjectType.File:
-                    SyntaxHelper.AddUsing("System.IO", usings);
-                    return "Stream";
+                    Helper.AddUsing("System.IO", usings);
+                    return Helper.cStream;
             }
 
-            return "string";
+            return Helper.cString;
         }
 
         public SyntaxTree GenUnit(string name, StringBuilder source, HashSet<string> usings)
