@@ -32,6 +32,7 @@ namespace DataWF.Common
         private static readonly Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
         private static readonly Dictionary<MetadataToken, IElementSerializer> cachePropertyValueSerializer = new Dictionary<MetadataToken, IElementSerializer>(200);
         private static readonly Dictionary<Type, IElementSerializer> cacheValueSerializer = new Dictionary<Type, IElementSerializer>(200);
+        private static readonly Dictionary<Type, IElementSerializer> cacheClassSerializer = new Dictionary<Type, IElementSerializer>(200);
         private static readonly Dictionary<Type, PropertyInfo[]> cacheTypeProperties = new Dictionary<Type, PropertyInfo[]>(200);
         private static readonly Dictionary<MetadataToken, bool> cacheIsXmlAttribute = new Dictionary<MetadataToken, bool>(200);
         private static readonly Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(200);
@@ -343,6 +344,14 @@ namespace DataWF.Common
             return (ElementSerializer<T>)GetSerializer(typeof(T));
         }
 
+        public static IElementSerializer GetClassSerializer(Type elementType)
+        {
+            if (!elementType.IsClass)
+                throw new ArgumentOutOfRangeException();
+            if (!cacheClassSerializer.TryGetValue(elementType, out var serializer))
+                cacheClassSerializer[elementType] = serializer = (IElementSerializer)EmitInvoker.CreateObject(typeof(ObjectSerializer<>).MakeGenericType(elementType));
+            return serializer;
+        }
         public static IElementSerializer GetSerializer(Type elementType)
         {
             if (!cacheValueSerializer.TryGetValue(elementType, out var serializer))

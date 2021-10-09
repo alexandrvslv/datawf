@@ -69,7 +69,7 @@ namespace DataWF.WebService.Common
             }
             else if (typeToConvert.IsClass)
             {
-                return (JsonConverter)TypeHelper.GetSerializer(typeToConvert);
+                return (JsonConverter)TypeHelper.GetClassSerializer(typeToConvert);
             }
             else
             {
