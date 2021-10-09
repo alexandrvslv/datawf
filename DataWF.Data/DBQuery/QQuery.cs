@@ -940,7 +940,7 @@ namespace DataWF.Data
                             var entry = s.Trim(' ', '\'');
                             if (string.Equals(entry, strNull, StringComparison.Ordinal))
                                 continue;
-                            list.Items.Add(new QValue(, parameter.LeftColumn));
+                            list.Items.Add(new QValue(entry, parameter.LeftColumn));
                         }
 
                         parameter.Add(list);
