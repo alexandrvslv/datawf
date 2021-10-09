@@ -8,6 +8,23 @@ namespace DataWF.Common
     {
         public static Dictionary<Type, TypeSerializeInfo> SerializationInfo { get; } = new Dictionary<Type, TypeSerializeInfo>();
 
+        public static TypeSerializeInfo GetCacheTypeInfo<T>() => GetCacheTypeInfo(typeof(T));
+
+        public static TypeSerializeInfo GetCacheTypeInfo(Type type)
+        {
+            if (type == null)
+                return null;
+            if (!SerializationInfo.TryGetValue(type, out var info))
+            {
+                SerializationInfo[type] = info = new TypeSerializeInfo(type);
+                if (info.IsList)
+                {
+                    GetCacheTypeInfo(info.ListItemType);
+                }
+            }
+            return info;
+        }
+
         public static IDictionaryItem CreateDictionaryItem(Type type)
         {
             Type[] genericArguments = new Type[] { typeof(object), typeof(object) };
@@ -41,17 +58,7 @@ namespace DataWF.Common
 
         public virtual TypeSerializeInfo GetTypeInfo(Type type)
         {
-            if (type == null)
-                return null;
-            if (!SerializationInfo.TryGetValue(type, out var info))
-            {
-                SerializationInfo[type] = info = new TypeSerializeInfo(type);
-                if (info.IsList)
-                {
-                    GetTypeInfo(info.ListItemType);
-                }
-            }
-            return info;
+            return GetCacheTypeInfo(type);
         }
 
         public virtual void SetTypeInfo(Type type, TypeSerializeInfo info)

@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace DataWF.Common
 {
-    public abstract class ElementSerializer<T> : ElementSerializer, IElementSerializer<T>
+    public abstract class ElementSerializer<T> : JsonConverter<T>, IElementSerializer<T>
     {
+        public int SizeOfType { get; protected set; }
+        public abstract bool CanConvertString { get; }
         #region Binary
-        public override object ReadObject(BinaryReader reader) => Read(reader);
+        public virtual object ReadObject(BinaryReader reader) => Read(reader);
 
-        public override void WriteObject(BinaryWriter writer, object value, bool writeToken)
+        public virtual void WriteObject(BinaryWriter writer, object value, bool writeToken)
         {
             Write(writer, (T)value, writeToken);
         }
@@ -19,9 +22,9 @@ namespace DataWF.Common
 
         public abstract void Write(BinaryWriter writer, T value, bool writeToken);
 
-        public override object ReadObject(SpanReader reader) => Read(reader);
+        public virtual object ReadObject(SpanReader reader) => Read(reader);
 
-        public override void WriteObject(SpanWriter writer, object value, bool writeToken)
+        public virtual void WriteObject(SpanWriter writer, object value, bool writeToken)
         {
             Write(writer, (T)value, writeToken);
         }
@@ -30,12 +33,12 @@ namespace DataWF.Common
 
         public virtual void Write(SpanWriter writer, T value, bool writeToken) => throw new NotImplementedException();
 
-        public override void WriteObject(BinaryInvokerWriter writer, object value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
+        public virtual void WriteObject(BinaryInvokerWriter writer, object value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             Write(writer, (T)value, info, map);
         }
 
-        public override object ReadObject(BinaryInvokerReader reader, object value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
+        public virtual object ReadObject(BinaryInvokerReader reader, object value, TypeSerializeInfo info, Dictionary<ushort, IPropertySerializeInfo> map)
         {
             return Read(reader, (T)value, info, map);
         }
@@ -53,20 +56,20 @@ namespace DataWF.Common
         #endregion
 
         #region Xml
-        public override object ObjectFromString(string value) => FromString(value);
+        public virtual object ObjectFromString(string value) => FromString(value);
 
-        public override string ObjectToString(object value) => ToString((T)value);
+        public virtual string ObjectToString(object value) => ToString((T)value);
 
         public abstract T FromString(string value);
 
         public abstract string ToString(T value);
 
-        public override void WriteObject(XmlInvokerWriter writer, object value, TypeSerializeInfo info)
+        public virtual void WriteObject(XmlInvokerWriter writer, object value, TypeSerializeInfo info)
         {
             Write(writer, (T)value, info);
         }
 
-        public override object ReadObject(XmlInvokerReader reader, object value, TypeSerializeInfo info)
+        public virtual object ReadObject(XmlInvokerReader reader, object value, TypeSerializeInfo info)
         {
             return Read(reader, (T)value, info);
         }
@@ -87,24 +90,31 @@ namespace DataWF.Common
         #endregion
 
         #region Json
-        public override void WriteObject(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+
+        public override bool CanConvert(Type typeToConvert)
+        {
+            return base.CanConvert(typeToConvert);
+        }
+
+        public virtual void WriteObject(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
             Write(writer, (T)value, options);
         }
 
-        public override object ReadObject(ref Utf8JsonReader reader, object value, JsonSerializerOptions options)
+        public virtual object ReadObject(ref Utf8JsonReader reader, object value, JsonSerializerOptions options)
         {
             return ReadObject(ref reader, value, options);
         }
 
-        public virtual void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
         {
-            JsonSerializer.Serialize(writer, value, options);
+            JsonSerializer.Serialize<T>(writer, value, options);
         }
 
-        public virtual T Read(ref Utf8JsonReader reader, T value, JsonSerializerOptions options)
+        public override T Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options)
         {
-            return FromString(reader.GetString());
+            return JsonSerializer.Deserialize<T>(ref reader, options);
+            
         }
         #endregion
     }

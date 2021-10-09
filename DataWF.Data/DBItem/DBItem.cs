@@ -87,12 +87,6 @@ namespace DataWF.Data
         public ref readonly PullHandler GetRefHandler() => ref handler;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public PullHandler Handler { get => handler; }
-
-        [XmlIgnore, JsonIgnore]
-        public long HandlerValue => handler.Value;
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual string ParametersCategory
         {
             get => Table.CodeKey != null ? GetValue<string>(Table.CodeKey) : "General";

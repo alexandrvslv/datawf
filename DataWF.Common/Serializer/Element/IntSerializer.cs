@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text.Json;
 
 namespace DataWF.Common
 {
@@ -24,7 +25,7 @@ namespace DataWF.Common
 
         public override int FromString(string value) => int.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var result) ? result : 0;
 
-        public override string ToString(int value) => value.ToString(CultureInfo.InvariantCulture);
+        public override string ToString(int value) => value.ToString(CultureInfo.InvariantCulture);        
     }
 
 

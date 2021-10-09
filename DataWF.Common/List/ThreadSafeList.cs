@@ -107,10 +107,12 @@ namespace DataWF.Common
             {
                 Reallock();
             }
-            if ((uint)index < (uint)_count++)
+            if ((uint)index < (uint)_count)
             {
-                items.AsSpan(index, _count - index).CopyTo(items.AsSpan(index + 1, _count - index));
+                var copyCount = _count - index;
+                items.AsSpan(index, copyCount).CopyTo(items.AsSpan(index + 1, copyCount));
             }
+            _count++;
             items[index] = item;
         }
 

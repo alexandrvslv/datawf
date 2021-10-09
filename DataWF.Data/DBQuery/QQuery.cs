@@ -937,7 +937,10 @@ namespace DataWF.Data
                         var list = new QArray();
                         foreach (var s in word2.Split(Helper.CommaSeparator))
                         {
-                            list.Items.Add(new QValue(s.Trim(' ', '\''), parameter.LeftColumn));
+                            var entry = s.Trim(' ', '\'');
+                            if (string.Equals(entry, strNull, StringComparison.Ordinal))
+                                continue;
+                            list.Items.Add(new QValue(, parameter.LeftColumn));
                         }
 
                         parameter.Add(list);

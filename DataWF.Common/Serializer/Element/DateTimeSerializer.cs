@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text.Json;
 
 namespace DataWF.Common
 {
@@ -43,6 +44,6 @@ namespace DataWF.Common
             ? DateTime.FromBinary(binary)
             : DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var result) ? result : DateTime.MinValue;
 
-        public override string ToString(DateTime value) => value.ToString("o");
+        public override string ToString(DateTime value) => value.ToString("o");        
     }
 }

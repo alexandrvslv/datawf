@@ -30,8 +30,8 @@ namespace DataWF.Common
         private static readonly Dictionary<Assembly, Dictionary<string, Type>> cacheAssemblyTypes = new Dictionary<Assembly, Dictionary<string, Type>>();
         private static readonly Dictionary<MetadataToken, bool> cacheIsXmlText = new Dictionary<MetadataToken, bool>(200);
         private static readonly Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
-        private static readonly Dictionary<MetadataToken, ElementSerializer> cachePropertyValueSerializer = new Dictionary<MetadataToken, ElementSerializer>(200);
-        private static readonly Dictionary<Type, ElementSerializer> cacheValueSerializer = new Dictionary<Type, ElementSerializer>(200);
+        private static readonly Dictionary<MetadataToken, IElementSerializer> cachePropertyValueSerializer = new Dictionary<MetadataToken, IElementSerializer>(200);
+        private static readonly Dictionary<Type, IElementSerializer> cacheValueSerializer = new Dictionary<Type, IElementSerializer>(200);
         private static readonly Dictionary<Type, PropertyInfo[]> cacheTypeProperties = new Dictionary<Type, PropertyInfo[]>(200);
         private static readonly Dictionary<MetadataToken, bool> cacheIsXmlAttribute = new Dictionary<MetadataToken, bool>(200);
         private static readonly Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(200);
@@ -312,7 +312,7 @@ namespace DataWF.Common
             return converter;
         }
 
-        public static ElementSerializer GetSerializer(PropertyInfo property)
+        public static IElementSerializer GetSerializer(PropertyInfo property)
         {
             //return ValueSerializer.GetSerializerFor(property);
             var token = MetadataToken.GetToken(property, false);
@@ -321,7 +321,7 @@ namespace DataWF.Common
                 var attribute = property.GetCustomAttribute<ElementSerializerAttribute>(false);
                 if (attribute != null && attribute.SerializerType != null)
                 {
-                    serializer = (ElementSerializer)CreateObject(attribute.SerializerType);
+                    serializer = (IElementSerializer)CreateObject(attribute.SerializerType);
                 }
                 else
                 {
@@ -333,17 +333,17 @@ namespace DataWF.Common
             return serializer;
         }
 
-        public static ElementSerializer SetSerializer(Type type, ElementSerializer serializer)
+        public static IElementSerializer SetSerializer(Type type, IElementSerializer serializer)
         {
             return cacheValueSerializer[type] = serializer;
         }
 
-        public static IElementSerializer<T> GetSerializer<T>()
+        public static ElementSerializer<T> GetSerializer<T>()
         {
-            return (IElementSerializer<T>)GetSerializer(typeof(T));
+            return (ElementSerializer<T>)GetSerializer(typeof(T));
         }
 
-        public static ElementSerializer GetSerializer(Type elementType)
+        public static IElementSerializer GetSerializer(Type elementType)
         {
             if (!cacheValueSerializer.TryGetValue(elementType, out var serializer))
             {
@@ -351,7 +351,7 @@ namespace DataWF.Common
                 var attribute = type.GetCustomAttribute<ElementSerializerAttribute>(false);
                 serializer = null;
                 if (attribute != null && attribute.SerializerType != null)
-                    serializer = (ElementSerializer)CreateObject(attribute.SerializerType);
+                    serializer = (IElementSerializer)CreateObject(attribute.SerializerType);
                 else if (type == typeof(string))
                     serializer = StringSerializer.Instance;
                 else if (type == typeof(int))
@@ -399,33 +399,33 @@ namespace DataWF.Common
                 else if (IsBaseType(type, typeof(System.IO.Stream)))
                     serializer = TempFileStreamSerializer.Instance;
                 else if (type.IsEnum)
-                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
+                    serializer = (IElementSerializer)EmitInvoker.CreateObject(typeof(EnumSerializer<>).MakeGenericType(type));
                 else if (IsInterface(type, typeof(IBinarySerializable)))
                 {
                     if (elementType.IsValueType)
-                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(NBytesSerializer<>).MakeGenericType(type));
+                        serializer = (IElementSerializer)EmitInvoker.CreateObject(typeof(NBytesSerializer<>).MakeGenericType(type));
                     else
-                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(BytesSerializer<>).MakeGenericType(type));
+                        serializer = (IElementSerializer)EmitInvoker.CreateObject(typeof(BytesSerializer<>).MakeGenericType(type));
                 }
                 else if (IsInterface(type, typeof(IXMLSerializable)))
-                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(XMLSerializer<>).MakeGenericType(type));
+                    serializer = (IElementSerializer)EmitInvoker.CreateObject(typeof(XMLSerializer<>).MakeGenericType(type));
                 else if (IsInterface(type, typeof(IDictionary)))
                 {
                     if (IsGeneric(type, out var dargs))
-                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(DictionarySerializer<,,>).MakeGenericType(type, dargs[0], dargs[1]));
+                        serializer = (IElementSerializer)EmitInvoker.CreateObject(typeof(DictionarySerializer<,,>).MakeGenericType(type, dargs[0], dargs[1]));
                     else
-                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(DictionarySerializer<>).MakeGenericType(type));
+                        serializer = (IElementSerializer)EmitInvoker.CreateObject(typeof(DictionarySerializer<>).MakeGenericType(type));
                 }
                 else if (IsInterface(type, typeof(IList)))
                 {
                     if (IsGeneric(type, out var largs))
-                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(ListSerializer<,>).MakeGenericType(type, largs[0]));
+                        serializer = (IElementSerializer)EmitInvoker.CreateObject(typeof(ListSerializer<,>).MakeGenericType(type, largs[0]));
                     else
-                        serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(ListSerializer<>).MakeGenericType(type));
+                        serializer = (IElementSerializer)EmitInvoker.CreateObject(typeof(ListSerializer<>).MakeGenericType(type));
                 }
                 else if (type != typeof(object))
                 {
-                    serializer = (ElementSerializer)EmitInvoker.CreateObject(typeof(ObjectSerializer<>).MakeGenericType(type));
+                    serializer = (IElementSerializer)EmitInvoker.CreateObject(typeof(ObjectSerializer<>).MakeGenericType(type));
                 }
                 //else
                 //{

@@ -51,7 +51,10 @@ namespace DataWF.WebService.Common
 
         public override bool CanConvert(Type typeToConvert)
         {
-            return TypeHelper.IsBaseType(typeToConvert, typeof(DBItem));
+            return TypeHelper.IsBaseType(typeToConvert, typeof(DBItem))
+                || (typeToConvert.IsClass && !TypeHelper.IsEnumerable(typeToConvert)
+                    && typeToConvert != typeof(string)
+                    && typeToConvert != typeof(byte[]));
         }
 
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
@@ -63,6 +66,10 @@ namespace DataWF.WebService.Common
                 //    cache[typeToConvert] = converter = ;
                 //}
                 return (JsonConverter)EmitInvoker.CreateObject(typeof(DBItemConverter<>).MakeGenericType(typeToConvert), types, new[] { this }, true);
+            }
+            else if (typeToConvert.IsClass)
+            {
+                return (JsonConverter)TypeHelper.GetSerializer(typeToConvert);
             }
             else
             {

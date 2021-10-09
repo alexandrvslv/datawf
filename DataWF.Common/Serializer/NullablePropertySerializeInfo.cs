@@ -1,6 +1,7 @@
 ﻿using DataWF.Common;
 using System;
 using System.Reflection;
+using System.Text.Json;
 
 namespace DataWF.Common
 {
@@ -148,6 +149,24 @@ namespace DataWF.Common
             }
         }
 
+        public override void Write<E>(Utf8JsonWriter writer, E element, JsonSerializerOptions options = null)
+        {
+            if (PropertyInvoker is IInvoker<E, T?> valueInvoker)
+            {
+                T? value = valueInvoker.GetValue(element);
+                if (value == null)
+                    writer.WriteNull(JsonName);
+                else
+                {
+                    writer.WritePropertyName(JsonName);
+                    JsonSerializer.Serialize(writer, value, options);
+                }
+            }
+            else
+            {
+                Write(writer, (object)element, options);
+            }
+        }
 
     }
 }

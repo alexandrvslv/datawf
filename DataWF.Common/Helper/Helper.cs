@@ -931,9 +931,9 @@ namespace DataWF.Common
             return GetSerializer(typev)?.ReadObject(reader);
         }
 
-        public static ElementSerializer GetSerializer(BinaryToken token)
+        public static IElementSerializer GetSerializer(BinaryToken token)
         {
-            ElementSerializer value = null;
+            IElementSerializer value = null;
             switch (token)
             {
                 case BinaryToken.Boolean: value = BoolSerializer.Instance; break;
