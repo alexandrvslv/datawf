@@ -12,7 +12,7 @@ namespace DataWF.Common
     {
         public static Action<PropertyChangedEventHandler, object, PropertyChangedEventArgs> GlogalChangedHook;
         protected ThreadSafeList<PropertyChangedEventHandler> propertyChanged;
-        
+
         [Newtonsoft.Json.JsonIgnore, JsonIgnore, XmlIgnore, Browsable(false)]
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged, PropertyChangedEventHandler>(propertyChanged);
 
@@ -21,8 +21,9 @@ namespace DataWF.Common
             add
             {
                 if (propertyChanged == null)
-                    propertyChanged = new ThreadSafeList<PropertyChangedEventHandler>();
-                propertyChanged.Add(value);
+                    propertyChanged = new ThreadSafeList<PropertyChangedEventHandler>(value);
+                else
+                    propertyChanged.Add(value);
             }
             remove => propertyChanged?.Remove(value);
         }

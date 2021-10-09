@@ -22,7 +22,7 @@ using System.Collections.Generic;
 
 namespace DataWF.Data
 {
-    public interface IDBSchemaItem
+    public interface IDBSchemaItem : IModelItem
     {
         IEnumerable<INotifyListPropertyChanged> Containers { get; }
         AccessValue Access { get; set; }
@@ -30,9 +30,8 @@ namespace DataWF.Data
         string FullName { get; }
         bool IsSynch { get; set; }
         LocaleItem LocaleInfo { get; }
-        string Name { get; set; }
         string OldName { get; set; }
-        IDBSchema Schema { get; set; }
+        new IDBSchema Schema { get; set; }
 
         string FormatSql(DDLType ddlType, bool dependency = false);
         string GetLocalizeCategory();

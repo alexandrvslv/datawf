@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace DataWF.Common
 {
-    public class NewtonJsonClientConverter<T, K> : JsonConverter<T>, IClientConverter
+    public class NewtonJsonClientConverter<T, K> : JsonConverter<T>, IWebTableConverter
         where T : class, new()
         where K : struct
     {
@@ -15,14 +15,14 @@ namespace DataWF.Common
             SerializationInfo = Serialization.Instance.GetTypeInfo(typeof(T));
         }
 
-        public NewtonJsonClientConverter(WebClient<T, K> client) : this()
+        public NewtonJsonClientConverter(WebTable<T, K> table) : this()
         {
-            Client = client;
+            Table = table;
         }
 
-        ICrudClient IClientConverter.Client => Client;
+        IWebTable IWebTableConverter.Table => Table;
 
-        public WebClient<T, K> Client { get; }
+        public WebTable<T, K> Table { get; }
 
         public TypeSerializeInfo SerializationInfo { get; }
 
@@ -67,13 +67,13 @@ namespace DataWF.Common
                         ? property.PropertyInvoker.GetValue(item)
                         : null;
 
-                    if (string.Equals(property.Name, Client.TypeInvoker?.Name, StringComparison.Ordinal))
+                    if (string.Equals(property.Name, Table.TypeInvoker?.Name, StringComparison.Ordinal))
                     {
                         object value = Read(jreader, property.DataType, serializer, currentValue);
                         var typeId = value == null ? 0 : (int)value;
-                        if (typeId != Client.TypeId)
+                        if (typeId != Table.TypeId)
                         {
-                            var client = Client.Provider.GetClient(typeof(T), typeId);
+                            var client = Table.Schema.GetTable(typeof(T), typeId);
 #if NETSTANDARD2_0
                             return (T)client.Converter.Read(jreader, item, serializer);
 #else
@@ -82,24 +82,24 @@ namespace DataWF.Common
                         }
                         continue;
                     }
-                    if (string.Equals(property.Name, Client.IdInvoker?.Name, StringComparison.Ordinal))
+                    if (string.Equals(property.Name, Table.IdInvoker?.Name, StringComparison.Ordinal))
                     {
                         id = (K?)Read(jreader, property.DataType, serializer, currentValue);
                         if (item == null && id != null)
                         {
-                            item = Client.SelectNoDownloads((K)id);
+                            item = Table.SelectNoDownloads((K)id);
                             if (item == null)
                             {
-                                item = Client.AddDownloads((K)id, Client.NewLoadItem);
+                                item = Table.AddDownloads((K)id, Table.NewLoadItem);
                             }
                         }
                         else if (id == null)
                         {
-                            item = (T)Client.NewItem();
+                            item = (T)Table.NewItem();
                         }
-                        else if (!Client.Items.Contains(item))
+                        else if (!Table.Items.Contains(item))
                         {
-                            item = Client.AddDownloads((K)id, item);
+                            item = Table.AddDownloads((K)id, item);
                         }
                         synchItem = item as ISynchronized;
                         continue;
@@ -138,9 +138,9 @@ namespace DataWF.Common
                         synchItem.SyncStatus = SynchronizedStatus.Actual;
                     }
 
-                    if (id != null && Client.RemoveDownloads((K)id))
+                    if (id != null && Table.RemoveDownloads((K)id))
                     {
-                        Client.Add(item);
+                        Table.Add(item);
                     }
                 }
             }
@@ -188,7 +188,7 @@ namespace DataWF.Common
             }
 
 #if NETSTANDARD2_0
-            var client = Client.Provider.GetClient(type);
+            var client = Table.Schema.GetTable(type);
             if (client != null)
                 return client.Converter.Read(jreader, null, serializer);
             else
@@ -207,7 +207,7 @@ namespace DataWF.Common
             }
             var typeInfo = Serialization.Instance.GetTypeInfo(type);
             var itemType = typeInfo.ListItemType;
-            var client = Client.Provider.GetClient(itemType);
+            var client = Table.Schema.GetTable(itemType);
             var temp = sourceList ?? (IList)EmitInvoker.CreateObject(type);
             var referenceList = temp as IReferenceList;
             if (referenceList != null && client != null)
@@ -349,7 +349,7 @@ namespace DataWF.Common
             jwriter.WriteEndArray();
         }
 #if !NETSTANDARD2_0
-        object IClientConverter.Read(ref System.Text.Json.Utf8JsonReader jreader, object item, System.Text.Json.JsonSerializerOptions options)
+        object IWebTableConverter.Read(ref System.Text.Json.Utf8JsonReader jreader, object item, System.Text.Json.JsonSerializerOptions options)
         {
             throw new NotSupportedException();
         }

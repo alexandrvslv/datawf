@@ -390,12 +390,7 @@ namespace DataWF.Data
 
         public DBTable ParseTable(string word)
         {
-            var table = Schema.ParseTable(word);
-            if (table == null)
-            {
-                table = Schema.Containers.OfType<DBSchemaList>().FirstOrDefault()?.ParseTableByTypeName(word);
-            }
-            return table;
+            return Schema.ParseTable(word) ?? Schema.Tables.GetByTypeName(word);
         }
 
         public DBColumn ParseColumn(string word, string prefix, out QTable qTable)
@@ -552,99 +547,50 @@ namespace DataWF.Data
                     case '=':
                     case '>':
                     case '<':
+                        if (MemoryExtensions.Equals(word, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
                         {
-                            if (MemoryExtensions.Equals(word, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                            {
-                                state = QParserState.Select;
-                            }
-                            else if (MemoryExtensions.Equals(word, StrFrom.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                            {
-                                prefix.Clear();
-                                state = QParserState.From;
-                            }
-                            else if (MemoryExtensions.Equals(word, StrWhere.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                            {
-                                prefix.Clear();
-                                state = QParserState.Where;
-                            }
-                            else if (MemoryExtensions.Equals(word, StrOrder.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                            {
-                                state = QParserState.OrderBy;
-                            }
-                            else if (MemoryExtensions.Equals(word, StrGroup.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                            {
-                                state = QParserState.GroupBy;
-                            }
-                            else if (MemoryExtensions.Equals(word, StrBy.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                            {
+                            state = QParserState.Select;
+                        }
+                        else if (MemoryExtensions.Equals(word, StrFrom.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            prefix.Clear();
+                            state = QParserState.From;
+                        }
+                        else if (MemoryExtensions.Equals(word, StrWhere.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            prefix.Clear();
+                            state = QParserState.Where;
+                        }
+                        else if (MemoryExtensions.Equals(word, StrOrder.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            state = QParserState.OrderBy;
+                        }
+                        else if (MemoryExtensions.Equals(word, StrGroup.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            state = QParserState.GroupBy;
+                        }
+                        else if (MemoryExtensions.Equals(word, StrBy.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        {
 
-                            }
-                            else
+                        }
+                        else
+                        {
+                            switch (state)
                             {
-                                switch (state)
-                                {
-                                    case QParserState.Select:
-                                        if (word.Length > 0)
+                                case QParserState.Select:
+                                    if (word.Length > 0)
+                                    {
+                                        if (MemoryExtensions.Equals(word, StrAs.AsSpan(), StringComparison.OrdinalIgnoreCase) && c == ' ')
                                         {
-                                            if (MemoryExtensions.Equals(word, StrAs.AsSpan(), StringComparison.OrdinalIgnoreCase) && c == ' ')
-                                            {
-                                                alias = true;
-                                            }
-                                            else if (MemoryExtensions.Equals(word, strNull.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                Columns.Add(new QValue(null));
-                                            }
-                                            else
-                                            {
-                                                var wordStr = word.ToString();
-                                                if (alias)
-                                                {
-                                                    SetColumAlias(wordStr);
-                                                    alias = false;
-                                                }
-                                                else
-                                                {
-                                                    var fn = QFunction.ParseFunction(wordStr);
-                                                    if (fn != QFunctionType.none)
-                                                    {
-                                                        Columns.Add(new QFunction(fn));
-                                                    }
-                                                    else
-                                                    {
-                                                        var dbColumn = ParseColumn(wordStr, prefix.LastOrDefault(), out var qTable);
-                                                        if (dbColumn != null)
-                                                        {
-                                                            Columns.Add(new QColumn(dbColumn)
-                                                            {
-                                                                QTable = qTable
-                                                            });
-                                                            prefix.Clear();
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                            alias = true;
                                         }
-                                        if (c == '(')
+                                        else if (MemoryExtensions.Equals(word, strNull.AsSpan(), StringComparison.OrdinalIgnoreCase))
                                         {
-                                            var word2 = query.GetSubPart(ref i, '(', ')').Trim();
-                                            if (Columns.LastOrDefault() is QFunction qFunc)
-                                            {
-                                                ParseFunction(qFunc, word2);
-                                            }
-                                            else if (MemoryExtensions.StartsWith(word2, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                Columns.Add(new QQuery<DBItem>(this, word2));
-                                            }
-                                            else
-                                            {
-                                                var expression = new QExpression();
-                                                ParseExpression(expression, word2);
-                                                Columns.Add(expression);
-                                            }
+                                            Columns.Add(new QValue(null));
                                         }
-                                        else if (c == '\'' || c == '"')
+                                        else
                                         {
-                                            var wordStr = query.GetSubPart(ref i, c, c).ToString();
+                                            var wordStr = word.ToString();
                                             if (alias)
                                             {
                                                 SetColumAlias(wordStr);
@@ -652,102 +598,148 @@ namespace DataWF.Data
                                             }
                                             else
                                             {
-                                                Columns.Add(new QValue(wordStr, null));
+                                                var fn = QFunction.ParseFunction(wordStr);
+                                                if (fn != QFunctionType.none)
+                                                {
+                                                    Columns.Add(new QFunction(fn));
+                                                }
+                                                else
+                                                {
+                                                    var dbColumn = ParseColumn(wordStr, prefix.LastOrDefault(), out var qTable);
+                                                    if (dbColumn != null)
+                                                    {
+                                                        Columns.Add(new QColumn(dbColumn)
+                                                        {
+                                                            QTable = qTable
+                                                        });
+                                                        prefix.Clear();
+                                                    }
+                                                }
                                             }
                                         }
-                                        break;
-                                    case QParserState.From:
+                                    }
+                                    if (c == '(')
+                                    {
+                                        var word2 = query.GetSubPart(ref i, '(', ')').Trim();
+                                        if (Columns.LastOrDefault() is QFunction qFunc)
                                         {
-                                            if (word.Length > 0)
-                                            {
-                                                //Table = ParseTable(word);
-                                            }
+                                            ParseFunction(qFunc, word2);
                                         }
-                                        break;
-                                    case QParserState.Where:
-                                        ParseParameter(query, ref parameter, word, ref i, c, prefix);
-                                        if (parameter != null && parameter.Container == null)
-                                            Parameters.Add(parameter);
-                                        break;
-                                    case QParserState.OrderBy:
+                                        else if (MemoryExtensions.StartsWith(word2, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            Columns.Add(new QQuery<DBItem>(this, word2));
+                                        }
+                                        else
+                                        {
+                                            var expression = new QExpression();
+                                            ParseExpression(expression, word2);
+                                            Columns.Add(expression);
+                                        }
+                                    }
+                                    else if (c == '\'' || c == '"')
+                                    {
+                                        var wordStr = query.GetSubPart(ref i, c, c).ToString();
+                                        if (alias)
+                                        {
+                                            SetColumAlias(wordStr);
+                                            alias = false;
+                                        }
+                                        else
+                                        {
+                                            Columns.Add(new QValue(wordStr, null));
+                                        }
+                                    }
+                                    break;
+                                case QParserState.From:
+                                    {
                                         if (word.Length > 0)
                                         {
+                                            //Table = ParseTable(word);
+                                        }
+                                    }
+                                    break;
+                                case QParserState.Where:
+                                    ParseParameter(query, ref parameter, word, ref i, c, prefix);
+                                    if (parameter != null && parameter.Container == null)
+                                        Parameters.Add(parameter);
+                                    break;
+                                case QParserState.OrderBy:
+                                    if (word.Length > 0)
+                                    {
 
-                                            if (MemoryExtensions.Equals(word, StrAsc.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                        if (MemoryExtensions.Equals(word, StrAsc.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            if (order != null)
                                             {
-                                                if (order != null)
+                                                order.Direction = ListSortDirection.Ascending;
+                                                order = null;
+                                            }
+                                        }
+                                        else if (MemoryExtensions.Equals(word, StrDesc.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            if (order != null)
+                                            {
+                                                order.Direction = ListSortDirection.Descending;
+                                                order = null;
+                                            }
+                                        }
+                                        else if (MemoryExtensions.Equals(word, StrIGroup.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            TreeComparer = GroupHelper.GetTreeInvoker(typeof(T)).CreateTreeComparer(typeof(T));
+                                        }
+                                        else
+                                        {
+                                            var wordStr = word.ToString();
+                                            var dbColumn = ParseColumn(wordStr, prefix.LastOrDefault(), out var qTable);
+                                            if (dbColumn != null)
+                                            {
+                                                order = new QOrder
                                                 {
-                                                    order.Direction = ListSortDirection.Ascending;
-                                                    order = null;
-                                                }
+                                                    Item = new QColumn(dbColumn)
+                                                    {
+                                                        TableAlias = prefix.FirstOrDefault(),
+                                                        QTable = qTable
+                                                    }
+                                                };
+                                                Orders.Add(order);
+                                                prefix.Clear();
                                             }
-                                            else if (MemoryExtensions.Equals(word, StrDesc.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                            else if (prefix.Count > 0)
                                             {
-                                                if (order != null)
-                                                {
-                                                    order.Direction = ListSortDirection.Descending;
-                                                    order = null;
-                                                }
-                                            }
-                                            else if (MemoryExtensions.Equals(word, StrIGroup.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                TreeComparer = GroupHelper.GetTreeInvoker(typeof(T)).CreateTreeComparer(typeof(T));
-                                            }
-                                            else
-                                            {
-                                                var wordStr = word.ToString();
-                                                var dbColumn = ParseColumn(wordStr, prefix.LastOrDefault(), out var qTable);
-                                                if (dbColumn != null)
+                                                var property = $"{string.Join(".", prefix)}.{wordStr}";
+                                                prefix.Clear();
+                                                var invoker = EmitInvoker.Initialize(Table.ItemType, property);
+                                                if (invoker != null)
                                                 {
                                                     order = new QOrder
                                                     {
-                                                        Item = new QColumn(dbColumn)
-                                                        {
-                                                            TableAlias = prefix.FirstOrDefault(),
-                                                            QTable = qTable
-                                                        }
+                                                        Item = new QInvoker(invoker) { QTable = QTable }
                                                     };
                                                     Orders.Add(order);
                                                     prefix.Clear();
                                                 }
-                                                else if (prefix.Count > 0)
+                                            }
+                                            else
+                                            {
+                                                var invoker = EmitInvoker.Initialize(Table.ItemType, wordStr);
+                                                if (invoker != null)
                                                 {
-                                                    var property = $"{string.Join(".", prefix)}.{wordStr}";
+                                                    order = new QOrder
+                                                    {
+                                                        Item = new QInvoker(invoker)
+                                                    };
+                                                    Orders.Add(order);
                                                     prefix.Clear();
-                                                    var invoker = EmitInvoker.Initialize(Table.ItemType.Type, property);
-                                                    if (invoker != null)
-                                                    {
-                                                        order = new QOrder
-                                                        {
-                                                            Item = new QInvoker(invoker) { QTable = QTable }
-                                                        };
-                                                        Orders.Add(order);
-                                                        prefix.Clear();
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    var invoker = EmitInvoker.Initialize(Table.ItemType.Type, wordStr);
-                                                    if (invoker != null)
-                                                    {
-                                                        order = new QOrder
-                                                        {
-                                                            Item = new QInvoker(invoker)
-                                                        };
-                                                        Orders.Add(order);
-                                                        prefix.Clear();
-                                                    }
                                                 }
                                             }
                                         }
-                                        break;
-                                }
+                                    }
+                                    break;
                             }
-                            word = ReadOnlySpan<char>.Empty;
-                            startIndex = i + 1;
-                            break;
                         }
-
+                        word = ReadOnlySpan<char>.Empty;
+                        startIndex = i + 1;
+                        break;
                     default:
                         word = query.Slice(startIndex, (i - startIndex) + 1);
                         break;
@@ -873,7 +865,7 @@ namespace DataWF.Data
                                         }
                                         else
                                         {
-                                            var invoker = EmitInvoker.Initialize(Table.ItemType.Type, wordStr);
+                                            var invoker = EmitInvoker.Initialize(Table.ItemType, wordStr);
                                             if (invoker != null)
                                             {
                                                 parameter.Add(new QInvoker(invoker));
@@ -1051,29 +1043,33 @@ namespace DataWF.Data
                     case '>':
                     case '<':
                         if (MemoryExtensions.Equals(word, StrWhere.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                            break;
-                        if (parameter != null)
+                            return;
+                        var join = JoinType.Parse(word);
+                        if (join != JoinTypes.Undefined)
+                        {
+                            table = null;
+                            parameter = null;
+                            joinType |= join;
+                        }
+                        else if (parameter != null)
                         {
                             ParseParameter(query, ref parameter, word, ref i, c, prefix);
-                        }
-                        else
-                        {
-                            var join = JoinType.Parse(word);
-                            if (join != JoinTypes.Undefined)
-                            {
-                                table = null;
+                            if (parameter.RightItem != null)
                                 parameter = null;
-                                joinType |= join;
-                                word = ReadOnlySpan<char>.Empty;
-                                startIndex = i + 1;
-                            }
-                            else if (MemoryExtensions.Equals(word, StrOn.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        }
+                        else if (MemoryExtensions.Equals(word, StrOn.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            table.On = parameter = new QParam();
+                        }
+                        else if (word.Length > 0)
+                        {
+                            var wordStr = word.ToString();
+                            if (table != null)
                             {
-                                table.On = parameter = new QParam();
+                                table.TableAlias = wordStr;
                             }
-                            else if (word.Length > 0)
+                            else
                             {
-                                var wordStr = word.ToString();
                                 var tb = ParseTable(wordStr);
                                 if (tb != null)
                                 {
@@ -1087,10 +1083,6 @@ namespace DataWF.Data
                                         table = QTable;
                                     }
                                     joinType = JoinTypes.Undefined;
-                                }
-                                else if (table != null)
-                                {
-                                    table.TableAlias = wordStr;
                                 }
                             }
                         }
@@ -1573,7 +1565,7 @@ namespace DataWF.Data
             for (int i = Tables.Count - 1; i > -1; i--)
             {
                 var qTable = Tables[i];
-                if (qTable.Table.ItemType.Type == type)
+                if (qTable.Table.ItemType == type)
                     return qTable;
             }
             return null;

@@ -7,8 +7,10 @@ namespace DataWF.Common
 {
     public class TypeSerializeInfo
     {
+        private static Type[] propertyInfoCtorParams = new Type[] { typeof(PropertyInfo), typeof(int) };
+
         public TypeSerializeInfo(Type type)
-            : this(type, TypeHelper.GetPropertiesByHierarchi(type))
+                : this(type, TypeHelper.GetPropertiesByHierarchi(type))
         { }
 
         public TypeSerializeInfo(Type type, IEnumerable<string> properties)
@@ -29,7 +31,7 @@ namespace DataWF.Common
             var keys = TypeSerializationInfoKeys.None;
             if (TypeHelper.IsSerializeAttribute(Type))
             {
-                Keys |= TypeSerializationInfoKeys.IsAttribute;
+                Keys |= TypeSerializationInfoKeys.Attribute;
                 return;
             }
             if (!Type.IsInterface && !Type.IsAbstract)
@@ -39,12 +41,12 @@ namespace DataWF.Common
 
             if (TypeHelper.IsList(type))
             {
-                keys |= TypeSerializationInfoKeys.IsList;
+                keys |= TypeSerializationInfoKeys.List;
                 if (TypeHelper.IsInterface(type, typeof(INamedList)))
-                    keys |= TypeSerializationInfoKeys.ListIsNamed;
+                    keys |= TypeSerializationInfoKeys.NamedList;
 
                 if (type.IsArray)
-                    keys |= TypeSerializationInfoKeys.ListIsArray;
+                    keys |= TypeSerializationInfoKeys.Array;
 
                 ListItemType = TypeHelper.GetItemType(type);
 
@@ -53,44 +55,41 @@ namespace DataWF.Common
                     && !type.IsGenericType
                     && !type.IsArray
                     && !TypeHelper.IsInterface(type, typeof(ISortable)))
-                    keys |= TypeSerializationInfoKeys.ListIsTyped;
+                    keys |= TypeSerializationInfoKeys.TypedList;
 
                 if (TypeHelper.IsSerializeAttribute(ListItemType))
-                    keys |= TypeSerializationInfoKeys.ListItemIsAttribute;
+                    keys |= TypeSerializationInfoKeys.AttributeList;
 
                 ListConstructor = EmitInvoker.Initialize(type, new[] { typeof(int) });
             }
             if (TypeHelper.IsDictionary(type))
-                keys |= TypeSerializationInfoKeys.IsDictionary;
+                keys |= TypeSerializationInfoKeys.Dictionary;
             Keys = keys;
 
             int order = 0;
-            var chackedProperties = new List<PropertyInfo>();
+            var index = new ListIndex<IPropertySerializeInfo, string>(PropertySerializeInfoName.Instance, "[null]", StringComparer.Ordinal, false);
+            Properties = new NamedList<IPropertySerializeInfo>(6, index);
+            Properties.Indexes.Add(PropertySerializeInfo.IsAttributeInvoker.Instance);
+
             foreach (var property in properties)
             {
                 var name = property.Name;
-                var exist = chackedProperties.Find(p => string.Equals(p.Name, name, StringComparison.Ordinal));
+                var exist = Properties.Get(name);
 
                 if (TypeHelper.IsNonSerialize(property))
                 {
                     if (exist != null)
-                        chackedProperties.Remove(exist);
+                        Properties.Remove(exist);
                     continue;
                 }
                 //var method = property.GetGetMethod() ?? property.GetSetMethod();
                 if (exist != null)// && method.Equals(method.GetBaseDefinition())
                 {
-                    chackedProperties.Remove(exist);
+                    Properties.Remove(exist);
                 }
-                chackedProperties.Add(property);
-            }
-            var index = new ListIndex<IPropertySerializeInfo, string>(PropertySerializeInfoName.Instance, "[null]", StringComparer.Ordinal, false);
-            Properties = new NamedList<IPropertySerializeInfo>(6, index);
-            Properties.Indexes.Add(PropertySerializeInfo.IsAttributeInvoker.Instance);
-            foreach (var property in chackedProperties)
-            {
                 Properties.Add(CreateProperty(property, ++order));
             }
+
             Properties.ApplySortInternal(OrderPropertiesComparer.Instance);
 
             XmlProperties = new SelectableListView<IPropertySerializeInfo>(Properties);
@@ -102,15 +101,15 @@ namespace DataWF.Common
             if (TypeHelper.IsNullable(property.PropertyType))
             {
                 return (IPropertySerializeInfo)EmitInvoker.CreateObject(typeof(NullablePropertySerializeInfo<>).MakeGenericType(TypeHelper.CheckNullable(property.PropertyType)),
-                new Type[] { typeof(PropertyInfo), typeof(int) }, new object[] { property, order });
+                    propertyInfoCtorParams, new object[] { property, order });
             }
-            if (property.PropertyType.IsClass)
+            if (property.PropertyType.IsClass && property.PropertyType != typeof(Type))
             {
                 return (IPropertySerializeInfo)EmitInvoker.CreateObject(typeof(ReferencePropertySerializeInfo<>).MakeGenericType(property.PropertyType),
-                new Type[] { typeof(PropertyInfo), typeof(int) }, new object[] { property, order });
+                    propertyInfoCtorParams, new object[] { property, order });
             }
             return (IPropertySerializeInfo)EmitInvoker.CreateObject(typeof(PropertySerializeInfo<>).MakeGenericType(property.PropertyType),
-                new Type[] { typeof(PropertyInfo), typeof(int) }, new object[] { property, order });
+                propertyInfoCtorParams, new object[] { property, order });
         }
 
         public Type Type { get; }
@@ -121,13 +120,13 @@ namespace DataWF.Common
 
         public TypeSerializationInfoKeys Keys { get; }
 
-        public bool IsList { get => (Keys & TypeSerializationInfoKeys.IsList) != 0; }
-        public bool IsDictionary { get => (Keys & TypeSerializationInfoKeys.IsDictionary) != 0; }
-        public bool IsAttribute { get => (Keys & TypeSerializationInfoKeys.IsAttribute) != 0; }
-        public bool ListIsNamed { get => (Keys & TypeSerializationInfoKeys.ListIsNamed) != 0; }
-        public bool ListIsArray { get => (Keys & TypeSerializationInfoKeys.ListIsArray) != 0; }
-        public bool ListIsTyped { get => (Keys & TypeSerializationInfoKeys.ListIsTyped) != 0; }
-        public bool ListItemIsAttribute { get => (Keys & TypeSerializationInfoKeys.ListItemIsAttribute) != 0; }
+        public bool IsList { get => (Keys & TypeSerializationInfoKeys.List) != 0; }
+        public bool IsDictionary { get => (Keys & TypeSerializationInfoKeys.Dictionary) != 0; }
+        public bool IsAttribute { get => (Keys & TypeSerializationInfoKeys.Attribute) != 0; }
+        public bool ListIsNamed { get => (Keys & TypeSerializationInfoKeys.NamedList) != 0; }
+        public bool ListIsArray { get => (Keys & TypeSerializationInfoKeys.Array) != 0; }
+        public bool ListIsTyped { get => (Keys & TypeSerializationInfoKeys.TypedList) != 0; }
+        public bool ListItemIsAttribute { get => (Keys & TypeSerializationInfoKeys.AttributeList) != 0; }
 
 
         public Type ListItemType { get; }
@@ -200,13 +199,13 @@ namespace DataWF.Common
     public enum TypeSerializationInfoKeys : byte
     {
         None = 0,
-        IsAttribute = 1,
-        IsDictionary = 2,
-        IsList = 4,
-        ListIsNamed = 8,
-        ListIsArray = 16,
-        ListIsTyped = 32,
-        ListItemIsAttribute = 64
+        Attribute = 1,
+        Dictionary = 2,
+        List = 4,
+        NamedList = 8,
+        Array = 16,
+        TypedList = 32,
+        AttributeList = 64
 
     }
 }

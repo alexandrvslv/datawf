@@ -1,12 +1,12 @@
 ﻿namespace DataWF.Common
 {
-    public class ClientItemList<T> : ChangeableList<T>, IClientItemList
+    public class WebTableItemList<T> : ChangeableList<T>, IWebTableItemList
     {
-        public ClientItemList(IClient client)
+        public WebTableItemList(IWebClient client)
         {
             Client = client;
         }
 
-        public IClient Client { get; }
+        public IWebClient Client { get; }
     }
 }

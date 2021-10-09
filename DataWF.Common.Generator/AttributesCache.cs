@@ -20,7 +20,7 @@ namespace DataWF.Common.Generator
         public INamedTypeSymbol ControllerParameter;
         public INamedTypeSymbol ModuleInitialize;
         public INamedTypeSymbol Invoker;
-        public INamedTypeSymbol ClientProvider;
+        public INamedTypeSymbol WebSchema;
         //public INamedTypeSymbol DataProvider;
 
         public AttributesCache(Compilation compilation)
@@ -41,7 +41,7 @@ namespace DataWF.Common.Generator
             ControllerParameter = compilation.GetTypeByMetadataName("DataWF.Data.ControllerParameterAttribute");
             ModuleInitialize = compilation.GetTypeByMetadataName("DataWF.Common.ModuleInitializeAttribute");
             Invoker = compilation.GetTypeByMetadataName("DataWF.Common.InvokerGeneratorAttribute");
-            ClientProvider = compilation.GetTypeByMetadataName("DataWF.Common.ClientProviderAttribute");
+            WebSchema = compilation.GetTypeByMetadataName("DataWF.Common.WebSchemaAttribute");
             //DataProvider = compilation.GetTypeByMetadataName("DataWF.Common.DataProviderAttribute");
         }
     }

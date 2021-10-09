@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public abstract class LoggedWebClient<T, K, L> : WebClient<T, K>, ILoggedClient<T, L>
+    public abstract class LoggedWebTable<T, K, L> : WebTable<T, K>, ILoggedWebTable<T, L>
         where T : class, new()
         where K : struct
         where L : class, new()
     {
-        public LoggedWebClient(IInvoker<T, K> idInvoker, IInvoker<T, int> typeInvoker, int typeId = 0)
+        public LoggedWebTable(IInvoker<T, K> idInvoker, IInvoker<T, int> typeInvoker, int typeId = 0)
             : base(idInvoker, typeInvoker, typeId)
         { }
 
@@ -26,13 +26,13 @@ namespace DataWF.Common
         public abstract Task<T> UndoLog(long logId, ProgressToken progressToken);
 
 
-        async Task<IEnumerable> ILoggedClient.GetItemLogs(object id, ProgressToken progressToken)//new HttpJsonSettings(HttpJsonKeys.Refed, 2)
+        async Task<IEnumerable> ILoggedWebTable.GetItemLogs(object id, ProgressToken progressToken)//new HttpJsonSettings(HttpJsonKeys.Refed, 2)
             => await GetItemLogs(id, progressToken);
-        async Task<IEnumerable> ILoggedClient.GetLogs(string filter, ProgressToken progressToken)//new HttpJsonSettings(HttpJsonKeys.Refed, 2)
+        async Task<IEnumerable> ILoggedWebTable.GetLogs(string filter, ProgressToken progressToken)//new HttpJsonSettings(HttpJsonKeys.Refed, 2)
             => await GetLogs(filter, progressToken);
-        async Task<object> ILoggedClient.RedoLog(long logId, ProgressToken progressToken)
+        async Task<object> ILoggedWebTable.RedoLog(long logId, ProgressToken progressToken)
              => await RedoLog(logId, progressToken);
-        async Task<object> ILoggedClient.UndoLog(long logId, ProgressToken progressToken)
+        async Task<object> ILoggedWebTable.UndoLog(long logId, ProgressToken progressToken)
             => await UndoLog(logId, progressToken);
     }
 }

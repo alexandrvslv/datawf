@@ -159,7 +159,7 @@ namespace DataWF.Data
                 return null;
             foreach (var schema in this)
             {
-                var table = schema.Tables.FirstOrDefault(p => p.ItemType?.Type?.Name == code);
+                var table = schema.Tables.GetByTypeName(code);
                 if (table != null)
                     return table;
             }

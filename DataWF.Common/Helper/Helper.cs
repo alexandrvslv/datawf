@@ -1612,6 +1612,31 @@ namespace DataWF.Common
             return query.Slice(startIndex, i - startIndex);
         }
 
+        public static IEnumerable<ReadOnlyMemory<char>> Split(this ReadOnlyMemory<char> query, ReadOnlyMemory<char> separator, StringComparison comparizon = StringComparison.Ordinal)
+        {
+            var list = new List<ReadOnlyMemory<char>>();
+            if (query.Length < separator.Length)
+                yield break;
+            var word = ReadOnlyMemory<char>.Empty;
+            var startIndex = 0;
+            var separatorLength = separator.Length;
+            for (int i = 0; i < query.Length; i++)
+            {
+                word = i + separatorLength <= query.Length ? query.Slice(i, separatorLength) : ReadOnlyMemory<char>.Empty;
+
+                if (MemoryExtensions.Equals(word.Span, separator.Span, comparizon))
+                {
+                    if (startIndex < i)
+                    {
+                        yield return query.Slice(startIndex, i - startIndex);
+                    }
+                    startIndex = i + separatorLength;
+                }
+            }
+            if (startIndex < query.Length)
+                yield return query.Slice(startIndex, query.Length - startIndex);
+        }
+
         public static List<string> Split(this ReadOnlySpan<char> query, ReadOnlySpan<char> separator, StringComparison comparizon = StringComparison.Ordinal)
         {
             var list = new List<string>();

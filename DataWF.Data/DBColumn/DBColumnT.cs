@@ -120,7 +120,7 @@ namespace DataWF.Data
 
         protected internal override PullIndex CreatePullIndex()
         {
-            return PullIndexFactory.Create(Pull, Table.ItemType.Type, DataType, Table.DefaultComparer);
+            return PullIndexFactory.Create(Pull, Table.ItemType, DataType, Table.DefaultComparer);
         }
 
         public override void AddIndex<F>(F item)

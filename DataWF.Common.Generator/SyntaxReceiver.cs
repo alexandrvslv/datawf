@@ -22,7 +22,7 @@ namespace DataWF.Common.Generator
         public List<ClassDeclarationSyntax> IvokerCandidates { get; } = new List<ClassDeclarationSyntax>();
         public List<ClassDeclarationSyntax> TableCandidates { get; } = new List<ClassDeclarationSyntax>();
         public List<ClassDeclarationSyntax> SchemaCandidates { get; } = new List<ClassDeclarationSyntax>();
-        public List<ClassDeclarationSyntax> ClientProviderCandidate { get; } = new List<ClassDeclarationSyntax>();
+        public List<ClassDeclarationSyntax> WebSchemaCandidate { get; } = new List<ClassDeclarationSyntax>();
         public List<ClassDeclarationSyntax> SchemaControllerCandidate { get; } = new List<ClassDeclarationSyntax>();
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace DataWF.Common.Generator
                 if (syntaxNode is ClassDeclarationSyntax classDeclarationSyntax)
                 {
                     var attributesName = classDeclarationSyntax.AttributeLists.SelectMany(p => p.Attributes
-                           .Select(p => p.Name.ToString()));
+                           .Select(p => GetNameString(p.Name)));
 
                     foreach (var attribute in attributesName)
                     {
@@ -59,9 +59,9 @@ namespace DataWF.Common.Generator
                         {
                             SchemaCandidates.Add(classDeclarationSyntax);
                         }
-                        else if (attribute.StartsWith(Helper.cClientProvider, StringComparison.Ordinal))
+                        else if (attribute.StartsWith(Helper.cWebSchema, StringComparison.Ordinal))
                         {
-                            ClientProviderCandidate.Add(classDeclarationSyntax);
+                            WebSchemaCandidate.Add(classDeclarationSyntax);
                         }
                         else if (attribute.StartsWith(Helper.cSchemaController, StringComparison.Ordinal))
                         {
@@ -75,6 +75,15 @@ namespace DataWF.Common.Generator
                 Helper.LaunchDebugger();
                 Console.WriteLine($"Generator Fail: {ex.Message} at {ex.StackTrace}");
             }
+        }
+
+        private string GetNameString(NameSyntax name)
+        {
+            if (name is IdentifierNameSyntax iName)
+                return iName.Identifier.ValueText;
+            if (name is QualifiedNameSyntax qName)
+                return GetNameString(qName.Left);
+            return name.ToString();
         }
 
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context)

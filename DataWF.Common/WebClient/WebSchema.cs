@@ -5,53 +5,26 @@ using System.Text.Json;
 #endif
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-
-    public class ClientProviderBase : IClientProvider
+    public class WebSchema : IWebSchema
     {
-        private static readonly Dictionary<Type, ICrudClient> crudClients = new Dictionary<Type, ICrudClient>();
-        private static readonly Dictionary<Type, Dictionary<int, ICrudClient>> crudTypedClients = new Dictionary<Type, Dictionary<int, ICrudClient>>();
-        private readonly SelectableList<IClient> clients = new SelectableList<IClient>();
+
+        private readonly Dictionary<Type, IWebTable> crudClients = new Dictionary<Type, IWebTable>();
+        private readonly Dictionary<Type, Dictionary<int, IWebTable>> crudTypedClients = new Dictionary<Type, Dictionary<int, IWebTable>>();
+        private readonly SelectableList<IWebClient> clients = new SelectableList<IWebClient>();
 
         private static HttpClient client;
         private string baseUrl;
         private string authorizationToken;
         private HttpMessageHandler httpMessageHandler;
 
-        public static ICrudClient<T> Get<T>()
-        {
-            return (ICrudClient<T>)Get(typeof(T));
-        }
-
-        public static ICrudClient Get(Type type)
-        {
-            var baseType = type;
-            while (baseType != null)
-            {
-                if (crudClients.TryGetValue(baseType, out var crudClient))
-                    return crudClient;
-                baseType = baseType.BaseType;
-            }
-            return null;
-        }
-
-        public static ICrudClient Get(Type type, int typeId)
-        {
-            var baseType = type;
-            Dictionary<int, ICrudClient> types = null;
-            while (baseType != null && !crudTypedClients.TryGetValue(baseType, out types))
-            {
-                baseType = baseType.BaseType;
-            }
-            return types != null && types.TryGetValue(typeId, out var client) ? client : null;
-        }
-
-        public ClientProviderBase()
+        public WebSchema()
         {
 #if NETSTANDARD2_0
             JsonSettings = new JsonSerializerSettings()
@@ -87,7 +60,10 @@ namespace DataWF.Common
         public JsonSerializerOptions JsonSettings { get; }
 
 #endif
+        public string Name { get; set; }
+
         public string AuthorizationScheme { get; set; } = "Bearer";
+
         public string AuthorizationToken
         {
             get => authorizationToken;
@@ -125,11 +101,17 @@ namespace DataWF.Common
             }
         }
 
-        public SelectableList<IClient> Clients => clients;
+        public IModelProvider Provider { get; set; }
 
-        IEnumerable<IClient> IClientProvider.Clients => Clients;
+        public SelectableList<IWebClient> Clients => clients;
 
-        public virtual HttpClient CreateHttpClient(HttpMessageHandler httpMessageHandler = null)
+        IEnumerable<IWebClient> IWebSchema.Clients => Clients;
+
+        IEnumerable<IWebTable> IWebSchema.Tables => Clients.OfType<IWebTable>();
+
+        IEnumerable<IModelTable> IModelSchema.Tables => Clients.OfType<IModelTable>();
+
+        public virtual HttpClient GetHttpClient(HttpMessageHandler httpMessageHandler = null)
         {
             this.httpMessageHandler = httpMessageHandler;
             if (client == null)
@@ -158,10 +140,10 @@ namespace DataWF.Common
             return false;
         }
 
-        protected void Add(IClient client)
+        protected void Add(IWebClient client)
         {
             clients.Add(client);
-            if (client is ICrudClient crudClient)
+            if (client is IWebTable crudClient)
             {
                 crudClients[crudClient.ItemType] = crudClient;
             }
@@ -169,14 +151,14 @@ namespace DataWF.Common
 
         protected void RefreshTypedCache()
         {
-            foreach (var crudClient in clients.TypeOf<ICrudClient>())
+            foreach (var crudClient in clients.TypeOf<IWebTable>())
             {
                 if (crudClient.TypeId != 0)
                 {
-                    var baseClient = Get(crudClient.ItemType.BaseType);
+                    var baseClient = GetTable(crudClient.ItemType.BaseType);
                     while (baseClient != null && baseClient.TypeId != 0 && baseClient.ItemType.BaseType != null)
                     {
-                        baseClient = Get(baseClient.ItemType.BaseType);
+                        baseClient = GetTable(baseClient.ItemType.BaseType);
                     }
                     if (baseClient != null)
                     {
@@ -184,7 +166,7 @@ namespace DataWF.Common
 
                         if (!crudTypedClients.TryGetValue(baseType, out var types))
                         {
-                            crudTypedClients[baseType] = types = new Dictionary<int, ICrudClient>();
+                            crudTypedClients[baseType] = types = new Dictionary<int, IWebTable>();
                         }
                         types[crudClient.TypeId] = crudClient;
                     }
@@ -200,11 +182,36 @@ namespace DataWF.Common
             }
         }
 
-        public ICrudClient<T> GetClient<T>() => Get<T>();
+        public IWebTable<T> GetTable<T>()
+        {
+            return (IWebTable<T>)GetTable(typeof(T));
+        }
 
-        public ICrudClient GetClient(Type type) => Get(type);
+        public IWebTable GetTable(Type type)
+        {
+            var baseType = type;
+            while (baseType != null)
+            {
+                if (crudClients.TryGetValue(baseType, out var crudClient))
+                    return crudClient;
+                baseType = baseType.BaseType;
+            }
+            return null;
+        }
 
-        public ICrudClient GetClient(Type type, int typeId) => Get(type, typeId);
+        public IWebTable GetTable(Type type, int typeId)
+        {
+            var baseType = type;
+            Dictionary<int, IWebTable> types = null;
+            while (baseType != null && !crudTypedClients.TryGetValue(baseType, out types))
+            {
+                baseType = baseType.BaseType;
+            }
+            return types != null && types.TryGetValue(typeId, out var client) ? client : null;
+        }
 
+        IModelTable<T> IModelSchema.GetTable<T>() => GetTable<T>();
+        IModelTable IModelSchema.GetTable(Type type) => GetTable(type);
+        IModelTable IModelSchema.GetTable(Type type, int typeId) => GetTable(type, typeId);
     }
 }

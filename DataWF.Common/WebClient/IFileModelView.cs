@@ -6,7 +6,7 @@ namespace DataWF.Common
     public interface IFileModelView : IModelView
     {
         IFileLaunch Launcher { get; }
-        IFileClient FileClient { get; }
+        IFileWebTable FileClient { get; }
         Task<FileWatcher> SilentDownload(IFileModel item);
         Task<FileWatcher> Download(IFileModel item);
         Task Launch(IFileModel item);

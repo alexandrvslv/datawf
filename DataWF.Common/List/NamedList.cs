@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace DataWF.Common
 {
-    public class NamedList<T> : SelectableList<T>, INamedList where T : INamed
+    public class NamedList<T> : SelectableList<T>, INamedList<T> where T : INamed
     {
         private ListIndex<T, string> nameIndex;
 
@@ -59,12 +59,12 @@ namespace DataWF.Common
             return item == null ? false : Remove(item);
         }
 
-        public INamed Get(string name)
+        public T Get(string name)
         {
             return this[name];
         }
 
-        public void Set(INamed value)
+        public void Set(T value)
         {
             if (value != null)
             {
@@ -72,7 +72,7 @@ namespace DataWF.Common
             }
         }
 
-        public void Set(INamed value, int index)
+        public void Set(T value, int index)
         {
             if (value != null)
             {
@@ -84,6 +84,12 @@ namespace DataWF.Common
                 this[index] = (T)value;
             }
         }
+
+        INamed INamedList.Get(string name) => Get(name);
+
+        public void Set(INamed value) => Set((T)value);
+
+        public void Set(INamed value, int index) => Set((T)value, index);
     }
 
 

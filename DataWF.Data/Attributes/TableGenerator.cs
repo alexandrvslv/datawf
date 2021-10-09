@@ -258,16 +258,16 @@ namespace DataWF.Data
         {
             foreach (var entry in table.ItemTypes.ToList())
             {
-                if (entry.Value == null || entry.Value.Type == null)
+                if (entry.Value == null)
                     table.ItemTypes.Remove(entry.Key);
             }
             if (table.ItemTypes.Count == 0)
             {
-                table.ItemTypes[0] = new DBItemType { Type = ItemType };
+                table.ItemTypes[0] = ItemType;
             }
             foreach (var itemType in cacheItemTypes)
             {
-                table.ItemTypes[itemType.Attribute.Id] = new DBItemType { Type = itemType.Type };
+                table.ItemTypes[itemType.Attribute.Id] = itemType.Type;
                 itemType.Generate(table.Schema);
             }
         }

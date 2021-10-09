@@ -9,7 +9,7 @@ namespace DataWF.Test.Common
     public class TestSpan
     {
         [Test]
-        public void TestSplit()
+        public void SpanSplit()
         {
             string someString = ", bla, blah, , , h, b, ";
             var spanResult = someString.AsSpan().Split(", ".AsSpan());
@@ -21,7 +21,19 @@ namespace DataWF.Test.Common
         }
 
         [Test]
-        public void TestSubPart()
+        public void MemorySplit()
+        {
+            string someString = ", bla, blah, , , h, b, ";
+            var spanResult = someString.AsMemory().Split(", ".AsMemory()).ToList();
+            Assert.AreEqual(4, spanResult.Count);
+            Assert.AreEqual("bla", spanResult[0].ToString());
+            Assert.AreEqual("blah", spanResult[1].ToString());
+            Assert.AreEqual("h", spanResult[2].ToString());
+            Assert.AreEqual("b", spanResult[3].ToString());
+        }
+
+        [Test]
+        public void SubPart()
         {
             string someString = "some text (bla (bl()ah) bla) some other text";
             var i = someString.IndexOf('(');

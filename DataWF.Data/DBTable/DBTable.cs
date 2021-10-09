@@ -90,8 +90,8 @@ namespace DataWF.Data
         protected DBTableType type = DBTableType.Table;
         protected int blockSize = 256;
         internal object locker = new object();
-        private DBItemType itemType;
-        private int itemTypeIndex = 0;
+        private Type itemType;
+        private int typeId = 0;
         private DBColumn[] refInvoker;
 
         protected DBTable(string name = null) : base(name)
@@ -184,23 +184,23 @@ namespace DataWF.Data
         //[Browsable(false), XmlIgnore, JsonIgnore]
         //public TableAttribute Info { get; protected set; }
         [Browsable(false)]
-        public Dictionary<int, DBItemType> ItemTypes { get; set; } = new Dictionary<int, DBItemType>();
+        public Dictionary<int, Type> ItemTypes { get; set; } = new Dictionary<int, Type>();
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public DBItemType ItemType => itemType;
+        public Type ItemType => itemType;
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public string ItemTypeName => itemType?.Type.Name;
+        public string ItemTypeName => itemType?.Name;
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public int ItemTypeIndex
+        public int TypeId
         {
-            get => itemTypeIndex;
+            get => typeId;
             set
             {
-                if (itemTypeIndex != value)
+                if (typeId != value)
                 {
-                    itemTypeIndex = value;
+                    typeId = value;
                     OnPropertyChanged();
                 }
             }
@@ -627,7 +627,7 @@ namespace DataWF.Data
 
         protected internal void SetItemType(Type type)
         {
-            itemType = ItemTypes[0] = new DBItemType { Type = type };
+            itemType = ItemTypes[0] = type;
             OnPropertyChanged(nameof(ItemType));
             OnPropertyChanged(nameof(ItemTypeName));
             // Info = DBService.GetTableAttribute(type);
@@ -645,7 +645,7 @@ namespace DataWF.Data
         {
             if (itemType == 0)
                 return this;
-            return virtualTables.FirstOrDefault(p => p.ItemTypeIndex == itemType);
+            return virtualTables.FirstOrDefault(p => p.TypeId == itemType);
         }
 
         public DBTable<T> GetVirtualTable<T>() where T : DBItem
@@ -655,11 +655,11 @@ namespace DataWF.Data
 
         public IDBTable GetVirtualTable(Type type)
         {
-            if (type == ItemType.Type)
+            if (type == ItemType)
                 return this;
             if (IsVirtual)
                 return ParentTable.GetVirtualTable(type);
-            return virtualTables.FirstOrDefault(p => p.ItemType.Type == type) ?? this;
+            return virtualTables.FirstOrDefault(p => p.ItemType == type) ?? this;
         }
 
         public void RefreshSequence(bool truncate = false)
@@ -810,9 +810,13 @@ namespace DataWF.Data
             LoadColumns?.Invoke(this, arg);
         }
 
+        bool IModelTable.Add(object item) => Add((DBItem)item);
+
+        bool IModelTable.Remove(object item) => Remove((DBItem)item);
+
         public abstract DBItem this[int index] { get; }
 
-        public abstract void Add(DBItem item);
+        public abstract bool Add(DBItem item);
 
         public abstract IEnumerable<T> Load<T>(DBLoadParam param = DBLoadParam.Referencing, DBTransaction transaction = null) where T : DBItem;
 
@@ -1096,7 +1100,7 @@ namespace DataWF.Data
         {
             var type = GetItemType(typeIndex);
             return type != null
-                ? NewItem(state, def, typeIndex, type.Type)
+                ? NewItem(state, def, typeIndex, type)
                 : NewItem(state, def);
         }
 
@@ -1107,7 +1111,7 @@ namespace DataWF.Data
 
         public DBItem NewItem(DBUpdateState state, bool def, Type type)
         {
-            var typeIndex = ItemTypes.First(p => p.Value.Type == type).Key;
+            var typeIndex = ItemTypes.First(p => p.Value == type).Key;
             return NewItem(state, def, typeIndex, type);
         }
 
@@ -1495,14 +1499,14 @@ namespace DataWF.Data
         {
             if (LogTable == null)
             {
-                var genericType = TypeHelper.ParseType(ItemType.Type.Name + "Log");
+                var genericType = TypeHelper.ParseType(ItemType.Name + "Log");
                 var itemType = genericType ?? typeof(DBItemLog);
                 LogTable = (IDBTableLog)(Schema.LogSchema ?? Schema).GetTable(itemType, true);
                 if (LogTable == null)
                 {
                     var tableGenerator = new LogTableGenerator()
                     {
-                        Attribute = new LogTableAttribute(ItemType.Type, $"{Name}{(IsVirtual ? "Log" : "_log")}")
+                        Attribute = new LogTableAttribute(ItemType, $"{Name}{(IsVirtual ? "Log" : "_log")}")
                         {
                             SequenceName = SequenceName + "_log"
                         },
@@ -1624,7 +1628,7 @@ namespace DataWF.Data
             return LoadById<DBItem>(id)?.GetRowText((allColumns ? (IEnumerable<DBColumn>)Columns : Columns.GetIsView()), showColumn, separator);
         }
 
-        public virtual DBItemType GetItemType(int typeIndex)
+        public virtual Type GetItemType(int typeIndex)
         {
             if (IsVirtual)
             {
@@ -1641,7 +1645,7 @@ namespace DataWF.Data
             }
             foreach (var entry in ItemTypes)
             {
-                if (entry.Value.Type == type)
+                if (entry.Value == type)
                     return entry.Key;
             }
             return -1;

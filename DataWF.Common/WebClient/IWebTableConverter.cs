@@ -1,9 +1,9 @@
 ﻿
 namespace DataWF.Common
 {
-    public interface IClientConverter
+    public interface IWebTableConverter
     {
-        ICrudClient Client { get; }
+        IWebTable Table { get; }
 
         TypeSerializeInfo SerializationInfo { get; }
 #if NETSTANDARD2_0

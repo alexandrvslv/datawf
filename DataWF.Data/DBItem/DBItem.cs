@@ -44,6 +44,7 @@ namespace DataWF.Data
 
         internal PullHandler? oldHandler;
         internal PullHandler handler;
+        internal int rowId;
         internal string cacheToString = string.Empty;
         protected DBTable table;
         protected DBItemState state = DBItemState.New;
@@ -216,6 +217,7 @@ namespace DataWF.Data
                 {
                     table = (DBTable)value.GetVirtualTable(GetType());
                     handler = table.GetNextHandler();
+                    rowId = handler.GetSeqence(table.BlockSize);
                 }
             }
         }
@@ -699,7 +701,7 @@ namespace DataWF.Data
             return Format(Table.Columns[code]);
         }
 
-        public void Build(IDBTable table, bool setDefauilts = true, int itemType = -1)
+        public void Build(IDBTable table, bool setDefauilts = true, int typeId = -1)
         {
             Table = table;
             if (setDefauilts)
@@ -708,7 +710,7 @@ namespace DataWF.Data
             }
             if (Table.ItemTypeKey != null)
             {
-                SetValue(itemType < 0 ? table.GetTypeIndex(GetType()) : itemType, table.ItemTypeKey, DBSetValueMode.Loading);
+                SetValue(typeId < 0 ? table.GetTypeIndex(GetType()) : typeId, table.ItemTypeKey, DBSetValueMode.Loading);
             }
         }
 
@@ -1679,6 +1681,11 @@ namespace DataWF.Data
             ref readonly var xHandler = ref handler;
             ref readonly var yHandler = ref y.handler;
             return xHandler.Value.CompareTo(yHandler.Value);
+        }
+
+        internal int CompareByRowId(DBItem y)
+        {
+            return rowId.CompareTo(y.rowId);
         }
 
         public string GeneretePatch(IEnumerable<DBItem> items)

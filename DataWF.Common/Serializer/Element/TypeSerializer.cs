@@ -21,7 +21,7 @@ namespace DataWF.Common
 
     public class TypeShortSerializer : ElementSerializer<Type>
     {
-        public static readonly TypeSerializer Instance = new TypeSerializer();
+        public static readonly TypeShortSerializer Instance = new TypeShortSerializer();
 
         public override bool CanConvertString => true;
 

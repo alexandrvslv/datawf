@@ -14,13 +14,16 @@ using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace DataWF.Common.Generator
 {
-    internal class ClientProviderGenerator : BaseGenerator
+    internal class WebSchemaGenerator : BaseGenerator
     {
         private const string cList = "List";
         private const string cApi = "api";
         private const string cXId = "x-id";
         private const string cXType = "x-type";
         private const string c200 = "200";
+        private const string cWebClient = "WebClient";
+        private const string cWebTable = "WebTable";
+
         private readonly HashSet<string> VirtualOperations = new HashSet<string>(StringComparer.Ordinal)
         {
             "Get",
@@ -42,13 +45,14 @@ namespace DataWF.Common.Generator
         private Dictionary<string, INamedTypeSymbol> cacheReferences = new Dictionary<string, INamedTypeSymbol>(StringComparer.Ordinal);
         private Dictionary<string, Dictionary<string, INamedTypeSymbol>> cacheAssemblySymbolTypes = new Dictionary<string, Dictionary<string, INamedTypeSymbol>>(StringComparer.Ordinal);
         private string clientName = string.Empty;
-        private HashSet<string> clients = new HashSet<string>(StringComparer.Ordinal);
+        private string clientType = string.Empty;
+        private Dictionary<string, string> clients = new Dictionary<string, string>(StringComparer.Ordinal);
         private HashSet<string> usings = new HashSet<string>(StringComparer.Ordinal);
         private Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
         private OpenApiDocument document;
         private List<IAssemblySymbol> usingReferences = new List<IAssemblySymbol>();
 
-        public ClientProviderGenerator(CompilationContext compilationContext)
+        public WebSchemaGenerator(CompilationContext compilationContext)
             : base(compilationContext)
         {
         }
@@ -58,13 +62,13 @@ namespace DataWF.Common.Generator
         public string DocumentSource { get; set; }
         public AttributeData Attribute { get; private set; }
         public string Namespace { get; set; }
-        public string ProviderName { get; set; }
+        public string SchemaName { get; set; }
 
         public override bool Process()
         {
-            Attribute = TypeSymbol.GetAttribute(Attributes.ClientProvider);
+            Attribute = TypeSymbol.GetAttribute(Attributes.WebSchema);
             Namespace = TypeSymbol.ContainingNamespace.ToDisplayString();
-            ProviderName = TypeSymbol.Name;
+            SchemaName = TypeSymbol.Name;
             source = new StringBuilder();
             LoadDocument();
 
@@ -100,7 +104,7 @@ namespace DataWF.Common.Generator
         {
             if (source.Length > 0)
             {
-                clients.Add(clientName);
+                clients.Add(clientName, clientType);
                 source.Append($@"
     }}");
                 GenUnit($"{Namespace}.{clientName}ClientGen.cs", source, usings);
@@ -150,16 +154,15 @@ namespace DataWF.Common.Generator
         {
             source.Clear();
             source.Append($@"
-    public partial class {ProviderName} {(TypeSymbol.BaseType?.Name != "ClientProviderBase" ? ": ClientProviderBase" : "")}
-    {{
-        //public static {ProviderName} Default = new {ProviderName}();");
+    public partial class {SchemaName} {(TypeSymbol.BaseType?.Name != "WebSchema" ? ": WebSchema" : "")}
+    {{");
 
             GenProviderConstructor();
 
             foreach (var client in clients)
             {
                 source.Append($@"
-        public {client}Client {client} {{ get; }}");
+        public {client.Value} {client.Key} {{ get; }}");
             }
             source.Append($@"
     }}");
@@ -169,13 +172,14 @@ namespace DataWF.Common.Generator
         private void GenProviderConstructor()
         {
             source.Append($@"
-        public {ProviderName}()
-        {{");
+        public {SchemaName}()
+        {{
+            Name = ""{SchemaName}"";");
 
             foreach (var client in clients)
             {
                 source.Append($@"
-            Add({client} = new {client}Client(this));");
+            Add({client.Key} = new {client.Value}(this));");
             }
             source.Append($@"
             RefreshTypedCache();
@@ -196,17 +200,18 @@ namespace DataWF.Common.Generator
 
         private void GenClient(string clientName, HashSet<string> usings)
         {
-            this.clientName = clientName;
             usings.Add("DataWF.Common");
             usings.Add("System");
             usings.Add("System.Collections.Generic");
             usings.Add("System.Net.Http");
             usings.Add("System.Threading.Tasks");
             usings.Add("System.Text.Json.Serialization");
-            var baseType = GetClientBaseType(clientName, usings, out var idKey, out var typeKey, out var typeId);
+            var baseType = GetClientBaseType(clientName, usings, out var idKey, out var typeKey, out var typeId, out var postfix);
+            this.clientName = clientName;
+            this.clientType = $"{clientName}{postfix}";
             source.Clear();
             source.Append($@"
-    public partial class {clientName}Client: {baseType}
+    public partial class {clientType}: {baseType}
     {{");
             GenClientMembers(source, clientName, idKey, typeKey, typeId, usings);
         }
@@ -223,10 +228,10 @@ namespace DataWF.Common.Generator
 
             clientSource.Append($@"
         [JsonIgnore]
-        public new {ProviderName} Provider
+        public new {SchemaName} Schema
         {{
-            get => ({ProviderName})base.Provider;
-            set => base.Provider = value;
+            get => ({SchemaName})base.Schema;
+            set => base.Schema = value;
         }}");
 
             if (cache.Count > 0)
@@ -247,11 +252,10 @@ namespace DataWF.Common.Generator
                   {clientName}.{typeName}Invoker.Instance,
                   {typeId}";
             clientSource.Append($@"
-        public {clientName}Client({ProviderName} provider)
+        public {clientType}({SchemaName} schema)
             : base({baseCtor})
         {{
-            Provider = provider;
-            //Instance = Instance ?? this;");
+            Schema = schema;");
 
             foreach (var refField in cache)
             {
@@ -275,7 +279,7 @@ namespace DataWF.Common.Generator
                 clientSource.Append($@"
                 if (item.{refField.KeyName} != null)
                 {{
-                    var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = Provider.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};
+                    var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = Schema.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};
                     item{refField.ValueName}?.{refField.PropertyName}.Remove(item);
                 }}");
             }
@@ -297,7 +301,7 @@ namespace DataWF.Common.Generator
                 clientSource.Append($@"
                 if (item.{refField.KeyName} != null)
                 {{
-                    var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = Provider.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};
+                    var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = Schema.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};
                     item{refField.ValueName}?.{refField.PropertyName}.Add(item);
                 }}");
             }
@@ -310,8 +314,8 @@ namespace DataWF.Common.Generator
         {
             var operationName = GetOperationName(descriptor, out var clientName);
             var actualName = operationName;
-            var baseType = GetClientBaseType(clientName, usings, out _, out _, out _);
-            var isOverride = !string.Equals(baseType, "WebClientBase", StringComparison.Ordinal)
+            var baseType = GetClientBaseType(clientName, usings, out _, out _, out _, out _);
+            var isOverride = !string.Equals(baseType, cWebClient, StringComparison.Ordinal)
                             && VirtualOperations.Contains(actualName);
             var returnType = GetReturningTypeCheck(descriptor, operationName, usings);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
@@ -346,7 +350,7 @@ namespace DataWF.Common.Generator
 
         private void GenOperationBody(StringBuilder source, string actualName, OpenApiOperationDescription descriptor, HashSet<string> usings, bool isOverride)
         {
-            var method = descriptor.Method.ToString().ToUpperInvariant();
+            var method = descriptor.Method.ToInitcap();
             var responceSchema = (JsonSchema)null;
             var mediatype = "application/json";
             if (descriptor.Operation.Responses.TryGetValue(c200, out var responce))
@@ -372,7 +376,7 @@ namespace DataWF.Common.Generator
             var returnType = GetReturningType(descriptor, usings);
 
             source.Append($@"
-            return await Request<{returnType}>(progressToken, HttpMethod.{method.ToInitcap()}, ""{path}"", ""{mediatype}"" ");
+            return await Request<{returnType}>(progressToken, HttpMethod.{method}, ""{path}"", ""{mediatype}"" ");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             if (bodyParameter == null)
             {
@@ -441,18 +445,16 @@ namespace DataWF.Common.Generator
         public string GetOperationName(OpenApiOperationDescription descriptor, out string clientName)
         {
             clientName = GetClientName(descriptor);
-            string name = string.Empty;
+
             foreach (var step in descriptor.Path.SpanSplit('/'))
             {
                 if (MemoryExtensions.Equals(step.Span, cApi.AsSpan(), StringComparison.Ordinal)
                     || MemoryExtensions.Equals(step.Span, clientName.AsSpan(), StringComparison.Ordinal)
                     || (step.Length > 0 && step.Span[0] == '{'))
                     continue;
-                name = step.Span.ToString();
+                return step.Span.ToString();
             }
-            if (name.Length == 0)
-                name = descriptor.Method.ToInitcap();
-            return name;
+            return descriptor.Method.ToInitcap();
         }
 
         private HashSet<RefField> GetClientReferences(JsonSchema clientSchema)
@@ -474,8 +476,9 @@ namespace DataWF.Common.Generator
             return cache;
         }
 
-        private string GetClientBaseType(string clientName, HashSet<string> usings, out JsonSchemaProperty idKey, out JsonSchemaProperty typeKey, out int typeId)
+        private string GetClientBaseType(string clientName, HashSet<string> usings, out JsonSchemaProperty idKey, out JsonSchemaProperty typeKey, out int typeId, out string postfix)
         {
+            postfix = cWebClient;
             idKey = null;
             typeKey = null;
             typeId = 0;
@@ -486,13 +489,14 @@ namespace DataWF.Common.Generator
             var loggedTypeName = loggedReturnSchema == null ? null : GetArrayElementTypeString(loggedReturnSchema, usings);
             if (document.Definitions.TryGetValue(clientName, out var schema))
             {
+                postfix = cWebTable;
                 idKey = GetPrimaryKey(schema);
                 typeKey = GetTypeKey(schema);
                 typeId = GetTypeId(schema);
 
-                return $"{(loggedTypeName != null ? "Logged" : "")}WebClient<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, usings, cList))}{(logged != null ? $", {loggedTypeName}" : "")}>";
+                return $"{(loggedTypeName != null ? "Logged" : "")}WebTable<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, usings, cList))}{(logged != null ? $", {loggedTypeName}" : "")}>";
             }
-            return $"WebClientBase";
+            return cWebClient;
         }
 
         private JsonSchemaProperty GetProperty(JsonSchema schema, string propertyName)
@@ -806,9 +810,9 @@ namespace DataWF.Common.Generator
             {
                 source.Append($@"
         [JsonIgnore]    
-        public new {ProviderName} Provider
+        public new {SchemaName} Schema
         {{
-            get => ({ProviderName})base.Provider;
+            get => ({SchemaName})base.Schema;
         }}");
             }
             foreach (var property in schema.Properties)
@@ -1137,7 +1141,7 @@ namespace DataWF.Common.Generator
                     source.Append($@"
                 if ({objectFieldName}?.Id != value)
                 {{
-                    {objectFieldName} = value == default({type}) ? null : Provider?.{clientName}.Select(value{(type.EndsWith("?") ? ".Value" : "")});
+                    {objectFieldName} = value == default({type}) ? null : Schema?.{clientName}.Select(value{(type.EndsWith("?") ? ".Value" : "")});
                     OnPropertyChanged(nameof({GetPropertyName(objectProperty)}));
                 }}");
                 }
@@ -1172,17 +1176,19 @@ namespace DataWF.Common.Generator
 
         private string GetDefinitionName(string name)
         {
-            return string.Concat(char.ToUpperInvariant(name[0]).ToString(), name.Substring(1));
+            return name.ToInitcap();
         }
 
         private string GetFieldName(JsonSchemaProperty property)
         {
-            return GetFieldName(property.Name);
+            return !string.IsNullOrEmpty(property.Id)
+                ? property.Id
+                : property.Id = GetFieldName(property.Name);
         }
 
         private string GetFieldName(string property)
         {
-            return string.Concat("_", char.ToLowerInvariant(property[0]).ToString(), property.Substring(1));
+            return string.Concat("_", property.ToLowerCap());
         }
 
         private string GetPropertyRefKey(JsonSchema schema)

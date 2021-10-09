@@ -237,6 +237,8 @@ namespace DataWF.Data
             set => fileName = value;
         }
 
+        IEnumerable<IModelTable> IModelSchema.Tables => throw new NotImplementedException();
+
         #endregion
 
         public async Task Update()
@@ -515,6 +517,12 @@ namespace DataWF.Data
             return table.GetVirtualTable(itemType);
         }
 
+        public IDBTable GetVirtualTable(Type type, int itemType)
+        {
+            var table = GetTable(type);
+            return table.GetVirtualTable(itemType);
+        }
+
         public DBTable<T> GetTable<T>(bool generate = false) where T : DBItem
         {
             return (DBTable<T>)GetTable(typeof(T), generate);
@@ -694,5 +702,11 @@ namespace DataWF.Data
         {
             Provider?.OnChanged(item, type);
         }
+
+        IModelTable<T> IModelSchema.GetTable<T>() => (IModelTable<T>)GetTable(typeof(T));
+
+        IModelTable IModelSchema.GetTable(Type type) => GetTable(type);
+
+        IModelTable IModelSchema.GetTable(Type type, int typeId) => GetVirtualTable(type, typeId);
     }
 }

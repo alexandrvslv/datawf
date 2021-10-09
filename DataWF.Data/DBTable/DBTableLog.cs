@@ -117,8 +117,8 @@ namespace DataWF.Data
                 }
                 foreach (var entry in value.ItemTypes)
                 {
-                    var logEquevalent = TypeHelper.ParseType(entry.Value.Type.Name + "Log");
-                    ItemTypes[entry.Key] = new DBItemType { Type = logEquevalent ?? typeof(DBItemLog) };
+                    var logEquevalent = TypeHelper.ParseType(entry.Value.Name + "Log");
+                    ItemTypes[entry.Key] = logEquevalent ?? typeof(DBItemLog);
                 }
             }
         }

@@ -280,6 +280,7 @@ order by emp.DateCreate desc";
             Assert.IsAssignableFrom<QQuery<DBItem>>(query.Columns[2]);
             var posSubQuery = (QQuery<DBItem>)query.Columns[2];
             Assert.AreEqual("sub_query_position_name", posSubQuery.ColumnAlias);
+            Assert.AreEqual(1, posSubQuery.Columns.Count);
             Assert.AreEqual(positions.NameENKey, ((QColumn)posSubQuery.Columns[0]).Column);
             Assert.AreEqual(positions, posSubQuery.Tables[0].Table);
             Assert.AreEqual(positions.IdKey, posSubQuery.Parameters[0].LeftColumn);
@@ -440,7 +441,7 @@ order by emp.DateCreate desc";
             var tableCommand = query.ToCommand(true);
             Console.WriteLine(tableCommand.CommandText);
 
-            var queryLoadCount = employers.Load(tableCommand).Count();
+            var queryLoadCount = employers.Load(tableCommand, query).Count();
 
             Assert.AreEqual(posCodes.Length, positions.Count);
             Assert.AreEqual(linqCount, employers.Count);

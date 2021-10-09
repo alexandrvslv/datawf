@@ -6,7 +6,8 @@ using System.Xml.Serialization;
 
 namespace DataWF.Module.Common
 {
-    public class UserRegItem
+    [InvokerGenerator]
+    public partial class UserRegItem
     {
         private DBItemLog cacheLogItem;
         private IDBTable cacheTargetTable;

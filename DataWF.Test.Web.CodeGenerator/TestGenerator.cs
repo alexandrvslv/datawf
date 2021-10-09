@@ -11,7 +11,7 @@ namespace DataWF.Test.Web.CodeGenerator
         [Test()]
         public void GenerateCode()
         {
-            var provider = new WebClientTestProvider();
+            var provider = new WebSchemaTest();
 
         }
     }

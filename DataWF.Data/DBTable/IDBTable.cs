@@ -28,7 +28,7 @@ using DataWF.Common;
 
 namespace DataWF.Data
 {
-    public interface IDBTable : IDBSchemaItem, ICollection, IDisposable
+    public interface IDBTable : IDBSchemaItem, IModelTable, ICollection, IDisposable
     {
         DBItem this[int index] { get; }
         DBColumn PrimaryKey { get; }
@@ -65,9 +65,7 @@ namespace DataWF.Data
         bool IsLoging { get; set; }
         bool IsVirtual { get; }
         IDBTable ParentTable { get; }
-        DBItemType ItemType { get; }
-        int ItemTypeIndex { get; set; }
-        Dictionary<int, DBItemType> ItemTypes { get; set; }
+        Dictionary<int, Type> ItemTypes { get; set; }
         IDBTableLog LogTable { get; set; }
         string LogTableName { get; set; }
         string SubQuery { get; set; }
@@ -87,7 +85,7 @@ namespace DataWF.Data
         event EventHandler<DBItemEventArgs> RowUpdating;
 
         void Accept(DBItem item);
-        void Add(DBItem item);
+        bool Add(DBItem item);
         void AcceptAll(IUserIdentity user);
         void RejectAll(IUserIdentity user);
         void DeleteById(object id);
@@ -147,7 +145,7 @@ namespace DataWF.Data
         IEnumerable<DBForeignKey> GetChildRelations();
         IEnumerable<IDBTable> GetChildTables();
         IEnumerable<IDBTable> GetParentTables();
-        DBItemType GetItemType(int typeIndex);
+        Type GetItemType(int typeIndex);
         int GetTypeIndex(Type type);
 
 

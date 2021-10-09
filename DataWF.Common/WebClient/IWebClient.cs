@@ -7,10 +7,21 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public interface IClientProvider
+
+    public interface IWebProvider: IModelProvider
     {
+        new IEnumerable<IWebSchema> Schems { get; }
+
+        new IWebTable<T> GetTable<T>();
+        new IWebTable GetTable(Type type);
+        new IWebTable GetTable(Type type, int typeId);
+    }
+
+    public interface IWebSchema : IModelSchema
+    {
+        IEnumerable<IWebClient> Clients { get; }
+        new IEnumerable<IWebTable> Tables { get; }
         string BaseUrl { get; set; }
-        IEnumerable<IClient> Clients { get; }
         string AuthorizationScheme { get; set; }
         string AuthorizationToken { get; set; }
         Func<Task<bool>> UnauthorizedError { get; set; }
@@ -19,33 +30,30 @@ namespace DataWF.Common
 #else
         System.Text.Json.JsonSerializerOptions JsonSettings { get; }
 #endif  
-        HttpClient CreateHttpClient(HttpMessageHandler httpMessageHandler = null);
+        HttpClient GetHttpClient(HttpMessageHandler httpMessageHandler = null);
         Task<bool> OnUnauthorized();
-        ICrudClient<T> GetClient<T>();
-        ICrudClient GetClient(Type type);
-        ICrudClient GetClient(Type type, int typeId);
+        new IWebTable<T> GetTable<T>();
+        new IWebTable GetTable(Type type);
+        new IWebTable GetTable(Type type, int typeId);
     }
 
-    public interface IClient
+    public interface IWebClient
     {
-        IClientProvider Provider { get; set; }
+        IWebSchema Schema { get; set; }
 
-        ClientStatus Status { get; set; }
+        WebClientStatus Status { get; set; }
 
         event EventHandler CacheCleared;
 
         void ClearCache();
     }
 
-    public interface ICrudClient : IClient
+    public interface IWebTable : IModelTable, IWebClient
     {
-        IClientConverter Converter { get; }
-        IClientItemList Items { get; }
+        IWebTableConverter Converter { get; }
+        IWebTableItemList Items { get; }
         bool IsSynchronized { get; set; }
-        Type ItemType { get; }
-        int TypeId { get; }
-        bool Add(object item);
-        bool Remove(object item);
+
         object AddDownloads(object id, object item);
         bool RemoveDownloads(object id);
         object GetDownloads(object id);
@@ -54,7 +62,7 @@ namespace DataWF.Common
         object Select(object id);
         object ParseId(object id);
         IEnumerable GetChanges();
-        
+
         Task<object> Reload(object item, ProgressToken token);
         Task<IEnumerable> Load(string filter, ProgressToken token);
         ILoadProgress LoadCache(string filter, ProgressToken token);
@@ -74,11 +82,9 @@ namespace DataWF.Common
         bool ClearLoadCache(string filter);
     }
 
-    public interface ICrudClient<T> : ICrudClient
+    public interface IWebTable<T> : IWebTable, IModelTable<T>
     {
-        new ClientItemList<T> Items { get; }
-        bool Add(T item);
-        bool Remove(T item);
+        new WebTableItemList<T> Items { get; }
         T Get(object id);
         Task<T> Reload(T item, ProgressToken token);
         new ICollection<T> GetChanges();
@@ -96,7 +102,7 @@ namespace DataWF.Common
         Task<T> Merge(T value, List<string> ids, ProgressToken token);
     }
 
-    public interface ILoggedClient
+    public interface ILoggedWebTable
     {
         Task<IEnumerable> GetLogs(string filter, ProgressToken token);
         Task<IEnumerable> GetItemLogs(object id, ProgressToken token);
@@ -106,16 +112,16 @@ namespace DataWF.Common
         Task<bool> RemoveLog(long logId, ProgressToken token);
     }
 
-    public interface ILoggedClient<T, L> : ILoggedClient
+    public interface ILoggedWebTable<T, L> : ILoggedWebTable
     {
         new Task<List<L>> GetLogs(string filter, ProgressToken token);
         new Task<List<L>> GetItemLogs(object id, ProgressToken token);
 
         new Task<T> UndoLog(long logId, ProgressToken token);
-        new Task<T> RedoLog(long logId, ProgressToken token);        
+        new Task<T> RedoLog(long logId, ProgressToken token);
     }
 
-    public interface IFileClient
+    public interface IFileWebTable
     {
         string GetFilePath(IFileModel model);
         Task<Stream> DownloadFile(object id, ProgressToken token);
@@ -124,17 +130,17 @@ namespace DataWF.Common
         Task<object> UploadFileModel(object model, ProgressToken token);
     }
 
-    public interface ILoggedFileClient : IFileClient
+    public interface ILoggedFileWebTable : IFileWebTable
     {
         Task<Stream> DownloadLogFile(long logId, ProgressToken token);
     }
 
-    public interface IClientItemList : IList
+    public interface IWebTableItemList : IList
     {
-        IClient Client { get; }
+        IWebClient Client { get; }
     }
 
-    public enum ClientStatus
+    public enum WebClientStatus
     {
         None,
         Compleate,

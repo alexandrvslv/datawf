@@ -73,7 +73,7 @@ namespace DataWF.Data
                 schema.Tables.Add(table);
             }
             table.Generator = TableGenerator;
-            table.ItemTypeIndex = Attribute.Id;
+            table.TypeId = Attribute.Id;
             table.Schema = schema;
             table.RefreshVirtualTable(baseTable);
             foreach (var columnGenerator in TableGenerator.Columns)

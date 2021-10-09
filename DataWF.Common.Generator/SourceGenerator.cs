@@ -114,15 +114,15 @@ namespace DataWF.Common.Generator
                     }
                 }
 
-                if (receiver.ClientProviderCandidate.Any())
+                if (receiver.WebSchemaCandidate.Any())
                 {
                     invokerGenerator.ForceInstance = true;
-                    var clientGenerator = new ClientProviderGenerator(compilationContext)
+                    var clientGenerator = new WebSchemaGenerator(compilationContext)
                     {
                         InvokerGenerator = invokerGenerator
                     };
 
-                    foreach (var clientClass in receiver.ClientProviderCandidate)
+                    foreach (var clientClass in receiver.WebSchemaCandidate)
                     {
                         if (context.CancellationToken.IsCancellationRequested)
                             return;

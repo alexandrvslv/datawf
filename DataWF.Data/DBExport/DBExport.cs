@@ -76,8 +76,8 @@ namespace DataWF.Data
             foreach (var table in list)
             {
                 builder.AppendLine($"    public class {table.DisplayName.Replace(" ", "")}Generator {{");
-                builder.AppendLine($"        public void Generate() {{");
-                builder.AppendLine($"            using(var transaction = new DBTransaction({table.ItemType.Type.Name}.DBTable.Schema.Connection)){{");
+                builder.AppendLine($"        public void Generate(IDBSchema schema) {{");
+                builder.AppendLine($"            using(var transaction = new DBTransaction(schema)){{");
                 var enumer = (IEnumerable<DBItem>)table;
                 if (table.GroupKey != null)
                 {
@@ -101,7 +101,7 @@ namespace DataWF.Data
                     }
                     builder.AppendLine("                }.Save();");
                 }
-                builder.AppendLine($"                {table.ItemType.Type.Name}.DBTable.Save();");
+                builder.AppendLine($"                {table.ItemType.Name}.DBTable.Save();");
                 builder.AppendLine("                transaction.Commit();");
                 builder.AppendLine("            }");
                 builder.AppendLine("        }");

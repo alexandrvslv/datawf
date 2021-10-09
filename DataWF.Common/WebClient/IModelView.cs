@@ -9,7 +9,7 @@ namespace DataWF.Common
     public interface IModelView : INotifyValidation, INotifyPropertyChanged
     {
         Type ItemType { get; }
-        IClient BaseClient { get; }
+        IWebClient WebClient { get; }
         IFilterable Items { get; set; }
         IQuery Filter { get; set; }
         object SelectedItem { get; set; }

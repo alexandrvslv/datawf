@@ -12,48 +12,52 @@ namespace DataWF.Common.Generator
 {
     public static class Helper
     {
-        public const string cCodeKey = "CodeKey";
-        public const string cFileNameKey = "FileNameKey";
-        public const string cFileLastWriteKey = "FileLastWriteKey";
-        public const string cDBSchema = "DBSchema";
-        public const string cDBSchemaLog = "DBSchemaLog";
-        public const string cIDBSchema = "IDBSchema";
-        public const string cIDBSchemaLog = "IDBSchemaLog";
-        public const string cDBTable = "DBTable";
-        public const string cIDBTable = "IDBTable";
-        public const string cDBTableLog = "DBTableLog";
-        public const string cIDBTableLog = "IDBTableLog";
-        public const string cDBItem = "DBItem";
-        public const string cDBItemLog = "DBItemLog";
-        public const string cDBGroupItem = "DBGroupItem";
-        public const string cDBTransaction = "DBTransaction";
-        public const string cType = "Type";
-        public const string cObject = "Object";
-        public const string cSystem = "System";
-        public const string cStream = "Stream";
-        public const string cString = "string";
-        public const string cLog = "Log";
-        public const string cKeys = "Keys";
-        public const string cSchema = "Schema";
-        public const string cSchemaAttribute = "SchemaAttribute";
-        public const string cTable = "Table";
-        public const string cTableAttribute = "TableAttribute";
-        public const string cLogTable = "LogTable";
-        public const string cLogTableAttribute = "LogTableAttribute";
-        public const string cAbstractTable = "AbstractTable";
-        public const string cAbstractTableAttribute = "AbstractTableAttribute";
-        public const string cVirtualTable = "VirtualTable";
-        public const string cVirtualTableAttribute = "VirtualTableAttribute";
-        public const string cColumn = "Column";
-        public const string cColumnAttribute = "ColumnAttribute";
-        public const string cReference = "Reference";
-        public const string cReferenceAttribute = "ReferenceAttribute";
-        public const string cInvokerGenerator = "InvokerGenerator";
-        public const string cInvokerGeneratorAttribute = "InvokerGeneratorAttribute";
-        public const string cClientProvider = "ClientProvider";
-        public const string cClientProviderAttribute = "ClientProviderAttribute";
-        public const string cSchemaController = "SchemaController";
-        public const string cSchemaControllerAttribute = "SchemaControllerAttribute";
+        public static readonly string cCodeKey = "CodeKey";
+        public static readonly string cFileNameKey = "FileNameKey";
+        public static readonly string cFileLastWriteKey = "FileLastWriteKey";
+        public static readonly string cDBSchema = "DBSchema";
+        public static readonly string cDBSchemaLog = "DBSchemaLog";
+        public static readonly string cIDBSchema = "IDBSchema";
+        public static readonly string cIDBSchemaLog = "IDBSchemaLog";
+        public static readonly string cDBTable = "DBTable";
+        public static readonly string cIDBTable = "IDBTable";
+        public static readonly string cDBTableLog = "DBTableLog";
+        public static readonly string cIDBTableLog = "IDBTableLog";
+        public static readonly string cDBItem = "DBItem";
+        public static readonly string cDBItemLog = "DBItemLog";
+        public static readonly string cDBGroupItem = "DBGroupItem";
+        public static readonly string cDBTransaction = "DBTransaction";
+        public static readonly string cType = "Type";
+        public static readonly string cObject = "Object";
+        public static readonly string cSystem = "System";
+        public static readonly string cStream = "Stream";
+        public static readonly string cString = "string";
+        public static readonly string cLog = "Log";
+        public static readonly string cKeys = "Keys";
+        public static readonly string cSchema = "Schema";
+        public static readonly string cSchemaAttribute = "SchemaAttribute";
+        public static readonly string cTable = "Table";
+        public static readonly string cTableAttribute = "TableAttribute";
+        public static readonly string cLogTable = "LogTable";
+        public static readonly string cLogTableAttribute = "LogTableAttribute";
+        public static readonly string cAbstractTable = "AbstractTable";
+        public static readonly string cAbstractTableAttribute = "AbstractTableAttribute";
+        public static readonly string cVirtualTable = "VirtualTable";
+        public static readonly string cVirtualTableAttribute = "VirtualTableAttribute";
+        public static readonly string cColumn = "Column";
+        public static readonly string cColumnAttribute = "ColumnAttribute";
+        public static readonly string cReference = "Reference";
+        public static readonly string cReferenceAttribute = "ReferenceAttribute";
+        public static readonly string cInvokerGenerator = "InvokerGenerator";
+        public static readonly string cInvokerGeneratorAttribute = "InvokerGeneratorAttribute";
+        public static readonly string cWebSchema = "WebSchema";
+        public static readonly string cWebSchemaAttribute = "WebSchemaAttribute";
+        public static readonly string cSchemaController = "SchemaController";
+        public static readonly string cSchemaControllerAttribute = "SchemaControllerAttribute";
+        public static readonly string cGet = "Get";
+        public static readonly string cPost = "Post";
+        public static readonly string cPut = "Put";
+        public static readonly string cDelete = "Delete";
 
         public static readonly DiagnosticDescriptor DDCommonLibrary = new DiagnosticDescriptor("DWFG001",
             "DataWF.Common references not found",
@@ -103,11 +107,24 @@ namespace DataWF.Common.Generator
                 yield return word;
         }
 
+        public static string ToLowerCap(this string str)
+        {
+            return string.Concat(Char.ToLowerInvariant(str[0]).ToString(), str.Substring(1));
+        }
+
         //https://stackoverflow.com/a/24768641
         public static string ToInitcap(this string str, params char[] separator)
         {
             if (string.IsNullOrEmpty(str))
                 return str;
+            if (string.Equals(str, cGet, StringComparison.OrdinalIgnoreCase))
+                return cGet;
+            if (string.Equals(str, cPost, StringComparison.OrdinalIgnoreCase))
+                return cPost;
+            if (string.Equals(str, cPut, StringComparison.OrdinalIgnoreCase))
+                return cPut;
+            if (string.Equals(str, cDelete, StringComparison.OrdinalIgnoreCase))
+                return cDelete;
             var charArray = new List<char>(str.Length);
             bool newWord = true;
             foreach (Char currentChar in str)
@@ -160,6 +177,7 @@ namespace DataWF.Common.Generator
                 return assembly.GetType(value);
             }
         }
+
         public static IEnumerable<AttributeData> GetAllAttributes(this ITypeSymbol typeSymbol, INamedTypeSymbol type)
         {
             var list = new List<AttributeData>();
@@ -171,6 +189,7 @@ namespace DataWF.Common.Generator
             }
             return list;
         }
+
         public static TypedConstant GetNamedValue(this AttributeData attributeData, string name)
         {
             return attributeData.NamedArguments.FirstOrDefault(kvp => string.Equals(kvp.Key, name, StringComparison.Ordinal)).Value;

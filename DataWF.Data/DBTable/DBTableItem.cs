@@ -51,7 +51,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public override IDBSchema Schema
+        public new IDBSchema Schema
         {
             get { return Table?.Schema; }
         }

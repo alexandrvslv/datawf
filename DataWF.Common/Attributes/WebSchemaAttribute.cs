@@ -7,9 +7,9 @@ using System;
 namespace DataWF.Common
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class ClientProviderAttribute : Attribute
+    public class WebSchemaAttribute : Attribute
     {
-        public ClientProviderAttribute(string documentPath)
+        public WebSchemaAttribute(string documentPath)
         {
             DocumentPath = documentPath;
         }

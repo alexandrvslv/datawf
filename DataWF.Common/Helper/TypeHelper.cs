@@ -283,9 +283,10 @@ namespace DataWF.Common
             var buffer = new List<Type>();
             while (type != null)
             {
-                buffer.Insert(0, type);
+                buffer.Add(type);
                 type = type.BaseType;
             }
+            buffer.Reverse();
             return buffer;
         }
 

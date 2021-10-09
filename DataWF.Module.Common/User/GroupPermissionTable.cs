@@ -30,7 +30,7 @@ namespace DataWF.Module.Common
                 else if (value is DBTable table)
                 {
                     type = PermissionType.GTable;
-                    name = table.ItemType?.Type.Name ?? value.ToString();
+                    name = table.ItemType?.Name ?? value.ToString();
                 }
                 else if (value is DBColumn column)
                 {

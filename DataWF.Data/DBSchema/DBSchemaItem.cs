@@ -56,7 +56,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public virtual IDBSchema Schema
+        public new IDBSchema Schema
         {
             get => schema;
             set

@@ -37,7 +37,7 @@ using System.Linq.Expressions;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public partial class DBTable<T> : DBTable, IIdCollection<T> where T : DBItem
+    public partial class DBTable<T> : DBTable, IModelTable<T>, IIdCollection<T> where T : DBItem
     {
         protected readonly List<T> items = new List<T>();
         protected readonly List<T> insertItems = new List<T>();
@@ -114,18 +114,20 @@ namespace DataWF.Data
             Add(row);
         }
 
-        public override void Add(DBItem item)
+        void ICollection<T>.Add(T item) => Add(item);
+
+        public override bool Add(DBItem item)
         {
-            Add((T)item);
+            return Add((T)item);
         }
 
-        public virtual void Add(T item)
+        public virtual bool Add(T item)
         {
             if (IsVirtual)
             {
                 if (!item.Attached)
                 {
-                    ParentTable.Add(item);
+                    return ParentTable.Add(item);
                 }
                 else
                 {
@@ -133,7 +135,6 @@ namespace DataWF.Data
                     AddIndexes(item);
                     CheckViews(item, NotifyCollectionChangedAction.Add);
                 }
-                return;
             }
             //if (item.Table != this)
             //{
@@ -141,12 +142,13 @@ namespace DataWF.Data
             //}
             if (item.Attached)
             {
-                return;
+                return false;
             }
             items.Add(item);
             AddIndexes(item);
             item.OnAttached();
             CheckViews(item, NotifyCollectionChangedAction.Add);
+            return true;
         }
 
         protected void AddIndexes(T item)
@@ -1087,7 +1089,7 @@ namespace DataWF.Data
             var parametrized = query.Tables.Skip(1).Where(table => (table.Join.Type & JoinTypes.Left) != JoinTypes.Left
                                                             || table.GetParameters().Any())
                                             .ToList();
-                
+
             var count = query.Tables.Count;
             foreach (var table in parametrized)
             {
@@ -1182,12 +1184,12 @@ namespace DataWF.Data
                 ListHelper.QuickSort<T>(bufList, (IComparer<T>)treeComparer);
             }
             else if (comparers != null)
-            {                
+            {
                 var bufList = buf.ToList();
                 buf = bufList;
                 ListHelper.QuickSort<T>(bufList, comparers);
             }
-            
+
             return buf;
         }
 
@@ -1408,7 +1410,7 @@ namespace DataWF.Data
         public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true)
         {
             var item = (T)FormatterServices.GetUninitializedObject(typeof(T));
-            item.Build(this, def, ItemTypeIndex);
+            item.Build(this, def, TypeId);
             item.update = state;
             return item;
         }
@@ -1434,7 +1436,7 @@ namespace DataWF.Data
                     invokerWriter.WriteArrayBegin();
                     invokerWriter.WriteArrayLength(Count);
                     var itemSerializer = new DBItemSerializer<T>(this);
-                    var map = itemSerializer.WriteMap(invokerWriter, ItemType.Type);
+                    var map = itemSerializer.WriteMap(invokerWriter, ItemType);
                     foreach (var item in this)
                     {
                         invokerWriter.WriteArrayEntry();
@@ -1465,7 +1467,7 @@ namespace DataWF.Data
                         var count = Int32Serializer.Instance.Read(invokerReader.Reader);
                         invokerReader.ReadToken();
                     }
-                    var type = ItemType.Type;
+                    var type = ItemType;
                     var map = (Dictionary<ushort, IPropertySerializeInfo>)null;
                     if (invokerReader.CurrentToken == BinaryToken.SchemaBegin)
                     {

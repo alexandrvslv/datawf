@@ -150,9 +150,9 @@ namespace DataWF.Common
             WriteEndElement();
         }
 
-        public void WriteObject(object element, TypeSerializeInfo info)
+        public void WriteObject(object element, TypeSerializeInfo typeInfo)
         {
-            foreach (var property in info.XmlProperties)
+            foreach (var property in typeInfo.XmlProperties)
             {
                 if (property.IsReadOnly || !property.IsWriteable)
                 {
