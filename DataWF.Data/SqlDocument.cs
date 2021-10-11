@@ -55,7 +55,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBSchema Schema
         {
-            get { return schema ?? (schema = Povider.Schems[schemaName]); }
+            get { return schema ?? (schema = (DBSchema)Povider.Schems[schemaName]); }
             set
             {
                 if (schema != value)

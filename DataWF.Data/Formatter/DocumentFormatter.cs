@@ -84,7 +84,7 @@ namespace DataWF.Data
             }
             else
             {
-                var procedure = args.Schema.ParseProcedure(procedureCode, args.Category);
+                var procedure = args.Schema.GetProcedure(procedureCode, args.Category);
                 if (procedure != null)
                     try { val = procedure.Execute(args); }
                     catch (Exception ex) { val = ex.Message; }

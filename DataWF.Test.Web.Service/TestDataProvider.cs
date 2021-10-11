@@ -7,29 +7,30 @@ using System.Threading.Tasks;
 
 namespace DataWF.Test.Web.Service
 {
-    [DataProvider()]
+    [Provider]
     [SchemaEntry(typeof(FlowSchema))]
-    public class TestDataProvider : DBProvider
+    [SchemaEntry(typeof(FlowSchemaLog))]
+    public partial class TestDataProvider : DBProvider
     {
-        public TestDataProvider()
-        {
-            SchemaName = "test";
-        }
-
-        public new FlowSchema Schema
-        {
-            get => (FlowSchema)base.Schema;
-            set => base.Schema = value;
-        }
+        public FlowSchema Schema => FlowSchema;
 
         public override void Load()
         {
             base.Load("data.xml");
 
-            if (Schema == null || Schema.Connection == null)
+            if (Schema.Connection == null)
             {
-                CreateNew();
+                Schema.Connection = new DBConnection
+                {
+                    Name = Schema.Name,
+                    System = DBSystem.SQLite,
+                    DataBase = $"{Schema.Name}.sqlite"
+                };
             }
+            Schema.ExecuteDropDatabase();
+            Generate();
+            Schema.ExecuteCreateDatabase();
+            Save();
             if (!Schema.Connection.CheckConnection())
             {
                 throw new Exception("Check Connection FAIL!");
@@ -39,7 +40,7 @@ namespace DataWF.Test.Web.Service
 
             Helper.Log(this, "Generate Data");
 
-            foreach (var initializer in Helper.ModuleInitializer)
+            foreach (var initializer in Helper.Modules)
             {
                 initializer.Initialize(new[] { Schema });
             }
@@ -61,30 +62,9 @@ namespace DataWF.Test.Web.Service
             }.SaveOrUpdate((IUserIdentity)null);
         }
 
-        public override Task<DBSchema> CreateNew()
-        {
-            Schema = new FlowSchema()
-            {
-                Name = schemaName,
-                Provider = this,
-                Connection = new DBConnection
-                {
-                    Name = schemaName,
-                    System = DBSystem.SQLite,
-                    DataBase = $"{schemaName}.sqlite"
-                }
-            };
-
-            Generate();
-            Schema.ExecuteDropDatabase();
-            Schema.ExecuteCreateDatabase();
-            Save();
-            return Task.FromResult<DBSchema>(Schema);
-        }
-
         public UserTable Users => Schema.User;
 
-        public override DBUser FindUser(string email)
+        public override IUserIdentity GetUser(string email)
         {
             return Users.GetByEmail(email);
         }

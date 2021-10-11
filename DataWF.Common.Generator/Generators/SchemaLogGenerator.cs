@@ -10,7 +10,7 @@ using System.Diagnostics;
 
 namespace DataWF.Common.Generator
 {
-    internal class SchemaLogGenerator : BaseTableGenerator
+    internal class SchemaLogGenerator : ExtendedGenerator
     {
         public SchemaLogGenerator(CompilationContext compilationContext, InvokerGenerator invokerGenerator)
             : base(compilationContext, invokerGenerator)
@@ -68,7 +68,7 @@ namespace DataWF.Common.Generator
                 baseClass = $"{TypeSymbol.BaseType.ContainingNamespace.ToDisplayString()}.{TypeSymbol.BaseType.Name}Log";
             }
             var namespaces = schemaEntries.Select(p => p.ContainingNamespace.ToDisplayString())
-                .Union(new[] { Helper.cSystem, "System.Text.Json.Serialization", "DataWF.Data" })
+                .Union(new[] { Helper.cSystem, "System.Text.Json.Serialization", "DataWF.Common", "DataWF.Data" })
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(p => p, StringComparer.Ordinal);
 

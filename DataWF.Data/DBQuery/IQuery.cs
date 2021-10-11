@@ -42,11 +42,12 @@ namespace DataWF.Data
         string WhereText { get; }
         string QueryText { get; }
         ITreeComparer TreeComparer { get; set; }
+        bool IsJoinAffectResult { get; }
+        bool IsNoParameters();
 
         string Format(IDbCommand command = null);
         IDbCommand ToCommand(bool defcolumns = false);
 
-        bool IsNoParameters();
         IEnumerable<QParam> GetAllParameters(Func<QParam, bool> predicate = null);
         bool Contains(string columnName);
         bool Contains(DBColumn column);

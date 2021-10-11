@@ -116,7 +116,7 @@ namespace DataWF.Common.Generator
                 return;
             }
             var tableDeclareType = $"{tableType.Name}{(tableIsGeneric ? "<T>" : string.Empty)}";
-            var schemaType = Helper.cIDBSchema;
+            var providerType = Helper.cIDBProvider;            
             var keyType = "K";
 
             var source = new StringBuilder($@"//Source generator for {type.Name}
@@ -139,8 +139,8 @@ namespace {Namespace}
                 source.Append($@"
     //Prototype Controller    
     public {(type.IsAbstract ? "abstract " : string.Empty)}partial class {controllerClassName}<T, K, L>: {baseName}<T, K, L> 
-    where T:{type.Name}
-    where L:{logType.Name}");
+        where T:{type.Name}
+        where L:{logType.Name}");
             }
             else
             {
@@ -158,7 +158,7 @@ namespace {Namespace}
             }
             source.Append($@"
     {{
-        public {controllerClassName}({schemaType} schema) :base(schema)
+        public {controllerClassName}({providerType} provider) :base(provider)
         {{ }}");
 
             if (tableType != null)
@@ -200,7 +200,7 @@ namespace {Namespace}
     [ApiController]
     public partial class {controllerClassName}: {controllerClassName}<{type.Name}, {primaryKey.Type}, {logTypeName}>
     {{
-        public {controllerClassName}(DBSchema schema) :base(schema)
+        public {controllerClassName}({providerType} provider) :base(provider)
         {{ }}
     }}");
                 }

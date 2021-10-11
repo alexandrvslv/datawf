@@ -41,20 +41,21 @@ namespace DataWF.WebService.Common
         protected DBColumn<K> primaryKey;
         protected DBTableLog<L> logTable;
 
-        public BaseController(IDBSchema schema)
+        public BaseController(IDBProvider provider)
         {
-            Schema = schema;
 #if DEBUG
             Interlocked.Increment(ref MemoryLeak.Controllers.DiagnosticsController.Requests);
 #endif
-            Table = Schema.GetTable<T>();
+            Table = (DBTable<T>)provider.GetTable<T>();
             primaryKey = (DBColumn<K>)Table.PrimaryKey;
             logTable = Table.LogTable as DBTableLog<L>;
         }
 
-        public IUserIdentity CurrentUser => User.GetCommonUser();
+        public IUserIdentity CurrentUser => Provider.GetUser(User);
 
-        protected IDBSchema Schema { get; }
+        public IDBProvider Provider => Table.Provider;
+
+        public IDBSchema Schema => Table.Schema;
 
         public DBTable<T> Table { get; }
 
@@ -910,7 +911,7 @@ namespace DataWF.WebService.Common
                     }
                     else if (MultipartRequestHelper.HasModel(contentDisposition))
                     {
-                        using (var factory = new DBItemConverterFactory(HttpContext, Schema.Provider))
+                        using (var factory = new DBItemConverterFactory(HttpContext, Provider))
                         {
                             var option = new JsonSerializerOptions();
                             option.InitDefaults(factory);

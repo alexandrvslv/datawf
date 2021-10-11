@@ -116,7 +116,7 @@ namespace DataWF.Data
                     if (int.TryParse(tableIndex, out int tableIntIndex))
                         table = (DBTable)Query.Tables[tableIntIndex].Table;
                     else
-                        table = Table.Schema.ParseTable(tableIndex) ?? Table;
+                        table = Table.Schema.GetTable(tableIndex) ?? Table;
                 }
 
                 var column = table.GetOrCreateColumn(fieldName, Reader.GetFieldType(i), ref newcol);

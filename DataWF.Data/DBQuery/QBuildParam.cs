@@ -21,13 +21,13 @@ using System;
 
 namespace DataWF.Data
 {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class SchemaEntryAttribute : Attribute
+    [Flags]
+    public enum QBuildParam
     {
-        public SchemaEntryAttribute(Type entryType)
-        {
-            EntryType = entryType;
-        }
-        public Type EntryType { get; }
+        None = 0,
+        AutoLike = 1,
+        SplitString = 2
     }
+
 }
+

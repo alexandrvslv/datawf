@@ -12,12 +12,12 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public class WebSchema : IWebSchema
+    [InvokerGenerator(Instance = true)]
+    public partial class WebSchema : IWebSchema
     {
-
-        private readonly Dictionary<Type, IWebTable> crudClients = new Dictionary<Type, IWebTable>();
-        private readonly Dictionary<Type, Dictionary<int, IWebTable>> crudTypedClients = new Dictionary<Type, Dictionary<int, IWebTable>>();
-        private readonly SelectableList<IWebClient> clients = new SelectableList<IWebClient>();
+        private readonly Dictionary<Type, IWebTable> tables = new Dictionary<Type, IWebTable>();
+        private readonly Dictionary<Type, Dictionary<int, IWebTable>> typedTables = new Dictionary<Type, Dictionary<int, IWebTable>>();
+        private readonly NamedList<IWebClient> clients = new NamedList<IWebClient>();
 
         private static HttpClient client;
         private string baseUrl;
@@ -145,13 +145,13 @@ namespace DataWF.Common
             clients.Add(client);
             if (client is IWebTable crudClient)
             {
-                crudClients[crudClient.ItemType] = crudClient;
+                tables[crudClient.ItemType] = crudClient;
             }
         }
 
         protected void RefreshTypedCache()
         {
-            foreach (var crudClient in clients.TypeOf<IWebTable>())
+            foreach (var crudClient in clients.OfType<IWebTable>())
             {
                 if (crudClient.TypeId != 0)
                 {
@@ -164,9 +164,9 @@ namespace DataWF.Common
                     {
                         var baseType = baseClient.ItemType;
 
-                        if (!crudTypedClients.TryGetValue(baseType, out var types))
+                        if (!typedTables.TryGetValue(baseType, out var types))
                         {
-                            crudTypedClients[baseType] = types = new Dictionary<int, IWebTable>();
+                            typedTables[baseType] = types = new Dictionary<int, IWebTable>();
                         }
                         types[crudClient.TypeId] = crudClient;
                     }
@@ -182,17 +182,25 @@ namespace DataWF.Common
             }
         }
 
-        public IWebTable<T> GetTable<T>()
-        {
-            return (IWebTable<T>)GetTable(typeof(T));
-        }
+        public IWebTable<T> GetTable<T>() => (IWebTable<T>)GetTable(typeof(T));
+
+        public IWebClient GetClient(string name) => clients[name];
 
         public IWebTable GetTable(Type type)
         {
+            if (type.IsInterface)
+            {
+                if (!tables.TryGetValue(type, out var table))
+                {
+                    tables[type] = table = Clients.OfType<IWebTable>()
+                                                .FirstOrDefault(p => p.ItemType.IsInterface(type));
+                }
+                return table;
+            }
             var baseType = type;
             while (baseType != null)
             {
-                if (crudClients.TryGetValue(baseType, out var crudClient))
+                if (tables.TryGetValue(baseType, out var crudClient))
                     return crudClient;
                 baseType = baseType.BaseType;
             }
@@ -203,7 +211,7 @@ namespace DataWF.Common
         {
             var baseType = type;
             Dictionary<int, IWebTable> types = null;
-            while (baseType != null && !crudTypedClients.TryGetValue(baseType, out types))
+            while (baseType != null && !typedTables.TryGetValue(baseType, out types))
             {
                 baseType = baseType.BaseType;
             }
@@ -211,6 +219,7 @@ namespace DataWF.Common
         }
 
         IModelTable<T> IModelSchema.GetTable<T>() => GetTable<T>();
+        IModelTable IModelSchema.GetTable(string name) => GetClient(name) as IModelTable;
         IModelTable IModelSchema.GetTable(Type type) => GetTable(type);
         IModelTable IModelSchema.GetTable(Type type, int typeId) => GetTable(type, typeId);
     }

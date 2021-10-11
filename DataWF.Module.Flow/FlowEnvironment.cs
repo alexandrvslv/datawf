@@ -8,16 +8,12 @@ using System.Diagnostics;
 
 namespace DataWF.Module.Flow
 {
-
-    public sealed class FlowProvider : DBProvider
+    [Provider]
+    [SchemaEntry(typeof(FlowSchema))]
+    public sealed partial class FlowProvider : DBProvider
     {
         private static FlowProvider instance = new FlowProvider();
 
-        public new IFlowSchema Schema
-        {
-            get => (IFlowSchema)base.Schema;
-            set => base.Schema = (DBSchema)value;
-        }
         public bool LogUpdate { get; set; } = true;
 
         public bool LogExecute { get; set; } = true;
@@ -39,9 +35,9 @@ namespace DataWF.Module.Flow
 
         public void OnDBRowChanged(DBItemEventArgs arg)
         {
-            if (arg.Item.Table == Schema.UserReg) //|| arg.Row.Table == FlowEnvir.Config.Document.Table)
+            if (arg.Item.Table == FlowSchema.UserReg) //|| arg.Row.Table == FlowEnvir.Config.Document.Table)
                 return;
-            var documentTable = Schema.Document;
+            var documentTable = FlowSchema.Document;
             if (!arg.Item.Table.IsVirtual)
             {
                 var cols = arg.Item.Table.Columns.GetByReference(documentTable);
@@ -57,7 +53,7 @@ namespace DataWF.Module.Flow
 
         public void LoadBooks()
         {
-            var schema = Schema;
+            var schema = FlowSchema;
             Helper.Log(schema, "Start", StatusType.Information);
             Stopwatch watch = new Stopwatch();
             watch.Start();
@@ -79,9 +75,6 @@ namespace DataWF.Module.Flow
                 schema.StageParam.Load(transaction: transaction);
                 schema.GroupPermission.Load(transaction: transaction);
                 schema.Scheduler.Load(transaction: transaction);
-
-                AccessValue.Provider = new CommonAccessProvider(schema);
-
             }
             watch.Stop();
 

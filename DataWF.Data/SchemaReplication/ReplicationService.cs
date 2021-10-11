@@ -240,7 +240,7 @@ namespace DataWF.Data
 
         public object GenerateTableDiff(string schemaName, string tableName, DateTime? stamp)
         {
-            var table = Provider.Schems[schemaName]?.Tables[tableName];
+            var table = Provider.GetDBSchema(schemaName)?.GetTable(tableName);
             if (table == null)
                 throw new Exception("No such Schema/Table");
             return table.GetReplicateItems(stamp);

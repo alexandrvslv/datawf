@@ -23,9 +23,9 @@ namespace DataWF.Test.Data
         public async Task Setup()
         {
             provider = new TestProvider();
-            await provider.CreateNew();
+            await provider.GenerateAsync();
 
-            schema = provider.Schema;
+            schema = provider.TestSchema;
             employers = schema.Employer;
             employerReferences = schema.EmployerReference;
             positions = schema.Position;
@@ -390,6 +390,8 @@ order by emp.DateCreate desc";
         [Test]
         public void TestBuildQuery()
         {
+            System.Threading.Thread.Sleep(5);
+
             var query = employers.Query();
             var posCodes = new[] { "2", "3" };
             query.Column(employers.IdKey)
@@ -403,11 +405,13 @@ order by emp.DateCreate desc";
                                                                 .Or(employers.IdKey, CompareType.Equal, 1))
                                            .And(pGoup => pGoup.And(employers.IdKey, CompareType.LessOrEqual, 5)
                                                                 .Or(employers.IdKey, CompareType.GreaterOrEqual, 5)))
+                .And(positions.IdKey, CompareType.Greater, 1)
                 .And(employers.DateCreateKey, CompareType.IsNot, null)
                 .And(employers.DateCreateKey, CompareType.Between, new DateInterval(new DateTime(2000, 01, 01), new DateTime(3000, 01, 01)))
                 .And(employers.PositionIdKey, CompareType.In, positions.Query(query)
                                                                     .Column(positions.IdKey)
                                                                     .Where(positions.CodeKey, CompareType.In, posCodes));
+            var querySelectCount = query.Select().Count();
 
             Console.WriteLine(query.FormatAll());
 
@@ -416,6 +420,7 @@ order by emp.DateCreate desc";
             var linqQuery = from emp in employers
                             join pos in positions on emp.PositionId equals pos.Id
                             where ((emp.Id != 1 || emp.Id == 1) && (emp.Id <= 5 || emp.Id >= 5))
+                                && pos.Id > 1
                                 && emp.DateCreate != default(DateTime)
                                 && (emp.DateCreate >= new DateTime(2000, 01, 01) && emp.DateCreate <= new DateTime(3000, 01, 01)
                                 && posSubQuery.Contains(emp.PositionId))
@@ -426,14 +431,13 @@ order by emp.DateCreate desc";
                                 SubPosName = positions.FirstOrDefault(p => p.Id == emp.Id)?.Name,
                                 PosName = pos.Name.Trim()
                             };
+            var linqCount = linqQuery.Count();
 
 
             var command = query.ToCommand();
             var list = schema.Connection.ExecuteQResult(command);
-
-            var linqCount = linqQuery.Count();
             var queryExecuteCount = list.Values.Count;
-            var querySelectCount = query.Select().Count();
+
 
             employers.Clear();
             positions.Clear();

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace DataWF.Test.Data
 {
-    public class AccessGroupBung : IGroupIdentity, IPrimaryKey
+    public class AccessGroupBung : IUserGroupIdentity, IPrimaryKey
     {
         public int Id { get; set; }
 

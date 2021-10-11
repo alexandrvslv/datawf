@@ -68,7 +68,7 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore]
         public DBTable ReferenceTable
         {
-            get => referenceTable ??= Schema?.ParseTable(ReferenceTableName);
+            get => referenceTable ??= Schema?.GetTable(ReferenceTableName);
             set
             {
                 if (referenceTable != value)

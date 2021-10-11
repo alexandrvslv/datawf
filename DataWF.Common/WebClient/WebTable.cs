@@ -56,6 +56,10 @@ namespace DataWF.Common
 
         IWebTableItemList IWebTable.Items => Items;
 
+        IEnumerable IModelTable.Items => Items;
+
+        IEnumerable<T> IModelTable<T>.Items => Items;
+
         public WebTableItemList<T> Items { get; set; }
 
         public bool IsSynchronized

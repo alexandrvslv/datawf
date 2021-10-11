@@ -36,21 +36,7 @@ namespace DataWF.Data
 
     public class QQuery<T> : QItem, IQQuery<T>, IDisposable where T : DBItem
     {
-        private const string StrFrom = "from";
-        private const string StrOn = "on";
-        private const string StrSelect = "select";
-        private const string StrWhere = "where";
-        private const string StrOrder = "order";
-        private const string StrGroup = "group";
-        private const string StrBy = "by";
-        private const string StrAs = "as";
-        private const string StrTrue = "true";
-        private const string StrFalse = "false";
-        private const string strNull = "null";
-        private const string strNot = "not";
-        private const string StrAsc = "asc";
-        private const string StrDesc = "desc";
-        private const string StrIGroup = nameof(IGroup);
+
 
         protected QParamList parameters;
         protected QItemList<QItem> columns;
@@ -390,7 +376,7 @@ namespace DataWF.Data
 
         public DBTable ParseTable(string word)
         {
-            return Schema.ParseTable(word) ?? Schema.Tables.GetByTypeName(word);
+            return Schema.GetTable(word) ?? Schema.Tables.GetByTypeName(word);
         }
 
         public DBColumn ParseColumn(string word, string prefix, out QTable qTable)
@@ -462,39 +448,7 @@ namespace DataWF.Data
             return i;
         }
 
-        protected int FindFrom(ReadOnlySpan<char> query)
-        {
-            int exit = 0;
-            int startIndex = 0;
-            var word = ReadOnlySpan<char>.Empty;
 
-            for (int i = 0; i <= query.Length; i++)
-            {
-                var c = i < query.Length ? query[i] : '\n';
-                switch (c)
-                {
-                    case ' ':
-                    case '\n':
-                    case '\r':
-                        if (exit <= 0
-                            && MemoryExtensions.Equals(word, StrFrom.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                            return i;
-                        word = ReadOnlySpan<char>.Empty;
-                        startIndex = i + 1;
-                        break;
-                    case '(':
-                        exit++;
-                        break;
-                    case ')':
-                        exit--;
-                        break;
-                    default:
-                        word = query.Slice(startIndex, (i - startIndex) + 1);
-                        break;
-                }
-            }
-            return query.Length;
-        }
 
         public void Parse(string query)
         {
@@ -547,29 +501,29 @@ namespace DataWF.Data
                     case '=':
                     case '>':
                     case '<':
-                        if (MemoryExtensions.Equals(word, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        if (MemoryExtensions.Equals(word, QueryHelper.StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
                         {
                             state = QParserState.Select;
                         }
-                        else if (MemoryExtensions.Equals(word, StrFrom.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        else if (MemoryExtensions.Equals(word, QueryHelper.StrFrom.AsSpan(), StringComparison.OrdinalIgnoreCase))
                         {
                             prefix.Clear();
                             state = QParserState.From;
                         }
-                        else if (MemoryExtensions.Equals(word, StrWhere.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        else if (MemoryExtensions.Equals(word, QueryHelper.StrWhere.AsSpan(), StringComparison.OrdinalIgnoreCase))
                         {
                             prefix.Clear();
                             state = QParserState.Where;
                         }
-                        else if (MemoryExtensions.Equals(word, StrOrder.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        else if (MemoryExtensions.Equals(word, QueryHelper.StrOrder.AsSpan(), StringComparison.OrdinalIgnoreCase))
                         {
                             state = QParserState.OrderBy;
                         }
-                        else if (MemoryExtensions.Equals(word, StrGroup.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        else if (MemoryExtensions.Equals(word, QueryHelper.StrGroup.AsSpan(), StringComparison.OrdinalIgnoreCase))
                         {
                             state = QParserState.GroupBy;
                         }
-                        else if (MemoryExtensions.Equals(word, StrBy.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        else if (MemoryExtensions.Equals(word, QueryHelper.StrBy.AsSpan(), StringComparison.OrdinalIgnoreCase))
                         {
 
                         }
@@ -580,11 +534,11 @@ namespace DataWF.Data
                                 case QParserState.Select:
                                     if (word.Length > 0)
                                     {
-                                        if (MemoryExtensions.Equals(word, StrAs.AsSpan(), StringComparison.OrdinalIgnoreCase) && c == ' ')
+                                        if (MemoryExtensions.Equals(word, QueryHelper.StrAs.AsSpan(), StringComparison.OrdinalIgnoreCase) && c == ' ')
                                         {
                                             alias = true;
                                         }
-                                        else if (MemoryExtensions.Equals(word, strNull.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                        else if (MemoryExtensions.Equals(word, QueryHelper.StrNull.AsSpan(), StringComparison.OrdinalIgnoreCase))
                                         {
                                             Columns.Add(new QValue(null));
                                         }
@@ -625,7 +579,7 @@ namespace DataWF.Data
                                         {
                                             ParseFunction(qFunc, word2);
                                         }
-                                        else if (MemoryExtensions.StartsWith(word2, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                        else if (MemoryExtensions.StartsWith(word2, QueryHelper.StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
                                         {
                                             Columns.Add(new QQuery<DBItem>(this, word2));
                                         }
@@ -667,7 +621,7 @@ namespace DataWF.Data
                                     if (word.Length > 0)
                                     {
 
-                                        if (MemoryExtensions.Equals(word, StrAsc.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                        if (MemoryExtensions.Equals(word, QueryHelper.StrAsc.AsSpan(), StringComparison.OrdinalIgnoreCase))
                                         {
                                             if (order != null)
                                             {
@@ -675,7 +629,7 @@ namespace DataWF.Data
                                                 order = null;
                                             }
                                         }
-                                        else if (MemoryExtensions.Equals(word, StrDesc.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                        else if (MemoryExtensions.Equals(word, QueryHelper.StrDesc.AsSpan(), StringComparison.OrdinalIgnoreCase))
                                         {
                                             if (order != null)
                                             {
@@ -683,7 +637,7 @@ namespace DataWF.Data
                                                 order = null;
                                             }
                                         }
-                                        else if (MemoryExtensions.Equals(word, StrIGroup.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                                        else if (MemoryExtensions.Equals(word, QueryHelper.StrIGroup.AsSpan(), StringComparison.OrdinalIgnoreCase))
                                         {
                                             TreeComparer = GroupHelper.GetTreeInvoker(typeof(T)).CreateTreeComparer(typeof(T));
                                         }
@@ -765,19 +719,19 @@ namespace DataWF.Data
                 {
                     parameter.Add(new QValue(word.ToString(), parameter.LeftColumn));
                 }
-                else if (MemoryExtensions.Equals(word, StrTrue.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                else if (MemoryExtensions.Equals(word, QueryHelper.StrTrue.AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
                     parameter.Add(new QValue(true, parameter.LeftColumn));
                 }
-                else if (MemoryExtensions.Equals(word, StrFalse.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                else if (MemoryExtensions.Equals(word, QueryHelper.StrFalse.AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
                     parameter.Add(new QValue(false, parameter.LeftColumn));
                 }
-                else if (MemoryExtensions.Equals(word, strNull.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                else if (MemoryExtensions.Equals(word, QueryHelper.StrNull.AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
                     parameter.Add(new QValue(DBNull.Value, parameter.LeftColumn));
                 }
-                else if (MemoryExtensions.Equals(word, strNot.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                else if (MemoryExtensions.Equals(word, QueryHelper.StrNot.AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
                     if (parameter.Comparer.Type == CompareTypes.Is)
                         parameter.Comparer = new CompareType(CompareTypes.Is, true);
@@ -924,7 +878,7 @@ namespace DataWF.Data
                 case '(':
                     int tempIndex = i;
                     var word2 = query.GetSubPart(ref i, '(', ')').Trim();
-                    if (MemoryExtensions.StartsWith(word2, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                    if (MemoryExtensions.StartsWith(word2, QueryHelper.StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
                     {
                         parameter.Add(new QQuery<DBItem>(this, word2));
                     }
@@ -938,7 +892,7 @@ namespace DataWF.Data
                         foreach (var s in word2.Split(Helper.CommaSeparator))
                         {
                             var entry = s.Trim(' ', '\'');
-                            if (string.Equals(entry, strNull, StringComparison.Ordinal))
+                            if (string.Equals(entry, QueryHelper.StrNull, StringComparison.Ordinal))
                                 continue;
                             list.Items.Add(new QValue(entry, parameter.LeftColumn));
                         }
@@ -1023,7 +977,10 @@ namespace DataWF.Data
             int startIndex = 0;
             var joinType = JoinTypes.Undefined;
 
-            for (int i = FindFrom(query); i <= query.Length; i++)
+            var fromIndex = QueryHelper.IndexOfFrom(query);
+            if (fromIndex < 0)
+                return;
+            for (int i = fromIndex + 5; i <= query.Length; i++)
             {
                 var c = i < query.Length ? query[i] : '\n';
                 switch (c)
@@ -1045,7 +1002,7 @@ namespace DataWF.Data
                     case '=':
                     case '>':
                     case '<':
-                        if (MemoryExtensions.Equals(word, StrWhere.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        if (MemoryExtensions.Equals(word, QueryHelper.StrWhere.AsSpan(), StringComparison.OrdinalIgnoreCase))
                             return;
                         var join = JoinType.Parse(word);
                         if (join != JoinTypes.Undefined)
@@ -1060,7 +1017,7 @@ namespace DataWF.Data
                             if (parameter.RightItem != null)
                                 parameter = null;
                         }
-                        else if (MemoryExtensions.Equals(word, StrOn.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        else if (MemoryExtensions.Equals(word, QueryHelper.StrOn.AsSpan(), StringComparison.OrdinalIgnoreCase))
                         {
                             table.On = parameter = new QParam();
                         }
@@ -1165,7 +1122,7 @@ namespace DataWF.Data
                         {
                             var word2 = query.GetSubPart(ref i, '(', ')');
                             startIndex = i + 1;
-                            if (MemoryExtensions.StartsWith(word2, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                            if (MemoryExtensions.StartsWith(word2, QueryHelper.StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
                             {
                                 expression.Items.Add(new QQuery<DBItem>(this, word2));
                             }
@@ -1269,7 +1226,7 @@ namespace DataWF.Data
                     {
                         var word2 = query.GetSubPart(ref i, '(', ')').Trim();
                         startIndex = i;
-                        if (MemoryExtensions.StartsWith(word2, StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                        if (MemoryExtensions.StartsWith(word2, QueryHelper.StrSelect.AsSpan(), StringComparison.OrdinalIgnoreCase))
                         {
                             function.Items.Add(new QQuery<DBItem>(this, word2));
                         }
@@ -1316,6 +1273,11 @@ namespace DataWF.Data
             }
             return false;
         }
+
+        public bool IsJoinAffectResult => Tables.Count > 1
+            && Tables.Skip(1).Any(table => table.Join.IsInner
+                                || table.Join.IsRight
+                                || table.HasParameters);
 
         public QParam NewParam() => NewParam(LogicType.Undefined);
 
@@ -2091,18 +2053,18 @@ namespace DataWF.Data
             var partWhere = FormatWhere(command, subSpace);
 
             var resultBuilder = new StringBuilder();
-            resultBuilder.Append(StrSelect);
+            resultBuilder.Append(QueryHelper.StrSelect);
             resultBuilder.Append(' ');
             resultBuilder.Append(cols);
             resultBuilder.Append('\n');
             resultBuilder.Append(subSpace);
-            resultBuilder.Append(StrFrom);
+            resultBuilder.Append(QueryHelper.StrFrom);
             resultBuilder.Append(partFrom);
             if (partWhere.Length > 0)
             {
                 resultBuilder.Append('\n');
                 resultBuilder.Append(subSpace);
-                resultBuilder.Append(StrWhere);
+                resultBuilder.Append(QueryHelper.StrWhere);
                 resultBuilder.Append(' ');
                 resultBuilder.Append(partWhere);
             }
@@ -2110,9 +2072,9 @@ namespace DataWF.Data
             {
                 resultBuilder.Append('\n');
                 resultBuilder.Append(subSpace);
-                resultBuilder.Append(StrOrder);
+                resultBuilder.Append(QueryHelper.StrOrder);
                 resultBuilder.Append(' ');
-                resultBuilder.Append(StrBy);
+                resultBuilder.Append(QueryHelper.StrBy);
                 resultBuilder.Append(' ');
                 resultBuilder.Append(partOrder);
             }
@@ -2575,23 +2537,61 @@ namespace DataWF.Data
         IQQuery<T> IQQuery<T>.OrderByDescending<K>(Expression<Func<T, K>> keySelector) => OrderByDescending(keySelector);
 
     }
-
-    public enum QMathType
+    public static class QueryHelper
     {
-        None,
-        Plus,
-        Minus,
-        Devide,
-        Multiply
-    }
+        public static string StrFrom = "from";
+        public static string StrOn = "on";
+        public static string StrSelect = "select";
+        public static string StrWhere = "where";
+        public static string StrOrder = "order";
+        public static string StrGroup = "group";
+        public static string StrBy = "by";
+        public static string StrAs = "as";
+        public static string StrTrue = "true";
+        public static string StrFalse = "false";
+        public static string StrNull = "null";
+        public static string StrNot = "not";
+        public static string StrAsc = "asc";
+        public static string StrDesc = "desc";
+        public static string StrIGroup = nameof(IGroup);
 
-    [Flags]
-    public enum QBuildParam
-    {
-        None = 0,
-        AutoLike = 1,
-        SplitString = 2
-    }
+        public static int IndexOfFrom(this ReadOnlySpan<char> query) => IndexOfQueryWord(query, StrFrom.AsSpan());
 
+        public static int IndexOfWhere(this ReadOnlySpan<char> query) => IndexOfQueryWord(query, StrWhere.AsSpan());
+
+        public static int IndexOfQueryWord(this ReadOnlySpan<char> query, ReadOnlySpan<char> specialWord)
+        {
+            int exit = 0;
+            int startIndex = 0;
+            var word = ReadOnlySpan<char>.Empty;
+
+            for (int i = 0; i <= query.Length; i++)
+            {
+                var c = i < query.Length ? query[i] : '\n';
+                switch (c)
+                {
+                    case ' ':
+                    case '\n':
+                    case '\r':
+                        if (exit <= 0
+                            && MemoryExtensions.Equals(word, specialWord, StringComparison.OrdinalIgnoreCase))
+                            return i - specialWord.Length;
+                        word = ReadOnlySpan<char>.Empty;
+                        startIndex = i + 1;
+                        break;
+                    case '(':
+                        exit++;
+                        break;
+                    case ')':
+                        exit--;
+                        break;
+                    default:
+                        word = query.Slice(startIndex, (i - startIndex) + 1);
+                        break;
+                }
+            }
+            return -1;
+        }
+    }
 }
 

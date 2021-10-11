@@ -133,10 +133,7 @@ namespace DataWF.Module.Common
 
         public async Task CachePermission(DBTransaction transaction)
         {
-            if (AccessValue.Provider == null || !AccessValue.Provider.GetGroups().Any())
-                return;
-
-            foreach (DBSchema schema in Schema.Schems)
+            foreach (DBSchema schema in Schema.Provider.Schems.OfType<DBSchema>())
             {
                 var permission = await Get(null, schema);
                 var groups = schema.TableGroups.GetTopParents();

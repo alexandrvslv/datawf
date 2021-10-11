@@ -47,7 +47,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public IDBSchema TargetSchema
         {
-            get { return targetSchema ?? (targetSchema = Provider?.Schems[TargetSchemaName]); }
+            get { return targetSchema ?? (targetSchema = (DBSchema)Provider?.Schems[TargetSchemaName]); }
             set
             {
                 targetSchema = value;

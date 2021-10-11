@@ -108,9 +108,9 @@ namespace DataWF.Data
             base.OnItemPropertyChanged(sender, e);
             if (Schema != null
                 && !Schema.IsSynchronizing
-                && Schema.Schems is DBSchemaList schemaList)
+                && Schema.Provider != null)
             {
-                schemaList.OnItemsListChanged(this, e);
+                Schema.Provider.OnItemsListChanged(this, e);
             }
         }
 
@@ -119,9 +119,9 @@ namespace DataWF.Data
             var args = base.OnCollectionChanged(type, item, index, oldIndex, oldItem);
             if (Schema != null
                 && !Schema.IsSynchronizing
-                && Schema.Schems is DBSchemaList schemaList)
+                && Schema.Provider != null)
             {
-                schemaList.OnItemsListChanged(this, args ?? ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
+                Schema.Provider.OnItemsListChanged(this, args ?? ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
             }
             return args;
         }

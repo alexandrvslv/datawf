@@ -246,7 +246,11 @@ namespace DataWF.Data
                 schema.Tables.Add(table);
             }
             GenerateReferences(table);
+
             GenerateIndexes(table);
+
+            table.RemoveDeletedColumns();
+
             GenerateVirtualTables(table);
 
             table.IsLoging = (Attribute.Keys & DBTableKeys.NoLogs) == 0;
@@ -268,7 +272,12 @@ namespace DataWF.Data
             foreach (var itemType in cacheItemTypes)
             {
                 table.ItemTypes[itemType.Attribute.Id] = itemType.Type;
-                itemType.Generate(table.Schema);
+                if (!itemType.IsGenerated(table.Schema, out var virtualTable))
+                    virtualTable = itemType.Generate(table.Schema);
+                else
+                    virtualTable.RefreshVirtualTable(table);
+
+                virtualTable.RemoveDeletedColumns();
             }
         }
 

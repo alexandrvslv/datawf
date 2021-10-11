@@ -1,9 +1,5 @@
-﻿using DataWF.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DataWF.Common;
+using DataWF.Data;
 
 namespace DataWF.Test.Data
 {
@@ -17,8 +13,5 @@ namespace DataWF.Test.Data
     [SchemaEntry(typeof(FileData))]
     public partial class TestSchema : DBSchema
     {
-        public TestSchema()
-        {
-        }
     }
 }

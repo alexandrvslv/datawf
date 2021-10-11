@@ -59,7 +59,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
-            get => cacheColumn ?? (cacheColumn = Schema.ParseColumn(ColumnName));
+            get => cacheColumn ?? (cacheColumn = Schema.GetColumn(ColumnName));
             set
             {
                 ColumnName = value?.FullName;

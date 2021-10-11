@@ -8,10 +8,11 @@ using System.Threading.Tasks;
 namespace DataWF.Common
 {
 
-    public interface IWebProvider: IModelProvider
+    public interface IWebProvider : IModelProvider
     {
         new IEnumerable<IWebSchema> Schems { get; }
 
+        IWebClient GetClient(string name);
         new IWebTable<T> GetTable<T>();
         new IWebTable GetTable(Type type);
         new IWebTable GetTable(Type type, int typeId);
@@ -32,12 +33,13 @@ namespace DataWF.Common
 #endif  
         HttpClient GetHttpClient(HttpMessageHandler httpMessageHandler = null);
         Task<bool> OnUnauthorized();
+        IWebClient GetClient(string name);
         new IWebTable<T> GetTable<T>();
         new IWebTable GetTable(Type type);
         new IWebTable GetTable(Type type, int typeId);
     }
 
-    public interface IWebClient
+    public interface IWebClient : INamed
     {
         IWebSchema Schema { get; set; }
 
@@ -51,7 +53,7 @@ namespace DataWF.Common
     public interface IWebTable : IModelTable, IWebClient
     {
         IWebTableConverter Converter { get; }
-        IWebTableItemList Items { get; }
+        new IWebTableItemList Items { get; }
         bool IsSynchronized { get; set; }
 
         object AddDownloads(object id, object item);

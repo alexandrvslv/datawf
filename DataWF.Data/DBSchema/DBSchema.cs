@@ -82,14 +82,18 @@ namespace DataWF.Data
 
         public Version Version { get; set; } = new Version(1, 0, 0, 0);
 
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBSchemaList Schems => Containers.FirstOrDefault(p => p is DBSchemaList) as DBSchemaList;
-
         [XmlIgnore, JsonIgnore]
         public new DBProvider Provider
         {
-            get => provider ??= Schems?.Provider;
+            get => provider;
             set => provider = value;
+        }
+
+        [XmlIgnore, JsonIgnore]
+        IModelProvider IModelSchema.Provider
+        {
+            get => Provider;
+            set => Provider = (DBProvider)value;
         }
 
         [Browsable(false)]
@@ -106,6 +110,8 @@ namespace DataWF.Data
                 if (value != null && Provider != null && !Provider.Connections.Contains(value))
                 {
                     Provider.Connections.Add(value);
+                    if (LogSchema != null && LogSchema.Connection == null)
+                        LogSchema.Connection = value;
                 }
             }
         }
@@ -145,6 +151,9 @@ namespace DataWF.Data
         public DBSystem System => Connection?.System ?? DBSystem.Default;
 
         public DBTableList Tables { get; set; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        IEnumerable<IModelTable> IModelSchema.Tables => Tables;
 
         public DBTableGroupList TableGroups { get; set; }
 
@@ -236,8 +245,6 @@ namespace DataWF.Data
             }
             set => fileName = value;
         }
-
-        IEnumerable<IModelTable> IModelSchema.Tables => throw new NotImplementedException();
 
         #endregion
 
@@ -428,17 +435,22 @@ namespace DataWF.Data
             }
         }
 
-        public DBProcedure ParseProcedure(string code, string category = "General")
+        public DBProcedure GetProcedure(string code, string category = "General")
         {
-            return Schems.ParseProcedure(code, category);
+            return Provider?.ParseProcedure(code, category);
         }
 
-        public DBColumn ParseColumn(string code)
+        public DBColumn GetColumn(string code)
         {
-            return Schems.ParseColumn(code, this);
+            return Provider?.ParseColumn(code, this);
         }
 
-        public DBTable ParseTable(string code)
+        public DBTableGroup GetTableGroup(string name)
+        {
+            return TableGroups[name] ?? Provider?.ParseTableGroup(name);
+        }
+
+        public DBTable GetTable(string code)
         {
             if (string.IsNullOrEmpty(code))
                 return null;
@@ -447,23 +459,19 @@ namespace DataWF.Data
             int index = code.IndexOf('.');
             if (index >= 0)
             {
-                schema = Schems?[code.Substring(0, index++)];
+                schema = (DBSchema)Provider?.Schems[code.Substring(0, index++)];
                 int sindex = code.IndexOf('.', index);
                 code = sindex < 0 ? code.Substring(index) : code.Substring(index, sindex - index);
             }
             if (schema == null)
                 schema = this;
 
-            table = schema.Tables[code];
+            table = schema.Tables[code]
+                ?? schema.Tables.GetByTypeName(code);
 
             if (table == null)
             {
-                foreach (var sch in Schems)
-                {
-                    table = sch.Tables[code];
-                    if (table != null)
-                        break;
-                }
+                table = Provider?.GetDBTable(code);
             }
             return table;
         }
@@ -511,13 +519,13 @@ namespace DataWF.Data
             });
         }
 
-        public IDBTable GetVirtualTable<T>(int itemType) where T : DBItem
+        public IDBTable GetTable<T>(int itemType) where T : DBItem
         {
             var table = GetTable<T>();
             return table.GetVirtualTable(itemType);
         }
 
-        public IDBTable GetVirtualTable(Type type, int itemType)
+        public IDBTable GetTable(Type type, int itemType)
         {
             var table = GetTable(type);
             return table.GetVirtualTable(itemType);
@@ -558,16 +566,16 @@ namespace DataWF.Data
                         if (table != null)
                             return cacheTables[type] = table;
                     }
-                    else
-                    {
-                        cacheTables[type] = null;
-                    }
+
                 }
+                if (table == null && type.IsInterface)
+                    table = Tables.FirstOrDefault(p => p.ItemType.IsInterface(type));
+                cacheTables[type] = table;
             }
             return table;
         }
 
-        public virtual void Generate(string name)
+        public virtual void Generate(string name = null)
         {
             if (name != null)
                 Name = name;
@@ -586,65 +594,53 @@ namespace DataWF.Data
 
         public void Generate(IEnumerable<Type> types)
         {
-            var logSchema = (IDBSchema)GetLogSchema() ?? this;
             this.Log($"Start generate {types.Count()} type(s)");
             var assemblies = new HashSet<Assembly>();
-            var tableGenerators = new HashSet<TableGenerator>();
-            var logTableGenerators = new HashSet<LogTableGenerator>();
+            var generators = new HashSet<TableGenerator>();
             foreach (var type in types)
             {
                 var tableGenerator = TableGenerator.Get(type);
                 if (tableGenerator != null)
                 {
-                    if (tableGenerator is LogTableGenerator logTableGenerator)
-                    {
-                        logTableGenerators.Add(logTableGenerator);
-                    }
-                    else
-                    {
-                        tableGenerators.Add(tableGenerator);
-                    }
+                    generators.Add(tableGenerator);
                 }
                 else if (TypeHelper.IsInterface(type, typeof(IExecutable)))
                 {
                     Procedures.Generate(type);
                 }
 
-                if (!assemblies.Contains(type.Assembly))
-                {
-                    assemblies.Add(type.Assembly);
-                }
+                assemblies.Add(type.Assembly);
             }
 
-            foreach (var tableGenerator in tableGenerators)
+            foreach (var tableGenerator in generators)
             {
-                var table = tableGenerator.Generate(this);
-                table.RemoveDeletedColumns();
+                var table = tableGenerator.Generate(this);                
             }
 
-            foreach (var logTableGenerator in logTableGenerators)
+            if (this is not IDBSchemaLog)
             {
-                var table = logTableGenerator.Generate(logSchema);
-                table.RemoveDeletedColumns();
-            }
-
-            if (logSchema is DBSchema defLogSchema && logSchema != this)
-            {
-                defLogSchema.Generate(defLogSchema.Name);
                 foreach (var assembly in assemblies)
                     Procedures.Generate(assembly);
 
                 Procedures.CheckDeleted();
             }
-            foreach (DBTable table in Tables)
+            Helper.Log(this, $"Success");
+        }
+
+        public virtual void GenerateLogs()
+        {
+            var logSchema = GetLogSchema();
+            if (logSchema != this)
             {
-                if (!(table is IDBTableLog)
-                    && table.IsLoging)
+                foreach (var table in Tables)
                 {
-                    table.GenerateLogTable();
+                    if (!(table is IDBTableLog)
+                        && table.IsLoging)
+                    {
+                        table.GenerateLogTable();
+                    }
                 }
             }
-            Helper.Log(this, $"Success");
         }
 
         internal IEnumerable<DBConstraint> GetAllConstraints()
@@ -703,10 +699,12 @@ namespace DataWF.Data
             Provider?.OnChanged(item, type);
         }
 
+        IModelTable IModelSchema.GetTable(string name) => GetTable(name);
+
         IModelTable<T> IModelSchema.GetTable<T>() => (IModelTable<T>)GetTable(typeof(T));
 
         IModelTable IModelSchema.GetTable(Type type) => GetTable(type);
 
-        IModelTable IModelSchema.GetTable(Type type, int typeId) => GetVirtualTable(type, typeId);
+        IModelTable IModelSchema.GetTable(Type type, int typeId) => GetTable(type, typeId);
     }
 }

@@ -40,6 +40,8 @@ namespace DataWF.WebService.Common
 
         public DBProvider Provider { get; }
 
+        IDBProvider IWebNotifyService.Provider => Provider;
+
         public event EventHandler<WebNotifyEventArgs> ReceiveMessage;
         public event EventHandler<WebNotifyEventArgs> RemoveConnection;
 
@@ -107,7 +109,7 @@ namespace DataWF.WebService.Common
 
         public virtual void SetCurrentAction(ActionExecutingContext context)
         {
-            var user = context.HttpContext.User?.GetCommonUser();
+            var user = Provider.GetUser(context.HttpContext.User);
             SetCurrentAction(user, context);
         }
 

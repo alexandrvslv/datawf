@@ -40,7 +40,7 @@ namespace DataWF.WebService.Common
 
         public IUserIdentity CurrentUser
         {
-            get => user ?? (user = HttpContext?.User?.GetCommonUser());
+            get => user ?? (user = Provider?.GetUser(HttpContext?.User));
             set => user = value;
         }
         public HttpJsonSettings HttpJsonSettings

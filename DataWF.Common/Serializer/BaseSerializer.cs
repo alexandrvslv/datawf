@@ -17,7 +17,7 @@ namespace DataWF.Common
             if (!SerializationInfo.TryGetValue(type, out var info))
             {
                 SerializationInfo[type] = info = new TypeSerializeInfo(type);
-                if (info.IsList)
+                if (info.IsList && !info.ListItemType.IsInterface)
                 {
                     GetCacheTypeInfo(info.ListItemType);
                 }

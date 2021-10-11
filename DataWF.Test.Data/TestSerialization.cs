@@ -12,7 +12,6 @@ namespace DataWF.Test.Data
 {
     public class TestSerialization
     {
-        public const string SchemaName = "test";
         private TestProvider provider;
         private TestSchema schema;
         private PositionTable positions;
@@ -21,9 +20,9 @@ namespace DataWF.Test.Data
         [SetUp]
         public async Task Setup()
         {
-            provider = new TestProvider() { SchemaName = SchemaName };
-            await provider.CreateNew();
-            schema = provider.Schema;
+            provider = new TestProvider();
+            await provider.GenerateAsync();
+            schema = provider.TestSchema;
             positions = schema.Position;
             employers = schema.Employer;
         }

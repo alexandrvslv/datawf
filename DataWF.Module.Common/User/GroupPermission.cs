@@ -69,13 +69,13 @@ namespace DataWF.Module.Common
                 {
                     var type = Type;
                     if (type == PermissionType.GSchema)
-                        target = Schema.Schems[Code];
+                        target = Schema.Provider.GetSchema(Code);
                     else if (type == PermissionType.GColumn)
-                        target = Schema.Schems.ParseColumn(Code);
+                        target = Schema.Provider.ParseColumn(Code);
                     else if (type == PermissionType.GTable)
-                        target = Schema.Schems.ParseTable(Code);
+                        target = Schema.Provider.ParseTable(Code);
                     else if (type == PermissionType.GBlock)
-                        target = Schema.Schems.ParseTableGroup(Code);
+                        target = Schema.Provider.ParseTableGroup(Code);
                     else if (type == PermissionType.GType)
                         target = GetClass();
                     else if (type == PermissionType.GTypeMember)
@@ -95,7 +95,7 @@ namespace DataWF.Module.Common
         public IEnumerable<AccessItem> AccessItems
         {
             get => Access.Items;
-            set => Access = new AccessValue(value);
+            set => Access = new AccessValue(value, Provider);
         }
 
         public override AccessValue Access
@@ -119,11 +119,11 @@ namespace DataWF.Module.Common
 
         private object GetClass() => System.Type.GetType(Code);
 
-        public DBSchema GetSchema() => Schema?.Provider?.Schems[Code];
+        public DBSchema GetSchema() => (DBSchema)Schema?.Provider?.GetSchema(Code);
 
-        public DBTable GetTable() => Schema?.Schems?.ParseTable(Code);
+        public DBTable GetTable() => Schema?.Provider?.ParseTable(Code);
 
-        public DBColumn GetColumn() => Schema?.Schems?.ParseColumn(Code);
+        public DBColumn GetColumn() => Schema?.Provider?.ParseColumn(Code);
 
         public override string ToString()
         {

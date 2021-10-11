@@ -54,7 +54,7 @@ namespace DataWF.Data
 
             if ((Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
             {
-                var cash = new AccessValue(value);
+                var cash = new AccessValue(value, Provider);
                 string rez = string.Empty;
                 foreach (var item in cash)
                 {

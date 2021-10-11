@@ -12,16 +12,16 @@ namespace DataWF.Common
     [InvokerGenerator]
     public partial class AccessValue : IAccessValue, IBinarySerializable//, IEnumerable<AccessItem>
     {
-        public static IAccessProvider Provider = new AccessProviderStub { Groups = new IdCollection<IGroupIdentity>() };
-        public static readonly AccessValue Empty = new AccessValue();
-        public static implicit operator AccessValue(byte[] value)
-        {
-            return new AccessValue(value);
-        }
+
+        public static readonly AccessValue Empty = new AccessValue(null);
+        //public static implicit operator AccessValue(byte[] value)
+        //{
+        //    return new AccessValue(value);
+        //}
 
         public static AccessValue operator &(AccessValue a, AccessValue b)
         {
-            AccessValue c = new AccessValue();
+            AccessValue c = new AccessValue(a.Provider);
             foreach (var aItem in a.Items)
             {
                 var bItem = b.Get(aItem.Identity);
@@ -44,7 +44,7 @@ namespace DataWF.Common
 
         public static AccessValue operator |(AccessValue a, AccessValue b)
         {
-            AccessValue c = new AccessValue();
+            AccessValue c = new AccessValue(a.Provider);
             foreach (var aItem in a.Items)
             {
                 if (b.items.TryGetValue(aItem.Identity, out var bItem))
@@ -71,10 +71,13 @@ namespace DataWF.Common
         private string ownerName;
 
 
-        public AccessValue()
-        { }
+        public AccessValue(IAccessProvider provider)
+        {
+            Provider = provider;
+        }
 
-        public AccessValue(IEnumerable<IAccessIdentity> identities, AccessType access = AccessType.Read)
+        public AccessValue(IEnumerable<IAccessIdentity> identities, IAccessProvider provider, AccessType access = AccessType.Read)
+            : this(provider)
         {
             foreach (var identity in identities)
             {
@@ -85,7 +88,8 @@ namespace DataWF.Common
             }
         }
 
-        public AccessValue(IEnumerable<AccessItem> items)
+        public AccessValue(IEnumerable<AccessItem> items, IAccessProvider provider)
+            : this(provider)
         {
             foreach (var item in items)
             {
@@ -93,13 +97,17 @@ namespace DataWF.Common
             }
         }
 
-        public AccessValue(byte[] buffer)
+        public AccessValue(byte[] buffer, IAccessProvider provider)
+            : this(provider)
         {
             if (buffer != null)
             {
                 Deserialize(buffer);
             }
         }
+
+        [XmlIgnore, JsonIgnore]
+        public IAccessProvider Provider { get; set; }
 
         [XmlIgnore, JsonIgnore]
         public IAccessable Owner
@@ -207,7 +215,7 @@ namespace DataWF.Common
                 int index = 0;
                 while (index < capacity)
                 {
-                    var item = AccessItem.Deserialize(reader, isTyped);
+                    var item = AccessItem.Deserialize(reader, isTyped, Provider);
                     if (!item.IsEmpty)
                     {
                         items[item.Identity] = item;
@@ -320,7 +328,7 @@ namespace DataWF.Common
 
         public AccessValue Clone()
         {
-            var cache = new AccessValue();
+            var cache = new AccessValue(Provider);
             foreach (var item in items.Values)
                 cache.Add(item);
             return cache;

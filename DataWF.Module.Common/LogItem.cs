@@ -7,14 +7,14 @@ namespace DataWF.Module.Common
     [AbstractTable, InvokerGenerator(Instance = false)]
     public abstract partial class LogItem : DBItemLog
     {
-        private UserReg userReg;
+        //private UserReg userReg;
 
-        [Reference(nameof(UserRegId))]
-        public UserReg UserReg
-        {
-            get => GetReference(LogTable.UserLogKey, ref userReg);
-            set => SetReference(userReg = value, LogTable.UserLogKey);
-        }
+        //[Reference(nameof(UserRegId))]
+        //public UserReg UserReg
+        //{
+        //    get => GetReference(LogTable.UserLogKey, ref userReg);
+        //    set => SetReference(userReg = value, LogTable.UserLogKey);
+        //}
 
         [Column("loguser_id", ColumnType = DBColumnTypes.Code)]
         public int? LogUserId
@@ -26,7 +26,7 @@ namespace DataWF.Module.Common
         [Reference(nameof(LogUserId))]
         public User LogUser
         {
-            get => UserReg?.User;
+            get => (User)UserReg?.User;
             set { }
         }
     }

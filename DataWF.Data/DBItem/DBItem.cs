@@ -66,6 +66,9 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual string AccessorName => ToString();
+        
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public IDBProvider Provider => (IDBProvider)table.Provider;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool Loading
@@ -647,7 +650,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetReferencing<T>(string tableCode, string columnCode, DBLoadParam param) where T : DBItem
         {
-            var table = (DBTable<T>)Schema.ParseTable(tableCode);
+            var table = (DBTable<T>)Schema.GetTable(tableCode);
             return table != null ? GetReferencing<T>(table, table.GetColumn(columnCode), param) : null;
         }
 
@@ -777,7 +780,7 @@ namespace DataWF.Data
         private AccessValue ReadAccess()
         {
             var accessData = Table.AccessKey != null ? GetValue(Table.AccessKey) : null;
-            return accessData != null ? new AccessValue(accessData) { Owner = this } : null;
+            return accessData != null ? new AccessValue(accessData, table.Provider) { Owner = this } : null;
         }
 
         public virtual void Accept(IUserIdentity user)

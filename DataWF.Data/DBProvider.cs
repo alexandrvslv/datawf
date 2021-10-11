@@ -21,37 +21,21 @@
 using DataWF.Common;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
-    public class DBProvider<T> : DBProvider where T : DBSchema, new()
-    {
-        public new T Schema
-        {
-            get => (T)base.Schema;
-            set => base.Schema = value;
-        }
-
-        public override async Task<DBSchema> CreateNew()
-        {
-            return await base.CreateNew<T>();
-        }
-    }
-
-    public class DBProvider : IDBProvider
+    public class DBProvider : ModelProvider, IDBProvider
     {
         public static DBProvider Default;
         private readonly DBConnectionList connections = new DBConnectionList();
-        private readonly DBSchemaList schems = new DBSchemaList();
-        private DBSchema schema;
-        protected string schemaName = "example";
+
         public DBProvider()
         {
             Default = this;
-            schems.Provider = this;
             connections.Provider = this;
         }
 
@@ -61,56 +45,14 @@ namespace DataWF.Data
 
         public DBConnectionList Connections => connections;
 
-        public DBSchemaList Schems => schems;
+        IEnumerable<IDBSchema> IDBProvider.Schems => Schems.OfType<IDBSchema>();
 
-        public string SchemaName
-        {
-            get => schemaName;
-            set => schemaName = value;
-        }
-
-        public DBSchema Schema
-        {
-            get => schema ??= schems[schemaName];
-            set
-            {
-                value.Provider = this;
-                schems[schemaName] = schema = value;
-            }
-        }
-
-        public virtual Task<DBSchema> CreateNew()
-        {
-            return CreateNew<DBSchema>();
-        }
-
-        public Task<T> CreateNew<T>() where T : DBSchema, new()
-        {
-            var schema = new T()
-            {
-                Name = SchemaName,
-                Provider = this,
-                //Connection = new DBConnection
-                //{
-                //    Name = SchemaName,
-                //    System = DBSystem.SQLite,
-                //    DataBase = $"{SchemaName}.sqlite"
-                //}
-            };
-            Schema = schema;
-            Generate();
-
-            if (schema.Connection?.CheckConnection() ?? false)
-            {
-                Schema.ExecuteCreateDatabase();
-                Save();
-            }
-            return Task.FromResult(schema);
-        }
+        public DBSchema GetDBSchema(string name) => (DBSchema)GetSchema(name);
 
         public virtual void Generate()
         {
-            Schema?.Generate(SchemaName);
+            foreach (var schema in Schems.OfType<DBSchema>())
+                schema.Generate();
         }
 
         public virtual void Load()
@@ -118,11 +60,12 @@ namespace DataWF.Data
             this.Log("Start");
             Load("data.xml");
 
-            if (Schema == null || Schema.Connection == null)
+            var schems = Schems.OfType<DBSchema>().ToList();
+            if (schems.Count() == 0 || schems.First().Connection == null)
             {
                 throw new Exception("Missing data.xml or connection.xml");
             }
-            if (!Schema.Connection.CheckConnection())
+            if (!schems.All(p => p.Connection.CheckConnection()))
             {
                 throw new Exception("Check Connection FAIL!");
             }
@@ -131,9 +74,9 @@ namespace DataWF.Data
 
             this.Log("Load & Generate Success");
 
-            foreach (var initializer in Helper.ModuleInitializer)
+            foreach (var module in Helper.Modules)
             {
-                initializer.Initialize(new[] { Schema });
+                module.Initialize(new[] { schems.First() });
             }
         }
 
@@ -144,20 +87,20 @@ namespace DataWF.Data
 
         public void Save(string file)
         {
-            foreach (var schema in schems)
+            foreach (var schema in Schems.OfType<DBSchema>())
             {
                 schema.Tables.ApplyDefaultSort();
             }
             Serialization.Serialize(connections, "connections.xml");
-            Serialization.Serialize(schems, file);
+            Serialization.Serialize(Schems, file);
         }
 
         public void Load(string file)
         {
             this.Log("Start Load config");
             Serialization.Deserialize("connections.xml", connections);
-            Serialization.Deserialize(file, schems);
-            foreach (var schema in schems)
+            Serialization.Deserialize(file, Schems);
+            foreach (var schema in Schems.OfType<DBSchema>())
             {
                 schema.IsSynchronizing = false;
             }
@@ -171,7 +114,6 @@ namespace DataWF.Data
             if (type == DDLType.None
                 || !item.Containers.Any()
                 || item.Schema == null
-                || item.Schema.Schems == null
                 || item.Schema.IsSynchronizing)
                 return;
             if (item is IDBTableContent tabled)
@@ -282,7 +224,7 @@ namespace DataWF.Data
         {
             if (Changes.Count == 0)
                 return;
-            foreach (var schema in schems)
+            foreach (var schema in Schems.OfType<DBSchema>())
             {
                 var isSqlite = schema.Connection.System == DBSystem.SQLite;
                 foreach (var item in GetChanges(schema))
@@ -423,11 +365,187 @@ namespace DataWF.Data
             return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
         }
 
-        public DBTable<T> GetTable<T>() where T : DBItem => (DBTable<T>)GetTable(typeof(T));
-
-        public DBTable GetTable(Type type)
+        public IEnumerable<KeyValuePair<string, DBProcedure>> GetProcedures(string category = "General")
         {
-            foreach (var schema in Schems)
+            foreach (var schema in Schems.OfType<DBSchema>())
+            {
+                foreach (var kvp in schema.Procedures.SelectByCategory(category))
+                {
+                    yield return kvp;
+                }
+            }
+        }
+
+        public DBProcedure ParseProcedure(string name, string category = "General")
+        {
+            var procedure = (DBProcedure)null;
+            foreach (var schema in Schems.OfType<DBSchema>())
+            {
+                procedure = schema.Procedures[name];
+                if (procedure == null)
+                    procedure = schema.Procedures.SelectByAttribute(name, category);
+                if (procedure == null && category != "General")
+                    procedure = schema.Procedures.SelectByAttribute(name);
+                if (procedure != null)
+                    break;
+            }
+            return procedure;
+        }
+
+        public void SaveCache()
+        {
+            foreach (DBSchema schema in Schems.OfType<DBSchema>())
+            {
+                foreach (DBTable table in schema.Tables)
+                {
+                    if (table.Count > 0 && table.IsCaching && !table.IsVirtual)
+                    {
+                        table.SaveFile();
+                    }
+                }
+            }
+        }
+
+        public void LoadCache()
+        {
+            foreach (DBSchema schema in Schems.OfType<DBSchema>())
+            {
+                foreach (DBTable table in schema.Tables)
+                {
+                    if (table.IsCaching && !table.IsVirtual)
+                    {
+                        table.LoadFile();
+                    }
+                }
+            }
+            Helper.LogWorkingSet("Data Cache");
+        }
+
+        public DBColumn ParseColumn(string name, IDBSchema schema = null)
+        {
+            if (string.IsNullOrEmpty(name))
+                return null;
+            DBTable table = ParseTable(name, schema);
+
+            int index = name.LastIndexOf('.');
+            name = index < 0 ? name : name.Substring(index + 1);
+            return table?.GetColumn(name);
+        }
+
+        public DBTable ParseTableByTypeName(string code)
+        {
+            if (string.IsNullOrEmpty(code))
+                return null;
+            foreach (var schema in Schems.OfType<DBSchema>())
+            {
+                var table = schema.Tables.GetByTypeName(code);
+                if (table != null)
+                    return table;
+            }
+            return null;
+        }
+
+        public DBTable ParseTable(string code, IDBSchema s = null)
+        {
+            if (string.IsNullOrEmpty(code))
+                return null;
+            DBTable table = null;
+            IDBSchema schema = null;
+            int index = code.IndexOf('.');
+            if (index >= 0)
+            {
+                schema = (DBSchema)Schems[code.Substring(0, index++)];
+                int sindex = code.IndexOf('.', index);
+                code = sindex < 0 ? code.Substring(index) : code.Substring(index, sindex - index);
+            }
+            if (schema == null)
+                schema = s;
+            if (schema != null)
+            {
+                table = schema.Tables[code];
+            }
+            else
+            {
+                foreach (var sch in Schems.OfType<DBSchema>())
+                {
+                    table = sch.Tables[code];
+                    if (table != null)
+                        break;
+                }
+            }
+            return table;
+        }
+
+        public DBTableGroup ParseTableGroup(string code, DBSchema s = null)
+        {
+            if (code == null)
+                return null;
+            DBSchema schema = null;
+            int index = code.IndexOf('.');
+            if (index < 0)
+                schema = s;
+            else
+            {
+                schema = (DBSchema)Schems[code.Substring(0, index++)];
+                int sindex = code.IndexOf('.', index);
+                code = sindex < 0 ?
+                    code.Substring(index) :
+                    code.Substring(index, sindex - index);
+            }
+            return schema.TableGroups[code];
+        }
+
+        public void Deserialize(string file, IDBSchemaItem selectedItem)
+        {
+            var item = Serialization.Deserialize(file);
+            if (item is DBTable table)
+            {
+                var schema = selectedItem.Schema;
+
+                if (schema.Tables.Contains(table.Name))
+                    schema.Tables.Remove(table.Name);
+                schema.Tables.Add(table);
+            }
+            else if (item is DBSchema schema)
+            {
+                if (Schems.Contains(schema.Name))
+                    schema.Name = schema.Name + "1";
+                Add((DBSchema)item);
+            }
+            else if (item is DBColumn column)
+            {
+                if (selectedItem is DBTable sTable)
+                    sTable.Columns.Add((DBColumn)item);
+            }
+            else if (item is SelectableList<DBSchemaItem> list)
+            {
+                foreach (var element in list)
+                {
+                    if (element is DBColumn && selectedItem is DBTable)
+                        ((DBTable)selectedItem).Columns.Add((DBColumn)element);
+                    else if (element is DBTable && selectedItem is DBSchema)
+                        ((DBSchema)selectedItem).Tables.Add((DBTable)element);
+                }
+
+            }
+        }
+
+        public DBTable GetDBTable(string name)
+        {
+            foreach (var schema in Schems.OfType<DBSchema>())
+            {
+                var table = schema.GetTable(name);
+                if (table is DBTable dBTable)
+                    return dBTable;
+            }
+            return null;
+        }
+
+        public DBTable<T> GetDBTable<T>() where T : DBItem => (DBTable<T>)GetTable(typeof(T));
+
+        public DBTable GetDBTable(Type type)
+        {
+            foreach (var schema in Schems.OfType<DBSchema>())
             {
                 var table = schema.GetTable(type);
                 if (table != null)
@@ -436,10 +554,24 @@ namespace DataWF.Data
             return null;
         }
 
-        public virtual DBUser FindUser(string email)
+        public DBTable GetDBTable(Type type, int typeId)
         {
-            throw new NotImplementedException();
+            foreach (var schema in Schems.OfType<DBSchema>())
+            {
+                var table = schema.GetTable(type, typeId);
+                if (table is DBTable dBTable)
+                    return dBTable;
+            }
+            return null;
         }
+
+        IDBTable IDBProvider.GetTable(string name) => GetDBTable(name);
+
+        IDBTable<T> IDBProvider.GetTable<T>() => GetDBTable<T>();
+
+        IDBTable IDBProvider.GetTable(Type itemType) => GetDBTable(itemType);
+
+        IDBTable IDBProvider.GetTable(Type baseType, int typeId) => GetDBTable(baseType, typeId);
 
         public void RefreshToString()
         {
@@ -453,6 +585,11 @@ namespace DataWF.Data
                     }
                 }
             }
+        }
+
+        internal void OnItemsListChanged<T>(DBSchemaItemList<T> ts, EventArgs e) where T : DBSchemaItem
+        {
+            //throw new NotImplementedException();
         }
     }
 }

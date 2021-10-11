@@ -58,7 +58,7 @@ namespace DataWF.Data
 
         public void Initialize(DBProvider provider)
         {
-            Schema = provider.Schems[SchemaName];
+            Schema = (DBSchema)provider.Schems[SchemaName];
             if (Schema == null)
                 throw new Exception($"Schema with name {SchemaName} not found!");
             Tables.Clear();

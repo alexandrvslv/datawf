@@ -14,7 +14,7 @@ namespace DataWF.Module.Common
     }
 
     [Table("rgroup", "User", BlockSize = 10)]
-    public sealed partial class UserGroup : DBGroupItem, IDisposable, IGroupIdentity
+    public sealed partial class UserGroup : DBGroupItem, IDisposable, IUserGroupIdentity
     {
         private Company company;
 

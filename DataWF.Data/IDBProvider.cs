@@ -20,23 +20,23 @@
 
 using DataWF.Common;
 using System;
+using System.Collections.Generic;
 
 namespace DataWF.Data
 {
 
-    public interface IDBProvider
+    public interface IDBProvider : IModelProvider
     {
-        DBSchema Schema { get; }
+        DBConnectionList Connections { get; }
+        new IEnumerable<IDBSchema> Schems { get; }
+
+        new IDBTable<T> GetTable<T>() where T : DBItem;
+        new IDBTable GetTable(string name);
+        new IDBTable GetTable(Type itemType);
+        new IDBTable GetTable(Type baseType, int typeId);
+
         void Load();
         void Save();
-        DBUser FindUser(string email);
 
-        DBConnectionList Connections { get; }
-
-        DBSchemaList Schems { get; }
-
-        DBTable<T> GetTable<T>() where T : DBItem;
-
-        DBTable GetTable(Type ItemType);
     }
 }

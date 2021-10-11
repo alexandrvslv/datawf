@@ -70,8 +70,8 @@ namespace DataWF.Common.Generator
             Namespace = TypeSymbol.ContainingNamespace.ToDisplayString();
             SchemaName = TypeSymbol.Name;
             source = new StringBuilder();
+            
             LoadDocument();
-
             LoadReferences();
 
             foreach (var definition in document.Definitions)
@@ -255,6 +255,7 @@ namespace DataWF.Common.Generator
         public {clientType}({SchemaName} schema)
             : base({baseCtor})
         {{
+            Name = ""{clientName}"";
             Schema = schema;");
 
             foreach (var refField in cache)

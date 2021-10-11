@@ -37,7 +37,7 @@ using System.Linq.Expressions;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public partial class DBTable<T> : DBTable, IModelTable<T>, IIdCollection<T> where T : DBItem
+    public partial class DBTable<T> : DBTable, IDBTable<T>, IIdCollection<T> where T : DBItem
     {
         protected readonly List<T> items = new List<T>();
         protected readonly List<T> insertItems = new List<T>();
@@ -91,6 +91,8 @@ namespace DataWF.Data
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public override object SyncRoot => items;
+
+        public IEnumerable<T> Items => items;
 
         public override DBItem this[int index]
         {
@@ -263,10 +265,7 @@ namespace DataWF.Data
             SequenceName = value.SequenceName;
             Keys = value.Keys | DBTableKeys.Virtual;
             FilterQuery = null;
-            if (ParentTable != null)
-            {
-                ParentTable.AddVirtualTable(this);
-            }
+            ParentTable?.AddVirtualTable(this);
             var type = typeof(T);
 
             foreach (DBColumnGroup group in ParentTable.ColumnGroups)
@@ -644,18 +643,7 @@ namespace DataWF.Data
                 }
                 query.CacheState = DBCacheState.Actual;
             }
-            var result = Select(query);
-            if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
-            {
-                var temp = result.ToList();
-                ListHelper.QuickSort(temp, TreeComparer<IGroup>.Default);
-                return temp;
-            }
-            else
-            {
-                return result;
-            }
-
+            return Select(query);
         }
 
         public async ValueTask<IEnumerable<T>> LoadAsync(IQQuery query, DBTransaction transaction = null)
@@ -690,17 +678,7 @@ namespace DataWF.Data
                 }
                 query.CacheState = DBCacheState.Actual;
             }
-            var result = Select(query);
-            if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
-            {
-                var temp = result.ToList();
-                ListHelper.QuickSort(temp, TreeComparer<IGroup>.Default);
-                return temp;
-            }
-            else
-            {
-                return result;
-            }
+            return Select(query);
         }
 
         private void CheckCacheState(IQQuery query)
@@ -1086,16 +1064,30 @@ namespace DataWF.Data
 
         public IEnumerable<DBTuple> Join(IQQuery query, IEnumerable<DBTuple> list)
         {
-            var parametrized = query.Tables.Skip(1).Where(table => (table.Join.Type & JoinTypes.Left) != JoinTypes.Left
-                                                            || table.GetParameters().Any())
-                                            .ToList();
+            var joins = query.Tables.Skip(1)
+                                    .Where(table => !table.Join.IsLeft
+                                                || table.HasParameters)
+                                    .ToList();
 
-            var count = query.Tables.Count;
-            foreach (var table in parametrized)
+            var count = joins.Count;
+            foreach (var tuple in list)
             {
-                list = Join(table, list);
+                var tuples = Enumerable.Repeat(tuple, 1);
+                foreach (var table in joins)
+                {
+                    tuples = Join(table, tuples);
+                }
+                foreach (var joinedTuple in tuples)
+                {
+                    yield return joinedTuple;
+                }
             }
-            return list;
+
+            int Compare(QTable x, QTable y) // TODO if order of join is not inclusive
+            {
+                var raiting = ((QColumn)x.On.LeftItem).Column.Table == this;
+                return x.Order.CompareTo(y.Order);
+            }
         }
 
         public IEnumerable<DBTuple> Join(QTable rtable, IEnumerable<DBTuple> list)
@@ -1111,28 +1103,39 @@ namespace DataWF.Data
 
         public IEnumerable<DBTuple> Join(QTable rtable, DBTuple tuple)
         {
-            var rcolumn = (QColumn)(rtable.On.LeftItem.QTable == rtable ? rtable.On.LeftItem : rtable.On.RightItem);
-            var lcolumn = (QColumn)(rtable.On.LeftItem != rcolumn ? rtable.On.LeftItem : rtable.On.RightItem);
+            //if(!rtable.On.IsCompaund)
+            {
+                var rcolumn = (QColumn)(rtable.On.LeftItem.QTable == rtable ? rtable.On.LeftItem : rtable.On.RightItem);
+                var lcolumn = (QColumn)(rtable.On.LeftItem != rcolumn ? rtable.On.LeftItem : rtable.On.RightItem);
 
-            var litem = tuple.Get(lcolumn.QTable);
-            if (litem == null)
-            {
-                yield break;
-            }
-            var items = rcolumn.Column.Select<DBItem>(rtable.On.Comparer, litem.GetValue(lcolumn.Column));
-            bool first = true;
-            foreach (var item in items)
-            {
-                var itemTurple = first ? tuple : tuple.Clone();
-                itemTurple.Set(rtable, item);
-                yield return itemTurple;
-                first = false;
-            }
-            if (first && (rtable.Join.Type & JoinTypes.Left) == JoinTypes.Left)
-            {
-                yield return tuple;
-            }
+                //if(rtable.On.Comparer == CompareType.Equal)
+                {
+                    var litem = tuple.Get(lcolumn.QTable);
+                    if (litem == null)
+                    {
+                        yield break;
+                    }
+                    var items = lcolumn.Column.IsPrimaryKey
+                        ? rcolumn.Column.Select<DBItem>(rtable.On.Comparer, litem)
+                        : rcolumn.Column.Select<DBItem>(rtable.On.Comparer, lcolumn.GetValue(litem));
 
+                    bool first = true;
+                    foreach (var item in items)
+                    {
+                        //if (QParam.CheckItem(item, rtable.GetParameters()))
+                        {
+                            var itemTurple = first ? tuple : tuple.Clone();
+                            itemTurple.Set(rtable, item);
+                            yield return itemTurple;
+                            first = false;
+                        }
+                    }
+                    if (first && rtable.Join.IsLeft)// && !rtable.HasParameters)
+                    {
+                        yield return tuple;
+                    }
+                }
+            }
         }
 
         public IEnumerable<T> Select(DBColumn column, CompareType comparer, object value)
@@ -1158,7 +1161,7 @@ namespace DataWF.Data
         public IEnumerable<T> Select(IQQuery query, IEnumerable<T> list = null)
         {
             IEnumerable<T> buf = null;
-            if (query.Tables.Count > 1)
+            if (query.IsJoinAffectResult)
             {
                 var joinSource = Join(query, AsTuple(list));
                 buf = Select(query, joinSource);

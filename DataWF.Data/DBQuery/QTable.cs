@@ -30,6 +30,8 @@ namespace DataWF.Data
         protected JoinType join = JoinType.Undefined;
         protected DBTable table;
         private QParam onParam;
+        private bool? parametrized;
+        private IEnumerable<QParam> parameters;
 
         public QTable()
         { }
@@ -83,6 +85,8 @@ namespace DataWF.Data
             }
         }
 
+        public bool HasParameters => GetParameters().Any();
+
         public override string Format(IDbCommand command = null)
         {
             return $"{Join.Format()} {System.FormatQTable(Table, TableAlias)} {(On != null ? $" on {On.Format(command)}" : string.Empty)}";
@@ -95,7 +99,7 @@ namespace DataWF.Data
 
         public IEnumerable<QParam> GetParameters()
         {
-            return Query.GetAllParameters(p => p.GetAllQItems<QColumn>(c => c.QTable == this).Any());
+            return parameters ??=  Query.GetAllParameters(p => p.GetAllQItems<QColumn>(c => c.QTable == this).Any()).ToList();
         }
     }
 }

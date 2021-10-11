@@ -15,6 +15,10 @@ namespace DataWF.Common.Generator
         public static readonly string cCodeKey = "CodeKey";
         public static readonly string cFileNameKey = "FileNameKey";
         public static readonly string cFileLastWriteKey = "FileLastWriteKey";
+        public static readonly string cIWebProvider = "IWebProvider";
+        public static readonly string cModelProvider = "ModelProvider";
+        public static readonly string cDBProvider = "DBProvider";
+        public static readonly string cIDBProvider = "IDBProvider";
         public static readonly string cDBSchema = "DBSchema";
         public static readonly string cDBSchemaLog = "DBSchemaLog";
         public static readonly string cIDBSchema = "IDBSchema";
@@ -54,6 +58,8 @@ namespace DataWF.Common.Generator
         public static readonly string cWebSchemaAttribute = "WebSchemaAttribute";
         public static readonly string cSchemaController = "SchemaController";
         public static readonly string cSchemaControllerAttribute = "SchemaControllerAttribute";
+        public static readonly string cProvider = "Provider";
+        public static readonly string cProviderAttribute = "ProviderAttribute";
         public static readonly string cGet = "Get";
         public static readonly string cPost = "Post";
         public static readonly string cPut = "Put";

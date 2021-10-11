@@ -17,18 +17,20 @@ namespace DataWF.WebService.Common
     [LoggerAndFormatter]
     public class AccessController : ControllerBase
     {
-        public AccessController(DBSchema schema)
+        public AccessController(IModelProvider provider)
         {
-            Schema = schema;
+            Provider = provider;
         }
 
-        public IUserIdentity CurrentUser => User.GetCommonUser();
+        public IUserIdentity CurrentUser => Provider.GetUser(User);
 
         public DBSchema Schema { get; }
 
+        public IModelProvider Provider { get; }
+
         private DBTable GetTable(string name)
         {
-            var table = Schema.Tables.GetByTypeName(name);
+            var table = (DBTable)Provider.GetTable(name);
             if (table == null && name.EndsWith("Log"))
                 table = (DBTable)GetTable(name.Replace("Log", ""))?.LogTable;
             return table;
@@ -187,7 +189,7 @@ namespace DataWF.WebService.Common
                         transaction.Rollback();
                         return Forbid();
                     }
-                    value.Access = new AccessValue(accessItems);
+                    value.Access = new AccessValue(accessItems, Provider);
                     await value.Save(transaction);
                     transaction.Commit();
                     return true;
@@ -221,7 +223,7 @@ namespace DataWF.WebService.Common
             {
                 return BadRequest($"Table {table} is not Accessable!");
             }
-            var temp = new AccessValue(accessPack.Items);
+            var temp = new AccessValue(accessPack.Items, Provider);
             using (var transaction = new DBTransaction(table, CurrentUser))
             {
                 try

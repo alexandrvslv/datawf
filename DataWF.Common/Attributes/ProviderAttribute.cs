@@ -7,9 +7,9 @@ using System;
 namespace DataWF.Common
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class DataProviderAttribute : Attribute
+    public class ProviderAttribute : Attribute
     {
-        public DataProviderAttribute()
+        public ProviderAttribute()
         {
         }
 

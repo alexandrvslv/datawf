@@ -9,41 +9,34 @@ using DataWF.Data;
 
 namespace DataWF.Test.Data
 {
-    public class TestProvider : DBProvider
+    [Provider]
+    [SchemaEntry(typeof(TestSchema))]
+    public partial class TestProvider : DBProvider
     {
-        public new TestSchema Schema
+        private IdCollection<IUserGroupIdentity> Groups = new IdCollection<IUserGroupIdentity>
         {
-            get => (TestSchema)base.Schema;
-            set => base.Schema = value;
-        }
+            new AccessGroupBung() { Id = 1, Name = "Group1"},
+            new AccessGroupBung() { Id = 2, Name = "Group2"},
+            new AccessGroupBung() { Id = 3, Name = "Group3"}
+        };
 
-        public override async Task<DBSchema> CreateNew()
+        public override IUserGroupIdentity GetUserGroup(int id) => Groups.GetById(id);
+
+        public override IEnumerable<IAccessIdentity> GetGroups() => Groups;
+
+        public async Task GenerateAsync()
         {
-            Locale.Instance.Culture = CultureInfo.GetCultureInfo("en-US");
-            Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            Schems.Clear();
+            LoadConnections();
+
             TableGenerator.ClearGeneratorCache();
+            Generate();
 
-            if (Connections.Count == 0)
-                Serialization.Deserialize("connections.xml", Connections);
+            TestSchema.Connection = Connections["TestSqlLite"];
+            TestSchema.ExecuteDropDatabase();
 
-            AccessValue.Provider = new AccessProviderStub
-            {
-                Groups = new IdCollection<IGroupIdentity>
-                {
-                    new AccessGroupBung() { Id = 1, Name = "Group1"},
-                    new AccessGroupBung() { Id = 2, Name = "Group2"},
-                    new AccessGroupBung() { Id = 3, Name = "Group3"}
-                }
-            };
+            TestSchema.ExecuteCreateDatabase();
 
-            Schema = await CreateNew<TestSchema>();
-
-            Schema.Connection = Connections["TestSqlLite"];
-            Schema.ExecuteDropDatabase();
-            Schema.ExecuteCreateDatabase();
-
-            var positions = Schema.Position;
+            var positions = TestSchema.Position;
 
             new Position(positions) { Id = 1, Code = "1", Name = "First Position" }.Attach();
             new Position(positions) { Id = 2, Code = "2", Name = "Second Position" }.Attach();
@@ -52,7 +45,7 @@ namespace DataWF.Test.Data
             new Position(positions) { Id = 5, Code = "5", Name = "Sub Sub Position", ParentId = 4 }.Attach();
             await positions.Save();
 
-            var employers = Schema.Employer;
+            var employers = TestSchema.Employer;
             var random = new Random();
             for (var i = 1; i <= 100; i++)
             {
@@ -67,16 +60,16 @@ namespace DataWF.Test.Data
                     Salary = 231323.32M / random.Next(1, 5),
                     Name = $"Name{i,3:0}",
                     Access = new AccessValue(new[]
-                   {
-                    new AccessItem(AccessValue.Provider.GetAccessIdentity(1, IdentityType.Group), AccessType.Read | AccessType.Download),
-                    new AccessItem(AccessValue.Provider.GetAccessIdentity(2, IdentityType.Group), AccessType.Admin),
-                    new AccessItem(AccessValue.Provider.GetAccessIdentity(3, IdentityType.Group), AccessType.Read | AccessType.Create | AccessType.Update)
-                })
+                    {
+                        new AccessItem(GetAccessIdentity(1, IdentityType.Group), AccessType.Read | AccessType.Download),
+                        new AccessItem(GetAccessIdentity(2, IdentityType.Group), AccessType.Admin),
+                        new AccessItem(GetAccessIdentity(3, IdentityType.Group), AccessType.Read | AccessType.Create | AccessType.Update)
+                    }, this)
                 }.Attach();
             }
             await employers.Save();
 
-            var employerReferences = Schema.EmployerReference;
+            var employerReferences = TestSchema.EmployerReference;
             foreach (var employer in employers)
             {
                 employer.SubEmployers = new[] {
@@ -98,7 +91,15 @@ namespace DataWF.Test.Data
                 };
             }
             await employerReferences.Save();
-            return Schema;
+        }
+
+        public void LoadConnections()
+        {
+            Locale.Instance.Culture = CultureInfo.GetCultureInfo("en-US");
+            Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            if (Connections.Count == 0)
+                Serialization.Deserialize("connections.xml", Connections);
         }
     }
 }

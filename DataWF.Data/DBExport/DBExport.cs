@@ -272,7 +272,7 @@ namespace DataWF.Data
 
         public DBSchema Source
         {
-            get { return dbsource ?? Provider.Schems[source]; }
+            get { return dbsource ?? (dbsource = (DBSchema)Provider.Schems[SourceName]); }
             set
             {
                 if (Source != value)
@@ -302,7 +302,7 @@ namespace DataWF.Data
 
         public DBSchema Target
         {
-            get { return dbtarget ?? Provider.Schems[target]; }
+            get { return dbtarget ?? (dbtarget = (DBSchema)Provider.Schems[target]); }
             set
             {
                 if (Target != value)

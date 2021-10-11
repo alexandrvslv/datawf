@@ -29,6 +29,7 @@
   <ItemGroup>
     <Compile Remove="Attributes\VirtualColumnAttribute.cs" />
     <Compile Remove="DBItem\DBVirtualItem.cs" />
+    <Compile Remove="DBSchema\DBSchemaList.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.13.1" />

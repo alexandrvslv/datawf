@@ -4,12 +4,12 @@ using DataWF.Common.Generator;
 
 namespace DataWF.Common.Generator
 {
-    internal abstract class BaseTableGenerator : BaseGenerator
+    internal abstract class ExtendedGenerator : BaseGenerator
     {
         protected List<string> cultures;
         protected List<IPropertySymbol> properties;
 
-        public BaseTableGenerator(CompilationContext compilationContext, InvokerGenerator invokerGenerator) : base(compilationContext)
+        public ExtendedGenerator(CompilationContext compilationContext, InvokerGenerator invokerGenerator) : base(compilationContext)
         {
             InvokerGenerator = invokerGenerator;
         }

@@ -22,8 +22,9 @@ namespace DataWF.Common.Generator
         public List<ClassDeclarationSyntax> IvokerCandidates { get; } = new List<ClassDeclarationSyntax>();
         public List<ClassDeclarationSyntax> TableCandidates { get; } = new List<ClassDeclarationSyntax>();
         public List<ClassDeclarationSyntax> SchemaCandidates { get; } = new List<ClassDeclarationSyntax>();
-        public List<ClassDeclarationSyntax> WebSchemaCandidate { get; } = new List<ClassDeclarationSyntax>();
-        public List<ClassDeclarationSyntax> SchemaControllerCandidate { get; } = new List<ClassDeclarationSyntax>();
+        public List<ClassDeclarationSyntax> WebSchemaCandidates { get; } = new List<ClassDeclarationSyntax>();
+        public List<ClassDeclarationSyntax> SchemaControllerCandidates { get; } = new List<ClassDeclarationSyntax>();
+        public List<ClassDeclarationSyntax> ProviderCandidates { get; } = new List<ClassDeclarationSyntax>();
 
         /// <summary>
         /// Called for every syntax node in the compilation, we can inspect the nodes and save any information useful for generation
@@ -61,11 +62,15 @@ namespace DataWF.Common.Generator
                         }
                         else if (attribute.StartsWith(Helper.cWebSchema, StringComparison.Ordinal))
                         {
-                            WebSchemaCandidate.Add(classDeclarationSyntax);
+                            WebSchemaCandidates.Add(classDeclarationSyntax);
                         }
                         else if (attribute.StartsWith(Helper.cSchemaController, StringComparison.Ordinal))
                         {
-                            SchemaControllerCandidate.Add(classDeclarationSyntax);
+                            SchemaControllerCandidates.Add(classDeclarationSyntax);
+                        }
+                        else if (attribute.StartsWith(Helper.cProvider, StringComparison.Ordinal))
+                        {
+                            ProviderCandidates.Add(classDeclarationSyntax);
                         }
                     }
                 }

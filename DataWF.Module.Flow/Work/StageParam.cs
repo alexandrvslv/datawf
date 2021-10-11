@@ -67,7 +67,7 @@ namespace DataWF.Module.Flow
                             _cache = GetReference();
                             break;
                         case StageParamType.Procedure:
-                            _cache = Schema.ParseProcedure(ParamCode);
+                            _cache = Schema.Provider.ParseProcedure(ParamCode);
                             break;
                         case StageParamType.Reference:
                             _cache = Schema.Stage.LoadById(ParamCode);
@@ -91,7 +91,7 @@ namespace DataWF.Module.Flow
             int index = ParamCode.IndexOf(' ');
             string code = ParamCode.Substring(0, index < 0 ? ParamCode.Length : index);
 
-            var column = Schema.ParseColumn(code);
+            var column = Schema.Provider.ParseColumn(code);
             //var result = new DBConstraintForeign() { Table = column.Table, Column = column, Value = column.Reference };
             //if (index >= 0) result.Value = ParamCode.Substring(index + 1);
             return column?.GetForeign();
@@ -101,7 +101,7 @@ namespace DataWF.Module.Flow
         {
             int index = ParamCode.IndexOf(' ');
             string code = ParamCode.Substring(0, index < 0 ? ParamCode.Length : index);
-            DBColumn column = Schema.ParseColumn(code);
+            DBColumn column = Schema.Provider.ParseColumn(code);
             return column;
         }
 

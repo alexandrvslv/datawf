@@ -28,6 +28,10 @@ using DataWF.Common;
 
 namespace DataWF.Data
 {
+    public interface IDBTable<T> : IDBTable, IModelTable<T>
+    {
+    }
+
     public interface IDBTable : IDBSchemaItem, IModelTable, ICollection, IDisposable
     {
         DBItem this[int index] { get; }

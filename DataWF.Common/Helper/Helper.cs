@@ -24,7 +24,7 @@ namespace DataWF.Common
     {
         public static string AppName = "DataWF";
         private static readonly StateInfoList logs = new StateInfoList();
-        public static readonly List<IModuleInitialize> ModuleInitializer = new List<IModuleInitialize>();
+        public static readonly List<IModuleInitialize> Modules = new List<IModuleInitialize>();
         private static readonly Dictionary<string, string> words = new Dictionary<string, string>(StringComparer.Ordinal);
         public static readonly char[] CommaSeparator = new char[] { ',' };
         public static readonly char[] DotSeparator = { '.' };
@@ -75,7 +75,7 @@ namespace DataWF.Common
                         && TypeHelper.IsInterface(moduleInitializeAttribute.InitializeType, typeof(IModuleInitialize)))
                     {
                         var imodule = (IModuleInitialize)EmitInvoker.CreateObject(moduleInitializeAttribute.InitializeType);
-                        ModuleInitializer.Add(imodule);
+                        Modules.Add(imodule);
                     }
                 }
                 catch (Exception ex)

@@ -13,11 +13,7 @@ namespace DataWF.Module.Common
     {
         public Task Initialize(object[] args)
         {            
-            var schema = args.FirstOrDefault() as ICommonSchema;
-            if (AccessValue.Provider is AccessProviderStub)
-            {
-                AccessValue.Provider = new CommonAccessProvider(schema);
-            }
+            var schema = args.FirstOrDefault() as ICommonSchema;            
 
             schema.Book.Load();
             schema.Department.Load();

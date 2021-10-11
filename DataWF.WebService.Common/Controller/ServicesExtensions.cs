@@ -92,21 +92,31 @@ namespace DataWF.WebService.Common
                 .UseAuthorization();
         }
 
-        public static IServiceCollection AddDefaults(this IServiceCollection services, IConfiguration configuration, IDBProvider dataProvider)
+        public static IServiceCollection AddDefaults(this IServiceCollection services, IConfiguration configuration, IDBProvider dbProvider)
         {
-            FindUser = dataProvider.FindUser;
-            dataProvider.Load();
+            dbProvider.Load();
 
-            services.AddSingleton<DBSchema>(dataProvider.Schema);
-            foreach (var interfaceType in TypeHelper.GetDerivedInterfaces<IDBSchema>(dataProvider.Schema.GetType()))
-                services.AddSingleton(interfaceType, dataProvider.Schema);
 
-            if (dataProvider.GetType() != typeof(DBProvider))
-                services.AddSingleton(dataProvider.GetType(), dataProvider);
-            if (dataProvider is DBProvider)
-                services.AddSingleton<DBProvider>((DBProvider)dataProvider);
+            foreach (var interfaceType in TypeHelper.GetDerivedInterfaces<IModelProvider>(dbProvider.GetType()))
+                services.AddSingleton(interfaceType, dbProvider);
 
-            services.AddSingleton<IDBProvider>(dataProvider);
+            if (dbProvider is DBProvider)
+                services.AddSingleton<DBProvider>((DBProvider)dbProvider);
+
+            if (dbProvider.GetType() != typeof(DBProvider))
+                services.AddSingleton(dbProvider.GetType(), dbProvider);
+
+            var schema = dbProvider.Schems.OfType<DBSchema>().FirstOrDefault();
+            if (schema != null)
+            {
+                foreach (var interfaceType in TypeHelper.GetDerivedInterfaces<IDBSchema>(schema.GetType()))
+                    services.AddSingleton(interfaceType, schema);
+
+                services.AddSingleton<DBSchema>(schema);
+
+                if (schema.GetType() != typeof(DBSchema))
+                    services.AddSingleton(schema.GetType(), schema);
+            }
 
             var protocolSetting = new ProtocolSetting();
             var protocolSection = configuration.GetSection("ProtocolSetting");
@@ -132,7 +142,7 @@ namespace DataWF.WebService.Common
             }
             services.Configure<SMTPSetting>(ldapSection);
 
-            var formatter = new DBItemOutputFormatter(dataProvider);
+            var formatter = new DBItemOutputFormatter(dbProvider);
             services.AddControllers(options =>
             {
                 options.CacheProfiles.Add("Never", new CacheProfile()
@@ -242,14 +252,5 @@ namespace DataWF.WebService.Common
             app.UseWebSockets(webSocketOptions);
             return app;
         }
-
-        public static IUserIdentity GetCommonUser(this ClaimsPrincipal claims)
-        {
-            var emailClaim = claims?.FindFirst(ClaimTypes.Email);
-            return emailClaim != null ? FindUser?.Invoke(emailClaim.Value) : null;
-        }
-
-        public static Func<string, IUserIdentity> FindUser;
-
     }
 }

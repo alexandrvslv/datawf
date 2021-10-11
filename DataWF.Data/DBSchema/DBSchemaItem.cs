@@ -41,7 +41,7 @@ namespace DataWF.Data
 
         public DBSchemaItem()
         {
-            SyncStatus = SynchronizedStatus.Load; 
+            SyncStatus = SynchronizedStatus.Load;
         }
 
         public DBSchemaItem(string name)
@@ -68,6 +68,9 @@ namespace DataWF.Data
             }
         }
 
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public new IDBProvider Provider => schema.Provider;
+
         [Browsable(false), Category("Policy"), XmlIgnore, JsonIgnore]
         public virtual string AccessorName => DisplayName;
 
@@ -80,7 +83,7 @@ namespace DataWF.Data
         [Browsable(false), Category("Policy"), XmlIgnore, JsonIgnore]
         public virtual AccessValue Access
         {
-            get { return access ?? (access = new AccessValue(AccessValue.Provider.GetGroups())); }
+            get { return access ?? (access = new AccessValue(Provider.GetGroups(), Provider)); }
             set
             {
                 access = value;

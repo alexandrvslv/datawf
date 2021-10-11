@@ -472,7 +472,7 @@ namespace DataWF.Data
             if (ProcedureType == ProcedureTypes.Assembly || ProcedureType == ProcedureTypes.Source)
                 temp = EmitInvoker.CreateObject(GetObjectType(), true);
             else if (ProcedureType == ProcedureTypes.Table)
-                temp = Schema.ParseTable(Source);
+                temp = Schema.GetTable(Source);
             else if (ProcedureType == ProcedureTypes.Constant)
                 temp = Source;
             else

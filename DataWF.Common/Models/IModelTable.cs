@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace DataWF.Common
 {
@@ -11,13 +13,17 @@ namespace DataWF.Common
     {
         Type ItemType { get; }
         int TypeId { get; }
+        IEnumerable Items { get; }
 
         bool Add(object item);
         bool Remove(object item);
+
     }
 
     public interface IModelTable<T> : IModelTable
     {
+        new IEnumerable<T> Items { get; }
+
         bool Add(T item);
         bool Remove(T item);
     }

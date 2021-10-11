@@ -139,6 +139,8 @@ namespace DataWF.Data
                     parentTable = (DBTable)value;
                     if (parentTable != null)
                     {
+                        if (parentTable.TypeId != 0)
+                            throw new Exception("May bee Hierarchy!");
                         BlockSize = parentTable.BlockSize;
                     }
                 }
@@ -264,6 +266,8 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public abstract bool IsEdited { get; }
+
+        IEnumerable IModelTable.Items => null;
 
         [Browsable(false), Category("Database")]
         public string ComInsert
@@ -752,10 +756,10 @@ namespace DataWF.Data
 
         private static string GetWhere(string commandText)
         {
-            var whereIndex = commandText.IndexOf(" left join ", StringComparison.OrdinalIgnoreCase);
+            var whereIndex = commandText.AsSpan().IndexOfQueryWord("left".AsSpan());
             if (whereIndex < 0)
             {
-                whereIndex = commandText.IndexOf(" where ", StringComparison.OrdinalIgnoreCase);
+                whereIndex = commandText.AsSpan().IndexOfWhere();
             }
             var where = whereIndex < 0 ? string.Empty : commandText.Substring(whereIndex);
             return where;

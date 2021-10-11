@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace DataWF.Common.Generator
 {
-    internal class TableGenerator : BaseTableGenerator
+    internal class TableGenerator : ExtendedGenerator
     {
 
 

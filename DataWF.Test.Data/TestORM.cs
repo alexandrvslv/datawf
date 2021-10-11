@@ -24,24 +24,13 @@ namespace DataWF.Test.Data
         private TestProvider provider;
 
         [SetUp]
-        public async Task Setup()
+        public void Setup()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            provider = new TestProvider { SchemaName = "test" };
-            schema = await provider.CreateNew<TestSchema>();
-
-            if (provider.Connections.Count == 0)
-                Serialization.Deserialize("connections.xml", provider.Connections);
-
-            AccessValue.Provider = new AccessProviderStub
-            {
-                Groups = new IdCollection<IGroupIdentity>
-                {
-                    new AccessGroupBung() { Id = 1, Name = "Group1"},
-                    new AccessGroupBung() { Id = 2, Name = "Group2"},
-                    new AccessGroupBung() { Id = 3, Name = "Group3"}
-                }
-            };
+            provider = new TestProvider();
+            provider.LoadConnections();
+            provider.Generate();
+            schema = provider.TestSchema;
         }
 
         [Test]
@@ -258,10 +247,10 @@ namespace DataWF.Test.Data
                 Name = "Ivan",
                 Access = new AccessValue(new[]
                 {
-                    new AccessItem(AccessValue.Provider.GetAccessIdentity(1, IdentityType.Group), AccessType.Read),
-                    new AccessItem(AccessValue.Provider.GetAccessIdentity(2, IdentityType.Group), AccessType.Admin),
-                    new AccessItem(AccessValue.Provider.GetAccessIdentity(3, IdentityType.Group), AccessType.Create)
-                })
+                    new AccessItem(provider.GetAccessIdentity(1, IdentityType.Group), AccessType.Read),
+                    new AccessItem(provider.GetAccessIdentity(2, IdentityType.Group), AccessType.Admin),
+                    new AccessItem(provider.GetAccessIdentity(3, IdentityType.Group), AccessType.Create)
+                }, provider)
             };
             Assert.AreEqual(employer.Type, EmployerType.Type2, "Default Value & Enum");
 
@@ -282,7 +271,7 @@ namespace DataWF.Test.Data
             Assert.IsTrue(lodar == "1" || lodar == "True", "Insert sql Fail Bool");
             Assert.IsInstanceOf<byte[]>(qresult.Get(0, "group_access"), "Insert sql Fail Byte Array");
 
-            var accessValue = new AccessValue((byte[])qresult.Get(0, "group_access"));
+            var accessValue = new AccessValue((byte[])qresult.Get(0, "group_access"), provider);
             Assert.AreEqual(3, accessValue.Items.Count(), "Insert sql Fail Byte Array");
             Assert.AreEqual(true, accessValue.Items.ElementAt(0).Read, "Insert sql Fail Byte Array");
             Assert.AreEqual(true, accessValue.Items.ElementAt(1).Admin, "Insert sql Fail Byte Array");

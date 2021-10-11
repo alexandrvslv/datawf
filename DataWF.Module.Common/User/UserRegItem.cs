@@ -17,9 +17,12 @@ namespace DataWF.Module.Common
         public string TableName { get; set; }
 
         [XmlIgnore]
+        public DBProvider Provider => DBProvider.Default;
+
+        [XmlIgnore]
         public IDBTable Table
         {
-            get => cacheTargetTable ?? (cacheTargetTable = DBProvider.Default.Schems.ParseTable(TableName));
+            get => cacheTargetTable ?? (cacheTargetTable = Provider.ParseTable(TableName));
             set
             {
                 cacheTargetTable = value;
@@ -91,8 +94,8 @@ namespace DataWF.Module.Common
                         if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
                         {
                             string rez = string.Empty;
-                            var oldAcces = new AccessValue((byte[])oldValue);
-                            var newAcces = new AccessValue((byte[])newValue);
+                            var oldAcces = new AccessValue((byte[])oldValue, Provider);
+                            var newAcces = new AccessValue((byte[])newValue, Provider);
                             foreach (var oAccess in oldAcces.Items)
                             {
                                 var nAceess = newAcces.Get(oAccess.Identity);

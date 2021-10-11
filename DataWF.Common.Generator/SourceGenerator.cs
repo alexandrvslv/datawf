@@ -102,11 +102,11 @@ namespace DataWF.Common.Generator
                     }
                 }
 
-                if (receiver.SchemaControllerCandidate.Any())
+                if (receiver.SchemaControllerCandidates.Any())
                 {
                     var controllerGenerator = new SchemaControllerGenerator(compilationContext) { };
 
-                    foreach (var serviceClass in receiver.SchemaControllerCandidate)
+                    foreach (var serviceClass in receiver.SchemaControllerCandidates)
                     {
                         if (context.CancellationToken.IsCancellationRequested)
                             return;
@@ -114,7 +114,7 @@ namespace DataWF.Common.Generator
                     }
                 }
 
-                if (receiver.WebSchemaCandidate.Any())
+                if (receiver.WebSchemaCandidates.Any())
                 {
                     invokerGenerator.ForceInstance = true;
                     var clientGenerator = new WebSchemaGenerator(compilationContext)
@@ -122,11 +122,24 @@ namespace DataWF.Common.Generator
                         InvokerGenerator = invokerGenerator
                     };
 
-                    foreach (var clientClass in receiver.WebSchemaCandidate)
+                    foreach (var clientClass in receiver.WebSchemaCandidates)
                     {
                         if (context.CancellationToken.IsCancellationRequested)
                             return;
                         clientGenerator.Process(clientClass);
+                    }
+                }
+
+                if (receiver.ProviderCandidates.Any())
+                {
+                    invokerGenerator.ForceInstance = true;
+                    var providerGenerator = new ProviderGenerator(compilationContext, invokerGenerator);
+
+                    foreach (var clientClass in receiver.ProviderCandidates)
+                    {
+                        if (context.CancellationToken.IsCancellationRequested)
+                            return;
+                        providerGenerator.Process(clientClass);
                     }
                 }
             }

@@ -322,7 +322,7 @@ namespace DataWF.Data
         private string FormatMessage(PostgresException pex, DBTable table, DBItem dbItem)
         {
             var text = string.IsNullOrEmpty(pex.Detail) ? pex.MessageText : pex.Detail;
-            var refTable = string.IsNullOrEmpty(pex.TableName) ? null : table.Schema.ParseTable(pex.TableName);
+            var refTable = string.IsNullOrEmpty(pex.TableName) ? null : table.Schema.GetTable(pex.TableName);
             var builder = new StringBuilder();
             text = text.Replace("character varying", "Text");
             foreach (var item in text.Split(new char[] { ',', ' ', '"', '(', ')' }, StringSplitOptions.RemoveEmptyEntries))

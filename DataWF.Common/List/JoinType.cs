@@ -39,7 +39,7 @@ namespace DataWF.Common
 
             if ((type & JoinTypes.Outer) == JoinTypes.Outer)
                 rezult += string.Concat(" ", StrOuter);
-            
+
             if (type != JoinTypes.Undefined)
                 rezult += string.Concat(" ", StrJoin);
             return rezult;
@@ -71,13 +71,20 @@ namespace DataWF.Common
             else if (string.Equals(code, StrLeft, StringComparison.OrdinalIgnoreCase))
                 type = JoinTypes.Left;
             else if (string.Equals(code, StrRight, StringComparison.OrdinalIgnoreCase))
-                type = JoinTypes.Right;            
+                type = JoinTypes.Right;
             else if (string.Equals(code, StrOuter, StringComparison.OrdinalIgnoreCase))
                 type = JoinTypes.Outer;
             return type;
         }
 
         public readonly JoinTypes Type;
+
+        public bool IsInner => (Type & JoinTypes.Inner) == JoinTypes.Inner
+                            || (!IsLeft && !IsRight);
+
+        public bool IsLeft => (Type & JoinTypes.Left) == JoinTypes.Left;
+
+        public bool IsRight => (Type & JoinTypes.Right) == JoinTypes.Right;
 
         public JoinType(JoinTypes type)
         {

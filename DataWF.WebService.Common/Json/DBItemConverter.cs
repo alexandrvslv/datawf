@@ -20,7 +20,7 @@ namespace DataWF.WebService.Common
         public DBItemConverter(DBItemConverterFactory factory)
         {
             Factory = factory;
-            Table = Factory.Provider.GetTable<T>();
+            Table = (DBTable<T>)Factory.Provider.GetTable<T>();
         }
 
         public DBTable<T> Table { get; set; }

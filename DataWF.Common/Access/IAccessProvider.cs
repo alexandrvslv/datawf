@@ -7,7 +7,6 @@ namespace DataWF.Common
     {
         IAccessIdentity GetAccessIdentity(int id, IdentityType type);
         IEnumerable<IAccessIdentity> GetGroups();
-
         IEnumerable<IAccessIdentity> GetSpecialUserGroups(IUserIdentity user);
     }
 

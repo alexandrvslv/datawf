@@ -10,7 +10,7 @@ using System.Diagnostics;
 
 namespace DataWF.Common.Generator
 {
-    internal class TableLogGenerator : BaseTableGenerator
+    internal class TableLogGenerator : ExtendedGenerator
     {
         public TableLogGenerator(CompilationContext compilationContext, InvokerGenerator invokerGenerator)
             : base(compilationContext, invokerGenerator)

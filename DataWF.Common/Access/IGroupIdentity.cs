@@ -5,14 +5,13 @@
         bool Required { get; }
         bool ContainsIdentity(IUserIdentity user);
     }
-    public interface IProjectItem
-    {
-        IProjectIdentity ProjectIdentity { get; }
-    }
+    
+    public interface IUserGroupIdentity : IGroupIdentity
+    { }
+
     public interface IProjectIdentity : IGroupIdentity
-    {
-    }
+    { }
+
     public interface ICompanyIdentity : IGroupIdentity
-    {
-    }
+    { }
 }

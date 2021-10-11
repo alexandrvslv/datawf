@@ -35,7 +35,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public IDBTable Table
         {
-            get => table ?? (table = DBProvider.Default.GetTable(Type));
+            get => table ?? (table = DBProvider.Default.GetDBTable(Type));
             set => table = value;
         }
 

@@ -31,7 +31,7 @@ namespace DataWF.WebService.Common
                 return BadRequest();
             }
             var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            var connection = Service.Register(socket, User.GetCommonUser(), GetIPAddress());
+            var connection = Service.Register(socket, Service.Provider.GetUser(User), GetIPAddress());
             await Service.ListenAsync(connection);
             return new EmptyResult();
         }
