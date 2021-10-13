@@ -188,7 +188,7 @@ namespace DataWF.Common
 
         public IWebTable GetTable(Type type)
         {
-            if (type.IsInterface)
+            if (type.IsInterface || type.IsAbstract)
             {
                 if (!tables.TryGetValue(type, out var table))
                 {
@@ -200,10 +200,11 @@ namespace DataWF.Common
             var baseType = type;
             while (baseType != null)
             {
-                if (tables.TryGetValue(baseType, out var crudClient))
-                    return crudClient;
+                if (tables.TryGetValue(baseType, out var webTable))
+                    return webTable;
                 baseType = baseType.BaseType;
             }
+
             return null;
         }
 
