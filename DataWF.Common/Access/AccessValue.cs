@@ -93,7 +93,8 @@ namespace DataWF.Common
         {
             foreach (var item in items)
             {
-                this.items[item.Identity] = item;
+                var identity = item.Identity ?? provider.GetAccessIdentity(item.IdentityId, item.IdentityType);
+                this.items[identity] = item;
             }
         }
 
