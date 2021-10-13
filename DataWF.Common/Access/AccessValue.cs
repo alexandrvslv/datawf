@@ -10,7 +10,7 @@ using System.Xml.Serialization;
 namespace DataWF.Common
 {
     [InvokerGenerator]
-    public partial class AccessValue : IAccessValue, IBinarySerializable//, IEnumerable<AccessItem>
+    public partial class AccessValue : IAccessValue//, IBinarySerializable, IEnumerable<AccessItem>
     {
 
         public static readonly AccessValue Empty = new AccessValue(null);
