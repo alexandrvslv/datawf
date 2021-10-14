@@ -30,7 +30,6 @@ namespace DataWF.Data
         protected JoinType join = JoinType.Undefined;
         protected DBTable table;
         private QParam onParam;
-        private bool? parametrized;
         private IEnumerable<QParam> parameters;
 
         public QTable()

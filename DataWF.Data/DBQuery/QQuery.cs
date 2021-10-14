@@ -974,13 +974,14 @@ namespace DataWF.Data
             var prefix = new List<string>();
             var word = ReadOnlySpan<char>.Empty;
             QParam parameter = null;
-            int startIndex = 0;
+            
             var joinType = JoinTypes.Undefined;
 
             var fromIndex = QueryHelper.IndexOfFrom(query);
             if (fromIndex < 0)
                 return;
-            for (int i = fromIndex + 5; i <= query.Length; i++)
+            int startIndex = fromIndex + 5;
+            for (int i = startIndex; i <= query.Length; i++)
             {
                 var c = i < query.Length ? query[i] : '\n';
                 switch (c)
