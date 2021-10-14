@@ -14,4 +14,10 @@ namespace DataWF.Test.Data
     public partial class TestSchema : DBSchema
     {
     }
+
+    public partial class TestSchemaLog
+    {
+        
+    }
+
 }

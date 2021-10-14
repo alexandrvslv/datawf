@@ -92,7 +92,7 @@ namespace DataWF.Data
                 TargetTableName = value?.Name ?? throw new ArgumentException("Value is required", nameof(value));
                 targetTable = value;
                 Name = $"{value.Name}{(IsVirtual ? "Log" : "_log")}";
-                Schema = value.Schema.LogSchema ?? value.Schema;
+                //Schema = value.Schema.LogSchema ?? value.Schema;
                 var seqName = $"{value.SequenceName}_log";
                 Sequence = Schema.Sequences[seqName] ?? new DBSequence() { Name = seqName };
                 DisplayName = $"{value.DisplayName} Log";

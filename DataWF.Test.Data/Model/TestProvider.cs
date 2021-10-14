@@ -11,6 +11,7 @@ namespace DataWF.Test.Data
 {
     [Provider]
     [SchemaEntry(typeof(TestSchema))]
+    [SchemaEntry(typeof(TestSchemaLog))]
     public partial class TestProvider : DBProvider
     {
         private IdCollection<IUserGroupIdentity> Groups = new IdCollection<IUserGroupIdentity>

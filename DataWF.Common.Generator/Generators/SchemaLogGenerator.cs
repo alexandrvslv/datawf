@@ -49,7 +49,8 @@ namespace DataWF.Common.Generator
             var className = $"{TypeSymbol.Name}Log";
 
             var schemaAttribute = TypeSymbol.GetAttribute(Attributes.Schema);
-            var schemaName = schemaAttribute?.ConstructorArguments.FirstOrDefault().Value + "_log";
+            var baseSchemaName = schemaAttribute?.ConstructorArguments.FirstOrDefault().Value;
+            var schemaName = baseSchemaName + "_log";
 
             var schemaEntries = TypeSymbol.GetAttributes(Attributes.SchemaEntry)
                                 .Select(p => p.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol)
@@ -98,7 +99,12 @@ namespace { namespaceName }
             }
             source.Append($@"    
     public partial class {className}: {baseClass}
-    {{ 
+    {{
+        public {className}()
+        {{
+            TargetSchemaName = ""{baseSchemaName}"";
+        }}
+
         [JsonIgnore]
         public new I{TypeSymbol.Name} TargetSchema
         {{
@@ -109,6 +115,11 @@ namespace { namespaceName }
 
     public partial class {TypeSymbol.Name}
     {{ 
+        public {TypeSymbol.Name}()
+        {{
+            logSchemaName=""{schemaName}"";
+        }}
+
         [JsonIgnore]
         public new I{className} LogSchema
         {{
