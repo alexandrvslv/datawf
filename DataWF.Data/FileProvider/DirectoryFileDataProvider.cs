@@ -38,7 +38,7 @@ namespace DataWF.Data
         {
             var fileHandler = await FileTable.LoadByIdAsync<long>(id, DBLoadParam.Load, transaction);
             var path = fileHandler?.Path ?? transaction.DbConnection.GetFilePath(id);
-            return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, true);
+            return GetFile(path, bufferSize);
         }
 
         public override async Task<bool> DeleteFile(long id, DBTransaction transaction)

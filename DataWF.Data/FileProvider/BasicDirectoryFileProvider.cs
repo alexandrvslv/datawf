@@ -28,7 +28,12 @@ namespace DataWF.Data
         public virtual Task<Stream> GetFile(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
         {
             var path = transaction.DbConnection.GetFilePath(id);
-            return Task.FromResult<Stream>(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, true));
+            return Task.FromResult<Stream>(GetFile(path, bufferSize));
+        }
+
+        protected FileStream GetFile(string path, int bufferSize)
+        {
+            return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, true);
         }
 
         public virtual async Task<bool> DeleteFile(long id, DBTransaction transaction)
