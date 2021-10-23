@@ -156,7 +156,7 @@ namespace DataWF.Module.Flow
         {
             if (FileLOB != null)
             {
-                var item = await GetBlobFileStream(Table.FileOIDKey, fileName, transaction);
+                var item = await GetBlob(Table.FileOIDKey, fileName, transaction);
                 if (item != null)
                 {
                     return item;

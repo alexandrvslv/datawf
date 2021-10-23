@@ -232,29 +232,11 @@ namespace DataWF.Data
             return $"[{table.SqlName}] {alias}";
         }
 
-        public override Task<bool> DeleteBlobDatabase(long id, DBTransaction transaction)
+        public override ValueTask<IDataParameter> CreateStreamParameter(IDbCommand command, DBColumn<byte[]> dataColumn, Stream stream)
         {
-            return DeleteBlobTable(id, transaction);
-        }
-
-        public override Task<Stream> GetBlobDatabase(long id, DBTransaction transaction, int bufferSize = 81920)
-        {
-            return GetBlobTable(id, transaction, bufferSize);
-        }
-
-        public override Task SetBlobDatabase(long id, Stream value, DBTransaction transaction)
-        {
-            return SetBlobTable(id, value, transaction);
-        }
-
-        public override async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
-        {
-            var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            var command = (SqlCommand)transaction.AddCommand($"insert into {table.Name} ({table.IdKey.SqlName}, {table.DataKey.SqlName}) " +
-                $"values (@{table.IdKey.SqlName}, @{table.DataKey.SqlName})");
-            command.Parameters.Add($"@{table.IdKey.SqlName}", SqlDbType.BigInt, -1).Value = id;
-            command.Parameters.Add($"@{table.DataKey.SqlName}", SqlDbType.Binary, -1).Value = value;
-            await transaction.ExecuteQueryAsync(command, DBExecuteType.Scalar);
+            var parameter = ((SqlCommand)command).Parameters.Add($"@{dataColumn.SqlName}", SqlDbType.Binary, -1);
+            parameter.Value = stream;
+            return new ValueTask<IDataParameter>(parameter);
         }
 
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)

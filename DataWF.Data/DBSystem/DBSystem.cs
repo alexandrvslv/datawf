@@ -76,6 +76,10 @@ namespace DataWF.Data
             return command;
         }
 
+        public IDataParameter CreateParameter(IDbCommand command, DBColumn column, object value)
+        {
+            return CreateParameter(command, $"{ParameterPrefix}{column.SqlName}", value, column);
+        }
 
         public virtual IDataParameter CreateParameter(IDbCommand command, string name, object value, DBColumn column)
         {
@@ -176,147 +180,12 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
         }
 
-        public virtual async Task<bool> DeleteBlob(long id, DBTransaction transaction)
+        
+
+        public virtual async ValueTask<IDataParameter> CreateStreamParameter(IDbCommand command, DBColumn<byte[]> dataColumn, Stream stream)
         {
-            switch (transaction.DbConnection.FileStorage)
-            {
-                case FileStorage.FileTable:
-                    return await DeleteBlobTable(id, transaction);
-                case FileStorage.FileSystem:
-                    return await DeleteBlobFile(id, transaction);
-                case FileStorage.DatabaseSystem:
-                    return await DeleteBlobDatabase(id, transaction);
-                default:
-                    throw new Exception("Unsupperted Storage");
-            }
-        }
-
-        public abstract Task<bool> DeleteBlobDatabase(long id, DBTransaction transaction);
-
-        public virtual async Task<bool> DeleteBlobFile(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
-        {
-            var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            var fileHandler = await table.LoadByIdAsync<long>(id, DBLoadParam.Load, transaction);
-            var path = fileHandler?.Path ?? transaction.DbConnection.GetFilePath(id);
-            if (fileHandler != null)
-                await fileHandler.Delete(transaction);
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-                return true;
-            }
-            return false;
-        }
-
-        public virtual async Task<bool> DeleteBlobTable(long id, DBTransaction transaction)
-        {
-            var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            var command = transaction.AddCommand($"delete from {table.Name} where {table.IdKey.SqlName} = {ParameterPrefix}{table.IdKey.SqlName}");
-            CreateParameter(command, $"{ParameterPrefix}{table.IdKey.SqlName}", id, table.IdKey);
-            var result = await ExecuteQueryAsync(command, DBExecuteType.Scalar, CommandBehavior.Default);
-            return Convert.ToInt32(result) != 0;
-        }
-
-        public virtual async Task<Stream> GetBlob(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
-        {
-            switch (transaction.DbConnection.FileStorage)
-            {
-                case FileStorage.FileTable:
-                    return await GetBlobTable(id, transaction, bufferSize);
-                case FileStorage.FileSystem:
-                    return await GetBlobFile(id, transaction, bufferSize);
-                case FileStorage.DatabaseSystem:
-                    return await GetBlobDatabase(id, transaction, bufferSize);
-                default:
-                    throw new Exception("Unsupperted Storage");
-            }
-        }
-
-        public abstract Task<Stream> GetBlobDatabase(long id, DBTransaction transaction, int bufferSize = 80 * 1024);
-
-        public virtual async Task<Stream> GetBlobFile(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
-        {
-            var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            var fileHandler = await table.LoadByIdAsync<long>(id, DBLoadParam.Load, transaction);
-            var path = fileHandler?.Path ?? transaction.DbConnection.GetFilePath(id);
-            return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, true);
-        }
-
-        public virtual async Task<Stream> GetBlobTable(long id, DBTransaction transaction, int bufferSize = 80 * 1024)
-        {
-            var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            var command = transaction.AddCommand($"select {table.DataKey.SqlName} from {table.Name} where {table.IdKey.SqlName} = {ParameterPrefix}{table.IdKey.SqlName}");
-            CreateParameter(command, $"{ParameterPrefix}{table.IdKey.SqlName}", id, table.IdKey);
-            var reader = await transaction.ExecuteReaderAsync(command, CommandBehavior.SequentialAccess);
-            if (await reader.ReadAsync())
-            {
-                return reader.GetStream(0);
-            }
-            throw new Exception("No Data Found!");
-        }
-
-        public virtual async Task<long> SetBlob(Stream value, DBTransaction transaction)
-        {
-            var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            var result = table.Sequence.GetNext(transaction);
-            switch (transaction.DbConnection.FileStorage)
-            {
-                case FileStorage.FileTable:
-                    await SetBlobTable(result, value, transaction);
-                    break;
-                case FileStorage.FileSystem:
-                    await SetBlobFile(result, value, transaction.DbConnection.GetFilePath(result), transaction);
-                    break;
-                case FileStorage.DatabaseSystem:
-                    await SetBlobDatabase(result, value, transaction);
-                    break;
-                default:
-                    throw new Exception("Unsupperted Storage");
-            }
-
-            return result;
-        }
-
-        public virtual async Task SetBlobFile(long id, Stream value, string path, DBTransaction transaction, int bufferSize = 80 * 1024)
-        {
-            var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            using (var sha256 = new SHA256Managed())
-            {
-                var length = 0;
-                using (var fileStream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite, bufferSize, true))
-                {
-                    var buffer = new byte[bufferSize];
-                    var read = 0;
-                    while ((read = await value.ReadAsync(buffer, 0, bufferSize)) > 0)
-                    {
-                        length += read;
-                        await fileStream.WriteAsync(buffer, 0, read);
-                        sha256.TransformBlock(buffer, 0, read, null, 0);
-                    }
-                    sha256.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-                }
-                var fileHandler = new FileData(table)
-                {
-                    Id = id,
-                    Storage = FileStorage.FileSystem,
-                    Path = path,
-                    Size = length,
-                    Hash = sha256.Hash
-                };
-                await fileHandler.Save(transaction);
-            }
-        }
-
-        public abstract Task SetBlobDatabase(long id, Stream value, DBTransaction transaction);
-
-        public virtual async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
-        {
-            var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            var command = transaction.AddCommand($@"insert into {table.Name} ({table.IdKey.SqlName}, {table.DataKey.SqlName}) 
-values ({ParameterPrefix}{table.IdKey.SqlName}, {ParameterPrefix}{table.DataKey.SqlName});");
-            CreateParameter(command, $"{ParameterPrefix}{table.IdKey.SqlName}", id, table.IdKey);
-            CreateParameter(command, $"{ParameterPrefix}{table.DataKey.SqlName}", await Helper.GetBufferedBytesAsync(value), table.DataKey);//Double buffering!!!
-            await transaction.ExecuteQueryAsync(command);
+            //Double buffering!!!
+            return CreateParameter(command, dataColumn, await Helper.GetBufferedBytesAsync(stream));
         }
 
         public virtual void CreateDatabase(DBSchema schema, DBConnection connection)

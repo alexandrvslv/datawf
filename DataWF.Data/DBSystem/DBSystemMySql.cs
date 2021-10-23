@@ -156,30 +156,10 @@ select seq from db_sequence where name = '{sequence.Name}';";
             return base.FillParameter(command, parameter, value, column);
         }
 
-        public override Task<bool> DeleteBlobDatabase(long id, DBTransaction transaction)
+        public override ValueTask<IDataParameter> CreateStreamParameter(IDbCommand command, DBColumn<byte[]> dataColumn, Stream stream)
         {
-            return DeleteBlobTable(id, transaction);
-        }
-
-        public override Task<Stream> GetBlobDatabase(long id, DBTransaction transaction, int bufferSize = 81920)
-        {
-            return GetBlobTable(id, transaction, bufferSize);
-        }
-
-        public override Task SetBlobDatabase(long id, Stream value, DBTransaction transaction)
-        {
-            return SetBlobTable(id, value, transaction);
-        }
-
-        public override async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
-        {
-            var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            var command = (MySqlCommand)transaction.AddCommand($@"insert into {table.Name} ({table.IdKey.SqlName}, {table.DataKey.SqlName}) 
-values (@{table.IdKey.SqlName}, @{table.DataKey.SqlName});");
-            command.Parameters.Add($"@{table.IdKey.SqlName}", MySqlDbType.Int64).Value = id;
-            command.Parameters.Add($"@{table.DataKey.SqlName}", MySqlDbType.LongBlob).Value = await Helper.GetBufferedBytesAsync(value);//Double buffering!!!
-            await transaction.ExecuteQueryAsync(command);
-        }
+            return base.CreateStreamParameter(command, dataColumn, stream);
+        }        
 
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
         {

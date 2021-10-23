@@ -42,13 +42,15 @@ namespace DataWF.Test.Data
         [Test]
         public async Task GeneratePostgresWithLOB()
         {
-            await Generate(provider.Connections["TestPostgresLOB"]);
+            provider.FileProvider = PostgresFileProvider.Instance;
+            await Generate(provider.Connections["TestPostgres"]);
         }
 
         [Test]
         public async Task GeneratePostgresWithBLOB()
         {
-            await Generate(provider.Connections["TestPostgresBLOB"]);
+            provider.FileProvider = new DirectoryFileDataProvider((FileDataTable)provider.GetTable<FileData>());
+            await Generate(provider.Connections["TestPostgres"]);
         }
 
         [Test]

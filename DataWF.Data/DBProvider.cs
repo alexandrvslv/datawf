@@ -24,13 +24,16 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
     public class DBProvider : ModelProvider, IDBProvider
     {
         public static DBProvider Default;
+        private IFileProvider fileProvider;
         private readonly DBConnectionList connections = new DBConnectionList();
 
         public DBProvider()
@@ -40,6 +43,12 @@ namespace DataWF.Data
         }
 
         public event EventHandler<DBSchemaChangedArgs> DBSchemaChanged;
+        [XmlIgnore, JsonIgnore]
+        public IFileProvider FileProvider
+        {
+            get => fileProvider ?? (fileProvider = (FileDataTable)GetTable<FileData>());
+            set => fileProvider = value;
+        }
 
         public SelectableList<DBSchemaChange> Changes = new SelectableList<DBSchemaChange>();
 

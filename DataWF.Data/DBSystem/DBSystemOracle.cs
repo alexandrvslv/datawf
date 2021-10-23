@@ -359,33 +359,14 @@ namespace DataWF.Data
                     ((OracleClob)parameter.Value).Dispose();
             }
         }
-        public override Task<bool> DeleteBlobDatabase(long id, DBTransaction transaction)
+        
+        public override async ValueTask<IDataParameter> CreateStreamParameter(IDbCommand command, DBColumn<byte[]> dataColumn, Stream stream)
         {
-            return DeleteBlobTable(id, transaction);
-        }
-
-        public override Task<Stream> GetBlobDatabase(long id, DBTransaction transaction, int bufferSize = 81920)
-        {
-            return GetBlobTable(id, transaction, bufferSize);
-        }
-
-        public override Task SetBlobDatabase(long id, Stream value, DBTransaction transaction)
-        {
-            return SetBlobTable(id, value, transaction);
-        }
-
-        public override async Task SetBlobTable(long id, Stream value, DBTransaction transaction)
-        {
-            var table = (FileDataTable)transaction.Schema.GetTable<FileData>();
-            using (var blob = new OracleBlob((OracleConnection)transaction.Connection))
-            {
-                await value.CopyToAsync(blob);
-                var command = (OracleCommand)transaction.AddCommand($@"insert into {table.Name} ({table.IdKey.SqlName}, {table.DataKey.SqlName}) 
-values (:{table.IdKey.SqlName}, :{table.DataKey.SqlName})");
-                command.Parameters.Add($":{table.IdKey.SqlName}", OracleDbType.Long, id, ParameterDirection.Input);
-                command.Parameters.Add($":{table.DataKey.SqlName}", OracleDbType.Blob, -1).Value = blob;
-                await transaction.ExecuteQueryAsync(command, DBExecuteType.NoReader);
-            }
+            var blob = new OracleBlob((OracleConnection)command.Connection);
+            await stream.CopyToAsync(blob);
+            var parameter = ((OracleCommand)command).Parameters.Add($":{dataColumn.SqlName}", OracleDbType.Blob, -1);
+            parameter.Value = blob;
+            return parameter;
         }
 
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)

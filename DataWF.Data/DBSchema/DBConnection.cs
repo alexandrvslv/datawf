@@ -36,27 +36,6 @@ using PathHelper = System.IO.Path;
 
 namespace DataWF.Data
 {
-    public class DBConnectionList : SelectableList<DBConnection>
-    {
-        IListIndex<DBConnection, string> nameIndex;
-        public DBConnectionList()
-        {
-            nameIndex = Indexes.Add(DBConnection.NameInvoker.Instance);
-        }
-
-        [JsonIgnore, XmlIgnore]
-        public DBProvider Provider
-        {
-            get;
-            set;
-        }
-
-        public DBConnection this[string name]
-        {
-            get => nameIndex.SelectOne(name);
-        }
-    }
-
     [InvokerGenerator(Instance = true)]
     public partial class DBConnection : INotifyPropertyChanged, IDisposable
     {
@@ -78,7 +57,6 @@ namespace DataWF.Data
         private DBSystem system;
         internal HashSet<IDbConnection> Buffer = new HashSet<IDbConnection>();
         private string path;
-        private FileStorage fileStorage;
         private byte dataBaseId;
 
         public DBConnection()
@@ -318,19 +296,6 @@ namespace DataWF.Data
                 if (path != value)
                 {
                     path = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public FileStorage FileStorage
-        {
-            get => fileStorage;
-            set
-            {
-                if (fileStorage != value)
-                {
-                    fileStorage = value;
                     OnPropertyChanged();
                 }
             }

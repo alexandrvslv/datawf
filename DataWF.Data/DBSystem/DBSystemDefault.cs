@@ -76,21 +76,6 @@ namespace DataWF.Data
         public override string SequenceNextValue(DBSequence sequence)
         {
             throw new NotImplementedException();
-        }
-
-        public override Task<Stream> GetBlobDatabase(long oid, DBTransaction transaction, int bufferSize = 81920)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Task<bool> DeleteBlobDatabase(long oid, DBTransaction transaction)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Task SetBlobDatabase(long id, Stream value, DBTransaction transaction)
-        {
-            throw new NotImplementedException();
-        }
+        }        
     }
 }

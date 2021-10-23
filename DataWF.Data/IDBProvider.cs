@@ -27,6 +27,7 @@ namespace DataWF.Data
 
     public interface IDBProvider : IModelProvider
     {
+        IFileProvider FileProvider { get; set; }
         DBConnectionList Connections { get; }
         new IEnumerable<IDBSchema> Schems { get; }
 

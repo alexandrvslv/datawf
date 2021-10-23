@@ -19,7 +19,11 @@
 // DEALINGS IN THE SOFTWARE.
 
 using DataWF.Common;
+using System;
+using System.Data;
+using System.IO;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -40,7 +44,7 @@ namespace DataWF.Data
             get => GetValue<byte[]>(Table.DataKey);
             set => SetValue(value, Table.DataKey);
         }
-        
+
         [Column("file_size")]
         public int? Size
         {

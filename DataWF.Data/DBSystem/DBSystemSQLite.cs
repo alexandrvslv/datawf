@@ -242,39 +242,6 @@ select seq from db_sequence where name = '{sequence.Name}';";
             }
         }
 
-        public override Task<bool> DeleteBlobDatabase(long id, DBTransaction transaction)
-        {
-            return DeleteBlobTable(id, transaction);
-        }
-
-        public override Task<Stream> GetBlobDatabase(long id, DBTransaction transaction, int bufferSize = 81920)
-        {
-            return GetBlobTable(id, transaction, bufferSize);
-        }
-
-        public override Task SetBlobDatabase(long id, Stream value, DBTransaction transaction)
-        {
-            return SetBlobTable(id, value, transaction);
-        }
-
-        public override Task SetBlobTable(long id, Stream value, DBTransaction transaction)
-        {
-            return base.SetBlobTable(id, value, transaction);
-            //TODO Separate transactinos
-            //var result = FileData.DBTable.Sequence.GetNext(transaction);
-            //var command = (SqliteCommand)transaction.AddCommand($@"insert into {FileData.DBTable.Name} ({FileData.IdKey.Name}, {FileData.DataKey.Name}) values (${FileData.IdKey.Name}, zeroblob($length));");
-            //command.Parameters.AddWithValue($"${FileData.IdKey.Name}", value.Length);
-            //command.Parameters.AddWithValue("$length", value.Length);
-            //await transaction.ExecuteQueryAsync(command);
-
-            //// Open a stream to write the data
-            //using (var blobStream = new SqliteBlob((SqliteConnection)transaction.Connection, FileData.DBTable.Name, FileData.DataKey.Name, result))
-            //{
-            //    await value.CopyToAsync(blobStream);
-            //}
-            //return result;
-        }
-
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
         {
             var sqliteCommand = (SqliteCommand)command;

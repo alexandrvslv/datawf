@@ -60,6 +60,7 @@ namespace DataWF.Data
         private bool cacheRelation;
         private IDBSchemaLog logSchema;
         private DBProvider provider;
+        private IFileProvider fileProvider;
 
         public DBSchema()
             : this(null)
@@ -94,6 +95,13 @@ namespace DataWF.Data
         {
             get => Provider;
             set => Provider = (DBProvider)value;
+        }
+
+        [XmlIgnore, JsonIgnore]
+        public IFileProvider FileProvider
+        {
+            get => fileProvider ?? (fileProvider = Provider?.FileProvider ?? (FileDataTable)GetTable<FileData>());
+            set => fileProvider = value;
         }
 
         [Browsable(false)]
@@ -614,7 +622,7 @@ namespace DataWF.Data
 
             foreach (var tableGenerator in generators)
             {
-                var table = tableGenerator.Generate(this);                
+                var table = tableGenerator.Generate(this);
             }
 
             if (this is not IDBSchemaLog)

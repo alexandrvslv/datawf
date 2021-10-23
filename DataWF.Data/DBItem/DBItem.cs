@@ -66,7 +66,7 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual string AccessorName => ToString();
-        
+
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public IDBProvider Provider => (IDBProvider)table.Provider;
 
@@ -1505,15 +1505,15 @@ namespace DataWF.Data
             return null;
         }
 
-        public async Task SetStream(string filepath, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public async Task SetStream(string filePath, DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = 81920)
         {
-            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 await SetStream(stream, column, transaction, bufferSize);
             }
         }
 
-        public async Task SetStream(Stream stream, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public async Task SetStream(Stream stream, DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = 81920)
         {
             SetValue(await Helper.GetBufferedBytesAsync(stream), column);
             await Save(transaction);
@@ -1521,7 +1521,7 @@ namespace DataWF.Data
             await OnSetStream(column, transaction);
         }
 
-        public virtual MemoryStream GetMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public virtual MemoryStream GetMemoryStream(DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = 81920)
         {
             OnGetStream(column, transaction);
             var memoryStream = (MemoryStream)null;
@@ -1535,7 +1535,7 @@ namespace DataWF.Data
             return memoryStream;
         }
 
-        public virtual FileStream GetFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public virtual FileStream GetFileStream(DBColumn<byte[]> column, string path, DBTransaction transaction, int bufferSize = 81920)
         {
             OnGetStream(column, transaction);
             var fileStream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
@@ -1560,13 +1560,13 @@ namespace DataWF.Data
             return Task.CompletedTask;
         }
 
-        public Stream GetZipMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public Stream GetZipMemoryStream(DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = 81920)
         {
             var memoryStream = GetMemoryStream(column, transaction, bufferSize);
             return Helper.IsGZip(memoryStream) ? Helper.GetGZipStrem(memoryStream) : memoryStream;
         }
 
-        public FileStream GetZipFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public FileStream GetZipFileStream(DBColumn<byte[]> column, string path, DBTransaction transaction, int bufferSize = 81920)
         {
             var fileStream = GetFileStream(column, path, transaction, bufferSize);
             if (Helper.IsGZip(fileStream))
@@ -1583,7 +1583,7 @@ namespace DataWF.Data
             return fileStream;
         }
 
-        public ArraySegment<byte>? GetZip(DBColumn column)
+        public ArraySegment<byte>? GetZip(DBColumn<byte[]> column)
         {
             var data = GetValue<byte[]>(column);
             if (data != null)
@@ -1594,7 +1594,7 @@ namespace DataWF.Data
             return null;
         }
 
-        public ArraySegment<byte>? SetZip(DBColumn column, byte[] data)
+        public ArraySegment<byte>? SetZip(DBColumn<byte[]> column, byte[] data)
         {
             var temp = data != null && data.Length > 500
                 ? Helper.WriteGZip(new ArraySegment<byte>(data))
@@ -1610,7 +1610,7 @@ namespace DataWF.Data
 
         public async Task<long> SetBlob(Stream value, DBColumn<long?> column, DBTransaction transaction)
         {
-            var id = await Table.System.SetBlob(value, transaction);
+            var id = await Schema.FileProvider.AddFile(value, transaction);
             SetValue<long?>(id, column);
             await Save(transaction);
             await OnSetStream(column, transaction);
@@ -1632,18 +1632,18 @@ namespace DataWF.Data
             {
                 transaction.Schema = Schema;
             }
-            return Table.System.GetBlob(oid.Value, transaction, bufferSize);
+            return Schema.FileProvider.GetFile(oid.Value, transaction, bufferSize);
         }
 
-        public async Task<FileStream> GetBlobFileStream(DBColumn<long?> column, string path, int bufferSize = 81920)
+        public async Task<FileStream> GetBlob(DBColumn<long?> column, string path, int bufferSize = 81920)
         {
             using (var transaction = new DBTransaction(Table))
             {
-                return await GetBlobFileStream(column, path, transaction, bufferSize);
+                return await GetBlob(column, path, transaction, bufferSize);
             }
         }
 
-        public async Task<FileStream> GetBlobFileStream(DBColumn<long?> column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public async Task<FileStream> GetBlob(DBColumn<long?> column, string path, DBTransaction transaction, int bufferSize = 81920)
         {
             using (var lobStream = await GetBlob(column, transaction))
             {

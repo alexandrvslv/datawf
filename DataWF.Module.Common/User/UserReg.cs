@@ -13,16 +13,9 @@ namespace DataWF.Module.Common
     public sealed partial class UserReg : DBUserReg
     {
 
-        private User user;
         private UserReg redo;
 
         [Reference(nameof(UserId))]
-        public User User
-        {
-            get => GetReference(Table.UserIdKey, ref user);
-            set => SetReference(user = value, Table.UserIdKey);
-        }
-
         [Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
         public UserRegType? RegType
         {

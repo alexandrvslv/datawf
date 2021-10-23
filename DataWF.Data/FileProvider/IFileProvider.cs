@@ -17,41 +17,18 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
-using System;
-using System.Collections.Generic;
+
+using System.IO;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
-    public interface IDBSchema : IDBSchemaItem, IModelSchema
+    public interface IFileProvider
     {
-        new DBTableList Tables { get; set; }
-        new DBProvider Provider { get; }
-        IFileProvider FileProvider { get; set; }
-
-        Version Version { get; set; }
-        DBConnection Connection { get; set; }
-        DBSystem System { get; }
-        DBTableGroupList TableGroups { get; set; }
-        DBSequenceList Sequences { get; set; }
-        DBProcedureList Procedures { get; set; }
-
-        IDBSchemaLog LogSchema { get; set; }
-        bool IsSynchronizing { get; }
-
-        void ExecuteCreateDatabase();
-        void ExecuteCreateSchema();
-        void ExecuteDropDatabase();
-
-        DBTable GetTable(Type type, bool generate = false);
-        DBTable<T> GetTable<T>(bool generate = false) where T : DBItem;
-        IDBTable GetTable<T>(int itemType) where T : DBItem;
-
-        new DBTable GetTable(string code);
-        DBTableGroup GetTableGroup(string code);
-        DBColumn GetColumn(string code);
-        DBProcedure GetProcedure(string code, string category = "General");
-
-        IEnumerable<DBForeignKey> GetAllForeignConstraints(DBTable target);
+        Task<long> AddFile(Stream value, DBTransaction transaction, int bufferSize = 80 * 1024);
+        Task AddFile(long id, Stream value, DBTransaction transaction, int bufferSize = 80 * 1024);
+        Task<bool> DeleteFile(long id, DBTransaction transaction);
+        Task<Stream> GetFile(long id, DBTransaction transaction, int bufferSize = 80 * 1024);
+        Task<long> GetNextId(DBTransaction transaction);
     }
 }
