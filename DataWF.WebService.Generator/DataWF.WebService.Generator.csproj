@@ -13,7 +13,7 @@
     <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/alexandrvslv/datawf</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/alexandrvslv/datawf.git</RepositoryUrl>
+    <RepositoryUrl>https://gitlab.com/kmgp/datawf.git</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
