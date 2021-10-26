@@ -198,8 +198,12 @@ namespace DataWF.Common
                                 break;
                             case System.Net.HttpStatusCode.Forbidden:
                                 var details = string.Empty;
-
-                                ErrorStatus("Access Denied!", response, await ReadContentAsString(response));
+                                var message = "Access Denied!";
+                                if (Locale.Instance.Culture.Name.Equals("en-US"))
+                                    message = "Access Denied!";
+                                else if (Locale.Instance.Culture.Name.Equals("ru-RU"))
+                                    message = "Нет доступа!";
+                                ErrorStatus(message, response, await ReadContentAsString(response));
                                 break;
                             case System.Net.HttpStatusCode.NotFound:
                                 ErrorStatus("No Data Found!", response, await ReadContentAsString(response));
