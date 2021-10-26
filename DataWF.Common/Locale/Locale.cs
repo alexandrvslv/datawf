@@ -48,7 +48,7 @@ namespace DataWF.Common
         public string Version { get; set; } = "1.0";
 
         [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore, XmlIgnore]
-        public static bool IsChanged { get; internal set; }
+        public static bool IsChanged { get; set; }
 
         public bool Contains(string name)
         {
