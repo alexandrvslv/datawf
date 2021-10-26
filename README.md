@@ -1,91 +1,129 @@
-# DATAWF
+# DataWF Data/Document WorkFlow
 
+## Overview
 
+Data/Document Work Flow is a set of C# libraries to build simple cross-platform IS:
 
-## Getting started
+- DataWF.Common - .NETStandard collections, reflections, io and networks helpers
+- DataWF.Data - .NETStandard Cross RDBMS ORM
+- DataWF.Gui - Xwt based desktop UI
+- DataWF.Data.Gui - Database desktop UI
+- DataWF.Module.Common - Common models
+- DataWF.Module.Flow - Document Workflow models
+- DataWF.Module.CommonGui - Users Administator UI
+- DataWF.Mudule.FlowGui - Document Workflow UI
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Note: most of DataWF UI libraries is in developing stage and not ready for production!
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Planing
 
-## Add your files
+Implement RPC/REST Server with Desktop/Web UI.
+Port to Avalonia UI
 
-- [ ] [Create](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## DataWF.Data
 
-```
-cd existing_repo
-git remote add origin https://gitlab.com/kmgp/datawf.git
-git branch -M main
-git push -uf origin main
-```
+ORM based on ADO.NET drivers. Not use EF.
 
-## Integrate with your tools
+Features: Code-first, Relational data managment, Formatting DDL and DML, Caching large tables
 
-- [ ] [Set up project integrations](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/user/project/integrations/)
+Cover basic database objects: Schema, Table, View, Column, Constraints(Primary and Foreign Key), Index, Stored Procedure.
 
-## Collaborate with your team
+Support several RDBMS(simply extendable):
 
-- [ ] [Invite team members and collaborators](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Automatically merge when pipeline succeeds](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+- MSSQL
+- MySql
+- Oracle
+- Postgress
+- Sqlite
 
-## Test and Deploy
+Limitation/Overhead:
 
-Use the built-in continuous integration in GitLab.
+- One column Primary Key
+- System columns: Create date, Stamp date, Access binary, Item Type identifier
 
-- [ ] [Get started with GitLab CI/CD](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://docs.gitlab.com/ee/user/clusters/agent/)
+Note: used beta version of ODP.NET for .netstandard compatibility
 
-***
+Model example:
 
-# Editing this README
+    [Table("employer_table")]
+    public class Employer : DBItem
+    {
+        public static DBTable<Employer> DBTable { get { return DBService.GetTable<Employer>(); } }
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!).  Thank you to [makeareadme.com](https://gitlab.com/-/experiment/new_project_readme_content:7d8d06fb2cad80620bb048a2cec302c4?https://www.makeareadme.com/) for this template.
+        public Employer() { Build(DBTable); }
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+        [Column("id", Keys = DBColumnKeys.Primary)]
+        public int? Id {  get { return GetProperty<int?>(); }  set { SetProperty(value); } }
 
-## Name
-Choose a self-explaining name for your project.
+        [Column("inn", 20, Keys = DBColumnKeys.Code), Index("employerinn", true)]
+        public string INN {  get { return GetProperty<string>(); }  set { SetProperty(value); } }
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+        [Column("name", 200, Keys = DBColumnKeys.Culture)]
+        public override string Name {  get { return GetName(nameof(Name)); }  set { SetName(nameof(Name), value); } }
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+        [Column("positionid")]
+        public int? PositionId { get { return GetProperty<int?>(); } set { SetProperty(value); } }
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+        [Reference(nameof(PositionId))]
+        public Position Position
+        {
+            get { return GetPropertyReference<Position>(); }
+            set { SetPropertyReference(value); }
+        }
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+        [Column("typeid", Keys = DBColumnKeys.Type, Default = "1")]
+        public EmployerType? Type {  get { return GetProperty<EmployerType?>(); }  set { SetProperty(value); } }
+    }
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Connection example:
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+    var connection = new DBConnection("test") { System = DBSystem.SQLite, DataBase = "test.sqlite" };
+    var qresult = connection.ExecuteQResult( $"select * from {SomeTableName}");
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## DataWF.Gui
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+Cross Platform Desktop UI, based on Xwt. Provide several widgets to build data navigation application
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+Main widgets:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+- LayoutList - universal widget, can be used like list view, tree view or property view. Support sorting, grouping, filtering and can construct from reflection
+- Toolsbar - buttons container
+- GroupBox - widget layout container
+- DockBox - dock panel manager
+- ToolWindow - helper window
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+Note: Move UI from WinForm/Gtk# to Xwt is not compleate and little bugly.
 
-## License
-For open source projects, say how it is licensed.
+## DataWF.Data.Gui
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- Database Administrator
+- Database Export utilite
+- Query Builder(not compleate)
+- Report engeene(planed)
 
+## DataWF.Module.Common
+
+Common Models:
+
+- Group & Permission
+- User & User Group
+- User Log
+- Reference Book
+- Scheduler
+
+## DataWF.Module.Flow
+
+WorkFlow Models:
+
+- Work & Stage
+- Template & Attribute
+- Document & Relating Data
+
+## DataWF.Module.CommonGUI
+
+- User&Group Administrator
+
+## DataWF.Module.FlowGui
+
+- Workflow Administrator
+- Document Editor (Create, Edit, Send document throw the flow);
