@@ -1,0 +1,175 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Mono.TextEditor</AssemblyName>
+    <RootNamespace>Mono.TextEditor</RootNamespace>
+    <TargetFrameworks>net461</TargetFrameworks>
+    <Platforms>AnyCPU;x86</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Execution>
+      <Execution clr-version="Net_2_0" />
+    </Execution>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <DefineConstants>DEBUG</DefineConstants>
+    <NoWarn>1591;1573</NoWarn>
+    <DocumentationFile>bin\Debug\Mono.TextEditor.xml</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Execution>
+      <Execution clr-version="Net_2_0" />
+    </Execution>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <DebugSymbols>true</DebugSymbols>
+    <NoWarn>1591;1573</NoWarn>
+    <DocumentationFile>bin\Release\Mono.TextEditor.xml</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net47|x86'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|x86'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>    
+  <ItemGroup>    
+    <None Include="Mono.TextEditor.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SyntaxModes\MakefileSyntaxMode.xml">
+      <LogicalName>MakefileSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\BooSyntaxMode.xml">
+      <LogicalName>BooSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\AspNetSyntaxMode.xml">
+      <LogicalName>AspNetSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\ChangeLogSyntaxMode.xml">
+      <LogicalName>ChangeLogSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\CPPSyntaxMode.xml">
+      <LogicalName>CPPSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\CSharpSyntaxMode.xml">
+      <LogicalName>CSharpSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\JavascriptSyntaxMode.xml">
+      <LogicalName>JavascriptSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\JavaSyntaxMode.xml">
+      <LogicalName>JavaSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\PythonSyntaxMode.xml">
+      <LogicalName>PythonSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\ValaSyntaxMode.xml">
+      <LogicalName>ValaSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\XmlSyntaxMode.xml">
+      <LogicalName>XmlSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\VBNetSyntaxMode.xml">
+      <LogicalName>VBNetSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\CSyntaxMode.xml">
+      <LogicalName>CSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\DiffSyntaxMode.xml">
+      <LogicalName>DiffSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\LuaSyntaxMode.xml">
+      <LogicalName>LuaSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\ILSyntaxMode.xml">
+      <LogicalName>ILSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\ActionScriptSyntaxMode.xml">
+      <LogicalName>ActionScriptSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\RubySyntaxMode.xml">
+      <LogicalName>RubySyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\CssSyntaxMode.xml">
+      <LogicalName>CssSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\JaySyntaxMode.xml">
+      <LogicalName>JaySyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\CGSyntaxMode.xml">
+      <LogicalName>CGSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\StringsSyntaxMode.xml">
+      <LogicalName>StringsSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\JsonSyntaxMode.xml">
+      <LogicalName>JsonSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\ShellScriptSyntaxMode.xml">
+      <LogicalName>ShellScriptSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\RazorSyntaxMode.xml">
+      <LogicalName>RazorSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\FSharpSyntaxMode.xml">
+      <LogicalName>FSharpSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\AspNetAshxSyntaxMode.xml">
+      <LogicalName>AspNetAshxSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Styles\DefaultStyle.json">
+      <LogicalName>DefaultStyle.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\HtmlSyntaxMode.xml">
+      <LogicalName>HtmlSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Styles\MonokaiStyle.json">
+      <LogicalName>MonokaiStyle.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Styles\NightshadeStyle.json">
+      <LogicalName>NightshadeStyle.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Styles\OblivionStyle.json">
+      <LogicalName>OblivionStyle.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Styles\SolarizedDarkStyle.json">
+      <LogicalName>SolarizedDarkStyle.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Styles\SolarizedLightStyle.json">
+      <LogicalName>SolarizedLightStyle.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Styles\TangoStyle.json">
+      <LogicalName>TangoStyle.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Styles\VisualStudioStyle.json">
+      <LogicalName>VisualStudioStyle.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\TypescriptSyntaxMode.xml">
+      <LogicalName>TypescriptSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SyntaxModes\LessSyntaxMode.xml">
+      <LogicalName>LessSyntaxMode.xml</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>  
+  <ItemGroup>
+    <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1" />
+  </ItemGroup>  
+  <ItemGroup>
+    <ProjectReference Include="..\xwt\Xwt\Xwt.csproj" />
+  </ItemGroup>
+</Project>

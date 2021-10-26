@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>DataWF.Test.GuiWpf</RootNamespace>
+    <AssemblyName>DataWF.Test.GuiWpf</AssemblyName>
+    <TargetFrameworks>net461</TargetFrameworks>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
+    <ProjectReference Include="..\DataWF.Data.Gui\DataWF.Data.Gui.csproj" />
+    <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />
+    <ProjectReference Include="..\DataWF.OdfGui\DataWF.OdfGui.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
+    <ProjectReference Include="..\External\xwt\Xwt.WPF\Xwt.WPF.csproj" />
+    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
+  </ItemGroup>
+   <Import Project="..\DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems" Label="Shared" />
+</Project>

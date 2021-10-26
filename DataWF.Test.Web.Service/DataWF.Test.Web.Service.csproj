@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>    
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">    
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="5.6.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.6.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DataWF.WebClient.Common\DataWF.WebClient.Common.csproj" />
+    <ProjectReference Include="..\DataWF.WebService.Common\DataWF.WebService.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />
+  </ItemGroup>
+ <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+  <Target Name="CodeGenerator" BeforeTargets="PreBuildEvent">
+    <Exec Command="dotnet tool restore" />
+    <Exec Command="dotnet wscodegen -m Controllers, Logs, Invokers -p $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.1/ -o $(ProjectDir)Controllers" />
+  </Target>
+  <Target Name="SwaggerToFile" AfterTargets="AfterBuild">
+    <Exec Command="dotnet swagger tofile --output $(ProjectDir)wwwroot/swagger.json $(OutputPath)$(AssemblyName).dll v1" />
+  </Target>
+</Project>

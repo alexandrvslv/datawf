@@ -1,0 +1,3 @@
+[submodule "External/xwt"]
+	path = External/xwt
+	url = https://github.com/alexandrvslv/xwt.git

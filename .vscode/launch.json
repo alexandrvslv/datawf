@@ -1,0 +1,49 @@
+{
+    // Используйте IntelliSense, чтобы узнать о возможных атрибутах.
+    // Наведите указатель мыши, чтобы просмотреть описания существующих атрибутов.
+    // Для получения дополнительной информации посетите: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch StarterGtk",
+            "type": "mono",
+            "request": "launch",
+            "program": "${workspaceRoot}/DataWF.StarterGtk/bin/Debug/net461/DataWF.StarterGtk.exe",
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "name": "Launch StarterWpf",
+            "type": "mono",
+            "request": "launch",
+            "program": "${workspaceRoot}/DataWF.StarterWpf/bin/Debug/net461/DataWF.StarterWpf.exe",
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "name": "Launch TestGTK",
+            "type": "mono",
+            "request": "launch",
+            "program": "${workspaceRoot}/DataWF.Test.GuiGtk/bin/Debug/net461/DataWF.Test.GuiGtk.exe",
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "name": "Launch TestWPF",
+            "type": "mono",
+            "request": "launch",
+            "program": "${workspaceRoot}/DataWF.Test.GuiWpf/bin/Debug/net461/DataWF.Test.GuiWpf.exe",
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "name": "Attach",
+            "type": "mono",
+            "request": "attach",
+            "address": "localhost",
+            "port": 55555
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        }
+    ]
+}

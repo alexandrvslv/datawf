@@ -1,0 +1,340 @@
+﻿// 
+
+// ViBuilderContext.cs
+//  
+// Author:
+//       Michael Hutchinson <mhutchinson@novell.com>
+// 
+// Copyright (c) 2010 Novell, Inc.
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+using System;
+using Xwt.Drawing;
+using System.Collections.Generic;
+using System.Text;
+using Mono.TextEditor;
+using System.Linq;
+using Xwt;
+
+namespace Mono.TextEditor.Vi
+{
+
+    /// <summary>
+    /// Returns true if it handled the keystroke.
+    /// </summary>
+    public delegate bool ViBuilder(ViBuilderContext ctx);
+
+    public class ViBuilderContext
+    {
+        readonly ViEditor editor;
+        readonly List<ViKey> keys = new List<ViKey>();
+
+        ViBuilderContext(ViEditor editor)
+        {
+            this.editor = editor;
+            Multiplier = 1;
+        }
+
+        public void ProcessKey(Key key, char ch, ModifierKeys modifiers)
+        {
+            var k = ch == '\0' ? new ViKey(modifiers, key) : new ViKey(modifiers, ch);
+            Keys.Add(k);
+            if (!Builder(this))
+            {
+                SetError("Unknown command");
+            }
+        }
+
+        public void SetError(string error)
+        {
+            Completed = Error = true;
+            Message = error;
+        }
+
+        public string Message { get; set; }
+        public int Multiplier { get; set; }
+        public char Register { get; set; }
+        protected ViEditor Editor { get { return editor; } }
+        public List<ViKey> Keys { get { return keys; } }
+        public bool Completed { get; private set; }
+        public bool Error { get; private set; }
+
+        //copied from EditMode.cs, with the undo stack handling code removed
+        public void InsertChar(char ch)
+        {
+            var data = Editor.Data;
+            var doc = Editor.Document;
+            var caret = Editor.Data.Caret;
+
+            if (!data.CanEdit(data.Caret.Line))
+                return;
+
+            if (Editor.Editor != null)
+                Editor.Editor.HideMouseCursor();
+
+            data.DeleteSelectedText(data.IsSomethingSelected ? data.MainSelection.SelectionMode != SelectionMode.Block : true);
+
+            if (!char.IsControl(ch) && data.CanEdit(caret.Line))
+            {
+                DocumentLine line = doc.GetLine(caret.Line);
+                if (caret.IsInInsertMode || caret.Column >= line.Length + 1)
+                {
+                    string text;
+                    if (data.HasIndentationTracker)
+                    {
+                        text = caret.Column > line.Length + 1 ? data.GetIndentationString(caret.Location) + ch.ToString() : ch.ToString();
+                    }
+                    else
+                    {
+                        text = ch.ToString();
+                    }
+                    if (data.IsSomethingSelected && data.MainSelection.SelectionMode == SelectionMode.Block)
+                    {
+                        int length = 0;
+                        for (int lineNumber = data.MainSelection.MinLine; lineNumber <= data.MainSelection.MaxLine; lineNumber++)
+                        {
+                            length = data.Insert(doc.GetLine(lineNumber).Offset + caret.Column, text);
+                        }
+                        caret.PreserveSelection = true;
+                        caret.Column += length - 1;
+                        data.MainSelection = data.MainSelection.WithRange(
+                            new DocumentLocation(data.MainSelection.Anchor.Line, caret.Column + 1),
+                            new DocumentLocation(data.MainSelection.Lead.Line, caret.Column + 1)
+                        );
+                        doc.CommitMultipleLineUpdate(data.MainSelection.MinLine, data.MainSelection.MaxLine);
+                    }
+                    else
+                    {
+                        int length = data.Insert(caret.Offset, text);
+                        caret.Column += length - 1;
+                    }
+                }
+                else
+                {
+                    data.Replace(caret.Offset, 1, ch.ToString());
+                }
+                caret.Column++;
+                if (caret.PreserveSelection)
+                    caret.PreserveSelection = false;
+            }
+            if (data.IsSomethingSelected && data.MainSelection.SelectionMode == SelectionMode.Block)
+                data.Caret.PreserveSelection = false;
+        }
+
+        public void RunAction(Action<ViEditor> action)
+        {
+            Completed = true;
+
+            //FALLBACK for builders that don't handler multipliers directly
+            //we cap these at 100, to reduce the length of time MD could be unresponsive
+            if (Multiplier > 1)
+            {
+                for (int i = 0; i < System.Math.Min(100, Multiplier); i++)
+                    action(editor);
+            }
+            else
+            {
+                action(editor);
+            }
+        }
+
+        public ViEditorMode Mode { get { return Editor.Mode; } }
+
+        //HACK: this is really inelegant
+        public void SuppressCompleted()
+        {
+            Completed = false;
+        }
+
+        private ViBuilder _builder;
+
+        public ViBuilder Builder
+        {
+            get { return _builder; }
+            set
+            {
+                if (_builder == value)
+                    return;
+                if (value == null)
+                    throw new ArgumentException("builder cannot be null");
+                if (Completed)
+                    throw new InvalidOperationException("builder cannot be set after context is completed");
+                _builder = value;
+            }
+        }
+
+        public ViKey LastKey
+        {
+            get { return Keys[Keys.Count - 1]; }
+        }
+
+        public static ViBuilderContext Create(ViEditor editor)
+        {
+            return new ViBuilderContext(editor)
+            {
+                Builder = normalBuilder
+            };
+        }
+
+        static ViBuilderContext()
+        {
+            normalBuilder =
+                ViBuilders.RegisterBuilder(
+                    ViBuilders.MultiplierBuilder(
+                        ViBuilders.First(normalActions.Builder, motions.Builder, nonCharMotions.Builder)));
+            insertActions = ViBuilders.First(nonCharMotions.Builder, insertEditActions.Builder);
+        }
+
+        static ViBuilder normalBuilder, insertActions;
+
+        static ViCommandMap normalActions = new ViCommandMap() {
+            { 'J', ViActions.Join },
+            { 'z', new ViCommandMap () {
+                { 'A', FoldActions.ToggleFoldRecursive },
+                { 'C', FoldActions.CloseFoldRecursive },
+                { 'M', FoldActions.CloseAllFolds },
+                { 'O', FoldActions.OpenFoldRecursive },
+                { 'R', FoldActions.OpenAllFolds },
+                { 'a', FoldActions.ToggleFold },
+                { 'c', FoldActions.CloseFold },
+                { 'o', FoldActions.OpenFold },
+            }},
+            { 'g', new ViCommandMap () {
+                { 'g', GotoLine, true },
+            }},
+            { 'r', ViBuilders.ReplaceChar },
+            { '~', ViActions.ToggleCase },
+            { 'm', ViBuilders.Mark },
+            { 'M', ViEditorActions.CaretToScreenCenter },
+            { 'H', ViEditorActions.CaretToScreenTop },
+            { 'L', ViEditorActions.CaretToScreenBottom },
+            { 'u', MiscActions.Undo },
+            { 'i', Insert, true },
+            { 'R', Replace, true },
+            { 'o', Open, true },
+            { 'O', OpenAbove, true },
+            { new ViKey (ModifierKeys.Control, Key.Up),       ScrollActions.Up },
+            { new ViKey (ModifierKeys.Control, Key.NumPadUp),    ScrollActions.Up },
+            { new ViKey (ModifierKeys.Control, Key.Down),     ScrollActions.Down },
+            { new ViKey (ModifierKeys.Control, Key.NumPadDown),  ScrollActions.Down },
+        };
+
+        static ViCommandMap motions = new ViCommandMap() {
+            { '`', ViBuilders.GoToMark },
+            { 'h', ViActions.Left },
+            { 'b', CaretMoveActions.PreviousSubword },
+            { 'B', CaretMoveActions.PreviousWord },
+            { 'l', ViActions.Right },
+            { 'w', CaretMoveActions.NextSubword },
+            { 'W', CaretMoveActions.NextWord },
+            { 'k', ViActions.Up },
+            { 'j', ViActions.Down },
+            { '%', MiscActions.GotoMatchingBracket },
+            { '0', CaretMoveActions.LineStart },
+            { '^', CaretMoveActions.LineFirstNonWhitespace },
+            { '_', CaretMoveActions.LineFirstNonWhitespace },
+            { '$', ViActions.LineEnd },
+            { 'G', CaretMoveActions.ToDocumentEnd },
+            { '{', ViActions.MoveToPreviousEmptyLine },
+            { '}', ViActions.MoveToNextEmptyLine },
+        };
+
+        static ViCommandMap nonCharMotions = new ViCommandMap() {
+            { Key.Left,         ViActions.Left },
+            { Key.NumPadLeft,      ViActions.Left },
+            { Key.Right,        ViActions.Right },
+            { Key.NumPadRight,     ViActions.Right },
+            { Key.Up,           ViActions.Up },
+            { Key.NumPadUp,        ViActions.Up },
+            { Key.Down,         ViActions.Down },
+            { Key.NumPadDown,      ViActions.Down },
+            { Key.NumPadHome,      CaretMoveActions.LineHome },
+            { Key.Home,         CaretMoveActions.LineHome },
+            { Key.NumPadEnd,       ViActions.LineEnd },
+            { Key.End,          ViActions.LineEnd },
+            { Key.PageUp,      CaretMoveActions.PageUp },
+            { Key.PageDown,    CaretMoveActions.PageDown },
+            { new ViKey (ModifierKeys.Control, Key.Left),     CaretMoveActions.PreviousWord },
+            { new ViKey (ModifierKeys.Control, Key.NumPadLeft),  CaretMoveActions.PreviousWord },
+            { new ViKey (ModifierKeys.Control, Key.Right),    CaretMoveActions.NextWord },
+            { new ViKey (ModifierKeys.Control, Key.NumPadRight), CaretMoveActions.NextWord },
+            { new ViKey (ModifierKeys.Control, Key.Home),     CaretMoveActions.ToDocumentStart },
+            { new ViKey (ModifierKeys.Control, Key.NumPadHome),  CaretMoveActions.ToDocumentStart },
+            { new ViKey (ModifierKeys.Control, Key.End),      CaretMoveActions.ToDocumentEnd },
+            { new ViKey (ModifierKeys.Control, Key.NumPadEnd),   CaretMoveActions.ToDocumentEnd },
+            { new ViKey (ModifierKeys.Control, 'u'),  CaretMoveActions.PageUp },
+            { new ViKey (ModifierKeys.Control, 'd'),  CaretMoveActions.PageDown },
+        };
+
+        static ViCommandMap insertEditActions = new ViCommandMap() {
+            { Key.Tab,       MiscActions.InsertTab },
+            { Key.Return,    MiscActions.InsertNewLine },
+            { Key.NumPadEnter,  MiscActions.InsertNewLine },
+            { Key.BackSpace, DeleteActions.Backspace },
+            { Key.Delete,    DeleteActions.Delete },
+            { Key.NumPadDelete, DeleteActions.Delete },
+            { Key.Insert,    MiscActions.SwitchCaretMode },
+            { new ViKey (ModifierKeys.Control, Key.BackSpace), DeleteActions.PreviousWord },
+            { new ViKey (ModifierKeys.Control, Key.Delete),    DeleteActions.NextWord },
+            { new ViKey (ModifierKeys.Control, Key.NumPadDelete), DeleteActions.NextWord },
+            { new ViKey (ModifierKeys.Shift,   Key.Tab),       MiscActions.RemoveTab },
+            { new ViKey (ModifierKeys.Shift,   Key.BackSpace),       DeleteActions.Backspace },
+        };
+
+        static bool Insert(ViBuilderContext ctx)
+        {
+            ctx.RunAction((ViEditor e) => e.SetMode(ViEditorMode.Insert));
+            ctx.SuppressCompleted();
+
+            ctx.Builder = ViBuilders.InsertBuilder(insertActions);
+            return true;
+        }
+
+        static bool Replace(ViBuilderContext ctx)
+        {
+            ctx.RunAction((ViEditor e) => e.SetMode(ViEditorMode.Replace));
+            ctx.SuppressCompleted();
+
+            ctx.Builder = ViBuilders.InsertBuilder(insertActions);
+            return true;
+        }
+
+        static bool Open(ViBuilderContext ctx)
+        {
+            ctx.RunAction((ViEditor e) => MiscActions.InsertNewLineAtEnd(e.Data));
+            return Insert(ctx);
+        }
+
+        static bool OpenAbove(ViBuilderContext ctx)
+        {
+            // FIXME: this doesn't work correctly on the first line
+            ctx.RunAction((ViEditor e) => ViActions.Up(e.Data));
+            return Open(ctx);
+        }
+
+        static bool GotoLine(ViBuilderContext ctx)
+        {
+            ctx.RunAction((ViEditor e) => ViEditorActions.CaretToLineNumber(ctx.Multiplier, e));
+            ctx.RunAction((ViEditor e) => CaretMoveActions.LineFirstNonWhitespace(e.Data));
+            return true;
+        }
+    }
+}
+

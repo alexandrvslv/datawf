@@ -1,0 +1,70 @@
+﻿using DataWF.Common;
+using System.Collections.Generic;
+using System.Data;
+
+namespace DataWF.Gui
+{
+    public class LayoutDataColumn : LayoutColumn
+    {
+        public DataColumn DataColumn { get; set; }
+    }
+
+    public class LayoutDataTable : LayoutList
+    {
+        public LayoutDataTable()
+            : base()
+        {
+            GenerateToString = false;
+        }
+
+        private DataTable Table
+        {
+            get { return (listSource as DataView)?.Table; }
+        }
+
+        protected override string GetCacheKey()
+        {
+            if (Table != null)
+                return string.Format("{0}.{1}", Table.DataSet != null ? Table.DataSet.DataSetName : "", Table.TableName);
+            return base.GetCacheKey();
+        }
+
+        public override LayoutColumn CreateColumn(string name)
+        {
+            if (Table != null)
+            {
+                var column = Table.Columns[name];
+                if (column != null)
+                {
+                    return new LayoutDataColumn()
+                    {
+                        Name = name,
+                        DataColumn = column,
+                        Invoker = new ActionIndexInvoker<DataRowView, object, int>(name,
+                                                                      (row, index) => row[index],
+                                                                      (row, index, value) => row[index] = value)
+                        {
+                            Index = column.Ordinal,
+                            DataType = column.DataType
+                        }
+                    };
+                }
+            }
+            return base.CreateColumn(name);
+        }
+
+        protected override void OnGetProperties(LayoutListPropertiesArgs args)
+        {
+            if (Table != null && args.Cell == null)
+            {
+                args.Properties = new List<string>();
+                foreach (DataColumn column in Table.Columns)
+                {
+                    args.Properties.Add(column.ColumnName);
+                }
+            }
+            base.OnGetProperties(args);
+        }
+    }
+}
+
