@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -58,6 +59,8 @@ namespace DataWF.WebService.Common
         public IDBSchema Schema => Table.Schema;
 
         public DBTable<T> Table { get; }
+
+        public DBTableLog<L> LogTable => logTable;
 
         [HttpGet]
         public ValueTask<ActionResult<IEnumerable<T>>> Get()
@@ -606,39 +609,33 @@ namespace DataWF.WebService.Common
 
         [HttpPost("DownloadFiles")]
         [ProducesResponseType(typeof(FileStreamResult), 200)]
-        public virtual async Task<ActionResult<Stream>> DownloadFiles([FromBody] List<K> ids)
+        public virtual ActionResult<Stream> DownloadFiles([FromBody] List<K> ids)
         {
             try
-            {
+            {               
                 var zipName = "Package" + DateTime.UtcNow.ToString("o").Replace(":", "-") + ".zip";
-                var zipPath = Helper.GetDocumentsFullPath(zipName, zipName);
-                var fileStream = System.IO.File.Create(zipPath);
-                using (var transaction = new DBTransaction(Table, CurrentUser))
-                using (var zipStream = new ZipOutputStream(fileStream))
-                {
-                    var buffer = new byte[64 * 1024];
 
-                    zipStream.IsStreamOwner = false;
-                    foreach (var id in ids)
+                return new FileCallbackResult(System.Net.Mime.MediaTypeNames.Application.Octet, async (outputStream, _) =>
+                {
+                    using (var transaction = new DBTransaction(Table, CurrentUser))
+                    using (var zipArchive = new ZipArchive(outputStream, ZipArchiveMode.Create))
                     {
-                        var streamResult = await GetStream(id, transaction);
-                        if (streamResult.Value.Stream == null)
-                            return streamResult.Result;
-                        using (var stream = streamResult.Value.Stream)
+                        foreach (var id in ids)
                         {
-                            var entry = new ZipEntry(streamResult.Value.FileName);
-                            zipStream.PutNextEntry(entry);
-                            StreamUtils.Copy(stream, zipStream, buffer);
-                            stream.Dispose();
+                            var streamResult = await GetStream(id, transaction);
+                            if (streamResult.Value.Stream == null)
+                                continue;
+
+                            var zipEntry = zipArchive.CreateEntry(streamResult.Value.FileName);
+                            using (var zipStream = zipEntry.Open())
+                            using (var stream = streamResult.Value.Stream)
+                                await stream.CopyToAsync(zipStream);
                         }
                     }
-                    zipStream.Flush();
-                }
-                fileStream.Position = 0;
-                return new TransactFileStreamResult(fileStream,
-                        System.Net.Mime.MediaTypeNames.Application.Octet,
-                        null, zipName)
-                { DeleteFile = true };
+                })
+                {
+                    FileDownloadName = zipName
+                };
             }
             catch (Exception ex)
             {
@@ -646,7 +643,7 @@ namespace DataWF.WebService.Common
             }
         }
 
-        private async Task<ActionResult<(Stream Stream, string FileName)>> GetStream(K id, DBTransaction transaction)
+        protected async Task<ActionResult<(Stream Stream, string FileName)>> GetStream(K id, DBTransaction transaction)
         {
             if (Table.FileNameKey == null)
             {
@@ -663,7 +660,7 @@ namespace DataWF.WebService.Common
             {
                 return Forbid();
             }
-            var fileName = item.GetValue<string>(Table.FileNameKey);
+            var fileName = item.GetValue(Table.FileNameKey);
             if (string.IsNullOrEmpty(fileName))
             {
                 return BadRequest("File name was not specified!");
@@ -680,6 +677,45 @@ namespace DataWF.WebService.Common
             else
             {
                 return BadRequest("No file columns presented!");
+            }
+            return (stream, fileName);
+        }
+
+        protected async Task<ActionResult<(Stream Stream, string FileName)>> GetLogStream(long logId, DBTransaction transaction)
+        {
+            var logItem = LogTable?.LoadById<L, long>(logId, transaction: transaction);
+            if (logItem == null)
+            {
+                return NotFound();
+            }
+            if (!(logItem.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
+                && !(logItem.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
+            {
+                return Forbid();
+            }
+            var baseItem = logItem.BaseItem;
+            if (baseItem != null && baseItem != DBItem.EmptyItem)
+            {
+                if (!(baseItem.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
+                && !(baseItem.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
+                {
+                    return Forbid();
+                }
+            }
+            var fileName = logItem.GetValue(LogTable.FileNameKey);
+            if (fileName == null)
+            {
+                return BadRequest($"Log with id {logId} no file name defined!");
+            }
+
+            var stream = (Stream)null;
+            if (LogTable.FileOIDKey != null && logItem.GetValue(LogTable.FileOIDKey) != null)
+            {
+                stream = await logItem.GetBlob(LogTable.FileOIDKey, transaction);
+            }
+            else if (LogTable.FileKey != null)
+            {
+                stream = logItem.GetZipMemoryStream(LogTable.FileKey, transaction);
             }
             return (stream, fileName);
         }
@@ -819,47 +855,15 @@ namespace DataWF.WebService.Common
             var transaction = new DBTransaction(Table, CurrentUser);
             try
             {
-                var logItem = Table.LogTable?.LoadById<DBItemLog, long>(logId);
-                if (logItem == null)
+                var streamResult = await GetLogStream(logId, transaction);
+                if (streamResult.Value.Stream == null)
                 {
                     transaction.Dispose();
-                    return NotFound();
+                    return streamResult.Result;
                 }
-                if (!(logItem.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
-                    && !(logItem.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
-                {
-                    transaction.Dispose();
-                    return Forbid();
-                }
-                var baseItem = logItem.BaseItem;
-                if (baseItem != null && baseItem != DBItem.EmptyItem)
-                {
-                    if (!(baseItem.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
-                    && !(baseItem.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
-                    {
-                        transaction.Dispose();
-                        return Forbid();
-                    }
-                }
-                var fileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
-                if (fileName == null)
-                {
-                    transaction.Dispose();
-                    return BadRequest($"Log with id {logId} no file name defined!");
-                }
-
-                var stream = (Stream)null;
-                if (Table.LogTable.FileOIDKey != null && logItem.GetValue(Table.LogTable.FileOIDKey) != null)
-                {
-                    stream = await logItem.GetBlob(Table.LogTable.FileOIDKey, transaction);
-                }
-                else if (Table.LogTable.FileKey != null)
-                {
-                    stream = logItem.GetZipMemoryStream(Table.LogTable.FileKey, transaction);
-                }
-                return new TransactFileStreamResult(stream,
+                return new TransactFileStreamResult(streamResult.Value.Stream,
                        System.Net.Mime.MediaTypeNames.Application.Octet,
-                       transaction, fileName);
+                       transaction, streamResult.Value.FileName);                
             }
             catch (Exception ex)
             {
@@ -867,8 +871,6 @@ namespace DataWF.WebService.Common
                 return BadRequest(ex);
             }
         }
-
-
 
         [NonAction]
         private BadRequestObjectResult Forbid(DBItem value, DBUpdateState updateState)

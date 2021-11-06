@@ -13,6 +13,7 @@ namespace DataWF.Common
         IFilterable Items { get; set; }
         IQuery Filter { get; set; }
         object SelectedItem { get; set; }
+        object HoveredItem { get; set; }
         IEnumerable<object> SelectedItems { get; set; }
         bool VirtualMode { get; set; }
         bool PreventLoad { get; set; }

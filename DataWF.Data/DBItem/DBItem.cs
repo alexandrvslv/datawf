@@ -40,6 +40,7 @@ namespace DataWF.Data
     [InvokerGenerator]
     public partial class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IPullHandler, IDBTableContent
     {
+        private const int defBufferSize = 81920;
         public static readonly DBItem EmptyItem = new DBItem((IDBTable)null) { cacheToString = "Loading" };
 
         internal PullHandler? oldHandler;
@@ -1492,7 +1493,7 @@ namespace DataWF.Data
                 throw new Exception("Unsupported Column type");
         }
 
-        public async Task<Stream> GetStream(DBTransaction transaction, int bufferSize = 81920)
+        public async Task<Stream> GetStream(DBTransaction transaction, int bufferSize = defBufferSize)
         {
             if (!(Table.FileOIDKey?.IsEmpty(this) ?? true))
             {
@@ -1505,7 +1506,7 @@ namespace DataWF.Data
             return null;
         }
 
-        public async Task SetStream(string filePath, DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = 81920)
+        public async Task SetStream(string filePath, DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = defBufferSize)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
@@ -1513,7 +1514,7 @@ namespace DataWF.Data
             }
         }
 
-        public async Task SetStream(Stream stream, DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = 81920)
+        public async Task SetStream(Stream stream, DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = defBufferSize)
         {
             SetValue(await Helper.GetBufferedBytesAsync(stream), column);
             await Save(transaction);
@@ -1521,7 +1522,7 @@ namespace DataWF.Data
             await OnSetStream(column, transaction);
         }
 
-        public virtual MemoryStream GetMemoryStream(DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = 81920)
+        public virtual MemoryStream GetMemoryStream(DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = defBufferSize)
         {
             OnGetStream(column, transaction);
             var memoryStream = (MemoryStream)null;
@@ -1535,7 +1536,7 @@ namespace DataWF.Data
             return memoryStream;
         }
 
-        public virtual FileStream GetFileStream(DBColumn<byte[]> column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public virtual FileStream GetFileStream(DBColumn<byte[]> column, string path, DBTransaction transaction, int bufferSize = defBufferSize)
         {
             OnGetStream(column, transaction);
             var fileStream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
@@ -1560,13 +1561,13 @@ namespace DataWF.Data
             return Task.CompletedTask;
         }
 
-        public Stream GetZipMemoryStream(DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = 81920)
+        public Stream GetZipMemoryStream(DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = defBufferSize)
         {
             var memoryStream = GetMemoryStream(column, transaction, bufferSize);
             return Helper.IsGZip(memoryStream) ? Helper.GetGZipStrem(memoryStream) : memoryStream;
         }
 
-        public FileStream GetZipFileStream(DBColumn<byte[]> column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public FileStream GetZipFileStream(DBColumn<byte[]> column, string path, DBTransaction transaction, int bufferSize = defBufferSize)
         {
             var fileStream = GetFileStream(column, path, transaction, bufferSize);
             if (Helper.IsGZip(fileStream))
@@ -1617,12 +1618,12 @@ namespace DataWF.Data
             return id;
         }
 
-        public Task<Stream> GetBlob(DBTransaction transaction, int bufferSize = 81920)
+        public Task<Stream> GetBlob(DBTransaction transaction, int bufferSize = defBufferSize)
         {
             return GetBlob(Table.FileOIDKey, transaction, bufferSize);
         }
 
-        public virtual Task<Stream> GetBlob(DBColumn<long?> column, DBTransaction transaction, int bufferSize = 81920)
+        public virtual Task<Stream> GetBlob(DBColumn<long?> column, DBTransaction transaction, int bufferSize = defBufferSize)
         {
             OnGetStream(column, transaction);
             var oid = GetValue<long?>(column);
@@ -1635,7 +1636,7 @@ namespace DataWF.Data
             return Schema.FileProvider.GetFile(oid.Value, transaction, bufferSize);
         }
 
-        public async Task<FileStream> GetBlob(DBColumn<long?> column, string path, int bufferSize = 81920)
+        public async Task<FileStream> GetBlob(DBColumn<long?> column, string path, int bufferSize = defBufferSize)
         {
             using (var transaction = new DBTransaction(Table))
             {
@@ -1643,7 +1644,7 @@ namespace DataWF.Data
             }
         }
 
-        public async Task<FileStream> GetBlob(DBColumn<long?> column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public async Task<FileStream> GetBlob(DBColumn<long?> column, string path, DBTransaction transaction, int bufferSize = defBufferSize)
         {
             using (var lobStream = await GetBlob(column, transaction))
             {
