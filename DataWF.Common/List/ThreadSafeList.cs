@@ -2,19 +2,19 @@
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace DataWF.Common
 {
     public class ThreadSafeList<T> : ICollection<T>
     {
         private T single;
-        private T[] items;
+        private ArrayPointer<T> items;
         private int _count;
-        private int _capacity;//TODO REMOVE
+
         public ThreadSafeList()
         {
             //items = SmallArrayPool<T>.Instance.Rent(capacity);// new List<T>(capacity);
-            _capacity = 1;
         }
 
         public ThreadSafeList(T item) : this()
@@ -25,13 +25,12 @@ namespace DataWF.Common
 
         ~ThreadSafeList()
         {
-            if (items != null)
-                SmallArrayPool<T>.Instance.Return(items);
+            items?.Unsubscribe();
         }
 
         public int Count => _count;
 
-        public int Capacity => _capacity;
+        public int Capacity => items?.Length ?? 1;
 
         public bool IsSynchronized => true;
 
@@ -53,7 +52,7 @@ namespace DataWF.Common
 
         public void Add(T item)
         {
-            if ((uint)_count >= (uint)_capacity)
+            if ((uint)_count >= (uint)Capacity)
             {
                 Reallock();
             }
@@ -68,16 +67,15 @@ namespace DataWF.Common
 
         private void Reallock()
         {
-            var temp = SmallArrayPool<T>.Instance.Rent(Math.Max(_count, 2) * 2);
+            var temp = new ArrayPointer<T>(Math.Max(_count, 2) * 2);
             if (items != null)
                 items.AsSpan(0, _count).CopyTo(temp.AsSpan());
             else if (_count > 0)
                 temp[0] = single;
             var swap = items;
             items = temp;
-            _capacity = items.Length;
-            if (swap != null)
-                SmallArrayPool<T>.Instance.Return(swap);
+
+            swap?.Unsubscribe();
         }
 
         public bool Remove(T item)
@@ -103,7 +101,7 @@ namespace DataWF.Common
 
         public void Insert(int index, T item)
         {
-            if ((uint)_count >= (uint)_capacity)
+            if ((uint)_count >= (uint)Capacity)
             {
                 Reallock();
             }
@@ -119,14 +117,14 @@ namespace DataWF.Common
         public int IndexOf(T item)
         {
             return items != null
-                ? Array.IndexOf(items, item, 0, (int)_count)
+                ? Array.IndexOf(items.Array, item, 0, (int)_count)
                 : EqualityComparer<T>.Default.Equals(item, single) ? 0 : -1;
         }
 
         public void Clear()
         {
             if (items != null)
-                Array.Clear(items, 0, _count);
+                Array.Clear(items.Array, 0, _count);
             _count = 0;
             single = default(T);
         }
@@ -139,17 +137,17 @@ namespace DataWF.Common
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
 
-        public ThreadSafeArrayEnumerator<T> GetEnumerator() => _count == 0
-            ? ThreadSafeArrayEnumerator<T>.Empty
+        public OneArrayPointerEnumerator<T> GetEnumerator() => _count == 0
+            ? OneArrayPointerEnumerator<T>.Empty
             : items == null
-                ? new ThreadSafeArrayEnumerator<T>(single, _count)
-                : new ThreadSafeArrayEnumerator<T>(items, _count);
+                ? new OneArrayPointerEnumerator<T>(single, _count)
+                : new OneArrayPointerEnumerator<T>(items, _count);
 
         public int BinarySearch(T item, IComparer<T> comparer)
         {
             if (items != null)
             {
-                return Array.BinarySearch(items, 0, _count, item, comparer);
+                return Array.BinarySearch(items.Array, 0, _count, item, comparer);
                 //ListHelper.BinarySearch(items, 0, _count - 1, item, comparer, false);//
             }
 
@@ -161,7 +159,7 @@ namespace DataWF.Common
         public void Sort(IComparer<T> comparer)
         {
             if (items != null)
-                Array.Sort(items, 0, _count, comparer);
+                Array.Sort(items.Array, 0, _count, comparer);
         }
 
         public void AddRange(IEnumerable<T> enumerable)
@@ -183,7 +181,7 @@ namespace DataWF.Common
             return items.AsSpan(0, _count);
         }
 
-        public ReadOnlyList<T> AsReadOnly() => new ReadOnlyList<T>(items, _count);
+        public ReadOnlyList<T> AsReadOnly() => new ReadOnlyList<T>(items.Array, _count);
     }
 
     public struct ReadOnlyList<T> : IReadOnlyList<T>
@@ -196,8 +194,9 @@ namespace DataWF.Common
         public ReadOnlyList(T[] array, int count)
         {
             this.array = array;
-            this.count = count;
+            this.count = count;            
         }
+
         public T this[int index] => array[index];
 
         public int Count => count;
@@ -207,7 +206,10 @@ namespace DataWF.Common
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
 
-        public ThreadSafeArrayEnumerator<T> GetEnumerator() => count == 0 ? ThreadSafeArrayEnumerator<T>.Empty : new ThreadSafeArrayEnumerator<T>(array, count);
+        public OneArrayEnumerator<T> GetEnumerator() => count == 0 
+            ? OneArrayEnumerator<T>.Empty 
+            : new OneArrayEnumerator<T>(array, count);
+        
     }
 }
 

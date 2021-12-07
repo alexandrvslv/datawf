@@ -5,14 +5,16 @@ using System.Collections.Generic;
 namespace DataWF.Common
 {
     [Serializable]
-    public struct ThreadSafeArrayEnumerator<T> : IEnumerator<T>, IEnumerator
+    public struct OneArrayPointerEnumerator<T> : IEnumerator<T>, IEnumerator, IDisposable
     {
-        public static readonly ThreadSafeArrayEnumerator<T> Empty = new ThreadSafeArrayEnumerator<T>(null, 0);
+        public static readonly OneArrayPointerEnumerator<T> Empty = new OneArrayPointerEnumerator<T>(null, 0);
         private int i;
         private uint count;
-        private T[] items;
+        private ArrayPointer<T> items;
         private T single;
-        public ThreadSafeArrayEnumerator(T single, int count)
+
+        public OneArrayPointerEnumerator
+            (T single, int count)
         {
             i = -1;
             this.count = (uint)count;
@@ -20,12 +22,13 @@ namespace DataWF.Common
             this.single = single;
         }
 
-        public ThreadSafeArrayEnumerator(T[] items, int count)
+        public OneArrayPointerEnumerator(ArrayPointer<T> items, int count)
         {
             i = -1;
             this.count = (uint)count;
             this.items = items;
             single = default(T);
+            items?.Subscribe();
         }
 
         public T Current => items != null ? items[i] : single;
@@ -33,7 +36,9 @@ namespace DataWF.Common
         object IEnumerator.Current => Current;
 
         public void Dispose()
-        { }
+        {
+            items?.Unsubscribe();
+        }
 
         public bool MoveNext()
         {

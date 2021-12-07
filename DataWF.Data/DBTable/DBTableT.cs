@@ -418,9 +418,9 @@ namespace DataWF.Data
             return GetEnumerator();
         }
 
-        public ThreadSafeEnumerator<T> GetEnumerator()
+        public OneListEnumerator<T> GetEnumerator()
         {
-            return items.Count == 0 ? ThreadSafeEnumerator<T>.Empty : new ThreadSafeEnumerator<T>(items);
+            return items.Count == 0 ? OneListEnumerator<T>.Empty : new OneListEnumerator<T>(items);
         }
 
         #endregion

@@ -941,9 +941,9 @@ namespace DataWF.Common
             return GetEnumerator();
         }
 
-        public virtual ThreadSafeEnumerator<T> GetEnumerator()
+        public virtual OneListEnumerator<T> GetEnumerator()
         {
-            return items.Count == 0 ? ThreadSafeEnumerator<T>.Empty : new ThreadSafeEnumerator<T>(items);
+            return items.Count == 0 ? OneListEnumerator<T>.Empty : new OneListEnumerator<T>(items);
         }
     }
 }

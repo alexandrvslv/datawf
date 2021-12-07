@@ -20,7 +20,6 @@ namespace DataWF.Common
             if (minimumLength >= 4)
                 return four.TryDequeue(out var fourArray) ? fourArray : new T[4];
             return two.TryDequeue(out var twoArray) ? twoArray : new T[2];
-
         }
 
         public override void Return(T[] array, bool clearArray = false)

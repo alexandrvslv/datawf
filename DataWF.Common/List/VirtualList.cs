@@ -143,12 +143,12 @@ namespace DataWF.Common
             return base.Contains(item) || (IndexOf(item) >= 0);
         }
 
-        public override ThreadSafeEnumerator<T> GetEnumerator()
+        public override OneListEnumerator<T> GetEnumerator()
         {
             var count = Count;
             return count == 0 
-                ? ThreadSafeEnumerator<T>.Empty
-                : new ThreadSafeEnumerator<T>(this, count);
+                ? OneListEnumerator<T>.Empty
+                : new OneListEnumerator<T>(this, count);
         }
 
         public override int IndexOf(T item)
