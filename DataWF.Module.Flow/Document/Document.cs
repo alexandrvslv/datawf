@@ -48,7 +48,6 @@ namespace DataWF.Module.Flow
         {
             if (!item.Attached)
                 return;
-
             //if (item is DocumentWork work)
             //{
             //    if (work.Completed || work.UpdateState == DBUpdateState.Default)
