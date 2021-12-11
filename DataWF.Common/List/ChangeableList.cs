@@ -18,20 +18,22 @@ namespace DataWF.Common
 
         public virtual void CheckStatus(T item)
         {
-            var syncItem = item as ISynchronized;
-            if (syncItem.SyncStatus == SynchronizedStatus.Actual)
+            if (item is ISynchronized syncItem)
             {
-                if (changes.TryRemove(item, out _))
+                if (syncItem.SyncStatus == SynchronizedStatus.Actual)
                 {
-                    OnItemStatusChanged(item);
+                    if (changes.TryRemove(item, out _))
+                    {
+                        OnItemStatusChanged(item);
+                    }
                 }
-            }
-            else if (syncItem.SyncStatus == SynchronizedStatus.New
-                || syncItem.SyncStatus == SynchronizedStatus.Edit)
-            {
-                if (changes.TryAdd(item, 0))
+                else if (syncItem.SyncStatus == SynchronizedStatus.New
+                    || syncItem.SyncStatus == SynchronizedStatus.Edit)
                 {
-                    OnItemStatusChanged(item);
+                    if (changes.TryAdd(item, 0))
+                    {
+                        OnItemStatusChanged(item);
+                    }
                 }
             }
         }
