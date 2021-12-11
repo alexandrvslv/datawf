@@ -52,15 +52,16 @@ namespace DataWF.Data
             var table = (IDBTableLog)EmitInvoker.CreateObject(type);
             table.Name = Attribute.TableName;
             table.Schema = schema;
-            var baseSchema = schema is DBSchemaLog logSchema ? logSchema.TargetSchema : schema;
-            table.TargetTable = baseSchema.GetTable(LogAttribute.BaseType);
+            table.TargetTable = GetLogTargetTable(schema, LogAttribute.BaseType);
             return (DBTable)table;
-        }
+        }      
 
         public override DBTable Generate(IDBSchema schema)
         {
             var table = base.Generate(schema);
             table.SetItemType(ItemType);
+            var baseTable = GetLogTargetTable(schema, LogAttribute.BaseType);
+            baseTable.LogTableName = table.Name;
             return table;
         }
     }

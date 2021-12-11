@@ -590,5 +590,15 @@ namespace DataWF.Data
         {
             cacheGenerated.Clear();
         }
+
+        public IDBSchema GetLogTargetSchema(IDBSchema schema)
+        {
+            return schema is DBSchemaLog logSchema ? logSchema.TargetSchema : schema;
+        }
+
+        public IDBTable GetLogTargetTable(IDBSchema schema, Type type)
+        {
+            return GetLogTargetSchema(schema)?.GetTable(type);
+        }
     }
 }

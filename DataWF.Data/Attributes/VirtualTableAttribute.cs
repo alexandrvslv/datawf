@@ -36,6 +36,8 @@ namespace DataWF.Data
 
         public string Query { get; set; }
 
+        public Type BaseType { get; set; }
+
         public Type Type { get; set; }
     }
 }

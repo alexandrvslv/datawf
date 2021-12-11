@@ -130,7 +130,7 @@ namespace {namespaceName}
                     {
                         itemType = virtualTableAttribute.ConstructorArguments.FirstOrDefault();
                     }
-                    source.Append($"[VirtualTable({itemType.Value})]");
+                    source.Append($"[VirtualTable({itemType.Value}, BaseType = typeof({TypeSymbol.Name}))]");
                 }
 
                 source.Append($@"

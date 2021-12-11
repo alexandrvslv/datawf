@@ -76,11 +76,22 @@ namespace DataWF.Data
             table.TypeId = Attribute.Id;
             table.Schema = schema;
             table.RefreshVirtualTable(baseTable);
+            RefreshVirtualColumns(table);
+            if (table is IDBTableLog logTable)
+            {
+                var loggedTable = TableGenerator.GetLogTargetTable(schema, Attribute.BaseType);
+                loggedTable.LogTable = logTable;
+            }
+            return table;
+        }
+
+        private void RefreshVirtualColumns(DBTable table)
+        {
             foreach (var columnGenerator in TableGenerator.Columns)
             {
                 var virtualColumn = table.Columns[columnGenerator.ColumnName];
                 if (virtualColumn != null)
-                {                    
+                {
                     if (columnGenerator.DefaultValues != null && columnGenerator.DefaultValues.TryGetValue(Type, out var defaultValue))
                     {
                         virtualColumn.DefaultValue = defaultValue;
@@ -93,8 +104,6 @@ namespace DataWF.Data
                     }
                 }
             }
-
-            return table;
         }
 
         public virtual DBTable CreateTable(IDBSchema schema, DBTable baseTable)
@@ -116,11 +125,15 @@ namespace DataWF.Data
             }
 
             var table = (DBTable)EmitInvoker.CreateObject(typeOfTable);
+            table.IsVirtual = true;
             table.Name = Type.Name;
             table.Schema = schema;
             table.ParentTable = baseTable;
             table.DisplayName = Type.Name;
-
+            if (table is IDBTableLog logTable)
+            {
+                logTable.TargetTable = TableGenerator.GetLogTargetTable(schema, Attribute.BaseType);
+            }
             return table;
         }
 

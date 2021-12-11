@@ -175,8 +175,12 @@ namespace DataWF.Data
             get => logTable ??= ((IDBTableLog)Schema?.LogSchema?.Tables[LogTableName] ?? (IDBTableLog)Schema?.Tables[LogTableName]);
             set
             {
-                LogTableName = value?.Name;
-                logTable = value;
+                if (logTable != value)
+                {
+                    LogTableName = value?.Name;
+                    logTable = value;
+                    OnPropertyChanged();
+                }
             }
         }
 
