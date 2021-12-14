@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace DataWF.Common
@@ -28,9 +29,17 @@ namespace DataWF.Common
             items?.Unsubscribe();
         }
 
-        public int Count => _count;
-
-        public int Capacity => items?.Length ?? 1;
+        public int Count
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _count;
+        }
+        
+        public int Capacity
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => items?.Length ?? 1;
+        }
 
         public bool IsSynchronized => true;
 
@@ -40,6 +49,7 @@ namespace DataWF.Common
 
         public T this[int index]
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => items != null ? items[index] : single;
             set
             {

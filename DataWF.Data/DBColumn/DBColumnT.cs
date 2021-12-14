@@ -455,7 +455,8 @@ namespace DataWF.Data
                 return;
 
             if (ColumnType == DBColumnTypes.Expression
-                || ColumnType == DBColumnTypes.Code)
+                || ColumnType == DBColumnTypes.Code
+                || Table?.IsVirtual == true)
             {
                 return;
             }
