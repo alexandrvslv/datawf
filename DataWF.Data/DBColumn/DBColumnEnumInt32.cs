@@ -25,7 +25,7 @@ using System.Runtime.CompilerServices;
 
 namespace DataWF.Data
 {
-    public class DBColumnEnumInt32<T> : DBColumn<T> where T : struct
+    public sealed class DBColumnEnumInt32<T> : DBColumn<T> where T : struct
     {
         public override void Read(DbDataReader reader, DBItem row, int i)
         {

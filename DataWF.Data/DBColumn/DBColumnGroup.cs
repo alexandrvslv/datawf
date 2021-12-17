@@ -27,9 +27,9 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public partial class DBColumnGroup : DBTableItem, IComparable, IComparable<DBColumnGroup>
+    public sealed partial class DBColumnGroup : DBTableItem, IComparable, IComparable<DBColumnGroup>
     {
-        protected int order = -1;
+        private int order = -1;
 
         public DBColumnGroup() : base()
         { }

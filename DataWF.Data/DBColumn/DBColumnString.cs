@@ -24,7 +24,7 @@ using System.Text.Json;
 
 namespace DataWF.Data
 {
-    public class DBColumnString : DBColumnReferenceType<string>
+    public sealed class DBColumnString : DBColumnReferenceType<string>
     {
         public override bool Equal(string oldValue, string newValue)
         {

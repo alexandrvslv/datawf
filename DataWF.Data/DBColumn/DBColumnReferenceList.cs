@@ -27,7 +27,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBColumnReferenceList : SelectableList<DBColumnReference>
+    public sealed class DBColumnReferenceList : SelectableList<DBColumnReference>
     {
         public DBColumnReferenceList()
         {

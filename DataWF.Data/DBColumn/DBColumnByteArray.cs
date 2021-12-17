@@ -26,7 +26,7 @@ using System.Text.Json;
 
 namespace DataWF.Data
 {
-    public class DBColumnByteArray : DBColumnReferenceType<byte[]>
+    public sealed class DBColumnByteArray : DBColumnReferenceType<byte[]>
     {
         public override bool Equal(byte[] oldValue, byte[] newValue)
         {

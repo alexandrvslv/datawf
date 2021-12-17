@@ -24,7 +24,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBColumnBinarySerializable<T> : DBColumn<T> where T : IBinarySerializable, new()
+    public sealed class DBColumnBinarySerializable<T> : DBColumn<T> where T : IBinarySerializable, new()
     {
         public override void Read(DbDataReader reader, DBItem row, int i)
         {

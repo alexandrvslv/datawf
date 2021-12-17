@@ -29,7 +29,7 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
     [InvokerGenerator(Instance = true)]
-    public partial class DBColumnReference : DefaultItem
+    public sealed partial class DBColumnReference : DefaultItem
     {
         private string columnName;
         private DBColumn column;

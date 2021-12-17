@@ -21,7 +21,7 @@ using System;
 
 namespace DataWF.Data
 {
-    public class DBColumnGroupList : DBTableItemList<DBColumnGroup>
+    public sealed class DBColumnGroupList : DBTableItemList<DBColumnGroup>
     {
         public DBColumnGroupList(DBTable table) : base(table)
         {

@@ -26,7 +26,7 @@ using System.Text.Json;
 
 namespace DataWF.Data
 {
-    public class DBColumnInt16 : DBColumn<short>
+    public sealed class DBColumnInt16 : DBColumn<short>
     {
         public override void Read(DbDataReader reader, DBItem row, int i)
         {

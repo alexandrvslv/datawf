@@ -24,7 +24,7 @@ using System.Globalization;
 
 namespace DataWF.Data
 {
-    public class DBColumnTimeSpan : DBColumn<TimeSpan>
+    public sealed class DBColumnTimeSpan : DBColumn<TimeSpan>
     {
         public override void Read(DbDataReader reader, DBItem row, int i)
         {

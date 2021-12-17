@@ -26,7 +26,7 @@ using System.Runtime.CompilerServices;
 
 namespace DataWF.Data
 {
-    public class DBColumnNEnumUInt8<T> : DBColumnNullable<T> where T : struct
+    public sealed class DBColumnNEnumUInt8<T> : DBColumnNullable<T> where T : struct
     {
         public override void Read(DbDataReader reader, DBItem row, int i)
         {

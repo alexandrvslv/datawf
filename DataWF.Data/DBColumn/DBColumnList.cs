@@ -24,7 +24,7 @@ using System.Linq;
 
 namespace DataWF.Data
 {
-    public class DBColumnList<T> : DBTableItemList<T> where T : DBColumn
+    public sealed class DBColumnList<T> : DBTableItemList<T> where T : DBColumn
     {
         private HashSet<DBColumn> toReplace = new HashSet<DBColumn>();
         private IListIndex<T, string> groupNameIndex;
