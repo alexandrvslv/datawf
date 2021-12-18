@@ -9,7 +9,7 @@ using System.Text;
 
 namespace DataWF.Common
 {
-    public class BinaryInvokerReader : IDisposable, ISerializeReader
+    public sealed class BinaryInvokerReader : IDisposable, ISerializeReader
     {
         private readonly Dictionary<Type, Dictionary<ushort, IPropertySerializeInfo>> cacheType = new Dictionary<Type, Dictionary<ushort, IPropertySerializeInfo>>();
         private readonly bool dispReader;

@@ -5,7 +5,7 @@ using System.Xml;
 
 namespace DataWF.Common
 {
-    public class XmlInvokerWriter : IDisposable, ISerializeWriter
+    public sealed class XmlInvokerWriter : IDisposable, ISerializeWriter
     {
         public XmlInvokerWriter(Stream stream, XmlTextSerializer serializer)
         {

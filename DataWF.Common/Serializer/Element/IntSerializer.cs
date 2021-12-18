@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace DataWF.Common
 {
-    public class Int32Serializer : NullableSerializer<int>
+    public sealed class Int32Serializer : NullableSerializer<int>
     {
         public static readonly Int32Serializer Instance = new Int32Serializer();
 
@@ -25,11 +25,11 @@ namespace DataWF.Common
 
         public override int FromString(string value) => int.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var result) ? result : 0;
 
-        public override string ToString(int value) => value.ToString(CultureInfo.InvariantCulture);        
+        public override string ToString(int value) => value.ToString(CultureInfo.InvariantCulture);
     }
 
 
-    public class UInt32Serializer : NullableSerializer<uint>
+    public sealed class UInt32Serializer : NullableSerializer<uint>
     {
         public static readonly UInt32Serializer Instance = new UInt32Serializer();
 
@@ -53,7 +53,7 @@ namespace DataWF.Common
 
     }
 
-    public class Int64Serializer : NullableSerializer<long>
+    public sealed class Int64Serializer : NullableSerializer<long>
     {
         public static readonly Int64Serializer Instance = new Int64Serializer();
 
@@ -76,7 +76,7 @@ namespace DataWF.Common
 
     }
 
-    public class UInt64Serializer : NullableSerializer<ulong>
+    public sealed class UInt64Serializer : NullableSerializer<ulong>
     {
         public static readonly UInt64Serializer Instance = new UInt64Serializer();
 
@@ -99,7 +99,7 @@ namespace DataWF.Common
 
     }
 
-    public class Int16Serializer : NullableSerializer<short>
+    public sealed class Int16Serializer : NullableSerializer<short>
     {
         public static readonly Int16Serializer Instance = new Int16Serializer();
 
@@ -123,7 +123,7 @@ namespace DataWF.Common
 
     }
 
-    public class UInt16Serializer : NullableSerializer<ushort>
+    public sealed class UInt16Serializer : NullableSerializer<ushort>
     {
         public static readonly UInt16Serializer Instance = new UInt16Serializer();
 
@@ -146,7 +146,7 @@ namespace DataWF.Common
 
     }
 
-    public class Int8Serializer : NullableSerializer<sbyte>
+    public sealed class Int8Serializer : NullableSerializer<sbyte>
     {
         public static readonly Int8Serializer Instance = new Int8Serializer();
 
@@ -170,7 +170,7 @@ namespace DataWF.Common
 
     }
 
-    public class UInt8Serializer : NullableSerializer<byte>
+    public sealed class UInt8Serializer : NullableSerializer<byte>
     {
         public static readonly UInt8Serializer Instance = new UInt8Serializer();
 

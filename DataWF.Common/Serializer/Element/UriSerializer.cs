@@ -3,7 +3,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class UriSerializer : ElementSerializer<Uri>
+    public sealed class UriSerializer : ElementSerializer<Uri>
     {
         public static readonly UriSerializer Instance = new UriSerializer();
 

@@ -4,7 +4,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class TempFileStreamSerializer : ObjectSerializer<Stream>
+    public sealed class TempFileStreamSerializer : ObjectSerializer<Stream>
     {
         public static readonly TempFileStreamSerializer Instance = new TempFileStreamSerializer();
         public static readonly byte[] endOfStream = new byte[] { 1, (byte)'e', 2, 1, (byte)'o', 2, 1, (byte)'s', 2 };

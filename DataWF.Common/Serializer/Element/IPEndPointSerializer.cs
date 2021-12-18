@@ -4,7 +4,7 @@ using System.Net;
 
 namespace DataWF.Common
 {
-    public class IPEndPointSerializer : ElementSerializer<IPEndPoint>
+    public sealed class IPEndPointSerializer : ElementSerializer<IPEndPoint>
     {
         public static readonly IPEndPointSerializer Instance = new IPEndPointSerializer();
 

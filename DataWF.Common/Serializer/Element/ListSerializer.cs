@@ -5,7 +5,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class ListSerializer<T, V> : ObjectSerializer<T> where T : IList<V>
+    public sealed class ListSerializer<T, V> : ObjectSerializer<T> where T : IList<V>
     {
         public override bool CanConvertString => false;
 

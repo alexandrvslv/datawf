@@ -3,7 +3,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class CharSerializer : NullableSerializer<char>
+    public sealed class CharSerializer : NullableSerializer<char>
     {
         public static readonly CharSerializer Instance = new CharSerializer();
 

@@ -6,7 +6,7 @@ using System.Text;
 namespace DataWF.Common
 {
     //https://github.com/cwensley/Portable.Xaml/blob/74d570bf7f75ab0c2fcdf4217e3019b3f24920e6/src/Portable.Xaml/Portable.Xaml.Markup/ValueSerializer.cs
-    public class StringSerializer : ElementSerializer<string>
+    public sealed class StringSerializer : ElementSerializer<string>
     {
 
         public static readonly StringSerializer Instance = new StringSerializer();

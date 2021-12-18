@@ -4,7 +4,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class VersionSerializer : ElementSerializer<Version>
+    public sealed class VersionSerializer : ElementSerializer<Version>
     {
         public static readonly VersionSerializer Instance = new VersionSerializer();
 

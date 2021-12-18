@@ -3,7 +3,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class GuidSerializer : NullableSerializer<Guid>
+    public sealed class GuidSerializer : NullableSerializer<Guid>
     {
         public static readonly GuidSerializer Instance = new GuidSerializer();
 

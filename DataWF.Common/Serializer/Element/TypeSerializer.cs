@@ -4,7 +4,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class TypeSerializer : ElementSerializer<Type>
+    public sealed class TypeSerializer : ElementSerializer<Type>
     {
         public static readonly TypeSerializer Instance = new TypeSerializer();
 
@@ -19,7 +19,7 @@ namespace DataWF.Common
         public override string ToString(Type value) => TypeHelper.FormatBinary(value);
     }
 
-    public class TypeShortSerializer : ElementSerializer<Type>
+    public sealed class TypeShortSerializer : ElementSerializer<Type>
     {
         public static readonly TypeShortSerializer Instance = new TypeShortSerializer();
 

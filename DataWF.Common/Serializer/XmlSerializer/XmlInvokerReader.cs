@@ -6,7 +6,7 @@ using System.Xml;
 
 namespace DataWF.Common
 {
-    public class XmlInvokerReader : IDisposable, ISerializeReader
+    public sealed class XmlInvokerReader : IDisposable, ISerializeReader
     {
         public XmlInvokerReader(Stream stream, XmlTextSerializer serializer)
         {

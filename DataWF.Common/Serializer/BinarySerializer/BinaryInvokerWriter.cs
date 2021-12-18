@@ -8,7 +8,7 @@ using System.Xml;
 
 namespace DataWF.Common
 {
-    public class BinaryInvokerWriter : IDisposable, ISerializeWriter
+    public sealed class BinaryInvokerWriter : IDisposable, ISerializeWriter
     {
         private readonly Dictionary<Type, Dictionary<ushort, IPropertySerializeInfo>> cacheSchema = new Dictionary<Type, Dictionary<ushort, IPropertySerializeInfo>>();
         private readonly bool dispWriter;

@@ -6,7 +6,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class TypeConverterSerializers<T> : ElementSerializer<T>
+    public sealed class TypeConverterSerializers<T> : ElementSerializer<T>
     {
         public TypeConverterSerializers(TypeConverter converter)
         {

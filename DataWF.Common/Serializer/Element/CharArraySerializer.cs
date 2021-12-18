@@ -2,7 +2,7 @@
 
 namespace DataWF.Common
 {
-    public class CharArraySerializer : ElementSerializer<char[]>
+    public sealed class CharArraySerializer : ElementSerializer<char[]>
     {
         public static readonly CharArraySerializer Instance = new CharArraySerializer();
 

@@ -4,7 +4,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class ByteArraySerializer : ElementSerializer<byte[]>
+    public sealed class ByteArraySerializer : ElementSerializer<byte[]>
     {
         public static readonly ByteArraySerializer Instance = new ByteArraySerializer();
 

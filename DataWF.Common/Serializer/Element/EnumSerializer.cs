@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace DataWF.Common
 {
-    public class EnumSerializer<T> : NullableSerializer<T> where T : struct
+    public sealed class EnumSerializer<T> : NullableSerializer<T> where T : struct
     {
         public static readonly EnumSerializer<T> Instance = new EnumSerializer<T>();
         private readonly BinaryToken binaryToken;

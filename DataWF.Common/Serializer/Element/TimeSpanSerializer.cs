@@ -5,7 +5,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class TimeSpanSerializer : NullableSerializer<TimeSpan>
+    public sealed class TimeSpanSerializer : NullableSerializer<TimeSpan>
     {
         public static readonly TimeSpanSerializer Instance = new TimeSpanSerializer();
 

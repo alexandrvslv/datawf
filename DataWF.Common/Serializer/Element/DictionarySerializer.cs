@@ -5,7 +5,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class DictionarySerializer<T, K, V> : ObjectSerializer<T> where T : IDictionary<K, V>
+    public sealed class DictionarySerializer<T, K, V> : ObjectSerializer<T> where T : IDictionary<K, V>
     {
         public override bool CanConvertString => false;
 

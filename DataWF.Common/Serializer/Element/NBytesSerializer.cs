@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Common
 {
-    public class NBytesSerializer<T> : NullableSerializer<T> where T : struct, IBinarySerializable
+    public sealed class NBytesSerializer<T> : NullableSerializer<T> where T : struct, IBinarySerializable
     {
         public override bool CanConvertString => false;
         public override BinaryToken BinaryToken => BinaryToken.ByteArray;

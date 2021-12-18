@@ -6,7 +6,7 @@ using System.Net;
 
 namespace DataWF.Common
 {
-    public class CultureInfoSerializer : ElementSerializer<CultureInfo>
+    public sealed class CultureInfoSerializer : ElementSerializer<CultureInfo>
     {
         public static readonly CultureInfoSerializer Instance = new CultureInfoSerializer();
 

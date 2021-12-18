@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace DataWF.Common
 {
-    public class DateTimeSerializer : NullableSerializer<DateTime>
+    public sealed class DateTimeSerializer : NullableSerializer<DateTime>
     {
         public static readonly DateTimeSerializer Instance = new DateTimeSerializer();
 

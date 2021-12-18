@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace DataWF.Common
 {
-    public class TimeSpanConverter : JsonConverter<TimeSpan>
+    public sealed class TimeSpanConverter : JsonConverter<TimeSpan>
     {
         public override TimeSpan Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
