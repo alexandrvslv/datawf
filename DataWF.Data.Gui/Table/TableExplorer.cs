@@ -95,7 +95,7 @@ namespace DataWF.Data.Gui
                     {
                         Table = table,
                         TableView = openmode == TableEditorMode.Item ? null
-                        : table.CreateItemsView("", DBViewKeys.None, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error),
+                        : table.CreateView("", DBViewKeys.None, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error),
                         Item = row,
                         Column = ownColumn,
                         Mode = openmode,
@@ -248,7 +248,7 @@ namespace DataWF.Data.Gui
             var tableName = reader.ReadAttribute<string>("TableName");
             if (!string.IsNullOrEmpty(tableName))
             {
-                Table = DBService.Schems.ParseTable(tableName);
+                Table = DataExplorer.Provider.ParseTable(tableName);
             }
         }
     }

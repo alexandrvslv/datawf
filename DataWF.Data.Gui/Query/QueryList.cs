@@ -12,7 +12,7 @@ namespace DataWF.Data.Gui
         private LayoutColumn colParamTable;
         private LayoutColumn colComparer;
         private LayoutColumn colValue;
-        private QQuery query;
+        private IQQuery query;
         private LayoutColumn colString;
         private LayoutColumn colOrder;
 
@@ -61,9 +61,9 @@ namespace DataWF.Data.Gui
             get { return base.ListSource; }
             set
             {
-                if (value is QQuery)
+                if (value is IQQuery)
                 {
-                    this.query = (QQuery)value;
+                    this.query = (IQQuery)value;
                     //TODO Custome query view model;
                     base.ListSource = new SelectableList<QParam>(query.GetAllParameters());
                 }
@@ -89,8 +89,8 @@ namespace DataWF.Data.Gui
                 {
                     if ((param.LeftColumn.IsPrimaryKey || param.LeftColumn.IsReference) && param.Comparer.Type == CompareTypes.In)
                     {
-                        if (param.LeftColumn.IsReference && param.RightValue == null)
-                            param.RightItem = new QQuery(string.Empty, param.LeftColumn.ReferenceTable);
+                        if (param.LeftColumn.IsReference && param.RightItem == null)
+                            param.RightItem = (QItem)param.LeftColumn.ReferenceTable.QQuery(string.Empty);
                         editor = new CellEditorQuery();
                     }
                     else

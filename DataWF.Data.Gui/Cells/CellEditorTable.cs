@@ -66,7 +66,7 @@ namespace DataWF.Data.Gui
             get
             {
                 if ((listSource == null || ((IDBTableView)listSource).Disposed) && table != null)
-                    listSource = table.CreateItemsView(viewFilter, DBViewKeys.None, DBStatus.Actual | DBStatus.New | DBStatus.Edit);
+                    listSource = table.CreateView(viewFilter, DBViewKeys.None, DBStatus.Actual | DBStatus.New | DBStatus.Edit);
                 return listSource as IDBTableView;
             }
             set
@@ -102,10 +102,10 @@ namespace DataWF.Data.Gui
                         }
                     }
                     else
-                        obj = column.ReferenceTable.LoadItemById(obj);
+                        obj = column.ReferenceTable.LoadById<DBItem>(obj);
                 }
                 else if (table != null)
-                    obj = table.LoadItemById(obj);
+                    obj = table.LoadById<DBItem>(obj);
             return obj as DBItem;
         }
 
@@ -145,7 +145,7 @@ namespace DataWF.Data.Gui
                 return value;
             if (value is string)
             {
-                value = table.LoadItemById(value, DBLoadParam.None);
+                value = table.LoadById<DBItem>(value, DBLoadParam.None);
             }
             if (value is DBItem)
             {
@@ -203,16 +203,16 @@ namespace DataWF.Data.Gui
 
             if (Table.CodeKey != null)
             {
-                DBItem item = Table.LoadItemByCode(filter.Trim(), Table.CodeKey, Table.IsSynchronized ? DBLoadParam.None : DBLoadParam.Load | DBLoadParam.Synchronize);
+                DBItem item = Table.LoadByCode<DBItem>(filter.Trim(), Table.CodeKey, Table.IsSynchronized ? DBLoadParam.None : DBLoadParam.Load);
                 if (item != null)
                     list = new object[] { item };
             }
             if (list == null)
             {
-                var query = new QQuery("", Table);
-                query.SimpleFilter(EntryText);
+                var query = Table.QQuery("");
+                query.WhereViewColumns(EntryText);
                 TableEditor.Loader.LoadAsync(query);
-                list = query.Select();
+                list = query.Select<DBItem>();
             }
             return list;
         }

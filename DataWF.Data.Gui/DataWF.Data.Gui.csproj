@@ -32,10 +32,9 @@
     <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />
     <ProjectReference Include="..\External\Mono.Texteditor\Mono.TextEditor.csproj" />
     <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj" />
-    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DocumentFormat.OpenXml" Version="2.13.1" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.15.0" />
     <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1" />
   </ItemGroup>  
 </Project>

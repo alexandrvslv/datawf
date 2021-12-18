@@ -174,7 +174,7 @@ namespace DataWF.Data.Gui
             wait.Reset();
             string filter = table.GetStatusParam(DBStatus.New | DBStatus.Edit | DBStatus.Delete).Format();
             if (!wait.WaitOne(0))
-                foreach (DBItem row in table.LoadItems("where " + filter))
+                foreach (DBItem row in table.QQuery("where " + filter).Load<DBItem>())
                 {
                     if (wait.WaitOne(0))
                         break;
@@ -188,17 +188,15 @@ namespace DataWF.Data.Gui
                         {
                         }
                 }
-            using (QQuery qdelete = new QQuery("", (DBTable)table.LogTable))
+            IQQuery qdelete = table.LogTable.QQuery("");
+            qdelete.Where(table.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
+            qdelete.And(table.LogTable.StatusKey, CompareType.Equal, DBStatus.New);
+            foreach (DBItemLog log in qdelete.Load<DBItemLog>())
             {
-                qdelete.BuildParam(table.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
-                qdelete.BuildParam(table.LogTable.StatusKey, CompareType.Equal, DBStatus.New);
-                foreach (DBItemLog log in table.LogTable.LoadItems(qdelete, DBLoadParam.Synchronize))
-                {
-                    LogMap change = new LogMap { Table = table };
-                    //change.Logs.Add(log);
-                    change.RefreshChanges();
-                    rows.Add(change);
-                }
+                LogMap change = new LogMap { Table = table };
+                //change.Logs.Add(log);
+                change.RefreshChanges();
+                rows.Add(change);
             }
             //wait.Set();
             rows.OnCollectionChanged(NotifyCollectionChangedAction.Reset);

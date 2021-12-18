@@ -333,7 +333,7 @@ namespace DataWF.Data.Gui
 
         protected virtual DBColumn ParseDBColumn(string name)
         {
-            return Table?.ParseColumn(name);
+            return Table?.GetColumnOrProperty(name);
         }
 
         public override ILayoutCellEditor InitCellEditor(ILayoutCell cell)

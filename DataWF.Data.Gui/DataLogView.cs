@@ -312,17 +312,17 @@ namespace DataWF.Data.Gui
             Task.Run(() =>
             {
                 var logTable = filter?.Table.LogTable ?? Table?.LogTable;
-                using (var query = new QQuery("", (DBTable)logTable))
+                var query = logTable.QQuery("");
                 {
                     if (Mode == DataLogMode.Default || mode == DataLogMode.Document)
                     {
-                        query.BuildParam(logTable.BaseKey, CompareType.Equal, filter.PrimaryId).IsDefault = true;
+                        query.Where(logTable.BaseKey, CompareType.Equal, filter.PrimaryId);//TODO .IsDefault = true;
                     }
                     if (Date != null)
                     {
-                        query.BuildParam(logTable.DateCreateKey, CompareType.Between, interval);
+                        query.Where(logTable.DateCreateKey, CompareType.Between, interval);
                     }
-                    foreach (DBItemLog item in logTable.LoadItems(query))
+                    foreach (DBItemLog item in logTable.Load<DBItem>(query))
                         list.ListSource.Add(item);
                 }
                 if (mode == DataLogMode.Document)
@@ -334,14 +334,14 @@ namespace DataWF.Data.Gui
                         || (Table != filter.Table && refed.Table != Table))
                             continue;
 
-                        using (var query = new QQuery("", (DBTable)refed.Table.LogTable))
+                        var query2 = refed.Table.LogTable.QQuery("");
                         {
-                            query.BuildParam(refed.Table.LogTable.GetLogColumn(refed.Column), CompareType.Equal, filter.PrimaryId);
+                            query2.Where(refed.Table.LogTable.GetLogColumn(refed.Column), CompareType.Equal, filter.PrimaryId);
                             if (Date != null)
                             {
-                                query.BuildParam(refed.Table.LogTable.DateCreateKey, CompareType.Between, interval);
+                                query2.And(refed.Table.LogTable.DateCreateKey, CompareType.Between, interval);
                             }
-                            foreach (DBItemLog item in refed.Table.LogTable.LoadItems(query))
+                            foreach (DBItemLog item in refed.Table.LogTable.Load<DBItem>(query2))
                                 list.ListSource.Add(item);
                         }
                     }
@@ -382,7 +382,7 @@ namespace DataWF.Data.Gui
             var redo = list.Selection.GetItems<DBItemLog>();
             if (redo[0] != null && redo[0].Table.Access.GetFlag(AccessType.Update, GuiEnvironment.User))
             {
-                using (var transaction = new DBTransaction(GuiEnvironment.User))
+                using (var transaction = new DBTransaction(Table, GuiEnvironment.User))
                 {
                     var item = await redo[0].Redo(transaction);
                     transaction.Commit();

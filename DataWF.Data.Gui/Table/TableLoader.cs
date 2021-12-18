@@ -12,7 +12,7 @@ namespace DataWF.Data.Gui
     {
         private ManualResetEvent cancelEvent = new ManualResetEvent(true);
         private ManualResetEvent delayEvent = new ManualResetEvent(false);
-        private ConcurrentStack<QQuery> queries = new ConcurrentStack<QQuery>();
+        private ConcurrentStack<IQQuery> queries = new ConcurrentStack<IQQuery>();
         private DateTime changeProgressSpeed = DateTime.UtcNow;
         private IDBTableView view;
         private DBTransaction transaction = null;
@@ -111,7 +111,7 @@ namespace DataWF.Data.Gui
                 Application.Invoke(() => OnLoadColumns(arg));
         }
 
-        public async void LoadAsync(QQuery query)
+        public async void LoadAsync(IQQuery query)
         {
             Cancel();
             if (query != null && query.Table == view.Table)
@@ -131,7 +131,7 @@ namespace DataWF.Data.Gui
         private void Loader()
         {
             delayEvent.WaitOne(400);
-            if (queries.TryPop(out QQuery query))
+            if (queries.TryPop(out IQQuery query))
             {
                 cancelEvent.WaitOne();
                 try
@@ -140,7 +140,8 @@ namespace DataWF.Data.Gui
                     using (var temp = new DBTransaction(view.Table) { View = view })//DBLoadParam.GetCount | DBLoadParam.ReferenceRow
                     {
                         transaction = temp;
-                        View.Table.LoadItems(query, LoadParam).LastOrDefault();
+                        query.LoadParam = LoadParam;
+                        View.Table.Load<DBItem>(query).LastOrDefault();
                     }
                 }
                 catch (Exception e)

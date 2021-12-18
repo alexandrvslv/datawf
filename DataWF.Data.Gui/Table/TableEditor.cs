@@ -179,17 +179,17 @@ namespace DataWF.Data.Gui
                     }
                     foreach (var itemType in Table.ItemTypes.Values)
                     {
-                        var toolItemType = toolAdd.DropDownItems[itemType.Type.FullName];
+                        var toolItemType = toolAdd.DropDownItems[itemType.FullName];
                         if (toolItemType != null)
                         {
                             toolItemType.Visible = true;
                         }
                         else
                         {
-                            toolAdd.DropDownItems.Add(new ToolItemType((s, e) => ShowNewItem(((ToolItemType)s).Type.Create()))
+                            toolAdd.DropDownItems.Add(new ToolItemType((s, e) => ShowNewItem(Table.NewItem(DBUpdateState.Insert, true, (ToolItemType)s).Type))
                             {
-                                Name = itemType.Type.FullName,
-                                Text = itemType.Type.Name,
+                                Name = itemType.FullName,
+                                Text = itemType.Name,
                                 Type = itemType
                             });
                         }
@@ -248,7 +248,7 @@ namespace DataWF.Data.Gui
                 {
                     if (view != null && view.DefaultParam != null)
                     {
-                        view.DefaultParam.RightValue = value?.PrimaryId ?? 0;
+                        view.DefaultParam.SetRightValue(value?.PrimaryId ?? 0);
                         view.ResetFilter();
                         loader.LoadAsync();
                     }
@@ -366,7 +366,7 @@ namespace DataWF.Data.Gui
                         ListMode = true;
                         if (view != null && view.Table.IsCaching && !view.Table.IsSynchronized)
                         {
-                            loader.LoadAsync(new QQuery(string.Empty, view.Table));
+                            loader.LoadAsync(view.Table.QQuery(string.Empty));
                         }
                         break;
                     case TableEditorMode.Item:
@@ -426,7 +426,7 @@ namespace DataWF.Data.Gui
             toolReference.Text = tool.Text;
 
             if (tool.View == null)
-                tool.View = tool.Relation.Table.CreateItemsView("", DBViewKeys.Empty, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error);
+                tool.View = tool.Relation.Table.CreateView("", DBViewKeys.Empty, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error);
 
             tool.View.DefaultParam = new QParam(LogicType.And, tool.Relation.Column, CompareType.Equal, OwnerRow.PrimaryId);
             baseColumn = tool.Relation.Column;
@@ -528,7 +528,7 @@ namespace DataWF.Data.Gui
             if (((MenuItem)sender).Tag is DBColumn column)
             {
                 var editor = new TableEditor();
-                editor.Initialize(column.ReferenceTable.CreateItemsView("", DBViewKeys.None, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error), null, column, TableEditorMode.Reference, false);
+                editor.Initialize(column.ReferenceTable.CreateView("", DBViewKeys.None, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error), null, column, TableEditorMode.Reference, false);
                 editor.ItemSelect += OnRowSelected;
 
                 var cont = new ToolWindow
@@ -611,7 +611,7 @@ namespace DataWF.Data.Gui
 
                 LayoutField ff = (LayoutField)e.Cell;
                 if (e.Data != DBNull.Value)
-                    query.BuildParam(ff.Name, e.Data, QBuildParam.AutoLike | QBuildParam.SplitString);
+                    query.And(ff.Name, e.Data, QBuildParam.AutoLike | QBuildParam.SplitString);
 
                 foreach (LayoutField field in flist.Fields)
                 {
@@ -622,7 +622,7 @@ namespace DataWF.Data.Gui
                         continue;
                     if (string.IsNullOrEmpty(val.ToString()))
                         continue;
-                    query.BuildParam(field.Name, val, QBuildParam.AutoLike | QBuildParam.SplitString);
+                    query.And(field.Name, val, QBuildParam.AutoLike | QBuildParam.SplitString);
                 }
 
                 if (query.Parameters.Count == 0)
@@ -706,7 +706,7 @@ namespace DataWF.Data.Gui
                     {
                         foreach (var relation in selectedRow.Table.GetChildRelations())
                         {
-                            var childs = selectedRow.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
+                            var childs = selectedRow.GetReferencing(relation, DBLoadParam.Load).ToList();
                             if (childs.Count == 0)
                                 continue;
                             rowsText.Clear();
@@ -839,7 +839,7 @@ namespace DataWF.Data.Gui
                             if (MessageDialog.AskQuestion(ParentWindow, question) == Command.No)
                                 continue;
 
-                            var refrows = clonedRow.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Synchronize);
+                            var refrows = clonedRow.GetReferencing(relation, DBLoadParam.Load);
 
                             foreach (DBItem refrow in refrows)
                             {
@@ -902,7 +902,7 @@ namespace DataWF.Data.Gui
         private void ToolReportClick(object sender, EventArgs e)
         {
             var editor = new QueryEditor();
-            editor.Initialize(SearchState.Edit, new QQuery(string.Empty, Table), null, null);
+            editor.Initialize(SearchState.Edit, Table.QQuery(string.Empty), null, null);
             editor.ShowDialog(this);
             editor.Dispose();
         }
@@ -921,7 +921,7 @@ namespace DataWF.Data.Gui
             }
             else if (Table.IsSynchronized)
             {
-                Table.IsSynchronized = false;
+                Table.IsSynch = false;
             }
         }
 
@@ -934,7 +934,7 @@ namespace DataWF.Data.Gui
         {
             if (list.Selection.Count >= 2)
             {
-                var itemlist = new List<DBItem>(Table);
+                var itemlist = new List<DBItem>();
                 foreach (var item in list.Selection)
                     itemlist.Add((DBItem)item.Item);
                 var merge = new TableRowMerge
@@ -990,8 +990,8 @@ namespace DataWF.Data.Gui
         {
             Glyph = GlyphType.Plus;
         }
-
-        public DBItemType Type { get; set; }
+        
+        public Type Type { get; set; }
 
         public override void Localize()
         {

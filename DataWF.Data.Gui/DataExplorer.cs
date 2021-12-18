@@ -15,6 +15,7 @@ namespace DataWF.Data.Gui
     [Module(true)]
     public class DataExplorer : VPanel, IDockContent, IGlyph
     {
+        public static DBProvider Provider = new DBProvider();
         private ToolWindow itemWindow = new ToolWindow();
         private ListExplorer listExplorer = new ListExplorer();
         private DataTree dataTree;
@@ -94,7 +95,7 @@ namespace DataWF.Data.Gui
                 GenerateColumns = false,
                 AutoToStringFill = true,
                 CheckView = true,
-                ListSource = DBService.Changes
+                ListSource = Provider.Changes
             };
             changesView.ListInfo.ColumnsVisible = false;
 
@@ -129,7 +130,7 @@ namespace DataWF.Data.Gui
             itemWindow.Target = listExplorer;
             itemWindow.ButtonAcceptClick += AcceptOnActivated;
 
-            DBService.DBSchemaChanged += OnDBSchemaChanged;
+            Provider.DBSchemaChanged += OnDBSchemaChanged;
         }
 
 
@@ -179,7 +180,7 @@ namespace DataWF.Data.Gui
                 dialog.Filters.Add(new FileDialogFilter("Config(*.xml)", "*.xml"));
                 if (dialog.Run(ParentWindow))
                 {
-                    DBService.Schems.Deserialize(dialog.FileName, dataTree.SelectedDBItem);
+                    Provider.Deserialize(dialog.FileName, dataTree.SelectedDBItem);
                 }
             }
         }
@@ -217,7 +218,7 @@ namespace DataWF.Data.Gui
         {
             var query = new DataQuery
             {
-                Query = DBService.BuildChangesQuery(CurrentSchema),
+                Query = Provider.BuildChangesQuery(CurrentSchema),
                 CurrentSchema = CurrentSchema
             };
             query.ShowDialog(this);
@@ -240,7 +241,7 @@ namespace DataWF.Data.Gui
 
         public void HideChanges()
         {
-            DBService.Changes.Clear();
+            Provider.Changes.Clear();
             ChangesVisible = false;
         }
 
@@ -263,7 +264,7 @@ namespace DataWF.Data.Gui
             {
                 Mode = ExportMode.Patch,
                 Stamp = DateTime.Today.AddDays(-7),
-                Source = DBService.Schems.DefaultSchema,
+                Source = Provider.Schems.OfType<DBSchema>().FirstOrDefault(),
                 Target = new DBSchema()
                 {
                     Name = "patch",
@@ -287,16 +288,15 @@ namespace DataWF.Data.Gui
         private async void AcceptOnActivated(object sender, EventArgs e)
         {
             var value = listExplorer.Value;
-            if (value is DBSchema)
+            if (value is DBSchema valueSchema)
             {
-                var schema = (DBSchema)value;
-                DBService.Schems.Add(schema);
-                if (schema.Connection != null)
+                Provider.Schems.Add(valueSchema);
+                if (valueSchema.Connection != null)
                 {
                     var text = new StringBuilder();
-                    text.AppendLine(schema.FormatSql(DDLType.Create));
+                    text.AppendLine(valueSchema.FormatSql(DDLType.Create));
                     text.AppendLine("go");
-                    text.AppendLine(schema.FormatSql());
+                    text.AppendLine(valueSchema.FormatSql());
 
                     var query = new DataQuery { Query = text.ToString() };
                     GuiService.Main.DockPanel.Put(query);
@@ -310,54 +310,54 @@ namespace DataWF.Data.Gui
                     Connection = connection
                 };
                 value = schema;
-                DBService.Schems.Add(schema);
+                Provider.Schems.Add(schema);
             }
-            else if (value is DBSequence)
+            else if (value is DBSequence sequence)
             {
-                ((DBSequence)value).Schema.Sequences.Add((DBSequence)value);
+                sequence.Schema.Sequences.Add(sequence);
             }
-            else if (value is DBProcedure)
+            else if (value is DBProcedure procedure)
             {
-                ((DBProcedure)value).Schema.Procedures.Add((DBProcedure)value);
+                procedure.Schema.Procedures.Add(procedure);
             }
-            else if (value is DBProcParameter)
+            else if (value is DBProcParameter parameter)
             {
-                ((DBProcParameter)value).Procedure.Parameters.Add((DBProcParameter)value);
+                parameter.Procedure.Parameters.Add(parameter);
             }
-            else if (value is DBTable)
+            else if (value is DBTable table)
             {
-                ((DBTable)value).Schema.Tables.Add((DBTable)value);
+                table.Schema.Tables.Add(table);
             }
-            else if (value is DBTableGroup)
+            else if (value is DBTableGroup tableGroup)
             {
-                ((DBTableGroup)value).Schema.TableGroups.Add((DBTableGroup)value);
+                tableGroup.Schema.TableGroups.Add(tableGroup);
             }
-            else if (value is DBColumnGroup)
+            else if (value is DBColumnGroup columnGroup)
             {
-                ((DBColumnGroup)value).Table.ColumnGroups.Add((DBColumnGroup)value);
+                columnGroup.Table.ColumnGroups.Add(columnGroup);
             }
-            else if (value is DBColumn)
+            else if (value is DBColumn column)
             {
-                ((DBColumn)value).Table.Columns.Add((DBColumn)value);
+                column.Table.Columns.Add(column);
             }
-            else if (value is DBIndex)
+            else if (value is DBIndex index)
             {
-                ((DBIndex)value).Table.Indexes.Add((DBIndex)value);
+                index.Table.Indexes.Add(index);
             }
-            else if (value is DBForeignKey)
+            else if (value is DBForeignKey foreignKey)
             {
-                ((DBForeignKey)value).Table.Foreigns.Add((DBForeignKey)value);
+                foreignKey.Table.Foreigns.Add(foreignKey);
             }
-            else if (value is DBConstraint)
+            else if (value is DBConstraint constraint)
             {
-                ((DBConstraint)value).Table.Constraints.Add((DBConstraint)value);
+                constraint.Table.Constraints.Add(constraint);
             }
 
             dataTree.SelectedDBItem = value as DBSchemaItem;
 
-            if (value is DBSchema)
+            if (value is DBSchema selectedSchema)
             {
-                await ((DBSchema)value).GenerateFromTablesInfoAsync();
+                await selectedSchema.GenerateFromTablesInfoAsync();
             }
         }
 
@@ -418,7 +418,7 @@ namespace DataWF.Data.Gui
                   {
                       var schema = new DBSchema("NewSchema");
                       schema.Generate(assemblyList.Where(p => p.Check).Select(p => p.Assembly));
-                      DBService.Schems.Add(schema);
+                      Provider.Schems.Add(schema);
 
                       ShowNewItem(schema);
                   };
@@ -542,9 +542,9 @@ namespace DataWF.Data.Gui
 
         private void ToolReportClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedDBItem is DBTable)
+            if (dataTree.SelectedDBItem is DBTable table)
             {
-                var query = new QQuery { Table = (DBTable)dataTree.SelectedDBItem };
+                var query = table.QQuery();
                 var projecth = new ProjectHandler { Project = query };
                 GuiService.Main.CurrentProject = projecth;
             }
@@ -554,14 +554,14 @@ namespace DataWF.Data.Gui
         {
             ShowNewItem(new DBSchema()
             {
-                Connection = new DBConnection() { Name = "nc" + DBService.Connections.Count },
+                Connection = new DBConnection() { Name = "nc" + Provider.Connections.Count },
                 Name = "new"
             });
         }
 
         private void ToolAddConnectionClick(object sender, EventArgs e)
         {
-            ShowNewItem(new DBConnection() { Name = "nc" + DBService.Connections.Count });
+            ShowNewItem(new DBConnection() { Name = "nc" + Provider.Connections.Count });
         }
 
         private void ToolAddTableGroupClick(object sender, EventArgs e)

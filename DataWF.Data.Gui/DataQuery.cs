@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -61,7 +62,7 @@ namespace DataWF.Data.Gui
                 Editor = new CellEditorList
                 {
                     DataType = typeof(DBSchema),
-                    DataSource = DBService.Schems
+                    DataSource = DataExplorer.Provider.Schems
                 }
             };
             toolSchems.Field.BindData(this, nameof(CurrentSchema));
@@ -112,7 +113,7 @@ namespace DataWF.Data.Gui
             Localize();
 
             toolFind = new FindWindow { Editor = queryText };
-            CurrentSchema = DBService.Schems.DefaultSchema;
+            CurrentSchema = DataExplorer.Provider.Schems.OfType<DBSchema>().FirstOrDefault();
         }
 
         public string Query
@@ -243,11 +244,12 @@ namespace DataWF.Data.Gui
                     try
                     {
                         arg.Table.Access = null;
-                        using (transaction.Reader = (DbDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader))
+                        using (var reader = transaction.ExecuteReader(command))
                         {
-                            arg.Table.CheckColumns(transaction);
+                            var dbReader = new DBReader(transaction, arg.Table, null, reader, DBLoadParam.NoAttach);
+                            
                             Application.Invoke(() => list.ResetColumns());
-                            while (transaction.Reader.Read())
+                            while (reader.Read())
                             {
                                 if (arg.Cancel)
                                 {
@@ -256,16 +258,17 @@ namespace DataWF.Data.Gui
                                 }
                                 if (arg.Table != null)
                                 {
-                                    arg.Table.Add(arg.Table.LoadItemFromReader(transaction));
+                                    var item = dbReader.Load();
+                                    arg.Table.Add(item);
                                     flag = arg.Table.Count;
                                 }
                                 else
                                 {
-                                    flag = transaction.Reader.GetValue(0);
+                                    flag = reader.GetValue(0);
                                     break;
                                 }
                             }
-                            transaction.Reader.Close();
+                            reader.Close();
                         }
                         if (GuiService.Main != null)
                             GuiService.Main.SetStatus(new StateInfo("Data Query", "Execution complete!", s));
@@ -329,7 +332,7 @@ namespace DataWF.Data.Gui
                 return;
             table.Schema = CurrentSchema;
             if (list.ListSource == null)
-                list.ListSource = table.CreateView();
+                list.ListSource = table.CreateView("", DBViewKeys.None, DBStatus.Empty);
             table.Clear();
             table.Columns.Clear();
             table.BlockSize = 5000;

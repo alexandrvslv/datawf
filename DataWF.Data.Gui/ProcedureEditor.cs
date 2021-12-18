@@ -209,7 +209,7 @@ namespace DataWF.Data.Gui
                 Name = GetName(procedure);
                 Text = procedure.ToString();
                 FieldTypeValueChanged(null, null);
-                toolSave.Sensitive = !procedure.IsSynchronized;
+                //TODO toolSave.Sensitive = !procedure.IsSynchronized;
             }
         }
 
@@ -231,7 +231,7 @@ namespace DataWF.Data.Gui
             {
                 Text = procedure.ToString();
             }
-            toolSave.Sensitive = !procedure.IsSynchronized;
+            //TODO toolSave.Sensitive = !procedure.IsSynchronized;
         }
 
         private void OnSourceTextChanged(object sender, EventArgs e)
@@ -339,7 +339,7 @@ namespace DataWF.Data.Gui
             if (list.SelectedItem is System.CodeDom.Compiler.CompilerError error)
             {
                 string code = System.IO.Path.GetFileNameWithoutExtension(error.FileName);
-                DBProcedure p = DBService.Schems.ParseProcedure(code);
+                DBProcedure p = DataExplorer.Provider.ParseProcedure(code);
                 if (GuiService.Main == null)
                     Select(error.Column, error.Line);
                 else if (p != null)

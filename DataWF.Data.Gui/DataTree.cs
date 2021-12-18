@@ -293,12 +293,12 @@ namespace DataWF.Data.Gui
 
         private void InitSchems()
         {
-            DBService.Schems.ItemsListChanged -= OnItemsListChanged;
+            DataExplorer.Provider.Schems.CollectionChanged -= OnItemsListChanged;
             if (ShowSchema)
-                DBService.Schems.ItemsListChanged += OnItemsListChanged;
+                DataExplorer.Provider.Schems.CollectionChanged += OnItemsListChanged;
 
             Nodes.Sense = false;
-            foreach (var schema in DBService.Schems)
+            foreach (var schema in DataExplorer.Provider.Schems.OfType<DBSchema>())
             {
                 CheckItem(schema, null, ShowSchema);
             }
@@ -618,7 +618,7 @@ namespace DataWF.Data.Gui
 
         protected override void Dispose(bool disposing)
         {
-            DBService.Schems.ItemsListChanged -= OnItemsListChanged;
+            DataExplorer.Provider.Schems.CollectionChanged -= OnItemsListChanged;
             base.Dispose(disposing);
         }
     }

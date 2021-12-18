@@ -43,7 +43,7 @@ namespace DataWF.Data.Gui
             };
             GuiEnvironment.CellEditorFabric[typeof(DBConnection)] = (cell) =>
             {
-                return new CellEditorListEditor() { DataSource = DBService.Connections };
+                return new CellEditorListEditor() { DataSource = DataExplorer.Provider.Schems };
             };
             GuiEnvironment.CellEditorFabric[typeof(DBSystem)] = (cell) =>
             {

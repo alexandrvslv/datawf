@@ -3,6 +3,7 @@ using DataWF.Gui;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Xwt;
 
 namespace DataWF.Data.Gui
@@ -273,7 +274,7 @@ namespace DataWF.Data.Gui
                 AllowCheck = true,
                 CheckRecursive = true,
                 DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table,
-                DataFilter = DBService.Schems.DefaultSchema
+                DataFilter = DataExplorer.Provider.Schems.OfType<DBSchema>().FirstOrDefault()
             };
 
             var window = new ToolWindow()
@@ -293,7 +294,7 @@ namespace DataWF.Data.Gui
                         tables.Add(node.Item as DBTable);
                     }
                 }
-                tables.Sort(new Comparison<DBTable>(DBService.CompareDBTable));
+                tables.Sort(new Comparison<DBTable>(DBProvider.CompareDBTable));
                 status.Type = ExportProgressType.Initialize;
                 export.Initialize(status, tables);
             };
