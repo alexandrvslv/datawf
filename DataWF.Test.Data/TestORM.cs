@@ -79,8 +79,6 @@ namespace DataWF.Test.Data
 
         public async Task Generate(DBConnection connection)
         {
-            Assert.AreEqual(true, connection.CheckConnection(true), $"Connection Fail!");
-
             var employerTable = schema.Employer;
             var employerReferenceTable = schema.EmployerReference;
             var positionTable = schema.Position;
@@ -142,6 +140,8 @@ namespace DataWF.Test.Data
                 Directory.Delete(connection.GetFilesPath(), true);
             schema.Connection = connection;
 
+            //Assert.AreEqual(true, connection.CheckConnection(true), $"Connection Fail!");
+
             schema.ExecuteDropDatabase();
             schema.ExecuteCreateDatabase();
 
@@ -164,7 +164,7 @@ namespace DataWF.Test.Data
                 String = "Nullable Default Values",
                 BoolNullable = false,
                 //DateTime = System.Data.SqlTypes.SqlDateTime.MinValue.Value,//MSSQL
-                DateTimeNullable = new DateTime(2000, 01, 01),
+                DateTimeNullable = new DateTime(2000, 01, 01, 0, 0, 0, DateTimeKind.Local),
                 TimeSpanNullable = TimeSpan.Zero,
                 ByteNullable = 0,
                 IntNullable = 0,

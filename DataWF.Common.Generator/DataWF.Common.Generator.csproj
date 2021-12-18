@@ -21,14 +21,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NSwag.Core" Version="13.13.2" GeneratePathProperty="true" PrivateAssets="all" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" GeneratePathProperty="true" PrivateAssets="all" />
-    <PackageReference Include="NJsonSchema" Version="10.5.2" GeneratePathProperty="true" PrivateAssets="all" />
-    <PackageReference Include="Namotion.Reflection" Version="2.0.3" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="NSwag.Core" Version="13.15.5" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="NJsonSchema" Version="10.6.6" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Namotion.Reflection" Version="2.0.9" GeneratePathProperty="true" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" GeneratePathProperty="true" PrivateAssets="all" />
   </ItemGroup>
   <!--<ItemGroup>

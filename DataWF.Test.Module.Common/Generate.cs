@@ -8,19 +8,21 @@ using System.Threading.Tasks;
 
 namespace DataWF.Test.Module.Common
 {
-    [TestFixture()]
+    [Provider]
+    [SchemaEntry(typeof(CommonSchema))]
+    public partial class TestProvider : DBProvider
+    { }
+
+   [TestFixture()]
     public class Generate
     {
         [Test()]
         public async Task Initialize()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var provider = new DBProvider<CommonSchema>()
-            {
-                SchemaName = "common_database"
-            };
+            var provider = new TestProvider();
 
-            var schema = await provider.CreateNew<CommonSchema>();
+            var schema = provider.CommonSchema;
 
             var bookTable = schema.Book;
             var userGroupTable = schema.UserGroup;
@@ -67,7 +69,7 @@ namespace DataWF.Test.Module.Common
                 Password = "UserCommon1!",
                 Position = position,
                 AuthType = UserAuthType.Internal,
-                Access = new AccessValue(new[] { new AccessItem(group, AccessType.Create) })
+                Access = new AccessValue(new[] { new AccessItem(group, AccessType.Create) }, provider)
             };
             await user.Save();
 

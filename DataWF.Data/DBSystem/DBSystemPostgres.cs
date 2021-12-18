@@ -33,6 +33,11 @@ namespace DataWF.Data
 {
     public class DBSystemPostgres : DBSystem
     {
+        static DBSystemPostgres()
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        }
+
         public DBSystemPostgres()
         {
             Name = "Postgres";
@@ -85,7 +90,7 @@ namespace DataWF.Data
                     nConnection.NoResetOnClose = true;
                 }
             }
-            nConnection.IncludeErrorDetails = true;
+            nConnection.IncludeErrorDetail = true;
             nConnection.MaxPoolSize = 400;
             nConnection.ConnectionIdleLifetime = 200;
             nConnection.Timeout = 100;

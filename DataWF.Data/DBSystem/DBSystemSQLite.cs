@@ -69,8 +69,10 @@ namespace DataWF.Data
             var file = schema.Connection.DataBase;
             if (File.Exists(file))
             {
-                try { File.Delete(file); }
-                catch (Exception ex) { Helper.OnException(ex); }
+                schema.Connection.ClearConnectionCache();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                File.Delete(file);                
             }
         }
 
