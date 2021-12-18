@@ -131,7 +131,7 @@ namespace DataWF.Gui
                 if (accessable != null)
                 {
                     if (accessable.Access == null)
-                        accessable.Access = new AccessValue();
+                        accessable.Access = new AccessValue(null);
                     Access = (AccessValue)accessable.Access;
                     Readonly = !access.GetFlag(AccessType.Update, user) && !Access.GetFlag(AccessType.Admin, user);
                 }

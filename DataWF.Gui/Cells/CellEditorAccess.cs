@@ -7,6 +7,7 @@ namespace DataWF.Gui
     public class CellEditorAccess : CellEditorText
     {
         AccessValue temp;
+        public static IAccessProvider Provider;
 
         public CellEditorAccess()
             : base()
@@ -33,7 +34,7 @@ namespace DataWF.Gui
                 temp = (AccessValue)value;
             if (value is byte[])
             {
-                temp = new AccessValue();
+                temp = new AccessValue(Provider);
                 temp.Deserialize((byte[])value);
             }
             if (temp != null)
