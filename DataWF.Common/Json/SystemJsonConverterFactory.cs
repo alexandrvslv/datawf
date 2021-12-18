@@ -19,12 +19,27 @@ namespace DataWF.Common
 
         public override bool CanConvert(Type typeToConvert)
         {
-            return Provider.GetTable(typeToConvert) != null;
+            return Provider.GetTable(typeToConvert) != null
+                || (typeToConvert.IsClass && !TypeHelper.IsEnumerable(typeToConvert)
+                    && typeToConvert != typeof(string)
+                    && typeToConvert != typeof(byte[]));
         }
 
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
         {
-            return (JsonConverter)Provider.GetTable(typeToConvert)?.Converter;
+            var table = Provider.GetTable(typeToConvert);
+            if (table != null)
+            {
+                return (JsonConverter)table.Converter;
+            }
+            else if (typeToConvert.IsClass)
+            {
+                return (JsonConverter)TypeHelper.GetClassSerializer(typeToConvert);
+            }
+            else
+            {
+                return options.GetConverter(typeToConvert);
+            }
         }
     }
 }

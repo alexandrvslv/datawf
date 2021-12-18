@@ -143,7 +143,7 @@ namespace DataWF.Common
                                 {
                                     using (var encodedStream = GetEncodedStream(response, responseStream))
                                     {
-                                        if (mediaType.Equals("application/octet-stream"))
+                                        if (string.Equals(mediaType, "application/octet-stream", StringComparison.Ordinal))
                                         {
                                             var headers = GetHeaders(response);
                                             (string fileName, int fileSize) = GetFileInfo(headers);

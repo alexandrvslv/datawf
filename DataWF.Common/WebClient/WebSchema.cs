@@ -40,7 +40,7 @@ namespace DataWF.Common
             JsonSettings = new JsonSerializerOptions
             {
 #if DEBUG
-            WriteIndented = true,
+                WriteIndented = true,
 #endif
                 DefaultBufferSize = 64 * 1024,
                 AllowTrailingCommas = true,
