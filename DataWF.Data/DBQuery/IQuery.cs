@@ -104,7 +104,8 @@ namespace DataWF.Data
         T FirstOrDefault<T>(DBTransaction transaction = null) where T : DBItem;
 
         T FirstOrDefault<T>(Func<T, bool> predicate, DBTransaction transaction = null) where T : DBItem;
-
+        
+        void Parse(string test);
     }
 
 }

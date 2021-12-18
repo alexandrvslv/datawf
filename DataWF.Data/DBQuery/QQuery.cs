@@ -448,8 +448,6 @@ namespace DataWF.Data
             return i;
         }
 
-
-
         public void Parse(string query)
         {
             QueryText = query;
@@ -826,6 +824,8 @@ namespace DataWF.Data
                                                 prefix.Clear();
                                             }
                                         }
+                                        if (parameter.LeftItem == null)
+                                            throw new Exception($"Column '{wordStr}' not found in table {Table}");
                                     }
                                     else// if (parameter.Column != null)
                                     {
