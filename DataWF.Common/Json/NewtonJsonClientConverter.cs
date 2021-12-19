@@ -302,7 +302,7 @@ namespace DataWF.Common
                 }
                 else if (value is IList list)
                 {
-                    WriteArray(jwriter, list, serializer);
+                    WriteList(jwriter, list, serializer);
                 }
                 else
                 {
@@ -321,7 +321,7 @@ namespace DataWF.Common
             }
             else if (item is IList list)
             {
-                WriteArray(jwriter, list, serializer);
+                WriteList(jwriter, list, serializer);
             }
             else
             {
@@ -329,7 +329,7 @@ namespace DataWF.Common
             }
         }
 
-        protected virtual void WriteArray(JsonWriter jwriter, IList list, JsonSerializer serializer)
+        protected virtual void WriteList(JsonWriter jwriter, IList list, JsonSerializer serializer)
         {
             jwriter.WriteStartArray();
             var listInfo = Serialization.Instance.GetTypeInfo(list.GetType());

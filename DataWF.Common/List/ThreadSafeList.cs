@@ -121,7 +121,7 @@ namespace DataWF.Common
                 items.AsSpan(index, copyCount).CopyTo(items.AsSpan(index + 1, copyCount));
             }
             _count++;
-            items[index] = item;
+            items.Array[index] = item;
         }
 
         public int IndexOf(T item)
