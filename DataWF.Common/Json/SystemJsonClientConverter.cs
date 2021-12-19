@@ -80,8 +80,11 @@ namespace DataWF.Common
                         if (typeId != Table.TypeId)
                         {
                             var table = Table.Schema.GetTable(typeof(T), typeId);
-
+#if NETSTANDARD2_0
+                            return (T)JsonSerializer.Deserialize(ref jreader, table.ItemType, options);
+#else
                             return (T)table.Converter.Read(ref jreader, item, options);
+#endif
                         }
                         continue;
                     }
@@ -227,7 +230,11 @@ namespace DataWF.Common
                 }                
                 while (jreader.Read() && jreader.TokenType != JsonTokenType.EndArray)
                 {
+#if NETSTANDARD2_0
+                    var item = Read(ref jreader, itemType, options, null);
+#else
                     var item = client.Converter.Read(ref jreader, itemType, options);
+#endif
                     if (item is ISynchronized synched)
                     {
                         referenceList.Add(item);
