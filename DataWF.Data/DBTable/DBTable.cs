@@ -241,15 +241,7 @@ namespace DataWF.Data
             get => blockSize;
             set
             {
-                var i = 1;
-                var temp = value;
-                do
-                {
-                    i++;
-                    temp = temp / 2;
-                }
-                while (temp > 1);
-                temp = (int)Math.Pow(2, i);
+                int temp = BinaryArraySize(value);
                 if (temp != blockSize)
                 {
                     blockSize = temp;
@@ -263,6 +255,20 @@ namespace DataWF.Data
                     }
                 }
             }
+        }
+
+        private static int BinaryArraySize(int value)
+        {
+            var i = 1;
+            var temp = value;
+            do
+            {
+                i++;
+                temp = temp / 2;
+            }
+            while (temp > 1);
+            temp = (int)Math.Pow(2, i);
+            return temp;
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -428,6 +434,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Category("Database")]
         public bool IsCaching
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => (Keys & DBTableKeys.Caching) != 0;
             set
             {
@@ -449,6 +456,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Category("Database")]
         public bool IsReadOnly
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => (Keys & DBTableKeys.ReadOnly) != 0;
             set
             {
@@ -470,6 +478,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Category("Database")]
         public bool IsPrivate
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => (Keys & DBTableKeys.Private) != 0;
             set
             {
@@ -487,10 +496,11 @@ namespace DataWF.Data
                 }
             }
         }
-
+        
         [XmlIgnore, JsonIgnore, Category("Database")]
         public virtual bool IsLoging
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => (Keys & DBTableKeys.NoLogs) == 0;
             set
             {
@@ -509,6 +519,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Category("Database")]
         public virtual bool IsVirtual
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => (Keys & DBTableKeys.Virtual) != 0;
             set
             {
@@ -886,15 +897,17 @@ namespace DataWF.Data
             RowUpdated?.Invoke(this, e);
         }
 
-        protected internal PullHandler GetNextHandler()
+        protected internal PullHandler GetNextHandler(out int rowId)
         {
             if (IsVirtual)
-                return ((DBTable)ParentTable).GetNextHandler();
+                return ((DBTable)ParentTable).GetNextHandler(out rowId);
             if (FreeHandlers.TryDequeue(out var handler))
             {
+                rowId = handler.GetSeqence(BlockSize);
                 return handler;
             }
-            return PullHandler.FromSeqence(NextHash(), BlockSize);
+            rowId = NextHash();
+            return PullHandler.FromSeqence(rowId, BlockSize);
         }
 
         protected internal int NextHash()

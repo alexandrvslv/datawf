@@ -8,14 +8,14 @@ namespace DataWF.Common
     public class PullArray<T> : GenericPull<T>, IEnumerable<T>
     {
         protected T[][] array = new T[16][];
-        private int maxIndex;
+        private PullHandler maxIndex;
 
         public PullArray(int blockSize) : base(blockSize)
         { }
 
         public override int Capacity => array.Length * blockSize;
 
-        public int Count => maxIndex;
+        public int Count => maxIndex.GetSeqence(blockSize);
 
         public override void Clear()
         {
@@ -84,7 +84,7 @@ namespace DataWF.Common
                 array[handler.Block] = arrayBlock = new T[blockSize];
             }
             arrayBlock[handler.BlockIndex] = value;
-            maxIndex = Math.Max(maxIndex, handler.GetSeqence(blockSize));
+            maxIndex = PullHandler.Max(maxIndex, handler);
         }
 
         private void Reallocate(int minCount)
@@ -101,7 +101,8 @@ namespace DataWF.Common
 
         public IEnumerator<T> GetEnumerator()
         {
-            for (int i = 0; i <= maxIndex; i++)
+            var sequence = maxIndex.GetSeqence(blockSize);
+            for (int i = 0; i <= sequence; i++)
             {
                 yield return GetValue(i);
             }

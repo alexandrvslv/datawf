@@ -122,15 +122,20 @@ namespace DataWF.Data
             {
                 baseItem = value;
                 Build((DBTable)value.Table.LogTable);
-                LogType = value.UpdateState.HasFlag(DBUpdateState.Insert)
-                              ? DBLogType.Insert : value.UpdateState.HasFlag(DBUpdateState.Update)
-                              ? DBLogType.Update : value.UpdateState.HasFlag(DBUpdateState.Delete)
-                              ? DBLogType.Delete : DBLogType.None;
+                LogType = GetLogType(value.UpdateState);
                 foreach (var column in Table.GetLogColumns())
                 {
                     column.Copy(value, column.TargetColumn, this);
                 }
             }
+        }
+
+        private static DBLogType GetLogType(DBUpdateState updateState)
+        {
+            return (updateState & DBUpdateState.Insert) == DBUpdateState.Insert
+                ? DBLogType.Insert : (updateState & DBUpdateState.Update) == DBUpdateState.Update
+                ? DBLogType.Update : (updateState & DBUpdateState.Delete) == DBUpdateState.Delete
+                ? DBLogType.Delete : DBLogType.None;
         }
 
         [XmlIgnore, JsonIgnore]

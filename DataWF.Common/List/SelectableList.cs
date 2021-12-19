@@ -770,6 +770,7 @@ namespace DataWF.Common
             return GetItemInternal(index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual T GetItemInternal(int index)
         {
             return items[index];
@@ -941,7 +942,7 @@ namespace DataWF.Common
             return GetEnumerator();
         }
 
-        public virtual OneListEnumerator<T> GetEnumerator()
+        public OneListEnumerator<T> GetEnumerator()
         {
             return items.Count == 0 ? OneListEnumerator<T>.Empty : new OneListEnumerator<T>(items);
         }

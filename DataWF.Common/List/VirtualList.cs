@@ -143,7 +143,7 @@ namespace DataWF.Common
             return base.Contains(item) || (IndexOf(item) >= 0);
         }
 
-        public override OneListEnumerator<T> GetEnumerator()
+        public new OneListEnumerator<T> GetEnumerator()
         {
             var count = Count;
             return count == 0 

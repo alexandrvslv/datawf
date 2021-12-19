@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
@@ -213,6 +214,7 @@ namespace DataWF.Data
 
         public CompareType Comparer
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => comparer;
             set
             {

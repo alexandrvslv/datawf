@@ -86,7 +86,11 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public bool Attached => (state & DBItemState.Attached) == DBItemState.Attached;
+        public bool Attached
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (state & DBItemState.Attached) == DBItemState.Attached;
+        }
 
         public ref readonly PullHandler GetRefHandler() => ref handler;
 
@@ -214,8 +218,7 @@ namespace DataWF.Data
                 if (table != value)
                 {
                     table = (DBTable)value.GetVirtualTable(GetType());
-                    handler = table.GetNextHandler();
-                    rowId = handler.GetSeqence(table.BlockSize);
+                    handler = table.GetNextHandler(out rowId);                    
                 }
             }
         }
@@ -413,7 +416,7 @@ namespace DataWF.Data
         {
             if (oldHandler == null && (UpdateState & DBUpdateState.Insert) == 0)
             {
-                var newHandler = table.GetNextHandler();
+                var newHandler = table.GetNextHandler(out _);
                 CopyTo(newHandler);
                 //swap
                 oldHandler = handler;

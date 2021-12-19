@@ -8,6 +8,14 @@ namespace DataWF.Common
     public readonly struct PullHandler : IEquatable<PullHandler>, IComparable<PullHandler>
     {
         public static readonly PullHandler Zero = new PullHandler(0, 0);
+
+        public static PullHandler Max(PullHandler a, PullHandler b)
+        {
+            return a.Block > b.Block ? a
+                : a.Block < b.Block ? b
+                : a.BlockIndex >= b.BlockIndex ? a : b;
+        }
+
         [FieldOffset(0)]
         public readonly int BlockIndex;
         [FieldOffset(4)]
