@@ -58,7 +58,7 @@ namespace DataWF.Common
         Task<object> GenerateId();
         Task<bool> DeleteAsync(object id);
         Task<IEnumerable> SearchAsync(string filter, HttpPageSettings list);
-        Task<IEnumerable> GetAsync(HttpPageSettings list);
+        Task<IEnumerable> GetAllAsync(HttpPageSettings list);
         Task<object> GetAsync(object id);
         Task<object> CopyAsync(object id);
         Task<object> PostAsync(object value);
@@ -82,7 +82,7 @@ namespace DataWF.Common
         Task<bool> Delete(T item);
         LoadProgress<T> Load(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
         Task<List<T>> SearchAsync(string filter, HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
-        Task<List<T>> GetAsync(HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
+        Task<List<T>> GetAllAsync(HttpPageSettings list, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> GetAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> CopyAsync(object id, HttpJsonSettings settings, ProgressToken progressToken);
         Task<T> PostAsync(T value, HttpJsonSettings settings, ProgressToken progressToken);
