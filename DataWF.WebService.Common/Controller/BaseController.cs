@@ -45,8 +45,8 @@ namespace DataWF.WebService.Common
 
         public IUserIdentity CurrentUser => User.GetCommonUser();
 
-        [HttpGet]
-        public ValueTask<ActionResult<IEnumerable<T>>> Get()
+        [HttpGet("GetAll")]
+        public ValueTask<ActionResult<IEnumerable<T>>> GetAll()
         {
             return Search(string.Empty);
         }

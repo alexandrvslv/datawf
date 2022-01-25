@@ -382,14 +382,14 @@ namespace DataWF.Common
 
         private async Task<List<T>> LoadAsync(HttpPageSettings pages, HttpJsonSettings json, ProgressToken token)
         {
-            var result = await GetAsync(pages, json, token);
+            var result = await GetAllAsync(pages, json, token);
             IsSynchronized = true;
             return result;
         }
 
-        public virtual Task<List<T>> GetAsync(HttpPageSettings pages, HttpJsonSettings json, ProgressToken progressToken) => Task.FromResult<List<T>>(null);
+        public virtual Task<List<T>> GetAllAsync(HttpPageSettings pages, HttpJsonSettings json, ProgressToken progressToken) => Task.FromResult<List<T>>(null);
 
-        public async Task<IEnumerable> GetAsync(HttpPageSettings pages) => await GetAsync(pages, HttpJsonSettings.Default, ProgressToken.None);
+        public async Task<IEnumerable> GetAllAsync(HttpPageSettings pages) => await GetAllAsync(pages, HttpJsonSettings.Default, ProgressToken.None);
 
         public virtual Task<List<T>> SearchAsync(string filter, HttpPageSettings pages, HttpJsonSettings json, ProgressToken progressToken) => Task.FromResult<List<T>>(null);
 
