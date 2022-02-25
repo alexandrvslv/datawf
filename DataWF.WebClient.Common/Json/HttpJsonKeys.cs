@@ -9,6 +9,7 @@ namespace DataWF.Common
         Refing = 1,
         Refed = 2,
         Ref = 3,
+        GetFullJson=4,
         Full = Refing | Refed | Ref
     }
 }

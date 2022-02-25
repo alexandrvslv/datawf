@@ -12,6 +12,7 @@ namespace DataWF.WebClient.Common
         public static readonly string XPageIndex = "X-Page-Index";
         public static readonly string XPageSize = "X-Page-Size";
         public static readonly string XPageCount = "X-Page-Count";
+        public static readonly string XGetRef = "X-Get-Ref";
         private int count;
 
         public HttpPageSettings()

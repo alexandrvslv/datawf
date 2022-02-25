@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -19,6 +20,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.WebService.Common
 {
+
 
     [ResponseCache(CacheProfileName = "Never")]
     [LoggerAndFormatter]
@@ -37,6 +39,7 @@ namespace DataWF.WebService.Common
 
         protected DBTable<T> table;
 
+
         public BaseController()
         {
             Interlocked.Increment(ref MemoryLeak.Controllers.DiagnosticsController.Requests);
@@ -44,6 +47,29 @@ namespace DataWF.WebService.Common
         }
 
         public IUserIdentity CurrentUser => User.GetCommonUser();
+
+        private string ToLowerFirstChar(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            return char.ToLower(input[0]) + input.Substring(1);
+        }
+
+        [HttpGet("GetColumns")]
+        [AllowAnonymous]
+        public IActionResult GetColumns()
+        {
+            var path = Path.Combine("locale.xml");
+            var properties = typeof(T).GetProperties();
+            var obj = new JObject();
+
+            foreach (var item in properties)
+            {
+                obj[ToLowerFirstChar(item.Name)] = ToLowerFirstChar(item.Name);
+            }
+            return Ok(obj.ToString());
+        }
 
         [HttpGet]
         public ValueTask<ActionResult<IEnumerable<T>>> Get()
