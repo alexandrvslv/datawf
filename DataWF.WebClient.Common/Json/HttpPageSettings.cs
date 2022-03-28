@@ -79,7 +79,11 @@ namespace DataWF.WebClient.Common
         {
             ListCount = result.Count();
 
-            if (Mode == HttpPageMode.Page)
+            if (Mode == HttpPageMode.SkipTake)
+            {
+                return result.Skip(ListFrom).Take(ListTo);
+            }
+            else if (Mode == HttpPageMode.Page)
             {
                 ListFrom = PageIndex * PageSize;
                 ListTo = (ListFrom + PageSize) - 1;
@@ -109,6 +113,7 @@ namespace DataWF.WebClient.Common
     public enum HttpPageMode
     {
         List,
-        Page
+        Page,
+        SkipTake
     }
 }

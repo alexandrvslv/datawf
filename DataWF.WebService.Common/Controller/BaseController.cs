@@ -139,6 +139,47 @@ namespace DataWF.WebService.Common
             }
         }
 
+        public class FilterContainer
+        {
+            public string Filter { get; set; }
+            public int Take { get; set; } = 50;
+            public int Skip { get; set; } = 0;
+        }
+
+        [HttpPost("SkipTake")]
+        public async ValueTask<ActionResult<PageContent<T>>> SkipTake([FromBody] FilterContainer filterContainer)
+        {
+            try
+            {
+                var searchResult = await Search(filterContainer.Filter);
+
+                if (searchResult is ForbidResult forbid)
+                {
+                    return forbid;
+                }
+
+                var settings = new HttpPageSettings
+                {
+                    Mode = HttpPageMode.SkipTake,
+                    ListFrom = filterContainer.Skip,
+                    ListTo = filterContainer.Take
+                };
+
+                var content = Pagination(searchResult.Value, settings, false);
+
+                return new ActionResult<PageContent<T>>(new PageContent<T>
+                {
+                    Info = settings,
+                    Items = content
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex, null);
+            }
+        }
+
+
         [HttpGet("PageSearch")]
         public async ValueTask<ActionResult<PageContent<T>>> PageSearch([FromQuery] string filter, [FromQuery] int pageIndex = 0, [FromQuery] int pageSize = 50)
         {
