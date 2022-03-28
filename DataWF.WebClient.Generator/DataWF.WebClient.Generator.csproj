@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Description>Web Client Code Generation Tool</Description>
@@ -8,7 +8,7 @@
     <PackageId>DataWF.WebClient.Generator</PackageId>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>wccodegen</ToolCommandName>
-    <VersionPrefix>1.7.7</VersionPrefix>
+    <VersionPrefix>1.7.8</VersionPrefix>
     <Authors>Alexandr</Authors>
     <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

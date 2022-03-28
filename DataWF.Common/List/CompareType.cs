@@ -8,6 +8,8 @@ namespace DataWF.Common
         public static readonly CompareType Undefined = new CompareType(CompareTypes.Undefined);
         public static readonly CompareType Like = new CompareType(CompareTypes.Like);
         public static readonly CompareType NotLike = new CompareType(CompareTypes.Like, true);
+        public static readonly CompareType ILike = new CompareType(CompareTypes.ILike);
+        public static readonly CompareType NotILike = new CompareType(CompareTypes.ILike, true);
         public static readonly CompareType Equal = new CompareType(CompareTypes.Equal);
         public static readonly CompareType NotEqual = new CompareType(CompareTypes.Equal, true);
         public static readonly CompareType In = new CompareType(CompareTypes.In);
@@ -62,6 +64,8 @@ namespace DataWF.Common
                     return Not ? "is not" : "is";
                 case (CompareTypes.Like):
                     return Not ? "not like" : "like";
+                case (CompareTypes.ILike):
+                    return Not ? "not ilike" : "ilike";
                 case (CompareTypes.Between):
                     return Not ? "not between" : "between";
                 case (CompareTypes.Greater):
@@ -119,6 +123,8 @@ namespace DataWF.Common
                 type = CompareTypes.In;
             else if (code.Equals("like", StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.Like;
+            else if (code.Equals("ilike", StringComparison.OrdinalIgnoreCase))
+                type = CompareTypes.ILike;
             else if (code.Equals("between", StringComparison.OrdinalIgnoreCase))
                 type = CompareTypes.Between;
             else if (code.Equals("is", StringComparison.OrdinalIgnoreCase))

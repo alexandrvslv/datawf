@@ -73,6 +73,8 @@ namespace DataWF.WebService.Common
 
         [HttpGet]
         public ValueTask<ActionResult<IEnumerable<T>>> Get()
+        [HttpGet("GetAll")]
+        public ValueTask<ActionResult<IEnumerable<T>>> GetAll()
         {
             return Search(string.Empty);
         }

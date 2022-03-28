@@ -20,6 +20,7 @@ namespace DataWF.WebClient.Generator
         private readonly HashSet<string> VirtualOperations = new HashSet<string>
         {
             "GetAsync",
+            "GetAllAsync",
             "PutAsync",
             "PostAsync",
             "PostPackageAsync",

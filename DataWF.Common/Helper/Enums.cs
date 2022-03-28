@@ -76,6 +76,7 @@ namespace DataWF.Common
         Equal,
         In,
         Like,
+        ILike,
         Greater,
         GreaterOrEqual,
         Less,
