@@ -71,8 +71,6 @@ namespace DataWF.WebService.Common
             return Ok(obj.ToString());
         }
 
-        [HttpGet]
-        public ValueTask<ActionResult<IEnumerable<T>>> Get()
         [HttpGet("GetAll")]
         public ValueTask<ActionResult<IEnumerable<T>>> GetAll()
         {
