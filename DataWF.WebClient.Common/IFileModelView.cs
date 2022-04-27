@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -15,5 +15,6 @@ namespace DataWF.Common
         Task<object> Save(IFileModel item);
         Task<object> SaveAs(IFileModel item);
         Task<object> Upload(IFileModel item);
+        Task<bool> Reload(IFileModel item);
     }
 }
