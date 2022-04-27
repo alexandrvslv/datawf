@@ -1,4 +1,4 @@
-﻿using Brotli;
+using Brotli;
 using DataWF.WebClient.Common;
 using System;
 using System.Collections;
@@ -232,7 +232,11 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    throw ex;
+                    //throw ex;
+                    if (ex.Message.Equals("Connect Error"))
+                        throw new Exception("Wrong Login or Password!", ex);
+                    else
+                        throw ex;
                 }
             }
         }
