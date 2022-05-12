@@ -7,7 +7,7 @@ namespace DataWF.WebService.Common
 {
     public interface IWebNotifyService
     {
-        WebNotifyConnection Register(WebSocket socket, IUserIdentity userIdentity, string v);
+        WebNotifyConnection Register(WebSocket socket, IUserIdentity userIdentity, string v, bool isWebClient = false);
         Task ListenAsync(WebNotifyConnection connection);
         IEnumerable<WebNotifyConnection> GetConnections();
         void Start();

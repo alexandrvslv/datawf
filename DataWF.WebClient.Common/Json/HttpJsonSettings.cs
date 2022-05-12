@@ -12,6 +12,8 @@ namespace DataWF.Common
         public static readonly HttpJsonSettings OnlyReferenced2Level = new HttpJsonSettings(HttpJsonKeys.Refed | HttpJsonKeys.Ref, 2);
         public static readonly HttpJsonSettings OnlyReferenced3Level = new HttpJsonSettings(HttpJsonKeys.Refed | HttpJsonKeys.Ref, 3);
         public static readonly HttpJsonSettings OnlyReferenced4Level = new HttpJsonSettings(HttpJsonKeys.Refed | HttpJsonKeys.Ref, 4);
+        public static readonly HttpJsonSettings OnlyReferenced5Level = new HttpJsonSettings(HttpJsonKeys.Refed | HttpJsonKeys.Ref, 5);
+
 
         public static readonly string XJsonKeys = "X-Json-Keys";
         public static readonly string XJsonKeyRefered = "X-Json-KeyRefed";

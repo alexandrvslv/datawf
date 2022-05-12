@@ -61,6 +61,8 @@ namespace DataWF.WebService.Common
 
         public int SendingCount { get; internal set; }
 
+        public bool IsWebClient { get; set; }
+
         public void Dispose()
         {
             Socket?.Dispose();

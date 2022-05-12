@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace DataWF.WebService.Common
@@ -32,6 +33,24 @@ namespace DataWF.WebService.Common
             }
             var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             var connection = Service.Register(socket, User.GetCommonUser(), GetIPAddress());
+            await Service.ListenAsync(connection);
+            return new EmptyResult();
+        }
+        [HttpGet("ws")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetWs()
+        {
+            if (!HttpContext.WebSockets.IsWebSocketRequest)
+            {
+                return BadRequest();
+            }
+            var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            var email = HttpContext.Request.QueryString.ToString().Split("=")[1];
+            if (string.IsNullOrEmpty(email))
+            {
+                return BadRequest();
+            }
+            var connection = Service.Register(socket, User.GetCommonUser(email), GetIPAddress(), true);
             await Service.ListenAsync(connection);
             return new EmptyResult();
         }

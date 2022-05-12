@@ -116,7 +116,7 @@ namespace DataWF.Data
         }
 
         public void Send(byte[] data, IInstance address = null, SocketMessageType type = SocketMessageType.Data, bool checkState = false)
-        {
+        {            
             var buffer = EndPointMessage.Write(new EndPointMessage()
             {
                 SenderName = instance.Id.ToString(),

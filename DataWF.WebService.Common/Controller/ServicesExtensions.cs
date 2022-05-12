@@ -158,6 +158,12 @@ namespace DataWF.WebService.Common
             return services;
         }
 
+        public static IUserIdentity GetCommonUser(this ClaimsPrincipal claims, string email)
+        {
+            var emailClaim = email;
+            return emailClaim != null ? FindUser?.Invoke(email) : null;
+        }
+
         public static IServiceCollection AddSwagger(this IServiceCollection services, IConfiguration configuration, string name, string version)
         {
             return services.AddSwaggerGen(c =>
