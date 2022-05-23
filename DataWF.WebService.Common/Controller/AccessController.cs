@@ -148,7 +148,7 @@ namespace DataWF.WebService.Common
             }
         }
 
-        [HttpPut("SetItems/{name}/{id}")]
+        [HttpPut("SetItemsByNameAndId/{name}/{id}")]
         public async Task<ActionResult<bool>> Set([FromRoute] string name, [FromRoute] string id, [FromBody] List<AccessItem> accessItems)
         {
             var table = GetTable(name);
@@ -195,7 +195,7 @@ namespace DataWF.WebService.Common
             }
         }
 
-        [HttpPut("SetItems/{name}")]
+        [HttpPut("SetItemsByName/{name}")]
         public async Task<ActionResult<bool>> Set([FromRoute] string name, [FromBody] AccessUpdatePackage accessPack)
         {
             if (accessPack == null)
@@ -250,7 +250,7 @@ namespace DataWF.WebService.Common
             }
         }
 
-        [HttpPut("ClearAccess/{name}/{id}")]
+        [HttpPut("ClearAccessByNameAndId/{name}/{id}")]
         public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute] string name, [FromRoute] string id)
         {
             var table = GetTable(name);
@@ -296,7 +296,7 @@ namespace DataWF.WebService.Common
             }
         }
 
-        [HttpPut("ClearAccess/{name}")]
+        [HttpPut("ClearAccessByName/{name}")]
         public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute] string name, [FromBody] List<string> ids)
         {
             var table = GetTable(name);
