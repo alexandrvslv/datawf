@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -19,6 +20,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.WebService.Common
 {
+
 
     [ResponseCache(CacheProfileName = "Never")]
     [LoggerAndFormatter]
@@ -37,6 +39,7 @@ namespace DataWF.WebService.Common
 
         protected DBTable<T> table;
 
+
         public BaseController()
         {
             Interlocked.Increment(ref MemoryLeak.Controllers.DiagnosticsController.Requests);
@@ -44,6 +47,29 @@ namespace DataWF.WebService.Common
         }
 
         public IUserIdentity CurrentUser => User.GetCommonUser();
+
+        private string ToLowerFirstChar(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            return char.ToLower(input[0]) + input.Substring(1);
+        }
+
+        [HttpGet("GetColumns")]
+        [AllowAnonymous]
+        public IActionResult GetColumns()
+        {
+            var path = Path.Combine("locale.xml");
+            var properties = typeof(T).GetProperties();
+            var obj = new JObject();
+
+            foreach (var item in properties)
+            {
+                obj[ToLowerFirstChar(item.Name)] = ToLowerFirstChar(item.Name);
+            }
+            return Ok(obj.ToString());
+        }
 
         [HttpGet("GetAll")]
         public ValueTask<ActionResult<IEnumerable<T>>> GetAll()
@@ -112,6 +138,47 @@ namespace DataWF.WebService.Common
                 return BadRequest(ex, null);
             }
         }
+
+        public class FilterContainer
+        {
+            public string Filter { get; set; }
+            public int Take { get; set; } = 50;
+            public int Skip { get; set; } = 0;
+        }
+
+        [HttpPost("SkipTake")]
+        public async ValueTask<ActionResult<PageContent<T>>> SkipTake([FromBody] FilterContainer filterContainer)
+        {
+            try
+            {
+                var searchResult = await Search(filterContainer.Filter);
+
+                if (searchResult is ForbidResult forbid)
+                {
+                    return forbid;
+                }
+
+                var settings = new HttpPageSettings
+                {
+                    Mode = HttpPageMode.SkipTake,
+                    ListFrom = filterContainer.Skip,
+                    ListTo = filterContainer.Take
+                };
+
+                var content = Pagination(searchResult.Value, settings, false);
+
+                return new ActionResult<PageContent<T>>(new PageContent<T>
+                {
+                    Info = settings,
+                    Items = content
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex, null);
+            }
+        }
+
 
         [HttpGet("PageSearch")]
         public async ValueTask<ActionResult<PageContent<T>>> PageSearch([FromQuery] string filter, [FromQuery] int pageIndex = 0, [FromQuery] int pageSize = 50)

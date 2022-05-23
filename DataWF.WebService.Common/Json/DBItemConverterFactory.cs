@@ -58,7 +58,13 @@ namespace DataWF.WebService.Common
                 //{
                 //    cache[typeToConvert] = converter = ;
                 //}
-                return (JsonConverter)EmitInvoker.CreateObject(typeof(DBItemConverter<>).MakeGenericType(typeToConvert), types, new[] { this }, true);
+
+                if (!HttpJsonSettings.FullJson)
+                {
+                    return (JsonConverter)EmitInvoker.CreateObject(typeof(DBItemConverter<>).MakeGenericType(typeToConvert), types, new[] { this }, true);
+                }
+
+                return (JsonConverter)EmitInvoker.CreateObject(typeof(DBItemFullConverter<>).MakeGenericType(typeToConvert), types, new[] { this }, true);
             }
             else
             {

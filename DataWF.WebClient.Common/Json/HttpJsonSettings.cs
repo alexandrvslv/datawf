@@ -18,15 +18,21 @@ namespace DataWF.Common
         public static readonly string XJsonKyeRefering = "X-Json-KeyRefing";
         public static readonly string XJsonKeyRef = "X-Json-KeyRef";
         public static readonly string XJsonMaxDepth = "X-Json-MaxDepth";
+        /// <summary>
+        /// Получение полных обектов
+        /// </summary>
+        public static readonly string XGetFullJson = "X-Get-Full-Json";
 
-        public HttpJsonSettings(HttpJsonKeys keys = HttpJsonKeys.Full, int maxDepth = 3)
+        public HttpJsonSettings(HttpJsonKeys keys = HttpJsonKeys.Full, int maxDepth = 3, bool fullJson = false)
         {
             MaxDepth = maxDepth;
             Keys = keys;
+            FullJson = fullJson;
         }
 
         public readonly HttpJsonKeys Keys;
         public readonly int MaxDepth;
+        public readonly bool FullJson;
 
         public bool Referencing => (Keys & HttpJsonKeys.Refing) == HttpJsonKeys.Refing;
         public bool Referenced => (Keys & HttpJsonKeys.Refed) == HttpJsonKeys.Refed;

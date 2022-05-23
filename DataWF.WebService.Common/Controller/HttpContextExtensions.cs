@@ -13,6 +13,8 @@ namespace DataWF.WebService.Common
         public static HttpJsonSettings ReadJsonSettings(this HttpContext httpContext)
         {
             var keys = httpContext.ReadEnum<HttpJsonKeys>(HttpJsonSettings.XJsonKeys);
+
+            var fullJson = httpContext.Request.Headers[HttpJsonSettings.XGetFullJson];
             if (keys == null)
             {
                 keys = HttpJsonKeys.None;
@@ -28,9 +30,22 @@ namespace DataWF.WebService.Common
                 {
                     keys |= HttpJsonKeys.Ref;
                 }
+                if (fullJson.ToString() != null)
+                {
+
+                }
             }
             var maxDepth = httpContext.ReadInt(HttpJsonSettings.XJsonMaxDepth) ?? 4;
-            return new HttpJsonSettings((HttpJsonKeys)keys, maxDepth);
+            bool.TryParse(fullJson, out var result);
+            if (result)
+            {
+                return new HttpJsonSettings((HttpJsonKeys)keys, maxDepth, result);
+
+            }
+            else
+            {
+                return new HttpJsonSettings((HttpJsonKeys)keys, maxDepth);
+            }
         }
 
         public static HttpPageSettings ReadPageSettings(this HttpContext httpContext)
