@@ -46,7 +46,7 @@ namespace DataWF.WebService.Common
 
         public virtual void SetCurrentAction(ActionExecutingContext context)
         {
-            var user = context.HttpContext.User?.GetCommonUser();            
+            var user = context.HttpContext.User?.GetCommonUser();
             SetCurrentAction(user, context);
         }
 
@@ -67,7 +67,7 @@ namespace DataWF.WebService.Common
             Helper.Logs.Add(new StateInfo("Web Request", action, address) { User = user?.Name });
         }
 
-        public virtual WebNotifyConnection Register(WebSocket socket, IUserIdentity user, string address)
+        public virtual WebNotifyConnection Register(WebSocket socket, IUserIdentity user, string address, bool isWebClient = false)
         {
             var connection = GetBySocket(socket);
             if (connection == null)
@@ -77,6 +77,7 @@ namespace DataWF.WebService.Common
                     Socket = socket,
                     User = user,
                     Address = address,
+                    IsWebClient = isWebClient
                 };
                 connections.Add(connection);
             }
@@ -260,7 +261,7 @@ namespace DataWF.WebService.Common
                         Remove(connection);
                         continue;
                     }
-                    using (var stream = WriteData(list, connection.User))
+                    using (var stream = WriteData(list, connection.User, connection.IsWebClient))
                     {
                         if (stream == null)
                             continue;
@@ -400,15 +401,26 @@ namespace DataWF.WebService.Common
             return stream;
         }
 
-        private MemoryStream WriteData(NotifyMessageItem[] list, IUserIdentity user)
+        private MemoryStream WriteData(NotifyMessageItem[] list, IUserIdentity user, bool isWebClient = false)
         {
             bool haveValue = false;
             var jsonOptions = new JsonSerializerOptions();
-            jsonOptions.InitDefaults(new DBItemConverterFactory
+            if (isWebClient)
             {
-                CurrentUser = user,
-                HttpJsonSettings = HttpJsonSettings.None,
-            });
+                jsonOptions.InitDefaults(new DBItemConverterFactory
+                {
+                    CurrentUser = user,
+                    HttpJsonSettings = HttpJsonSettings.OnlyReferenced5Level,
+                });
+            }
+            else
+            {
+                jsonOptions.InitDefaults(new DBItemConverterFactory
+                {
+                    CurrentUser = user,
+                    HttpJsonSettings = HttpJsonSettings.None,
+                });
+            }
             var stream = new MemoryStream();
 
             //using (var streamWriter = new StreamWriter(stream, Encoding.UTF8, 80 * 1024, true))
@@ -418,9 +430,13 @@ namespace DataWF.WebService.Common
                 Indented = jsonOptions.WriteIndented
             }))
             {
+
+
                 writer.WriteStartArray();
                 Type itemType = null;
                 object id = null;
+
+
                 foreach (var item in list)
                 {
                     if (item.Table.ItemType.Type != itemType)
