@@ -321,7 +321,7 @@ namespace DataWF.WebService.Common
         }
 
         [HttpPost]
-        public async Task<ActionResult<T>> Post([FromBody] T value)
+        public virtual async Task<ActionResult<T>> Post([FromBody] T value)
         {
             using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
