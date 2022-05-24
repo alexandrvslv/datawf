@@ -45,11 +45,13 @@ namespace DataWF.Module.Export
                         InsertCell(row, i, header[i], CellValues.String);
                     }
                 }
+                var index = 1;
                 for (var i = 0; i < items.Count(); i++)
                 {
+                    index++;
                     var item = items[i];
                     Row row = new Row();
-                    row.RowIndex = UInt32Value.FromUInt32((uint)i++);
+                    row.RowIndex = UInt32Value.FromUInt32((uint)index);
                     sheetData.Append(row);
                     var body = columns.Select(x => x.Field).ToList();
                     for (var j = 0; j < body.Count(); j++)
