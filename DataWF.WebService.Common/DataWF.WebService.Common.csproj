@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
+	  <ProjectReference Include="..\DataWF.Module.Export\DataWF.Module.Export.csproj" />
     <ProjectReference Include="..\DataWF.WebClient.Common\DataWF.WebClient.Common.csproj" />
   </ItemGroup>
 </Project>

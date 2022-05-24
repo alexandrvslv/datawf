@@ -17,6 +17,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using DataWF.Module.Export;
 
 namespace DataWF.WebService.Common
 {
@@ -601,5 +602,20 @@ namespace DataWF.WebService.Common
         }
 
 
+        [HttpGet("ExportToExcell")]
+        public async Task<ActionResult<Stream>> ExportToExcell([FromQuery] string columns, string filter)
+        {
+            try
+            {
+                var cols = JsonSerializer.Deserialize<List<ExcellColumn>>(columns);
+                var items = new List<T>(Search(filter).Result.Value);
+                var stream = await ExportToExcell<T>.Create(cols, items);
+                return new FileStreamResult(stream.Item1, stream.Item2);
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
     }
 }
