@@ -197,6 +197,22 @@ namespace DataWF.Common
         }
 
         [XmlIgnore, JsonIgnore, DefaultValue(false)]
+        public bool ViewByDefault
+        {
+            get { return (Access & AccessType.ViewByDefault) == AccessType.ViewByDefault; }
+            set
+            {
+                if (Accept != value)
+                {
+                    if (value)
+                        Access |= AccessType.ViewByDefault;
+                    else
+                        Access &= ~AccessType.ViewByDefault;
+                }
+            }
+        }
+
+        [XmlIgnore, JsonIgnore, DefaultValue(false)]
         public bool Full
         {
             get { return (Access & AccessType.Full) == AccessType.Full; }
