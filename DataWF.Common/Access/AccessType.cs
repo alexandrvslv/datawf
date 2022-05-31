@@ -13,7 +13,8 @@ namespace DataWF.Common
         Admin = 16,
         Accept = 32,
         Download = 64,
-        Full = Download | Accept | Admin | Delete | Update | Create | Read
+        ViewByDefault = 128,
+        Full = Download | Accept | Admin | Delete | Update | Create | Read | ViewByDefault
     }
 
     public enum IdentityType : byte
