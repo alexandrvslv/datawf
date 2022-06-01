@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -75,7 +75,9 @@ namespace DataWF.Common
                         var typeId = value == null ? 0 : (int)value;
                         if (typeId != Client.TypeId)
                         {
-                            var client = Client.Provider.GetClient(typeof(T), typeId);
+                            var client = Client.Provider.GetClient(typeof(T), typeId);                            
+                            if (client == null)
+                                continue;
 #if NETSTANDARD2_0
                             return (T)client.Converter.Read(jreader, item, serializer);
 #else
