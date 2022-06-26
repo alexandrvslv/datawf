@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+using DataWF.Common;
 using DataWF.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
@@ -136,6 +136,8 @@ namespace DataWF.WebService.Common
                 }
                 else
                 {
+                    if (propertyName.Equals("access"))
+                        continue;
                     dictionary[invoker] = JsonSerializer.Deserialize(ref reader, invoker.DataType, options);
                 }
             }
