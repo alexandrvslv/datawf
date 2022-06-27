@@ -136,8 +136,6 @@ namespace DataWF.WebService.Common
                 }
                 else
                 {
-                    if (propertyName.Equals("access"))
-                        continue;
                     dictionary[invoker] = JsonSerializer.Deserialize(ref reader, invoker.DataType, options);
                 }
             }
@@ -299,6 +297,8 @@ namespace DataWF.WebService.Common
                 }
                 else
                 {
+                    if (propertyName.Equals("access"))
+                        continue;
                     dictionary[invoker] = JsonSerializer.Deserialize(ref reader, invoker.DataType, options);
                 }
             }
