@@ -329,6 +329,8 @@ namespace DataWF.WebService.Common
                 catch(Exception ex)
                 {
                     Helper.OnException(ex);
+                    Console.WriteLine(entry.Key);
+                    Console.WriteLine(entry.Value);
                 }
             }
             return item;
