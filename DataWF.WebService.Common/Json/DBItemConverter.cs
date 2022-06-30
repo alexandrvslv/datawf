@@ -321,18 +321,16 @@ namespace DataWF.WebService.Common
             }           
             if(dictionary.Count > 0)
             {
-                foreach (var entry in dictionary)
+                try
                 {
-                    try
+                    foreach (var entry in dictionary)
                     {
                         entry.Key.SetValue(item, entry.Value);
                     }
-                    catch (Exception ex)
-                    {
-                        Helper.OnException(ex);
-                        Console.WriteLine(entry.Key);
-                        Console.WriteLine(entry.Value);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
                 }
             }
             return item;
