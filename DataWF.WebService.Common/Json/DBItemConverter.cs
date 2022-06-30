@@ -325,6 +325,8 @@ namespace DataWF.WebService.Common
                 {
                     foreach (var entry in dictionary)
                     {
+                        if(entry.Value == null)
+                            continue;
                         entry.Key.SetValue(item, entry.Value);
                     }
                 }
