@@ -322,7 +322,14 @@ namespace DataWF.WebService.Common
 
             foreach (var entry in dictionary)
             {
-                entry.Key.SetValue(item, entry.Value);
+                try
+                {
+                    entry.Key.SetValue(item, entry.Value);
+                }
+                catch(Exception ex)
+                {
+                    Helper.OnException(ex);
+                }
             }
             return item;
         }
