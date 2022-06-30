@@ -318,19 +318,21 @@ namespace DataWF.WebService.Common
                 {
                     item = (T)table.NewItem(DBUpdateState.Insert, true);
                 }
-            }
-
-            foreach (var entry in dictionary)
+            }           
+            if(dictionary.Count > 0)
             {
-                try
+                foreach (var entry in dictionary)
                 {
-                    entry.Key.SetValue(item, entry.Value);
-                }
-                catch(Exception ex)
-                {
-                    Helper.OnException(ex);
-                    Console.WriteLine(entry.Key);
-                    Console.WriteLine(entry.Value);
+                    try
+                    {
+                        entry.Key.SetValue(item, entry.Value);
+                    }
+                    catch (Exception ex)
+                    {
+                        Helper.OnException(ex);
+                        Console.WriteLine(entry.Key);
+                        Console.WriteLine(entry.Value);
+                    }
                 }
             }
             return item;
