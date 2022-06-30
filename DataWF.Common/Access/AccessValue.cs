@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -145,6 +145,8 @@ namespace DataWF.Common
         {
             if (!IsFailRequired(user))
             {
+                if (user.Groups == null)
+                    return false;
                 foreach (IAccessIdentity group in user.Groups)
                 {
                     var item = Get(group);
