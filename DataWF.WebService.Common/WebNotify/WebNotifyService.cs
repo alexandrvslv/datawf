@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+using DataWF.Common;
 using DataWF.Data;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Text.Json;
@@ -462,7 +462,10 @@ namespace DataWF.WebService.Common
                         writer.WriteString("Id", item.ItemId.ToString());
                         if (item.Type != DBLogType.Delete)
                         {
-                            var value = item.Table.LoadItemById(item.ItemId);
+                            //var value = item.Table.LoadItemById(item.ItemId);
+                            //var query = new QQuery(itemType);                            
+                            //query.BuildParam(item.Table.PrimaryKey, item.ItemId);
+                            var value = item.Table.SelectItems(item.Table.PrimaryKey, CompareType.Equal, id).OrderBy(x=>x.Stamp).Last();
                             if (value != null
                                 && (value.Access?.GetFlag(AccessType.Read, user) ?? false)
                                 && value.PrimaryId != null)
