@@ -1,4 +1,4 @@
-﻿//  The MIT License (MIT)
+//  The MIT License (MIT)
 //
 // Copyright © 2020 Vassilyev Alexandr
 //
@@ -124,6 +124,10 @@ namespace DataWF.Data
                 throw new ArgumentException("Wrong Table item!");
             }
             if (item.Attached)
+            {
+                return;
+            }
+            if (item.IsChangedKey(item.Table.ItemTypeKey))
             {
                 return;
             }
