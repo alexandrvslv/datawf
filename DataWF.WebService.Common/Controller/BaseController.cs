@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+using DataWF.Common;
 using DataWF.Data;
 using DataWF.WebClient.Common;
 using Microsoft.AspNetCore.Authorization;
@@ -364,6 +364,11 @@ namespace DataWF.WebService.Common
                     if (value == null)
                     {
                         throw new InvalidOperationException("Some deserialization problem!");
+                    }
+                    if (value.IsChangedKey(table.ItemTypeKey))
+                    {
+                        value.Reject(transaction.Caller);
+                        throw new Exception("ItemType Changed");
                     }
                     if (IsDenied(value, transaction.Caller))
                     {

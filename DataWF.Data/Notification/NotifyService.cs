@@ -1,4 +1,4 @@
-﻿//  The MIT License (MIT)
+//  The MIT License (MIT)
 //
 // Copyright © 2020 Vassilyev Alexandr
 //
@@ -44,7 +44,7 @@ namespace DataWF.Data
         private IInstance instance;
         private readonly ConcurrentQueue<NotifyMessageItem> buffer = new ConcurrentQueue<NotifyMessageItem>();
         private readonly ManualResetEventSlim runEvent = new ManualResetEventSlim(false);
-        private const int timer = 2000;
+        private const int timer = 500;
 
         public IUserIdentity User { get; private set; }
 
