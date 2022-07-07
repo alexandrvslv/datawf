@@ -297,6 +297,11 @@ namespace DataWF.WebService.Common
                 }
                 else
                 {
+                    if (TypeHelper.IsBaseType(invoker.DataType, typeof(DBItem)))
+                    {
+                        reader.Skip();
+                        continue;
+                    }
                     if (propertyName == null || propertyName.Equals("access"))
                         continue;
                     dictionary[invoker] = JsonSerializer.Deserialize(ref reader, invoker.DataType, options);
