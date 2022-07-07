@@ -410,7 +410,7 @@ namespace DataWF.WebService.Common
                 jsonOptions.InitDefaults(new DBItemConverterFactory
                 {
                     CurrentUser = user,
-                    HttpJsonSettings = HttpJsonSettings.OnlyReferenced5Level,
+                    HttpJsonSettings = HttpJsonSettings.OnlyReferenced3Level,
                 });
             }
             else
