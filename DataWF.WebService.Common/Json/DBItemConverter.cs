@@ -302,8 +302,8 @@ namespace DataWF.WebService.Common
                         reader.Skip();
                         continue;
                     }
-                    if (propertyName == null || propertyName.Equals("access"))
-                        continue;
+                    //if (propertyName == null || propertyName.Equals("access"))
+                    //    continue;
                     dictionary[invoker] = JsonSerializer.Deserialize(ref reader, invoker.DataType, options);
                 }
             }
