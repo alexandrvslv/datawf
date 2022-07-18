@@ -460,7 +460,7 @@ namespace DataWF.WebService.Common
                         writer.WriteNumber("Diff", (int)item.Type);
                         writer.WriteNumber("User", item.UserId);
                         writer.WriteString("Id", item.ItemId.ToString());
-                        if (item.Type != DBLogType.Delete)
+                        if (item.Type != DBLogType.Delete || isWebClient)
                         {
                             var value = item.Table.LoadItemById(item.ItemId);
                             if (value != null
