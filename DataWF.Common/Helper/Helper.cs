@@ -610,10 +610,7 @@ namespace DataWF.Common
 #if PORTABLE
             return GetDirectory();
 #else
-            string path = Environment.GetFolderPath(folder);            
-            var env = Environment.OSVersion;
-            if (env.Platform == PlatformID.Unix)
-                path = "/home/gitlab-runner/.local/share/";
+            string path = Environment.GetFolderPath(folder);  
             if (appName != null)
                 path = Path.Combine(path, appName);
             if (!Directory.Exists(path))
