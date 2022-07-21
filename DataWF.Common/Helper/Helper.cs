@@ -1,4 +1,4 @@
-﻿using ICSharpCode.SharpZipLib.Core;
+using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Zip;
 using System;
@@ -610,7 +610,10 @@ namespace DataWF.Common
 #if PORTABLE
             return GetDirectory();
 #else
-            string path = Environment.GetFolderPath(folder);
+            string path = Environment.GetFolderPath(folder);            
+            var env = Environment.OSVersion;
+            if (env.Platform == PlatformID.Unix)
+                path = "/home/gitlab-runner/.local/share/";
             if (appName != null)
                 path = Path.Combine(path, appName);
             if (!Directory.Exists(path))
