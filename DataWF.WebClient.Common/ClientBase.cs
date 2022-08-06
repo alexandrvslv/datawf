@@ -214,6 +214,9 @@ namespace DataWF.Common
                             case System.Net.HttpStatusCode.NoContent:
                                 result = default;
                                 break;
+                            case System.Net.HttpStatusCode.ServiceUnavailable:
+                                ErrorStatus("Error! License expired", response, await ReadContentAsString(response));
+                                break;
                             default:
                                 UnexpectedStatus(response, await ReadContentAsString(response));
                                 break;
