@@ -31,6 +31,7 @@ namespace DataWF.Common
         private string baseUrl;
         private IClientProvider provider;
         private Environment.SpecialFolder defaultFolder = Environment.SpecialFolder.LocalApplicationData;
+        static string email;
 
         public ClientBase()
         {
@@ -105,6 +106,10 @@ namespace DataWF.Common
             object value,
             params object[] routeParams)
         {
+            if (value is TokenModel)
+                email = ((TokenModel)value).Email;
+            if (value is LoginModel loginModel)
+                email = loginModel.Email;
             var client = GetHttpClient();
             try
             {
@@ -336,6 +341,7 @@ namespace DataWF.Common
                 RequestUri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute),
                 Method = httpMethod
             };
+            request.Headers.Add("email", email);
             request.Headers.Add(HttpJsonSettings.XJsonKeys, jsonSettings.Keys.ToString());
             request.Headers.Add(HttpJsonSettings.XJsonMaxDepth, jsonSettings.MaxDepth.ToString());
             if (httpMethod.Method.Equals("GET", StringComparison.OrdinalIgnoreCase))
