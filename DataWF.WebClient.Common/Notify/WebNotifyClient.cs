@@ -22,12 +22,13 @@ namespace DataWF.Common
         public event EventHandler<EventArgs> OnClose;
         public event EventHandler<EventArgs> OnOpen;
 
-        public Task RegisterNotify(Uri uri, string autorization)
+        public Task RegisterNotify(Uri uri, string autorization, string email)
         {
             socket = new ClientWebSocket();
             if (!string.IsNullOrEmpty(autorization))
             {
                 socket.Options.SetRequestHeader("Authorization", autorization);
+                socket.Options.SetRequestHeader("email", email);
             }
             this.uri = uri;
             return Task.CompletedTask;
