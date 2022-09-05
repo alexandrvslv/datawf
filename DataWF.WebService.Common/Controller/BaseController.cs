@@ -145,6 +145,7 @@ namespace DataWF.WebService.Common
             public string Filter { get; set; }
             public int Take { get; set; } = 50;
             public int Skip { get; set; } = 0;
+            public string Property { get; set; }
         }
 
         [HttpPost("SkipTake")]
@@ -621,6 +622,24 @@ namespace DataWF.WebService.Common
             {
                 return null;
             }
+        }
+
+        [HttpPost("GetFilter")]
+        public async Task<ActionResult<PageContentFilter>> GetFilter([FromBody] FilterContainer filterContainer)
+        {
+            var list = new PageContentFilter();
+            string str = filterContainer.Property.Substring(0, 1).ToUpper() + filterContainer.Property.Substring(1);
+            var search = await SkipTake(filterContainer);
+            list.Info = search.Value.Info;
+            list.Items = new List<object>();
+            foreach (var item in search.Value.Items)
+            {
+                var res = item.GetType().GetProperty(str).GetValue(item);
+                if (res != null)
+                    list.Items.Add(res);
+            }
+            list.Items.Distinct();
+            return list;
         }
     }
 }
