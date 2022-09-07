@@ -146,6 +146,7 @@ namespace DataWF.WebService.Common
             public int Take { get; set; } = 50;
             public int Skip { get; set; } = 0;
             public string Property { get; set; }
+            public bool IsReference { get; set; }
         }
 
         [HttpPost("SkipTake")]
@@ -153,7 +154,17 @@ namespace DataWF.WebService.Common
         {
             try
             {
-                var searchResult = await Search(filterContainer.Filter);
+                var search = await Search(filterContainer.Filter);
+
+                if (filterContainer.Property != null && filterContainer.IsReference)
+                {
+                    filterContainer.Property = $"{filterContainer.Property.Substring(0, 1).ToUpper()}{filterContainer.Property.Substring(1, filterContainer.Property.Length - 1)}Id";
+                }
+                else if (filterContainer.Property != null && !filterContainer.IsReference)
+                {
+                    filterContainer.Property = $"{filterContainer.Property.Substring(0, 1).ToUpper()}{filterContainer.Property.Substring(1, filterContainer.Property.Length - 1)}";
+                }
+                var searchResult = GetUniqueList(search, filterContainer);
 
                 if (searchResult is ForbidResult forbid)
                 {
@@ -179,6 +190,14 @@ namespace DataWF.WebService.Common
             {
                 return BadRequest(ex, null);
             }
+        }
+
+        private static ActionResult<IEnumerable<T>> GetUniqueList(ActionResult<IEnumerable<T>> search, FilterContainer filterContainer)
+        {
+            if (filterContainer.Property != null)
+                return search.Value.GroupBy(x => x.GetType().GetProperty(filterContainer.Property).GetValue(x)).Select(g => g.FirstOrDefault()).ToList();
+            else
+                return search.Value.ToList();
         }
 
 
@@ -629,54 +648,10 @@ namespace DataWF.WebService.Common
         {
             var list = new PageContentFilter();
             string property = filterContainer.Property.Substring(0, 1).ToUpper() + filterContainer.Property.Substring(1);
-            list.Items = new List<object>();
-            await GetItemsForFilter(filterContainer, list, property, filterContainer.Filter);
+            ActionResult<PageContent<T>> search = await SkipTake(filterContainer);
+            list.Items = search.Value.Items.Select(x => x.GetType().GetProperty(property).GetValue(x)).ToList();
+            list.Info = search.Value.Info;
             return list;
-        }
-
-        private async Task GetItemsForFilter(FilterContainer filterContainer, PageContentFilter list, string property, string filter)
-        {
-            try
-            {
-                ActionResult<PageContent<T>> search = await SkipTake(filterContainer);
-                var vals = search.Value.Items.Select(x => x.GetType().GetProperty(property).GetValue(x)).Distinct().ToList();
-                list.Items.AddRange(vals);
-                list.Items.Distinct();
-                string type = "";
-                var ids = list.Items.Select(x =>
-                {
-                    if (x == null)
-                        return null;
-                    if (x is string str)
-                    {
-                        type = "string";
-                        return str;
-                    }
-                    else
-                        return x.GetType().GetProperty("Id").GetValue(x);
-                }).ToList().Distinct();
-                if (list.Items.Count > filterContainer.Take)
-                {
-                    list.Info = search.Value.Info;
-                    list.Skip = filterContainer.Skip;
-                    return;
-                }
-                filterContainer.Skip += filterContainer.Take;
-                if (filterContainer.Skip > search.Value.Info.ListCount)
-                {
-                    list.Info = search.Value.Info;
-                    list.Skip = filterContainer.Skip -= filterContainer.Take;
-                    return;
-                }
-                filter = "";
-                if (type != "string")
-                    filter = $"{filterContainer.Filter} and {property}Id NOT IN ({string.Join(",", ids)})";
-                await GetItemsForFilter(filterContainer, list, property, filter);
-            }
-            catch (Exception ex)
-            {
-
-            }
         }
     }
 }
