@@ -1615,11 +1615,6 @@ namespace DataWF.Data
             {
                 if (item.IsChanged || item.IsReferencingChanged)
                 {
-                    if ((UpdateState & DBUpdateState.DeleteCommit) == DBUpdateState.DeleteCommit)
-                    {
-                        item.UpdateState = DBUpdateState.DeleteCommit;
-                        item.Delete();
-                    }
                     await item.Save(transaction);
                 }
             }
