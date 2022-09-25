@@ -9,6 +9,7 @@ namespace DataWF.Common
 {
     public class TokenModel : DefaultItem
     {
+        private int? id;
         private string email;
         private string accessToken;
         private string refreshToken;
@@ -54,6 +55,27 @@ namespace DataWF.Common
                     OnPropertyChanged(oldValue, value);
                 }
             }
+        }
+
+        public int? Id
+        {
+            get => id;
+            set
+            {
+                var temp = id;
+                id = value;
+                OnPropertyChanged(temp, value);
+            }
+        }
+        public class IdInvoker<T> : Invoker<T, int?> where T : TokenModel
+        {
+            public override string Name => nameof(Id);
+
+            public override bool CanWrite => true;
+
+            public override int? GetValue(T target) => target.Id;
+
+            public override void SetValue(T target, int? value) => target.Id = value;
         }
 
         public class EmailInvoker<T> : Invoker<T, string> where T : TokenModel
