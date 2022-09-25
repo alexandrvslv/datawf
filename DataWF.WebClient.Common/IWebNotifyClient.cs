@@ -16,6 +16,6 @@ namespace DataWF.Common
         void Listen();
         Task Send(byte[] data);
         Task Send(Stream data);
-        Task RegisterNotify(Uri uri, string autorization);
+        Task RegisterNotify(Uri uri, string autorization, string email);
     }
 }
