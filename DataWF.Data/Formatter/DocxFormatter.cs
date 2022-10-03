@@ -206,8 +206,15 @@ namespace DataWF.Data
                         pr.RemoveAllChildren<Word.SdtRun>();
 
                         pr.Append(r);
-
-                        paragraph.Parent.InsertAfter<Word.Paragraph>(pr, paragraph);
+                        foreach (var item in pr.ChildElements.ToList())
+                        {
+                            if (string.IsNullOrEmpty(item.InnerText))
+                                continue;
+                            if (!paragraph.Parent.ChildElements.ToList().Where(x => x.InnerText.Equals(item.InnerText)).Any())
+                            {
+                                paragraph.Parent.InsertAfter<Word.Paragraph>(pr, paragraph);
+                            }
+                        }
                         paragraph = pr;
                     }
                 }
