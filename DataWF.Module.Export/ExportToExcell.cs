@@ -26,6 +26,10 @@ namespace DataWF.Module.Export
                 worksheetPart.Worksheet = new Worksheet(new SheetData());
                 WorkbookStylesPart wbsp = workbookPart.AddNewPart<WorkbookStylesPart>();
 
+                // Добавляем в документ набор стилей
+                wbsp.Stylesheet = GenerateStyleSheet();
+                wbsp.Stylesheet.Save();
+
                 //Создаем лист в книге
                 Sheets sheets = workbookPart.Workbook.AppendChild(new Sheets());
                 Sheet sheet = new Sheet() { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = nameof(T) };
@@ -42,54 +46,10 @@ namespace DataWF.Module.Export
                     for (var i = 0; i < header.Count(); i++)
                     {
                         var col = header[i];
-                        InsertCell(row, i, header[i], CellValues.String);
+                        InsertCell(row, i, header[i]);
                     }
                 }
-                var index = 1;
-                for (var i = 0; i < items.Count(); i++)
-                {
-                    index++;
-                    var item = items[i];
-                    Row row = new Row();
-                    row.RowIndex = UInt32Value.FromUInt32((uint)index);
-                    sheetData.Append(row);
-                    var body = columns.Select(x => x.Field).ToList();
-                    for (var j = 0; j < body.Count(); j++)
-                    {
-                        var col = body[j].Split('.');
-                        object value;
-                        if (col.Length > 1)
-                        {
-                            value = GetPropertyValue(item, col[0]);
-                            if (value != null)
-                            {
-                                value = GetPropertyValue(value, col[1]);
-                            }
-                            if (value != null && value.ToString().Equals("False", StringComparison.OrdinalIgnoreCase))
-                            {
-                                value = "No";
-                            }
-                            else if (value != null && value.ToString().Equals("True", StringComparison.OrdinalIgnoreCase))
-                            {
-                                value = "Yes";
-                            }
-                            InsertCell(row, j, value != null ? value.ToString() : "N/A", CellValues.String);
-                        }
-                        else
-                        {
-                            value = GetPropertyValue(item, col[0]);
-                            if (value != null && value.ToString().Equals("False", StringComparison.OrdinalIgnoreCase))
-                            {
-                                value = "No";
-                            }
-                            else if (value != null && value.ToString().Equals("True", StringComparison.OrdinalIgnoreCase))
-                            {
-                                value = "Yes";
-                            }
-                            InsertCell(row, j, value != null ? value.ToString() : "N/A", CellValues.String);
-                        }
-                    }
-                }
+                FillBody(columns, items, sheetData);
 
                 workbookPart.Workbook.Save();
                 document.Close();
@@ -98,16 +58,72 @@ namespace DataWF.Module.Export
             return await Task.FromResult((memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         }
 
+        private static void FillBody(List<ExcellColumn> columns, List<T> items, SheetData sheetData)
+        {
+            var index = 1;
+            for (var i = 0; i < items.Count(); i++)
+            {
+                index++;
+                var item = items[i];
+                Row row = new Row();
+                row.RowIndex = UInt32Value.FromUInt32((uint)index);
+                sheetData.Append(row);
+                var body = columns.Select(x => x.Field).ToList();
+                for (var j = 0; j < body.Count(); j++)
+                {
+                    var col = body[j].Split('.');
+                    object value;
+                    if (col.Length > 1)
+                    {
+                        value = GetPropertyValue(item, col[0]);
+                        if (value != null)
+                        {
+                            value = GetPropertyValue(value, col[1]);
+                        }
+                        if (value != null && value.ToString().Equals("False", StringComparison.OrdinalIgnoreCase))
+                        {
+                            value = "No";
+                        }
+                        else if (value != null && value.ToString().Equals("True", StringComparison.OrdinalIgnoreCase))
+                        {
+                            value = "Yes";
+                        }
+                        InsertCell(row, j, value != null ? ReplaceHexadecimalSymbols(value.ToString()) : "N/A");
+                    }
+                    else
+                    {
+                        value = GetPropertyValue(item, col[0]);
+                        if (value != null && value.ToString().Equals("False", StringComparison.OrdinalIgnoreCase))
+                        {
+                            value = "No";
+                        }
+                        else if (value != null && value.ToString().Equals("True", StringComparison.OrdinalIgnoreCase))
+                        {
+                            value = "Yes";
+                        }
+                        InsertCell(row, j, value != null ? ReplaceHexadecimalSymbols(value.ToString()) : "N/A");
+                    }
+                }
+            }
+        }
+
         //Добавление Ячейки в строку (На вход подаем: строку, номер колонки, тип значения, стиль)
-        static void InsertCell(Row row, int cell_num, string val, CellValues type)
+        static void InsertCell(Row row, int cell_num, object val)
         {
             Cell refCell = null;
             Cell newCell = new Cell() { CellReference = cell_num.ToString() + ":" + row.RowIndex.ToString() };
             row.InsertBefore(newCell, refCell);
-
+            if (val is bool)
+            {
+                newCell.CellValue = new CellValue((bool)val);
+                newCell.DataType = new EnumValue<CellValues>(CellValues.Boolean);
+            }
+            else if (val is string)
+            {
+                newCell.CellValue = new CellValue(val.ToString());
+                newCell.DataType = new EnumValue<CellValues>(CellValues.String);
+            }
             // Устанавливает тип значения.
-            newCell.CellValue = new CellValue(val);
-            newCell.DataType = new EnumValue<CellValues>(type);
 
         }
 
@@ -128,6 +144,16 @@ namespace DataWF.Module.Export
             return property.GetValue(item, null);
         }
 
+        static Stylesheet GenerateStyleSheet()
+        {
+            return new Stylesheet(
+                new Fonts(
+                    new Font(                                                               // Стиль под номером 2 - Обычный шрифт Times New Roman.
+                        new FontSize() { Val = 11 },
+                        new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
+                        new FontName() { Val = "Times New Roman" })
+                ));
+        }
     }
 
 }
