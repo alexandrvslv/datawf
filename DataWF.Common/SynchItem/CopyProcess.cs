@@ -39,6 +39,8 @@ namespace DataWF.Common
 
         private double speed;
         private Stopwatch stopWatch;
+        private int lenght;
+        private string info;
 
         public DateTime Date { get; }
 
@@ -100,6 +102,25 @@ namespace DataWF.Common
 
         public IFileModel File { get; internal set; }
 
+        public int Lenght
+        {
+            get => lenght;
+            set
+            {
+                lenght = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Info
+        {
+            get => info;
+            set
+            {
+                info = value;
+                OnPropertyChanged();
+            }
+        }
         public async Task StartAsync(long size, Stream sourceStream, Stream destinationStream)
         {
             await Task.Run(() => Start(size, sourceStream, destinationStream));
@@ -120,16 +141,20 @@ namespace DataWF.Common
                 var buffer = new byte[BufferSize];
 
                 stopWatch.Start();
+                Info = "Downloading...";
                 while ((count = sourceStream.Read(buffer, 0, BufferSize)) != 0 && !(Token?.IsCancelled ?? false))
                 {
                     targetStream.Write(buffer, 0, count);
                     length += count;
+                    Lenght += count;
                 }
+                Info = "Completed";
                 stopWatch.Stop();
             }
             catch (Exception ex)
             {
                 Helper.OnException(ex);
+                Info = "Error";
                 throw ex;
             }
             finally
