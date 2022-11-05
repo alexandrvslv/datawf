@@ -41,6 +41,7 @@ namespace DataWF.Common
         private Stopwatch stopWatch;
         private int lenght;
         private string info;
+        private string path;
 
         public DateTime Date { get; }
 
@@ -121,15 +122,26 @@ namespace DataWF.Common
                 OnPropertyChanged();
             }
         }
-        public async Task StartAsync(long size, Stream sourceStream, Stream destinationStream)
+        public string Path
         {
-            await Task.Run(() => Start(size, sourceStream, destinationStream));
+            get => path;
+            set
+            {
+                path = value;
+                OnPropertyChanged();
+            }
         }
 
-        public void Start(long size, Stream sourceStream, Stream targetStream)
+        public async Task StartAsync(long size, Stream sourceStream, Stream destinationStream, string path = "")
+        {
+            await Task.Run(() => Start(size, sourceStream, destinationStream, path));
+        }
+
+        public void Start(long size, Stream sourceStream, Stream targetStream, string path)
         {
             Prepare(size, sourceStream, targetStream);
-
+            if (!string.IsNullOrEmpty(path))
+                Path = path;
             try
             {
                 DownloadStart?.Invoke(this);

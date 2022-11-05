@@ -156,7 +156,7 @@ namespace DataWF.Common
                                             {
                                                 progressToken.Process = process;
                                             }
-                                            await process.StartAsync(fileSize, responseStream, fileStream);
+                                            await process.StartAsync(fileSize, responseStream, fileStream, filePath);
                                             return (R)(object)fileStream;
                                         }
                                         else if (typeof(R) == typeof(string))
