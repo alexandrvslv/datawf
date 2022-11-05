@@ -41,7 +41,7 @@ namespace DataWF.Common
         private Stopwatch stopWatch;
         private int lenght;
         private string info;
-        private string path;
+        private string filePath;
 
         public DateTime Date { get; }
 
@@ -122,12 +122,12 @@ namespace DataWF.Common
                 OnPropertyChanged();
             }
         }
-        public string Path
+        public string FilePath
         {
-            get => path;
+            get => filePath;
             set
             {
-                path = value;
+                filePath = value;
                 OnPropertyChanged();
             }
         }
@@ -141,7 +141,7 @@ namespace DataWF.Common
         {
             Prepare(size, sourceStream, targetStream);
             if (!string.IsNullOrEmpty(path))
-                Path = path;
+                FilePath = path;
             try
             {
                 DownloadStart?.Invoke(this);
