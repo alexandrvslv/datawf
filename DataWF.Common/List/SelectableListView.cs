@@ -333,12 +333,18 @@ namespace DataWF.Common
 
         public virtual void OnSourceItemChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (updatingFilter == 1 || FilterQuery.Suspending)
+            if (updatingFilter == 1)
             {
                 return;
             }
 
             var item = (T)sender;
+
+            if (FilterQuery.Suspending)
+            {
+                NotifyItemPropertyChanged(item, e);
+                return;
+            }
 
             var checkItem = ListHelper.CheckItem(item, query);
             if (checkItem)

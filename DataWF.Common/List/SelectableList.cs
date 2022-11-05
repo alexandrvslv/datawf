@@ -407,6 +407,11 @@ namespace DataWF.Common
             {
                 Move(item, index);
             }
+            NotifyItemPropertyChanged(item, e);
+        }
+
+        protected void NotifyItemPropertyChanged(T item, PropertyChangedEventArgs e)
+        {
             if (ItemPropertyChanged != null)
             {
                 if (AsyncNotification)
