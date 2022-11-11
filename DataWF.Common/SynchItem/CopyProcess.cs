@@ -39,9 +39,11 @@ namespace DataWF.Common
 
         private double speed;
         private Stopwatch stopWatch;
-        private int lenght;
+        private string lenght;
         private string info;
         private string filePath;
+        private int fileCount;
+        private string size;
 
         public DateTime Date { get; }
 
@@ -103,15 +105,15 @@ namespace DataWF.Common
 
         public IFileModel File { get; internal set; }
 
-        public int Lenght
-        {
-            get => lenght;
-            set
-            {
-                lenght = value;
-                OnPropertyChanged();
-            }
-        }
+        //public int Lenght
+        //{
+        //    get => lenght;
+        //    set
+        //    {
+        //        lenght = value;
+        //        OnPropertyChanged();
+        //    }
+        //}
 
         public string Info
         {
@@ -131,7 +133,24 @@ namespace DataWF.Common
                 OnPropertyChanged();
             }
         }
-
+        public string Size
+        {
+            get => size;
+            set
+            {
+                size = value;
+                OnPropertyChanged();
+            }
+        }
+        public int FileCount
+        {
+            get => fileCount;
+            set
+            {
+                fileCount = value;
+                OnPropertyChanged();
+            }
+        }
         public async Task StartAsync(long size, Stream sourceStream, Stream destinationStream, string path = "")
         {
             await Task.Run(() => Start(size, sourceStream, destinationStream, path));
@@ -139,6 +158,7 @@ namespace DataWF.Common
 
         public void Start(long size, Stream sourceStream, Stream targetStream, string path)
         {
+            FileCount = fileCount;
             Prepare(size, sourceStream, targetStream);
             if (!string.IsNullOrEmpty(path))
                 FilePath = path;
@@ -154,13 +174,18 @@ namespace DataWF.Common
 
                 stopWatch.Start();
                 Info = "Downloading...";
+                double len = 0;
+                double total = ((float)FileSize) / 1048576;
                 while ((count = sourceStream.Read(buffer, 0, BufferSize)) != 0 && !(Token?.IsCancelled ?? false))
                 {
                     targetStream.Write(buffer, 0, count);
                     length += count;
-                    Lenght += count;
+                    len = Math.Round(len += count, 0);
+                    Size = $"{Math.Round(len / 1048576, 0)} МБ/{Math.Round(total, 0)} МБ";
+                    Progress = (Math.Round(((len / 1048576) * 100) / total)) / 100;
                 }
-                Info = "Completed";
+                if (!Info.Equals("Canceled"))
+                    Info = "Completed";
                 stopWatch.Stop();
             }
             catch (Exception ex)

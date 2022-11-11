@@ -10,6 +10,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -32,11 +33,30 @@ namespace DataWF.Common
         private IClientProvider provider;
         private Environment.SpecialFolder defaultFolder = Environment.SpecialFolder.LocalApplicationData;
         static string email;
+        private long fileSize;
+        private int fileCount;
 
         public ClientBase()
         {
         }
 
+        public long FileSize
+        {
+            get => fileSize;
+            set
+            {
+                fileSize = value;
+            }
+        }
+
+        public int FileCount
+        {
+            get => fileCount;
+            set
+            {
+                fileCount = value;
+            }
+        }
         public IClientProvider Provider
         {
             get => provider;
@@ -149,6 +169,8 @@ namespace DataWF.Common
                                         {
                                             var headers = GetHeaders(response);
                                             (string fileName, int fileSize) = GetFileInfo(headers);
+                                            fileSize = (int)FileSize;
+                                            var fileCount = FileCount;
                                             var filePath = GetFilePath(fileName, request.RequestUri);
                                             var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                                             var process = new CopyProcess(CopyProcessCategory.Download);
@@ -156,7 +178,7 @@ namespace DataWF.Common
                                             {
                                                 progressToken.Process = process;
                                             }
-                                            await process.StartAsync(fileSize, responseStream, fileStream, filePath);
+                                            await process.StartAsync(fileSize, responseStream, fileStream, filePath, fileCount);
                                             return (R)(object)fileStream;
                                         }
                                         else if (typeof(R) == typeof(string))
