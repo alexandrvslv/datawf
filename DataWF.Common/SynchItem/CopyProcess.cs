@@ -151,8 +151,9 @@ namespace DataWF.Common
                 OnPropertyChanged();
             }
         }
-        public async Task StartAsync(long size, Stream sourceStream, Stream destinationStream, string path = "")
+        public async Task StartAsync(long size, Stream sourceStream, Stream destinationStream, string path = "", int count = 0)
         {
+            FileCount = count;
             await Task.Run(() => Start(size, sourceStream, destinationStream, path));
         }
 
