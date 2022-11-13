@@ -182,7 +182,8 @@ namespace DataWF.Common
                     targetStream.Write(buffer, 0, count);
                     length += count;
                     len = Math.Round(len += count, 0);
-                    Size = $"{Math.Round(len / 1048576, 0)} МБ/{Math.Round(total, 0)} МБ";
+                    //Size = $"{Math.Round(len / 1048576, 0)} МБ/{Math.Round(total, 0)} МБ";
+                    Size = $"{Math.Round(len / 1048576, 0)} МБ";
                     Progress = (Math.Round(((len / 1048576) * 100) / total)) / 100;
                 }
                 if (!Info.Equals("Canceled"))
