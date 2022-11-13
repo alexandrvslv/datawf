@@ -112,10 +112,10 @@ namespace DataWF.Common
             return GetFilePath(fileName, uri);
         }
 
-        public string GetFilePath(string fileName, Uri uri)
+        public string GetFilePath(string fileName, Uri uri, bool existFolder = false)
         {
             var indentifier = uri.LocalPath.Replace("/", "");
-            return Helper.GetDocumentsFullPath(fileName, indentifier, defaultFolder);
+            return Helper.GetDocumentsFullPath(fileName, indentifier, defaultFolder, existFolder);
         }
 
         public virtual async Task<R> Request<R>(ProgressToken progressToken,
@@ -171,7 +171,7 @@ namespace DataWF.Common
                                             (string fileName, int fileSize) = GetFileInfo(headers);
                                             fileSize = (int)FileSize;
                                             var fileCount = FileCount;
-                                            var filePath = GetFilePath(fileName, request.RequestUri);
+                                            var filePath = GetFilePath(fileName, request.RequestUri, true);
                                             var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                                             var process = new CopyProcess(CopyProcessCategory.Download);
                                             if (progressToken != ProgressToken.None)
