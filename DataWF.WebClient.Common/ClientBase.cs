@@ -35,6 +35,7 @@ namespace DataWF.Common
         static string email;
         private long fileSize;
         private int fileCount;
+        private string folderTemp;
 
         public ClientBase()
         {
@@ -76,6 +77,15 @@ namespace DataWF.Common
             set { baseUrl = value; }
         }
 
+        public string FolderTemp
+        {
+            get => folderTemp;
+            set
+            {
+                folderTemp = value;
+            }
+        }
+
         public event EventHandler CacheCleared;
 
         public virtual HttpClient GetHttpClient()
@@ -112,10 +122,10 @@ namespace DataWF.Common
             return GetFilePath(fileName, uri);
         }
 
-        public string GetFilePath(string fileName, Uri uri, bool existFolder = false)
+        public string GetFilePath(string fileName, Uri uri)
         {
             var indentifier = uri.LocalPath.Replace("/", "");
-            return Helper.GetDocumentsFullPath(fileName, indentifier, defaultFolder, existFolder);
+            return Helper.GetDocumentsFullPath(fileName, indentifier, defaultFolder, FolderTemp);
         }
 
         public virtual async Task<R> Request<R>(ProgressToken progressToken,
@@ -171,7 +181,8 @@ namespace DataWF.Common
                                             (string fileName, int fileSize) = GetFileInfo(headers);
                                             fileSize = (int)FileSize;
                                             var fileCount = FileCount;
-                                            var filePath = GetFilePath(fileName, request.RequestUri, true);
+                                            var filePath = GetFilePath(fileName, request.RequestUri);
+                                            FolderTemp = "";
                                             var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                                             var process = new CopyProcess(CopyProcessCategory.Download);
                                             if (progressToken != ProgressToken.None)
