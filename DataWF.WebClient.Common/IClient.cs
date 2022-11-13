@@ -115,6 +115,7 @@ namespace DataWF.Common
 
     public interface IFileClient
     {
+        string FolderTemp { get; set; }
         string GetFilePath(IFileModel model);
         Task<Stream> DownloadFileAsync(object id, ProgressToken progressToken);
         Task<Stream> DownloadFilesAsync(IEnumerable ids, ProgressToken progressToken);
