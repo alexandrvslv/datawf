@@ -586,9 +586,22 @@ namespace DataWF.Common
             }
             var path = Path.Combine(GetDirectory(folder, true), "Documents", identifier);
             if (!string.IsNullOrEmpty(folderTemp))
+            {
+                CheckFolderTemp(path);
                 path = Path.Combine(path, folderTemp);
+            }
             Directory.CreateDirectory(path);
             return Path.Combine(path, fileName);
+        }
+
+        private static void CheckFolderTemp(string path)
+        {
+            var folders = Directory.GetDirectories(path).Where(x=> Directory.GetCreationTime(x) < DateTime.Now.AddDays(-5));
+            if (folders.Any())
+            {
+                foreach (var folder in folders)
+                    Directory.Delete(folder, true);
+            }
         }
 
         public static string GetDirectory(string sub = "")
