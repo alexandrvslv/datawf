@@ -189,6 +189,7 @@ namespace DataWF.Common
                 if (!Info.Equals("Canceled"))
                     Info = "Completed";
                 stopWatch.Stop();
+                Progress = 1;
             }
             catch (Exception ex)
             {
@@ -243,7 +244,7 @@ namespace DataWF.Common
             {
                 long currentLength = length;
                 speed = currentLength / stopWatch.Elapsed.TotalSeconds;
-                Progress = (currentLength / percent) / 100;
+                //Progress = (currentLength / percent) / 100;
                 if (Progress == 1)
                     break;
             }
@@ -251,7 +252,7 @@ namespace DataWF.Common
 
             listen.Dispose();
             listen = null;
-            Progress = (length / percent) / 100;
+            //Progress = (length / percent) / 100;
         }
 
         public class CategoryInvoker : Invoker<CopyProcess, CopyProcessCategory>
