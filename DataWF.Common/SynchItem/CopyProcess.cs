@@ -159,7 +159,7 @@ namespace DataWF.Common
 
         public void Start(long size, Stream sourceStream, Stream targetStream, string path)
         {
-            FileCount = fileCount;
+            //FileCount = fileCount;
             Prepare(size, sourceStream, targetStream);
             if (!string.IsNullOrEmpty(path))
                 FilePath = path;
