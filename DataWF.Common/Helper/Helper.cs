@@ -587,8 +587,8 @@ namespace DataWF.Common
             var path = Path.Combine(GetDirectory(folder, true), "Documents", identifier);
             if (!string.IsNullOrEmpty(folderTemp))
             {
-                if(Directory.Exists(path))
-                    CheckFolderTemp(path);
+                //if(Directory.Exists(path))
+                //    CheckFolderTemp(path);
                 path = Path.Combine(path, folderTemp);
             }
             Directory.CreateDirectory(path);
