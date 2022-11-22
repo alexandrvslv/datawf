@@ -585,12 +585,12 @@ namespace DataWF.Common
                 return null;
             }
             var path = Path.Combine(GetDirectory(folder, true), "Documents", identifier);
-            //if (!string.IsNullOrEmpty(folderTemp))
-            //{
-            //    //if(Directory.Exists(path))
-            //    //    CheckFolderTemp(path);
-            //    path = Path.Combine(path, folderTemp);
-            //}
+            if (!string.IsNullOrEmpty(folderTemp))
+            {
+                if (Directory.Exists(path))
+                    CheckFolderTemp(path);
+                path = Path.Combine(path, folderTemp);
+            }
             Directory.CreateDirectory(path);
             return Path.Combine(path, fileName);
         }

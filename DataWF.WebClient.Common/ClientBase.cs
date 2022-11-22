@@ -183,7 +183,7 @@ namespace DataWF.Common
                                             //var fileCount = FileCount;
                                             var fileCount = 0;
                                             var filePath = GetFilePath(fileName, request.RequestUri);
-                                            //FolderTemp = "";
+                                            FolderTemp = "";
                                             var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                                             var process = new CopyProcess(CopyProcessCategory.Download);
                                             if (progressToken != ProgressToken.None)
