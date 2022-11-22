@@ -179,10 +179,11 @@ namespace DataWF.Common
                                         {
                                             var headers = GetHeaders(response);
                                             (string fileName, int fileSize) = GetFileInfo(headers);
-                                            fileSize = (int)FileSize;
-                                            var fileCount = FileCount;
+                                            //fileSize = (int)FileSize;
+                                            //var fileCount = FileCount;
+                                            var fileCount = 0;
                                             var filePath = GetFilePath(fileName, request.RequestUri);
-                                            FolderTemp = "";
+                                            //FolderTemp = "";
                                             var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                                             var process = new CopyProcess(CopyProcessCategory.Download);
                                             if (progressToken != ProgressToken.None)
