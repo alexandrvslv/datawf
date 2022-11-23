@@ -179,9 +179,8 @@ namespace DataWF.Common
                                         {
                                             var headers = GetHeaders(response);
                                             (string fileName, int fileSize) = GetFileInfo(headers);
-                                            //fileSize = (int)FileSize;
-                                            //var fileCount = FileCount;
-                                            var fileCount = 0;
+                                            fileSize = (int)FileSize;
+                                            var fileCount = FileCount;
                                             var filePath = GetFilePath(fileName, request.RequestUri);
                                             FolderTemp = "";
                                             var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
