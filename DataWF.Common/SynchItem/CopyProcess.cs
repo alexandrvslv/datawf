@@ -44,6 +44,7 @@ namespace DataWF.Common
         private string filePath;
         private int fileCount;
         private string size;
+        private bool finished;
 
         public DateTime Date { get; }
 
@@ -99,7 +100,19 @@ namespace DataWF.Common
             get => Helper.LenghtFormat(speed) + "/s";
         }
 
-        public bool Finished => length == fileSize;
+        //public bool Finished => length == fileSize;
+        public bool Finished
+        {
+            get => finished;
+            set
+            {
+                if(finished != value)
+                {
+                    finished = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public IProgressable Progressable { get; internal set; }
 
@@ -186,9 +199,11 @@ namespace DataWF.Common
                     Progress = (Math.Round(((len / 1048576) * 100) / total)) / 100;
                 }
                 if (!Info.Equals("Canceled"))
+                {
                     Info = "Completed";
+                    Progress = 1;
+                }
                 stopWatch.Stop();
-                Progress = 1;
             }
             catch (Exception ex)
             {
@@ -199,7 +214,7 @@ namespace DataWF.Common
             finally
             {
                 listen?.Set();
-
+                Finished = true;
                 if (sourceStream.CanSeek)
                 {
                     sourceStream.Position = 0;
