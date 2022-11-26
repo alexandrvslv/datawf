@@ -124,7 +124,12 @@ namespace DataWF.Common
         {
             string directory = Path.GetDirectoryName(file);
             if (directory.Length > 0 && !Directory.Exists(directory))
-                Directory.CreateDirectory(directory);
+            {
+                if (Directory.CreateDirectory(directory) == null)
+                {
+                    return;
+                }
+            }
 
             if (element == null)
                 return;
