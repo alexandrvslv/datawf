@@ -119,7 +119,7 @@ namespace DataWF.Common
                         else if (synchItem.SyncStatus != SynchronizedStatus.Load
                             && synchItem.Changes.ContainsKey(property.Name))
                         {
-                            if (!TypeHelper.IsJsonChangeOverride(property.Property))
+                            if (!TypeHelper.IsJsonChangeOverride(property.Property) && !synchItem.PropertyChangeOverride(property.Name))
                             {
                                 continue;
                             }

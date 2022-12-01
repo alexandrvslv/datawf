@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 
 namespace DataWF.Common
 {
@@ -6,6 +7,7 @@ namespace DataWF.Common
     {
         SynchronizedStatus SyncStatus { get; set; }
         IDictionary<string, object> Changes { get; }
+        bool PropertyChangeOverride(string propertyName);
     }
 }
 

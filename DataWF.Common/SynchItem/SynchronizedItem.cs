@@ -108,6 +108,11 @@ namespace DataWF.Common
             base.OnPropertyChanged(oldValue, newValue, propertyName);
         }
 
+        public virtual bool PropertyChangeOverride(string propertyName)
+        {
+            return false;
+        }
+
         public class SyncStatusInvoker<T> : Invoker<T, SynchronizedStatus> where T : SynchronizedItem
         {
             public override string Name => nameof(SynchronizedItem.SyncStatus);
