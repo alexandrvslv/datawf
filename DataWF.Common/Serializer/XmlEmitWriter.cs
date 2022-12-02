@@ -61,6 +61,11 @@ namespace DataWF.Common
         public void Write(object element, TypeSerializationInfo info, string name, bool writeType)
         {
             //Debug.WriteLine($"Xml Write {name}");
+            if (info is null)
+            {
+                return;
+            }
+
             if (writeType)
             {
                 WriteType(info);
