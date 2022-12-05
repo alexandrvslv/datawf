@@ -423,6 +423,12 @@ namespace DataWF.Common
             return attribute != null;
         }
 
+        public static bool IsJsonChangeOverride(PropertyInfo info)
+        {
+            var attribute = info.GetCustomAttribute<JsonChangeOverrideAttribute>(false);
+            return attribute != null;
+        }
+
         public static bool IsSerializeWriteable(PropertyInfo info)
         {
             var attribute = info.GetCustomAttribute<JsonIgnoreSerializationAttribute>(false);
