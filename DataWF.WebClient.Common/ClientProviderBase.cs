@@ -206,5 +206,13 @@ namespace DataWF.Common
 
         public ICrudClient GetClient(Type type, int typeId) => Get(type, typeId);
 
+        bool IClientProvider.LoginOut()
+        {
+            if (LoginOut != null)
+            {
+                return LoginOut();
+            }
+            return false;
+        }
     }
 }
