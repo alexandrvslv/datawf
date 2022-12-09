@@ -231,7 +231,10 @@ namespace DataWF.Common
                                 }
                                 else
                                 {
-                                    ErrorStatus("Unauthorized! Try Relogin!", response, await ReadContentAsString(response));
+                                    if ((bool)!Provider?.LoginOut())
+                                        ErrorStatus("Unauthorized! Try Relogin!", response, await ReadContentAsString(response));
+                                    else
+                                        return default;
                                 }
                                 break;
                             case System.Net.HttpStatusCode.Forbidden:

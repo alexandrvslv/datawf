@@ -22,6 +22,7 @@ namespace DataWF.Common
 #endif  
         HttpClient CreateHttpClient(HttpMessageHandler httpMessageHandler = null);
         Task<bool> OnUnauthorized();
+        bool LoginOut();
         ICrudClient<T> GetClient<T>();
         ICrudClient GetClient(Type type);
         ICrudClient GetClient(Type type, int typeId);

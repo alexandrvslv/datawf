@@ -104,6 +104,7 @@ namespace DataWF.Common
         }
 
         public Func<Task<bool>> UnauthorizedError { get; set; }
+        public Func<bool> LoginOut { get; set; }
 
         public string BaseUrl
         {
