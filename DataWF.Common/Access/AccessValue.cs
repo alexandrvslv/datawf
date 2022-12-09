@@ -209,7 +209,7 @@ namespace DataWF.Common
                 while (index < capacity)
                 {
                     var item = AccessItem.Deserialize(reader, isTyped);
-                    if (!item.IsEmpty)
+                    if (!item.IsEmpty && item.Identity != null)
                     {
                         items[item.Identity] = item;
                     }
