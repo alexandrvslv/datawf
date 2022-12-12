@@ -7,12 +7,19 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
+    public enum ActionType
+    {
+        None,
+        Edit,
+        Reload
+    }
     public class FileWatcher : IDisposable, INotifyPropertyChanged
     {
         private bool isChanged;
         private FileWatcherService service;
         private bool disposed;
         private IFileModel model;
+        private ActionType? actionType;
 
         //https://stackoverflow.com/a/721743
         public FileWatcher(string filePath, IFileModel model, object modelView, bool enabled = true, FileWatcherService service = null)
@@ -23,6 +30,12 @@ namespace DataWF.Common
             FilePath = filePath;
             Service = service ?? FileWatcherService.Instance;
             Enabled = enabled;
+        }
+
+        public ActionType? ActionType
+        {
+            get => actionType;
+            set => actionType = value;
         }
 
         public string FilePath { get; set; }
