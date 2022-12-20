@@ -75,8 +75,7 @@ namespace DataWF.Common
 
                     if (string.Equals(property.Name, Table.TypeInvoker?.Name, StringComparison.Ordinal))
                     {
-                        object value = Read(ref jreader, property.DataType, options, currentValue);
-                        var typeId = value == null ? 0 : (int)value;
+                        var typeId = JsonSerializer.Deserialize<int>(ref jreader, options);
                         if (typeId != Table.TypeId)
                         {
                             var table = Table.Schema.GetTable(typeof(T), typeId);
@@ -93,7 +92,7 @@ namespace DataWF.Common
                         id = JsonSerializer.Deserialize<K>(ref jreader, options);
                         if (item == null && id != null)
                         {
-                            item = Table.SelectNoDownloads((K)id);
+                            item = Table.Select((K)id);
                             if (item == null)
                             {
                                 item = Table.AddDownloads((K)id, Table.NewLoadItem);

@@ -174,12 +174,18 @@ namespace DataWF.Data
             get => base.Name;
             set
             {
+                var oldValue = base.Name;
                 base.Name = value;
                 DataBase = name;
-                if (LogSchema != null)
+                if (LogSchemaName == oldValue + "_log")
                 {
-                    LogSchema.Name = Name + "_log";
+                    if (LogSchema != null)
+                    {
+                        LogSchema.Name = Name + "_log";
+                    }
+                    LogSchemaName = value + "_log";                    
                 }
+
             }
         }
 

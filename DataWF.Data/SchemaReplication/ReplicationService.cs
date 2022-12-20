@@ -36,7 +36,6 @@ namespace DataWF.Data
         private static readonly object loadLock = new object();
         private readonly ConcurrentDictionary<DBTransaction, List<RSItem>> buffer = new ConcurrentDictionary<DBTransaction, List<RSItem>>();
 
-        private readonly ManualResetEventSlim loginEvent = new ManualResetEventSlim(false);
         private readonly CancellationTokenSource synchCancel = new CancellationTokenSource();
 
         public ReplicationService(ReplicationSettings settings, ISocketService socketService, DBProvider provider)
@@ -70,9 +69,11 @@ namespace DataWF.Data
             var instance = Settings.GetInstance(e.Connection.Address);
             if (instance == null)
             {
-                Helper.Log("Replication", "Unexpected Connection", $"Address: {e.Connection.Address}", StatusType.Warning);
+                this.Log($"Unknown Address: {e.Connection.Address}", StatusType.Warning);
                 e.Connection.Dispose();
             }
+            instance.Connection = e.Connection;
+            instance.Active = true;
         }
 
         public async Task Stop()
@@ -107,7 +108,7 @@ namespace DataWF.Data
             }
         }
 
-        public async ValueTask SignIn()
+        public async ValueTask SignIn(ManualResetEventSlim loginEvent = null)
         {
             if (!Settings.Instances.Any(p => !p.Active.GetValueOrDefault()))
             {
@@ -197,7 +198,7 @@ namespace DataWF.Data
             bool sended = false;
             foreach (var item in Settings.Instances)
             {
-                if (signIn && item.Active.GetValueOrDefault())
+                if (signIn && item.Active.GetValueOrDefault(false))
                     continue;
                 if (await CheckAddress(Settings.Instance, item, signIn))
                     sended = await item.Send(message);

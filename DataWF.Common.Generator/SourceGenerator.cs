@@ -11,29 +11,33 @@ namespace DataWF.Common.Generator
     [Generator]
     public partial class SourceGenerator : ISourceGenerator
     {
-        //https://stackoverflow.com/a/67074009/4682355
-        static SourceGenerator()
-        {
-            AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
-            {
-                var name = new AssemblyName(args.Name);
-                Assembly loadedAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().FullName == name.FullName);
-                if (loadedAssembly != null)
-                {
-                    return loadedAssembly;
-                }
+        private static GeneratorExecutionContext StaticContext;
 
-                string resourceName = $"DataWF.Common.Generator.{name.Name}.dll";
-                using Stream resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
-                if (resourceStream == null)
-                {
-                    return null;
-                }
-                var buffer = new byte[resourceStream.Length];
-                resourceStream.Read(buffer, 0, buffer.Length);
-                return Assembly.Load(buffer);
-            };
-        }
+        //https://stackoverflow.com/a/67074009/4682355
+        //static SourceGenerator()
+        //{
+        //    AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
+        //    {
+        //        var name = new AssemblyName(args.Name);
+        //        Assembly loadedAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().FullName == name.FullName);
+        //        if (loadedAssembly != null)
+        //        {
+        //            try { StaticContext.ReportDiagnostic(Diagnostic.Create(Helper.DDFailGeneration, Location.None, "AssemblyResolve", $"DLL Exist", loadedAssembly.FullName, "")); } catch { }
+        //            return loadedAssembly;
+        //        }
+
+        //        string resourceName = $"DataWF.Common.Generator.{name.Name}.dll";
+        //        using Stream resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+        //        if (resourceStream == null)
+        //        {
+        //            try { StaticContext.ReportDiagnostic(Diagnostic.Create(Helper.DDFailGeneration, Location.None, "AssemblyResolve", "DLL Not found!", name.Name, "")); } catch { }
+        //            return null;
+        //        }
+        //        var buffer = new byte[resourceStream.Length];
+        //        resourceStream.Read(buffer, 0, buffer.Length);
+        //        return Assembly.Load(buffer);
+        //    };
+        //}
 
         public void Initialize(GeneratorInitializationContext context)
         {
@@ -43,6 +47,7 @@ namespace DataWF.Common.Generator
 
         public void Execute(GeneratorExecutionContext context)
         {
+            StaticContext = context;
             // retreive the populated receiver 
             if (!(context.SyntaxReceiver is SyntaxReceiver receiver))
             {

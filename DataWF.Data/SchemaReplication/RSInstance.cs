@@ -84,6 +84,7 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore]
         public ReplicationService Service { get; set; }
+
         public override bool Equals(object obj)
         {
             return Equals(obj as RSInstance);

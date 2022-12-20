@@ -31,6 +31,9 @@ namespace DataWF.Data
         protected IDBSchema targetSchema;
         protected string targetSchemaName;
 
+        public DBSchemaLog()
+        { }
+
         public string TargetSchemaName
         {
             get { return targetSchemaName; }

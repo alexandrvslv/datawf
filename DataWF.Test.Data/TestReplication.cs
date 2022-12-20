@@ -73,6 +73,7 @@ namespace DataWF.Test.Data
             await rService1.SignIn();
             await rService2.SignIn();
 
+
             await rService2.Synch();
 
             Assert.AreEqual(6, schema2.Position.Count, "Fail Synch");
@@ -84,6 +85,7 @@ namespace DataWF.Test.Data
             {
                 Name = name,
                 Provider = provider,
+                LogSchemaName = name + "Log",
                 Connection = new DBConnection
                 {
                     System = DBSystem.SQLite,

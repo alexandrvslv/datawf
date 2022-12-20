@@ -22,8 +22,12 @@ namespace DataWF.Common.Generator
                 if (compilation != value)
                 {
                     compilation = value;
-                    Options = (compilation as CSharpCompilation).SyntaxTrees[0].Options as CSharpParseOptions;
+                    
                     Attributes = new AttributesCache(Compilation);
+                    if(compilation is CSharpCompilation csCompilation)
+                        Options = csCompilation.SyntaxTrees[0].Options as CSharpParseOptions;
+                    else
+                        try { Context.ReportDiagnostic(Diagnostic.Create(Helper.DDFailGeneration, Location.None, "CompilationContext", $"Mismatch Versions!!!", compilation.GetType().Assembly.FullName, "")); } catch { }
                 }
             }
         }

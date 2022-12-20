@@ -1,39 +1,32 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using DataWF.Common.Generator;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.OpenApi.Readers;
-using Microsoft.OpenApi.Models;
+using NJsonSchema;
+using NSwag;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using System.Net.Http;
-using System.Collections;
-using System.Globalization;
-using Microsoft.OpenApi.Interfaces;
-using Microsoft.OpenApi.Any;
 
 namespace DataWF.Common.Generator
 {
     internal class WebSchemaGenerator : BaseGenerator
     {
-        private const string CList = "List";
-        private const string CApi = "api";
+        private const string cList = "List";
+        private const string cApi = "api";
+        private const string cXId = "x-id";
+        private const string cXType = "x-type";
+        private const string c200 = "200";
+        private const string cWebClient = "WebClient";
+        private const string cWebTable = "WebTable";
 
-        private const string C200 = "200";
-        private const string CWebClient = "WebClient";
-        private const string CWebTable = "WebTable";
-        private const string CNsDataWFCommon = "DataWF.Common";
-        private const string CNsSystem = "System";
-        private const string CTypeArray = "array";
-        private const string CTypeObject = "object";
-        private static readonly HashSet<string> VirtualOperations = new HashSet<string>(StringComparer.Ordinal)
+        private readonly HashSet<string> VirtualOperations = new HashSet<string>(StringComparer.Ordinal)
         {
             "Get",
-            "GetAll",
             "Put",
             "Post",
             "PostPackage",
@@ -53,14 +46,9 @@ namespace DataWF.Common.Generator
         private Dictionary<string, Dictionary<string, INamedTypeSymbol>> cacheAssemblySymbolTypes = new Dictionary<string, Dictionary<string, INamedTypeSymbol>>(StringComparer.Ordinal);
         private string clientName = string.Empty;
         private string clientType = string.Empty;
-        private string operationPath;
-        private string operationName;
-        private KeyValuePair<string, OpenApiSchema> idKey;
-        private KeyValuePair<string, OpenApiSchema> typeKey;
-        private int typeId;
         private Dictionary<string, string> clients = new Dictionary<string, string>(StringComparer.Ordinal);
         private HashSet<string> usings = new HashSet<string>(StringComparer.Ordinal);
-        private Dictionary<OpenApiSchema, List<RefField>> referenceFields = new Dictionary<OpenApiSchema, List<RefField>>();
+        private Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
         private OpenApiDocument document;
         private List<IAssemblySymbol> usingReferences = new List<IAssemblySymbol>();
 
@@ -82,31 +70,31 @@ namespace DataWF.Common.Generator
             Namespace = TypeSymbol.ContainingNamespace.ToDisplayString();
             SchemaName = TypeSymbol.Name;
             source = new StringBuilder();
-
+            
             LoadDocument();
             LoadReferences();
 
-            foreach (var definition in document.Components.Schemas)
+            foreach (var definition in document.Definitions)
             {
-                definition.Value.Title = definition.Key;
+                definition.Value.Id = definition.Key;
             }
-            foreach (var definition in document.Components.Schemas)
+            foreach (var definition in document.Definitions)
             {
                 if (CompilationContext.Context.CancellationToken.IsCancellationRequested)
                     return false;
-                GetOrGenDefinion(definition.Key, definition.Value, out _);
+                GetOrGenDefinion(definition.Value, out _);
             }
-            foreach (var operation in document.Paths)
+            foreach (var operation in document.Operations)
             {
-                AddClientOperation(operation.Key, operation.Value);
+                AddClientOperation(operation);
             }
             CompileClient();
 
             if (CompilationContext.Context.CancellationToken.IsCancellationRequested)
                 return false;
 
-            usings.Add(CNsDataWFCommon);
-            usings.Add(CNsSystem);
+            usings.Add("DataWF.Common");
+            usings.Add("System");
             GenUnit($"{Namespace}.{TypeSymbol.Name}.Gen.cs", GenProvider(), usings);
 
             return true;
@@ -126,9 +114,7 @@ namespace DataWF.Common.Generator
 
         private void LoadDocument()
         {
-            DocumentSource = Attribute.ConstructorArguments.FirstOrDefault().Value?.ToString();
-            if (DocumentSource == null)
-                throw new Exception($"No arguments on Attribute {Attribute}");
+            DocumentSource = Attribute.ConstructorArguments.FirstOrDefault().Value.ToString();
             if (!DocumentSource.StartsWith("http", StringComparison.Ordinal))
             {
                 var mainSyntaxTree = Compilation.SyntaxTrees
@@ -140,16 +126,9 @@ namespace DataWF.Common.Generator
             var url = new Uri(DocumentSource);
             if (string.Equals(url.Scheme, "http", StringComparison.Ordinal)
                 || string.Equals(url.Scheme, "https", StringComparison.Ordinal))
-            {
-                var httpClient = new HttpClient();
-                var stream = httpClient.GetStreamAsync(url).GetAwaiter().GetResult();
-                document = new OpenApiStreamReader().Read(stream, out _);
-            }
+                document = OpenApiDocument.FromUrlAsync(url.OriginalString).GetAwaiter().GetResult();
             else if (string.Equals(url.Scheme, "file", StringComparison.Ordinal))
-            {
-                using (var fileStream = new FileStream(url.LocalPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    document = new OpenApiStreamReader().Read(fileStream, out _);
-            }
+                document = OpenApiDocument.FromFileAsync(url.LocalPath).GetAwaiter().GetResult();
         }
 
         private void LoadReferences()
@@ -207,47 +186,47 @@ namespace DataWF.Common.Generator
         }}");
         }
 
-        private void AddClientOperation(string path, OpenApiPathItem pathItem)
+        private void AddClientOperation(OpenApiOperationDescription descriptor)
         {
-            operationPath = path;
-            operationName = GetOperationName(path, pathItem, out var clientName);
+            GetOperationName(descriptor, out var clientName);
             if (!string.Equals(clientName, this.clientName, StringComparison.Ordinal))
             {
                 CompileClient();
                 GenClient(clientName, usings);
             }
 
-            GenOperation(pathItem, usings);
+            GenOperation(source, descriptor, usings);
         }
 
         private void GenClient(string clientName, HashSet<string> usings)
         {
-            usings.Add(CNsDataWFCommon);
-            usings.Add(CNsSystem);
+            usings.Add("DataWF.Common");
+            usings.Add("System");
             usings.Add("System.Collections.Generic");
             usings.Add("System.Net.Http");
             usings.Add("System.Threading.Tasks");
             usings.Add("System.Text.Json.Serialization");
-            var baseType = GetTableBaseType(clientName, usings, out var postfix);
+            var baseType = GetClientBaseType(clientName, usings, out var idKey, out var typeKey, out var typeId, out var postfix);
             this.clientName = clientName;
             this.clientType = $"{clientName}{postfix}";
             source.Clear();
             source.Append($@"
     public partial class {clientType}: {baseType}
     {{");
-            GenClientMembers(usings);
+            GenClientMembers(source, clientName, idKey, typeKey, typeId, usings);
         }
 
-        private void GenClientMembers(HashSet<string> usings)
+        private void GenClientMembers(StringBuilder clientSource, string clientName, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId,
+            HashSet<string> usings)
         {
-            document.Components.Schemas.TryGetValue(clientName, out var clientSchema);
+            document.Definitions.TryGetValue(clientName, out var clientSchema);
             var typeName = $"{clientName}Client";
 
             var cache = clientSchema != null ? GetClientReferences(clientSchema) : new HashSet<RefField>();
 
-            GenClientConstructor(cache);
+            GenClientConstructor(clientSource, clientName, idKey, typeKey, typeId, cache);
 
-            source.Append($@"
+            clientSource.Append($@"
         [JsonIgnore]
         public new {SchemaName} Schema
         {{
@@ -258,19 +237,21 @@ namespace DataWF.Common.Generator
             if (cache.Count > 0)
             {
                 Helper.AddUsing("System.Collections", usings);
-                GenClientRemoveOverrideBody(cache);
-                GenClientAddOverrideBody(cache);
+
+                GenClientRemoveOverrideBody(clientSource, clientName, idKey, typeKey, typeId, cache);
+
+                GenClientAddOverrideBody(clientSource, clientName, idKey, typeKey, typeId, cache);
             }
         }
 
-        private void GenClientConstructor(HashSet<RefField> cache)
+        private void GenClientConstructor(StringBuilder clientSource, string clientName, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId, HashSet<RefField> cache)
         {
-            var idName = idKey.Key;
-            var typeName = typeKey.Key;
-            var baseCtor = idName == null ? "" : $@"{clientName}.{idName}Invoker.Instance,
+            var idName = idKey == null ? null : GetPropertyName(idKey);
+            var typeName = typeKey == null ? null : GetPropertyName(typeKey);
+            var baseCtor = idKey == null ? "" : $@"{clientName}.{idName}Invoker.Instance,
                   {clientName}.{typeName}Invoker.Instance,
                   {typeId}";
-            source.Append($@"
+            clientSource.Append($@"
         public {clientType}({SchemaName} schema)
             : base({baseCtor})
         {{
@@ -279,16 +260,16 @@ namespace DataWF.Common.Generator
 
             foreach (var refField in cache)
             {
-                source.Append($@"
+                clientSource.Append($@"
             Items.Indexes.Add({refField.InvokerName});");
             }
-            source.Append($@"
+            clientSource.Append($@"
         }}");
         }
 
-        private void GenClientRemoveOverrideBody(HashSet<RefField> cache)
+        private void GenClientRemoveOverrideBody(StringBuilder clientSource, string clientName, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId, HashSet<RefField> cache)
         {
-            source.Append($@"
+            clientSource.Append($@"
         protected override void OnRemoved(IList items = null)
         {{
             base.OnRemoved(items);
@@ -296,21 +277,21 @@ namespace DataWF.Common.Generator
             {{");
             foreach (var refField in cache)
             {
-                source.Append($@"
+                clientSource.Append($@"
                 if (item.{refField.KeyName} != null)
                 {{
                     var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = Schema.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};
                     item{refField.ValueName}?.{refField.PropertyName}.Remove(item);
                 }}");
             }
-            source.Append($@"
+            clientSource.Append($@"
             }}
         }}");
         }
 
-        private void GenClientAddOverrideBody(HashSet<RefField> cache)
+        private void GenClientAddOverrideBody(StringBuilder clientSource, string clientName, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId, HashSet<RefField> cache)
         {
-            source.Append($@"
+            clientSource.Append($@"
         protected override void OnAdded(IList items = null)
         {{
             base.OnAdded(items);
@@ -318,48 +299,48 @@ namespace DataWF.Common.Generator
             {{");
             foreach (var refField in cache)
             {
-                source.Append($@"
+                clientSource.Append($@"
                 if (item.{refField.KeyName} != null)
                 {{
                     var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = Schema.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};
                     item{refField.ValueName}?.{refField.PropertyName}.Add(item);
                 }}");
             }
-            source.Append($@"
+            clientSource.Append($@"
             }}
         }}");
         }
 
-        private void GenOperation(OpenApiPathItem pathItem, HashSet<string> usings)
+        private void GenOperation(StringBuilder source, OpenApiOperationDescription descriptor, HashSet<string> usings)
         {
-            var isTableClient = IsSchemaClient(clientName, out _);
-            var isOverride = isTableClient
-                            && VirtualOperations.Contains(operationName);
-            var returnType = GetReturningType(pathItem.Operation(), usings);
-            var returnTypeCheck = GetReturningTypeCheck(pathItem.Operation(), operationName, usings);
+            var operationName = GetOperationName(descriptor, out var clientName);
+            var actualName = operationName;
+            var baseType = GetClientBaseType(clientName, usings, out _, out _, out _, out _);
+            var isOverride = !string.Equals(baseType, cWebClient, StringComparison.Ordinal)
+                            && VirtualOperations.Contains(actualName);
+            var returnType = GetReturningTypeCheck(descriptor, operationName, usings);
+            returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
+
             source.Append($@"
-        public {(isOverride ? "override " : "")}async {(returnTypeCheck.Length > 0 ? $"Task<{returnTypeCheck}>" : "Task")} {operationName}(");
-            GenOperationParameter(pathItem, usings);
+        public {(isOverride ? "override " : "")}async {returnType} {actualName}(");
+            GenOperationParameter(source, descriptor, usings);
             source.Append($@")
         {{");
-            GenOperationBody(pathItem, returnType, usings, isOverride);
+            GenOperationBody(source, actualName, descriptor, usings, isOverride);
             source.Append($@"
         }}");
         }
 
-        private void GenOperationParameter(OpenApiPathItem pathItem, HashSet<string> usings)
+        private void GenOperationParameter(StringBuilder source, OpenApiOperationDescription descriptor, HashSet<string> usings)
         {
-            foreach (var parameter in pathItem.Operation().Parameters)
+            foreach (var parameter in descriptor.Operation.Parameters)
             {
-                source.Append($"{GetTypeString(parameter, usings, CList)} {parameter.Name}, ");
+                if (parameter.Kind == OpenApiParameterKind.Header)
+                    continue;
+                source.Append($"{GetTypeString(parameter, usings, cList)} {parameter.Name}, ");
             }
-            var bodyParameter = pathItem.Operation().RequestBody;
-            if (bodyParameter != null)
-            {
-                var mediaType = bodyParameter.Content.FirstOrDefault().Value;
-                source.Append($"{GetTypeString(mediaType.Schema, usings, CList)} body, ");
-            }
-            //var returnType = GetReturningType(pathItem, usings);
+            var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
+            var returnType = GetReturningType(descriptor, usings);
             //if (bodyParameter == null && returnType.StartsWith("List<", StringComparison.Ordinal))
             //{
             //    source.Append($"HttpPageSettings pages, ");
@@ -368,37 +349,36 @@ namespace DataWF.Common.Generator
             source.Append($"ProgressToken progressToken");
         }
 
-        private void GenOperationBody(OpenApiPathItem pathItem, string returnType, HashSet<string> usings, bool isOverride)
+        private void GenOperationBody(StringBuilder source, string actualName, OpenApiOperationDescription descriptor, HashSet<string> usings, bool isOverride)
         {
-            var operation = pathItem.Operation();
-            var method = pathItem.OperationType();
-            var responce = operation.Responce();
-            var responceSchema = (OpenApiSchema)null;
+            var method = descriptor.Method.ToInitcap();
+            var responceSchema = (JsonSchema)null;
             var mediatype = "application/json";
-            if (responce != null)
+            if (descriptor.Operation.Responses.TryGetValue(c200, out var responce))
             {
-                var responceContent = responce.Content.FirstOrDefault();
-                responceSchema = responceContent.Value?.Schema;
-                mediatype = responceContent.Key ?? "application/json";
+                responceSchema = responce.Schema;
+                mediatype = responce.Content.Keys.FirstOrDefault() ?? "application/json";
             }
 
-            var path = new StringBuilder(operationPath);
-            foreach (var parameter in operation.Parameters.Where(p => p.In == ParameterLocation.Query))
+            var path = new StringBuilder(descriptor.Path);
+            foreach (var parameter in descriptor.Operation.Parameters.Where(p => p.Kind == OpenApiParameterKind.Query))
             {
-                if (path.Length == operationPath.Length)
+                if (path.Length == descriptor.Path.Length)
                 {
-                    path.Append('?');
+                    path.Append("?");
                 }
                 else
                 {
-                    path.Append('&');
+                    path.Append("&");
                 }
                 path.Append($"{parameter.Name}={{{parameter.Name}}}");
             }
 
+            var returnType = GetReturningType(descriptor, usings);
+
             source.Append($@"
             return await Request<{returnType}>(progressToken, HttpMethod.{method}, ""{path}"", ""{mediatype}"" ");
-            var bodyParameter = operation.RequestBody;
+            var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             if (bodyParameter == null)
             {
                 //if (returnType.StartsWith("List<", StringComparison.Ordinal))
@@ -409,10 +389,10 @@ namespace DataWF.Common.Generator
                 source.Append(", null");
             }
             else
-            {                
-                source.Append($", body");
+            {
+                source.Append($", {bodyParameter.Name}");
             }
-            foreach (var parameter in operation.Parameters)
+            foreach (var parameter in descriptor.Operation.Parameters.Where(p => p.Kind == OpenApiParameterKind.Path || p.Kind == OpenApiParameterKind.Query))
             {
                 source.Append($", {parameter.Name}");
             }
@@ -424,66 +404,61 @@ namespace DataWF.Common.Generator
         //    return GetOrGenDefinion(document.Definitions[key], out type);
         //}
 
-        private bool GetOrGenDefinion(string name, OpenApiSchema definition, out INamedTypeSymbol type)
+        private bool GetOrGenDefinion(JsonSchema definition, out INamedTypeSymbol type)
         {
             bool generated = true;
-            if (!cacheModels.TryGetValue(name, out type))
+            if (!cacheModels.TryGetValue(definition.Id, out type))
             {
                 generated = false;
-                cacheModels[name] = null;
-                type = GetReferenceType(name, definition);
+                cacheModels[definition.Id] = null;
+                type = GetReferenceType(definition);
                 if (type == null)
                 {
                     generated = true;
-                    cacheModels[name] = type = GenDefinition(name, definition);
+                    cacheModels[definition.Id] = type = GenDefinition(definition);
                 }
             }
             else if (type == null)
             {
                 generated = false;
-                type = GetReferenceType(name, definition);
+                type = GetReferenceType(definition);
             }
             return generated;
         }
 
-        public string GetClientName(string path, OpenApiPathItem pathItem)
+        public string GetClientName(OpenApiOperationDescription decriptor)
         {
-            return GetClientName(path, pathItem.Operations.First().Value);
-        }
-
-        public string GetClientName(string path, OpenApiOperation operation)
-        {
-            if (operation.Tags?.Count > 0)
-                return operation.Tags[0].Name;
+            if (decriptor.Operation.Tags?.Count > 0)
+                return decriptor.Operation.Tags[0];
             else
             {
-                foreach (var step in path.SpanSplit('/'))
+                foreach (var step in decriptor.Path.SpanSplit('/'))
                 {
-                    if (MemoryExtensions.Equals(step.Span, CApi.AsSpan(), StringComparison.Ordinal)
+                    if (MemoryExtensions.Equals(step.Span, cApi.AsSpan(), StringComparison.Ordinal)
                         || (step.Length > 0 && step.Span[0] == '{'))
                         continue;
                     return step.Span.ToString();
                 }
-                return path.Replace("/", "").Replace("{", "").Replace("}", "");
+                return decriptor.Path.Replace("/", "").Replace("{", "").Replace("}", "");
             }
         }
 
-        public string GetOperationName(string path, OpenApiPathItem pathItem, out string clientName)
+        public string GetOperationName(OpenApiOperationDescription descriptor, out string clientName)
         {
-            clientName = GetClientName(path, pathItem);
+            clientName = GetClientName(descriptor);
 
-            foreach (var step in path.SpanSplit('/'))
+            foreach (var step in descriptor.Path.SpanSplit('/'))
             {
-                if (MemoryExtensions.Equals(step.Span, CApi.AsSpan(), StringComparison.Ordinal)
+                if (MemoryExtensions.Equals(step.Span, cApi.AsSpan(), StringComparison.Ordinal)
                     || MemoryExtensions.Equals(step.Span, clientName.AsSpan(), StringComparison.Ordinal)
                     || (step.Length > 0 && step.Span[0] == '{'))
                     continue;
                 return step.Span.ToString();
             }
-            return pathItem.Operations.FirstOrDefault().Value?.OperationId;
+            return descriptor.Method.ToInitcap();
         }
 
-        private HashSet<RefField> GetClientReferences(OpenApiSchema clientSchema)
+        private HashSet<RefField> GetClientReferences(JsonSchema clientSchema)
         {
             var cache = new HashSet<RefField>();
             foreach (var entry in referenceFields)
@@ -502,68 +477,167 @@ namespace DataWF.Common.Generator
             return cache;
         }
 
-        private string GetTableBaseType(string clientName, HashSet<string> usings, out string postfix)
+        private string GetClientBaseType(string clientName, HashSet<string> usings, out JsonSchemaProperty idKey, out JsonSchemaProperty typeKey, out int typeId, out string postfix)
         {
-            postfix = CWebClient;
-            idKey = default;
-            typeKey = default;
+            postfix = cWebClient;
+            idKey = null;
+            typeKey = null;
             typeId = 0;
-            var logged = document.Paths
-                .Where(p => p.Value.Operations.Values.Any(op => op.Tags.Any(t => string.Equals(t.Name, clientName, StringComparison.OrdinalIgnoreCase))))
-                .FirstOrDefault(p => p.Key.IndexOf("/GetItemLogs/", StringComparison.OrdinalIgnoreCase) > -1);
-            var loggedReturnSchema = logged.Value == null ? null : GetReturningTypeSchema(logged.Value);
+            var logged = document.Operations
+                .Where(p => p.Operation.Tags.Contains(clientName, StringComparer.OrdinalIgnoreCase))
+                .FirstOrDefault(p => p.Path.IndexOf("/GetItemLogs/", StringComparison.OrdinalIgnoreCase) > -1);
+            var loggedReturnSchema = logged == null ? null : GetReturningTypeSchema(logged);
             var loggedTypeName = loggedReturnSchema == null ? null : GetArrayElementTypeString(loggedReturnSchema, usings);
-            OpenApiSchema schema;
-            if (IsSchemaClient(clientName, out schema))
+            if (document.Definitions.TryGetValue(clientName, out var schema))
             {
-                postfix = CWebTable;
-                idKey = schema.GetPrimaryKey();
-                typeKey = schema.GetTypeKey();
-                typeId = schema.GetTypeId();
+                postfix = cWebTable;
+                idKey = GetPrimaryKey(schema);
+                typeKey = GetTypeKey(schema);
+                typeId = GetTypeId(schema);
 
-                return $"{(loggedTypeName != null ? "Logged" : "")}WebTable<{clientName}, {(idKey.Value == null ? "int" : GetTypeString(idKey.Value, usings, CList))}{(loggedTypeName != null ? $", {loggedTypeName}" : "")}>";
+                return $"{(loggedTypeName != null ? "Logged" : "")}WebTable<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, usings, cList))}{(logged != null ? $", {loggedTypeName}" : "")}>";
             }
-            return CWebClient;
+            return cWebClient;
         }
 
-        private bool IsSchemaClient(string clientName, out OpenApiSchema schema)
+        private JsonSchemaProperty GetProperty(JsonSchema schema, string propertyName)
         {
-            return document.Components.Schemas.TryGetValue(clientName, out schema);
+            if (schema.Properties.TryGetValue(propertyName, out var property))
+            {
+                return property;
+            }
+            foreach (var baseClass in schema.AllInheritedSchemas)
+            {
+                if (baseClass.Properties.TryGetValue(propertyName, out property))
+                {
+                    return property;
+                }
+            }
+
+            return null;
         }
 
-        private OpenApiSchema GetReturningTypeSchema(OpenApiPathItem pathItem)
+        private JsonSchemaProperty GetPrimaryKey(JsonSchema schema, bool inherit = true)
         {
-            return GetReturningTypeSchema(pathItem.Operation());
+            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue(cXId, out var propertyName))
+            {
+                return schema.Properties[propertyName.ToString()];
+            }
+            if (inherit)
+            {
+                foreach (var baseClass in schema.AllInheritedSchemas)
+                {
+                    if (baseClass.ExtensionData != null && baseClass.ExtensionData.TryGetValue(cXId, out propertyName))
+                    {
+                        return baseClass.Properties[propertyName.ToString()];
+                    }
+                }
+                var parentSchema = schema.ParentSchema;
+                while (parentSchema != null)
+                {
+                    if (parentSchema.ExtensionData != null && parentSchema.ExtensionData.TryGetValue(cXId, out propertyName))
+                    {
+                        return parentSchema.Properties[propertyName.ToString()];
+                    }
+                    parentSchema = schema.ParentSchema;
+                }
+
+            }
+            return null;
         }
 
-        private OpenApiSchema GetReturningTypeSchema(OpenApiOperation operation)
+        private JsonSchemaProperty GetReferenceProperty(JsonSchema schema, string name, bool inherit = true)
         {
-            return operation.Responses.TryGetValue(C200, out var responce)
-                ? responce.Content.FirstOrDefault().Value?.Schema
-                : null;
+            var find = schema.Properties.Values.FirstOrDefault(p => p.ExtensionData != null
+                 && p.ExtensionData.TryGetValue(cXId, out var propertyName)
+                 && string.Equals(propertyName.ToString(), name, StringComparison.Ordinal));
+            if (find != null)
+            {
+                return find;
+            }
+            if (inherit)
+            {
+                foreach (var baseClass in schema.AllInheritedSchemas)
+                {
+                    find = baseClass.Properties.Values.FirstOrDefault(p => p.ExtensionData != null
+                 && p.ExtensionData.TryGetValue(cXId, out var propertyName)
+                 && propertyName.Equals(name));
+                    if (find != null)
+                    {
+                        return find;
+                    }
+                }
+            }
+            return null;
         }
 
-        private string GetReturningType(OpenApiPathItem pathItem, HashSet<string> usings)
+        private JsonSchemaProperty GetReferenceIdProperty(JsonSchemaProperty property, bool inherit = true)
         {
-            return GetReturningType(pathItem.Operation(), usings);
+            if (property.ExtensionData != null && property.ExtensionData.TryGetValue(cXId, out var propertyName))
+            {
+                return GetProperty(property.ParentSchema, (string)propertyName);
+            }
+            return null;
         }
 
-        private string GetReturningType(OpenApiOperation operation, HashSet<string> usings)
+        private JsonSchemaProperty GetTypeKey(JsonSchema schema)
+        {
+            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue(cXType, out var propertyName))
+            {
+                return schema.Properties[propertyName.ToString()];
+            }
+
+            foreach (var baseClass in schema.AllInheritedSchemas)
+                if (baseClass.ExtensionData != null && baseClass.ExtensionData.TryGetValue(cXType, out propertyName))
+                {
+                    return baseClass.Properties[propertyName.ToString()];
+                }
+
+            return null;
+        }
+
+        private int GetTypeId(JsonSchema schema)
+        {
+            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-type-id", out var id))
+            {
+                return id is int intKey ? intKey
+                    : id is string stringKey && int.TryParse(stringKey, out var typeid) ? typeid
+                    : Convert.ToInt32(id);
+            }
+
+            return 0;
+        }
+
+        private IEnumerable<JsonSchema> GetParentSchems(JsonSchema schema)
+        {
+            while (schema.ParentSchema != null)
+            {
+                yield return schema.ParentSchema.ActualSchema;
+                schema = schema.ParentSchema.ActualSchema;
+            }
+        }
+
+        private JsonSchema GetReturningTypeSchema(OpenApiOperationDescription descriptor)
+        {
+            return descriptor.Operation.Responses.TryGetValue(c200, out var responce) && responce != null
+                ? responce.Schema : null;
+        }
+
+        private string GetReturningType(OpenApiOperationDescription descriptor, HashSet<string> usings)
         {
             var returnType = Helper.cString;
-            var schema = GetReturningTypeSchema(operation);
-            if (schema != null)
+            if (descriptor.Operation.Responses.TryGetValue(c200, out var responce) && responce != null)
             {
-                returnType = GetTypeString(schema, usings, CList);
+                returnType = $"{GetTypeString(responce.Schema, usings, cList)}";
             }
             return returnType;
         }
 
-        private string GetReturningTypeCheck(OpenApiOperation operation, string operationName, HashSet<string> usings)
+        private string GetReturningTypeCheck(OpenApiOperationDescription descriptor, string operationName, HashSet<string> usings)
         {
-            var returnType = GetReturningType(operation, usings);
-            if (string.Equals(operationName, "GenerateId", StringComparison.Ordinal))
-                returnType = CTypeObject;
+            var returnType = GetReturningType(descriptor, usings);
+            if (operationName == "GenerateId")
+                returnType = "object";
             //if (returnType == "AccessValue")
             //    returnType = "IAccessValue";
             //if (returnType == "List<AccessItem>")
@@ -571,12 +645,12 @@ namespace DataWF.Common.Generator
             return returnType;
         }
 
-        private INamedTypeSymbol GetReferenceType(OpenApiSchema definition)
+        private INamedTypeSymbol GetReferenceType(JsonSchema definition)
         {
             return GetReferenceType(GetDefinitionName(definition), definition);
         }
 
-        private INamedTypeSymbol GetReferenceType(string definitionName, OpenApiSchema definition)
+        private INamedTypeSymbol GetReferenceType(string definitionName, JsonSchema definition)
         {
             if (!cacheReferences.TryGetValue(definitionName, out var type))
             {
@@ -595,12 +669,11 @@ namespace DataWF.Common.Generator
                             {
                                 if (parsedType.EnumUnderlyingType != null)
                                 {
-                                    if (definition.Enum == null || definition.Enum.Count == 0)
+                                    if (definition.EnumerationNames == null)
                                         continue;
-                                    definition.Extensions.TryGetValue("x-enumNames", out var defiEnumeration);
+                                    var defiEnumeration = definition.EnumerationNames;
                                     var typeEnumeration = parsedType.GetMembers().OfType<IFieldSymbol>().Select(p => p.Name);
-                                    var apiEnumeration = ((IList)defiEnumeration).OfType<OpenApiString>().Select(p => p.Value);
-                                    if (apiEnumeration.SequenceEqual(typeEnumeration))
+                                    if (defiEnumeration.SequenceEqual(typeEnumeration))
                                     {
                                         type = parsedType;
                                         break;
@@ -635,27 +708,25 @@ namespace DataWF.Common.Generator
             return type;
         }
 
-        private INamedTypeSymbol GenDefinition(string name, OpenApiSchema schema)
+        private INamedTypeSymbol GenDefinition(JsonSchema schema)
         {
             usings.Clear();
-            usings.Add(CNsDataWFCommon);
-            usings.Add(CNsSystem);
+            usings.Add("DataWF.Common");
+            usings.Add("System");
 
-            var source = schema.Enum != null && schema.Enum.Count > 0
-                ? GenDefinitionEnum(name, schema, usings)
-                : GenDefinitionClass(name, schema, usings);
+            var source = schema.IsEnumeration ? GenDefinitionEnum(schema, usings) : GenDefinitionClass(schema, usings);
 
             var syntaxTree = GenUnit($"{Namespace}.{GetDefinitionName(schema)}DefenitionGen.cs", source, usings);
             return GenUnit(syntaxTree);
         }
 
-        private StringBuilder GenDefinitionEnum(string name, OpenApiSchema schema, HashSet<string> usings)
+        private StringBuilder GenDefinitionEnum(JsonSchema schema, HashSet<string> usings)
         {
             Helper.AddUsing("System.Runtime.Serialization", usings);
 
             source.Clear();
             source.Append($@"
-    {((schema.Extensions?.TryGetValue("x-flags", out _) ?? false) ? "[Flags]" : "")}
+    {((schema.ExtensionData?.TryGetValue("x-flags", out _) ?? false) ? "[Flags]" : "")}
     public enum {GetDefinitionName(schema)}
     {{");
             GenDefinitionEnumMemebers(source, schema);
@@ -664,54 +735,50 @@ namespace DataWF.Common.Generator
             return source;
         }
 
-        private void GenDefinitionEnumMemebers(StringBuilder source, OpenApiSchema schema)
+        private void GenDefinitionEnumMemebers(StringBuilder source, JsonSchema schema)
         {
-            IList members = null;
-            if (schema.Extensions != null
-                && schema.Extensions.TryGetValue("x-enumMembers", out var enumMembers))
+            object[] members = null;
+            if (schema.ExtensionData != null
+                && schema.ExtensionData.TryGetValue("x-enumMembers", out var enumMembers))
             {
-                members = (IList)enumMembers;
+                members = (object[])enumMembers;
             }
             int i = 0;
-            IList names = null;
-            schema.Extensions.TryGetValue("x-enumNames", out var enumNames);
-            names = (IList)enumNames;
-
-            foreach (OpenApiInteger item in schema.Enum)
+            //var definitionName = GetDefinitionName(schema);
+            foreach (var item in schema.Enumeration)
             {
-                var sitem = (OpenApiString)names[i];
+                var sitem = schema.EnumerationNames[i];
                 var memeber = sitem;
-                if (members != null && members.Count > i)
-                    memeber = members[i] as OpenApiString;
+                if (members != null && members.Length > i)
+                    memeber = members[i]?.ToString();
                 i++;
                 source.Append($@"
-        [EnumMember(Value = ""{ memeber.Value }"")]
-        {sitem.Value} = {item.Value},");
+        [EnumMember(Value = ""{ memeber }"")]
+        {sitem} = {item},");
             }
         }
 
-        private StringBuilder GenDefinitionClass(string name, OpenApiSchema schema, HashSet<string> usings)
+        private StringBuilder GenDefinitionClass(JsonSchema schema, HashSet<string> usings)
         {
             usings.Add("System.Text.Json.Serialization");
             var refFields = referenceFields[schema] = new List<RefField>();
             source.Clear();
             source.Append($@"
-    public partial class {name}: {string.Join(", ", GenDefinitionClassBases(schema, usings))}
+    public partial class {GetDefinitionName(schema)}: {string.Join(", ", GenDefinitionClassBases(schema, usings))}
     {{");
-            GenDefinitionClassMemebers(schema, refFields, usings);
+            GenDefinitionClassMemebers(source, schema, refFields, usings);
 
             source.Append($@"
     }}");
             return source;
         }
 
-        private IEnumerable<string> GenDefinitionClassBases(OpenApiSchema schema, HashSet<string> usings)
+        private IEnumerable<string> GenDefinitionClassBases(JsonSchema schema, HashSet<string> usings)
         {
-            var inderited = schema.InheritedSchema();
-            if (inderited != null)
+            if (schema.InheritedSchema != null)
             {
-                var name = GetDefinitionName(inderited);
-                var type = GetReferenceType(name, inderited);
+                var name = GetDefinitionName(schema.InheritedSchema);
+                var type = GetReferenceType(name, schema.InheritedSchema);
                 if (type != null)
                 {
                     Helper.AddUsing(type, usings);
@@ -723,22 +790,21 @@ namespace DataWF.Common.Generator
                 //yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IEntryNotifyPropertyChanged)));
                 yield return "SynchronizedItem";
             }
-            var idKey = schema.GetPrimaryKey(false);
-            if (idKey.Value != null)
+            var idKey = GetPrimaryKey(schema, false);
+            if (idKey != null)
             {
                 yield return "IPrimaryKey";
                 yield return "IQueryFormatable";
             }
         }
 
-        private void GenDefinitionClassMemebers(OpenApiSchema schema, List<RefField> refFields, HashSet<string> usings)
+        private void GenDefinitionClassMemebers(StringBuilder source, JsonSchema schema, List<RefField> refFields, HashSet<string> usings)
         {
-            idKey = schema.GetPrimaryKey();
-            typeKey = schema.GetTypeKey();
-            typeId = schema.GetTypeId();
-            var localIdKey = schema.GetPrimaryKey(false);
+            var idKey = GetPrimaryKey(schema);
+            var typeKey = GetTypeKey(schema);
+            var typeId = GetTypeId(schema);
             var definition = GetDefinitionName(schema);
-            var inheritedName = GetTypeString(schema.InheritedSchema(), usings);
+            var inheritedName = GetTypeString(schema.InheritedSchema, usings);
             if (inheritedName == Helper.cString
                 //|| inheritedName == "DefaultItem"
                 || inheritedName == "SynchronizedItem")
@@ -752,25 +818,25 @@ namespace DataWF.Common.Generator
             }
             foreach (var property in schema.Properties)
             {
-                GenDefinitionClassField(schema, property, refFields, usings);
+                GenDefinitionClassField(source, property.Value, idKey, refFields, usings);
             }
 
-            GenDefinitionClassConstructorBody(schema, refFields, usings);
+            GenDefinitionClassConstructorBody(source, schema, idKey, typeKey, typeId, refFields, usings);
 
-            if (refFields.Count > 0 && localIdKey.Value == null)
+            if (refFields.Count > 0 && idKey.ParentSchema != schema)
             {
-                GenDefinitionClassProperty(schema, idKey, refFields, usings, true);
+                GenDefinitionClassProperty(source, idKey, idKey, typeKey, refFields, usings, true);
             }
 
             foreach (var property in schema.Properties)
             {
-                GenDefinitionClassProperty(schema, property, refFields, usings);
+                GenDefinitionClassProperty(source, property.Value, idKey, typeKey, refFields, usings);
             }
 
-            if (localIdKey.Value != null)
+            if (GetPrimaryKey(schema, false) != null)
             {
                 var converter = "";
-                var idType = GetTypeString(localIdKey.Value, usings, CList);
+                var idType = GetTypeString(idKey, usings, cList);
                 if (idType == "long")
                     converter = "Convert.ToInt64(value)";
                 else if (idType == "int")
@@ -786,42 +852,42 @@ namespace DataWF.Common.Generator
         [JsonIgnore]    
         public object PrimaryKey 
         {{
-            get => {idKey.Key};
-            set => {idKey.Key} = {converter};
+            get => {idKey.Name};
+            set => {idKey.Name} = {converter};
         }}
 
-        public string Format() => {idKey.Key}.ToString();");
+        public string Format() => {idKey.Name}.ToString();");
             }
         }
 
-        private void GenDefinitionClassField(OpenApiSchema schema, KeyValuePair<string, OpenApiSchema> property, List<RefField> refFields, HashSet<string> usings)
+        private void GenDefinitionClassField(StringBuilder source, JsonSchemaProperty property, JsonSchemaProperty idKey, List<RefField> refFields, HashSet<string> usings)
         {
-            var refkey = property.Value.GetPropertyRefKey();
-            var isArray = property.Value.Type == CTypeArray;
-            if (refkey != null && isArray)
+            var refkey = GetPropertyRefKey(property);
+            if (refkey != null && property.Type == JsonObjectType.Array)
             {
-                var refProperty = property.Value.Items.GetReferenceProperty(refkey);
                 var refField = new RefField
                 {
-                    Property = property.Value,
-                    PropertyName = property.Key,
-                    Definition = schema.Title,
-                    TypeSchema = property.Value.Items,
-                    TypeName = GetTypeString(property.Value.Items, usings),
-                    KeyName = refkey,
-                    KeyProperty = property.Value.Items.GetProperty(refkey).Value,
-                    ValueName = refProperty.Key,
-                    ValueProperty = refProperty.Value,
-                    FieldType = GetTypeString(property.Value, usings, "ReferenceList"),
-                    FieldName = GetFieldName(property.Key),
+                    Property = property,
+                    PropertyName = GetPropertyName(property),
+                    Definition = property.ParentSchema.Id,
+                    RefKey = refkey,
+                    TypeSchema = property.Item.ActualTypeSchema,
+                    TypeName = GetTypeString(property.Item, usings),
                 };
                 refFields.Add(refField);
                 //var refTypePrimary = GetPrimaryKey(refTypeSchema);
                 //var refTypePrimaryName = GetPropertyName(refTypePrimary);
-                //var refTypePrimaryType = GetTypeString(refTypePrimary, true, "SelectableList");                
+                //var refTypePrimaryType = GetTypeString(refTypePrimary, true, "SelectableList");
+                refField.KeyProperty = GetProperty(refField.TypeSchema, refkey);
+                refField.KeyName = GetPropertyName(refField.KeyProperty);
                 refField.KeyType = GetTypeString(refField.KeyProperty, usings);
+
+                refField.ValueProperty = GetReferenceProperty((JsonSchema)refField.KeyProperty.Parent, refField.KeyName);
+                refField.ValueName = GetPropertyName(refField.ValueProperty);
+
                 refField.ValueType = GetTypeString(refField.ValueProperty, null);
-                refField.ValueFieldName = GetFieldName(refField.ValueName);
+                refField.ValueFieldName = GetFieldName(refField.ValueProperty);
+
                 refField.InvokerName = $"{refField.TypeName}.{refkey}Invoker.Instance";
 
                 //refField.ParameterType = $"QueryParameter<{refField.TypeName}>";
@@ -839,19 +905,21 @@ namespace DataWF.Common.Generator
                 //               initializer: SF.EqualsValueClause(
                 //                   SF.ParseExpression($"new {refField.ParameterType}{{ Invoker = {refField.InvokerName}}}"))))));
 
+                refField.FieldType = GetTypeString(property, usings, "ReferenceList");
+                refField.FieldName = GetFieldName(property);
                 source.Append($@"
         protected {refField.FieldType} {refField.FieldName};");
             }
             else
             {
-                var type = GetTypeString(property.Value, usings);
+                var type = GetTypeString(property, usings);
 
                 source.Append($@"
-        protected internal {type} {GetFieldName(property.Key)}{(isArray ? $" = new {type}()" : "")};");
+        protected internal {type} {GetFieldName(property)}{(property.Type == JsonObjectType.Array ? $" = new {type}()" : "")};");
             }
         }
 
-        private void GenDefinitionClassConstructorBody(OpenApiSchema schema, List<RefField> refFields, HashSet<string> usings)
+        private void GenDefinitionClassConstructorBody(StringBuilder source, JsonSchema schema, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, int typeId, List<RefField> refFields, HashSet<string> usings)
         {
             source.Append($@"
         public {GetDefinitionName(schema)}()
@@ -859,7 +927,7 @@ namespace DataWF.Common.Generator
             if (typeId != 0)
             {
                 source.Append($@"
-            {typeKey.Key} = {typeId};");
+            {GetPropertyName(typeKey)} = {typeId};");
             }
             foreach (var refField in refFields)
             {
@@ -870,19 +938,19 @@ namespace DataWF.Common.Generator
                 source.Append($@"
             {refField.FieldName} = new {refField.FieldType} (this, nameof({refField.PropertyName}));");
             }
-            foreach (var property in schema.Properties)
+            foreach (var property in schema.Properties.Select(p => p.Value))
             {
-                if (property.Value.Default != null)
+                if (property.Default != null)
                 {
                     source.Append($@"
-            {property.Key} = {GenFieldDefault(property, idKey, usings)};");
+            {GetPropertyName(property)} = {GenFieldDefault(property, idKey, usings)};");
                 }
             }
             source.Append($@"
         }}");
         }
 
-        private IEnumerable<StatementSyntax> GenDefintionClassPropertySynckGet(List<RefField> refFields)
+        private IEnumerable<StatementSyntax> GenDefintionClassPropertySynckGet(JsonSchemaProperty typeKey, int typeId, List<RefField> refFields)
         {
             yield return SF.ParseStatement($"if (base.SyncStatus != SynchronizedStatus.Actual)");
             yield return SF.ParseStatement($"return base.SyncStatus;");
@@ -914,47 +982,44 @@ namespace DataWF.Common.Generator
                 @default: @default);
         }
 
-        private void GenDefinitionClassProperty(OpenApiSchema schema, KeyValuePair<string, OpenApiSchema> property, List<RefField> refFields, HashSet<string> usings, bool isOverride = false)
+        private void GenDefinitionClassProperty(StringBuilder source, JsonSchemaProperty property, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, List<RefField> refFields, HashSet<string> usings, bool isOverride = false)
         {
-            var refkey = property.Value.GetPropertyRefKey();
-            var typeDeclaration = GetTypeString(property.Value, usings, refkey == null ? "SelectableList" : "ReferenceList");
+            var refkey = GetPropertyRefKey(property);
+            var typeDeclaration = GetTypeString(property, usings, refkey == null ? "SelectableList" : "ReferenceList");
             source.Append($@"
-        [{string.Join(", ", GenDefinitionClassPropertyAttributes(schema, property, usings))}]
-        public {(isOverride ? "override " : property.Key == idKey.Key ? "virtual " : "")}{typeDeclaration} {property.Key} 
+        [{string.Join(", ", GenDefinitionClassPropertyAttributes(property, idKey, typeKey, usings))}]
+        public {(isOverride ? "override " : property == idKey ? "virtual " : "")}{typeDeclaration} {GetPropertyName(property)} 
         {{");
-            GenDefintionClassPropertyGet(schema, property, isOverride);
-            GenDefinitionClassPropertySet(schema, property, refFields, usings, isOverride);
+            GenDefintionClassPropertyGet(source, property, isOverride);
+            GenDefinitionClassPropertySet(source, property, idKey, refFields, usings, isOverride);
             source.Append($@"
         }}");
         }
 
-        private IEnumerable<string> GenDefinitionClassPropertyAttributes(OpenApiSchema schema, KeyValuePair<string, OpenApiSchema> property, HashSet<string> usings)
+        private IEnumerable<string> GenDefinitionClassPropertyAttributes(JsonSchemaProperty property, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, HashSet<string> usings)
         {
-            var propertySchema = property.Value;
-            if (propertySchema.ReadOnly
-                || (propertySchema.Extensions != null
-                    && propertySchema.Extensions.TryGetValue("readOnly", out var isReadOnly)
-                    && isReadOnly.ToString() == "true"))
+            if (property.IsReadOnly
+                || (property.ExtensionData != null && property.ExtensionData.TryGetValue("readOnly", out var isReadOnly) && (bool)isReadOnly))
             {
                 yield return "JsonIgnoreSerialization";
             }
-            else if (string.Equals(property.Key, typeKey.Key, StringComparison.Ordinal))
+            else if (property == typeKey)
             {
                 Helper.AddUsing("System.ComponentModel.DataAnnotations", usings);
                 yield return $"Display(Order = -3)";
             }
-            else if (string.Equals(property.Key, idKey.Key, StringComparison.Ordinal))
+            else if (property == idKey)
             {
                 Helper.AddUsing("System.ComponentModel.DataAnnotations", usings);
                 yield return $"Display(Order = -2)";
             }
-            else if ((propertySchema.Type == CTypeObject
-                && !propertySchema.IsEnumeration()
-                && propertySchema.AllInheritedSchemas().Any(p => p.Title == "DBItem"))
-                || (propertySchema.InheritedSchema() != null
-                && propertySchema.InheritedSchema().Type == CTypeObject
-                && !propertySchema.InheritedSchema().IsEnumeration()
-                && propertySchema.InheritedSchema().AllInheritedSchemas().Any(p => p.Title == "DBItem")))
+            else if ((property.Type == JsonObjectType.Object
+                && !property.IsEnumeration
+                && property.AllInheritedSchemas.Any(p => p.Id == "DBItem"))
+                || (property.Type == JsonObjectType.None
+                && property.ActualTypeSchema.Type == JsonObjectType.Object
+                && !property.ActualTypeSchema.IsEnumeration
+                && property.ActualTypeSchema.AllInheritedSchemas.Any(p => p.Id == "DBItem")))
             {
                 yield return "JsonSynchronized";
             }
@@ -963,25 +1028,25 @@ namespace DataWF.Common.Generator
                 yield return "JsonSynchronized";
             }
 
-            foreach (var attribute in GenDefinitionClassPropertyValidationAttributes(schema, property, usings))
+            foreach (var attribute in GenDefinitionClassPropertyValidationAttributes(property, idKey, typeKey, usings))
             {
                 yield return attribute;
             }
         }
 
-        private IEnumerable<string> GenDefinitionClassPropertyValidationAttributes(OpenApiSchema schema, KeyValuePair<string, OpenApiSchema> property, HashSet<string> usings)
+        private IEnumerable<string> GenDefinitionClassPropertyValidationAttributes(JsonSchemaProperty property, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, HashSet<string> usings)
         {
-            var propertyName = property.Key;
-            var objectProperty = schema.GetReferenceProperty(propertyName);
-            if (objectProperty.Value != null)
+            var propertyName = GetPropertyName(property);
+            var objectProperty = GetReferenceProperty((JsonSchema)property.Parent, property.Name);
+            if (objectProperty != null)
             {
-                propertyName = objectProperty.Key;
+                propertyName = GetPropertyName(objectProperty);
             }
-            var isRequered = schema.Required.Contains(propertyName);
-            if (isRequered)
+
+            if (property.IsRequired)
             {
                 Helper.AddUsing("System.ComponentModel.DataAnnotations", usings);
-                if (property.Key == idKey.Key || property.Key == typeKey.Key)
+                if (property == idKey || property == typeKey)
                 {
                     yield return $"Required(AllowEmptyStrings = true)";
                 }
@@ -991,37 +1056,37 @@ namespace DataWF.Common.Generator
                 }
             }
 
-            if (property.Value.MaxLength != null)
+            if (property.MaxLength != null)
             {
                 Helper.AddUsing("System.ComponentModel.DataAnnotations", usings);
-                yield return $"MaxLength({property.Value.MaxLength}, ErrorMessage = \"{propertyName} only max {property.Value.MaxLength} letters allowed.\")";
+                yield return $"MaxLength({property.MaxLength}, ErrorMessage = \"{propertyName} only max {property.MaxLength} letters allowed.\")";
             }
-            var idProperty = schema.GetReferenceIdProperty(property);
-            if (idProperty.Value != null)
+            var idProperty = GetReferenceIdProperty(property);
+            if (idProperty != null)
             {
-                foreach (var attribute in GenDefinitionClassPropertyValidationAttributes(schema, idProperty, usings))
+                foreach (var attribute in GenDefinitionClassPropertyValidationAttributes(idProperty, idKey, typeKey, usings))
                 {
                     yield return attribute;
                 }
             }
         }
 
-        private void GenDefintionClassPropertyGet(OpenApiSchema schema, KeyValuePair<string, OpenApiSchema> property, bool isOverride)
+        private void GenDefintionClassPropertyGet(StringBuilder source, JsonSchemaProperty property, bool isOverride)
         {
-            var fieldName = GetFieldName(property.Key);
+            var fieldName = GetFieldName(property);
             if (isOverride)
             {
                 source.Append($@"
-            get => base.{property.Key};");
+            get => base.{GetPropertyName(property)};");
                 return;
             }
-            //var refkey = property.Value.GetPropertyRefKey();
-            //if (refkey != null)
-            //{
-            //    yield return SF.ParseStatement($"{fieldName}.UpdateFilter();");
-            //}
+            var refkey = GetPropertyRefKey(property);
+            if (refkey != null)
+            {
+                //yield return SF.ParseStatement($"{fieldName}.UpdateFilter();");
+            }
             // Change - refence from single json
-            //if (property.Extensions != null && property.Extensions.TryGetValue("x-id", out var idProperty))
+            //if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var idProperty))
             //{
             //    var idFiledName = GetFieldName((string)idProperty);
             //    yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
@@ -1032,7 +1097,7 @@ namespace DataWF.Common.Generator
             get => {fieldName};");
         }
 
-        private void GenDefinitionClassPropertySet(OpenApiSchema schema, KeyValuePair<string, OpenApiSchema> property, List<RefField> refFields, HashSet<string> usings, bool isOverride)
+        private void GenDefinitionClassPropertySet(StringBuilder source, JsonSchemaProperty property, JsonSchemaProperty idKey, List<RefField> refFields, HashSet<string> usings, bool isOverride)
         {
             source.Append($@"
             set
@@ -1040,49 +1105,45 @@ namespace DataWF.Common.Generator
 
             if (!isOverride)
             {
-                var peopertySchema = property.Value;
-                var type = GetTypeString(peopertySchema, usings, "SelectableList");
-                var fieldName = GetFieldName(property.Key);
+                var type = GetTypeString(property, usings, "SelectableList");
                 if (type.Equals(Helper.cString, StringComparison.Ordinal))
                 {
                     source.Append($@"
-                if (string.Equals({fieldName}, value, StringComparison.Ordinal)) return;");
+                if (string.Equals({GetFieldName(property)}, value, StringComparison.Ordinal)) return;");
                 }
                 else
                 {
                     source.Append($@"
-                if ({fieldName} == value) return;");
+                if ({GetFieldName(property)} == value) return;");
                 }
                 source.Append($@"
-                var temp = {fieldName};
-                {fieldName} = value;");
-                if (peopertySchema.Extensions != null && peopertySchema.Extensions.TryGetValue(OpenApiExtendions.cXId, out var refPropertyString))
+                var temp = {GetFieldName(property)};
+                {GetFieldName(property)} = value;");
+                if (property.ExtensionData != null && property.ExtensionData.TryGetValue(cXId, out var refPropertyName))
                 {
-                    var refPropertyName = ((OpenApiString)refPropertyString).Value;
-                    var idProperty = peopertySchema.InheritedSchema().GetPrimaryKey();
-                    var refProperty = schema.GetProperty(refPropertyName.ToString());
-                    var refType = GetTypeString(refProperty.Value, usings);
-                    if (idProperty.Value.Nullable)
+                    var idProperty = GetPrimaryKey(property.Reference ?? property.AllOf.FirstOrDefault()?.Reference ?? property.AnyOf.FirstOrDefault()?.Reference);
+                    var refProperty = GetProperty((JsonSchema)property.Parent, (string)refPropertyName);
+                    var refType = GetTypeString(refProperty, usings);
+                    if (idProperty.IsNullableRaw ?? false)
                         source.Append($@"
-                {refPropertyName} = value?.{idProperty.Key};");
+                {refPropertyName} = value?.{GetPropertyName(idProperty)};");
                     else
                         source.Append($@"
-                {refPropertyName} = value?.{idProperty.Key} ?? default({refType});");
+                {refPropertyName} = value?.{GetPropertyName(idProperty)} ?? default({refType});");
                 }
                 //Change - refence from single json
-                var objectProperty = schema.GetReferenceProperty(property.Key);
-                if (objectProperty.Value != null)
+                var objectProperty = GetReferenceProperty((JsonSchema)property.Parent, property.Name);
+                if (objectProperty != null)
                 {
-                    var objectFieldName = GetFieldName(objectProperty.Key);
-                    var clientName = GetTypeString(objectProperty.Value, usings, CList);
-                    if (objectProperty.Value.Extensions != null
-                        && objectProperty.Value.Extensions.TryGetValue("x-derived", out var derivedClass))
-                        clientName = ((OpenApiString)derivedClass).Value;
+                    var objectFieldName = GetFieldName(objectProperty);
+                    var clientName = GetTypeString(objectProperty, usings, cList);
+                    if (objectProperty.ExtensionData != null && objectProperty.ExtensionData.TryGetValue("x-derived", out var derivedClass))
+                        clientName = derivedClass.ToString();
                     source.Append($@"
                 if ({objectFieldName}?.Id != value)
                 {{
                     {objectFieldName} = value == default({type}) ? null : Schema?.{clientName}.Select(value{(type.EndsWith("?") ? ".Value" : "")});
-                    OnPropertyChanged(nameof({objectProperty.Key}));
+                    OnPropertyChanged(nameof({GetPropertyName(objectProperty)}));
                 }}");
                 }
                 source.Append($@"
@@ -1091,7 +1152,7 @@ namespace DataWF.Common.Generator
             else
             {
                 source.Append($@"
-                base.{property.Key} = value;");
+                base.{GetPropertyName(property)} = value;");
             }
             //if (property.Name == idKey?.Name)
             //{
@@ -1104,9 +1165,14 @@ namespace DataWF.Common.Generator
             }}");
         }
 
-        private string GetDefinitionName(OpenApiSchema schema)
+        private string GetPropertyName(JsonSchemaProperty property)
         {
-            return schema.Title;
+            return property.Name;
+        }
+
+        private string GetDefinitionName(JsonSchema schema)
+        {
+            return schema.Id;
         }
 
         private string GetDefinitionName(string name)
@@ -1114,71 +1180,79 @@ namespace DataWF.Common.Generator
             return name.ToInitcap();
         }
 
+        private string GetFieldName(JsonSchemaProperty property)
+        {
+            return !string.IsNullOrEmpty(property.Id)
+                ? property.Id
+                : property.Id = GetFieldName(property.Name);
+        }
+
         private string GetFieldName(string property)
         {
             return string.Concat("_", property.ToLowerCap());
         }
 
-        private string GenFieldDefault(KeyValuePair<string, OpenApiSchema> property,
-            KeyValuePair<string, OpenApiSchema> idKey, HashSet<string> usings)
+        private string GetPropertyRefKey(JsonSchema schema)
         {
-            var text = property.Value.Default.Format();
-            var type = GetTypeString(property.Value, usings).TrimEnd('?');
+            return schema.ExtensionData != null
+                ? schema.ExtensionData.TryGetValue("x-ref-key", out var key) ? (string)key : null
+                : null;
+        }
+
+        private ExpressionSyntax GenFieldDefault(JsonSchemaProperty property, JsonSchemaProperty idKey, HashSet<string> usings)
+        {
+            var text = property.Default.ToString();
+            var type = GetTypeString(property, usings).TrimEnd('?');
             if (string.Equals(type, "bool", StringComparison.Ordinal))
                 text = text.ToLowerInvariant();
             else if (string.Equals(type, Helper.cString, StringComparison.Ordinal))
                 text = $"\"{text}\"";
-            else if (property.Value.InheritedSchema()?.IsEnumeration() == true)
+            else if (property.ActualSchema != null && property.ActualSchema.IsEnumeration)
                 text = $"{type}.{text}";
-            return text;
+            return SF.ParseExpression(text);
         }
 
-        private string GetArrayElementTypeString(OpenApiSchema schema, HashSet<string> usings)
+        private string GetArrayElementTypeString(JsonSchema schema, HashSet<string> usings)
         {
-            return schema.Items != null
-                ? GetTypeString(schema.Items, usings, CList)
+            return schema.Type == JsonObjectType.Array
+                ? GetTypeString(schema.Item, usings, cList)
                 : null;
         }
 
-        private string GetTypeString(OpenApiParameter parameter, HashSet<string> usings, string listType = "SelectableList", bool? baseNullable = null)
-        {
-            return GetTypeString(parameter.Schema, usings, listType, baseNullable);
-        }
-
-        private string GetTypeString(OpenApiSchema schema, HashSet<string> usings, string listType = "SelectableList", bool? baseNullable = null)
+        private string GetTypeString(JsonSchema schema, HashSet<string> usings, string listType = "SelectableList", bool? baseNullable = null)
         {
             if (schema == null)
                 return Helper.cString;
 
-            var nullable = baseNullable ?? schema.Nullable;
+            var nullable = baseNullable ?? schema.IsNullableRaw ?? false;
             switch (schema.Type)
             {
-                case "integer":
-                    if (schema.IsEnumeration())
+                case JsonObjectType.Integer:
+                    if (schema.IsEnumeration)
                     {
-                        goto case CTypeObject;
+                        goto case JsonObjectType.Object;
                     }
                     if (schema.Format == "int64")
                     {
                         return "long" + (nullable ? "?" : string.Empty);
                     }
                     return "int" + (nullable ? "?" : string.Empty);
-                case "boolean":
+                case JsonObjectType.Boolean:
                     return "bool" + (nullable ? "?" : string.Empty);
-                case "number":
-                    if (schema.IsEnumeration())
+                case JsonObjectType.Number:
+                    if (schema.IsEnumeration)
                     {
-                        goto case CTypeObject;
+                        goto case JsonObjectType.Object;
                     }
                     if (string.IsNullOrEmpty(schema.Format))
                     {
                         return "decimal" + (nullable ? "?" : string.Empty);
                     }
                     return schema.Format + (nullable ? "?" : string.Empty);
-                case "string":
-                    if (schema.IsEnumeration())
+                case JsonObjectType.String:
+                    if (schema.IsEnumeration)
                     {
-                        goto case CTypeObject;
+                        goto case JsonObjectType.Object;
                     }
                     switch (schema.Format)
                     {
@@ -1193,28 +1267,31 @@ namespace DataWF.Common.Generator
                         default:
                             return Helper.cString;
                     }
-                case "array":
-                    return $"{listType}<{GetTypeString(schema.Items, usings, listType)}>";
-                case "":
-                case null:
-                case "none":
-                    if (schema.InheritedSchema() != schema)
+                case JsonObjectType.Array:
+                    return $"{listType}<{GetTypeString(schema.Item, usings, listType)}>";
+                case JsonObjectType.None:
+                    if (schema.ActualTypeSchema != schema)
                     {
-                        return GetTypeString(schema.InheritedSchema(), usings, listType, nullable);
+                        return GetTypeString(schema.ActualTypeSchema, usings, listType, nullable);
+                    }
+                    else if (schema is JsonSchemaProperty propertySchema)
+                    {
+                        return GetTypeString(propertySchema.AllOf.FirstOrDefault()?.Reference
+                            ?? propertySchema.AnyOf.FirstOrDefault()?.Reference, usings, listType, nullable);
                     }
                     else
                     {
-                        goto case CTypeObject;
+                        goto case JsonObjectType.Object;
                     }
-                case CTypeObject:
-                    if (schema.Title != null)
+                case JsonObjectType.Object:
+                    if (schema.Id != null)
                     {
                         var type = GetReferenceType(schema);
                         if (type != null)
                         {
                             Helper.AddUsing(type, usings);
                         }
-                        if (schema.IsEnumeration())
+                        if (schema.IsEnumeration)
                         {
                             return GetDefinitionName(schema) + (nullable ? "?" : string.Empty);
                         }
@@ -1226,10 +1303,10 @@ namespace DataWF.Common.Generator
                     else if (schema.Properties.ContainsKey("file"))
                     {
                         //SyntaxHelper.AddUsing("System.IO", usings);
-                        return CTypeObject;
+                        return "object";
                     }
                     break;
-                case "file":
+                case JsonObjectType.File:
                     Helper.AddUsing("System.IO", usings);
                     return Helper.cStream;
             }
@@ -1325,218 +1402,27 @@ namespace {Namespace}
 
         private class RefField
         {
-            public OpenApiSchema KeyProperty;
+            public string RefKey;
+            public JsonSchemaProperty KeyProperty;
             public string KeyName;
             public string KeyType;
-            public OpenApiSchema TypeSchema;
+            public JsonSchema TypeSchema;
             public string TypeName;
             public string InvokerName;
             //public string InvokerType;
             //public string ParameterType;
             //public string ParameterName;
-            public OpenApiSchema Property;
+            public JsonSchemaProperty Property;
             public string PropertyName;
             public string FieldType;
             public string FieldName;
             public string Definition;
-            public OpenApiSchema ValueProperty;
+            public JsonSchemaProperty ValueProperty;
             public string ValueName;
             public string ValueType;
             public string ValueFieldName;
 
         }
-    }
 
-    public static class OpenApiExtendions
-    {
-        public const string cXId = "x-id";
-        public const string cXType = "x-type";
-
-        public static string Format(this IOpenApiAny apiAny)
-        {
-            switch (apiAny.AnyType)
-            {
-                case AnyType.Primitive:
-                    var primitive = (IOpenApiPrimitive)apiAny;
-                    switch (primitive.PrimitiveType)
-                    {
-                        case PrimitiveType.Integer:
-                            return ((OpenApiInteger)primitive).Value.ToString();
-                        case PrimitiveType.Long:
-                            return ((OpenApiLong)primitive).Value.ToString();
-                        case PrimitiveType.Float:
-                            return ((OpenApiFloat)primitive).Value.ToString(CultureInfo.InvariantCulture);
-                        case PrimitiveType.Double:
-                            return ((OpenApiDouble)primitive).Value.ToString(CultureInfo.InvariantCulture);
-                        case PrimitiveType.String:
-                            return ((OpenApiString)primitive).Value;
-                        case PrimitiveType.Byte:
-                            return ((OpenApiByte)primitive).Value.ToString();
-                        case PrimitiveType.Binary:
-                            return ((OpenApiBinary)primitive).Value.ToString();
-                        case PrimitiveType.Boolean:
-                            return ((OpenApiBoolean)primitive).Value.ToString();
-                        case PrimitiveType.Date:
-                            return ((OpenApiDate)primitive).Value.ToString(CultureInfo.InvariantCulture);
-                        case PrimitiveType.DateTime:
-                            return ((OpenApiDateTime)primitive).Value.ToString();
-                        case PrimitiveType.Password:
-                            return ((OpenApiPassword)primitive).Value.ToString();
-                        default:
-                            return primitive.ToString();
-                    }
-                case AnyType.Null:
-                    return "null";
-                case AnyType.Array:
-                    return "Array";
-                case AnyType.Object:
-                default:
-                    return "object";
-            };
-        }
-
-        public static KeyValuePair<string, OpenApiSchema> GetProperty(this OpenApiSchema schema, string propertyName)
-        {
-            if (schema.Properties.TryGetValue(propertyName, out var property))
-            {
-                property.Title = propertyName;
-
-                return new KeyValuePair<string, OpenApiSchema>(propertyName, property);
-            }
-            foreach (var baseClass in schema.AllInheritedSchemas())
-            {
-                if (baseClass.Properties.TryGetValue(propertyName, out property))
-                {
-                    property.Title = propertyName;
-
-                    return new KeyValuePair<string, OpenApiSchema>(propertyName, property);
-                }
-            }
-
-            return default;
-        }
-
-        public static KeyValuePair<string, OpenApiSchema> GetPrimaryKey(this OpenApiSchema schema, bool inherit = true)
-        {
-            IOpenApiExtension propertyName = null;
-            if (schema.Extensions?.TryGetValue(cXId, out propertyName) == true)
-            {
-                return schema.GetProperty(((OpenApiString)propertyName).Value);
-            }
-            if (inherit)
-            {
-                foreach (var baseClass in schema.AllInheritedSchemas())
-                {
-                    if (baseClass.Extensions?.TryGetValue(cXId, out propertyName) == true)
-                    {
-                        return baseClass.GetProperty(((OpenApiString)propertyName).Value);
-                    }
-                }
-            }
-            return default;
-        }
-
-        public static KeyValuePair<string, OpenApiSchema> GetReferenceIdProperty(this OpenApiSchema schema, KeyValuePair<string, OpenApiSchema> property, bool inherit = true)
-        {
-            if (property.Value.Extensions != null && property.Value.Extensions.TryGetValue(cXId, out var propertyName))
-            {
-                return schema.GetProperty(((OpenApiString)propertyName).Value);
-            }
-            return default;
-        }
-
-        public static KeyValuePair<string, OpenApiSchema> GetReferenceProperty(this OpenApiSchema schema, string name)
-        {
-            var find = schema.Properties.FirstOrDefault(p => p.Value.Extensions != null
-                 && p.Value.Extensions.TryGetValue(cXId, out var propertyName)
-                 && string.Equals(((OpenApiString)propertyName).Value, name, StringComparison.Ordinal));
-            if (find.Value != null)
-            {
-                return find;
-            }
-            foreach (var baseClass in schema.AllInheritedSchemas())
-            {
-                find = baseClass.Properties.FirstOrDefault(p => p.Value.Extensions != null
-                        && p.Value.Extensions.TryGetValue(cXId, out var propertyName)
-                        && string.Equals(((OpenApiString)propertyName).Value, name, StringComparison.Ordinal));
-                if (find.Value != null)
-                {
-                    return find;
-                }
-            }
-            return new KeyValuePair<string, OpenApiSchema>();
-        }
-
-        public static string GetPropertyRefKey(this OpenApiSchema schema)
-        {
-            return schema.Extensions != null
-                ? schema.Extensions.TryGetValue("x-ref-key", out var key) ? ((OpenApiString)key).Value : null
-                : null;
-        }
-
-        public static KeyValuePair<string, OpenApiSchema> GetTypeKey(this OpenApiSchema schema)
-        {
-            if (schema.Extensions != null && schema.Extensions.TryGetValue(cXType, out var propertyName))
-            {
-                return schema.GetProperty(((OpenApiString)propertyName).Value);
-            }
-
-            foreach (var baseClass in schema.AllInheritedSchemas())
-                if (baseClass.Extensions != null && baseClass.Extensions.TryGetValue(cXType, out propertyName))
-                {
-                    return baseClass.GetProperty(((OpenApiString)propertyName).Value);
-                }
-
-            return default;
-        }
-
-        public static int GetTypeId(this OpenApiSchema schema)
-        {
-            if (schema.Extensions != null && schema.Extensions.TryGetValue("x-type-id", out var id))
-            {
-                return id is OpenApiInteger openApiInteger
-                    ? openApiInteger.Value
-                    : int.TryParse(id.ToString(), out var typeid) 
-                        ? typeid
-                        : Convert.ToInt32(id);
-            }
-
-            return 0;
-        }
-
-        public static OpenApiSchema InheritedSchema(this OpenApiSchema apiSchema)
-        {
-            return apiSchema.AllOf?.Count != 0 ? apiSchema.AllOf[0] : null;
-        }
-
-        public static IEnumerable<OpenApiSchema> AllInheritedSchemas(this OpenApiSchema apiSchema)
-        {
-            var inherited = apiSchema.InheritedSchema();
-            while (inherited != null)
-            {
-                yield return inherited;
-                inherited = inherited.InheritedSchema();
-            }
-        }
-
-        public static bool IsEnumeration(this OpenApiSchema apiSchema)
-        {
-            return apiSchema.Enum?.Count > 0;
-        }
-
-        public static OpenApiOperation Operation(this OpenApiPathItem pathItem)
-        {
-            return pathItem.Operations.FirstOrDefault().Value;
-        }
-
-        public static OperationType OperationType(this OpenApiPathItem pathItem)
-        {
-            return pathItem.Operations.FirstOrDefault().Key;
-        }
-
-        public static OpenApiResponse Responce(this OpenApiOperation operation)
-        {
-            return operation.Responses.TryGetValue("200", out var responce) ? responce : null;
-        }
     }
 }

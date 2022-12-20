@@ -43,6 +43,7 @@ namespace DataWF.Data
         }
 
         public event EventHandler<DBSchemaChangedArgs> DBSchemaChanged;
+
         [XmlIgnore, JsonIgnore]
         public IFileProvider FileProvider
         {
