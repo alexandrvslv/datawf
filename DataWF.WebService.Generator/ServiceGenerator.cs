@@ -982,7 +982,9 @@ namespace DataWF.WebService.Generator
                     continue;
                 }
                 if (parameter.Type != typeof(string)
-                    && !parameter.Type.IsValueType)
+                    && !parameter.Type.IsValueType
+                    || parameter.Attribute != null
+                    && parameter.Attribute.Type == ControllerParameterType.Body)
                 {
                     post = true;
                     continue;
