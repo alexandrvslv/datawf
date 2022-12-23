@@ -434,9 +434,9 @@ namespace DataWF.Common
             return count;
         }
 
-        private static string GetString(byte[] data)
+        public static string ToHexString(this byte[] data)
         {
-            var builder = new StringBuilder();
+            var builder = new StringBuilder(data.Length * 2);
             for (int i = 0; i < data.Length; i++)
             {
                 builder.Append(data[i].ToString("x2"));
@@ -450,7 +450,7 @@ namespace DataWF.Common
                 return null;
             using (var encript = System.Security.Cryptography.SHA1.Create())
             {
-                return GetString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
+                return ToHexString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
             }
         }
 
@@ -460,7 +460,7 @@ namespace DataWF.Common
                 return null;
             using (var encript = System.Security.Cryptography.SHA256.Create())
             {
-                return GetString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
+                return ToHexString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
             }
         }
 
@@ -470,7 +470,7 @@ namespace DataWF.Common
                 return null;
             using (var encript = System.Security.Cryptography.SHA512.Create())
             {
-                return GetString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
+                return ToHexString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
             }
         }
 
@@ -480,7 +480,7 @@ namespace DataWF.Common
                 return null;
             using (var encript = System.Security.Cryptography.MD5.Create())
             {
-                return GetString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
+                return ToHexString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
             }
         }
 
@@ -597,7 +597,7 @@ namespace DataWF.Common
 
         private static void CheckFolderTemp(string path)
         {
-            var folders = Directory.GetDirectories(path).Where(x=> Directory.GetCreationTime(x) < DateTime.Now.AddDays(-5));
+            var folders = Directory.GetDirectories(path).Where(x => Directory.GetCreationTime(x) < DateTime.Now.AddDays(-5));
             if (folders.Any())
             {
                 foreach (var folder in folders)
@@ -626,7 +626,7 @@ namespace DataWF.Common
 #if PORTABLE
             return GetDirectory();
 #else
-            string path = Environment.GetFolderPath(folder);  
+            string path = Environment.GetFolderPath(folder);
             if (appName != null)
                 path = Path.Combine(path, appName);
             if (!Directory.Exists(path))
