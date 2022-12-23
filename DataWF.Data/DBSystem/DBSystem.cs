@@ -451,6 +451,11 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
         }
 
+        public virtual string FormatDropView(string name)
+        {
+            return $"drop view {name}";
+        }
+
         public virtual string FormatCreateView(string name)
         {
             return "create view " + name + " as";
@@ -476,6 +481,10 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 ddl.Length -= 2;
                 ddl.AppendLine();
                 ddl.AppendLine($"from {table.SqlName} a where {table.Query};");
+            }
+            else if (ddlType == DDLType.Drop)
+            {
+                ddl.AppendLine(FormatDropView(table.Name));
             }
         }
 

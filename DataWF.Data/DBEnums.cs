@@ -35,10 +35,22 @@ namespace DataWF.Data
 
     public enum DDLType
     {
-        Alter,
+        Default,
         Create,
-        Drop,
-        Default
+        Alter,
+        Drop
+    }
+
+    public enum DBSchemaItemType
+    {
+        None = 0,
+        Schema,
+        Table,
+        Column,
+        Constraint,
+        ForeignKey,
+        Index,
+        View
     }
 
     public enum DBExecuteType
@@ -183,7 +195,7 @@ namespace DataWF.Data
         max,
         min,
         count
-        
+
     }
 
     public enum DBRowBinarySeparator

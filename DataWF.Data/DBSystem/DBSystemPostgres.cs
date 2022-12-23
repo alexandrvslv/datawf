@@ -218,6 +218,11 @@ namespace DataWF.Data
             }
         }
 
+        public override string FormatDropView(string name)
+        {
+            return $"drop view if exists {name}";
+        }
+
         public override string FormatCreateView(string name)
         {
             return $"drop view if exists {name}; create view {name} as";

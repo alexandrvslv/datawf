@@ -208,9 +208,14 @@ namespace DataWF.Data
                 change = list[0];
                 if (change.Change != type)
                 {
-                    if (change.Change == DDLType.Create && type == DDLType.Alter)
+                    if (change.Change == DDLType.Create
+                        && type == DDLType.Alter)
                         return;
                     change = null;
+                }
+                else if (list.Any(x => x.Change == type))
+                {
+                    return;
                 }
             }
 
@@ -236,6 +241,21 @@ namespace DataWF.Data
                     OnDBSchemaChanged(foreign, DDLType.Create);
                 }
             }
+            else if (item is DBColumn cColumn)
+                table = cColumn.Table;
+            else
+                table = null;
+
+            if (table != null &&
+                table.GetVirtualTables() is IEnumerable<DBTable> vTables
+                    && vTables.Any())
+            {
+                foreach (var virtualTable in vTables)
+                {
+                    OnDBSchemaChanged(virtualTable, DDLType.Drop);
+                    OnDBSchemaChanged(virtualTable, DDLType.Create);
+                }
+            }
 
             DBSchemaChanged?.Invoke(item, new DBSchemaChangedArgs { Item = item, Type = type });
         }
@@ -247,40 +267,7 @@ namespace DataWF.Data
             foreach (var schema in schems)
             {
                 var chages = Changes.Where(p => p.Item.Schema == schema).ToList();
-                chages.Sort((a, b) =>
-                {
-                    if (a.Item is DBTable tableA && !(tableA is IDBVirtualTable))
-                    {
-                        if (b.Item is DBTable tableB && !(tableB is IDBVirtualTable))
-                        {
-                            return DBTableComparer.Instance.Compare(tableA, tableB, true);
-                        }
-                        else
-                        {
-                            return -1;
-                        }
-                    }
-                    else if (b.Item is DBTable table && !(table is IDBVirtualTable))
-                    {
-                        return 1;
-                    }
-                    else if (a.Item is DBColumn columnA)
-                    {
-                        if (b.Item is DBColumn columnB)
-                        {
-                            return a.Order.CompareTo(b.Order);
-                        }
-                        else
-                        {
-                            return -1;
-                        }
-                    }
-                    else if (b.Item is DBColumn)
-                    {
-                        return 1;
-                    }
-                    return a.Order.CompareTo(b.Order);
-                });
+                chages.Sort();
                 foreach (var item in chages)
                 {
                     string val = item.Generate();
@@ -500,7 +487,7 @@ namespace DataWF.Data
         public static IDBProvider DataProvider { get; set; }
     }
 
-    public class DBSchemaChange : ICheck
+    public class DBSchemaChange : ICheck, IComparable<DBSchemaChange>
     {
         private DBSchemaItem item;
         private DDLType change;
@@ -516,7 +503,23 @@ namespace DataWF.Data
             get { return item; }
             set { item = value; }
         }
-
+        public DBSchemaItemType ItemType
+        {
+            get
+            {
+                switch (Item)
+                {
+                    case DBSchema schema: return DBSchemaItemType.Schema;
+                    case IDBVirtualTable table: return DBSchemaItemType.View;
+                    case DBTable table: return DBSchemaItemType.Table;
+                    case DBColumn column: return DBSchemaItemType.Column;
+                    case DBForeignKey foreignKey: return DBSchemaItemType.ForeignKey;
+                    case DBConstraint constrant: return DBSchemaItemType.Constraint;
+                    case DBIndex constrant: return DBSchemaItemType.Index;
+                    default: return DBSchemaItemType.None;
+                }
+            }
+        }
         public DDLType Change
         {
             get { return change; }
@@ -528,11 +531,6 @@ namespace DataWF.Data
             return item.FormatSql(change);
         }
 
-        public override string ToString()
-        {
-            return string.Format("{0} {1} {2}", change, Type, item);
-        }
-
         public bool Check
         {
             get { return check; }
@@ -540,5 +538,38 @@ namespace DataWF.Data
         }
 
         public int Order { get; set; }
+
+        public override string ToString()
+        {
+            return string.Format("{0} {1} {2}", change, Type, item);
+        }
+
+        public int CompareTo(DBSchemaChange other)
+        {
+            var result = Comparer<DDLType>.Default.Compare(this.Change, other.Change);
+            if (result == 0)
+            {
+                result = Comparer<DBSchemaItemType>.Default.Compare(this.ItemType, other.ItemType);
+                if (result == 0)
+                {
+                    if (this.Item is DBTable thisTable && other.Item is DBTable otherTable)
+                        result = DBTableComparer.Instance.Compare(thisTable, otherTable);
+                    else if (this.Item is DBColumn thisColumn && other.Item is DBColumn otherColumn)
+                        result = thisColumn.Order.CompareTo(otherColumn.Order);
+                    else
+                        result = this.Item.Name.CompareTo(other.Item.Name);
+                }
+                else if (this.ItemType == DBSchemaItemType.View
+                    && this.Change == DDLType.Drop)
+                    result = 1;
+                else if(other.ItemType == DBSchemaItemType.View
+                    && other.Change == DDLType.Drop)
+                    result = -1;
+            }
+            else if (this.ItemType == DBSchemaItemType.View
+                || other.ItemType == DBSchemaItemType.View)
+                result = -result;
+            return result;
+        }
     }
 }
