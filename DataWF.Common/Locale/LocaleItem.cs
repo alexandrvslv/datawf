@@ -186,6 +186,11 @@ namespace DataWF.Common
             return litem;
         }
 
+        public void RaiseNotifyPropertyChanged()
+        {
+            OnPropertyChanged(nameof(Value));
+        }
+
         public class NameInvoker : Invoker<LocaleItem, string>
         {
             public static readonly NameInvoker Instance = new NameInvoker();

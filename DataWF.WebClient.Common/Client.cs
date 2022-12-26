@@ -66,6 +66,15 @@ namespace DataWF.Common
             }
         }
 
+        public virtual void ResetLocalization()
+        {
+            if (typeof(ILocalizable).IsAssignableFrom(typeof(T)))
+            {
+                foreach (ILocalizable item in Items)
+                    item.ResetLocalization();
+            }
+        }
+
         public override void ClearCache()
         {
             IsSynchronized = false;

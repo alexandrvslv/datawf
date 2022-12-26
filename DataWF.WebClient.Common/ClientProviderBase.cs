@@ -129,6 +129,17 @@ namespace DataWF.Common
 
         IEnumerable<IClient> IClientProvider.Clients => Clients;
 
+        public virtual void ResetLocalization()
+        {
+            foreach (var client in Clients)
+            {
+                if (client is ICrudClient crudClient)
+                {
+                    crudClient.ResetLocalization();
+                }
+            }
+        }
+
         public virtual HttpClient CreateHttpClient(HttpMessageHandler httpMessageHandler = null)
         {
             this.httpMessageHandler = httpMessageHandler;

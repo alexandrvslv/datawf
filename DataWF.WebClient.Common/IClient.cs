@@ -70,6 +70,7 @@ namespace DataWF.Common
         IEnumerable<object> SearchByValue(IInvoker valueInvoker, object value);
 
         bool ClearLoadCache(string filter);
+        void ResetLocalization();
     }
 
     public interface ICrudClient<T> : ICrudClient

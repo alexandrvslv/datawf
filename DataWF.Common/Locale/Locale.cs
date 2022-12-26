@@ -15,6 +15,7 @@ namespace DataWF.Common
     public class Locale : SelectableList<LocaleCategory>
     {
         public static Locale Instance = new Locale();
+        public static CultureInfo CurrentCulture => Instance.Culture;
 
         private CultureInfo culture = CultureInfo.GetCultureInfo("en-US");
 
@@ -32,11 +33,16 @@ namespace DataWF.Common
         {
             get { return culture; }
             set
-            {
+            {                
                 culture = value;
                 if (culture != null && !Cultures.Contains(culture))
                 {
                     Cultures.Add(culture);
+                }
+                foreach (var category in this)
+                {
+                    foreach (var item in category)
+                        item.RaiseNotifyPropertyChanged();
                 }
             }
         }
@@ -152,6 +158,7 @@ namespace DataWF.Common
         {
             return Instance.GetByName(GetTypeCategory(category)).GetByName(name);
         }
+
         public static GlyphType GetGlyph(Type category, string name, GlyphType def = GlyphType.None)
         {
             return GetGlyph(GetTypeCategory(category), name, def);

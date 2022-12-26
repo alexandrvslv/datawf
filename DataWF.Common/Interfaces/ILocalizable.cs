@@ -2,7 +2,7 @@
 {
     public interface ILocalizable
     {
-        void Localize();
+        void ResetLocalization();
     }
 }
 

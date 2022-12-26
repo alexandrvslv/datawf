@@ -5,6 +5,7 @@ using NJsonSchema;
 using NSwag;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -1037,6 +1038,10 @@ namespace DataWF.WebClient.Generator
                 yield return SF.SimpleBaseType(SF.ParseTypeName("IPrimaryKey"));
                 yield return SF.SimpleBaseType(SF.ParseTypeName("IQueryFormatable"));
             }
+            if (schema.Properties?.Values.Any(x => x.ExtensionData != null && x.ExtensionData.ContainsKey("x-culture")) ?? false)
+            {
+                yield return SF.SimpleBaseType(SF.ParseTypeName("ILocalizable"));
+            }
         }
 
         private IEnumerable<MemberDeclarationSyntax> GenDefinitionClassMemebers(JsonSchema schema, List<RefField> refFields, Dictionary<string, UsingDirectiveSyntax> usings, List<AttributeListSyntax> attributes)
@@ -1045,14 +1050,37 @@ namespace DataWF.WebClient.Generator
             var typeKey = GetTypeKey(schema);
             var typeId = GetTypeId(schema);
 
-            foreach (var property in schema.Properties)
+            var cultureProperties = new Dictionary<string, List<CultureProperty>>();
+            foreach (var entry in schema.Properties)
             {
-                foreach (var item in GenDefinitionClassField(property.Value, idKey, refFields, usings))
+                var property = entry.Value;
+                if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-culture", out var cultureName))
+                {
+                    var name = GetDefinitionName(entry.Key).Substring(0, entry.Key.Length - 2) + "UI";
+                    if (!cultureProperties.TryGetValue(name, out var cultureKeyProperties))
+                        cultureProperties[name] = cultureKeyProperties = new List<CultureProperty>();
+                    cultureKeyProperties.Add(new CultureProperty
+                    {
+                        Name = name,
+                        CultureName = cultureName.ToString(),
+                        Property = property,
+                        Default = cultureName.ToString() == "en-US"
+                    });
+                }
+                foreach (var item in GenDefinitionClassField(property, idKey, refFields, usings))
                 {
                     yield return item;
                 }
-            }
 
+            }
+            if (cultureProperties.Count > 0)
+            {
+                SyntaxHelper.AddUsing("System.Globalization", usings);
+                foreach (var cultureProperty in cultureProperties)
+                {
+                    yield return GenDefinitionClassField(cultureProperty, idKey, refFields, usings);
+                }
+            }
             yield return SF.ConstructorDeclaration(
                       attributeLists: SF.List<AttributeListSyntax>(),
                       modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
@@ -1066,11 +1094,26 @@ namespace DataWF.WebClient.Generator
                 yield return GenDefinitionClassProperty(idKey, idKey, typeKey, refFields, usings, true);
             }
 
-            foreach (var property in schema.Properties)
+            foreach (var entry in schema.Properties)
             {
-                yield return GenDefinitionClassProperty(property.Value, idKey, typeKey, refFields, usings);
+                var property = entry.Value;
+                CultureProperty cultureProperty = null;
+                foreach (var culturePropertyEntry in cultureProperties)
+                {
+                    cultureProperty = culturePropertyEntry.Value.FirstOrDefault(x => x.Property == property);
+                    if (cultureProperty != null)
+                        break;
+                }
+                yield return GenDefinitionClassProperty(property, idKey, typeKey, refFields, usings, false, cultureProperty);
             }
-
+            if (cultureProperties.Count > 0)
+            {
+                foreach (var cultureProperty in cultureProperties)
+                {
+                    yield return GenDefinitionClassProperty(cultureProperty, idKey, typeKey, refFields, usings);
+                }
+                yield return GenResetUIFields(cultureProperties);
+            }
             if (GetPrimaryKey(schema, false) != null)
             {
                 SyntaxHelper.AddUsing("System.Text.Json.Serialization", usings);
@@ -1117,10 +1160,44 @@ namespace DataWF.WebClient.Generator
 
                 yield return GenDefinitionClassPropertyInvoker(name, definitionName, propertyName, propertyType, attributes);
             }
-
+            if (cultureProperties.Count > 0)
+            {
+                foreach (var cultureProperty in cultureProperties)
+                {
+                    var defaultProperty = cultureProperty.Value.First(x => x.Default).Property;
+                    var propertyName = GetDefinitionName(cultureProperty.Key);
+                    var name = GetInvokerName(propertyName);
+                    var propertyType = GetTypeString(defaultProperty, defaultProperty.IsNullableRaw ?? true, usings, "SelectableList");
+                    yield return GenDefinitionClassPropertyInvoker(name, definitionName, propertyName, propertyType, attributes);
+                }
+            }
             if (GetPrimaryKey(schema, false) != null)
             {
                 yield return GenDefinitionClassPropertyInvoker("PrimaryKeyInvoker", definitionName, "PrimaryKey", "object", attributes);
+            }
+        }
+
+        private MemberDeclarationSyntax GenResetUIFields(Dictionary<string, List<CultureProperty>> cultureProperties)
+        {
+            return SF.MethodDeclaration(
+                   attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                   returnType: SF.ParseTypeName("void"),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier("ResetLocalization"),
+                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                   typeParameterList: null,
+                   body: SF.Block(GenResetUIFieldsBody(cultureProperties)),
+                   parameterList: SF.ParameterList(),
+                   expressionBody: null,
+                   semicolonToken: SF.Token(SyntaxKind.None));
+        }
+
+        private IEnumerable<StatementSyntax> GenResetUIFieldsBody(Dictionary<string, List<CultureProperty>> cultureProperties)
+        {
+            foreach (var entry in cultureProperties)
+            {
+                yield return SF.ParseStatement($"{GetDefinitionName(entry.Key)} = null;");
             }
         }
 
@@ -1239,6 +1316,11 @@ namespace DataWF.WebClient.Generator
             return GetPropertyName(property) + "Invoker";
         }
 
+        private string GetInvokerName(string propertyName)
+        {
+            return propertyName + "Invoker";
+        }
+
         private IEnumerable<StatementSyntax> GenDefintionClassPropertySynckGet(JsonSchemaProperty typeKey, int typeId, List<RefField> refFields)
         {
             yield return SF.ParseStatement($"if (base.SyncStatus != SynchronizedStatus.Actual)");
@@ -1294,8 +1376,30 @@ namespace DataWF.WebClient.Generator
                 @default: @default);
         }
 
-        private PropertyDeclarationSyntax GenDefinitionClassProperty(JsonSchemaProperty property, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, List<RefField> refFields,
+        private PropertyDeclarationSyntax GenDefinitionClassProperty(KeyValuePair<string, List<CultureProperty>> property, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, List<RefField> refFields,
             Dictionary<string, UsingDirectiveSyntax> usings, bool isOverride = false)
+        {
+            var defaultProperty = property.Value.First(x => x.Default).Property;
+            var typeDeclaration = GetTypeDeclaration(defaultProperty, defaultProperty.IsNullableRaw ?? true, usings, "SelectableList");
+
+            return SF.PropertyDeclaration(
+                attributeLists: SF.List(new[]{SF.AttributeList(
+                             SF.SingletonSeparatedList(
+                                 SF.Attribute(
+                                     SF.IdentifierName("JsonIgnoreSerialization")))) }),
+                modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                type: typeDeclaration,
+                explicitInterfaceSpecifier: null,
+                identifier: SF.Identifier(GetDefinitionName(property.Key)),
+                accessorList: SF.AccessorList(SF.List(GenDefinitionClassPropertyAccessors(property, idKey, refFields, usings, isOverride))),
+                expressionBody: null,
+                initializer: null,
+                semicolonToken: SF.Token(SyntaxKind.None)
+               );
+        }
+
+        private PropertyDeclarationSyntax GenDefinitionClassProperty(JsonSchemaProperty property, JsonSchemaProperty idKey, JsonSchemaProperty typeKey, List<RefField> refFields,
+            Dictionary<string, UsingDirectiveSyntax> usings, bool isOverride = false, CultureProperty cultureProperty = null)
         {
             var refkey = GetPropertyRefKey(property);
             var typeDeclaration = GetTypeDeclaration(property, property.IsNullableRaw ?? true, usings, refkey == null ? "SelectableList" : "ReferenceList");
@@ -1306,7 +1410,7 @@ namespace DataWF.WebClient.Generator
                 type: typeDeclaration,
                 explicitInterfaceSpecifier: null,
                 identifier: SF.Identifier(GetPropertyName(property)),
-                accessorList: SF.AccessorList(SF.List(GenDefinitionClassPropertyAccessors(property, idKey, refFields, usings, isOverride))),
+                accessorList: SF.AccessorList(SF.List(GenDefinitionClassPropertyAccessors(property, idKey, refFields, usings, isOverride, cultureProperty))),
                 expressionBody: null,
                 initializer: null,
                 semicolonToken: SF.Token(SyntaxKind.None)
@@ -1406,7 +1510,7 @@ namespace DataWF.WebClient.Generator
         }
 
         private IEnumerable<AccessorDeclarationSyntax> GenDefinitionClassPropertyAccessors(
-            JsonSchemaProperty property,
+            KeyValuePair<string, List<CultureProperty>> property,
             JsonSchemaProperty idKey,
             List<RefField> refFields,
             Dictionary<string, UsingDirectiveSyntax> usings,
@@ -1418,6 +1522,43 @@ namespace DataWF.WebClient.Generator
             yield return SF.AccessorDeclaration(
                 kind: SyntaxKind.SetAccessorDeclaration,
                 body: SF.Block(GenDefinitionClassPropertySet(property, idKey, refFields, usings, isOverride)));
+        }
+
+        private IEnumerable<AccessorDeclarationSyntax> GenDefinitionClassPropertyAccessors(
+            JsonSchemaProperty property,
+            JsonSchemaProperty idKey,
+            List<RefField> refFields,
+            Dictionary<string, UsingDirectiveSyntax> usings,
+            bool isOverride,
+            CultureProperty cultureProperty = null)
+        {
+            yield return SF.AccessorDeclaration(
+                kind: SyntaxKind.GetAccessorDeclaration,
+                body: SF.Block(GenDefintionClassPropertyGet(property, isOverride)));
+            yield return SF.AccessorDeclaration(
+                kind: SyntaxKind.SetAccessorDeclaration,
+                body: SF.Block(GenDefinitionClassPropertySet(property, idKey, refFields, usings, isOverride, cultureProperty)));
+        }
+
+        private IEnumerable<StatementSyntax> GenDefintionClassPropertyGet(KeyValuePair<string, List<CultureProperty>> property, bool isOverride)
+        {
+            var defaultProperty = property.Value.First(x => x.Default).Property;
+            var defaultFieldName = GetFieldName(defaultProperty);
+            var fieldName = GetFieldName(property.Key);
+            if (isOverride)
+            {
+                yield return SF.ParseStatement($"return base.{GetDefinitionName(property.Key)};");
+                yield break;
+            }
+            var body = new StringBuilder($"return {fieldName} ?? ({fieldName} = ( ");
+            foreach (var cultureProperty in property.Value)
+            {
+                if (cultureProperty.Property == defaultProperty)
+                    continue;
+                body.Append($"string.Equals(Locale.CurrentCulture.Name, \"{cultureProperty.CultureName}\", StringComparison.Ordinal) ? {GetFieldName(cultureProperty.Property)} : ");
+            }
+            body.Append($"{defaultFieldName}) ?? {defaultFieldName});");
+            yield return SF.ParseStatement(body.ToString());
         }
 
         private IEnumerable<StatementSyntax> GenDefintionClassPropertyGet(JsonSchemaProperty property, bool isOverride)
@@ -1445,29 +1586,73 @@ namespace DataWF.WebClient.Generator
         }
 
         private IEnumerable<StatementSyntax> GenDefinitionClassPropertySet(
-            JsonSchemaProperty property,
+            KeyValuePair<string, List<CultureProperty>> property,
             JsonSchemaProperty idKey,
             List<RefField> refFields,
             Dictionary<string, UsingDirectiveSyntax> usings,
             bool isOverride)
         {
+            var defaultProperty = property.Value.First(x => x.Default).Property;
+            var defaultFieldName = GetFieldName(defaultProperty);
+            var fieldName = GetFieldName(property.Key);
+            if (!isOverride)
+            {
+                var type = GetTypeString(defaultProperty, true, usings, "SelectableList");
+                if (type.Equals("string", StringComparison.Ordinal))
+                {
+                    yield return SF.ParseStatement($"if(string.Equals({fieldName}, value, StringComparison.Ordinal)) return;");
+                }
+                else
+                {
+                    yield return SF.ParseStatement($"if({fieldName} == value) return;");
+                }
+                yield return SF.ParseStatement($"var temp = {fieldName};");
+                yield return SF.ParseStatement($"{fieldName} = value;");
+                yield return SF.ParseStatement($"if({fieldName} != null) {{");
+                foreach (var cultureProperty in property.Value)
+                {
+                    yield return SF.ParseStatement($"if(string.Equals(Locale.CurrentCulture.Name, \"{cultureProperty.CultureName}\", StringComparison.Ordinal)) {GetPropertyName(cultureProperty.Property)} = value;");
+                }
+                yield return SF.ParseStatement("}");
+                yield return SF.ParseStatement($"OnPropertyChanged();");
+            }
+            else
+            {
+                yield return SF.ParseStatement($"base.{GetDefinitionName(property.Key)} = value;");
+            }
+        }
+
+        private IEnumerable<StatementSyntax> GenDefinitionClassPropertySet(
+            JsonSchemaProperty property,
+            JsonSchemaProperty idKey,
+            List<RefField> refFields,
+            Dictionary<string, UsingDirectiveSyntax> usings,
+            bool isOverride,
+            CultureProperty cultureProperty)
+        {
+            var fieldName = GetFieldName(property);
             if (!isOverride)
             {
                 var type = GetTypeString(property, true, usings, "SelectableList");
                 if (type.Equals("string", StringComparison.Ordinal))
                 {
-                    yield return SF.ParseStatement($"if(string.Equals({GetFieldName(property)}, value, StringComparison.Ordinal)) return;");
+                    yield return SF.ParseStatement($"if(string.Equals({fieldName}, value, StringComparison.Ordinal)) return;");
                 }
                 else
                 {
-                    yield return SF.ParseStatement($"if({GetFieldName(property)} == value) return;");
+                    yield return SF.ParseStatement($"if({fieldName} == value) return;");
                 }
-                yield return SF.ParseStatement($"var temp = {GetFieldName(property)};");
-                yield return SF.ParseStatement($"{GetFieldName(property)} = value;");
+                yield return SF.ParseStatement($"var temp = {fieldName};");
+                yield return SF.ParseStatement($"{fieldName} = value;");
                 if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var refPropertyName))
                 {
                     var idProperty = GetPrimaryKey(property.Reference ?? property.AllOf.FirstOrDefault()?.Reference ?? property.AnyOf.FirstOrDefault()?.Reference);
                     yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)};");
+                }
+                if (cultureProperty != null)
+                {
+                    yield return SF.ParseStatement($"if(string.Equals(Locale.CurrentCulture.Name, \"{cultureProperty.CultureName}\", StringComparison.Ordinal))");
+                    yield return SF.ParseStatement($"{GetDefinitionName(cultureProperty.Name)} = null;");
                 }
                 //Change - refence from single json
                 var objectProperty = GetReferenceProperty((JsonSchema)property.Parent, property.Name);
@@ -1526,6 +1711,25 @@ namespace DataWF.WebClient.Generator
             return schema.ExtensionData != null
                 ? schema.ExtensionData.TryGetValue("x-ref-key", out var key) ? (string)key : null
                 : null;
+        }
+
+        private FieldDeclarationSyntax GenDefinitionClassField(KeyValuePair<string, List<CultureProperty>> property, JsonSchemaProperty idKey, List<RefField> refFields, Dictionary<string, UsingDirectiveSyntax> usings)
+        {
+            var defaultProperty = property.Value.FirstOrDefault(x => x.Default);
+            var type = GetTypeString(defaultProperty.Property, defaultProperty.Property.IsNullableRaw ?? true, usings);
+            return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
+                modifiers: SF.TokenList(type.EndsWith('?')
+                ? new[] { SF.Token(SyntaxKind.ProtectedKeyword) }
+                : new[] { SF.Token(SyntaxKind.ProtectedKeyword), SF.Token(SyntaxKind.InternalKeyword) }),
+               declaration: SF.VariableDeclaration(
+                   type: SF.ParseTypeName(type),
+                   variables: SF.SingletonSeparatedList(
+                       SF.VariableDeclarator(
+                           identifier: SF.Identifier(GetFieldName(property.Key)),
+                           argumentList: null,
+                           initializer: defaultProperty.Property.Type == JsonObjectType.Array
+                           ? SF.EqualsValueClause(SF.ParseExpression($"new {type}()"))
+                           : null))));
         }
 
         private IEnumerable<FieldDeclarationSyntax> GenDefinitionClassField(JsonSchemaProperty property, JsonSchemaProperty idKey, List<RefField> refFields, Dictionary<string, UsingDirectiveSyntax> usings)
@@ -1752,7 +1956,16 @@ namespace DataWF.WebClient.Generator
             public string ValueName;
             public string ValueType;
             public string ValueFieldName;
+            public string CulruteName;
 
+        }
+
+        private class CultureProperty
+        {
+            public string Name;
+            public string CultureName;
+            public JsonSchemaProperty Property;
+            public bool Default;
         }
 
     }
