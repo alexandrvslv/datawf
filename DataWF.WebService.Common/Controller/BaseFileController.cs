@@ -140,10 +140,17 @@ namespace DataWF.WebService.Common
                         {
                             return NotFound();
                         }
-                        if (IsDenied(item, transaction.Caller))
+
+                        try
                         {
-                            item.Reject(transaction.Caller);
-                            return Forbid();
+                            if (IsDenied(item, transaction.Caller))
+                            {
+                                return Forbid();
+                            }
+                        }
+                        catch (InvalidOperationException ex)
+                        {
+                            return BadRequest(ex.Message);
                         }
 
                         if (string.IsNullOrEmpty(item.GetValue<string>(table.FileNameKey)))
@@ -206,9 +213,17 @@ namespace DataWF.WebService.Common
                     {
                         return NotFound();
                     }
-                    if (IsDenied(item, transaction.Caller))
+
+                    try
                     {
-                        return Forbid();
+                        if (IsDenied(item, transaction.Caller))
+                        {
+                            return Forbid();
+                        }
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        return BadRequest(ex.Message);
                     }
 
                     var upload = await Upload();
