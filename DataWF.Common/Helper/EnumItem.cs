@@ -101,6 +101,7 @@ namespace DataWF.Common
 
 
         private bool check;
+        private LocaleItem localeItem;
 
         public EnumItem()
         { }
@@ -114,7 +115,15 @@ namespace DataWF.Common
             Value = item;
             Name = name;
             Text = text;
-            TextUI = Locale.Get(item.GetType(), text);
+            localeItem = Locale.GetItem(item.GetType(), text);
+            localeItem.PropertyChanged += LocaleItem_PropertyChanged;
+            TextUI = localeItem.Value;
+        }
+
+        private void LocaleItem_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            TextUI = localeItem.Value;
+            OnPropertyChanged(nameof(TextUI));
         }
 
         public int Index { get; set; }
