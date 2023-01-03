@@ -28,7 +28,7 @@ namespace DataWF.WebService.Common
     public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
     {
         protected int MaxDeleteDepth = 4;
-        protected static bool IsDenied(T value, IUserIdentity user)
+        protected virtual bool IsDenied(T value, IUserIdentity user)
         {
             if (value.Access.GetFlag(AccessType.Admin, user))
                 return false;
