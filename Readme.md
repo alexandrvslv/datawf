@@ -1,4 +1,4 @@
-# DataWF Data/Document WorkFlow
+# DataWF Data Wrapper Framework
 
 ## Overview
 
