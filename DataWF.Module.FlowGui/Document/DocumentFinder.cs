@@ -1,8 +1,8 @@
 ﻿using DataWF.Data;
 using DataWF.Module.Flow;
 using DataWF.Gui;
-using DataWF.Common;
-using Xwt;
+using DataWF;
+using Avalonia;
 
 namespace DataWF.Module.FlowGui
 {

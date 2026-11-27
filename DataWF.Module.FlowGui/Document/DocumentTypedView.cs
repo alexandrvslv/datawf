@@ -1,5 +1,5 @@
 ﻿using System;
-using DataWF.Common;
+using DataWF;
 using DataWF.Gui;
 using DataWF.Module.Flow;
 
@@ -47,10 +47,10 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public override void Serialize(ISerializeWriter writer)
+        public override void Serialize(XmlInvokerWriter writer)
         { }
 
-        public override void Deserialize(ISerializeReader reader)
+        public override void Deserialize(XmlInvokerReader reader)
         { }
     }
 }

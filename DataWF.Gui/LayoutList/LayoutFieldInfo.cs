@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using DataWF.Common;
+using DataWF;
 
 namespace DataWF.Gui
 {
@@ -66,9 +66,25 @@ namespace DataWF.Gui
             ValueColumn = new LayoutFieldColumn() { Name = "Value", FillWidth = true, StyleName = "Value", Invoker = new FieldValueInvoker() };
 
             Columns = new LayoutListInfo(
-                new LayoutColumn { Name = nameof(LayoutField.ToString), Editable = false, Width = 100, Invoker = ToStringInvoker<object>.Instance },
-                new LayoutColumn { Name = nameof(LayoutField.Category), Visible = false, Invoker = categoryInvoker },
-                new LayoutColumn { Name = nameof(LayoutField.Order), Visible = false, Invoker = orderInvoker },
+                new LayoutColumn
+                {
+                    Name = nameof(LayoutField.ToString),
+                    Editable = false,
+                    Width = 100,
+                    Invoker = ToStringInvoker<object>.Instance
+                },
+                new LayoutColumn
+                {
+                    Name = nameof(LayoutField.Category),
+                    Visible = false,
+                    Invoker = categoryInvoker
+                },
+                new LayoutColumn
+                {
+                    Name = nameof(LayoutField.Order),
+                    Visible = false,
+                    Invoker = orderInvoker
+                },
                 ValueColumn
             )
             {
@@ -100,7 +116,7 @@ namespace DataWF.Gui
 
         public LayoutNodeList<LayoutField> Nodes
         {
-            get { return nodes; }
+            get => nodes;
             set
             {
                 nodes = value;
@@ -116,8 +132,8 @@ namespace DataWF.Gui
 
         public LayoutListInfo Columns
         {
-            get { return colums; }
-            set { colums = value; }
+            get => colums;
+            set => colums = value;
         }
 
         public void SetGridMode(bool gridMode)

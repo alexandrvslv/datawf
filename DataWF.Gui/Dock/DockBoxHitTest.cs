@@ -1,6 +1,6 @@
 ﻿using System;
-using Xwt;
-using DataWF.Common;
+using Avalonia;
+using DataWF;
 
 namespace DataWF.Gui
 {
@@ -8,28 +8,28 @@ namespace DataWF.Gui
     {
         DockItem item;
         LayoutAlignType align;
-        Rectangle alignBound;
+        Rect alignBound;
 
 
         public DockItem Item
         {
-            get { return item; }
-            set { item = value; }
+            get => item;
+            set => item = value;
         }
 
         public LayoutAlignType Align
         {
-            get { return align; }
-            set { align = value; }
+            get => align;
+            set => align = value;
         }
 
-        public Rectangle AlignBound
+        public Rect AlignBound
         {
-            get { return alignBound; }
-            set { alignBound = value; }
+            get => alignBound;
+            set => alignBound = value;
         }
 
-        public Rectangle Bound { get; internal set; }
+        public Rect Bound { get; internal set; }
     }
 }
 

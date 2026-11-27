@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -27,10 +27,9 @@ namespace DataWF.Data
     {
         bool? Active { get; set; }
         IPEndPoint EndPoint { get; set; }
-        string Host { get; set; }
-        int? Id { get; set; }
+        string Url { get; set; }
+        int Id { get; set; }
         bool IsCurrent { get; }
-        int? Port { get; set; }
         long ReceiveCount { get; set; }
         long ReceiveLength { get; set; }
         long SendCount { get; set; }

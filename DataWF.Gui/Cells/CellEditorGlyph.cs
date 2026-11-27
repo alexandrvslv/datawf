@@ -1,6 +1,7 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
-using Xwt.Drawing;
+using Avalonia.Controls;
+using Avalonia.Media.Imaging;
 
 namespace DataWF.Gui
 {
@@ -9,9 +10,8 @@ namespace DataWF.Gui
         public CellEditorGlyph()
         {
             var list = new SelectableList<GlyphView>();
-            var enumVals = Enum.GetValues(typeof(GlyphType));
-            foreach (var enumItem in enumVals)
-                list.Add(new GlyphView((GlyphType)enumItem));
+            foreach (GlyphType enumItem in Enum.GetValues(typeof(GlyphType)))
+                list.Add(new GlyphView(enumItem));
             listSource = list;
         }
 
@@ -37,9 +37,9 @@ namespace DataWF.Gui
 
             public GlyphType Glyph { get; set; }
 
-            public Image Image
+            public Bitmap Image
             {
-                get { return null; }
+                get => null;
                 set { }
             }
         }

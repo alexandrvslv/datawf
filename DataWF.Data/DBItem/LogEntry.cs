@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -42,13 +42,13 @@ namespace DataWF.Data
 
         public object OldFormat
         {
-            get { return Column.FormatValue(Old); }
+            get { return Column.FormatDisplay(Old); }
             set { Old = value; }
         }
 
         public object NewFormat
         {
-            get { return Column.FormatValue(New); }
+            get { return Column.FormatDisplay(New); }
             set { New = value; }
         }
 
@@ -58,7 +58,7 @@ namespace DataWF.Data
     public class LogMap
     {
         private DBItem row;
-        private List<DBLogItem> logs = new List<DBLogItem>();
+        private List<DBItemLog> logs = new List<DBItemLog>();
         private readonly SelectableList<LogEntry> changes = new SelectableList<LogEntry>();
         private string user;
         private DBTable table;
@@ -88,22 +88,22 @@ namespace DataWF.Data
             {
                 row = value;
                 if (row != null)
-                    table = row.Table;
+                    table = (DBTable)row.Table;
                 RefreshLogs();
             }
         }
 
         public void RefreshLogs()
         {
-            QQuery query = new QQuery(string.Empty, (DBTable)Row.Table.LogTable);
-            query.BuildParam(Row.Table.LogTable.BaseKey, CompareType.Equal, row.PrimaryId);
-            query.BuildParam(Row.Table.LogTable.StatusKey, CompareType.Equal, (int)DBStatus.New);
-            Logs.AddRange(Row.Table.LogTable.LoadItems(query, DBLoadParam.Load | DBLoadParam.Synchronize).Cast<DBLogItem>());
+            var query = Row.Table.LogTable.QQuery(DBLoadParam.Load | DBLoadParam.NoCache)
+                .Where(Row.Table.LogTable.BaseKey, CompareOperator.Equal, row.PrimaryId)
+                .And(Row.Table.LogTable.StatusKey, CompareOperator.Equal, (int)DBStatus.New);
+            Logs.AddRange(query.Load<DBItemLog>());
 
             RefreshChanges();
         }
 
-        public List<DBLogItem> Logs
+        public List<DBItemLog> Logs
         {
             get { return logs; }
             set
@@ -120,11 +120,11 @@ namespace DataWF.Data
 
         public void RefreshChanges()
         {
-            logs.Sort(new DBComparer<DBLogItem, int?>(Row.Table.LogTable.PrimaryKey));
+            logs.Sort(new DBComparer<DBItemLog, int?>(Row.Table.LogTable.PrimaryKey));
 
             changes.Clear();
             user = string.Empty;
-            DBLogItem prev = null;
+            DBItemLog prev = null;
             foreach (var log in Logs)
             {
                 if (log.Status == DBStatus.New)
@@ -134,13 +134,13 @@ namespace DataWF.Data
                         user += name + "; ";
                     foreach (var logColumn in log.LogTable.GetLogColumns())
                     {
-                        LogEntry map = changes.SelectOne(nameof(LogEntry.Column), CompareType.Equal, logColumn.BaseColumn);
+                        LogEntry map = changes.SelectOne(nameof(LogEntry.Column), CompareOperator.Equal, logColumn.TargetColumn);
                         if (map == null)
                         {
                             map = new LogEntry
                             {
                                 User = name,
-                                Column = logColumn.BaseColumn,
+                                Column = logColumn.TargetColumn,
                                 Old = prev?.GetValue(logColumn)
                             };
                             changes.Add(map);
@@ -177,13 +177,13 @@ namespace DataWF.Data
 
         public async Task Accept(IUserIdentity user)
         {
-            await DBLogItem.Accept(row, logs, user);
+            await DBTableLog<DBItemLog>.Accept(row, logs, user);
             RefreshLogs();
         }
 
         public async Task Reject(IUserIdentity user)
         {
-            await DBLogItem.Reject(logs, user);
+            await DBTableLog<DBItemLog>.Reject(logs, user);
             RefreshLogs();
         }
     }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using DataWF.Common;
-using Xwt;
+using DataWF;
+using Avalonia;
 
 namespace DataWF.Gui
 {
@@ -22,14 +22,14 @@ namespace DataWF.Gui
 
         public DockPanel Panel
         {
-            get { return panel; }
+            get => panel;
             set
             {
                 if (panel == value)
                     return;
                 panel = value;
                 panel.DockItem = this;
-                panel.Visible = Visible;
+                panel.IsVisible = Visible;
                 if (box != null && panel.Parent == null)
                 {
                     box.Add(Panel);
@@ -40,7 +40,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public DockBox DockBox
         {
-            get { return box; }
+            get => box;
             set
             {
                 if (box == value)
@@ -69,26 +69,26 @@ namespace DataWF.Gui
 
         public override bool Visible
         {
-            get { return base.Visible; }
+            get => base.IsVisible;
             set
             {
                 if (Main)
                     return;
 
-                base.Visible = value;
+                base.IsVisible = value;
 
                 if (panel != null)
-                    panel.Visible = value;
+                    panel.IsVisible = value;
             }
         }
 
         [XmlIgnore]
-        public Rectangle Bound { get; private set; }
+        public Rect Bound { get; private set; }
 
-        public override void ApplyBound(Rectangle value)
+        public override void ApplyBound(Rect value)
         {
             base.ApplyBound(value);
-            Bound = value.Inflate(-3, -3);
+            Bound = value.Inflate(new Thickness(-3, -3));
         }
 
         public override void Dispose()

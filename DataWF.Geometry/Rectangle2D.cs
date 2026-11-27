@@ -17,9 +17,10 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Globalization;
+using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
@@ -27,7 +28,7 @@ namespace DataWF.Geometry
 {
     /// Rectangle in User Space  - Base coordinate: bottom left corner
     [JsonConverter(typeof(SystemJsonRectangle2DConverter)), Newtonsoft.Json.JsonConverter(typeof(NewtonJsonRectangle2DConverter))]
-    public struct Rectangle2D : IByteSerializable, IComparable<Rectangle2D>, IEquatable<Rectangle2D>
+    public struct Rectangle2D : IBinarySerializable, IComparable<Rectangle2D>, IEquatable<Rectangle2D>
     {
         public static readonly Rectangle2D Empty = new Rectangle2D();
 
@@ -139,6 +140,22 @@ namespace DataWF.Geometry
                 && Left.Equals(other.Left)
                 && Top.Equals(other.Top)
                 && Right.Equals(other.Right);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Left = reader.ReadDouble();
+            Bottom = reader.ReadDouble();
+            Right = reader.ReadDouble();
+            Top = reader.ReadDouble();
+        }
+
+        public void Serialize(BinaryWriter writer)
+        {
+            writer.Write(Left);
+            writer.Write(Bottom);
+            writer.Write(Right);
+            writer.Write(Top);
         }
 
         public void Deserialize(byte[] data)

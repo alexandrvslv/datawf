@@ -1,5 +1,5 @@
-﻿using DataWF.Common;
-using Xwt;
+﻿using DataWF;
+using Avalonia;
 
 namespace DataWF.Gui
 {
@@ -19,8 +19,8 @@ namespace DataWF.Gui
 
         public Toolsbar ContextBar
         {
-            get { return Editor.Bar; }
-            set { Editor.Bar = value; }
+            get => Editor.Bar;
+            set => Editor.Bar = value;
         }
     }
 }

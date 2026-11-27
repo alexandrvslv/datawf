@@ -1,4 +1,5 @@
-﻿using DataWF.Common;
+﻿using Avalonia.Media.Imaging;
+using DataWF;
 using DataWF.Gui;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Drawing.Spreadsheet;
@@ -604,7 +605,7 @@ namespace DataWF.Data.Gui
                         Offset = offset
                     };
 
-                    var bm = Xwt.Drawing.Image.FromFile(sImagePath).ToBitmap();
+                    var bm = new Bitmap(sImagePath);
                     //http://en.wikipedia.org/wiki/English_Metric_Unit#DrawingML
                     //http://stackoverflow.com/questions/1341930/pixel-to-centimeter
                     //http://stackoverflow.com/questions/139655/how-to-convert-pixels-to-points-px-to-pt-in-net-c

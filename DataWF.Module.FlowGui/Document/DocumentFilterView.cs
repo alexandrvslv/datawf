@@ -1,7 +1,7 @@
 ﻿using DataWF.Gui;
 using DataWF.Module.Flow;
 using DataWF.Module.CommonGui;
-using DataWF.Common;
+using DataWF;
 using System;
 using DataWF.Module.Common;
 using DataWF.Data.Gui;
@@ -69,8 +69,8 @@ namespace DataWF.Module.FlowGui
                 FlowKeys = FlowTreeKeys.Work | FlowTreeKeys.Stage,
                 Name = "Works_Stage"
             };
-            //dates = new VBox();
-            //dates.PackStart(dateType)
+            //dates = new StackPanel{Orientation = Orientation.Vertical};
+            //dates.Children.Add(dateType)
 
             users = new UserTree()
             {
@@ -80,19 +80,19 @@ namespace DataWF.Module.FlowGui
             };
 
             box = new GroupBox(
-                new GroupBoxItem { Widget = templates, Name = "Document Type", FillWidth = true, FillHeight = true },
-                //new GroupBoxItem { Widget = fields, Row = 1, Name = "Parameters", FillWidth = true, Height = 160, Autosize = false, Expand = false },
-                new GroupBoxItem { Widget = works, Row = 2, Name = "Workflow & Stage", FillWidth = true, FillHeight = true, Expand = false },
-                new GroupBoxItem { Widget = users, Row = 3, Name = "Staff", FillWidth = true, FillHeight = true, Expand = false })
+                new GroupBoxItem { Control = templates, Name = "Document Type", FillWidth = true, FillHeight = true },
+                //new GroupBoxItem { Control = fields, Row = 1, Name = "Parameters", FillWidth = true, Height = 160, Autosize = false, Expand = false },
+                new GroupBoxItem { Control = works, Row = 2, Name = "Workflow & Stage", FillWidth = true, FillHeight = true, Expand = false },
+                new GroupBoxItem { Control = users, Row = 3, Name = "Staff", FillWidth = true, FillHeight = true, Expand = false })
             { Name = "Map" };
 
-            PackStart(box, true, true);
+            Children.Add(box, true, true);
             MinWidth = 330;
 
             var nodeSend = new TableItemNode()
             {
                 Name = "Send",
-                Tag = new DocumentFilter()
+                Tag = new DocumentFilter(FlowExplorer.Schema)
                 {
                     Staff = (User)GuiEnvironment.User,
                     DateType = DocumentSearchDate.WorkEnd,
@@ -105,7 +105,7 @@ namespace DataWF.Module.FlowGui
             var nodeRecent = new TableItemNode()
             {
                 Name = "Recent",
-                Tag = new DocumentFilter()
+                Tag = new DocumentFilter(FlowExplorer.Schema)
                 {
                     Staff = (User)GuiEnvironment.User,
                     DateType = DocumentSearchDate.WorkEnd,
@@ -117,7 +117,7 @@ namespace DataWF.Module.FlowGui
             var nodeSearch = new TableItemNode()
             {
                 Name = "Search",
-                Tag = new DocumentFilter() { }
+                Tag = new DocumentFilter(FlowExplorer.Schema) { }
             };
             GuiService.Localize(nodeSearch, "DocumentWorker", nodeSearch.Name);
 

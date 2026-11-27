@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,13 +10,17 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.Threading;
+using Avalonia.Media.Imaging;
 
 namespace DataWF.Gui
 {
     [ToolboxItem(true)]
-    public partial class LayoutList : VPanel, ILocalizable, ILayoutList, ISerializableElement
+    public partial class LayoutList : VPanel, ILocalizable, ILayoutList, IXMLSerializable
     {
         public static LayoutListMenu DefaultMenu { get; set; }
 
@@ -36,9 +40,9 @@ namespace DataWF.Gui
         protected LayoutListState ustate = LayoutListState.Default;
 
         private Point _cacheLocation = new Point();
-        private PointerButton _cacheButton = 0;
+        private MouseButton _cacheButton = 0;
         private Point location = new Point(0, 0);
-        private Rectangle _recMove = new Rectangle();
+        private Rect _recMove = new Rect();
         private Dictionary<LayoutColumn, decimal> collectedCache = new Dictionary<LayoutColumn, decimal>();
         private int _p0;
         private object dragItem;
@@ -58,7 +62,7 @@ namespace DataWF.Gui
         protected LayoutFieldInfo fieldInfo;
         protected LayoutNodeInfo nodeInfo;
         protected LayoutSelection selection;
-        private ScrollView scroll;
+        protected ScrollViewer scroll;
         protected LayoutGroupList groups;
         protected bool _gridMode = false;
         protected bool checkView = true;
@@ -75,7 +79,7 @@ namespace DataWF.Gui
         protected internal LayoutHitTestEventArgs cacheHitt = new LayoutHitTestEventArgs();
         protected internal LayoutListDrawArgs cacheDraw = new LayoutListDrawArgs();
         protected internal LayoutListDrawArgs cacheCalc = new LayoutListDrawArgs();
-        private List<Dictionary<LayoutColumn, TextLayout>> cache = new List<Dictionary<LayoutColumn, TextLayout>>();
+        private List<Dictionary<LayoutColumn, FormattedText>> cache = new List<Dictionary<LayoutColumn, FormattedText>>();
         private int gridCols = 1;
         private int gridRows = 1;
         #region Events
@@ -91,14 +95,14 @@ namespace DataWF.Gui
 
         public event EventHandler ColumnFilterChanged
         {
-            add { filterChanged += value; }
-            remove { filterChanged -= value; }
+            add => filterChanged += value;
+            remove => filterChanged -= value;
         }
 
         public event EventHandler ColumnFilterChanging
         {
-            add { filterChanging += value; }
-            remove { filterChanging -= value; }
+            add => filterChanging += value;
+            remove => filterChanging -= value;
         }
 
         public event EventHandler<NotifyProperty> PositionChanged;
@@ -144,20 +148,20 @@ namespace DataWF.Gui
 
         #endregion
         protected LayoutListCanvas canvas;
-        private CursorType _ctype = CursorType.Arrow;
+        private StandardCursorType _ctype = StandardCursorType.Arrow;
         private Menubar menu;
         //protected static PrintOperation print;
         public string Description;
-        private VBox filterBox;
+        private StackPanel filterBox;
         private bool treeMode;
         private InvokeBinder binder;
 
         public LayoutList()
         {
-            CanGetFocus = true;
+            Focusable = true;
             //filters = new LayoutFilterView(this);
 
-            editor.Visible = false;
+            editor.IsVisible = false;
             editor.PropertyChanged += ControlOnValueChanged;
 
             canvas = new LayoutListCanvas(this)
@@ -165,11 +169,11 @@ namespace DataWF.Gui
                 MinWidth = 150,
                 MinHeight = 50
             };
-            canvas.AddChild(editor, 0, 0);
+            canvas.Children.Add(editor, 0, 0);
 
-            scroll = new ScrollView() { Content = canvas, BorderVisible = false };
+            scroll = new ScrollViewer() { Content = canvas, BorderVisible = false };
 
-            PackStart(scroll, true, true);
+            Children.Add(scroll);
 
             groups = new LayoutGroupList(this);
             Selection = new LayoutSelection();
@@ -198,8 +202,8 @@ namespace DataWF.Gui
 
         public Menubar Menu
         {
-            get { return menu; }
-            set { menu = value; }
+            get => menu;
+            set => menu = value;
         }
 
         protected virtual void CheckScrolling()
@@ -251,14 +255,14 @@ namespace DataWF.Gui
 
         protected void FocusEditControl()
         {
-            if (editor.Widget != null)
-                editor.Widget.SetFocus();
+            if (editor.Control != null)
+                editor.Control.Focus();
         }
 
         public void GetAreaBound()
         {
-            bounds.Area = new Rectangle(canvas.Location, canvas.Size);
-            bounds.Middle = new Rectangle(listInfo.HeaderFrosen ? 0 : -bounds.Area.X,
+            bounds.Area = new Rect(canvas.Location, canvas.Bounds.Size);
+            bounds.Middle = new Rect(listInfo.HeaderFrosen ? 0 : -bounds.Area.X,
                                                  0,
                                                  listInfo.HeaderWidth,
                                                  bounds.Columns.Height);
@@ -266,7 +270,7 @@ namespace DataWF.Gui
 
         protected internal void CopyToClipboard(string text)
         {
-            Clipboard.SetText(text);
+            _ = Application.Current.Clipboard.SetTextAsync(text);
         }
 
         protected internal void CopyToClipboard(LayoutColumn column)
@@ -276,50 +280,50 @@ namespace DataWF.Gui
             {
                 object formated = FormatValue(SelectedItem, column);
                 if (formated is string)
-                    Clipboard.SetText((string)formated);
-                else if (formated is Image)
-                    Clipboard.SetImage((Image)formated);
+                    Application.Current.Clipboard.SetTextAsync((string)formated);
+                else if (formated is Bitmap)
+                    Application.Current.Clipboard.SetDataObjectAsync((Bitmap)formated);
             }
             else if (Selection.Count > 0)
             {
                 var builder = ToTabbedList(Selection.GetItems<object>());
-                Clipboard.SetText(builder.ToString());
+                Application.Current.Clipboard.SetTextAsync(builder.ToString());
             }
         }
 
         #region override
 
-
-        protected internal virtual void CanvasButtonPress(ButtonEventArgs e)
+        protected internal virtual void CanvasButtonPress(PointerPressedEventArgs e)
         {
             //if (!HasFocus)
-            //    SetFocus();
-            _cacheButton = e.Button;
-            var hInfo = HitTest(e.X, e.Y, e.Button,
-                                         Keyboard.CurrentModifiers == ModifierKeys.Control,
-                                         Keyboard.CurrentModifiers == ModifierKeys.Shift);
+            //    Focus();
+            _cacheButton = e.MouseButton;
+            var position = e.GetPosition(null);
+            var hInfo = HitTest(position, e.MouseButton,
+                                         e.KeyModifiers == KeyModifiers.Control,
+                                         e.KeyModifiers == KeyModifiers.Shift);
             hInfo.MouseDown = true;
             hInfo.Clicks = e.MultiplePress;
             cacheHitt.Cancel = false;
 
-            if (e.Button == PointerButton.Left && e.MultiplePress <= 1)
+            if (e.Button == MouseButton.Left && e.MultiplePress <= 1)
             {
                 switch (hInfo.Location)
                 {
                     case LayoutHitTestLocation.Column:
-                        if (AllowColumnSize && (canvas.Cursor == CursorType.ResizeUpDown || canvas.Cursor == CursorType.ResizeLeftRight))
+                        if (AllowColumnSize && (canvas.Cursor == StandardCursorType.SizeNorthSouth || canvas.Cursor == StandardCursorType.SizeWestEast))
                             OnColumnSizing(cacheHitt);
                         else
                             OnColumnMouseDown(cacheHitt);
                         break;
                     case LayoutHitTestLocation.Header:
-                        if (canvas.Cursor == CursorType.ResizeLeftRight)
+                        if (canvas.Cursor == StandardCursorType.SizeWestEast)
                             OnHeaderSizing(cacheHitt);
                         break;
                     case LayoutHitTestLocation.Cell:
                         if (AllowCellSize)
                         {
-                            if (canvas.Cursor == CursorType.ResizeUpDown || canvas.Cursor == CursorType.ResizeLeftRight)
+                            if (canvas.Cursor == StandardCursorType.SizeNorthSouth || canvas.Cursor == StandardCursorType.SizeWestEast)
                             {
                                 OnColumnSizing(cacheHitt);
                             }
@@ -341,12 +345,12 @@ namespace DataWF.Gui
 
         }
 
-        protected internal virtual void CanvasButtonReleased(ButtonEventArgs e)
+        protected internal virtual void CanvasButtonReleased(PointerEventArgs e)
         {
             _cacheButton = 0;
             HitTest(e.X, e.Y, e.Button,
-                Keyboard.CurrentModifiers == ModifierKeys.Control,
-                Keyboard.CurrentModifiers == ModifierKeys.Shift);
+                Keyboard.CurrentModifiers == KeyModifiers.Control,
+                Keyboard.CurrentModifiers == KeyModifiers.Shift);
             hitt.MouseDown = false;
             cacheHitt.Cancel = false;
             if (UseState == LayoutListState.MoveColumn)
@@ -370,7 +374,7 @@ namespace DataWF.Gui
                         OnCellMouseUp(cacheHitt);
                     break;
                 case LayoutHitTestLocation.Column:
-                    Debug.WriteLine($"Columns Clicks {e.MultiplePress}");
+                    Debug.WriteLine($"Columns Clicks {e.Pointer}");
                     if (hitt.Clicks == 2)
                         OnColumnDoubleClick(cacheHitt);
                     else
@@ -396,7 +400,7 @@ namespace DataWF.Gui
                         return;
                     }
                     CurrentCell = null;
-                    if (e.Button == PointerButton.Right)
+                    if (e.Button == MouseButton.Right)
                     {
                         OnContextMenuShow(cacheHitt.HitTest);
                     }
@@ -404,11 +408,11 @@ namespace DataWF.Gui
             }
         }
 
-        protected internal virtual void CanvasMouseMoved(MouseMovedEventArgs e)
+        protected internal virtual void CanvasMouseMoved(PointerEventArgs e)
         {
             HitTest(e.X, e.Y, _cacheButton,
-                                         Keyboard.CurrentModifiers == ModifierKeys.Control,
-                                         Keyboard.CurrentModifiers == ModifierKeys.Shift);
+                                         Keyboard.CurrentModifiers == KeyModifiers.Control,
+                                         Keyboard.CurrentModifiers == KeyModifiers.Shift);
             cacheHitt.Cancel = false;
 
             switch (UseState)
@@ -438,8 +442,8 @@ namespace DataWF.Gui
                     switch (hitt.Location)
                     {
                         case LayoutHitTestLocation.Group:
-                            if (canvas.Cursor != CursorType.Arrow)
-                                canvas.Cursor = CursorType.Arrow;
+                            if (canvas.Cursor != StandardCursorType.Arrow)
+                                canvas.Cursor = StandardCursorType.Arrow;
 
                             if (selection.HoverRow != null)
                                 OnCellMouseLeave(cacheHitt);
@@ -450,8 +454,8 @@ namespace DataWF.Gui
                             selection.SetHover(hitt.Group);
                             break;
                         case LayoutHitTestLocation.Aggregate:
-                            if (canvas.Cursor != CursorType.Arrow)
-                                canvas.Cursor = CursorType.Arrow;
+                            if (canvas.Cursor != StandardCursorType.Arrow)
+                                canvas.Cursor = StandardCursorType.Arrow;
 
                             if (selection.HoverRow != null)
                                 OnCellMouseLeave(cacheHitt);
@@ -472,11 +476,11 @@ namespace DataWF.Gui
                             {
                                 if (hitt.Anchor == LayoutAlignType.Right)
                                 {
-                                    canvas.Cursor = CursorType.ResizeLeftRight;
+                                    canvas.Cursor = StandardCursorType.SizeWestEast;
                                 }
-                                else if (canvas.Cursor != CursorType.Arrow)
+                                else if (canvas.Cursor != StandardCursorType.Arrow)
                                 {
-                                    canvas.Cursor = CursorType.Arrow;
+                                    canvas.Cursor = StandardCursorType.Arrow;
                                 }
                             }
 
@@ -512,20 +516,20 @@ namespace DataWF.Gui
                             {
                                 if (hitt.Anchor == LayoutAlignType.Bottom && hitt.Index == 0)
                                 {
-                                    canvas.Cursor = CursorType.ResizeUpDown;
+                                    canvas.Cursor = StandardCursorType.SizeNorthSouth;
                                 }
                                 else if (hitt.Anchor == LayoutAlignType.Right && !hitt.Column.FillWidth)
                                 {
-                                    canvas.Cursor = CursorType.ResizeLeftRight;
+                                    canvas.Cursor = StandardCursorType.SizeWestEast;
                                 }
-                                else if (canvas.Cursor != CursorType.Arrow)
+                                else if (canvas.Cursor != StandardCursorType.Arrow)
                                 {
-                                    canvas.Cursor = CursorType.Arrow;
+                                    canvas.Cursor = StandardCursorType.Arrow;
                                 }
                             }
-                            else if (canvas.Cursor != CursorType.Arrow)
+                            else if (canvas.Cursor != StandardCursorType.Arrow)
                             {
-                                canvas.Cursor = CursorType.Arrow;
+                                canvas.Cursor = StandardCursorType.Arrow;
                             }
 
                             break;
@@ -535,8 +539,8 @@ namespace DataWF.Gui
                             if (selection.HoverColumn != null)
                                 OnColumnMouseLeave(cacheHitt);
                             selection.SetHover(null);
-                            if (canvas.Cursor != CursorType.Arrow)
-                                canvas.Cursor = CursorType.Arrow;
+                            if (canvas.Cursor != StandardCursorType.Arrow)
+                                canvas.Cursor = StandardCursorType.Arrow;
                             break;
                     }
 
@@ -550,15 +554,15 @@ namespace DataWF.Gui
                 OnColumnMouseLeave(EventArgs.Empty);
 
             //_cacheHitt.HitTest.Column = null;
-            //QueueDraw(false, false);
+            //InvalidateVisual(false, false);
             //OnToolTipCancel(EventArgs.Empty);
         }
 
-        protected internal virtual void CanvasMouseScrolled(MouseScrolledEventArgs e)
+        protected internal virtual void CanvasMouseScrolled(PointerWheelEventArgs e)
         {
-            hitt.ItemBound = new Rectangle();
-            CanvasMouseMoved(new MouseMovedEventArgs(e.Timestamp, e.X, e.Y));
-            canvas.QueueDraw();
+            hitt.ItemBound = new Rect();
+            CanvasMouseMoved(new PointerEventArgs(e.Timestamp, e.X, e.Y));
+            canvas.InvalidateVisual();
         }
 
         protected internal virtual void CanvasLostFocus(EventArgs e)
@@ -569,8 +573,8 @@ namespace DataWF.Gui
                 OnCellMouseLeave(e);
             //UseState = LayoutListState.Default;
             //_cacheButton = 0;
-            //if (canvas.Cursor != CursorType.Arrow)
-            //    canvas.Cursor = CursorType.Arrow;
+            //if (canvas.Cursor != StandardCursorType.Arrow)
+            //    canvas.Cursor = StandardCursorType.Arrow;
             OnToolTipCancel(EventArgs.Empty);
             base.OnLostFocus(e);
         }
@@ -586,14 +590,14 @@ namespace DataWF.Gui
             switch (e.Key)
             {
                 case Key.Escape:
-                    if (editor.Visible)
+                    if (editor.IsVisible)
                     {
                         OnCellEditEnd(new CancelEventArgs(true));
                         e.Handled = true;
                     }
                     break;
                 case Key.F2:
-                    if (!editor.Visible && editMode != EditModes.None && CurrentCell != null)
+                    if (!editor.IsVisible && editMode != EditModes.None && CurrentCell != null)
                     {
                         OnCellEditBegin();
                         e.Handled = true;
@@ -601,9 +605,9 @@ namespace DataWF.Gui
                     break;
                 case Key.Return:
                 case Key.NumPadEnter:
-                    if (editor.Visible)
+                    if (editor.IsVisible)
                     {
-                        if (!(editor.Widget is TextEntry box) || !box.MultiLine)
+                        if (!(editor.Control is TextBox box) || !box.MultiLine)
                         {
                             OnCellEditEnd(new CancelEventArgs());
                             e.Handled = true;
@@ -644,7 +648,7 @@ namespace DataWF.Gui
                     e.Handled = true;
                     break;
                 case Key.Space:
-                    if (e.Modifiers == ModifierKeys.Control && selection.HoverRow != null)
+                    if (e.KeyModifiers == KeyModifiers.Control && selection.HoverRow != null)
                     {
                         if (selection.Contains(selection.HoverRow.Index))
                         {
@@ -664,7 +668,7 @@ namespace DataWF.Gui
                 case Key.Down:
                 case Key.PageUp:
                 case Key.PageDown:
-                    if (editor.Visible || ListSource?.Count == 0)
+                    if (editor.IsVisible || ListSource?.Count == 0)
                         return;
                     if (e.Key == Key.Up)
                     {
@@ -684,11 +688,11 @@ namespace DataWF.Gui
                         if (column == null)
                             return;
                     }
-                    var item = selection.HoverRow != null && e.Modifiers == ModifierKeys.Control
+                    var item = selection.HoverRow != null && e.KeyModifiers == KeyModifiers.Control
                                             ? selection.HoverRow?.Item
                                             : selection.CurrentRow?.Item;
 
-                    var itemIndex = selection.HoverRow != null && e.Modifiers == ModifierKeys.Control
+                    var itemIndex = selection.HoverRow != null && e.KeyModifiers == KeyModifiers.Control
                                             ? selection.HoverRow?.Index ?? -1
                                             : selection.CurrentRow?.Index ?? -1;
                     if (column.Name == nameof(object.ToString)
@@ -734,9 +738,9 @@ namespace DataWF.Gui
                     }
                     itemIndex = itemIndex < 0 ? 0 : itemIndex > listSource.Count - 1 ? listSource.Count - 1 : itemIndex;
 
-                    if (e.Modifiers == ModifierKeys.Shift)
+                    if (e.KeyModifiers == KeyModifiers.Shift)
                         selection.SetCurrent(selection.Add(listSource[itemIndex], itemIndex));
-                    else if (e.Modifiers == ModifierKeys.Control)
+                    else if (e.KeyModifiers == KeyModifiers.Control)
                         selection.SetHover(new LayoutSelectionRow(listSource[itemIndex], itemIndex));
                     else
                         SelectedItem = listSource[itemIndex];
@@ -745,7 +749,7 @@ namespace DataWF.Gui
                     break;
                 case Key.C:
                 case Key.c:
-                    if (!editor.Visible && e.Modifiers == ModifierKeys.Control)
+                    if (!editor.IsVisible && e.KeyModifiers == KeyModifiers.Control)
                     {
                         if (CurrentCell != null)
                         {
@@ -761,7 +765,7 @@ namespace DataWF.Gui
                     return;
                 case Key.V:
                 case Key.v:
-                    if (!editor.Visible && e.Modifiers == ModifierKeys.Control)
+                    if (!editor.IsVisible && e.KeyModifiers == KeyModifiers.Control)
                     {
                         if (CurrentCell != null)
                         {
@@ -769,7 +773,7 @@ namespace DataWF.Gui
                             if (text != null)
                             {
                                 OnCellEditBegin();
-                                if (editor.Visible)
+                                if (editor.IsVisible)
                                 {
                                     editor.CurrentEditor.Value = text;
                                 }
@@ -780,8 +784,8 @@ namespace DataWF.Gui
                     break;
                 case Key.S:
                 case Key.s:
-                    if (!editor.Visible
-                        && e.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+                    if (!editor.IsVisible
+                        && e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift))
                     {
                         if (CurrentCell != null)
                         {
@@ -793,8 +797,8 @@ namespace DataWF.Gui
                     }
                     break;
                 default:
-                    if (!editor.Visible && CurrentCell != null
-                        && e.Modifiers == ModifierKeys.None
+                    if (!editor.IsVisible && CurrentCell != null
+                        && e.KeyModifiers == KeyModifiers.None
                         && editMode == EditModes.ByClick)
                     {
                         OnCellEditBegin();
@@ -804,11 +808,11 @@ namespace DataWF.Gui
             }
         }
 
-        protected override void Dispose(bool disposing)
+        protected void Dispose(bool disposing)
         {
             if (disposing)
             {
-                Application.Invoke(() =>
+                _ = Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     ClearCache();
                     FieldSource = null;
@@ -820,7 +824,6 @@ namespace DataWF.Gui
 
             }
             binder?.Dispose();
-            base.Dispose(disposing);
 
             void ClearCache()
             {
@@ -828,10 +831,10 @@ namespace DataWF.Gui
                 {
                     foreach (var cacheItem in cache)
                     {
-                        foreach (var textLayout in cacheItem.Values)
+                        foreach (var FormattedText in cacheItem.Values)
                         {
-                            if (textLayout != null)
-                                textLayout.Dispose();
+                            if (FormattedText != null)
+                                FormattedText = null;
                         }
                     }
                     cache.Clear();
@@ -841,9 +844,9 @@ namespace DataWF.Gui
 
         #endregion
 
-        public void QueueDraw(double x, double y, double w, double h)
+        public void InvalidateVisual(double x, double y, double w, double h)
         {
-            canvas.QueueDraw();//new Rectangle(x, y, w, h));
+            canvas.InvalidateVisual();//new Rect(x, y, w, h));
         }
 
         private void ControlOnValueChanged(object sender, EventArgs e)
@@ -915,9 +918,8 @@ namespace DataWF.Gui
 
         protected virtual void OnContextMenuShow(LayoutHitTestInfo e)
         {
-            if (DefaultMenu == null)
-                DefaultMenu = new LayoutListMenu();
-            if (editor.Visible)
+            DefaultMenu ??= new LayoutListMenu();
+            if (editor.IsVisible)
             {
                 OnCellEditEnd(new CancelEventArgs(true));
             }
@@ -938,9 +940,9 @@ namespace DataWF.Gui
         {
             if (e.Location == LayoutHitTestLocation.Column || e.Location == LayoutHitTestLocation.Cell)
             {
-                DefaultMenu.Editor.CellCheck.Visible = (e.Column.Name == nameof(object.ToString) && AllowCheck)
+                DefaultMenu.Editor.CellCheck.IsVisible = (e.Column.Name == nameof(object.ToString) && AllowCheck)
                     || e.Column.GetEditor(e.Item) is CellEditorCheck;
-                DefaultMenu.Editor.CellCopy.Visible = e.Location != LayoutHitTestLocation.Column;
+                DefaultMenu.Editor.CellCopy.IsVisible = e.Location != LayoutHitTestLocation.Column;
 
 
             }
@@ -948,26 +950,26 @@ namespace DataWF.Gui
 
         public bool IsEditMode
         {
-            get { return editor.Visible; }
+            get { return editor.IsVisible; }
         }
 
         public event PListGetEditorHandler RetriveCellEditor
         {
-            add { handleGetCellEditor += value; }
-            remove { handleGetCellEditor -= value; }
+            add => handleGetCellEditor += value;
+            remove => handleGetCellEditor -= value;
         }
 
         [DefaultValue(EditListState.Edit)]
         public virtual EditListState EditState
         {
-            get { return editState; }
-            set { editState = value; }
+            get => editState;
+            set => editState = value;
         }
 
         [DefaultValue(false)]
         public bool HideEmpty
         {
-            get { return _hideEmpty; }
+            get => _hideEmpty;
             set
             {
                 if (_hideEmpty == value)
@@ -994,7 +996,7 @@ namespace DataWF.Gui
             if (CurrentEditor != null)
                 SetEditorBound();
 
-            canvas.QueueDraw();
+            canvas.InvalidateVisual();
         }
 
         public void InvalidateCell(object item, int index, LayoutColumn cell)
@@ -1002,27 +1004,27 @@ namespace DataWF.Gui
             if (cell == null)
                 return;
             bounds.Cell = GetCellBound(item, index, cell);
-            canvas.QueueDraw(bounds.Cell);
+            canvas.InvalidateVisual(bounds.Cell);
         }
 
         public void InvalidateColumns()
         {
             if (ListInfo.ColumnsVisible)
             {
-                canvas.QueueDraw(bounds.Columns);
+                canvas.InvalidateVisual(bounds.Columns);
             }
         }
 
         private void InvalidateGroup(LayoutGroup pGroup)
         {
             bounds.GroupHeader = GetGroupHeaderBound(pGroup);
-            QueueDraw(bounds.GroupHeader.X, bounds.GroupHeader.Y, bounds.GroupHeader.Width + 1, bounds.GroupHeader.Height + 1);
+            InvalidateVisual(bounds.GroupHeader.X, bounds.GroupHeader.Y, bounds.GroupHeader.Width + 1, bounds.GroupHeader.Height + 1);
         }
 
         private void InvalidateAggregate(LayoutGroup pGroup)
         {
             bounds.Aggregate = GetAggregateBound(pGroup);
-            QueueDraw(bounds.Aggregate.X, bounds.Aggregate.Y, bounds.Aggregate.Width, bounds.Aggregate.Height + 1);
+            InvalidateVisual(bounds.Aggregate.X, bounds.Aggregate.Y, bounds.Aggregate.Width, bounds.Aggregate.Height + 1);
         }
 
         public void InvalidateColumn(LayoutColumn column)
@@ -1030,7 +1032,7 @@ namespace DataWF.Gui
             if (column != null && listInfo.ColumnsVisible)
             {
                 var bound = GetColumnBound(column);
-                QueueDraw(bound.X, bound.Y, bound.Width, bound.Height + 1);
+                InvalidateVisual(bound.X, bound.Y, bound.Width, bound.Height + 1);
             }
         }
 
@@ -1039,15 +1041,15 @@ namespace DataWF.Gui
             if (index < 0)
                 return;
             bounds.Row = GetRowBound(index, GetRowGroup(index));
-            QueueDraw(bounds.Row.X, bounds.Row.Y, bounds.Row.Width + 1, bounds.Row.Height + 1);
+            InvalidateVisual(bounds.Row.X, bounds.Row.Y, bounds.Row.Width + 1, bounds.Row.Height + 1);
         }
 
-        protected LayoutHitTestInfo HitTest(double x, double y, PointerButton button, bool ctrl, bool shift)
+        protected LayoutHitTestInfo HitTest(Point position, MouseButton button, bool ctrl, bool shift)
         {
             if (listInfo.Columns.Count == 0)
                 return hitt;
             hitt.MouseButton = button;
-            hitt.Point = new Point(x, y);
+            hitt.Point = position;
             hitt.KeyCtrl = ctrl;
             hitt.KeyShift = shift;
             hitt.SubLocation = LayoutHitTestCellLocation.None;
@@ -1060,7 +1062,7 @@ namespace DataWF.Gui
                 HitTestAnchor(hitt);
                 return hitt;
             }
-            hitt.ItemBound = new Rectangle();
+            hitt.ItemBound = new Rect();
             hitt.Location = LayoutHitTestLocation.None;
             hitt.Column = null;
             hitt.Index = -1;
@@ -1070,7 +1072,7 @@ namespace DataWF.Gui
 
             if (listInfo.HeaderVisible && listInfo.ColumnsVisible)
             {
-                hitt.ItemBound = new Rectangle(0, 0, listInfo.HeaderWidth, bounds.Columns.Height);
+                hitt.ItemBound = new Rect(0, 0, listInfo.HeaderWidth, bounds.Columns.Height);
                 if (hitt.ItemBound.Contains(hitt.Point))
                 {
                     hitt.Location = LayoutHitTestLocation.Intermediate;
@@ -1107,12 +1109,12 @@ namespace DataWF.Gui
                         continue;
                     var group = groups[i];
 
-                    if (group.Visible)
+                    if (group.IsVisible)
                     {
                         if (listInfo.CollectingRow && HitTestAggregate(hitt, group))
                             return hitt;
 
-                        hitt.ItemBound = new Rectangle(group.Bound.X - bounds.Area.X, group.Bound.Y - bounds.Area.Y, group.Bound.Width, group.Bound.Height);
+                        hitt.ItemBound = new Rect(group.Bound.X - bounds.Area.X, group.Bound.Y - bounds.Area.Y, group.Bound.Width, group.Bound.Height);
                         //recg.Width = hitt.ColsBound.Width + _listInfo.HeaderWidth;
                         if (!group.IsExpand)
                             hitt.ItemBound.Height = listInfo.GroupHeigh;
@@ -1137,7 +1139,7 @@ namespace DataWF.Gui
                         }
                     }
                 }
-                hitt.ItemBound = new Rectangle();
+                hitt.ItemBound = new Rect();
             }
             else
             {
@@ -1298,7 +1300,7 @@ namespace DataWF.Gui
             info.Anchor = GuiService.GetAlignRect(info.ItemBound, 5 * listInfo.Scale, info.Point.X, info.Point.Y, ref _recMove);
         }
 
-        public Rectangle GetContentBound()
+        public Rect GetContentBound()
         {
             bounds.Content.Width = ((bounds.Columns.Width) * gridCols) + listInfo.HeaderWidth;
             bounds.Content.Height = 0D;
@@ -1380,7 +1382,7 @@ namespace DataWF.Gui
                 cacheCalc.Bound = ListInfo.Columns.GetBound(cacheCalc.Column, bounds.Columns);
                 cacheCalc.DisplayIndex = cacheCalc.Index;
 
-                hh = GetTextLayout(cacheCalc).Height + 4;
+                hh = GetFormattedText(cacheCalc).Height + 4;
             }
             else if (cacheCalc.Value is Image)
             {
@@ -1392,7 +1394,7 @@ namespace DataWF.Gui
 
         public virtual double GetItemsWidth(LayoutColumn column, int sIndex, int eIndex)
         {
-            var total = GraphContext.MeasureString(column.Text.ToString(), ListInfo.StyleColumn.Font, -1).Width;
+            var total = GraphContext.MeasureString(column.Text.ToString(), ListInfo.StyleColumn.FontFamily, -1).Width;
             for (int i = sIndex; i <= eIndex; i++)
             {
                 cacheCalc.Index = i;
@@ -1413,16 +1415,16 @@ namespace DataWF.Gui
             if (cacheCalc.Formated == null)
                 return 10;
             double max = 2000;
-            var ww = GraphContext.MeasureString(cacheCalc.Formated.ToString(), cacheCalc.Style.Font, -1).Width;
+            var ww = GraphContext.MeasureString(cacheCalc.Formated.ToString(), cacheCalc.Style.FontFamily, -1).Width;
             return Math.Min(max, ww);
         }
 
-        public Rectangle GetColumnsBound()
+        public Rect GetColumnsBound()
         {
             return GetColumnsBound(bounds.Area.Width, null, null);
         }
 
-        public Rectangle GetColumnsBound(double maxWidth, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
+        public Rect GetColumnsBound(double maxWidth, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
         {
             var bound = bounds.Columns;
             if (bound.Width.Equals(0) || wd != null || hd != null || (ListInfo.Columns.FillWidth && bounds.TempArea != bounds.Area))
@@ -1441,14 +1443,14 @@ namespace DataWF.Gui
             return bound;
         }
 
-        protected Rectangle GetColumnBound(LayoutColumn column)
+        protected Rect GetColumnBound(LayoutColumn column)
         {
             var bound = GetColumnBound(column, bounds.Columns, null, null);
             bound.X -= bounds.Area.X;
             return bound;
         }
 
-        public Rectangle GetColumnBound(LayoutColumn column, Rectangle mapBound, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
+        public Rect GetColumnBound(LayoutColumn column, Rect mapBound, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
         {
             if (!bounds.TryGetValue(column, out var bound) || wd != null || hd != null)
             {
@@ -1476,7 +1478,7 @@ namespace DataWF.Gui
         {
             if (listInfo.GroupVisible)
                 foreach (LayoutGroup group in groups)
-                    if (group.Visible && group.Contains(rowIndex))
+                    if (group.IsVisible && group.Contains(rowIndex))
                         return group;
             return null;
         }
@@ -1496,7 +1498,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool ListSensetive
         {
-            get { return listSensitive; }
+            get => listSensitive;
             set
             {
                 if (listSensitive == value)
@@ -1513,16 +1515,16 @@ namespace DataWF.Gui
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LayoutListState UseState
         {
-            get { return ustate; }
+            get => ustate;
             set
             {
                 if (ustate == value)
                     return;
                 if (ustate == LayoutListState.Select)
-                    bounds.Selection = new Rectangle(-1D, -1D, -1D, -1D);
+                    bounds.Selection = new Rect(-1D, -1D, -1D, -1D);
                 ustate = value;
                 if (ustate == LayoutListState.DragDrop)
-                    canvas.Cursor = CursorType.Hand;
+                    canvas.Cursor = StandardCursorType.Hand;
                 //else
                 //    canvas.Cursor = Cursors.Default;
             }
@@ -1531,7 +1533,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool AllowCellSize
         {
-            get { return (keys & LayoutListKeys.AllowSizeCell) == LayoutListKeys.AllowSizeCell; }
+            get => (keys & LayoutListKeys.AllowSizeCell) == LayoutListKeys.AllowSizeCell;
             set
             {
                 if (value)
@@ -1544,7 +1546,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool AllowColumnMove
         {
-            get { return (keys & LayoutListKeys.AllowMoveColumn) == LayoutListKeys.AllowMoveColumn; }
+            get => (keys & LayoutListKeys.AllowMoveColumn) == LayoutListKeys.AllowMoveColumn;
             set
             {
                 if (value)
@@ -1557,7 +1559,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool AllowColumnSize
         {
-            get { return (keys & LayoutListKeys.AllowSizeColumn) == LayoutListKeys.AllowSizeColumn; }
+            get => (keys & LayoutListKeys.AllowSizeColumn) == LayoutListKeys.AllowSizeColumn;
             set
             {
                 if (value)
@@ -1570,7 +1572,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool AllowHeaderSize
         {
-            get { return (keys & LayoutListKeys.AllowSizeHeader) == LayoutListKeys.AllowSizeHeader; }
+            get => (keys & LayoutListKeys.AllowSizeHeader) == LayoutListKeys.AllowSizeHeader;
             set
             {
                 if (value)
@@ -1583,7 +1585,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool AllowSort
         {
-            get { return (keys & LayoutListKeys.AllowSort) == LayoutListKeys.AllowSort; }
+            get => (keys & LayoutListKeys.AllowSort) == LayoutListKeys.AllowSort;
             set
             {
                 if (value)
@@ -1596,7 +1598,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool AllowEditColumn
         {
-            get { return (keys & LayoutListKeys.AllowEditColumn) == LayoutListKeys.AllowEditColumn; }
+            get => (keys & LayoutListKeys.AllowEditColumn) == LayoutListKeys.AllowEditColumn;
             set
             {
                 if (value)
@@ -1609,7 +1611,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool AllowCheck
         {
-            get { return (keys & LayoutListKeys.AllowCheck) == LayoutListKeys.AllowCheck; }
+            get => (keys & LayoutListKeys.AllowCheck) == LayoutListKeys.AllowCheck;
             set
             {
                 if (value)
@@ -1621,7 +1623,7 @@ namespace DataWF.Gui
 
         public bool CheckRecursive
         {
-            get { return (keys & LayoutListKeys.CheckRecursive) == LayoutListKeys.CheckRecursive; }
+            get => (keys & LayoutListKeys.CheckRecursive) == LayoutListKeys.CheckRecursive;
             set
             {
                 if (value)
@@ -1633,7 +1635,7 @@ namespace DataWF.Gui
 
         public bool CheckClearBase
         {
-            get { return (keys & LayoutListKeys.CheckClearBase) == LayoutListKeys.CheckClearBase; }
+            get => (keys & LayoutListKeys.CheckClearBase) == LayoutListKeys.CheckClearBase;
             set
             {
                 if (value)
@@ -1647,7 +1649,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool AllowImage
         {
-            get { return (keys & LayoutListKeys.AllowImage) == LayoutListKeys.AllowImage; }
+            get => (keys & LayoutListKeys.AllowImage) == LayoutListKeys.AllowImage;
             set
             {
                 if (value)
@@ -1660,7 +1662,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool AllowFilter
         {
-            get { return (keys & LayoutListKeys.AllowFilter) == LayoutListKeys.AllowFilter; }
+            get => (keys & LayoutListKeys.AllowFilter) == LayoutListKeys.AllowFilter;
             set
             {
                 if (value)
@@ -1673,14 +1675,14 @@ namespace DataWF.Gui
         [DefaultValue(EditModes.None)]
         public EditModes EditMode
         {
-            get { return editMode; }
-            set { editMode = value; }
+            get => editMode;
+            set => editMode = value;
         }
 
         [DefaultValue(LayoutListMode.List)]
         public LayoutListMode Mode
         {
-            get { return listMode; }
+            get => listMode;
             set
             {
                 if (listMode == value)
@@ -1735,7 +1737,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool GenerateMenu
         {
-            get { return (keys & LayoutListKeys.GenerateMenu) == LayoutListKeys.GenerateMenu; }
+            get => (keys & LayoutListKeys.GenerateMenu) == LayoutListKeys.GenerateMenu;
             set
             {
                 if (value)
@@ -1748,7 +1750,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool GenerateFields
         {
-            get { return (keys & LayoutListKeys.GenerateFields) == LayoutListKeys.GenerateFields; }
+            get => (keys & LayoutListKeys.GenerateFields) == LayoutListKeys.GenerateFields;
             set
             {
                 if (value)
@@ -1761,7 +1763,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool GenerateColumns
         {
-            get { return (keys & LayoutListKeys.GenerateColumns) == LayoutListKeys.GenerateColumns; }
+            get => (keys & LayoutListKeys.GenerateColumns) == LayoutListKeys.GenerateColumns;
             set
             {
                 if (value)
@@ -1774,7 +1776,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool GenerateToString
         {
-            get { return (keys & LayoutListKeys.GenerateName) == LayoutListKeys.GenerateName; }
+            get => (keys & LayoutListKeys.GenerateName) == LayoutListKeys.GenerateName;
             set
             {
                 if (value)
@@ -1787,7 +1789,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool AutoToStringFill
         {
-            get { return (keys & LayoutListKeys.AutoNameFill) == LayoutListKeys.AutoNameFill; }
+            get => (keys & LayoutListKeys.AutoNameFill) == LayoutListKeys.AutoNameFill;
             set
             {
                 if (value)
@@ -1800,7 +1802,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool AutoToStringHide
         {
-            get { return (keys & LayoutListKeys.AutoNameHide) == LayoutListKeys.AutoNameHide; }
+            get => (keys & LayoutListKeys.AutoNameHide) == LayoutListKeys.AutoNameHide;
             set
             {
                 if (value)
@@ -1811,7 +1813,7 @@ namespace DataWF.Gui
                 {
                     var column = listInfo.Columns[nameof(object.ToString)];
                     if (column != null)
-                        column.Visible = false;
+                        column.IsVisible = false;
                 }
             }
         }
@@ -1819,7 +1821,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool AutoToStringSort
         {
-            get { return (keys & LayoutListKeys.AutoNameSort) == LayoutListKeys.AutoNameSort; }
+            get => (keys & LayoutListKeys.AutoNameSort) == LayoutListKeys.AutoNameSort;
             set
             {
                 if (value)
@@ -1835,24 +1837,21 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool GridMode
         {
-            get { return _gridMode; }
-            set
-            {
-                _gridMode = value;
-            }
+            get => _gridMode;
+            set => _gridMode = value;
         }
 
         [DefaultValue(true)]
         public bool CheckView
         {
-            get { return checkView; }
-            set { checkView = value; }
+            get => checkView;
+            set => checkView = value;
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LayoutSelection Selection
         {
-            get { return selection; }
+            get => selection;
             set
             {
                 if (selection != value)
@@ -1898,20 +1897,20 @@ namespace DataWF.Gui
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object CurrentEditor
         {
-            get { return selection.EditorValue; }
-            set { selection.EditorValue = value; }
+            get => selection.EditorValue;
+            set => selection.EditorValue = value;
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object HoverItem
         {
-            get { return selection.HoverRow?.Item; }
+            get => selection.HoverRow?.Item;
             set
             {
                 if (HoverItem == value)
                     return;
 
-                if (editor.Visible)
+                if (editor.IsVisible)
                 { }
             }
         }
@@ -1919,13 +1918,13 @@ namespace DataWF.Gui
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object SelectedItem
         {
-            get { return selection.CurrentRow?.Item; }
+            get => selection.CurrentRow?.Item;
             set
             {
                 if (SelectedItem == value)
                     return;
 
-                if (editor.Visible)
+                if (editor.IsVisible)
                     OnCellEditEnd(new CancelEventArgs());
 
                 if (selection.Count > 1)
@@ -1955,20 +1954,17 @@ namespace DataWF.Gui
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Node SelectedNode
         {
-            get { return SelectedItem as Node; }
-            set
-            {
-                SelectedItem = value;
-            }
+            get => SelectedItem as Node;
+            set => SelectedItem = value;
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LayoutColumn CurrentCell
         {
-            get { return selection.CurrentRow?.Column; }
+            get => selection.CurrentRow?.Column;
             set
             {
-                if (editor.Visible)
+                if (editor.IsVisible)
                     OnCellEditEnd(new CancelEventArgs());
 
                 if (scroll.HorizontalScrollControl.UpperValue > 0 && value != null)
@@ -1988,7 +1984,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool ReadOnly
         {
-            get { return editState == EditListState.ReadOnly; }
+            get => editState == EditListState.ReadOnly;
             set
             {
                 if (value && editState != EditListState.ReadOnly)
@@ -2001,7 +1997,7 @@ namespace DataWF.Gui
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LayoutListInfo ListInfo
         {
-            get { return listInfo; }
+            get => listInfo;
             set
             {
                 if (listInfo == value)
@@ -2028,18 +2024,18 @@ namespace DataWF.Gui
 
         public LayoutListCache GetLayoutListCache()
         {
-            var widget = (Widget)this;
-            while (widget != null)
+            var Control = (Control)this;
+            while (Control != null)
             {
-                if (widget is ILayoutCacheProvider)
+                if (Control is ILayoutCacheProvider)
                 {
-                    return ((ILayoutCacheProvider)widget).Cache;
+                    return ((ILayoutCacheProvider)Control).Cache;
                 }
-                widget = widget.Parent;
+                Control = Control.Parent;
             }
-            if (ParentWindow is ILayoutCacheProvider)
+            if (VisualRoot is ILayoutCacheProvider)
             {
-                return ((ILayoutCacheProvider)ParentWindow).Cache;
+                return ((ILayoutCacheProvider)VisualRoot).Cache;
             }
             return GuiService.Main.Cache;
         }
@@ -2047,7 +2043,7 @@ namespace DataWF.Gui
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Type ListType
         {
-            get { return listType; }
+            get => listType;
             set
             {
                 if (listType == value)
@@ -2062,10 +2058,7 @@ namespace DataWF.Gui
                     var key = GetCacheKey();
                     var cache = GetLayoutListCache();
                     LayoutListInfo temp = cache.Lists[key];
-                    if (temp == null)
-                    {
-                        temp = GenerateListInfo();
-                    }
+                    temp ??= GenerateListInfo();
                     ListInfo = cache.Lists[key] = temp;
                 }
                 else
@@ -2078,7 +2071,7 @@ namespace DataWF.Gui
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual IList ListSource
         {
-            get { return listSource; }
+            get => listSource;
             set
             {
                 if (listSource == value)
@@ -2136,7 +2129,7 @@ namespace DataWF.Gui
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LayoutFieldInfo FieldInfo
         {
-            get { return fieldInfo; }
+            get => fieldInfo;
             set
             {
                 if (fieldInfo == value)
@@ -2158,7 +2151,7 @@ namespace DataWF.Gui
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Type FieldType
         {
-            get { return fieldType; }
+            get => fieldType;
             set
             {
                 if (fieldType == value)
@@ -2174,10 +2167,7 @@ namespace DataWF.Gui
                     var key = GetCacheKey();
                     var cache = GetLayoutListCache();
                     var temp = cache.Fields[key];
-                    if (temp == null)
-                    {
-                        temp = GenerateFieldInfo();
-                    }
+                    temp ??= GenerateFieldInfo();
                     FieldInfo = cache.Fields[key] = temp;
                 }
                 else if (FieldInfo != null)
@@ -2194,7 +2184,7 @@ namespace DataWF.Gui
         [DefaultValue(null)]
         public virtual object FieldSource
         {
-            get { return fieldSource; }
+            get => fieldSource;
             set
             {
                 if (fieldSource == value)
@@ -2224,7 +2214,7 @@ namespace DataWF.Gui
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LayoutNodeInfo NodeInfo
         {
-            get { return nodeInfo; }
+            get => nodeInfo;
             set
             {
                 if (nodeInfo == value)
@@ -2255,7 +2245,7 @@ namespace DataWF.Gui
             var stostr = BuildColumn(info, null, nameof(Object.ToString));
             if (stostr != null)
             {
-                stostr.Visible = GenerateToString || GridMode;
+                stostr.IsVisible = GenerateToString || GridMode;
                 info.Columns.Add(stostr);
                 if (_gridMode)
                 {
@@ -2290,7 +2280,7 @@ namespace DataWF.Gui
                 cell = (ILayoutCell)item;
                 item = fieldSource;
             }
-            return editor.Visible && editor.CurrentEditor?.EditItem == item && (cell == null || editor.Cell == cell);
+            return editor.IsVisible && editor.CurrentEditor?.EditItem == item && (cell == null || editor.Cell == cell);
         }
 
         protected bool IsSelectionRectangleVisible
@@ -2310,7 +2300,7 @@ namespace DataWF.Gui
                 {
                     column.Width += 40;
                     listInfo.Columns.Insert(column, false);
-                    column.Visible = !AutoToStringHide;
+                    column.IsVisible = !AutoToStringHide;
                     column.FillWidth = AutoToStringFill;
                 }
 
@@ -2412,7 +2402,7 @@ namespace DataWF.Gui
                 field.IsCompaund = IsComplex(field);
                 if (field.Invoker == null)
                 {
-                    Helper.Logs.Add(new StateInfo("LayoutList", "Remove unreferenced field", $"Field Name: {field.Name} ItemType: {fieldType}", StatusType.Warning));
+                    Helper.Log(this, $"Remove unreferenced Field Name: {field.Name} ItemType: {fieldType}", StatusType.Warning);
                     field.Remove();
                     return;
                 }
@@ -2429,7 +2419,7 @@ namespace DataWF.Gui
                 parent = BuildColumn(info, null, parentName);
                 if (parent.Map == null)
                 {
-                    parent.Visible = false;
+                    parent.IsVisible = false;
                     info.Columns.Add(parent);
                 }
             }
@@ -2487,7 +2477,7 @@ namespace DataWF.Gui
                 column.Collect = GetCellCollect(column);
                 if (column.Invoker == null)
                 {
-                    Helper.Logs.Add(new StateInfo("LayoutList", "Remove unreferenced column", $"Column Name: {column.Name} ItemType: {listType}", StatusType.Warning));
+                    Helper.Log(this, $"Remove unreferenced Column Name: {column.Name} ItemType: {listType}", StatusType.Warning);
                     column.Remove();
                     return;
                 }
@@ -2501,10 +2491,7 @@ namespace DataWF.Gui
             var member = TypeHelper.GetMemberInfoList(type, cell.Name).LastOrDefault();
             if (member == null)
                 return;
-            if (cell.Invoker == null)
-            {
-                cell.Invoker = EmitInvoker.Initialize(type, cell.Name);
-            }
+            cell.Invoker ??= InvokeProvider.Initialize(type, cell.Name);
             cell.Format = TypeHelper.GetDefaultFormat(member.Info);
             cell.Description = TypeHelper.GetDescription(member.Info);
             cell.Password = TypeHelper.IsPassword(member.Info);
@@ -2514,7 +2501,7 @@ namespace DataWF.Gui
             {
                 if (cell.Visible && checkView)
                 {
-                    ((LayoutColumn)cell).Visible = TypeHelper.GetBrowsable(member.Info);
+                    ((LayoutColumn)cell).IsVisible = TypeHelper.GetBrowsable(member.Info);
                 }
                 ((LayoutColumn)cell).Validate = TypeHelper.IsPassword(member.Info);
                 if (((LayoutColumn)cell).Map == null && cell.DataType.IsPrimitive)
@@ -2640,7 +2627,7 @@ namespace DataWF.Gui
 
         public virtual void RefreshInfo()
         {
-            bounds.Columns = Rectangle.Zero;
+            bounds.Columns = Rect.Empty;
             ClearFilter();
             RefreshProperties();
             foreach (LayoutColumn item in ListInfo.Columns.GetItems().ToList())
@@ -2690,7 +2677,7 @@ namespace DataWF.Gui
             for (int i = 0; i < groups.Count; i++)
             {
                 var lg = groups[i];
-                if (lg.Visible)
+                if (lg.IsVisible)
                 {
                     lg.Bound = GetGroupBound(lg, y);
                     y += lg.Bound.Height;
@@ -2698,16 +2685,16 @@ namespace DataWF.Gui
             }
         }
 
-        protected Rectangle GetGroupGlyphBound(LayoutGroup gp, Rectangle group)
+        protected Rect GetGroupGlyphBound(LayoutGroup gp, Rect group)
         {
             double w = (group.Width > bounds.Area.Width) ? bounds.Area.Width : group.Width;
-            return new Rectangle((w - 20), group.Y + 2, 16 * listInfo.Scale, 16 * listInfo.Scale);
+            return new Rect((w - 20), group.Y + 2, 16 * listInfo.Scale, 16 * listInfo.Scale);
         }
 
         protected virtual void GetColumnGlyphBound(LayoutColumn column)
         {
             var bound = GetColumnBound(column, bounds.Columns, null, null);
-            bounds.ColumnGlyph = new Rectangle(bound.X + 1, bound.Y + 1, 16 * listInfo.Scale, 16 * listInfo.Scale);
+            bounds.ColumnGlyph = new Rect(bound.X + 1, bound.Y + 1, 16 * listInfo.Scale, 16 * listInfo.Scale);
         }
 
         protected virtual double GetGroupHeght(LayoutGroup group)
@@ -2726,22 +2713,22 @@ namespace DataWF.Gui
             return h;
         }
 
-        internal protected Rectangle GetGroupBound(LayoutGroup gp, double y)
+        internal protected Rect GetGroupBound(LayoutGroup gp, double y)
         {
-            return new Rectangle(0D, y, (bounds.Columns.Width * gridCols) + listInfo.HeaderWidth, GetGroupHeght(gp));
+            return new Rect(0D, y, (bounds.Columns.Width * gridCols) + listInfo.HeaderWidth, GetGroupHeght(gp));
         }
 
-        protected Rectangle GetHeaderBound(Rectangle row)
+        protected Rect GetHeaderBound(Rect row)
         {
-            return new Rectangle(row.X + (listInfo.HeaderFrosen ? bounds.Area.X : 0D),
+            return new Rect(row.X + (listInfo.HeaderFrosen ? bounds.Area.X : 0D),
                                  row.Y,
                                  listInfo.HeaderWidth,
                                  row.Height);
         }
 
-        protected Rectangle GetAggregateBound(LayoutGroup group)
+        protected Rect GetAggregateBound(LayoutGroup group)
         {
-            var bound = new Rectangle();
+            var bound = new Rect();
             int rowindex = listSource.Count - 1;
             if (rowindex >= 0)
             {
@@ -2756,10 +2743,10 @@ namespace DataWF.Gui
             return bound;
         }
 
-        protected Rectangle GetRowBound(int index, LayoutGroup group)
+        protected Rect GetRowBound(int index, LayoutGroup group)
         {
             var columns = bounds.Columns;
-            var bound = new Rectangle();
+            var bound = new Rect();
             double top = columns.Y;
             //if (bcache.Index == index && group == bcache.Group)
             //{
@@ -2815,7 +2802,7 @@ namespace DataWF.Gui
             return bound;
         }
 
-        protected virtual Rectangle GetCellBound(LayoutColumn column, int index, Rectangle row)
+        protected virtual Rect GetCellBound(LayoutColumn column, int index, Rect row)
         {
             if (listInfo.CalcHeigh && index >= 0)
             {
@@ -2846,19 +2833,19 @@ namespace DataWF.Gui
             return bounds.VisibleColumns;
         }
 
-        protected Rectangle GetCellBound(LayoutSelectionRow cell)
+        protected Rect GetCellBound(LayoutSelectionRow cell)
         {
             return GetCellBound(cell.Item, cell.Index, cell.Column);
         }
 
-        protected Rectangle GetCellBound(object item, int index, LayoutColumn column)
+        protected Rect GetCellBound(object item, int index, LayoutColumn column)
         {
             LayoutGroup listGroup = GetRowGroup(index);
             var bound = GetRowBound(index, listGroup);
             return GetCellBound(column, index, bound);
         }
 
-        protected Rectangle GetGroupHeaderBound(LayoutGroup group)
+        protected Rect GetGroupHeaderBound(LayoutGroup group)
         {
             var bound = group.Bound;
             //bound.X += bounds.Columns.X;
@@ -2873,9 +2860,9 @@ namespace DataWF.Gui
             return bound;
         }
 
-        public Rectangle GetCellGlyphBound(IGroup item, int level, Rectangle cell)
+        public Rect GetCellGlyphBound(IGroup item, int level, Rect cell)
         {
-            var bound = new Rectangle(cell.X, cell.Y, 0, 0);
+            var bound = new Rect(cell.X, cell.Y, 0, 0);
             if (item != null && ListInfo.Tree)
             {
                 bound.X += level * listInfo.LevelIndent;
@@ -2886,9 +2873,9 @@ namespace DataWF.Gui
             return bound;
         }
 
-        public Rectangle GetCellCheckBound(object item, int level, Rectangle cell)
+        public Rect GetCellCheckBound(object item, int level, Rect cell)
         {
-            var bound = new Rectangle(cell.X, cell.Y, 0, 0);
+            var bound = new Rect(cell.X, cell.Y, 0, 0);
             if (listInfo.Tree && item is IGroup)
                 bound.X += level * listInfo.LevelIndent + listInfo.GliphSize;
             if (AllowCheck && item is ICheck)
@@ -2900,9 +2887,9 @@ namespace DataWF.Gui
             return bound;
         }
 
-        public Rectangle GetCellImageBound(object item, int level, Rectangle cell)
+        public Rect GetCellImageBound(object item, int level, Rect cell)
         {
-            var bound = new Rectangle(cell.X, cell.Y, 0, 0);
+            var bound = new Rect(cell.X, cell.Y, 0, 0);
             if (listInfo.Tree && item is IGroup)
                 bound.X += level * listInfo.LevelIndent + listInfo.GliphSize;
             if (AllowCheck && item is ICheck)
@@ -2928,7 +2915,7 @@ namespace DataWF.Gui
             return bound;
         }
 
-        public virtual Rectangle GetCellTextBound(LayoutListDrawArgs e)
+        public virtual Rect GetCellTextBound(LayoutListDrawArgs e)
         {
             var bound = e.Bound.Inflate(-2, -2);
             double indent = 0;
@@ -2958,17 +2945,17 @@ namespace DataWF.Gui
                 bound.X += indent;
                 bound.Width -= indent;
             }
-            if (e.Formated is TextLayout textLayout)
+            if (e.Formated is FormattedText FormattedText)
             {
-                bound.Height = textLayout.Height;
+                bound.Height = FormattedText.Height;
                 bound.Y = e.Bound.Y + (e.Bound.Height - bound.Height) / 2D;
             }
             return bound;
         }
 
-        protected virtual Rectangle GetEditorBound()
+        protected virtual Rect GetEditorBound()
         {
-            var bound = new Rectangle();
+            var bound = new Rect();
             if (CurrentEditor is LayoutSelectionRow row)
             {
                 bounds.Row = GetRowBound(row.Index, GetRowGroup(row.Index));
@@ -2984,9 +2971,9 @@ namespace DataWF.Gui
             {
                 canvas.SetChildBounds(editor, bounds.Editor);
             }
-            if (editor.Widget is TextEntry && bounds.Editor.Height > 20)
+            if (editor.Control is TextBox && bounds.Editor.Height > 20)
             {
-                ((TextEntry)editor.Widget).MultiLine = true;
+                ((TextBox)editor.Control).MultiLine = true;
             }
         }
 
@@ -3010,7 +2997,7 @@ namespace DataWF.Gui
 
         public virtual bool TreeMode
         {
-            get { return treeMode; }
+            get => treeMode;
             set
             {
                 if (TreeMode == value)
@@ -3036,7 +3023,7 @@ namespace DataWF.Gui
 
         protected virtual IComparer OnColumnCreateComparer(LayoutColumn column, ListSortDirection direction)
         {
-            return new InvokerComparer(column.Invoker, direction);
+            return column.Invoker.CreateComparer(direction);
         }
 
         protected void OnCellEditBegin()
@@ -3077,7 +3064,7 @@ namespace DataWF.Gui
 
                 object data = null;
                 if (check.FormatValue(val).Equals(CheckedState.Checked))
-                    data = check.ValueNull != null && check.TreeState ? check.ValueNull : check.ValueFalse;
+                    data = check.ValueNull != null && check.ThreeState ? check.ValueNull : check.ValueFalse;
                 else if (check.FormatValue(val).Equals(CheckedState.Unchecked))
                     data = check.ValueTrue;
                 else if (check.FormatValue(val).Equals(CheckedState.Indeterminate))
@@ -3089,7 +3076,7 @@ namespace DataWF.Gui
                     Data = data
                 });
 
-                canvas.QueueDraw();
+                canvas.InvalidateVisual();
                 return;
             }
 
@@ -3101,7 +3088,7 @@ namespace DataWF.Gui
                 cellEdit.InitializeEditor(editor, val, item);
                 editor.Style = OnGetCellStyle(item, val, cell);
                 SetEditorBound();
-                editor.Visible = true;
+                editor.IsVisible = true;
             }
             finally
             {
@@ -3112,7 +3099,7 @@ namespace DataWF.Gui
 
         protected virtual void OnCellEditEnd(CancelEventArgs e)
         {
-            if (!editor.Visible)
+            if (!editor.IsVisible)
                 return;
             if (editor.CurrentEditor != null && !e.Cancel)
             {
@@ -3135,10 +3122,10 @@ namespace DataWF.Gui
                 editor.CurrentEditor.FreeEditor();
                 editor.CurrentEditor = null;
             }
-            editor.Visible = false;
-            editor.Visible = false;
+            editor.IsVisible = false;
+            editor.IsVisible = false;
             CurrentEditor = null;
-            SetFocus();
+            Focus();
         }
 
         public object FormatValue(int index, ILayoutCell column)
@@ -3219,7 +3206,7 @@ namespace DataWF.Gui
 
         public virtual void OnToolTipCancel(EventArgs e)
         {
-            if (GuiService.ToolTip.Visible)
+            if (GuiService.ToolTip.IsVisible)
             {
                 //var point = this.PointToClient(System.Windows.Forms.Control.MousePosition);
                 //if (!GuiTool.ToolTip.Bounds.Contains(System.Windows.Forms.Control.MousePosition) &&
@@ -3297,7 +3284,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool Grouping
         {
-            get { return listInfo.GroupVisible; }
+            get => listInfo.GroupVisible;
             set
             {
                 if (value)
@@ -3416,19 +3403,19 @@ namespace DataWF.Gui
             {
                 if (e.HitTest.Anchor == LayoutAlignType.Bottom)
                 {
-                    canvas.Cursor = CursorType.ResizeUpDown;
+                    canvas.Cursor = StandardCursorType.SizeNorthSouth;
                 }
                 else if (e.HitTest.Anchor == LayoutAlignType.Right)
                 {
-                    canvas.Cursor = CursorType.ResizeLeftRight;
+                    canvas.Cursor = StandardCursorType.SizeWestEast;
                 }
                 //else if (GetColumnGlyphBound(hInfo.ItemBound).Contains(hInfo.Point))
                 //{
                 //canvas.Cursor = Cursors.Hand;
                 //}
-                else if (canvas.Cursor != CursorType.Arrow)
+                else if (canvas.Cursor != StandardCursorType.Arrow)
                 {
-                    canvas.Cursor = CursorType.Arrow;
+                    canvas.Cursor = StandardCursorType.Arrow;
                 }
             }
         }
@@ -3464,7 +3451,7 @@ namespace DataWF.Gui
         protected virtual void OnCellMouseMove(LayoutHitTestEventArgs e)
         {
             CellMouseMove?.Invoke(this, e);
-            if (UseState == LayoutListState.Default && e.HitTest.MouseButton == PointerButton.Left)
+            if (UseState == LayoutListState.Default && e.HitTest.MouseButton == MouseButton.Left)
             {
                 //if (ListInfo != null && ListInfo.Sorting.Count == 0)
                 //{
@@ -3558,7 +3545,7 @@ namespace DataWF.Gui
                 if (val is string)
                 {
                     CellStyle style = OnGetCellStyle(listSource[e.HitTest.Index], null, e.HitTest.Column);
-                    var f = GraphContext.MeasureString((string)val, style.Font, e.HitTest.ItemBound.Width);
+                    var f = GraphContext.MeasureString((string)val, style.FontFamily, e.HitTest.ItemBound.Width);
                     if (f.Height > e.HitTest.ItemBound.Height ||
                         f.Width > e.HitTest.ItemBound.Width)
                         OnToolTip(e);
@@ -3636,7 +3623,7 @@ namespace DataWF.Gui
         protected IFilterable SetFilteredCollection()
         {
             listBackup = listSource;
-            listSource = (IList)EmitInvoker.CreateObject(
+            listSource = (IList)InvokeProvider.CreateObject(
                 typeof(SelectableListView<>).MakeGenericType(ListType),
                 new Type[] { typeof(IEnumerable) },
                 new object[] { listSource }, true);
@@ -3680,9 +3667,9 @@ namespace DataWF.Gui
                 }
                 else if (TreeMode && TypeHelper.IsInterface(listType, typeof(IGroup)))
                 {
-                    var parameter = TreeInvoker<IGroup>.Instance.CreateParameter(ListType);
+                    var parameter = TreeInvoker<IGroup>.Instance.CreateTreeParameter(ListType);
                     filtered.FilterQuery.Parameters.Add(parameter);
-                    var comparer = TreeInvoker<IGroup>.Instance.CreateComparer(ListType);
+                    var comparer = TreeInvoker<IGroup>.Instance.CreateTreeComparer(ListType);
                     filtered.FilterQuery.Orders.Add(comparer);
                 }
             }
@@ -3726,7 +3713,7 @@ namespace DataWF.Gui
         protected virtual void OnGroupMouseUp(LayoutHitTestEventArgs e)
         {
             GroupClick?.Invoke(this, e);
-            if (e.HitTest.MouseButton == PointerButton.Left)
+            if (e.HitTest.MouseButton == MouseButton.Left)
             {
                 bounds.GroupHeader = GetGroupHeaderBound(e.HitTest.Group);
                 bounds.GroupGlyph = GetGroupGlyphBound(e.HitTest.Group, bounds.GroupHeader);
@@ -3760,15 +3747,15 @@ namespace DataWF.Gui
         protected virtual void OnColumnMouseClick(LayoutHitTestEventArgs e)
         {
             ColumnMouseClick?.Invoke(this, e);
-            if (editor.Visible)
+            if (editor.IsVisible)
             {
                 OnCellEditEnd(new CancelEventArgs());
             }
-            if (e.HitTest.MouseButton == PointerButton.Right)
+            if (e.HitTest.MouseButton == MouseButton.Right)
             {
                 OnContextMenuShow(e.HitTest);
             }
-            else if (e.HitTest.MouseButton == PointerButton.Left)
+            else if (e.HitTest.MouseButton == MouseButton.Left)
             {
                 if (e.HitTest.SubLocation == LayoutHitTestCellLocation.Sort)
                 {
@@ -3793,12 +3780,12 @@ namespace DataWF.Gui
 
             if (e.HitTest.Anchor == LayoutAlignType.Bottom)
             {
-                //CursorType = CursorType.BottomSide;
+                //StandardCursorType = StandardCursorType.BottomSide;
                 UseState = LayoutListState.SizeColumHeight;
             }
             else if (e.HitTest.Anchor == LayoutAlignType.Right)
             {
-                //CursorType = CursorType.RightSide;
+                //StandardCursorType = StandardCursorType.RightSide;
                 UseState = LayoutListState.SizeColumWidth;
             }
         }
@@ -3811,7 +3798,7 @@ namespace DataWF.Gui
             _cacheLocation = e.HitTest.Point;
             selection.CurrentColumn = null;
 
-            //CursorType = CursorType.RightSide;
+            //StandardCursorType = StandardCursorType.RightSide;
             UseState = LayoutListState.SizeHeaderWidth;
         }
 
@@ -3848,7 +3835,7 @@ namespace DataWF.Gui
             if (e.Cancel)
                 return;
             selection.CurrentColumn = e.HitTest.Column;
-            //CursorType = CursorType.Hand1;
+            //StandardCursorType = StandardCursorType.Hand1;
             UseState = LayoutListState.MoveColumn;
         }
 
@@ -3887,7 +3874,7 @@ namespace DataWF.Gui
 
         protected virtual void OnSelectRectangle(LayoutHitTestEventArgs e)
         {
-            if (e.HitTest.MouseButton != PointerButton.Left)
+            if (e.HitTest.MouseButton != MouseButton.Left)
             {
                 UseState = LayoutListState.Default;
                 return;
@@ -3895,7 +3882,7 @@ namespace DataWF.Gui
             bounds.Selection.Size = new Size(e.HitTest.Point.X - bounds.Selection.Location.X,
                                            e.HitTest.Point.Y - bounds.Selection.Location.Y);
 
-            var normalize = new Rectangle(bounds.Selection.Width < 0 ? bounds.Selection.X + bounds.Selection.Width : bounds.Selection.X,
+            var normalize = new Rect(bounds.Selection.Width < 0 ? bounds.Selection.X + bounds.Selection.Width : bounds.Selection.X,
                                           bounds.Selection.Height < 0 ? bounds.Selection.Y + bounds.Selection.Height : bounds.Selection.Y,
                                           Math.Abs(bounds.Selection.Width),
                                           Math.Abs(bounds.Selection.Height));
@@ -3922,7 +3909,7 @@ namespace DataWF.Gui
                 SelectionChanged(this, e);
             if (listSource == null)
             {
-                canvas.QueueDraw();
+                canvas.InvalidateVisual();
                 return;
             }
             if (e.Type == LayoutSelectionChange.Reset)
@@ -3966,7 +3953,7 @@ namespace DataWF.Gui
             {
                 return;
             }
-            if (e.HitTest.MouseButton == PointerButton.Left)
+            if (e.HitTest.MouseButton == MouseButton.Left)
             {
                 if (e.HitTest.SubLocation == LayoutHitTestCellLocation.Glyph)
                     OnCellGlyphClick(e);
@@ -4003,7 +3990,7 @@ namespace DataWF.Gui
             }
             CurrentCell = e.HitTest.Column;
 
-            if (e.HitTest.MouseButton == PointerButton.Left && (editMode == EditModes.ByClick || editMode == EditModes.ByF2))
+            if (e.HitTest.MouseButton == MouseButton.Left && (editMode == EditModes.ByClick || editMode == EditModes.ByF2))
             {
                 ILayoutCell cell = e.HitTest.Column;
                 object item = e.HitTest.Item;
@@ -4021,7 +4008,7 @@ namespace DataWF.Gui
         protected virtual void OnCellMouseDown(LayoutHitTestEventArgs e)
         {
             CellMouseDown?.Invoke(this, e);
-            if (e.HitTest.MouseButton == PointerButton.Left)
+            if (e.HitTest.MouseButton == MouseButton.Left)
                 _p0 = 0;
         }
 
@@ -4042,12 +4029,12 @@ namespace DataWF.Gui
             {
                 OnCellDragEnd(e);
             }
-            if (e.HitTest.MouseButton == PointerButton.Left)
+            if (e.HitTest.MouseButton == MouseButton.Left)
             {
                 OnCellMouseClick(e);
             }
-            else if (e.HitTest.MouseButton == PointerButton.Right
-                && (!editor.Visible || (e.HitTest.Item != editor.CurrentEditor.EditItem && e.HitTest.Column != CurrentCell)))
+            else if (e.HitTest.MouseButton == MouseButton.Right
+                && (!editor.IsVisible || (e.HitTest.Item != editor.CurrentEditor.EditItem && e.HitTest.Column != CurrentCell)))
             {
                 OnContextMenuShow(e.HitTest);
             }
@@ -4156,13 +4143,13 @@ namespace DataWF.Gui
 
         protected virtual void GetDisplayIndexes()
         {
-            bounds.Clip = new Rectangle(Point.Zero, bounds.Area.Size);
+            bounds.Clip = new Rect(Point.Zero, bounds.Area.Size);
             GetDisplayIndexes(bounds.Clip);
             dIndex.Set(tdIndex);
             dgIndex.Set(tdgIndex);
         }
 
-        protected virtual void GetDisplayIndexes(Rectangle clip)
+        protected virtual void GetDisplayIndexes(Rect clip)
         {
             tdIndex.First = tdIndex.Last = -1;
             if (listSource == null)
@@ -4174,14 +4161,14 @@ namespace DataWF.Gui
             if (!listInfo.GroupVisible)
             {
                 int start = listInfo.CalcHeigh || listInfo.GridOrientation == GridOrientation.Vertical ? 0 : (int)((bounds.Area.Top + clip.Y) * gridCols / bounds.Columns.Height);
-                if (listInfo.Columns.Visible)
+                if (listInfo.Columns.IsVisible)
                     start--;
                 if (start < 0)
                     start = 0;
 
                 int end = listInfo.CalcHeigh || listInfo.GridOrientation == GridOrientation.Vertical ? listSource.Count - 1 : (int)((bounds.Area.Top + clip.Bottom) * gridCols / bounds.Columns.Height);
                 end += gridCols;
-                if (listInfo.Columns.Visible)
+                if (listInfo.Columns.IsVisible)
                     end--;
                 if (end >= listSource.Count)
                     end = listSource.Count - 1;
@@ -4213,10 +4200,10 @@ namespace DataWF.Gui
                 for (int g = 0; g < groups.Count; g++)
                 {
                     LayoutGroup gp = groups[g];
-                    if (!gp.Visible)
+                    if (!gp.IsVisible)
                         continue;
 
-                    if (clip.IntersectsWith(new Rectangle(gp.Bound.X - bounds.Area.X, gp.Bound.Y - bounds.Area.Y, gp.Bound.Width, gp.Bound.Height)))
+                    if (clip.IntersectsWith(new Rect(gp.Bound.X - bounds.Area.X, gp.Bound.Y - bounds.Area.Y, gp.Bound.Width, gp.Bound.Height)))
                     {
                         if (tdIndex.First == -1)
                         {
@@ -4292,7 +4279,7 @@ namespace DataWF.Gui
 
         #region Paint
 
-        protected internal void OnDrawList(GraphContext context, Rectangle clip)
+        protected internal void OnDrawList(GraphContext context, Rect clip)
         {
             try
             {
@@ -4347,9 +4334,9 @@ namespace DataWF.Gui
                     OnDrawSelectionRectangle(context, bounds.Selection);
                 }
                 //Pen p = new Pen(Brushes.Red);
-                //p.Alignment = PenAlignment.Inset;
+                //p.TextAlignment = PenAlignment.Inset;
                 //p.DashStyle = DashStyle.DashDot;
-                //gc.G.DrawRectangle(p,Rectangle.Round( gc.Bound));
+                //gc.G.DrawRectangle(p,Rect.Round( gc.Bound));
                 //p.Dispose();
             }
             catch (Exception ex)
@@ -4358,15 +4345,15 @@ namespace DataWF.Gui
             }
         }
 
-        protected virtual void OnDrawMiddle(GraphContext context, Rectangle rect)
+        protected virtual void OnDrawMiddle(GraphContext context, Rect rect)
         {
             if (rect.Right > 0 && rect.Height > 0)
             {
-                context.DrawCell(listInfo.StyleColumn, null, rect, Rectangle.Zero, CellDisplayState.Default);
+                context.DrawCell(listInfo.StyleColumn, null, rect, Rect.Empty, CellDisplayState.Default);
             }
         }
 
-        protected virtual void OnDrawSelectionRectangle(GraphContext context, Rectangle rect)
+        protected virtual void OnDrawSelectionRectangle(GraphContext context, Rect rect)
         {
             var style = GuiEnvironment.Theme["Selection"];
             context.FillRectangle(style, rect, CellDisplayState.Default);
@@ -4380,7 +4367,7 @@ namespace DataWF.Gui
                 if (i < 0 || i >= groups.Count)
                     continue;
                 e.Group = groups[i];
-                if (!e.Group.Visible)
+                if (!e.Group.IsVisible)
                     continue;
 
                 e.Bound = GetGroupHeaderBound(e.Group);
@@ -4396,7 +4383,7 @@ namespace DataWF.Gui
         {
             bounds.GroupGlyph = GetGroupGlyphBound(e.Group, e.Bound);
             e.Context.DrawGroup(listInfo.StyleGroup, e.Group, e.Bound, selection.HoverValue == e.Group ? CellDisplayState.Hover : CellDisplayState.Default, bounds.GroupGlyph);
-            //context.Context.DrawString((i + 1) + "/" + _groups.Count, Font, Brushes.Gray, (float)bounds.GroupHeader.Right - 100, (float)bounds.GroupHeader.Bottom - 12);
+            //context.Context.DrawString((i + 1) + "/" + _groups.Count, FontFamily, Brushes.Gray, (float)bounds.GroupHeader.Right - 100, (float)bounds.GroupHeader.Bottom - 12);
         }
 
         protected virtual void OnDrawColumns(LayoutListDrawArgs e)
@@ -4418,33 +4405,33 @@ namespace DataWF.Gui
             }
         }
 
-        public Rectangle GetColumnSortBound(Rectangle column)
+        public Rect GetColumnSortBound(Rect column)
         {
             double size = 14 * listInfo.Scale;
-            return new Rectangle(column.Right - (size + 6),
+            return new Rect(column.Right - (size + 6),
                                  column.Top + 2,
                                  size,
                                  size);
         }
 
-        public Rectangle GetColumnFilterBound(Rectangle column)
+        public Rect GetColumnFilterBound(Rect column)
         {
             double size = 14 * listInfo.Scale;
-            return new Rectangle(column.Right - (size * 2 + 7),
+            return new Rect(column.Right - (size * 2 + 7),
                                  column.Top + 2,
                                  size,
                                  size);
         }
 
-        public Rectangle GetColumnTextBound(LayoutColumn column, Rectangle bound)
+        public Rect GetColumnTextBound(LayoutColumn column, Rect bound)
         {
-            return new Rectangle(new Point(bound.Left + 3, bound.Top + (bound.Height - column.TextSize.Height) / 2D),
+            return new Rect(new Point(bound.Left + 3, bound.Top + (bound.Height - column.TextSize.Height) / 2D),
                                  column.TextSize);
         }
 
         protected virtual void OnDrawColumn(LayoutListDrawArgs e)
         {
-            var layout = e.Column.GetTextLayout();
+            var layout = e.Column.GetFormattedText();
             bounds.ColumnText = GetColumnTextBound(e.Column, e.Bound);
 
             e.Context.DrawCell(e.Column.ColumnStyle, layout, e.Bound, bounds.ColumnText, e.State);
@@ -4463,7 +4450,7 @@ namespace DataWF.Gui
             }
             else
             {
-                var parameter = filterView?.Filters.SelectOne(nameof(LayoutFilter.Name), CompareType.Equal, e.Column.Name);
+                var parameter = filterView?.Filters.SelectOne(nameof(LayoutFilter.Name), CompareOperator.Equal, e.Column.Name);
                 if (parameter != null)
                 {
                     bounds.ColumnFilter = GetColumnFilterBound(e.Bound);
@@ -4508,7 +4495,7 @@ namespace DataWF.Gui
         protected virtual void OnDrawAggreage(LayoutListDrawArgs e)
         {
             var style = GuiEnvironment.Theme["Collect"];
-            e.Context.DrawCell(style, null, e.RowBound, Rectangle.Zero, CellDisplayState.Default);
+            e.Context.DrawCell(style, null, e.RowBound, Rect.Empty, CellDisplayState.Default);
             foreach (LayoutColumn column in e.Columns)
             {
                 if (column.Collect != CollectedType.None)
@@ -4612,7 +4599,7 @@ namespace DataWF.Gui
                 else if (selection.Contains(e.Index))
                     e.State = CellDisplayState.Selected;
             }
-            e.Context.DrawCell(OnGetCellStyle(e.Item, null, null), null, e.RowBound, Rectangle.Zero, e.State);
+            e.Context.DrawCell(OnGetCellStyle(e.Item, null, null), null, e.RowBound, Rect.Empty, e.State);
             foreach (LayoutColumn column in e.Columns)
             {
                 e.Column = column;
@@ -4627,10 +4614,10 @@ namespace DataWF.Gui
             }
         }
 
-        public TextLayout GetTextLayout(LayoutListDrawArgs e)
+        public FormattedText GetFormattedText(LayoutListDrawArgs e)
         {
-            TextLayout layout = null;
-            Dictionary<LayoutColumn, TextLayout> cacheItem = null;
+            FormattedText layout = null;
+            Dictionary<LayoutColumn, FormattedText> cacheItem = null;
 
             if (cache.Count > e.DisplayIndex)
             {
@@ -4639,17 +4626,14 @@ namespace DataWF.Gui
             }
             else
             {
-                cache.Add(cacheItem = new Dictionary<LayoutColumn, TextLayout>());
+                cache.Add(cacheItem = new Dictionary<LayoutColumn, FormattedText>());
             }
-            if (layout == null)
+            layout ??= cacheItem[e.Column] = new FormattedText()
             {
-                layout = cacheItem[e.Column] = new TextLayout()
-                {
-                    Font = e.Style.Font,
-                    Trimming = TextTrimming.WordElipsis,
-                    TextAlignment = e.Style.Alignment
-                };
-            }
+                FontFamily = e.Style.FontFamily,
+                Trimming = TextTrimming.WordElipsis,
+                TextAlignment = e.Style.TextAlignment
+            };
             if (!string.Equals(layout.Text, (string)e.Formated, StringComparison.Ordinal)
                 || layout.Width != e.Bound.Width)
             {
@@ -4680,7 +4664,7 @@ namespace DataWF.Gui
             e.Formated = FormatValue(e.Item, e.Value, e.Column);
             if (e.Formated is string)
             {
-                e.Formated = GetTextLayout(e);
+                e.Formated = GetFormattedText(e);
             }
 
             e.State = CellDisplayState.Default;
@@ -4719,7 +4703,7 @@ namespace DataWF.Gui
                 return;
             if (GuiService.InvokeRequired)
             {
-                Application.Invoke(() => OnFieldsPropertyChanged(sender, e));
+                _ = Dispatcher.UIThread.InvokeAsync(() => OnFieldsPropertyChanged(sender, e));
             }
             else
             {
@@ -4748,14 +4732,14 @@ namespace DataWF.Gui
             if (filterView == null)
             {
                 filterView = new LayoutFilterView(this);
-                filterBox = new VBox();
+                filterBox = new StackPanel { Orientation = Orientation.Vertical };
             }
             if (scroll.Parent == this)
             {
                 Remove(scroll);
-                filterBox.PackStart(filterView, false, false);
-                filterBox.PackStart(scroll, true, true);
-                PackStart(filterBox, true, true);
+                filterBox.Children.Add(filterView, false, false);
+                filterBox.Children.Add(scroll, true, true);
+                Children.Add(filterBox, true, true);
                 //filterView.Show(this, new Point(listInfo.HeaderWidth, bounds.Area.Height - 60));
             }
         }
@@ -4771,7 +4755,7 @@ namespace DataWF.Gui
                 Remove(filterBox);
                 filterBox.Remove(filterView);
                 filterBox.Remove(scroll);
-                PackStart(scroll, true, true);
+                Children.Add(scroll, true, true);
             }
         }
 
@@ -4789,12 +4773,12 @@ namespace DataWF.Gui
             {
                 direction = ListSortDirection.Descending;
             }
-            if ((Keyboard.CurrentModifiers & ModifierKeys.Control) != ModifierKeys.Control
-                && (Keyboard.CurrentModifiers & ModifierKeys.Shift) != ModifierKeys.Shift)
+            if ((Keyboard.CurrentModifiers & KeyModifiers.Control) != KeyModifiers.Control
+                && (Keyboard.CurrentModifiers & KeyModifiers.Shift) != KeyModifiers.Shift)
             {
                 listInfo.Sorters.Clear();
             }
-            if ((Keyboard.CurrentModifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            if ((Keyboard.CurrentModifiers & KeyModifiers.Control) == KeyModifiers.Control)
             {
                 OnColumnGrouping(column, direction);
             }
@@ -4848,7 +4832,7 @@ namespace DataWF.Gui
                 bounds.TempColumns = bounds.Columns;
                 bounds.TempContent = bounds.Content;
 
-                canvas.QueueDraw();
+                canvas.InvalidateVisual();
             }
             if (CurrentEditor != null)
                 SetEditorBound();
@@ -4987,8 +4971,8 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool WriteOnValueChaned
         {
-            get { return writeOnValueChanged; }
-            set { writeOnValueChanged = value; }
+            get => writeOnValueChanged;
+            set => writeOnValueChanged = value;
         }
 
         [DefaultValue(false)]
@@ -5027,7 +5011,7 @@ namespace DataWF.Gui
                     Task.Run(() =>
                     {
                         System.Threading.Thread.Sleep(300);
-                        Application.Invoke(() => OnListChangedApp(source, arg));
+                        _ = Dispatcher.UIThread.InvokeAsync(() => OnListChangedApp(source, arg));
                         post = false;
                     }).ConfigureAwait(false);
                 }
@@ -5051,14 +5035,14 @@ namespace DataWF.Gui
             return GuiEnvironment.GetCellEditor(cell);
         }
 
-        public override void Serialize(ISerializeWriter writer)
+        public override void Serialize(XmlInvokerWriter writer)
         {
             writer.WriteAttribute("Key", GetCacheKey());
         }
 
-        public override void Deserialize(ISerializeReader reader)
+        public override void Deserialize(XmlInvokerReader reader)
         {
-            var key = reader.ReadAttribute("Key", typeof(string));
+            var key = reader.ReadAttribute<string>("Key");
         }
 
         public void Bind<T>(T data, string property, string viewProperty)
@@ -5087,8 +5071,8 @@ namespace DataWF.Gui
 
         public string Value
         {
-            get { return val; }
-            set { val = value; }
+            get => val;
+            set => val = value;
         }
 
         public NotifyProperty(string value)

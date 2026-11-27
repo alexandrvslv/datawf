@@ -1,9 +1,10 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.ComponentModel;
 using System.IO;
-using Xwt.Drawing;
+using Avalonia.Controls;
+using Avalonia.Media.Imaging;
 
 namespace DataWF.TestGui
 {
@@ -11,7 +12,7 @@ namespace DataWF.TestGui
     {
         private FileSystemInfo info;
         private FileInfo finfo;
-        private Image image;
+        private Bitmap image;
         private GlyphType glyph;
 
         public override string ToString()
@@ -22,7 +23,7 @@ namespace DataWF.TestGui
         [Browsable(false)]
         public FileSystemInfo Info
         {
-            get { return info; }
+            get => info;
             set
             {
                 info = value;
@@ -55,7 +56,7 @@ namespace DataWF.TestGui
                     else if (ext == ".rar" || ext == ".cab")
                         glyph = GlyphType.FileArchiveO;
                     else if (ext == ".fon" || ext == ".ttf")
-                        glyph = GlyphType.Font;
+                        glyph = GlyphType.FontFamily;
                     else if (ext == ".exe" || ext == ".run")
                         glyph = GlyphType.GearAlias;
                     else if (ext == ".dll" || ext == ".o")
@@ -102,17 +103,17 @@ namespace DataWF.TestGui
         }
 
         [Browsable(false)]
-        public Image Image
+        public Bitmap Image
         {
-            get { return image; }
-            set { image = value as Image; }
+            get => image;
+            set => image = value as Bitmap;
         }
 
         [Browsable(false)]
         public GlyphType Glyph
         {
-            get { return glyph; }
-            set { glyph = value; }
+            get => glyph;
+            set => glyph = value;
         }
     }
 }

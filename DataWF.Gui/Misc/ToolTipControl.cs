@@ -1,13 +1,14 @@
 ﻿using System;
-using Xwt;
-using Xwt.Drawing;
-using Xwt.Formats;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Media.Immutable;
 
 namespace DataWF.Gui
 {
-    public class ToolTipControl : Widget
+    public class ToolTipControl : ContentControl
     {
-        protected RichTextView content = new RichTextView();
+        protected TextBox content = new TextBox();
 
         public ToolTipControl()
             : base()
@@ -17,16 +18,16 @@ namespace DataWF.Gui
 
         public string Text
         {
-            get { return content.PlainText; }
-            set { content.LoadText(value, new PlainTextFormat()); }
+            get => content.Text;
+            set => content.Text = value;
         }
 
         public void InitializeControl()
         {
-            content.ReadOnly = true;
-            this.Font = content.Font;
+            content.IsReadOnly = true;
+            this.FontFamily = content.FontFamily;
             Content = content;
-            BackgroundColor = Colors.LightSlateGray;
+            Background = new ImmutableSolidColorBrush(Colors.LightSlateGray);
         }
     }
 }

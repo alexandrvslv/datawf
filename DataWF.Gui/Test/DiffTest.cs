@@ -1,8 +1,10 @@
 ﻿using DataWF.Gui;
-using DataWF.Common;
+using DataWF;
 using System;
-using Xwt;
+using Avalonia;
 using System.Linq;
+using Avalonia.Controls;
+using Avalonia.Layout;
 
 namespace DataWF.TestGui
 {
@@ -10,52 +12,78 @@ namespace DataWF.TestGui
     {
         private Label textALabel;
         private Label textBLabel;
-        private TextEntry textA;
-        private TextEntry textB;
+        private TextBox textA;
+        private TextBox textB;
         private Button testChar;
         private Button testWord;
         private LayoutList result;
         private GroupBoxItem itemParam;
         private GroupBoxItem itemResult;
         private GroupBox map;
-        private Table panel;
+        private Grid panel;
         private DIffMode diffMode;
 
         public DiffTest()
         {
-            textALabel = new Label() { Text = "Param1:", TextAlignment = Alignment.Center };
-            textBLabel = new Label() { Text = "Param2:", TextAlignment = Alignment.Center };
-            textA = new TextEntry() { Text = "Sequential Read: Up to 550 MB/s " };
-            textB = new TextEntry() { Text = "Sequential Write: Up to 510 MB/s " };
+            textALabel = new Label() { Content = "Param1:", HorizontalContentAlignment = HorizontalAlignment.Center };
+            textBLabel = new Label() { Content = "Param2:", HorizontalContentAlignment = HorizontalAlignment.Center };
+            textA = new TextBox() { Text = "Sequential Read: Up to 550 MB/s " };
+            textB = new TextBox() { Text = "Sequential Write: Up to 510 MB/s " };
 
-            testChar = new Button() { Label = "Test Char" };
-            testChar.Clicked += TestCharOnClick;
+            testChar = new Button() { Content = "Test Char" };
+            testChar.Click += TestCharOnClick;
 
-            testWord = new Button() { Label = "Test Word" };
-            testWord.Clicked += TestWordOnClick;
+            testWord = new Button() { Content = "Test Word" };
+            testWord.Click += TestWordOnClick;
 
             result = new LayoutList() { GenerateToString = false };
             result.SelectionChanged += result_SelectionChanged;
 
-            panel = new Table();
-            panel.Add(textALabel, 0, 0);
-            panel.Add(textA, 1, 0, colspan: 2, hexpand: true);
-            panel.Add(textBLabel, 0, 1);
-            panel.Add(textB, 1, 1, colspan: 2, hexpand: true);
-            panel.Add(testChar, 0, 2);
-            panel.Add(testWord, 1, 2, hexpand: false);
+            panel = new Grid
+            {
+                RowDefinitions = new RowDefinitions {
+                    new RowDefinition(),
+                    new RowDefinition(),
+                    new RowDefinition()
+                },
+                ColumnDefinitions = new ColumnDefinitions {
+                    new ColumnDefinition(),
+                    new ColumnDefinition(),
+                }
+            };
+            Grid.SetRow(textALabel, 0);
+            Grid.SetColumn(textALabel, 0);
+            Grid.SetRow(textA, 0);
+            Grid.SetColumn(textA, 1);
+            Grid.SetColumnSpan(textA, 2);
+            Grid.SetRow(textBLabel, 1);
+            Grid.SetColumn(textBLabel, 0);
+            Grid.SetRow(textB, 1);
+            Grid.SetColumn(textB, 1);
+            Grid.SetColumnSpan(textB, 2);
+            Grid.SetRow(testChar, 2);
+            Grid.SetColumn(testChar, 0);
+            Grid.SetRow(testWord, 2);
+            Grid.SetColumn(testWord, 1);
+
+            panel.Children.Add(textALabel);
+            panel.Children.Add(textA);
+            panel.Children.Add(textBLabel);
+            panel.Children.Add(textB);
+            panel.Children.Add(testChar);
+            panel.Children.Add(testWord);
             //test.RowSpan = 
 
             itemParam = new GroupBoxItem()
             {
-                Widget = panel,
+                Control = panel,
                 FillWidth = true,
                 Name = "Params"
             };
 
             itemResult = new GroupBoxItem()
             {
-                Widget = result,
+                Control = result,
                 Row = 1,
                 FillHeight = true,
                 Name = "Result"
@@ -63,7 +91,7 @@ namespace DataWF.TestGui
 
             map = new GroupBox(itemParam, itemResult);
 
-            PackStart(map, true, true);
+            Children.Add(map);
             Text = "Diff Test";
         }
 
@@ -73,18 +101,18 @@ namespace DataWF.TestGui
             {
                 var rez = (DiffResult)result.SelectedItem;
                 var box = rez.Type == DiffType.Inserted ? textB : textA;
-                box.SetFocus();
+                box.Focus();
                 if (diffMode == DIffMode.Char)
                 {
                     box.SelectionStart = rez.Index;
-                    box.SelectionLength = rez.Length;
+                    box.SelectionEnd = rez.Length;
                 }
                 else
                 {
                     var array = box.Text.Split(' ');
 
                     box.SelectionStart = array.Take(rez.Index).Sum(p => p.Length) + rez.Index;
-                    box.SelectionLength = array.Skip(rez.Index + 1).Take(rez.Length).Sum(p => p.Length) + (rez.Length - 1);
+                    box.SelectionEnd = array.Skip(rez.Index + 1).Take(rez.Length).Sum(p => p.Length) + (rez.Length - 1);
                 }
             }
         }

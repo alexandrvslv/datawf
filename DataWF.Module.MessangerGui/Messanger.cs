@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
@@ -31,8 +31,8 @@ namespace DataWF.Module.MessangerGui
             spliter = new MessageEditor() { Name = "spliter", HeightRequest = 80 };
 
             Name = "MessangerDialog";
-            PackStart(plist, true, true);
-            PackStart(spliter, false, true);
+            Children.Add(plist, true, true);
+            Children.Add(spliter, false, true);
 
             Localize();
         }
@@ -46,7 +46,7 @@ namespace DataWF.Module.MessangerGui
         public void Sync()
         {
             if (list != null)
-                list.Load(DBLoadParam.Load | DBLoadParam.Synchronize);
+                list.Load(DBLoadParam.Load | DBLoadParam.NoCache);
         }
 
         public async Task SyncAsync()
@@ -72,7 +72,7 @@ namespace DataWF.Module.MessangerGui
                 spliter.Staff = staff;
                 spliter.toolUsers.Visible = false;
 
-                list = new MessageList(staff as User, (User)GuiEnvironment.User);
+                list = new MessageList(MessageExplorer.Schema.Message, staff as User, (User)GuiEnvironment.User);
                 plist.ListSource = list;
                 //list.Table.LoadComplete += TableLoadComplete;
             }
@@ -86,7 +86,7 @@ namespace DataWF.Module.MessangerGui
 
         private void TableLoadComplete(object sender, DBLoadCompleteEventArgs e)
         {
-            //GuiService.Context.Post((object p) => { plist.QueueDraw(true, true); }, null);
+            //GuiService.Context.Post((object p) => { plist.InvalidateVisual(true, true); }, null);
         }
 
         public bool HideOnClose

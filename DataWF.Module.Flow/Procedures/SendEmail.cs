@@ -12,7 +12,8 @@ namespace DataWF.Module.Flow
         public Task<object> Execute(ExecuteArgs arg)
         {
             var darg = (DocumentExecuteArgs)arg;
-            var smtpServer = Book.DBTable.LoadByCode("smtpserver");
+            
+            var smtpServer = darg.Document.Schema.GetTable<Book>().LoadByCode("smtpserver");
             if (smtpServer == null)
                 throw new NullReferenceException("smtpserver book parameter not found!");
 

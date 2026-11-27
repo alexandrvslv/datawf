@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
@@ -11,14 +11,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Module.FlowGui
 {
     public class DocumentSender : ToolWindow, ILocalizable
     {
-        public async static Task<Command> Send(Widget widget, Document document)
+        public async static Task<Command> Send(Control Control, Document document)
         {
             var work = document.CurrentWork;
             if (work != null)
@@ -51,10 +51,10 @@ namespace DataWF.Module.FlowGui
                         return null;
                 }
             }
-            return await Send(widget, new[] { document }, null, null, null);
+            return await Send(Control, new[] { document }, null, null, null);
         }
 
-        public static async Task<Command> Send(Widget widget, IEnumerable<Document> documnets, DocumentWork work, Stage stage, User user)
+        public static async Task<Command> Send(Control Control, IEnumerable<Document> documnets, DocumentWork work, Stage stage, User user)
         {
             var sender = new DocumentSender();
             sender.Localize();
@@ -63,7 +63,7 @@ namespace DataWF.Module.FlowGui
             // sender.Hidden += SenderSendComplete;
             if (stage != null && user != null)
                 sender.Send(stage, user, DocumentSendType.Next);
-            return await sender.ShowAsync(widget, Point.Zero);
+            return await sender.ShowAsync(Control, Point.Zero);
         }
 
         private FlowTree listUsers;
@@ -154,8 +154,8 @@ namespace DataWF.Module.FlowGui
             listDocuments.GetCellStyle += OnListDocumentsGetCellStyle;
 
             groupBox = new GroupBox(
-                new GroupBoxItem() { Widget = listDocuments, Name = "Documents", FillHeight = true, FillWidth = true },
-                new GroupBoxItem() { Widget = listUsers, Name = "Users", FillHeight = true, FillWidth = true, Row = 1 })
+                new GroupBoxItem() { Control = listDocuments, Name = "Documents", FillHeight = true, FillWidth = true },
+                new GroupBoxItem() { Control = listUsers, Name = "Users", FillHeight = true, FillWidth = true, Row = 1 })
             { Name = "GroupMap" };
 
             Mode = ToolShowMode.Dialog;
@@ -261,7 +261,7 @@ namespace DataWF.Module.FlowGui
 
                 toolReturn.Visible &= cwork.From != null;
 
-                if (!items.Select("Document", CompareType.Equal, document).Any())
+                if (!items.Select("Document", CompareOperator.Equal, document).Any())
                 {
                     items.Add(new DocumentSendItem()
                     {
@@ -416,7 +416,7 @@ namespace DataWF.Module.FlowGui
             var nodes = listUsers.Nodes.GetChecked().Cast<TableItemNode>().Select(p => (DBItem)p.Item).ToList();
             foreach (DocumentSendItem sender in items)
             {
-                using (var transaction = new DBTransaction(Document.DBTable.Schema.Connection, GuiEnvironment.User))
+                using (var transaction = new DBTransaction(FlowExplorer.Schema, GuiEnvironment.User))
                 {
                     try
                     {
@@ -450,13 +450,13 @@ namespace DataWF.Module.FlowGui
 
         private void SendCallback()
         {
-            Application.Invoke(() =>
+            _ = Dispatcher.UIThread.InvokeAsync(() =>
             {
                 toolProgress.Visible = false;
                 listDocuments.Sensitive = true;
                 listDocuments.RefreshBounds(false);
-                var send = items.Select("Work.IsComplete", CompareType.Equal, true);
-                var restor = items.Select("Work", CompareType.Equal, null);
+                var send = items.Select("Work.IsComplete", CompareOperator.Equal, true);
+                var restor = items.Select("Work", CompareOperator.Equal, null);
                 var sended = send.Union(restor).ToList();
                 MessageDialog.ShowMessage(this, string.Format("Sended {0} of {1} documents", sended.Count, items.Count));
 

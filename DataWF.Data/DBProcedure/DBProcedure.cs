@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using System.Text.Json.Serialization;
 using System;
@@ -33,15 +33,10 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.Source), typeof(DBProcedure.SourceInvoker))]
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.Stamp), typeof(DBProcedure.StampInvoker))]
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.Parameters), typeof(DBProcedure.ParametersInvoker))]
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.GroupName), typeof(DBProcedure.GroupNameInvoker))]
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.DataName), typeof(DBProcedure.DataNameInvoker))]
-[assembly: Invoker(typeof(DBProcedure), nameof(DBProcedure.ProcedureType), typeof(DBProcedure.ProcedureTypeInvoker))]
 namespace DataWF.Data
 {
-    public class DBProcedure : DBSchemaItem, IData, IGroup
+    [Invoker(Instance = true)]
+    public partial class DBProcedure : DBSchemaItem, IData, IGroup
     {
         private Assembly tempAssembly;
         private byte[] cacheData;
@@ -100,13 +95,13 @@ namespace DataWF.Data
             {
                 if (cacheData == null && DataStore != null)
                 {
-                    cacheData = Helper.ReadGZip(DataStore);
+                    cacheData = Helper.ReadGZip(new ArraySegment<byte>(DataStore)).Array;
                 }
                 return cacheData;
             }
             set
             {
-                DataStore = Helper.WriteGZip(value);
+                DataStore = Helper.WriteGZip(new ArraySegment<byte>(value)).Array;
                 if (DataName != null)
                 {
                     if (value != null)
@@ -181,7 +176,7 @@ namespace DataWF.Data
         {
             if (outFile == null)
                 outFile = "temp";
-            EmitInvoker.DeleteCache();
+            InvokeProvider.DeleteCache();
             //
             string path = Path.Combine(Helper.GetDirectory(Environment.SpecialFolder.LocalApplicationData, true), "Temp", outFile);
             if (Directory.Exists(path))
@@ -263,7 +258,7 @@ namespace DataWF.Data
                     info.Description = CompilerError(result);
                     info.Type = StatusType.Error;
                 }
-                Helper.Logs.Add(info);
+                Helper.Log(info);
 
 
                 using (FileStream ms = new FileStream(outFile + ".csproj", FileMode.Create))
@@ -381,7 +376,7 @@ namespace DataWF.Data
                             TempAssembly = Assembly.LoadFrom(file);//File.ReadAllBytes(FileDataName)
                                                                    //TempAssembly = Assembly.LoadFile(Path.Combine(Environment.CurrentDirectory,  FileDataName)); // Assembly.Load(File.ReadAllBytes(FileDataName))
                         }
-                        var list = Store.Select(DataNameInvoker.Instance, CompareType.Equal, DataName);
+                        var list = Store.Select(DataNameInvoker.Instance, CompareOperator.Equal, DataName);
                         foreach (DBProcedure proc in list)
                             proc.TempAssembly = TempAssembly;
                     }
@@ -475,9 +470,9 @@ namespace DataWF.Data
         {
             object temp = null;
             if (ProcedureType == ProcedureTypes.Assembly || ProcedureType == ProcedureTypes.Source)
-                temp = EmitInvoker.CreateObject(GetObjectType(), true);
+                temp = InvokeProvider.CreateObject(GetObjectType(), true);
             else if (ProcedureType == ProcedureTypes.Table)
-                temp = DBService.Schems.ParseTable(Source);
+                temp = Schema.GetTable(Source);
             else if (ProcedureType == ProcedureTypes.Constant)
                 temp = Source;
             else
@@ -487,7 +482,7 @@ namespace DataWF.Data
 
         public object ExecuteObject(object obj, ExecuteArgs param)
         {
-            Helper.Logs.Add(new StateInfo("Procedure", this.Name, param.ToString(), StatusType.Information));
+            this.Log($"{Name} {param.ToString()}", StatusType.Information);
 
             //if (FlowEnvir.Config.LogProcedure)
             //DocumentLog.LogUser(FlowEnvir.Personal.User, DocumentLogType.Execute, this.ToString(), this, param.Document);
@@ -542,7 +537,7 @@ namespace DataWF.Data
 
         public TaskExecutor GetExecutor(DBItem document, DBTransaction transaction, bool autoCommit = false)
         {
-            var args = new ExecuteArgs(document)
+            var args = new ExecuteArgs(Schema, document)
             {
                 Transaction = transaction,
                 AutoCommit = autoCommit
@@ -564,7 +559,7 @@ namespace DataWF.Data
                     {
                         if (args.AutoCommit && args.Transaction == null)
                         {
-                            args.Transaction = new DBTransaction(Schema.Connection);
+                            args.Transaction = new DBTransaction(Schema);
                         }
                         result = this.ExecuteObject(obj, args);
                         if (args.AutoCommit)
@@ -594,7 +589,7 @@ namespace DataWF.Data
 
         public Dictionary<string, object> ExecuteDBProcedure(IDbCommand command, ExecuteArgs args)
         {
-            var transaction = args.Transaction ?? new DBTransaction(Schema.Connection);
+            var transaction = args.Transaction ?? new DBTransaction(Schema);
             try
             {
                 transaction.AddCommand(command);
@@ -629,7 +624,7 @@ namespace DataWF.Data
 
         public object ExecuteDBFunction(IDbCommand command)
         {
-            using (var transaction = new DBTransaction(Schema.Connection))
+            using (var transaction = new DBTransaction(Schema))
             {
                 try
                 {
@@ -656,7 +651,7 @@ namespace DataWF.Data
 
         public QResult ExecuteQueryResult(IDbCommand command)
         {
-            using (var transaction = new DBTransaction(Schema.Connection))
+            using (var transaction = new DBTransaction(Schema))
             {
                 try
                 {
@@ -679,7 +674,7 @@ namespace DataWF.Data
 
         public List<Dictionary<string, object>> ExecuteListDictionary(IDbCommand command)
         {
-            using (var transaction = new DBTransaction(Schema.Connection))
+            using (var transaction = new DBTransaction(Schema))
             {
                 try
                 {
@@ -754,7 +749,7 @@ namespace DataWF.Data
                 parameters.Add("documentid", document.PrimaryId);
                 foreach (DBColumn column in document.Table.Columns)
                 {
-                    if (!document.Table.IsSerializeableColumn(column, document.GetType()))
+                    if (!column.IsSerializeable(document.GetType()))
                         continue;
                     object val = document[column];
                     if (val != null)
@@ -786,7 +781,7 @@ namespace DataWF.Data
             };
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             var ddl = new StringBuilder();
             Schema.System.Format(ddl, this, ddlType);
@@ -798,11 +793,11 @@ namespace DataWF.Data
             Helper.SetDirectory(Environment.SpecialFolder.LocalApplicationData);
 
             //var appDir = Tool.GetDirectory();
-            Helper.Logs.Add(new StateInfo("Startup", "Cache Sources", "", StatusType.Information));
+            schema.Log("Procedures");
 
 
             var groups = schema.Procedures.Select(ProcedureTypeInvoker.Instance,
-                                                  CompareType.Equal,
+                                                  CompareOperator.Equal,
                                                   ProcedureTypes.Source).GroupBy((p) => p.DataName);
             foreach (var group in groups)
             {
@@ -841,76 +836,6 @@ namespace DataWF.Data
             return result;
         }
 
-        public class SourceInvoker : Invoker<DBProcedure, string>
-        {
-            public static readonly SourceInvoker Instance = new SourceInvoker();
-            public override string Name => nameof(DBProcedure.Source);
 
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBProcedure target) => target.Source;
-
-            public override void SetValue(DBProcedure target, string value) => target.Source = value;
-        }
-
-        public class StampInvoker : Invoker<DBProcedure, DateTime>
-        {
-            public static readonly StampInvoker Instance = new StampInvoker();
-            public override string Name => nameof(DBProcedure.Stamp);
-
-            public override bool CanWrite => true;
-
-            public override DateTime GetValue(DBProcedure target) => target.Stamp;
-
-            public override void SetValue(DBProcedure target, DateTime value) => target.Stamp = value;
-        }
-
-        public class ParametersInvoker : Invoker<DBProcedure, DBProcParameterList>
-        {
-            public static readonly ParametersInvoker Instance = new ParametersInvoker();
-            public override string Name => nameof(DBProcedure.Parameters);
-
-            public override bool CanWrite => true;
-
-            public override DBProcParameterList GetValue(DBProcedure target) => target.Parameters;
-
-            public override void SetValue(DBProcedure target, DBProcParameterList value) => target.Parameters = value;
-        }
-
-        public class GroupNameInvoker : Invoker<DBProcedure, string>
-        {
-            public static readonly GroupNameInvoker Instance = new GroupNameInvoker();
-            public override string Name => nameof(DBProcedure.GroupName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBProcedure target) => target.GroupName;
-
-            public override void SetValue(DBProcedure target, string value) => target.GroupName = value;
-        }
-
-        public class DataNameInvoker : Invoker<DBProcedure, string>
-        {
-            public static readonly DataNameInvoker Instance = new DataNameInvoker();
-            public override string Name => nameof(DBProcedure.DataName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBProcedure target) => target.DataName;
-
-            public override void SetValue(DBProcedure target, string value) => target.DataName = value;
-        }
-
-        public class ProcedureTypeInvoker : Invoker<DBProcedure, ProcedureTypes>
-        {
-            public static readonly ProcedureTypeInvoker Instance = new ProcedureTypeInvoker();
-            public override string Name => nameof(DBProcedure.ProcedureType);
-
-            public override bool CanWrite => true;
-
-            public override ProcedureTypes GetValue(DBProcedure target) => target.ProcedureType;
-
-            public override void SetValue(DBProcedure target, ProcedureTypes value) => target.ProcedureType = value;
-        }
     }
 }

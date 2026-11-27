@@ -1,7 +1,7 @@
 ﻿using DataWF.Module.Flow;
 using DataWF.Gui;
-using DataWF.Common;
-using Xwt.Drawing;
+using DataWF;
+using Avalonia.Controls;
 using System;
 
 namespace DataWF.Module.FlowGui

@@ -2,7 +2,7 @@
 using System.Xml.Serialization;
 using DataWF.Data;
 using DataWF.Gui;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Data.Gui
 {

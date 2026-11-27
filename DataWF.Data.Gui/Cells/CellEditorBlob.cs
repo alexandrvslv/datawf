@@ -1,5 +1,5 @@
 ﻿using DataWF.Gui;
-using DataWF.Common;
+using DataWF;
 
 namespace DataWF.Data.Gui
 {

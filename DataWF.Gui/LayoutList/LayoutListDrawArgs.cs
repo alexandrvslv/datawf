@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using DataWF.Common;
-using Xwt;
+using DataWF;
+using Avalonia;
 
 namespace DataWF.Gui
 {
@@ -9,14 +9,14 @@ namespace DataWF.Gui
     {
         public LayoutList LayoutList;
         public GraphContext Context;
-        public Rectangle Bound;
+        public Rect Bound;
         public LayoutColumn Column;
         public CellDisplayState State;
         public int Index;
         public object Item;
         public object Value;
         public object Formated;
-        public Rectangle RowBound;
+        public Rect RowBound;
         public List<LayoutColumn> Columns;
         public CellStyle Style;
         public LayoutGroup Group;

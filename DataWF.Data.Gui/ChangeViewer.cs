@@ -1,9 +1,9 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Collections.Specialized;
 using System.Threading;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Data.Gui
 {
@@ -80,8 +80,8 @@ namespace DataWF.Data.Gui
             this.Name = "ChangeViewer";
             this.Text = "Change Viewer";
 
-            PackStart(tools, false, false);
-            PackStart(split1, true, true);
+            Children.Add(tools, false, false);
+            Children.Add(split1, true, true);
             split1.Name = "splitter";
             split1.Panel1.Content = listObjects;
             split1.Panel2.Content = split2;
@@ -114,7 +114,7 @@ namespace DataWF.Data.Gui
 
         private void LoadData()
         {
-            using (var transaction = new DBTransaction())
+            using (var transaction = new DBTransaction(Table))
             {
                 var command = transaction.AddCommand("");
                 foreach (TableItemNode node in listObjects.Nodes)
@@ -174,12 +174,12 @@ namespace DataWF.Data.Gui
             wait.Reset();
             string filter = table.GetStatusParam(DBStatus.New | DBStatus.Edit | DBStatus.Delete).Format();
             if (!wait.WaitOne(0))
-                foreach (DBItem row in table.LoadItems("where " + filter))
+                foreach (DBItem row in table.QQuery("where " + filter).Load<DBItem>())
                 {
                     if (wait.WaitOne(0))
                         break;
 
-                    if (rows.Find("Row", CompareType.Equal, row) == null)
+                    if (rows.SearchOne("Row", CompareOperator.Equal, row) == null)
                         try
                         {
                             rows.Add(new LogMap(row));
@@ -188,17 +188,15 @@ namespace DataWF.Data.Gui
                         {
                         }
                 }
-            using (QQuery qdelete = new QQuery("", (DBTable)table.LogTable))
+            IQQuery qdelete = table.LogTable.QQuery("");
+            qdelete.Where(table.LogTable.ElementTypeKey, CompareOperator.Equal, DBLogType.Delete);
+            qdelete.And(table.LogTable.StatusKey, CompareOperator.Equal, DBStatus.New);
+            foreach (DBItemLog log in qdelete.Load<DBItemLog>())
             {
-                qdelete.BuildParam(table.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
-                qdelete.BuildParam(table.LogTable.StatusKey, CompareType.Equal, DBStatus.New);
-                foreach (DBLogItem log in table.LogTable.LoadItems(qdelete, DBLoadParam.Synchronize))
-                {
-                    LogMap change = new LogMap { Table = table };
-                    //change.Logs.Add(log);
-                    change.RefreshChanges();
-                    rows.Add(change);
-                }
+                LogMap change = new LogMap { Table = table };
+                //change.Logs.Add(log);
+                change.RefreshChanges();
+                rows.Add(change);
             }
             //wait.Set();
             rows.OnCollectionChanged(NotifyCollectionChangedAction.Reset);

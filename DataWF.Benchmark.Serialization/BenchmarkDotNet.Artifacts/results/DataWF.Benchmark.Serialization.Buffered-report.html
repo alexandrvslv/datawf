@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>DataWF.Benchmark.Serialization.Buffered-20261116-092843</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.8, Linux Ubuntu 26.04.1 LTS (Resolute Raccoon)
+AMD Ryzen 7 2700U with Radeon Vega Mobile Gfx, 1 CPU, 8 logical and 4 physical cores
+.NET SDK 10.0.115
+  [Host]     : .NET 10.0.15 (10.0.15, 10.0.1526.53008), X64 RyuJIT x86-64-v3
+  DefaultJob : .NET 10.0.15 (10.0.15, 10.0.1526.53008), X64 RyuJIT x86-64-v3
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method     </th><th>Mean </th><th>Error</th><th>StdDev</th><th>Median</th><th>Buffer size</th><th>Gen0</th><th>Gen1</th><th>Gen2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>MemoryPack</td><td>24.81 ms</td><td>0.492 ms</td><td>1.331 ms</td><td>24.53 ms</td><td>132 124 B</td><td>9666.6667</td><td>4133.3333</td><td>4133.3333</td><td>34.7 MB</td>
+</tr><tr><td>InvokeMemoryPack</td><td>25.03 ms</td><td>0.497 ms</td><td>1.220 ms</td><td>24.82 ms</td><td>132 124 B</td><td>9718.7500</td><td>4156.2500</td><td>4156.2500</td><td>34.7 MB</td>
+</tr><tr><td>InvokeMessagePack</td><td>72.83 ms</td><td>2.551 ms</td><td>7.360 ms</td><td>71.69 ms</td><td>57 746 B</td><td>8000.0000</td><td>2000.0000</td><td>-</td><td>27.61 MB</td>
+</tr><tr><td>MessagePack</td><td>94.57 ms</td><td>1.778 ms</td><td>2.820 ms</td><td>93.60 ms</td><td>59 446 B</td><td>9000.0000</td><td>3000.0000</td><td>-</td><td>27.76 MB</td>
+</tr><tr><td>InvokeJson</td><td>381.74 ms</td><td>31.902 ms</td><td>93.059 ms</td><td>361.22 ms</td><td>376 751 B</td><td>20000.0000</td><td>12000.0000</td><td>10000.0000</td><td>63.68 MB</td>
+</tr><tr><td>SystemJson</td><td>387.79 ms</td><td>7.676 ms</td><td>21.270 ms</td><td>386.83 ms</td><td>379 169 B</td><td>19000.0000</td><td>12000.0000</td><td>10000.0000</td><td>66.74 MB</td>
+</tr><tr><td>InvokeXml</td><td>1,072.81 ms</td><td>67.792 ms</td><td>199.887 ms</td><td>1,050.75 ms</td><td>396 617 B</td><td>82000.0000</td><td>38000.0000</td><td>37000.0000</td><td>241.23 MB</td>
+</tr><tr><td>SystemXml</td><td>1,693.53 ms</td><td>126.203 ms</td><td>372.111 ms</td><td>1,528.49 ms</td><td>751 401 B</td><td>58000.0000</td><td>49000.0000</td><td>49000.0000</td><td>281.01 MB</td>
+</tr></tbody></table>
+</body>
+</html>

@@ -1,23 +1,35 @@
 ﻿using System;
-using Xwt;
+using System.Linq;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Dialogs;
+using Avalonia.Platform.Storage;
+using Avalonia.Platform.Storage.FileIO;
 
 namespace DataWF.Gui
 {
     public class CellEditorPath : CellEditorText
     {
-        private static FileDialog picker;
+        private FilePickerOpenOptions options;
 
         public CellEditorPath() : base()
         {
             DropDownWindow = false;
             HandleText = false;
+            options = new FilePickerOpenOptions { AllowMultiple = false };
+
         }
 
-        private void OnDropDownClick(object sender, EventArgs e)
+        private async void OnDropDownClick(object sender, EventArgs e)
         {
-            if (picker.Run(Editor.ParentWindow))
+            if (Editor is IControl control
+                && control.VisualRoot is Window window)
             {
-                Value = picker.FileName;
+                var file = await window.StorageProvider.OpenFilePickerAsync(options);
+                if (file.Any())
+                {
+                    Value = file.First().Name;
+                }
             }
         }
 
@@ -28,12 +40,8 @@ namespace DataWF.Gui
             Editor.DropDownVisible = true;
             Editor.DropDownClick += OnDropDownClick;
 
-            if (picker == null)
-            {
-                picker = new OpenFileDialog();
-            }
 
-            picker.InitialFileName = value?.ToString();
+            options.Title = value?.ToString();
         }
 
         public override void FreeEditor()

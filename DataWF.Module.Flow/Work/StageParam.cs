@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -8,93 +8,46 @@ using System.Xml.Serialization;
 namespace DataWF.Module.Flow
 {
 
-    public enum StageParamType
+    [Table("rstage_param", "Template", BlockSize = 200), Invoker]
+    public partial class StageParam : DBItem
     {
-        None,
-        Column,
-        Foreign,
-        Template,
-        Procedure,
-        Reference,
-    }
-
-    public enum StageParamProcudureType
-    {
-        Start,
-        Manual,
-        Check,
-        Finish
-    }
-
-    public class StageParamList : DBTableView<StageParam>
-    {
-        public StageParamList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(filter, mode, status)
-        {
-            ApplySortInternal(new DBComparer<StageParam, int?>(StageParam.DBTable.PrimaryKey, ListSortDirection.Ascending));
-        }
-
-        public StageParamList()
-            : this(string.Empty)
-        {
-        }
-
-        public StageParamList(Stage stage)
-            : this(StageParam.DBTable.ParseProperty(nameof(StageParam.StageId)).Name + "=" + stage.PrimaryId)
-        {
-        }
-    }
-
-    [Table("rstage_param", "Template", BlockSize = 200)]
-    public class StageParam : DBItem
-    {
-        public static readonly DBTable<StageParam> DBTable = GetTable<StageParam>();
-
-        public static readonly DBColumn StageKey = DBTable.ParseProperty(nameof(StageId));
-        public static readonly DBColumn ParamCodeKey = DBTable.ParseProperty(nameof(ParamCode));
-        public static readonly DBColumn NameKey = DBTable.ParseProperty(nameof(Name));
-
         private object _cache;
         private Stage stage;
 
-        public StageParam()
+        [Column("unid", Keys = ColumnFlags.Primary)]
+        public int Id
         {
-        }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
-        {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [Column("stage_id")]
         public int? StageId
         {
-            get => GetValue<int?>(StageKey);
-            set => SetValue(value, StageKey);
+            get => GetValue(Table.StageIdKey);
+            set => SetValue(value, Table.StageIdKey);
         }
 
         [Reference(nameof(StageId))]
         public Stage Stage
         {
-            get => GetReference(StageKey, ref stage);
-            set => SetReference(stage = value, StageKey);
+            get => GetReference(Table.StageIdKey, ref stage);
+            set => SetReference(stage = value, Table.StageIdKey);
         }
 
         [Column("code", 1024)]
         public string ParamCode
         {
-            get => GetValue<string>(ParamCodeKey);
-            set => SetValue(value, ParamCodeKey);
+            get => GetValue(Table.ParamCodeKey);
+            set => SetValue(value, Table.ParamCodeKey);
         }
 
         [Column("name", 1024)]
         public string Name
         {
-            get => GetValue<string>(NameKey);
-            set => SetValue(value, NameKey);
+            get => GetValue(Table.NameKey);
+            set => SetValue(value, Table.NameKey);
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -114,13 +67,13 @@ namespace DataWF.Module.Flow
                             _cache = GetReference();
                             break;
                         case StageParamType.Procedure:
-                            _cache = DBService.Schems.ParseProcedure(ParamCode);
+                            _cache = Schema.Provider.ParseProcedure(ParamCode);
                             break;
                         case StageParamType.Reference:
-                            _cache = Stage.DBTable.LoadItemById(ParamCode);
+                            _cache = Schema.Stage.LoadById(ParamCode);
                             break;
                         case StageParamType.Template:
-                            _cache = Template.DBTable.LoadItemById(ParamCode);
+                            _cache = Schema.Template.LoadById(ParamCode);
                             break;
                     }
                 }
@@ -138,7 +91,7 @@ namespace DataWF.Module.Flow
             int index = ParamCode.IndexOf(' ');
             string code = ParamCode.Substring(0, index < 0 ? ParamCode.Length : index);
 
-            DBColumn column = DBService.Schems.ParseColumn(code, Table.Schema);
+            var column = Schema.Provider.ParseColumn(code);
             //var result = new DBConstraintForeign() { Table = column.Table, Column = column, Value = column.Reference };
             //if (index >= 0) result.Value = ParamCode.Substring(index + 1);
             return column?.GetForeign();
@@ -148,7 +101,7 @@ namespace DataWF.Module.Flow
         {
             int index = ParamCode.IndexOf(' ');
             string code = ParamCode.Substring(0, index < 0 ? ParamCode.Length : index);
-            DBColumn column = DBService.Schems.ParseColumn(code, Table.Schema);
+            DBColumn column = Schema.Provider.ParseColumn(code);
             return column;
         }
 
@@ -158,42 +111,9 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [ItemType((int)StageParamType.Procedure)]
-    public class StageProcedure : StageParam
+    [VirtualTable((int)StageParamType.Reference), Invoker]
+    public sealed partial class StageReference : StageParam
     {
-        private static DBColumn procedureTypeKey = DBColumn.EmptyKey;
-        public static DBColumn ProcedureTypeKey => DBTable.ParseProperty(nameof(ProcedureType), ref procedureTypeKey);
-
-        public StageProcedure()
-        {
-            ItemType = (int)StageParamType.Procedure;
-        }
-
-        public DBProcedure Procedure
-        {
-            get => Param as DBProcedure;
-            set => Param = value;
-        }
-
-        [Column("procedure_type")]
-        public StageParamProcudureType? ProcedureType
-        {
-            get => GetValue<StageParamProcudureType?>(ProcedureTypeKey);
-            set => SetValue(value, ProcedureTypeKey);
-        }
-    }
-
-    [ItemType((int)StageParamType.Reference)]
-    public class StageReference : StageParam
-    {
-        private static DBColumn nextKey = DBColumn.EmptyKey;
-        public static DBColumn NextKey => DBTable.ParseProperty(nameof(Next), ref nextKey);
-
-        public StageReference()
-        {
-            ItemType = (int)StageParamType.Reference;
-        }
-
         public Stage ReferenceStage
         {
             get => Param as Stage;
@@ -203,19 +123,14 @@ namespace DataWF.Module.Flow
         [Column("is_next")]
         public bool? Next
         {
-            get => GetValue<bool?>(NextKey);
-            set => SetValue(value, NextKey);
+            get => GetValue<bool?>(Table.NextKey);
+            set => SetValue(value, Table.NextKey);
         }
     }
 
-    [ItemType((int)StageParamType.Template)]
-    public class StageTemplate : StageParam
+    [VirtualTable((int)StageParamType.Template), Invoker]
+    public sealed partial class StageTemplate : StageParam
     {
-        public StageTemplate()
-        {
-            ItemType = (int)StageParamType.Template;
-        }
-
         public Template Template
         {
             get => Param as Template;
@@ -223,14 +138,9 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [ItemType((int)StageParamType.Foreign)]
-    public class StageForeign : StageParam
+    [VirtualTable((int)StageParamType.Foreign), Invoker]
+    public sealed partial class StageForeign : StageParam
     {
-        public StageForeign()
-        {
-            ItemType = (int)StageParamType.Foreign;
-        }
-
         [XmlIgnore, JsonIgnore]
         public DBForeignKey Foreign
         {

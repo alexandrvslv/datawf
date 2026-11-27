@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -38,16 +38,13 @@ namespace DataWF.Gui
         public Node InitNetworkInterface(NetworkInterface netInterface)
         {
             var node = Nodes.Find(netInterface.Name);
-            if (node == null)
-            {
-                node = new Node()
+            node ??= new Node()
                 {
                     Name = netInterface.Name,
                     Text = netInterface.Description,
                     Glyph = GlyphType.HospitalO,
                     Tag = netInterface
                 };
-            }
             return node;
         }
 
@@ -55,9 +52,7 @@ namespace DataWF.Gui
         {
             var name = address.GetHashCode().ToString();
             var node = Nodes.Find(name);
-            if (node == null)
-            {
-                node = new Node()
+            node ??= new Node()
                 {
                     Name = name,
                     Text = address.ToString(),
@@ -65,7 +60,6 @@ namespace DataWF.Gui
                     Tag = address,
                     Group = parent
                 };
-            }
             return node;
         }
     }

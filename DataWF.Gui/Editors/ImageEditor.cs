@@ -1,8 +1,11 @@
 ﻿using System;
 using System.IO;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
+using DataWF;
+using Avalonia;
+using Avalonia.Controls;
+using System.Linq;
+using Avalonia.Media.Imaging;
+using System.Collections.Generic;
 
 namespace DataWF.Gui
 {
@@ -20,7 +23,7 @@ namespace DataWF.Gui
         private ToolItem toolRotate = new ToolItem();
         private ToolItem toolUndo = new ToolItem();
         private ImageCanvas imageView = new ImageCanvas();
-        private ScrollView panel = new ScrollView();
+        private ScrollViewer panel = new ScrollViewer();
 
         public ImageEditor()
         {
@@ -79,14 +82,14 @@ namespace DataWF.Gui
 
             panel.Content = imageView;
 
-            PackStart(tools, false, false);
-            PackStart(panel, true, true);
+            Children.Add(tools);
+            Children.Add(panel);
             Name = "ImageEditor";
         }
 
-        public Image EditImage
+        public Bitmap EditImage
         {
-            get { return imageView.Image; }
+            get => imageView.Image;
             set
             {
                 if (EditImage == value)
@@ -99,17 +102,18 @@ namespace DataWF.Gui
         {
             using (var ms = new MemoryStream(value))
             {
-                EditImage = Image.FromStream(ms);
+                EditImage = new Bitmap(ms);
             }
         }
 
-        private void toolSaveClick(object sender, EventArgs e)
+        private async void toolSaveClick(object sender, EventArgs e)
         {
             var dialog = new SaveFileDialog();
-            dialog.Filters.Add(new FileDialogFilter("PNG", "*.png"));
-            if (dialog.Run(ParentWindow))
+            dialog.Filters.Add(new FileDialogFilter { Name = "PNG", Extensions = new List<string> { "*.png" } });
+            var file = await dialog.ShowAsync((Window)VisualRoot);
+            if (file != null)
             {
-                imageView.Save(dialog.FileName);
+                imageView.Save(file);
 
             }
         }
@@ -124,12 +128,13 @@ namespace DataWF.Gui
         }
 
 
-        private void toolLoadClick(object sender, EventArgs e)
+        private async void toolLoadClick(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
-            if (dialog.Run(ParentWindow))
+            var files = await dialog.ShowAsync((Window)VisualRoot);
+            if (files?.Any() ?? false)
             {
-                EditImage = Image.FromFile(dialog.FileName);
+                EditImage = new Bitmap(files.First());
             }
         }
 

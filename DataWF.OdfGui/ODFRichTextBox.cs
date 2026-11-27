@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Linq;
 using System.ComponentModel;
-using Xwt.Drawing;
-using Xwt;
+using Avalonia.Controls;
+using Avalonia;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
+using Avalonia.Media;
 
 namespace Doc.Odf
 {
 	public class TextPropertiesView
 	{
 		public TextProperties Text;
-		protected Font _font;
+		protected FontFamily _font;
 
-		public Font Font
+		public FontFamily FontFamily
 		{
 			get
 			{
@@ -48,7 +49,7 @@ namespace Doc.Odf
 						if (property != null)
 							size = new Length(property.FontSize, 0, LengthType.None).Data * (l.Data / 100);
 					}
-					_font = Font.FromName(Text.FontName == "" ? "Arial" : ff.Family)
+					_font = FontFamily.FromName(Text.FontName == "" ? "Arial" : ff.Family)
 								.WithSize(size).WithStyle(fs).WithWeight(fw);
 				}
 				return _font;
@@ -59,42 +60,42 @@ namespace Doc.Odf
 	public class ODFRichTextBox : Canvas
 	{
 		private const double width = 500;
-		public class TextLayoutCache
+		public class FormattedTextCache
 		{
-			public TextLayoutCache()
+			public FormattedTextCache()
 			{
-				Layout = new TextLayout();
+				Layout = new FormattedText();
 				Text = new StringBuilder();
 				Width = width;
 			}
 
-			public TextLayoutCache(TextLayoutCache layout) : this()
+			public FormattedTextCache(FormattedTextCache layout) : this()
 			{
 				Previus = layout;
 			}
 
-			TextLayoutCache Previus { get; set; }
+			FormattedTextCache Previus { get; set; }
 
-			public TextLayout Layout { get; set; }
+			public FormattedText Layout { get; set; }
 
 			public Point Location { get; set; }
 
-			public Rectangle Bound { get; set; }
+			public Rect Bound { get; set; }
 
 			public Color Color { get; set; }
 
 			public Color BackColor { get; set; }
 
-			public Font Font { get => Layout.Font; set => Layout.Font = value; }
+			public FontFamily FontFamily { get => Layout.FontFamily; set => Layout.FontFamily = value; }
 
-			public Alignment Align { get => Layout.TextAlignment; set => Layout.TextAlignment = value; }
+			public TextAlignment Align { get => Layout.TextAlignment; set => Layout.TextAlignment = value; }
 
 			public double Width { get => Layout.Width; set => Layout.Width = value; }
 
 			public StringBuilder Text { get; set; }
 
 			private List<TextAttribute> attributes = new List<TextAttribute>();
-			public void AppendText(string text, Font font, Color foreColor, Color backColor)
+			public void AppendText(string text, FontFamily font, Color foreColor, Color backColor)
 			{
 				if (text.Length == 0)
 					return;
@@ -104,8 +105,8 @@ namespace Doc.Odf
 					attributes.Add(new BackgroundTextAttribute() { Color = backColor, StartIndex = index, Count = text.Length });
 				if (foreColor != Color)
 					attributes.Add(new ColorTextAttribute() { Color = foreColor, StartIndex = index, Count = text.Length });
-				if (!Font.Equals(font))
-					attributes.Add(new FontTextAttribute() { Font = font, StartIndex = index, Count = text.Length });
+				if (!FontFamily.Equals(font))
+					attributes.Add(new FontTextAttribute() { FontFamily = font, StartIndex = index, Count = text.Length });
 			}
 
 			public void Refresh()
@@ -116,19 +117,19 @@ namespace Doc.Odf
 				var size = Layout.GetSize();
 				if (Previus != null)
 				{
-					if (Previus.Bound == Rectangle.Zero)
+					if (Previus.Bound == Rect.Empty)
 						Previus.Refresh();
 					Location = new Point(0, Previus.Bound.Bottom + 1);
 				}
-				Bound = new Rectangle(Location, size);
+				Bound = new Rect(Location, size);
 				Debug.WriteLine($"Bound {Bound}");
 			}
 		}
 
 		protected TextDocument _document;
-		protected List<TextLayoutCache> displayCache = new List<TextLayoutCache>();
-		private Alignment textAlign;
-		private Font textFont;
+		protected List<FormattedTextCache> displayCache = new List<FormattedTextCache>();
+		private TextAlignment textAlign;
+		private FontFamily textFont;
 		private Color textColor;
 		private Color textBackColor;
 		private ScrollAdjustment horizontal;
@@ -148,17 +149,17 @@ namespace Doc.Odf
 			}
 		}
 
-		public void WriteElement(BaseItem element, TextLayoutCache layout)
+		public void WriteElement(BaseItem element, FormattedTextCache layout)
 		{
 			if (element is IStyledElement)
 				ApplyStyle(((IStyledElement)element).Style);
 			if (element is Paragraph || element is TextHeader)
 			{
-				layout = new TextLayoutCache(displayCache.Count == 0 ? null : displayCache[displayCache.Count - 1])
+				layout = new FormattedTextCache(displayCache.Count == 0 ? null : displayCache[displayCache.Count - 1])
 				{
 					Color = textColor,
 					BackColor = textBackColor,
-					Font = textFont,
+					FontFamily = textFont,
 					Align = textAlign,
 				};
 				displayCache.Add(layout);
@@ -183,17 +184,17 @@ namespace Doc.Odf
 		{
             if (item is TextStyle ts)
             {
-                textFont = new TextPropertiesView { Text = ts.TextProperties }.Font ?? textFont;
+                textFont = new TextPropertiesView { Text = ts.TextProperties }.FontFamily ?? textFont;
                 textColor = ts.TextProperties.FontColor.Length == 0 ? Colors.Black : Color.FromName(ts.TextProperties.FontColor);
                 textBackColor = ts.TextProperties.FontBackgroundColor.Length == 0 ? Colors.Transparent : Color.FromName(ts.TextProperties.FontBackgroundColor);
             }
             if (item is ParagraphStyle ps)
             {
-                textAlign = Alignment.Start;
+                textAlign = TextAlignment.Start;
                 if (ps.ParagraphProperty.TextAlign == "center")
-                    textAlign = Alignment.Center;
+                    textAlign = TextAlignment.Center;
                 if (ps.ParagraphProperty.TextAlign == "right")
-                    textAlign = Alignment.End;
+                    textAlign = TextAlignment.End;
                 if (!string.IsNullOrEmpty(ps.ParagraphProperty.MarginTop))
                 {
 
@@ -215,9 +216,9 @@ namespace Doc.Odf
 		{
 			base.SetScrollAdjustments(horizontal, vertical);
 			this.horizontal = horizontal;
-			horizontal.ValueChanged += (s, e) => { QueueDraw(); };
+			horizontal.ValueChanged += (s, e) => { InvalidateVisual(); };
 			this.vertical = vertical;
-			vertical.ValueChanged += (s, e) => { QueueDraw(); };
+			vertical.ValueChanged += (s, e) => { InvalidateVisual(); };
 		}
 
 		protected override void OnReallocate()
@@ -230,10 +231,10 @@ namespace Doc.Odf
 			}
 		}
 
-		protected override void OnDraw(Context ctx, Rectangle dirtyRect)
+		protected override void OnDraw(Context ctx, Rect dirtyRect)
 		{
 			base.OnDraw(ctx, dirtyRect);
-			var area = new Rectangle(0, vertical?.Value ?? 0, dirtyRect.Width, dirtyRect.Height);
+			var area = new Rect(0, vertical?.Value ?? 0, dirtyRect.Width, dirtyRect.Height);
 			foreach (var item in displayCache)
 			{
 				if (area.IntersectsWith(item.Bound))
@@ -241,11 +242,11 @@ namespace Doc.Odf
 					if (item.BackColor != Colors.Transparent)
 					{
 						ctx.SetColor(item.BackColor);
-						ctx.Rectangle(item.Bound);
+						ctx.Rect(item.Bound);
 						ctx.Fill();
 					}
 					ctx.SetColor(item.Color);
-					ctx.DrawTextLayout(item.Layout, item.Location.X, item.Location.Y - area.Y);
+					ctx.DrawFormattedText(item.Layout, item.Location.X, item.Location.Y - area.Y);
 				}
 			}
 		}

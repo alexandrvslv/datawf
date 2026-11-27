@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
 namespace DataWF.Data.Gui
 {
@@ -38,7 +40,7 @@ namespace DataWF.Data.Gui
             base.ToolLoadClick(sender, e);
         }
 
-        protected override void ToolExportClick(object sender, EventArgs e)
+        protected override async void ToolExportClick(object sender, EventArgs e)
         {
             if (Procedure == null || Procedure.Data == null)
             {
@@ -47,13 +49,13 @@ namespace DataWF.Data.Gui
             else
             {
                 string fileName = Procedure.DataName.Replace(".", DateTime.Now.ToString("yyMMddHHmmss") + ".");
-                using (var dialog = new SaveFileDialog() { InitialFileName = fileName })
+                var dialog = ((Window)VisualRoot).StorageProvider;
+
+                using var fileStorage = await dialog.SaveFilePickerAsync(new FilePickerSaveOptions { SuggestedFileName = fileName });
+                if (fileStorage != null && fileStorage.CanOpenWrite)
                 {
-                    if (dialog.Run(ParentWindow))
-                    {
-                        DocumentFormatter.Execute(Procedure, new ExecuteArgs() { Parameters = parameters, Result = Query });
-                        System.Diagnostics.Process.Start(dialog.FileName);
-                    }
+                    DocumentFormatter.Execute(Procedure, new ExecuteArgs(Procedure.Schema) { Parameters = parameters, Result = Query });
+                    System.Diagnostics.Process.Start(fileStorage.Name);
                 }
             }
         }
@@ -102,11 +104,10 @@ namespace DataWF.Data.Gui
                     if (row == null)
                         row = table.NewItem();
 
-                    DBColumn col = new DBColumn
-                    {
-                        Name = !string.IsNullOrEmpty(param.Name) ? param.Name : "NewParam",
-                        Table = table
-                    };
+                    DBColumn col = DBColumnFactory.Create(param.DataType,
+                        name: !string.IsNullOrEmpty(param.Name) ? param.Name : "NewParam",
+                        table: table
+                    );
                     if (param.Column != null)
                     {
                         if (param.Column.IsPrimaryKey)
@@ -114,7 +115,6 @@ namespace DataWF.Data.Gui
                         if (param.Column.IsReference)
                             col.ReferenceTable = param.Column.ReferenceTable;
                     }
-                    col.DataType = param.DataType;
                     table.Columns.Add(col);
 
                     var tool = new ToolDataFieldEditor

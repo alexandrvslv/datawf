@@ -1,10 +1,11 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -16,137 +17,83 @@ namespace DataWF.Module.Flow
         OfficeExcel
     }
 
-    public class TemplateList : DBTableView<Template>
-    {
-        TemplateList _cacheAllTemplates;
-
-        public TemplateList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(filter, mode, status)
-        {
-            ApplySortInternal(new DBComparer<Template, string>(Template.DBTable.CodeKey, ListSortDirection.Ascending));
-        }
-
-        public TemplateList()
-            : this("")
-        {
-        }
-
-        public TemplateList(Work flow)
-            : this(Template.WorkKey.Name + "=" + flow.PrimaryId)
-        {
-        }
-
-        public TemplateList(Template template)
-            : this(Template.DBTable.ParseProperty(nameof(Template.ParentId)).Name + "=" + template.PrimaryId)
-        {
-        }
-
-        public TemplateList AllTemplates(Template template)
-        {
-            if (_cacheAllTemplates == null)
-            {
-                _cacheAllTemplates = new TemplateList();
-                _cacheAllTemplates.Query.BuildParam(Template.DBTable.ParseProperty(nameof(Template.ParentId)), template.GetSubGroupFullIds());
-            }
-            return _cacheAllTemplates;
-        }
-    }
-
     [Table("rtemplate", "Template", BlockSize = 100)]
-    public class Template : DBGroupItem, IDisposable
+    public partial class Template : DBGroupItem, IDisposable
     {
-        private static DBTable<Template> dbTable;
-        private static DBColumn nameENKey = DBColumn.EmptyKey;
-        private static DBColumn nameRUKey = DBColumn.EmptyKey;
-        private static DBColumn workKey = DBColumn.EmptyKey;
-        private static DBColumn alterName1Key = DBColumn.EmptyKey;
-        private static DBColumn alterName2Key = DBColumn.EmptyKey;
-        private static DBColumn alterName3Key = DBColumn.EmptyKey;
-        private static DBColumn documentTypeKey = DBColumn.EmptyKey;
-        private static DBColumn isFileKey = DBColumn.EmptyKey;
-
-        public static DBTable<Template> DBTable => dbTable ?? (dbTable = GetTable<Template>());
-        public static DBColumn WorkKey => DBTable.ParseProperty(nameof(WorkId), ref workKey);
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
-        public static DBColumn AlterName1Key => DBTable.ParseProperty(nameof(AlterName1), ref alterName1Key);
-        public static DBColumn AlterName2Key => DBTable.ParseProperty(nameof(AlterName2), ref alterName2Key);
-        public static DBColumn AlterName3Key => DBTable.ParseProperty(nameof(AlterName3), ref alterName3Key);
-        public static DBColumn DocumentTypeKey => DBTable.ParseProperty(nameof(DocumentType), ref documentTypeKey);
-        public static DBColumn IsFileKey => DBTable.ParseProperty(nameof(IsFile), ref isFileKey);
-
         private Work work;
 
-        public Template()
+        [Column("unid", Keys = ColumnFlags.Primary)]
+        public int Id
         {
-        }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
-        {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Index("rtemplate_item_type", false)]
-        public override int? ItemType { get => base.ItemType; set => base.ItemType = value; }
+        public override int ItemType
+        {
+            get => base.ItemType;
+            set => base.ItemType = value;
+        }
 
-        [Column("code", 250, Keys = DBColumnKeys.Code)]
+        [Column("code", 250, Keys = ColumnFlags.Code)]
         public virtual string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
-        [Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
+        [Column("name", 512, Keys = ColumnFlags.Culture | ColumnFlags.View)]
         public string Name
         {
             get => GetName();
             set => SetName(value);
         }
 
+        [CultureKey(nameof(Name))]
         public virtual string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
+        [CultureKey(nameof(Name))]
         public virtual string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         [Column("alter_name1", 1024)]
         public virtual string AlterName1
         {
-            get => GetValue<string>(AlterName1Key);
-            set => SetValue(value, AlterName1Key);
+            get => GetValue(Table.AlterName1Key);
+            set => SetValue(value, Table.AlterName1Key);
         }
 
         [Column("alter_name2", 1024)]
         public virtual string AlterName2
         {
-            get => GetValue<string>(AlterName2Key);
-            set => SetValue(value, AlterName2Key);
+            get => GetValue(Table.AlterName2Key);
+            set => SetValue(value, Table.AlterName2Key);
         }
 
         [Column("alter_name3", 1024)]
         public virtual string AlterName3
         {
-            get => GetValue<string>(AlterName3Key);
-            set => SetValue(value, AlterName3Key);
+            get => GetValue(Table.AlterName3Key);
+            set => SetValue(value, Table.AlterName3Key);
         }
 
         [DefaultValue(0), Column("document_type", 250)]
         public int? DocumentType
         {
-            get => GetValueNullable<int>(DocumentTypeKey);
-            set => SetValueNullable(value, DocumentTypeKey);
+            get => GetValue(Table.DocumentTypeKey);
+            set => SetValue(value, Table.DocumentTypeKey);
         }
 
         [Browsable(false)]
-        [Column("group_id", Keys = DBColumnKeys.Group)]
+        [Column("group_id", Keys = ColumnFlags.Group)]
         public int? ParentId
         {
             get => GetGroupValue<int?>();
@@ -171,15 +118,15 @@ namespace DataWF.Module.Flow
         [Column("work_id")]
         public int? WorkId
         {
-            get => GetValueNullable<int>(WorkKey);
-            set => SetValueNullable(value, WorkKey);
+            get => GetValue(Table.WorkIdKey);
+            set => SetValue(value, Table.WorkIdKey);
         }
 
         [Reference(nameof(WorkId))]
         public Work Work
         {
-            get => GetReference(WorkKey, ref work);
-            set => SetReference(work = value, WorkKey);
+            get => GetReference(Table.WorkIdKey, ref work);
+            set => SetReference(work = value, Table.WorkIdKey);
         }
 
         //public IEnumerable<TemplateParam> GetParams()
@@ -187,41 +134,37 @@ namespace DataWF.Module.Flow
         //    return GetReferencing<TemplateParam>(nameof(TemplateParam.TemplateId), DBLoadParam.None);
         //}
 
+        [DefaultValue(false), Column("is_file")]
+        public bool? IsFile
+        {
+            get => GetValue(Table.IsFileKey);
+            set => SetValue(value, Table.IsFileKey);
+        }
+
+        public override AccessValue Access
+        {
+            get => InternalAccess ?? Parent.Access ?? Table.Access;
+        }
+
         [Referencing(nameof(TemplateData.TemplateId))]
         public IEnumerable<TemplateData> Datas
         {
-            get => GetReferencing(TemplateData.DBTable, TemplateData.TemplateKey, DBLoadParam.None);
-            set => SetReferencing(value, TemplateData.TemplateKey);
+            get => GetReferencing<TemplateData>(Schema.TemplateData.TemplateIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.TemplateData.TemplateIdKey);
         }
 
         [Referencing(nameof(TemplateReference.TemplateId))]
         public IEnumerable<TemplateReference> References
         {
-            get => GetReferencing(TemplateReference.DBTable, TemplateReference.TemplateKey, DBLoadParam.None);
-            set => SetReferencing(value, TemplateReference.TemplateKey);
+            get => GetReferencing<TemplateReference>(Schema.TemplateReference.TemplateIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.TemplateReference.TemplateIdKey);
         }
 
         [Referencing(nameof(TemplateProperty.TemplateId))]
         public IEnumerable<TemplateProperty> Properties
         {
-            get => GetReferencing(TemplateProperty.DBTable, TemplateProperty.TemplateKey, DBLoadParam.None);
-            set => SetReferencing(value, TemplateProperty.TemplateKey);
-        }
-
-        [DefaultValue(false), Column("is_file")]
-        public bool? IsFile
-        {
-            get => GetValue<bool?>(IsFileKey);
-            set => SetValue(value, IsFileKey);
-        }
-
-        public override AccessValue Access
-        {
-            get
-            {
-                return base.Access != Table.Access ? base.Access
-                  : Parent?.Access ?? base.Access;
-            }
+            get => GetReferencing<TemplateProperty>(Schema.TemplateProperty.TemplateIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.TemplateProperty.TemplateIdKey);
         }
 
         //[Browsable(false)]
@@ -239,7 +182,7 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public virtual Document CreateDocument()
         {
-            var document = (Document)Document.DBTable.NewItem(DBUpdateState.Insert, true, DocumentType ?? 0);
+            var document = (Document)Schema.Document.NewItem(DBUpdateState.Insert, true, DocumentType ?? 0);
             document.Template = this;
             return document;
         }
@@ -276,23 +219,15 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public TemplateReference GetTemplateReference(int referenceId)
         {
-            using (var query = new QQuery(TemplateReference.DBTable))
-            {
-                query.BuildParam(TemplateReference.TemplateKey, Id);
-                query.BuildParam(TemplateReference.ReferenceKey, referenceId);
-                return TemplateReference.DBTable.Select(query).FirstOrDefault();
-            }
+            return Schema.TemplateReference.Query(p => p.TemplateId == Id && p.ReferenceId == referenceId)
+                .Select().FirstOrDefault();
         }
 
         [ControllerMethod]
         public TemplateProperty GetTemplateProperty(string propertyName)
         {
-            using (var query = new QQuery(TemplateProperty.DBTable))
-            {
-                query.BuildParam(TemplateProperty.TemplateKey, Id);
-                query.BuildParam(TemplateProperty.PropertyNameKey, propertyName);
-                return TemplateProperty.DBTable.Select(query).FirstOrDefault();
-            }
+            return Schema.TemplateProperty.Query(p => p.TemplateId == Id && p.PropertyName == propertyName)
+                .Select().FirstOrDefault();
         }
 
         public bool CheckName(string name)

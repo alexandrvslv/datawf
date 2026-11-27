@@ -13,8 +13,8 @@ namespace DataWF.Gui
 
         public ILayoutEditor Editor
         {
-            get { return editor; }
-            set { editor = value; }
+            get => editor;
+            set => editor = value;
         }
     }
 }

@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -29,38 +29,141 @@ namespace DataWF.Data
 {
     public class TableGenerator
     {
-        private DBSchema cacheSchema;
-        private DBTable cacheTable;
-        private DBTableGroup cacheGroup;
+
+        private static readonly Type dbItemType = typeof(DBItem);
+        private static readonly Dictionary<Type, TableGenerator> cacheTableGenerators = new Dictionary<Type, TableGenerator>();
+        private static readonly Dictionary<Type, VirtualTableGenerator> cacheItemTypeGenerator = new Dictionary<Type, VirtualTableGenerator>();
+
+        public static void ClearGeneratorCache()
+        {
+            foreach (var generator in cacheTableGenerators.Values)
+            {
+                generator?.ClearCache();
+            }
+            cacheTableGenerators.Clear();
+            foreach (var generator in cacheItemTypeGenerator.Values)
+            {
+                generator?.ClearCache();
+            }
+            cacheItemTypeGenerator.Clear();
+        }
+
+        public static TableGenerator GetInherit(Type type)
+        {
+            var tableGenerator = Get(type);
+            while (tableGenerator == null && type != null)
+            {
+                type = type.BaseType;
+                tableGenerator = type == null ? null : Get(type);
+            }
+            return tableGenerator;
+        }
+
+        public static IEnumerable<TableGenerator> GetDerived(Type type)
+        {
+            var tableGenerator = Get(type);
+            if (tableGenerator != null)
+            {
+                yield return tableGenerator;
+                yield break;
+            }
+            foreach (var entry in cacheTableGenerators)
+            {
+                if (entry.Key.BaseType == type)
+                {
+                    if (entry.Key.IsAbstract)
+                    {
+                        foreach (var item in GetDerived(entry.Key))
+                            yield return item;
+                    }
+                    else
+                    {
+                        yield return entry.Value;
+                    }
+                }
+            }
+            foreach (var entry in cacheItemTypeGenerator)
+            {
+                if (entry.Key.BaseType == type)
+                {
+                    if (entry.Key.IsAbstract)
+                    {
+                        foreach (var item in GetDerived(entry.Key))
+                            yield return item;
+                    }
+                    else
+                    {
+                        yield return entry.Value.TableGenerator;
+                    }
+                }
+            }
+        }
+
+        public static TableGenerator Get<T>()
+        {
+            return Get(typeof(T));
+        }
+
+        public static TableGenerator Get(Type type)
+        {
+            if (!dbItemType.IsAssignableFrom(type))
+            {
+                return null;
+            }
+            if (!cacheTableGenerators.TryGetValue(type, out var tableGenerator))
+            {
+                var tableAttribute = type.GetCustomAttribute<TableAttribute>(false);
+                if (tableAttribute is LogTableAttribute)
+                {
+                    tableGenerator = new LogTableGenerator() { Attribute = tableAttribute };
+                    tableGenerator.Initialize(type);
+                }
+                else if (tableAttribute is TableAttribute)
+                {
+                    tableGenerator = new TableGenerator() { Attribute = tableAttribute };
+                    tableGenerator.Initialize(type);
+                }
+                cacheTableGenerators[type] = tableGenerator;
+            }
+            if (tableGenerator == null)
+            {
+                var itemType = GetItemType(type);
+                tableGenerator = itemType?.TableGenerator;
+            }
+            return tableGenerator;
+        }
+
+        public static VirtualTableGenerator GetItemType(Type type)
+        {
+            if (!dbItemType.IsAssignableFrom(type))
+            {
+                return null;
+            }
+            if (!cacheItemTypeGenerator.TryGetValue(type, out var itemTypeGenerator))
+            {
+                var itemTypeAttribute = type.GetCustomAttribute<VirtualTableAttribute>(false);
+                if (itemTypeAttribute is VirtualTableAttribute)
+                {
+                    itemTypeGenerator = new VirtualTableGenerator { Attribute = itemTypeAttribute };
+                    itemTypeGenerator.Initialize(type);
+                }
+                cacheItemTypeGenerator[type] = itemTypeGenerator;
+            }
+            return itemTypeGenerator;
+        }
+
         protected SelectableList<ColumnGenerator> cacheColumns;
         protected SelectableList<ReferenceGenerator> cacheReferences;
         protected SelectableList<ReferencingGenerator> cacheReferencings;
         protected SelectableList<IndexGenerator> cacheIndexes;
-        protected SelectableList<ItemTypeGenerator> cacheItemTypes;
+        protected SelectableList<VirtualTableGenerator> cacheItemTypes;
         protected List<Type> cachedTypes = new List<Type>();
         protected ColumnGenerator cachePrimaryKey;
         protected ColumnGenerator cacheTypeKey;
         protected ColumnGenerator cacheFileKey;
+        private Dictionary<IDBSchema, DBTable> cacheGenerated = new Dictionary<IDBSchema, DBTable>();
 
         public TableAttribute Attribute { get; set; }
-
-        public virtual DBSchema Schema
-        {
-            get { return cacheSchema; }
-            set { cacheSchema = value; }
-        }
-
-        public DBTable Table
-        {
-            get { return cacheTable ?? (cacheTable = DBService.Schems.ParseTable(Attribute.TableName)); }
-            internal set { cacheTable = value; }
-        }
-
-        public DBTableGroup TableGroup
-        {
-            get { return cacheGroup ?? (cacheGroup = Schema?.TableGroups[Attribute.GroupName]); }
-            internal set { cacheGroup = value; }
-        }
 
         public Type ItemType { get; internal set; }
 
@@ -78,7 +181,7 @@ namespace DataWF.Data
             {
                 if (cachePrimaryKey == null)
                 {
-                    cachePrimaryKey = cacheColumns.FirstOrDefault(p => (p.Attribute.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary);
+                    cachePrimaryKey = cacheColumns.FirstOrDefault(p => (p.Attribute.Keys & ColumnFlags.Primary) == ColumnFlags.Primary);
                 }
                 return cachePrimaryKey;
             }
@@ -90,7 +193,7 @@ namespace DataWF.Data
             {
                 if (cacheTypeKey == null)
                 {
-                    cacheTypeKey = cacheColumns.FirstOrDefault(p => (p.Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType);
+                    cacheTypeKey = cacheColumns.FirstOrDefault(p => (p.Attribute.Keys & ColumnFlags.ItemType) == ColumnFlags.ItemType);
                 }
                 return cacheTypeKey;
             }
@@ -102,7 +205,7 @@ namespace DataWF.Data
             {
                 if (cacheFileKey == null)
                 {
-                    cacheFileKey = cacheColumns.FirstOrDefault(p => (p.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File);
+                    cacheFileKey = cacheColumns.FirstOrDefault(p => (p.Attribute.Keys & ColumnFlags.File) == ColumnFlags.File);
                 }
                 return cacheFileKey;
             }
@@ -110,103 +213,133 @@ namespace DataWF.Data
 
         public SelectableList<ParameterInvoker> Parameters { get; private set; } = new SelectableList<ParameterInvoker>();
 
-        public virtual DBTable CreateTable()
+        public bool IsGenerated(IDBSchema schema, out DBTable table) => cacheGenerated.TryGetValue(schema, out table);
+
+        public virtual DBTable CreateTable(IDBSchema schema)
         {
             Debug.WriteLine($"Generate {Attribute.TableName} - {this.ItemType.Name}");
 
-            var type = typeof(DBTable<>).MakeGenericType(ItemType);
-            // var logicType = ItemType.Assembly.ExportedTypes.FirstOrDefault(p => p.BaseType == type);
-            var table = (DBTable)EmitInvoker.CreateObject(type);
+            var type = Attribute?.Type
+                ?? (ItemType.IsSealed
+                    ? TypeHelper.ParseType(ItemType.FullName + "Table")
+                    : TypeHelper.ParseType(ItemType.FullName + "Table`1"))
+                ?? typeof(DBTable<>);
+            if (type.IsGenericTypeDefinition)
+            {
+                type = type.MakeGenericType(ItemType);
+            }
+            var table = (DBTable)InvokeProvider.CreateObject(type);
             table.Name = Attribute.TableName;
-            table.Schema = Schema;
+            table.Schema = schema;
             return table;
         }
 
-        public DBTable Generate()
+        public virtual DBTable Generate(IDBSchema schema)
         {
-            if (Schema == null)
-                throw new InvalidOperationException("Can't generate as Schema not defined!");
-
-            return Generate(Schema);
-        }
-
-        public virtual DBTable Generate(DBSchema schema)
-        {
-            GenerateBasic(schema);
-            GenerateColumns();
-            if (!Schema.Tables.Contains(Table.Name))
+            if (IsGenerated(schema, out var table))
+                return table;
+            cacheGenerated[schema] =
+                table = GenerateBasic(schema);
+            GenerateColumns(table);
+            if (!schema.Tables.Contains(table.Name))
             {
-                Schema.Tables.Add(Table);
+                schema.Tables.Add(table);
             }
-            GenerateReferences();
-            Generateindexes();
-            GenerateVirtualTables(schema);
+            GenerateReferences(table);
 
-            Table.IsLoging = Attribute.IsLoging;
+            GenerateIndexes(table);
 
-            return Table;
+            table.RemoveDeletedColumns();
+
+            GenerateVirtualTables(table);
+
+            table.IsLoging = (Attribute.Keys & DBTableKeys.NoLogs) == 0;
+
+            return table;
         }
 
-        private void GenerateVirtualTables(DBSchema schema)
+        private void GenerateVirtualTables(DBTable table)
         {
+            foreach (var entry in table.ItemTypes.ToList())
+            {
+                if (entry.Value == null)
+                    table.ItemTypes.Remove(entry.Key);
+            }
+            if (table.ItemTypes.Count == 0)
+            {
+                table.ItemTypes[0] = ItemType;
+            }
             foreach (var itemType in cacheItemTypes)
             {
-                Table.ItemTypes[itemType.Attribute.Id] = new DBItemType { Type = itemType.Type };
-                itemType.Generate(schema);
+                table.ItemTypes[itemType.Attribute.Id] = itemType.Type;
+                if (!itemType.IsGenerated(table.Schema, out var virtualTable))
+                    virtualTable = itemType.Generate(table.Schema);
+                else
+                    virtualTable.RefreshVirtualTable(table);
+
+                virtualTable.RemoveDeletedColumns();
             }
         }
 
-        private void Generateindexes()
+        private void GenerateIndexes(DBTable table)
         {
             foreach (var index in cacheIndexes)
             {
-                index.Generate();
+                index.Generate(table);
             }
         }
 
-        private void GenerateReferences()
+        private void GenerateReferences(DBTable table)
         {
             foreach (var reference in cacheReferences)
             {
-                reference.CheckReference();
+                reference.CheckReference(table.Schema);
             }
 
             foreach (var reference in cacheReferences)
             {
-                reference.Generate();
+                reference.Generate(table);
+            }
+
+            foreach (var reference in cacheReferencings)
+            {
+                reference.Generate(table);
             }
         }
 
-        private void GenerateBasic(DBSchema schema)
+        private DBTable GenerateBasic(IDBSchema schema)
         {
-            Schema = schema ?? throw new ArgumentNullException(nameof(schema));
-
-            if (TableGroup == null)
+            if (schema == null)
+                throw new ArgumentNullException(nameof(schema));
+            var tableGroup = schema.TableGroups[Attribute.GroupName];
+            if (tableGroup == null)
             {
-                TableGroup = new DBTableGroup(Attribute.GroupName)
+                tableGroup = new DBTableGroup(Attribute.GroupName)
                 {
-                    Schema = Schema,
+                    Schema = schema,
                     DisplayName = Attribute.GroupName
                 };
-                Schema.TableGroups.Add(TableGroup);
+                schema.TableGroups.Add(tableGroup);
             }
-
-            if (Table == null)
+            var table = schema.Tables[Attribute.TableName];
+            if (table == null)
             {
-                Table = CreateTable();
+                table = CreateTable(schema);
             }
-            if (Table.DisplayName.Equals(Table.Name, StringComparison.Ordinal))
+            if (table.DisplayName.Equals(table.Name, StringComparison.Ordinal))
             {
-                Table.DisplayName = ItemType.Name;
+                table.DisplayName = ItemType.Name;
             }
-            Table.Generator = this;
-            Table.Group = TableGroup;
-            Table.Type = Attribute.TableType;
-            Table.BlockSize = Attribute.BlockSize;
-            Table.Sequence = Table.GenerateSequence(Attribute.SequenceName);
+            table.Generator = this;
+            table.Group = tableGroup;
+            table.Type = Attribute.TableType;
+            table.Keys = Attribute.Keys;
+            table.BlockSize = Attribute.BlockSize;
+            table.Sequence = table.GenerateSequence(Attribute.SequenceName);
+            return table;
         }
 
-        public void GenerateColumns()
+        public void GenerateColumns(DBTable table)
         {
             cacheColumns.Sort((a, b) =>
             {
@@ -216,7 +349,7 @@ namespace DataWF.Data
             });
             foreach (var column in cacheColumns)
             {
-                column.Generate();
+                column.Generate(table);
             }
         }
 
@@ -233,7 +366,7 @@ namespace DataWF.Data
             cacheReferencings.Indexes.Add(ReferencingGenerator.PropertyNameInvoker.Instance);
             cacheIndexes = new SelectableList<IndexGenerator>();
             cacheIndexes.Indexes.Add(IndexGenerator.IndexNameInvoker.Instance);
-            cacheItemTypes = new SelectableList<ItemTypeGenerator>();
+            cacheItemTypes = new SelectableList<VirtualTableGenerator>();
 
             ItemType = type;
             var types = TypeHelper.GetTypeHierarchi(type);
@@ -243,7 +376,7 @@ namespace DataWF.Data
             }
         }
 
-        public void InitializeItemType(ItemTypeGenerator itemType)
+        public void InitializeItemType(VirtualTableGenerator itemType)
         {
             if (cacheItemTypes.Contains(itemType))
                 return;
@@ -274,9 +407,9 @@ namespace DataWF.Data
                         {
                             cacheColumns.Remove(exist);
                         }
-                        if ((column.Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
+                        if ((column.Attribute.Keys & ColumnFlags.ItemType) == ColumnFlags.ItemType)
                             cacheColumns.Insert(0, column);
-                        else if ((column.Attribute.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
+                        else if ((column.Attribute.Keys & ColumnFlags.Primary) == ColumnFlags.Primary)
                             cacheColumns.Insert(1, column);
                         else
                             cacheColumns.Add(column);
@@ -319,7 +452,7 @@ namespace DataWF.Data
             {
                 index = cacheIndexes.SelectOne(nameof(IndexGenerator.IndexName), indexAttribute.IndexName)
                     ?? new IndexGenerator { Attribute = indexAttribute };
-                index.Table = this;
+                index.TableGenerator = this;
                 var columnAttribute = GetColumnByProperty(property.Name);
                 index.Columns.Add(columnAttribute);
                 return true;
@@ -336,7 +469,7 @@ namespace DataWF.Data
             {
                 index = cacheIndexes.SelectOne(nameof(IndexGenerator.IndexName), indexAttribute.IndexName)
                     ?? new IndexGenerator { Attribute = indexAttribute };
-                index.Table = this;
+                index.TableGenerator = this;
                 index.Columns.AddRange(columns);
                 return true;
             }
@@ -397,7 +530,7 @@ namespace DataWF.Data
                 if (columnAttribute.Order <= 0)
                     columnAttribute.Order = cacheColumns.Count;
 
-                if ((columnAttribute.Keys & DBColumnKeys.Culture) == DBColumnKeys.Culture)
+                if ((columnAttribute.Keys & ColumnFlags.Culture) == ColumnFlags.Culture)
                 {
                     foreach (var culture in Locale.Instance.Cultures)
                     {
@@ -406,7 +539,6 @@ namespace DataWF.Data
                         else
                             yield return new ColumnGenerator(this, property, columnAttribute, culture);
                     }
-
                 }
                 else
                 {
@@ -452,6 +584,21 @@ namespace DataWF.Data
         public ReferencingGenerator GetReferencingByProperty(string property)
         {
             return cacheReferencings.SelectOne(nameof(ReferencingGenerator.PropertyName), property);
+        }
+
+        public void ClearCache()
+        {
+            cacheGenerated.Clear();
+        }
+
+        public IDBSchema GetLogTargetSchema(IDBSchema schema)
+        {
+            return schema is DBSchemaLog logSchema ? logSchema.TargetSchema : schema;
+        }
+
+        public IDBTable GetLogTargetTable(IDBSchema schema, Type type)
+        {
+            return GetLogTargetSchema(schema)?.GetTable(type);
         }
     }
 }

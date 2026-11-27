@@ -23,7 +23,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBTableItemList<T> : DBSchemaItemList<T> where T : DBTableItem, new()
+    public class DBTableItemList<T> : DBSchemaItemList<T> where T : DBTableItem
     {
 
         public DBTableItemList(DBTable table) : base()
@@ -32,10 +32,10 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public override DBSchema Schema
+        public override IDBSchema Schema
         {
-            get { return base.Schema ?? Table?.Schema; }
-            internal set { base.Schema = value; }
+            get => base.Schema ?? Table?.Schema;
+            internal set => base.Schema = value;
         }
 
         [XmlIgnore, JsonIgnore]

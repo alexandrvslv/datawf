@@ -1,6 +1,6 @@
 ﻿using System;
-using DataWF.Common;
-using Xwt;
+using DataWF;
+using Avalonia;
 
 namespace DataWF.Gui
 {
@@ -28,7 +28,7 @@ namespace DataWF.Gui
         {
             if (menu != null)
             {
-                Bar.CurrentMenubar = menu.Visible ? null : menu;
+                Bar.CurrentMenubar = menu.IsVisible ? null : menu;
             }
         }
     }

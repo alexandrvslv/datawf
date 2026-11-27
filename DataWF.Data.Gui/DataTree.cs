@@ -1,12 +1,12 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Data.Gui
 {
@@ -32,7 +32,7 @@ namespace DataWF.Data.Gui
 
     public class SchemaItemNode : Node, ILocalizable
     {
-        public DBSchemaItem Item { get; set; }
+        public IDBSchemaItem Item { get; set; }
 
         public void Localize()
         {
@@ -45,9 +45,9 @@ namespace DataWF.Data.Gui
 
     public class DataTree : LayoutList
     {
-        private DBSchemaItem datafilter = null;
+        private IDBSchemaItem datafilter = null;
         private DataTreeKeys dataKeys = DataTreeKeys.None;
-        private TextEntry filterEntry;
+        private TextBox filterEntry;
 
         //TODO
         //private bool checkDelete = false;
@@ -83,7 +83,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public DBSchemaItem DataFilter
+        public IDBSchemaItem DataFilter
         {
             get { return datafilter; }
             set
@@ -257,27 +257,27 @@ namespace DataWF.Data.Gui
                 Nodes.Remove(node);
             }
         }
-        public DBSchemaItem SelectedDBItem
+        public IDBSchemaItem SelectedDBItem
         {
             get { return (SelectedNode as SchemaItemNode)?.Item; }
             set { SelectedNode = value == null ? null : Find(value); }
         }
 
-        public DBSchema CurrentSchema
+        public IDBSchema CurrentSchema
         {
             get
             {
-                return SelectedDBItem == null ? null : SelectedDBItem is DBSchema
-                    ? (DBSchema)SelectedDBItem : SelectedDBItem.Schema;
+                return SelectedDBItem == null ? null : SelectedDBItem is IDBSchema schema
+                    ? schema : SelectedDBItem.Schema;
             }
         }
 
-        public DBTable CurrentTable
+        public IDBTable CurrentTable
         {
             get
             {
-                return SelectedDBItem == null ? null : SelectedDBItem is DBTable
-                    ? (DBTable)SelectedDBItem : (SelectedDBItem as IDBTableContent).Table;
+                return SelectedDBItem == null ? null : SelectedDBItem is IDBTable table
+                    ? table : (SelectedDBItem as IDBTableContent)?.Table;
             }
         }
 
@@ -288,24 +288,24 @@ namespace DataWF.Data.Gui
 
         public SchemaItemNode Find(string name)
         {
-            return Nodes.SelectOne("Name", CompareType.Equal, name) as SchemaItemNode;
+            return Nodes.SelectOne("Name", CompareOperator.Equal, name) as SchemaItemNode;
         }
 
         private void InitSchems()
         {
-            DBService.Schems.ItemsListChanged -= OnItemsListChanged;
+            DataExplorer.Provider.Schems.CollectionChanged -= OnItemsListChanged;
             if (ShowSchema)
-                DBService.Schems.ItemsListChanged += OnItemsListChanged;
+                DataExplorer.Provider.Schems.CollectionChanged += OnItemsListChanged;
 
             Nodes.Sense = false;
-            foreach (var schema in DBService.Schems)
+            foreach (var schema in DataExplorer.Provider.Schems.OfType<DBSchema>())
             {
                 CheckItem(schema, null, ShowSchema);
             }
             Nodes.Sense = true;
         }
 
-        public virtual SchemaItemNode Init(DBSchemaItem item)
+        public virtual SchemaItemNode Init(IDBSchemaItem item)
         {
             SchemaItemNode node = null;
             if (item is DBSchema)
@@ -364,7 +364,7 @@ namespace DataWF.Data.Gui
                 CheckItem(table, node, ShowTable
                     && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.Read, GuiEnvironment.User)))
                     && (!CheckTableAdmin || (CheckTableAdmin && table.Access.GetFlag(AccessType.Admin, GuiEnvironment.User)))
-                    && (!(table is IDBLogTable) || ShowLogTable));
+                    && (!(table is IDBTableLog) || ShowLogTable));
             }
 
             InitList(schema.Procedures.SelectByParent(null), node, ShowProcedures, "Procedures");
@@ -424,7 +424,7 @@ namespace DataWF.Data.Gui
                 CheckItem(table, node, ShowTable
                     && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.Read, GuiEnvironment.User)))
                     && (!CheckTableAdmin || (CheckTableAdmin && table.Access.GetFlag(AccessType.Admin, GuiEnvironment.User)))
-                    && (!(table is IDBLogTable) || ShowLogTable));
+                    && (!(table is IDBTableLog) || ShowLogTable));
             }
             return node;
         }
@@ -513,7 +513,7 @@ namespace DataWF.Data.Gui
             return InitItem(relation);
         }
 
-        public SchemaItemNode InitItem(DBSchemaItem item)
+        public SchemaItemNode InitItem(IDBSchemaItem item)
         {
             string name = GetName(item);
             var node = Find(name);
@@ -583,7 +583,7 @@ namespace DataWF.Data.Gui
             return str;
         }
 
-        public TextEntry FilterEntry
+        public TextBox FilterEntry
         {
             get { return filterEntry; }
             set
@@ -600,14 +600,14 @@ namespace DataWF.Data.Gui
 
         private void FilterEntryChanged(object sender, EventArgs e)
         {
-            var entry = (TextEntry)sender;
+            var entry = (TextBox)sender;
             var list = listSource as SelectableListView<Node>;
             list.FilterQuery.Parameters.Clear();
 
             if (entry.Text?.Length != 0)
             {
                 TreeMode = false;
-                list.FilterQuery.Parameters.Add(LogicType.And, LayoutNodeList<Node>.FullPathInvoker, CompareType.Like, entry.Text);
+                list.FilterQuery.Parameters.Add(CompareOperator.And, LayoutNodeList<Node>.FullPathInvoker, CompareOperator.Like, entry.Text);
             }
             else
             {
@@ -618,7 +618,7 @@ namespace DataWF.Data.Gui
 
         protected override void Dispose(bool disposing)
         {
-            DBService.Schems.ItemsListChanged -= OnItemsListChanged;
+            DataExplorer.Provider.Schems.CollectionChanged -= OnItemsListChanged;
             base.Dispose(disposing);
         }
     }

@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Module.FlowGui
 {
@@ -24,7 +24,7 @@ namespace DataWF.Module.FlowGui
         None
     }
 
-    public class DocumentEditor : VPanel, IDocked, IDockContent, ISerializableElement
+    public class DocumentEditor : VPanel, IDocked, IDockContent, IXMLSerializable
     {
         public static async Task<string> Execute(DocumentData Current)
         {
@@ -135,11 +135,13 @@ namespace DataWF.Module.FlowGui
             Text = "Document";
             Tag = "Document";
 
-            PackStart(bar, false, false);
-            PackStart(dock, true, true);
+            Children.Add(bar, false, false);
+            Children.Add(dock, true, true);
 
             Localize();
         }
+
+        public DocumentTable<Document> Documents { get; set; }
 
         public Toolsbar Bar
         {
@@ -174,38 +176,38 @@ namespace DataWF.Module.FlowGui
         {
             if (page == null || document == null)
                 return;
-            if (page.Widget is IReadOnly)
+            if (page.Control is IReadOnly)
             {
-                ((IReadOnly)page.Widget).ReadOnly = state == DocumentEditorState.Readonly || !document.Access.GetFlag(AccessType.Update, GuiEnvironment.User);
+                ((IReadOnly)page.Control).ReadOnly = state == DocumentEditorState.Readonly || !document.Access.GetFlag(AccessType.Update, GuiEnvironment.User);
             }
             else
             {
-                page.Widget.Sensitive = state == DocumentEditorState.Edit && document.Access.GetFlag(AccessType.Update, GuiEnvironment.User);
+                page.Control.Sensitive = state == DocumentEditorState.Edit && document.Access.GetFlag(AccessType.Update, GuiEnvironment.User);
             }
-            if (page.Widget is IDocument)
+            if (page.Control is IDocument)
             {
-                ((IDocument)page.Widget).Document = document;
-            }
-
-            if (page.Widget is IExecutable)
-            {
-                await ((IExecutable)page.Widget).Execute(new ExecuteArgs(document));
+                ((IDocument)page.Control).Document = document;
             }
 
-            if (page.Widget is TableEditor)
+            if (page.Control is IExecutable)
             {
-                ((TableEditor)page.Widget).OwnerRow = document;
+                await ((IExecutable)page.Control).Execute(new ExecuteArgs(document.Schema, document));
+            }
+
+            if (page.Control is TableEditor)
+            {
+                ((TableEditor)page.Control).OwnerRow = document;
             }
 
             if (document.Attached)
             {
-                if (page.Widget is ILoader)
+                if (page.Control is ILoader)
                 {
-                    ((ILoader)page.Widget).Loader.LoadAsync();
+                    ((ILoader)page.Control).Loader.LoadAsync();
                 }
-                else if (page.Widget is ISync)
+                else if (page.Control is ISync)
                 {
-                    await ((ISync)page.Widget).SyncAsync();
+                    await ((ISync)page.Control).SyncAsync();
                 }
             }
         }
@@ -239,12 +241,12 @@ namespace DataWF.Module.FlowGui
         public object ExecuteDocumentProcedure(DBProcedure proc, Document document, bool callback)
         {
             document.Save();
-            var args = new ExecuteArgs(document);
+            var args = new ExecuteArgs(document.Schema, document);
             object result = null;
             try
             {
                 result = proc.CreateObject(args);
-                if (TypeHelper.IsBaseType(result.GetType(), typeof(Widget)))
+                if (TypeHelper.IsBaseType(result.GetType(), typeof(Control)))
                 {
                     result = proc.ExecuteObject(result, args);
                 }
@@ -302,7 +304,7 @@ namespace DataWF.Module.FlowGui
                         Name = "Confirmation!",
                         Action = () =>
                         {
-                            Application.Invoke(() => MessageDialog.ShowMessage(ParentWindow,
+                            _ = Dispatcher.UIThread.InvokeAsync(() => MessageDialog.ShowMessage(ParentWindow,
                                                                                string.Format(Locale.Get("DocumentEditor", "Method {0}\nExecute successful!"), proc.Name), "Methods"));
                             return null;
                         }
@@ -320,7 +322,7 @@ namespace DataWF.Module.FlowGui
 
         private void TaskCallback(RProcedureEventArgs e)
         {
-            Application.Invoke(() => CheckProcRezult(new ExecuteDocumentArg((Document)e.Task.Tag, (DBProcedure)e.Task.Object, e.Result, this)));
+            _ = Dispatcher.UIThread.InvokeAsync(() => CheckProcRezult(new ExecuteDocumentArg((Document)e.Task.Tag, (DBProcedure)e.Task.Object, e.Result, this)));
         }
 
         private void CheckProcRezult(object p)
@@ -344,11 +346,11 @@ namespace DataWF.Module.FlowGui
                     window.ShowInTaskbar = false;
                     window.Show();
                     break;
-                case Widget widget:
-                    if (widget is IText)
-                        ((IText)widget).Text = arg.Procedure.Name;
+                case Control Control:
+                    if (Control is IText)
+                        ((IText)Control).Text = arg.Procedure.Name;
                     if (arg.Tag == this)
-                        dock.Put(widget);
+                        dock.Put(Control);
                     break;
                 case Document docResult:
                     if (arg.Result != arg.Document)
@@ -592,7 +594,7 @@ namespace DataWF.Module.FlowGui
         private void DocumentPropertyChanged(object sender, EventArgs e)
         {
             if (document != null && state != DocumentEditorState.Send)
-                Application.Invoke(() => toolSave.Sensitive = document != null && (document.IsChanged || state == DocumentEditorState.Create));
+                _ = Dispatcher.UIThread.InvokeAsync(() => toolSave.Sensitive = document != null && (document.IsChanged || state == DocumentEditorState.Create));
         }
 
         private void CheckState(object obj)
@@ -614,7 +616,7 @@ namespace DataWF.Module.FlowGui
         public DockPage InitReference(DBItem owner, StageForeign param)
         {
             var foreign = param.Foreign;
-            if (foreign == null || foreign.ReferenceTable != Document.DBTable)
+            if (foreign == null || foreign.ReferenceTable != Documents)
                 return null;
 
             var name = foreign.Table.Name + " (" + foreign.Column.Name + ")";
@@ -667,12 +669,12 @@ namespace DataWF.Module.FlowGui
                 page.Tag = owner;
             }
             Type t = proc.ProcedureType == ProcedureTypes.Assembly || proc.ProcedureType == ProcedureTypes.Source ? proc.GetObjectType() : null;
-            if (t != null && !TypeHelper.IsBaseType(t, typeof(Window)) && TypeHelper.IsBaseType(t, typeof(Widget)))
+            if (t != null && !TypeHelper.IsBaseType(t, typeof(Window)) && TypeHelper.IsBaseType(t, typeof(Control)))
             {
                 DockPage page = dock.GetPage(name);
                 if (page == null)
                 {
-                    var control = (Widget)EmitInvoker.CreateObject(t, true);
+                    var control = (Control)InvokeProvider.CreateObject(t, true);
                     control.Name = name;
                     if (control is IText)
                         ((IText)control).Text = param.Name == null || param.Name.Length == 0 ? proc.ToString() : param.Name;
@@ -720,7 +722,7 @@ namespace DataWF.Module.FlowGui
 
         private void ToolRefreshClick(object sender, EventArgs e)
         {
-            foreach (var relation in Document.DBTable.GetChildRelations())
+            foreach (var relation in Documents.GetChildRelations())
             {
                 foreach (DBItem row in document.GetReferencing(relation, DBLoadParam.None))
                     row.Reject(GuiEnvironment.User);
@@ -748,7 +750,7 @@ namespace DataWF.Module.FlowGui
             var barcode = new BarCodeCtrl
             {
                 ShowFooter = true,
-                //FooterFont = new Font (control.FooterFont.FontFamily, 8.0F),
+                //FooterFont = new FontFamily (control.FooterFont.FontFamily, 8.0F),
                 BarCodeHeight = 25,
                 BarCode = document.Id.ToString(),
                 Weight = BarCodeCtrl.BarCodeWeight.Small
@@ -786,29 +788,29 @@ namespace DataWF.Module.FlowGui
 
         public List<DockPage> GetPages(Type documentType)
         {
-            var documentWidgets = new List<DockPage>();
+            var documentControls = new List<DockPage>();
             foreach (var type in GetTypes(documentType))
             {
                 var name = type.Name;
                 var page = dock.GetPage(name);
                 if (page == null)
                 {
-                    if (!TypeBinding.TryGetValue(type, out var widgetType))
+                    if (!TypeBinding.TryGetValue(type, out var ControlType))
                     {
-                        widgetType = typeof(DocumentDetailView<>);
+                        ControlType = typeof(DocumentDetailView<>);
                     }
-                    if (widgetType.IsGenericType)
+                    if (ControlType.IsGenericType)
                     {
-                        widgetType = widgetType.MakeGenericType(type, type);
+                        ControlType = ControlType.MakeGenericType(type, type);
                     }
 
-                    var widget = (Widget)EmitInvoker.CreateObject(widgetType);
-                    widget.Name = name;
-                    page = dock.Put(widget, TypeHelper.IsBaseType(type, typeof(DocumentData)) ? DockType.LeftBottom : DockType.Content);
+                    var Control = (Control)InvokeProvider.CreateObject(ControlType);
+                    Control.Name = name;
+                    page = dock.Put(Control, TypeHelper.IsBaseType(type, typeof(DocumentData)) ? DockType.LeftBottom : DockType.Content);
                 }
-                documentWidgets.Add(page);
+                documentControls.Add(page);
             }
-            return documentWidgets;
+            return documentControls;
         }
 
         public event EventHandler SendComplete;
@@ -824,7 +826,7 @@ namespace DataWF.Module.FlowGui
             return GetFileName(DocumentType);
         }
 
-        public override void Serialize(ISerializeWriter writer)
+        public override void Serialize(XmlInvokerWriter writer)
         {
             if (FileSerialize)
             {
@@ -843,7 +845,7 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public override void Deserialize(ISerializeReader reader)
+        public override void Deserialize(XmlInvokerReader reader)
         {
             if (FileSerialize)
             {
@@ -852,7 +854,7 @@ namespace DataWF.Module.FlowGui
 
                 XmlDeserialize(fileName);
 
-                Document = Document.DBTable.LoadById(documentid);
+                Document = Documents.LoadById(documentid);
             }
             else
             {

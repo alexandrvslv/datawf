@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Gui
 {
-    public class LayoutSort : IEntryNotifyPropertyChanged, IComparable, IComparable<LayoutSort>
+    public class LayoutSort : DefaultItem, IComparable, IComparable<LayoutSort>
     {
         private int order;
         private string name;
@@ -28,9 +28,6 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
-
-        [XmlIgnore, Browsable(false)]
         public LayoutListInfo Info
         {
             get { return ((LayoutSortList)Containers.FirstOrDefault())?.Info; }
@@ -38,7 +35,7 @@ namespace DataWF.Gui
 
         public int Order
         {
-            get { return order; }
+            get => order;
             set
             {
                 if (order != value)
@@ -51,7 +48,7 @@ namespace DataWF.Gui
 
         public string ColumnName
         {
-            get { return name; }
+            get => name;
             set
             {
                 if (name != value)
@@ -65,7 +62,7 @@ namespace DataWF.Gui
         [DefaultValue(ListSortDirection.Ascending)]
         public ListSortDirection Direction
         {
-            get { return direction; }
+            get => direction;
             set
             {
                 if (direction != value)
@@ -79,7 +76,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool IsGroup
         {
-            get { return group; }
+            get => group;
             set
             {
                 if (group != value)
@@ -95,8 +92,7 @@ namespace DataWF.Gui
         {
             get
             {
-                if (column == null)
-                    column = Info?.Columns.GetItem(name) as LayoutColumn;
+                column ??= Info?.Columns.GetItem(name) as LayoutColumn;
                 return column;
             }
             set
@@ -104,13 +100,6 @@ namespace DataWF.Gui
                 name = value?.Name;
                 column = value;
             }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
         public int CompareTo(object obj)

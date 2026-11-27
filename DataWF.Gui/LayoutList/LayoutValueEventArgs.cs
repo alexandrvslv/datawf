@@ -21,20 +21,20 @@ namespace DataWF.Gui
         }
         public object Data
         {
-            get { return data; }
-            set { data = value; }
+            get => data;
+            set => data = value;
         }
 
         public ILayoutCell Cell
         {
-            get { return cell; }
-            set { cell = value; }
+            get => cell;
+            set => cell = value;
         }
 
         public object ListItem
         {
-            get { return listItem; }
-            set { listItem = value; }
+            get => listItem;
+            set => listItem = value;
         }
     }
 }

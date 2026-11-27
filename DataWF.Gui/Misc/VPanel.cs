@@ -1,29 +1,32 @@
 ﻿using System;
 using System.ComponentModel;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
+using DataWF;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media.Imaging;
 
 namespace DataWF.Gui
 {
-    public class VPanel : VBox, IText, IGlyph, ILocalizable, ISerializableElement, INotifyPropertyChanged
+    public class VPanel : StackPanel, IText, IGlyph, ILocalizable, IXMLSerializable
     {
         private string text;
 
         public VPanel()
         {
+            Orientation = Orientation.Vertical;
             Spacing = 1;
         }
 
         public bool FileSerialize { get; set; }
 
-        public Image Image { get; set; }
+        public Bitmap Image { get; set; }
 
         public GlyphType Glyph { get; set; }
 
         public string Text
         {
-            get { return text; }
+            get => text;
             set
             {
                 if (text != value)
@@ -38,31 +41,31 @@ namespace DataWF.Gui
 
         public virtual void Localize()
         {
-            foreach (var widget in Children)
+            foreach (var control in Children)
             {
-                Localize(widget);
+                Localize(control);
             }
         }
 
-        public void Localize(Widget widget)
+        public void Localize(Visual control)
         {
-            if (widget == null)
+            if (control == null)
                 return;
-            if (widget is ILocalizable)
+            if (control is ILocalizable)
             {
-                ((ILocalizable)widget).Localize();
+                ((ILocalizable)control).Localize();
             }
-            else if (widget is Box)
+            else if (control is IPanel layoutable)
             {
-                foreach (var swidget in ((Box)widget).Children)
+                foreach (var sControl in layoutable.Children)
                 {
-                    Localize(swidget);
+                    Localize(sControl);
                 }
             }
-            else if (widget is Paned)
+            else if (control is SplitView split)
             {
-                Localize(((Paned)widget).Panel1.Content);
-                Localize(((Paned)widget).Panel2.Content);
+                Localize((IControl)split.Pane);
+                Localize((IControl)split.Content);
             }
         }
 
@@ -70,14 +73,14 @@ namespace DataWF.Gui
         {
             var temp = FileSerialize;
             FileSerialize = false;
-            using (var serializer = new Serializer())
+            using (var serializer = new XmlTextSerializer())
             {
-                serializer.Serialize(this, file);
+                serializer.Serialize(file, this);
             }
             FileSerialize = temp;
         }
 
-        public virtual void Serialize(ISerializeWriter writer)
+        public virtual void Serialize(XmlInvokerWriter writer)
         {
             foreach (var child in Children)
             {
@@ -85,25 +88,25 @@ namespace DataWF.Gui
             }
         }
 
-        public virtual void Serialize(Widget widget, ISerializeWriter writer)
+        public virtual void Serialize(IControl control, XmlInvokerWriter writer)
         {
-            if (widget == null)
+            if (control == null)
                 return;
-            if (widget is ISerializableElement && !string.IsNullOrEmpty(widget.Name))
+            if (control is IXMLSerializable && !string.IsNullOrEmpty(control.Name))
             {
-                writer.Write(widget, widget.Name, true);
+                writer.Write(control, control.Name, true);
             }
-            else if (widget is Box)
+            else if (control is IPanel panel)
             {
-                foreach (var swidget in ((Box)widget).Children)
+                foreach (var sControl in panel.Children)
                 {
-                    Serialize(swidget, writer);
+                    Serialize(sControl, writer);
                 }
             }
-            else if (widget is Paned)
+            else if (control is SplitView splitView)
             {
-                Serialize(((Paned)widget).Panel1.Content, writer);
-                Serialize(((Paned)widget).Panel2.Content, writer);
+                Serialize((IControl)splitView.Pane, writer);
+                Serialize((IControl)splitView.Content, writer);
             }
         }
 
@@ -111,25 +114,25 @@ namespace DataWF.Gui
         {
             var temp = FileSerialize;
             FileSerialize = false;
-            using (var serializer = new Serializer())
+            using (var serializer = new XmlTextSerializer())
             {
                 serializer.Deserialize(file, this, false);
             }
             FileSerialize = temp;
         }
 
-        public virtual void Deserialize(ISerializeReader reader)
+        public virtual void Deserialize(XmlInvokerReader reader)
         {
-            if (reader.IsEmpty)
+            if (reader.IsEmptyElement)
                 return;
-            while (reader.ReadBegin())
+            while (reader.ReadNextElement())
             {
-                var type = reader.ReadType();
-                var widget = FindWidget(this, reader.CurrentName, type);
-                if (widget != null)
+                var type = reader.ReadType(null);
+                var Control = FindControl(this, reader.CurrentName, type);
+                if (Control != null)
                 {
-                    reader.Read(widget, reader.GetTypeInfo(type));
-                    //((ISerializableElement)widget).Deserialize(reader);
+                    reader.Read(Control, type);
+                    //((ISerializableElement)Control).Deserialize(reader);
                 }
                 else
                 {
@@ -138,40 +141,33 @@ namespace DataWF.Gui
             }
         }
 
-        public static Widget FindWidget(Widget widget, string name, Type type)
+        public static IControl FindControl(IControl control, string name, ITypeSerializeInfo type)
         {
-            if (widget == null)
+            if (control == null)
                 return null;
-            if (widget.Name == name && widget.GetType() == type)
-                return widget;
-            else if (widget is Box)
+            if (control.Name == name && control.GetType() == type.Type)
+                return control;
+            else if (control is IPanel box)
             {
-                foreach (var swidget in ((Box)widget).Children)
+                foreach (var sControl in box.Children)
                 {
-                    var result = FindWidget(swidget, name, type);
+                    var result = FindControl(sControl, name, type);
                     if (result != null)
                         return result;
                 }
 
             }
-            else if (widget is Paned)
+            else if (control is SplitView splitView)
             {
-                var result = FindWidget(((Paned)widget).Panel1.Content, name, type);
+                var result = FindControl((IControl)splitView.Pane, name, type);
                 if (result != null)
                     return result;
-                result = FindWidget(((Paned)widget).Panel2.Content, name, type);
+                result = FindControl((IControl)splitView.Content, name, type);
                 if (result != null)
                     return result;
             }
             return null;
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
+        }        
     }
 
 }

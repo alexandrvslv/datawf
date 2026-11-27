@@ -1,7 +1,9 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
 
 namespace DataWF.Data.Gui
 {
@@ -22,7 +24,7 @@ namespace DataWF.Data.Gui
             get { return DropDown?.Target as DataTree; }
         }
 
-        public DBSchemaItem DataFilter { get; set; }
+        public IDBSchemaItem DataFilter { get; set; }
 
         public DataTreeKeys DataKeys
         {
@@ -67,17 +69,17 @@ namespace DataWF.Data.Gui
 
             list.FilterQuery.Parameters.Clear();
             if (filter.Length > 0)
-                list.FilterQuery.Parameters.Add(LogicType.And, LayoutNodeList<Node>.FullPathInvoker, CompareType.Like, filter);
+                list.FilterQuery.Parameters.Add(CompareOperator.And, LayoutNodeList<Node>.FullPathInvoker, CompareOperator.Like, filter);
             else
-                list.FilterQuery.Parameters.Add(LogicType.Undefined, TreeInvoker<Node>.Instance, CompareType.Equal, true);
+                list.FilterQuery.Parameters.Add(CompareOperator.Undefined, TreeInvoker<Node>.Instance, CompareOperator.Equal, true);
             list.UpdateFilter();
             if (list.Count == 1 && list[0].Tag.GetType() == DataType)
             {
                 string value = FormatValue(list[0].Tag, EditItem, DataType) as string;
                 int index = value.IndexOf(filter, StringComparison.OrdinalIgnoreCase);
-                EntryWidget.Text = value;
-                EntryWidget.SelectionStart = index + filter.Length;
-                EntryWidget.SelectionLength = value.Length - EntryWidget.SelectionStart;
+                EntryControl.Text = value;
+                EntryControl.SelectionStart = index + filter.Length;
+                EntryControl.SelectionEnd = value.Length;
                 Editor.Value = list[0].Tag;
             }
             else if (filter.Length > 0)
@@ -92,7 +94,7 @@ namespace DataWF.Data.Gui
             return Editor.GetCached<DataTree>();
         }
 
-        public override Widget InitDropDownContent()
+        public override IControl InitDropDownContent()
         {
             if (EditItem is DBTable && DataType == typeof(DBTableGroup))
             {
@@ -133,14 +135,14 @@ namespace DataWF.Data.Gui
             if (!ReadOnly)
             {
                 tree.CellDoubleClick += HandleAfterSelect;
-                tree.KeyPressed += TreeCellKeyDown;
+                tree.KeyDown += TreeCellKeyDown;
             }
             return tree;
         }
 
         protected void TreeCellKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.NumPadEnter || e.Key == Key.Return)
+            if (e.Key == Key.Enter || e.Key == Key.Return)
             {
                 Value = DataTree.SelectedDBItem;
                 DropDown.Hide();
@@ -167,7 +169,7 @@ namespace DataWF.Data.Gui
             if (DataTree is DataTree)
             {
                 DataTree.CellDoubleClick -= HandleAfterSelect;
-                DataTree.KeyPressed -= TreeCellKeyDown;
+                DataTree.KeyDown -= TreeCellKeyDown;
             }
             base.FreeEditor();
         }

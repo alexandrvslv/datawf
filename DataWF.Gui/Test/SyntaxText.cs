@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Xwt.Drawing;
+using Avalonia.Controls;
 using System.Text.RegularExpressions;
-using Xwt;
+using Avalonia;
+using Avalonia.Input;
+using Avalonia.Media;
 
 namespace DataWF.Gui
 {
@@ -26,28 +28,27 @@ namespace DataWF.Gui
             "return", "sbyte", "sealed", "short", "sizeof", "stackalloc", "static", "string", "struct", "switch", "this", "throw", "true",
             "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual", "volatile", "void", "while"});
 
-            this.Font = Font.WithSize(9);
             //keyWords = new Regex(sytax);
             //this.draw
             //this.Multiline = true;
             //this.ScrollBars = ScrollBars.Both;
-            this.BackgroundColor = Colors.WhiteSmoke;
         }
 
         public string Text
         {
-            get { return text; }
-            set { text = value; }
+            get => text;
+            set => text = value;
         }
 
-        protected override void OnKeyPressed(KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
-            base.OnKeyPressed(e);
+            base.OnKeyDown(e);
             //this.Text
         }
 
-        protected override void OnDraw(Context ctx, Rectangle bound)
+        public override void Render(DrawingContext ctx)
         {
+            Rect bound = Bounds;
             string seek = @"//+.+\n|\s|\b";
             foreach (string h in sytax)
                 seek += h + @"\b|\b";
@@ -81,21 +82,21 @@ namespace DataWF.Gui
 
                 if (topanit != string.Empty)
                 {
-                    //size = e.Graphics.MeasureString(topanit, this.Font);
-                    //e.Graphics.DrawString(topanit, this.Font, b, p);
-                    p.X += size.Width;
+                    //size = e.Graphics.MeasureString(topanit, this.FontFamily);
+                    //e.Graphics.DrawString(topanit, this.FontFamily, b, p);
+                    p = p.WithX(p.X + size.Width);
                 }
                 if (match.Value == "\n" || topanit.IndexOf('\n') >= 0)
                 {
-                    p.X = 0;
-                    p.Y += Font.Size + 5;
+                    p = p.WithX(0);
+                    p = p.WithY(p.Y + FontSize + 5);
                 }
                 else if (match.Value == "\t")
                 {
-                    p.X += 20;
+                    p = p.WithX(p.X + 20);
                 }
                 else if (match.Value == " ")
-                    p.X += Font.Size;
+                    p.X += FontFamily.Size;
                 index = match.Index + match.Length;
             }
         }

@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -30,35 +30,38 @@ namespace DataWF.Data
 
         public LogTableAttribute LogAttribute => base.Attribute as LogTableAttribute;
 
-        public TableGenerator BaseTableAttribute
+        public TableGenerator TargetTableGenerator
         {
-            get => baseTable ?? (baseTable = DBTable.GetTableAttribute(LogAttribute.BaseType));
+            get => baseTable ?? (baseTable = TableGenerator.Get(LogAttribute.BaseType));
             set => baseTable = value;
         }
 
-        public override DBSchema Schema
-        {
-            get => base.Schema is DBLogSchema logSchema
-                ? logSchema
-                : base.Schema?.LogSchema;
-            set => base.Schema = value;
-        }
-
-        public override DBTable CreateTable()
+        public override DBTable CreateTable(IDBSchema schema)
         {
             Debug.WriteLine($"Generate Log Table {Attribute.TableName} - {this.ItemType.Name}");
 
-            var type = typeof(DBLogTable<>).MakeGenericType(ItemType);
-            var table = (DBTable)EmitInvoker.CreateObject(type);
+            var type = Attribute.Type
+                ?? (ItemType.IsSealed
+                    ? TypeHelper.ParseType(ItemType.FullName + "Table")
+                    : TypeHelper.ParseType(ItemType.FullName + "Table`1"))
+                ?? typeof(DBTableLog<>);
+            if (type.IsGenericTypeDefinition)
+            {
+                type = type.MakeGenericType(ItemType);
+            }
+            var table = (IDBTableLog)InvokeProvider.CreateObject(type);
             table.Name = Attribute.TableName;
-            table.Schema = Schema;
-            return table;
-        }
+            table.Schema = schema;
+            table.TargetTable = GetLogTargetTable(schema, LogAttribute.BaseType);
+            return (DBTable)table;
+        }      
 
-        public override DBTable Generate(DBSchema schema)
+        public override DBTable Generate(IDBSchema schema)
         {
             var table = base.Generate(schema);
             table.SetItemType(ItemType);
+            var baseTable = GetLogTargetTable(schema, LogAttribute.BaseType);
+            baseTable.LogTableName = table.Name;
             return table;
         }
     }

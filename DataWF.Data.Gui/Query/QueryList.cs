@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System.Collections;
 using System.ComponentModel;
@@ -12,7 +12,7 @@ namespace DataWF.Data.Gui
         private LayoutColumn colParamTable;
         private LayoutColumn colComparer;
         private LayoutColumn colValue;
-        private QQuery query;
+        private IQQuery query;
         private LayoutColumn colString;
         private LayoutColumn colOrder;
 
@@ -61,10 +61,11 @@ namespace DataWF.Data.Gui
             get { return base.ListSource; }
             set
             {
-                if (value is QQuery)
+                if (value is IQQuery)
                 {
-                    this.query = (QQuery)value;
-                    base.ListSource = ((QQuery)value).AllParameters;
+                    this.query = (IQQuery)value;
+                    //TODO Custome query view model;
+                    base.ListSource = new SelectableList<QParam>(query.GetAllParameters());
                 }
                 //else
                 //    throw new Exception("Wrong parameter");
@@ -84,17 +85,17 @@ namespace DataWF.Data.Gui
             {
                 QParam param = (QParam)listItem;
                 ILayoutCellEditor editor = null;
-                if (param.Column != null)
+                if (param.LeftColumn != null)
                 {
-                    if ((param.Column.IsPrimaryKey || param.Column.IsReference) && param.Comparer.Type == CompareTypes.In)
+                    if ((param.LeftColumn.IsPrimaryKey || param.LeftColumn.IsReference) && param.Comparer.Type == CompareOperatorType.In)
                     {
-                        if (param.Column.IsReference && param.Value == null)
-                            param.ValueRight = new QQuery(string.Empty, param.Column.ReferenceTable);
+                        if (param.LeftColumn.IsReference && param.RightItem == null)
+                            param.RightItem = (QItem)param.LeftColumn.ReferenceTable.QQuery(string.Empty);
                         editor = new CellEditorQuery();
                     }
                     else
                     {
-                        editor = TableLayoutList.InitCellEditor(param.Column);
+                        editor = TableLayoutList.InitCellEditor(param.LeftColumn);
                     }
                     return editor;
                 }

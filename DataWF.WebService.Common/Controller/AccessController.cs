@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -17,10 +17,20 @@ namespace DataWF.WebService.Common
     [LoggerAndFormatter]
     public class AccessController : ControllerBase
     {
+        public AccessController(IModelProvider provider)
+        {
+            Provider = provider;
+        }
+
+        public IUserIdentity CurrentUser => Provider.GetUser(User);
+
+        public DBSchema Schema { get; }
+
+        public IModelProvider Provider { get; }
+
         private DBTable GetTable(string name)
         {
-            var table = DBService.Schems.DefaultSchema.Tables.FirstOrDefault(p =>
-                string.Equals(p.ItemTypeName, name, StringComparison.Ordinal));
+            var table = (DBTable)Provider.GetTable(name);
             if (table == null && name.EndsWith("Log"))
                 table = (DBTable)GetTable(name.Replace("Log", ""))?.LogTable;
             return table;
@@ -31,8 +41,6 @@ namespace DataWF.WebService.Common
             //}
             //return DBTable.GetTable(type);
         }
-
-        public IUserIdentity CurrentUser => User.GetCommonUser();
 
         [HttpGet("Get/{name}")]
         public ActionResult<AccessValue> Get([FromRoute] string name)
@@ -58,7 +66,7 @@ namespace DataWF.WebService.Common
             try
             {
                 var table = GetTable(name);
-                var column = table?.ParseProperty(property);
+                var column = table?.GetColumnByProperty(property);
                 if (column == null)
                 {
                     return NotFound();
@@ -86,7 +94,7 @@ namespace DataWF.WebService.Common
             }
             try
             {
-                var value = table.LoadItemById(id, DBLoadParam.Load | DBLoadParam.Referencing);
+                var value = table.LoadById<DBItem>(id, DBLoadParam.Load | DBLoadParam.Referencing);
                 if (value == null)
                 {
                     return NotFound();
@@ -123,7 +131,7 @@ namespace DataWF.WebService.Common
             }
             try
             {
-                var value = table.LoadItemById(id, DBLoadParam.Load | DBLoadParam.Referencing);
+                var value = table.PrimaryKey.Load(id, DBLoadParam.Load | DBLoadParam.Referencing).FirstOrDefault();
                 if (value == null)
                 {
                     return NotFound();
@@ -135,8 +143,8 @@ namespace DataWF.WebService.Common
                 {
                     return Forbid();
                 }
-                if (value is DBLogItem logItem
-                    && logItem.Access?.Owner != logItem)
+                if (value is DBItemLog itemlog
+                    && itemlog.Access?.Owner != itemlog)
                 {
                     return new ActionResult<IEnumerable<AccessItem>>(Enumerable.Empty<AccessItem>());
                 }
@@ -156,7 +164,7 @@ namespace DataWF.WebService.Common
             {
                 return NotFound();
             }
-            if (table is IDBLogTable)
+            if (table is IDBTableLog)
             {
                 return Forbid("History is Readonly!");
             }
@@ -165,11 +173,11 @@ namespace DataWF.WebService.Common
             {
                 return BadRequest($"Table {table} is not Accessable!");
             }
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(table, CurrentUser))
             {
                 try
                 {
-                    var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                    var value = table.PrimaryKey.Load(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction).FirstOrDefault();
                     if (value == null)
                     {
                         transaction.Rollback();
@@ -182,7 +190,7 @@ namespace DataWF.WebService.Common
                         transaction.Rollback();
                         return Forbid();
                     }
-                    value.Access = new AccessValue(accessItems);
+                    value.Access = new AccessValue(accessItems, Provider);
                     await value.Save(transaction);
                     transaction.Commit();
                     return true;
@@ -207,7 +215,7 @@ namespace DataWF.WebService.Common
             {
                 return NotFound();
             }
-            if (table is IDBLogTable)
+            if (table is IDBTableLog)
             {
                 return Forbid("History is Readonly!");
             }
@@ -216,14 +224,14 @@ namespace DataWF.WebService.Common
             {
                 return BadRequest($"Table {table} is not Accessable!");
             }
-            var temp = new AccessValue(accessPack.Items);
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            var temp = new AccessValue(accessPack.Items, Provider);
+            using (var transaction = new DBTransaction(table, CurrentUser))
             {
                 try
                 {
                     foreach (var id in accessPack.Ids)
                     {
-                        var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                        var value = table.PrimaryKey.Load(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction).FirstOrDefault();
                         if (value == null)
                         {
                             transaction.Rollback();
@@ -258,7 +266,7 @@ namespace DataWF.WebService.Common
             {
                 return NotFound();
             }
-            if (table is IDBLogTable)
+            if (table is IDBTableLog)
             {
                 return Forbid("History is Readonly!");
             }
@@ -267,11 +275,11 @@ namespace DataWF.WebService.Common
             {
                 return BadRequest($"Table {table} is not Accessable!");
             }
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(table, CurrentUser))
             {
                 try
                 {
-                    var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                    var value = table.PrimaryKey.Load(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction).FirstOrDefault();
                     if (value == null)
                     {
                         return NotFound();
@@ -304,23 +312,19 @@ namespace DataWF.WebService.Common
             {
                 return NotFound();
             }
-            if (table is IDBLogTable)
-            {
-                return Forbid("History is Readonly!");
-            }
             var accessColumn = table.AccessKey;
             if (accessColumn == null)
             {
                 return BadRequest($"Table {table} is not Accessable!");
             }
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(table, CurrentUser))
             {
                 try
                 {
                     var firstItem = (DBItem)null;
                     foreach (var id in ids)
                     {
-                        var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                        var value = table.PrimaryKey.Load(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction).FirstOrDefault();
                         if (value == null)
                         {
                             return NotFound();

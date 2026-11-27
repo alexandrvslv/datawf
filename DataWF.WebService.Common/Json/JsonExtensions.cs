@@ -1,4 +1,5 @@
-﻿using DataWF.Common;
+﻿using DataWF;
+using DataWF.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
@@ -8,9 +9,9 @@ namespace DataWF.WebService.Common
 {
     public static class JsonExtensions
     {
-        public static void InitDefaults(this JsonSerializerOptions options, HttpContext httpContext = null)
+        public static void InitDefaults(this JsonSerializerOptions options, HttpContext httpContext = null, DBProvider provider = null)
         {
-            options.InitDefaults(new DBItemConverterFactory(httpContext));
+            options.InitDefaults(new DBItemConverterFactory(httpContext, provider));
         }
 
         public static void InitDefaults(this JsonSerializerOptions options, DBItemConverterFactory converter)
@@ -18,9 +19,9 @@ namespace DataWF.WebService.Common
 #if DEBUG
             options.WriteIndented = true;
 #endif
-            options.IgnoreNullValues = false;
+            options.DefaultIgnoreCondition = JsonIgnoreCondition.Never;
             options.IgnoreReadOnlyProperties = false;
-            options.DefaultBufferSize = 82 * 1024;
+            options.DefaultBufferSize = 64 * 1024;
             options.PropertyNamingPolicy = null;
             options.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
             // Configure a converters.

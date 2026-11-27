@@ -1,0 +1,20 @@
+﻿using System.Collections.Generic;
+
+namespace DataWF.Settings
+{
+    public class ProtocolSetting
+    {
+        public static ProtocolSetting Current { get; private set; }
+
+        public ProtocolSetting()
+        {
+            Current = this;
+        }
+
+        public string Protocol { get; set; } = "datawf";
+
+        public string WebProtocol { get; set; } = "http";
+
+        public string Host { get; set; } = "default.net";
+    }
+}

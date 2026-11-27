@@ -9,8 +9,8 @@ namespace DataWF.Module.FlowGui
     {
         public override object FormatValue(object value, object dataSource, Type valueType)
         {
-            if (dataSource is DBLogItem)
-                value = ((DBLogItem)dataSource).BaseItem;
+            if (dataSource is DBItemLog itemLog)
+                value = itemLog.BaseItem;
             return base.FormatValue(value, dataSource, valueType);
         }
 

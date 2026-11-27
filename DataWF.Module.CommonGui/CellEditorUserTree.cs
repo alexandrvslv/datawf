@@ -2,8 +2,8 @@
 using DataWF.Gui;
 using DataWF.Data;
 using DataWF.Module.Common;
-using Xwt;
-using DataWF.Common;
+using Avalonia;
+using DataWF;
 
 namespace DataWF.Module.CommonGui
 {
@@ -58,7 +58,7 @@ namespace DataWF.Module.CommonGui
             }
         }
 
-        public override Widget InitDropDownContent()
+        public override Control InitDropDownContent()
         {
             var tree = Editor.GetCached<UserTree>();
             tree.UserKeys = UserKeys;
@@ -66,7 +66,7 @@ namespace DataWF.Module.CommonGui
             if (!ReadOnly)
             {
                 tree.CellDoubleClick += ListCellDoubleClick;
-                tree.KeyPressed += ListCellKeyDown;
+                tree.KeyDown += ListCellKeyDown;
                 //list.SelectionChanged += PListSelectionChanged;
             }
             return tree;
@@ -93,7 +93,7 @@ namespace DataWF.Module.CommonGui
         public override void FreeEditor()
         {
             UserTree.CellDoubleClick -= ListCellDoubleClick;
-            UserTree.KeyPressed -= ListCellKeyDown;
+            UserTree.KeyDown -= ListCellKeyDown;
             base.FreeEditor();
         }
     }

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <OutputType>Library</OutputType>
+    <RootNamespace>DataWF</RootNamespace>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <!--<PackageId>DataWF.Invoker</PackageId>
+    <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/alexandrvslv/datawf</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/alexandrvslv/datawf.git</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>-->
+    <Platforms>AnyCPU</Platforms>
+    <!-- <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath> -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>  
+  <ItemGroup>
+    <Compile Remove="EmitHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../DataWF.Generator/DataWF.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

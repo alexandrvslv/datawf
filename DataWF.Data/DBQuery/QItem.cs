@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using System;
 using System.Collections;
@@ -25,34 +25,57 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(QItem), nameof(QItem.Text), typeof(QItem.TextInvoker<>))]
-[assembly: Invoker(typeof(QItem), nameof(QItem.Order), typeof(QItem.OrderInvoker<>))]
 namespace DataWF.Data
 {
-    public class QItem : IDisposable, IEntryNotifyPropertyChanged, IComparable, IValued, IInvoker
+    [Invoker(Instance = true)]
+    public abstract partial class QItem : IDisposable, IComparable, IComparable<QItem>, IQItem
     {
+        public static QItem Fabric(object value, DBColumn column)
+        {
+            switch (value)
+            {
+                case QItem qItem:
+                    return qItem;
+                case DBColumn dBColumn:
+                    return new QColumn(dBColumn);
+                case IInvoker invoker:
+                    return new QInvoker(invoker);
+                case IBetween betweenValue:
+                    return new QBetween(betweenValue.GetMin(), betweenValue.GetMax(), column);
+                case string text:
+                    return new QValue(text, column);
+                case byte[] bytes:
+                    return new QValue(bytes, column);
+                case IEnumerable enumerable:
+                    return new QArray(enumerable, column);
+                default:
+                    return new QValue(value, column);
+            }
+        }
+
         protected int order = -1;
-        protected string text;
-        protected string alias;
+        private string tableAlias;
+        private string columnAlias;
         private QItem holder;
+        private IQItemList container;
+        protected QTable qTable;
+        private bool refmode;
 
         public QItem()
         {
         }
 
-        public QItem(string name)
-        {
-            this.text = name;
-        }
-
-        [JsonIgnore, XmlIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
-
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public IQItemList List => (IQItemList)Containers.FirstOrDefault(p => p is IQItemList);
+        public virtual IQItemList Container
+        {
+            get => container;
+            set => container = value;
+        }
 
         public int Order
         {
@@ -60,37 +83,44 @@ namespace DataWF.Data
             set
             {
                 order = value;
-                OnPropertyChanged(nameof(Order));
+                //OnPropertyChanged();
             }
         }
 
-        public virtual string Text
+        public virtual bool IsReference
         {
-            get => text;
-            set
-            {
-                if (text == value)
-                    return;
-                text = value;
-                OnPropertyChanged(nameof(Text));
-            }
+            get => refmode;
+            set => refmode = value;
         }
 
-        public string Alias
+        public string TableAlias
         {
-            get => alias;
+            get => tableAlias;
             set
             {
-                if (alias != value)
+                if (tableAlias != value)
                 {
-                    alias = value;
-                    OnPropertyChanged(nameof(Alias));
+                    tableAlias = value;
+                    //OnPropertyChanged();
+                }
+            }
+        }
+
+        public string ColumnAlias
+        {
+            get => columnAlias;
+            set
+            {
+                if (columnAlias != value)
+                {
+                    columnAlias = value;
+                    //OnPropertyChanged(nameof(Prefix));
                 }
             }
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public QItem Holder
+        public virtual QItem Holder
         {
             get => holder;
             set
@@ -98,82 +128,96 @@ namespace DataWF.Data
                 if (holder != value)
                 {
                     holder = value;
-                    OnPropertyChanged(nameof(Holder));
+                    //OnPropertyChanged();
                 }
             }
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual IQuery Query => Holder?.Query ?? List?.Query;
+        public virtual IQQuery Query => Holder?.Query ?? Container?.Query;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual DBTable Table
+        public virtual IDBTable Table
         {
-            get => Query?.Table;
+            get => QTable?.Table;
             set { }
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual DBSchema Schema => Table?.Schema;
+        public virtual QTable QTable
+        {
+            get => qTable ??= Query?.GetTableByAlias(tableAlias);
+            set
+            {
+                qTable = value;
+                if (qTable != null)
+                {
+                    TableAlias = qTable.TableAlias;
+                }
+            }
+        }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public virtual DBSystem DBSystem => Schema?.System ?? DBSystem.Default;
+        public virtual IDBSchema Schema
+        {
+            get => Query.Schema ?? Table?.Schema;
+            set { }
+        }
 
-        public Type DataType => typeof(DBItem);
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public virtual DBSystem System => Schema?.System ?? DBSystem.Default;
 
-        public Type TargetType => typeof(object);
+        public Type DataType => typeof(object);
+
+        public Type TargetType => typeof(DBItem);
 
         public bool CanWrite => false;
 
-        public string Name
+        public virtual string Name
         {
-            get => ToString();
+            get => string.Empty;
             set { }
         }
 
-        public virtual string Format(IDbCommand command = null)
-        {
-            return text;
-        }
+        public abstract string Format(IDbCommand command = null);
 
-        public object GetValue()
+        public object GetValue() => GetValue<DBItem>();
+        
+        public virtual object GetValue<T>()
         {
-            return GetValue(null);
-        }
-
-        public virtual object GetValue(DBItem row)
-        {
-            return text;
-        }
-
-        public void SetValue(object target, object value)
-        {
-            throw new NotSupportedException();
+            return GetValue((DBItem)null);            
         }
 
         public object GetValue(object target)
         {
-            return GetValue((DBItem)target);
+            if (target is DBItem dbItem)
+                return GetValue(dbItem);
+            if (target is DBTuple turple)
+                return GetValue(turple);
+            throw new ArgumentOutOfRangeException(nameof(target));
+        }
+
+        public object GetValue(DBTuple tuple) => GetValue(tuple.Get(QTable));
+
+        public abstract object GetValue(DBItem row);
+
+        public virtual void SetValue(object target, object value)
+        {
+            throw new NotSupportedException();
         }
 
         public virtual void Dispose()
         {
         }
 
-        #region INotifyPropertyChanged Members
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        #endregion
-
         public int CompareTo(object obj)
         {
-            return order.CompareTo(((QItem)obj).order);
+            return CompareTo(obj as QItem);
+        }
+
+        public int CompareTo(QItem other)
+        {
+            return order.CompareTo(other?.order ?? 0);
         }
 
         public override string ToString()
@@ -181,12 +225,89 @@ namespace DataWF.Data
             return Format();
         }
 
-        public bool CheckItem(object item, object typedValue, CompareType comparer, IComparer comparision)
+        public bool CheckItem(object item, object typedValue, CompareOperator comparer, IComparer comparision = null)
         {
-            return ListHelper.CheckItem(GetValue(item), typedValue, comparer, comparision);
+            if (item is DBItem dBItem)
+                return CheckItem(dBItem, typedValue, comparer);
+            if (item is DBTuple dBTuple)
+                return CheckItem(dBTuple, typedValue, comparer);
+            throw new ArgumentOutOfRangeException(nameof(item));
         }
 
-        public virtual string CreateParameter(IDbCommand command, object value, DBColumn column)
+        public bool CheckItem(DBTuple item, object typedValue, CompareOperator comparer)
+        {
+            return CheckItem(item.Get(QTable), typedValue, comparer);
+        }
+
+        public virtual bool CheckItem(DBItem item, object val2, CompareOperator comparer)
+        {
+            var val1 = GetValue(item);
+            if (item == null)
+                return false; //comparer.Type == CompareTypes.Is && !comparer.Not;
+            if (val1 == null)
+                return comparer.Type == CompareOperatorType.Is ? !comparer.Not : val2 == null;
+            else if (val2 == null)
+                return comparer.Type == CompareOperatorType.Is ? comparer.Not : false;
+
+            if (val1 is Enum)
+                val1 = (int)val1;
+            if (val2 is Enum)
+                val2 = (int)val1;
+
+            switch (comparer.Type)
+            {
+                //case CompareTypes.Is:
+                //    return val1.Equals(DBNull.Value) ? !comparer.Not : comparer.Not;
+                case CompareOperatorType.Equal:
+                    return ListHelper.Equal(val1, val2) ? !comparer.Not : comparer.Not;
+                case CompareOperatorType.Like:
+                    var r = val2 is Regex regexValue ? regexValue : Helper.BuildLike(val2.ToString());
+                    return r.IsMatch(val1.ToString()) ? !comparer.Not : comparer.Not;
+                case CompareOperatorType.In:
+                    var list = val2 as IEnumerable;
+                    if (list != null)
+                    {
+                        foreach (object s in list)
+                        {
+                            object comp = s;
+                            if (comp is QItem qItem)
+                                comp = qItem.GetValue(item);
+                            if (comp.Equals(val1) && !comparer.Not)
+                                return true;
+                        }
+                    }
+                    return comparer.Not;
+                case CompareOperatorType.Between:
+                    var between = val2 as QBetween;
+                    if (between == null)
+                        throw new Exception($"Expect QBetween but Get {(val2 == null ? "null" : val2.GetType().FullName)}");
+                    return ListHelper.Compare(val1, between.Min.GetValue(item), (IComparer)null) >= 0
+                                     && ListHelper.Compare(val1, between.Max.GetValue(item), (IComparer)null) <= 0;
+                default:
+                    bool f = false;
+                    int rez = ListHelper.Compare(val1, val2, (IComparer)null);
+                    switch (comparer.Type)
+                    {
+                        case CompareOperatorType.Greater:
+                            f = rez > 0;
+                            break;
+                        case CompareOperatorType.GreaterOrEqual:
+                            f = rez >= 0;
+                            break;
+                        case CompareOperatorType.Less:
+                            f = rez < 0;
+                            break;
+                        case CompareOperatorType.LessOrEqual:
+                            f = rez <= 0;
+                            break;
+                        default:
+                            break;
+                    }
+                    return f;
+            }
+        }
+
+        public virtual string CreateCommandParameter(IDbCommand command, object value, DBColumn column)
         {
             string name = (Table?.System?.ParameterPrefix ?? "@") + (column?.Name ?? "param");
 
@@ -210,30 +331,6 @@ namespace DataWF.Data
             return param;
         }
 
-        public class TextInvoker<T> : Invoker<T, string> where T : QItem
-        {
-            public static readonly TextInvoker<T> Instance = new TextInvoker<T>();
-
-            public override string Name => nameof(QItem.Text);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.Text;
-
-            public override void SetValue(T target, string value) => target.Text = value;
-        }
-
-        public class OrderInvoker<T> : Invoker<T, int> where T : QItem
-        {
-            public static readonly OrderInvoker<T> Instance = new OrderInvoker<T>();
-            public override string Name => nameof(QItem.Order);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(T target) => target.Order;
-
-            public override void SetValue(T target, int value) => target.Order = value;
-        }
 
     }
 }

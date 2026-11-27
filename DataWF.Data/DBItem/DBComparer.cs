@@ -17,7 +17,8 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using DataWF.Collections.Query;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -43,18 +44,18 @@ namespace DataWF.Data
 
     public class DBComparer<T, K> : IComparer<T>, IComparer where T : DBItem
     {
-        public DBTable Table;
+        public IDBTable Table;
         public string PropertyName;
         public string Format;
         public ListSortDirection Direction;
-        public CompareType Comparer;
+        public CompareOperator Comparer;
         public K Value;
-        private readonly DBColumn property;
-        public readonly bool buffered;
-        private readonly bool refernce;
+        private DBColumn property;
+        public bool buffered;
+        private bool refernce;
         public bool Hash;
 
-        public DBComparer(DBTable table, DBColumn column, string proeprty, ListSortDirection direction = ListSortDirection.Ascending)
+        public DBComparer(IDBTable table, DBColumn column, string proeprty, ListSortDirection direction = ListSortDirection.Ascending)
         {
             Table = table;
             PropertyName = proeprty;
@@ -68,25 +69,25 @@ namespace DataWF.Data
             : this(column.Table, column, column.Name, direction)
         { }
 
-        public DBComparer(string table, string column, ListSortDirection direction = ListSortDirection.Ascending)
-            : this(DBService.Schems.ParseTable(table), column, direction)
+        public DBComparer(DBSchema schema, string table, string column, ListSortDirection direction = ListSortDirection.Ascending)
+            : this(schema.GetTable(table), column, direction)
         { }
 
         public DBComparer(DBTable table, string column, ListSortDirection direction = ListSortDirection.Ascending)
-            : this(table, table.ParseColumn(column), column, direction)
+            : this(table, table.GetColumn(column), column, direction)
         { }
 
         #region IComparer
         public int Compare(T x, K key)
         {
-            var xo = buffered ? x.GetValue<K>(property) : (K)x[PropertyName];
-            if (Format != null && xo is IFormattable xFormat && key is IFormattable keyFormat)
+            var xValue = buffered ? x.GetValue<K>(property) : (K)x[PropertyName];
+            if (Format != null && xValue is IFormattable xFormat && key is IFormattable keyFormat)
             {
                 return string.Compare(xFormat.ToString(Format, CultureInfo.InvariantCulture), keyFormat.ToString(Format, CultureInfo.InvariantCulture), StringComparison.Ordinal);
             }
             return Direction == ListSortDirection.Ascending
-                ? ListHelper.CompareT<K>(xo, key, null)
-                : -ListHelper.CompareT<K>(xo, key, null);
+                ? ListHelper.Compare<K>(xValue, key)
+                : -ListHelper.Compare<K>(xValue, key);
         }
 
         public bool Predicate(T x)
@@ -95,32 +96,28 @@ namespace DataWF.Data
             bool f = false;
             switch (Comparer.Type)
             {
-                case CompareTypes.Equal:
+                case CompareOperatorType.Equal:
                     f = rez == 0 ? !Comparer.Not : Comparer.Not;
                     break;
-                case CompareTypes.Greater:
+                case CompareOperatorType.Greater:
                     f = rez > 0;
                     break;
-                case CompareTypes.GreaterOrEqual:
+                case CompareOperatorType.GreaterOrEqual:
                     f = rez >= 0;
                     break;
-                case CompareTypes.Less:
+                case CompareOperatorType.Less:
                     f = rez < 0;
                     break;
-                case CompareTypes.LessOrEqual:
+                case CompareOperatorType.LessOrEqual:
                     f = rez <= 0;
                     break;
-                case CompareTypes.In:
+                case CompareOperatorType.In:
                     break;
-                case CompareTypes.Like:
+                case CompareOperatorType.Like:
                     break;
-                case CompareTypes.Between:
+                case CompareOperatorType.Between:
                     break;
-                case CompareTypes.Is:
-                    break;
-                case CompareTypes.As:
-                    break;
-                case CompareTypes.Using:
+                case CompareOperatorType.Is:
                     break;
             }
             return f;
@@ -156,7 +153,7 @@ namespace DataWF.Data
                     if (len != 0)
                         return Direction == ListSortDirection.Descending ? -len : len;
                 }
-                rez = ListHelper.CompareT(xValue, yValue, null);
+                rez = ListHelper.Compare<K>(xValue, yValue);
                 if (rez == 0 && Hash)
                     rez = x.CompareTo(y);
             }

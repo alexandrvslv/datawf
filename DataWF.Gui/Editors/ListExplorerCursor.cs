@@ -8,7 +8,7 @@ namespace DataWF.Gui
 
         public ListExplorerNode Current
         {
-            get { return current?.Value; }
+            get => current?.Value;
             set
             {
                 if (Current != value)

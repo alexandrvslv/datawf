@@ -17,27 +17,21 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace DataWF.Data
 {
-    public interface IQItemList
-    {
-        IQuery Query { get; }
-        IQItemList Owner { get; }
-        void Delete(QItem item);
-    }
 
-    public class QItemList<T> : SelectableList<T>, IQItemList where T : QItem, new()
+    public class QItemList<T> : SelectableList<T>, IQItemList where T : QItem
     {
         protected IQuery query;
 
-        public QItemList()
+        public QItemList(int capacity = 2) : base(capacity)
         {
-            Indexes.Add(QItem.TextInvoker<T>.Instance);
-            ApplySort(new InvokerComparer(QItem.OrderInvoker<T>.Instance, ListSortDirection.Ascending));
+            ApplySort(new InvokerComparer<T, int>(QItem.OrderInvoker.Instance, ListSortDirection.Ascending));
         }
 
         public QItemList(IEnumerable<T> items) : this()
@@ -45,21 +39,23 @@ namespace DataWF.Data
             AddRangeInternal(items, false);
         }
 
-        public QItemList(IQItemList owner) : this()
+        public QItemList(IQItem owner) : this()
         {
             Owner = owner;
         }
 
-        public IQItemList Owner { get; set; }
-
-        public IQuery Query
+        public QItemList(IQItem owner, int capacity) : this(capacity)
         {
-            get { return Owner.Query; }
+            Owner = owner;
         }
 
-        public T this[string name]
+        public IQItem Owner { get; set; }
+
+        public IQQuery Query => Owner.Query;
+
+        void IQItemList.Add(QItem item)
         {
-            get { return SelectOne(nameof(QItem.Text), CompareType.Equal, name); }
+            this.Add((T)item);
         }
 
         public void Delete(QItem item)
@@ -75,21 +71,16 @@ namespace DataWF.Data
 
         public override void InsertInternal(int index, T item)
         {
-            if (item.List != this)
+            var itemList = item.Container;
+            if (itemList != this && itemList != null)
             {
-                if (item.List != null)
-                    item.List.Delete(item);
-                if (item.Order == -1)
-                    item.Order = index;
+                itemList.Delete(item);
             }
-            base.InsertInternal(index, item);
-        }
+            item.Container = this;
+            if (item.Order == -1)
+                item.Order = index;
 
-        public virtual T Add()
-        {
-            T item = new T() { Text = "Param" + Count.ToString() };
-            Add(item);
-            return item;
+            base.InsertInternal(index, item);
         }
 
         public override void Dispose()
@@ -98,6 +89,25 @@ namespace DataWF.Data
             foreach (T c in this)
                 c.Dispose();
             base.Dispose();
+        }
+
+        public IEnumerable<IT> GetAllQItems<IT>(Func<IT, bool> predicate = null) where IT : IQItem
+        {
+            foreach (var item in this)
+            {
+                if (item is IT typeItem
+                    && (predicate == null 
+                        || predicate(typeItem)))
+                    yield return typeItem;
+                if (item is IQItemList list)
+                {
+                    foreach (var subItem in list.GetAllQItems<IT>(predicate))
+                    {
+                        yield return subItem;
+                    }
+                }
+
+            }
         }
     }
 }

@@ -24,7 +24,7 @@ using System.Text;
 
 namespace DataWF.Data
 {
-    public class QExpression : QEnum
+    public class QExpression : QArray
     {
         private readonly List<QMathType> types = new List<QMathType>();
 
@@ -32,7 +32,7 @@ namespace DataWF.Data
         {
         }
 
-        public List<QMathType> Types
+        public List<QMathType> Operations
         {
             get { return types; }
         }
@@ -74,21 +74,20 @@ namespace DataWF.Data
         {
             if (val1 is string || val2 is string)
             {
-                return "" + val1 + val2;
+                return string.Concat(val1, val2);
             }
             else
             {
                 decimal obj1 = GetDecimal(val1);
                 decimal obj2 = GetDecimal(val2);
 
-                if (type == QMathType.Plus)
-                    return obj1 + obj2;
-                else if (type == QMathType.Minus)
-                    return obj1 - obj2;
-                else if (type == QMathType.Multiply)
-                    return obj1 * obj2;
-                else // if (type == QExpressionMathType.Devide)
-                    return obj2 == 0M ? 0M : obj1 / obj2;
+                return type switch
+                {
+                    QMathType.Plus => obj1 + obj2,
+                    QMathType.Minus => obj1 - obj2,
+                    QMathType.Multiply => obj1 * obj2,
+                    _ => obj2 == 0M ? 0M : obj1 / obj2
+                };
             }
         }
 
@@ -97,9 +96,9 @@ namespace DataWF.Data
             return obj is decimal ? (decimal)obj : obj == null || obj == DBNull.Value ? 0M : decimal.Parse(obj.ToString());
         }
 
-        public void Parse(string query, DBTable table)
+        public void Parse(string query, IDBTable table)
         {
-            QQuery q = new QQuery("", table);
+            var q = new QQuery<DBItem>(table);
             q.ParseExpression(this, query);
             //Regex exp = new Regex(@"\*|\+|\-|\/", RegexOptions.IgnoreCase);
             //string q = exp.Replace(query, ch => @" " + ch.Value + " ");

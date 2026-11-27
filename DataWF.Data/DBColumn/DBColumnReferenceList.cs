@@ -17,8 +17,11 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using DataWF.Collections;
+using DataWF.Collections.Query;
 using DataWF.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -26,7 +29,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBColumnReferenceList : SelectableList<DBColumnReference>
+    public sealed class DBColumnReferenceList : SelectableList<DBColumnReference>
     {
         public DBColumnReferenceList()
         {
@@ -42,7 +45,7 @@ namespace DataWF.Data
         public DBTableItem Container { get; set; }
 
         [XmlIgnore, JsonIgnore]
-        public DBSchema Schema { get { return Container?.Schema; } }
+        public IDBSchema Schema { get { return Container?.Schema; } }
 
         [XmlIgnore, JsonIgnore]
         public string Names { get; private set; }
@@ -85,7 +88,16 @@ namespace DataWF.Data
 
         public DBColumnReference Get(string column)
         {
-            return Select(DBColumnReference.ColumnNameInvoker.Instance, CompareType.Equal, column).FirstOrDefault();
+            return Select(DBColumnReference.ColumnNameInvoker.Instance, CompareOperator.Equal, column).FirstOrDefault();
+        }
+
+        public void Replace(DBColumn exist, DBColumn replacer)
+        {
+            foreach (var item in this)
+            {
+                if (item.Column == exist)
+                    item.Column = replacer;
+            }
         }
 
         protected override void OnPropertyChanged(string property)

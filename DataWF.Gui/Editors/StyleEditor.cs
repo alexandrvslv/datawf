@@ -1,7 +1,8 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 
 namespace DataWF.Gui
 {
@@ -19,20 +20,19 @@ namespace DataWF.Gui
 
         public CellStyle Style
         {
-            get { return style; }
+            get => style;
             set
             {
                 style = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
-        protected override void OnDraw(Context ctx, Rectangle dirtyRect)
+        public override void Render(DrawingContext ctx)
         {
-            base.OnDraw(ctx, dirtyRect);
-            ctx.SetColor(Colors.White);
-            ctx.RoundRectangle(dirtyRect, 10);
-            ctx.Fill();
+            base.Render(ctx);
+            var dirtyRect = Bounds;
+            ctx.FillRectangle(Brushes.White, dirtyRect, 10F);
 
             using (var context = new GraphContext(ctx))
             {
@@ -41,14 +41,12 @@ namespace DataWF.Gui
                     int y = 10;
                     foreach (var value in values)
                     {
-                        using (TextLayout text = new TextLayout(this) { Text = value.ToString() })
-                        {
-                            ctx.SetColor(Colors.Black);
-                            ctx.DrawTextLayout(text, new Point(5, y));
-                        }
+                        var text = new FormattedText { Text = value.ToString() };
+
+                        ctx.DrawText(Brushes.Black, new Point(5, y), text);
                         context.DrawCell(Style, "Test Text",
-                            new Rectangle(100, y, Size.Width - 120, 20),
-                            new Rectangle(100, y, Size.Width - 120, 20),
+                            new Rect(100, y, Width - 120, 20),
+                            new Rect(100, y, Width - 120, 20),
                             (CellDisplayState)value);
                         y += 30;
                     }
@@ -74,15 +72,15 @@ namespace DataWF.Gui
             details.EditMode = EditModes.ByClick;
 
             var smap = new GroupBoxItem(map) { Row = 1 };
-            smap.Add(new GroupBoxItem() { Widget = details, Text = "Detail", FillWidth = true, Width = 230, Height = 60 });
-            smap.Add(new GroupBoxItem() { Widget = preview, Text = "Preview", FillWidth = true, Width = 230, Height = 60 });
+            smap.Add(new GroupBoxItem() { Control = details, Text = "Detail", FillWidth = true, Width = 230, Height = 60 });
+            smap.Add(new GroupBoxItem() { Control = preview, Text = "Preview", FillWidth = true, Width = 230, Height = 60 });
 
-            map.Add(new GroupBoxItem() { Widget = list, Text = "Slyles", FillHeight = true, FillWidth = true });
+            map.Add(new GroupBoxItem() { Control = list, Text = "Slyles", FillHeight = true, FillWidth = true });
             map.Add(smap);
 
             Name = "StyleEditor";
             Text = "Style Editor";
-            PackStart(map, true, true);
+            Children.Add(map);
 
             Localize();
         }
@@ -100,14 +98,6 @@ namespace DataWF.Gui
         {
             base.Localize();
             GuiService.Localize(this, GetType().Name, "Localize Editor");
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-            }
-            base.Dispose(disposing);
         }
     }
 

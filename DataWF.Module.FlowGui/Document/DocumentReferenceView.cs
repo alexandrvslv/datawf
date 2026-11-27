@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
@@ -6,8 +6,8 @@ using DataWF.Module.Flow;
 using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Module.FlowGui
 {

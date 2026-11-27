@@ -17,7 +17,9 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using DataWF.Access;
+using DataWF.Collections.Query;
 using DataWF.Data;
 using System;
 using System.ComponentModel;
@@ -30,77 +32,41 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-
-    [Table("rinstance", "User", BlockSize = 128)]
-    public class Instance : DBItem, IInstance
+    [Table("rinstance", "General", BlockSize = 128, Keys = DBTableKeys.NoLogs | DBTableKeys.NoReplicate | DBTableKeys.Private, Type = typeof(InstanceTable))]
+    [Invoker]
+    public sealed partial class Instance : DBItem, IInstance
     {
-        public static readonly DBTable<Instance> DBTable = GetTable<Instance>();
-        public static readonly DBColumn HostKey = DBTable.ParseProperty(nameof(Host));
-        public static readonly DBColumn PortKey = DBTable.ParseProperty(nameof(Port));
-        public static readonly DBColumn ActiveKey = DBTable.ParseProperty(nameof(Active));
-
-        public static async Task<Instance> GetByNetId(IPEndPoint endPoint, bool create, IUserIdentity user = null)
-        {
-            var query = new QQuery(DBTable);
-            query.BuildPropertyParam(nameof(Host), CompareType.Equal, endPoint.Address.ToString());
-            query.BuildPropertyParam(nameof(Port), CompareType.Equal, endPoint.Port);
-            query.BuildPropertyParam(nameof(Action), CompareType.Equal, false);
-            var instance = DBTable.Load(query).LastOrDefault();
-            if (instance == null && create)
-            {
-                instance = new Instance
-                {
-                    EndPoint = endPoint,
-                    Active = true,
-                    IsCurrent = true
-                };
-                await instance.Save(user);
-            }
-            return instance;
-        }
-
         private IPEndPoint ipEndPoint;
 
-        public Instance()
-        { }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        [Column("unid", Keys = ColumnFlags.Primary)]
+        public int Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
-        [Column("instance_host", Keys = DBColumnKeys.View)]
-        public string Host
+        [Column("instance_url", 1024, Keys = ColumnFlags.View)]
+        public string Url
         {
-            get => GetValue<string>(HostKey);
-            set => SetValue(value, HostKey);
-        }
-
-        [Column("instance_port", Keys = DBColumnKeys.View)]
-        public int? Port
-        {
-            get => GetValue<int?>(PortKey);
-            set => SetValue(value, PortKey);
+            get => GetValue(Table.UrlKey);
+            set => SetValue(value, Table.UrlKey);
         }
 
         [Column("instance_active")]
         public bool? Active
         {
-            get => GetValue<bool?>(ActiveKey);
-            set => SetValue(value, ActiveKey);
+            get => GetValue<bool?>(Table.ActiveKey);
+            set => SetValue(value, Table.ActiveKey);
         }
 
         [JsonIgnore, XmlIgnore]
         public IPEndPoint EndPoint
         {
-            get => ipEndPoint ?? (ipEndPoint = Host == null ? null : new IPEndPoint(IPAddress.Parse(Host), Port.GetValueOrDefault()));
+            get => ipEndPoint ?? (ipEndPoint = Url == null ? null : new Uri(Url).ToEndPoint());
             set
             {
                 ipEndPoint = value;
-                Host = value?.Address.ToString();
-                Port = value?.Port;
+                Url = value?.ToStringUrl(UriScheme.udp);
             }
         }
 
@@ -119,7 +85,31 @@ namespace DataWF.Data
 
         public override string ToString()
         {
-            return $"{EndPoint} Sent: {SendCount}({Helper.LenghtFormat(SendLength)}) Receive: {ReceiveCount}({ReceiveLength})";
+            return $"{EndPoint} Sent: {SendCount}({Helper.SizeFormat(SendLength)}) Receive: {ReceiveCount}({ReceiveLength})";
         }
     }
+
+    public partial class InstanceTable
+    {
+        public async Task<Instance> GetByNetId(IPEndPoint endPoint, bool create, IUserIdentity user = null)
+        {
+            var query = Query()
+                .Where(UrlKey, CompareOperator.Equal, endPoint.ToStringUrl(UriScheme.udp))
+                .And(ActiveKey, CompareOperator.Equal, false);
+            var instance = Load(query).LastOrDefault();
+            if (instance == null && create)
+            {
+                instance = new Instance(this)
+                {
+                    EndPoint = endPoint,
+                    Active = true,
+                    IsCurrent = true
+                };
+                await instance.Save(user);
+            }
+            return instance;
+        }
+    }
+
 }
+

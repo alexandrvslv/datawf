@@ -1,9 +1,10 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Xwt;
+using System.Linq;
+using Avalonia;
 
 namespace DataWF.Data.Gui
 {
@@ -73,7 +74,7 @@ namespace DataWF.Data.Gui
             var gSetting = new GroupBoxItem()
             {
                 Name = "Setting",
-                Widget = setting,
+                Control = setting,
                 Column = 0,
                 Row = 0,
                 Autosize = false,
@@ -84,7 +85,7 @@ namespace DataWF.Data.Gui
             var gTable = new GroupBoxItem()
             {
                 Name = "Tables",
-                Widget = listTables,
+                Control = listTables,
                 Column = 1,
                 Row = 0,
                 Autosize = false,
@@ -95,7 +96,7 @@ namespace DataWF.Data.Gui
             var gColumn = new GroupBoxItem()
             {
                 Name = "Columns",
-                Widget = listColumns,
+                Control = listColumns,
                 Column = 0,
                 Row = 1,
                 FillWidth = true,
@@ -107,8 +108,8 @@ namespace DataWF.Data.Gui
             Name = "DataExport";
             Text = "Export";
 
-            PackStart(tools, false, false);
-            PackStart(map, true, true);
+            Children.Add(tools, false, false);
+            Children.Add(map, true, true);
         }
 
         public DBExport Export
@@ -210,7 +211,7 @@ namespace DataWF.Data.Gui
 
         private void OnExportProgress(object sender, ExportProgressArgs e)
         {
-            Application.Invoke(() => OnExportProgress(e));
+            _ = Dispatcher.UIThread.InvokeAsync(() => OnExportProgress(e));
         }
 
         public event EventHandler ExportComplete;
@@ -233,7 +234,7 @@ namespace DataWF.Data.Gui
 
         protected void OnExportComplete(object sender, ExportProgressArgs ea)
         {
-            Application.Invoke(() => OnExportComplete(ea));
+            _ = Dispatcher.UIThread.InvokeAsync(() => OnExportComplete(ea));
         }
 
         protected void ExportAsyncComplete(IAsyncResult rez)
@@ -273,7 +274,7 @@ namespace DataWF.Data.Gui
                 AllowCheck = true,
                 CheckRecursive = true,
                 DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table,
-                DataFilter = DBService.Schems.DefaultSchema
+                DataFilter = DataExplorer.Provider.Schems.OfType<DBSchema>().FirstOrDefault()
             };
 
             var window = new ToolWindow()
@@ -293,7 +294,7 @@ namespace DataWF.Data.Gui
                         tables.Add(node.Item as DBTable);
                     }
                 }
-                tables.Sort(new Comparison<DBTable>(DBService.CompareDBTable));
+                tables.Sort(new Comparison<DBTable>(DBProvider.CompareDBTable));
                 status.Type = ExportProgressType.Initialize;
                 export.Initialize(status, tables);
             };
@@ -312,7 +313,7 @@ namespace DataWF.Data.Gui
 
             var fileXML = Path.GetFileNameWithoutExtension(export.Source.Connection.Host) + ".xml";
 
-            Serialization.Serialize(export, fileXML);
+            SerializeProvider.Serialize(export, fileXML);
 
             using (var dialog = new SaveFileDialog())
             {

@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using System;
 using System.Collections.Generic;
@@ -8,120 +8,81 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    public class StageList : DBTableView<Stage>
-    {
-        public StageList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(filter, mode, status)
-        {
-            ApplySortInternal(new DBComparer<Stage, string>(Stage.DBTable.CodeKey, ListSortDirection.Ascending));
-        }
-
-        public StageList()
-            : this("")
-        {
-        }
-
-        public StageList(Work flow)
-            : this(Stage.WorkKey.Name + "=" + flow.PrimaryId)
-        {
-        }
-    }
-
-    [Flags]
-    public enum StageKey
-    {
-        None = 0,
-        Stop = 1,
-        Start = 2,
-        System = 4,
-        Return = 8,
-        AutoComplete = 16
-    }
 
     [Table("rstage", "Template", BlockSize = 100)]
-    public class Stage : DBItem, IDisposable
+    public sealed partial class Stage : DBItem, IDisposable
     {
-        public static readonly DBTable<Stage> DBTable = GetTable<Stage>();
-        public static readonly DBColumn ExportCodeKey = DBTable.ParseProperty(nameof(ExportCode));
-        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
-        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
-        public static readonly DBColumn WorkKey = DBTable.ParseProperty(nameof(WorkId));
-        public static readonly DBColumn KeysKey = DBTable.ParseProperty(nameof(Keys));
-        public static readonly DBColumn TimeLimitKey = DBTable.ParseProperty(nameof(TimeLimit));
-
         private Work work;
 
-        public Stage()
+        [Column("unid", Keys = ColumnFlags.Primary)]
+        public int Id
         {
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
-        {
-            get => GetValue<int?>(table.PrimaryKey);
-            set => SetValue(value, table.PrimaryKey);
-        }
-
-        [Column("code", 512, Keys = DBColumnKeys.Code)]
+        [Column("code", 512, Keys = ColumnFlags.Code)]
         public string Code
         {
-            get => GetValue<string>(table.CodeKey);
-            set => SetValue(value, table.CodeKey);
+            get => GetValue(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Column("export_code", 512)]
         public string ExportCode
         {
-            get => GetValue<string>(ExportCodeKey);
-            set => SetValue(value, ExportCodeKey);
+            get => GetValue(Table.ExportCodeKey);
+            set => SetValue(value, Table.ExportCodeKey);
         }
 
-        [Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
+        [Column("name", 512, Keys = ColumnFlags.Culture | ColumnFlags.View)]
         public string Name
         {
             get => GetName();
             set => SetName(value);
         }
 
+        [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
+        [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         [Browsable(false)]
         [Column("work_id")]
         public int? WorkId
         {
-            get => GetValue<int?>(WorkKey);
-            set => SetValue(value, WorkKey);
+            get => GetValue(Table.WorkIdKey);
+            set => SetValue(value, Table.WorkIdKey);
         }
 
         [Reference(nameof(WorkId))]
         public Work Work
         {
-            get => GetReference(WorkKey, ref work);
-            set => SetReference(work = value, WorkKey);
+            get => GetReference(Table.WorkIdKey, ref work);
+            set => SetReference(work = value, Table.WorkIdKey);
         }
 
         [Column("keys")]
         public StageKey? Keys
         {
-            get => GetValue<StageKey?>(KeysKey);
-            set => SetValue(value, KeysKey);
+            get => GetValue(Table.KeysKey);
+            set => SetValue(value, Table.KeysKey);
         }
 
         [Column("time_limit")]
         public TimeSpan? TimeLimit
         {
-            get => GetValue<TimeSpan?>(TimeLimitKey);
-            set => SetValue(value, TimeLimitKey);
+            get => GetValue(Table.TimeLimitKey);
+            set => SetValue(value, Table.TimeLimitKey);
         }
 
         public IEnumerable<T> GetParams<T>() where T : StageParam

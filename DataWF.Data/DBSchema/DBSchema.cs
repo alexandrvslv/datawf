@@ -17,8 +17,9 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
-using DataWF.Data;
+using DataWF;
+using DataWF.Comparers;
+using DataWF.ModelProviders;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -31,35 +32,37 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.DataBase), typeof(DBSchema.DataBaseInvoker<>))]
-[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.ConnectionName), typeof(DBSchema.ConnectionNameInvoker<>))]
-[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.Connection), typeof(DBSchema.ConnectionInvoker<>))]
-[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.LogSchemaName), typeof(DBSchema.LogSchemaNameInvoker<>))]
-[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.LogSchema), typeof(DBSchema.LogSchemaInvoker<>))]
-[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.Tables), typeof(DBSchema.TablesInvoker<>))]
-[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.TableGroups), typeof(DBSchema.TableGroupsInvoker<>))]
-[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.Procedures), typeof(DBSchema.ProceduresInvoker<>))]
-[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.Sequences), typeof(DBSchema.SequencesInvoker<>))]
-[assembly: Invoker(typeof(DBSchema), nameof(DBSchema.FileName), typeof(DBSchema.FileNameInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBSchema : DBSchemaItem, IFileSerialize
+    [Invoker(Instance = true)]
+    public partial class DBSchema : DBSchemaItem, IFileSerialize, IDBSchema
     {
-        public static DBSchema Generate(Assembly assembly, string schemaName)
+        public static DBSchema Generate(DBProvider provider, string schemaName, params Assembly[] assemblies)
         {
             var schema = new DBSchema(schemaName);
-            schema.Generate(new[] { assembly });
-            DBService.Schems.Add(schema);
+            schema.Generate(assemblies);
+            provider.Schems.Add(schema);
             return schema;
         }
 
+        public static DBSchema Generate(DBProvider provider, string schemaName, params Type[] types)
+        {
+            var schema = new DBSchema(schemaName);
+            schema.Generate(types);
+            provider.Schems.Add(schema);
+            return schema;
+        }
+
+        private readonly Dictionary<Type, DBTable> cacheTables = new Dictionary<Type, DBTable>();
         protected DBConnection connection;
         private string connectionName = string.Empty;
         protected string dataBase = "";
         protected string fileName = "";
-        protected DBLogSchema logSchema;
         protected string logSchemaName;
         private bool cacheRelation;
+        private IDBSchemaLog logSchema;
+        private DBProvider provider;
+        private IFileProvider fileProvider;
 
         public DBSchema()
             : this(null)
@@ -67,7 +70,7 @@ namespace DataWF.Data
 
         public DBSchema(string name) : base(name)
         {
-            DataBase = name;
+            Name = name;
             Sequences = new DBSequenceList(this);
             Tables = new DBTableList(this);
             TableGroups = new DBTableGroupList(this);
@@ -76,13 +79,34 @@ namespace DataWF.Data
 
         public DBSchema(string name, string fileName) : this(name)
         {
-            //Init();
             FileName = fileName;
-            Serialization.Deserialize(fileName, this);
+            SerializeProvider.Deserialize(fileName, this);
         }
 
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBSchemaList Schems => Containers.FirstOrDefault() as DBSchemaList;
+        public Version Version { get; set; } = new Version(1, 0, 0, 0);
+
+        public override DBSchemaItemType Type => DBSchemaItemType.Schema;
+
+        [XmlIgnore, JsonIgnore]
+        public new DBProvider Provider
+        {
+            get => provider;
+            set => provider = value;
+        }
+
+        [XmlIgnore, JsonIgnore]
+        IModelProvider IModelSchema.Provider
+        {
+            get => Provider;
+            set => Provider = (DBProvider)value;
+        }
+
+        [XmlIgnore, JsonIgnore]
+        public IFileProvider FileProvider
+        {
+            get => fileProvider ?? (fileProvider = Provider?.FileProvider ?? (FileDataTable)GetTable<FileData>());
+            set => fileProvider = value;
+        }
 
         [Browsable(false)]
         public string ConnectionName { get => connectionName; set => connectionName = value; }
@@ -90,14 +114,16 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBConnection Connection
         {
-            get { return connection ?? (connection = DBService.Connections[ConnectionName]); }
+            get => connection ?? (connection = Provider?.Connections[ConnectionName]);
             set
             {
                 connection = value;
                 ConnectionName = connection?.Name;
-                if (value != null && !DBService.Connections.Contains(value))
+                if (value != null && Provider != null && !Provider.Connections.Contains(value))
                 {
-                    DBService.Connections.Add(value);
+                    Provider.Connections.Add(value);
+                    if (LogSchema != null && LogSchema.Connection == null)
+                        LogSchema.Connection = value;
                 }
             }
         }
@@ -111,26 +137,35 @@ namespace DataWF.Data
                 if (logSchemaName != value)
                 {
                     logSchemaName = value;
-                    OnPropertyChanged(nameof(LogSchemaName));
+                    OnPropertyChanged();
                 }
             }
         }
 
         [XmlIgnore, JsonIgnore]
-        public DBLogSchema LogSchema
+        public IDBSchemaLog LogSchema
         {
-            get { return logSchema ?? (logSchema = (DBLogSchema)DBService.Schems[logSchemaName]); }
+            get => logSchema ?? (logSchema = (IDBSchemaLog)Provider?.Schems[logSchemaName]);
             set
             {
                 logSchema = value;
                 LogSchemaName = value?.Name;
+                if (value != null
+                    && (Provider?.Schems.Contains(this) ?? false)
+                    && !Provider.Schems.Contains(value.Name))
+                {
+                    Provider.Schems.Add((DBSchema)value);
+                }
             }
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBSystem System { get { return Connection?.System ?? DBSystem.Default; } }
+        public DBSystem System => Connection?.System ?? DBSystem.Default;
 
         public DBTableList Tables { get; set; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        IEnumerable<IModelTable> IModelSchema.Tables => Tables;
 
         public DBTableGroupList TableGroups { get; set; }
 
@@ -140,18 +175,21 @@ namespace DataWF.Data
 
         public override string Name
         {
-            get { return base.Name; }
+            get => base.Name;
             set
             {
                 base.Name = value;
-                if (DataBase == null)
-                    DataBase = value;
+                DataBase = name;
+                if (LogSchema != null)
+                {
+                    LogSchema.Name = Name + "_log";
+                }
             }
         }
 
         public string DataBase
         {
-            get { return dataBase; }
+            get => dataBase ?? Connection?.DataBase ?? Name;
             set
             {
                 if (dataBase != value)
@@ -163,19 +201,19 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public bool IsSynchronizing { get; internal set; }
+        public bool IsSynchronizing { get; internal set; } = true;
 
         public DBTable GenerateTable(string name)
         {
             return Tables[name] ?? new DBTable<DBItem>(name) { Schema = this };
         }
 
-        public void GenerateTablesInfo(IEnumerable<DBTableInfo> tables)
+        public void GenerateTables(IEnumerable<DBTableInfo> tables)
         {
             foreach (var tableInfo in tables)
             {
                 var table = GenerateTable(tableInfo.Name);
-                table.Type = tableInfo.View ? DBTableType.View : DBTableType.Table;
+                table.TableType = tableInfo.View ? DBTableType.View : DBTableType.Table;
                 table.Generate(tableInfo);
                 if (!Tables.Contains(table))
                 {
@@ -188,7 +226,7 @@ namespace DataWF.Data
 
         public void Save(string file)
         {
-            Serialization.Serialize(this, file);
+            SerializeProvider.Serialize(this, file);
         }
 
         public void Save()
@@ -198,7 +236,7 @@ namespace DataWF.Data
 
         public void Load(string file)
         {
-            Serialization.Deserialize(file, this);
+            SerializeProvider.Deserialize(file, this);
         }
 
         public void Load()
@@ -217,11 +255,9 @@ namespace DataWF.Data
                     fileName = "schems" + Path.DirectorySeparatorChar + name + ".xml";
                 return fileName;
             }
-            set { fileName = value; }
+            set => fileName = value;
         }
 
-        [JsonIgnore, XmlIgnore, Browsable(false)]
-        public List<Assembly> Assemblies { get; private set; }
         #endregion
 
         public async Task Update()
@@ -239,7 +275,7 @@ namespace DataWF.Data
             return ddl.ToString();
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             var ddl = new StringBuilder();
             System?.Format(ddl, this, ddlType);
@@ -251,45 +287,22 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public void LoadTablesInfo()
-        {
-            try
-            {
-                IsSynchronizing = true;
-
-                foreach (var tableInfo in GetTablesInfo())
-                {
-                    var table = GenerateTable(tableInfo.Name);
-                    table.Type = tableInfo.View ? DBTableType.View : DBTableType.Table;
-                    table.Generate(tableInfo);
-                    if (!Tables.Contains(table))
-                    {
-                        Tables.Add(table);
-                    }
-                }
-            }
-            finally
-            {
-                IsSynchronizing = false;
-            }
-        }
-
-        public IEnumerable<DBTableInfo> GetTablesInfo(string schemaName = null, string tableName = null)
-        {
-            return System.GetTablesInfo(Connection, schemaName, tableName);
-        }
-
-        public void DropDatabase()
-        {
-            System.DropDatabase(this);
-        }
-
-        public void CreateDatabase()
+        public void ExecuteDropDatabase()
         {
             if (Connection == null)
                 throw new InvalidOperationException("Connection is not defined!");
-            Helper.Logs.Add(new StateInfo("Load", "Database", "Create Database"));
+            this.Log("Start");
+            System.DropDatabase(this);
+            this.Log("Success");
+        }
+
+        public void ExecuteCreateDatabase()
+        {
+            if (Connection == null)
+                throw new InvalidOperationException("Connection is not defined!");
+            this.Log("Start");
             System.CreateDatabase(this, Connection);
+            this.Log("Success");
             if (LogSchema != null)
             {
                 if (LogSchema.Connection == null)
@@ -299,77 +312,41 @@ namespace DataWF.Data
 
                 if (LogSchema.Connection != Connection)
                 {
-                    LogSchema.CreateDatabase();
+                    LogSchema.ExecuteCreateDatabase();
                 }
                 else
                 {
-                    LogSchema.CreateSchema();
+                    LogSchema.ExecuteCreateSchema();
                 }
             }
         }
 
-        public void CreateSchema()
+        public void ExecuteCreateSchema()
         {
             if (Connection == null)
                 throw new InvalidOperationException("Connection is not defined!");
-            Helper.Logs.Add(new StateInfo("Load", "Database", "Create Schema"));
+            this.Log("Start");
             System.CreateSchema(this, Connection);
+            this.Log("Success");
         }
 
-        public DBLogSchema GenerateLogSchema()
+        public virtual IDBSchemaLog GetLogSchema()
         {
             if (LogSchema == null)
             {
-                //var logConnection = connection.Clone();
-                //logConnection.Name += "_log";
-                LogSchema = new DBLogSchema()
-                {
-                    Name = Name + "_log",
-                    Connection = connection,
-                    BaseSchema = this
-                };
-                foreach (DBTable table in Tables)
-                {
-                    if (table.IsLoging)
-                    {
-                        table.GenerateLogTable();
-                    }
-                }
+                LogSchema = NewLogSchema();
             }
             return LogSchema;
         }
 
-        internal IEnumerable<DBConstraint> GetConstraints()
+        public virtual DBSchemaLog NewLogSchema()
         {
-            foreach (var table in Tables)
+            return new DBSchemaLog()
             {
-                if (table is IDBVirtualTable)
-                    continue;
-                foreach (var constraint in table.Constraints)
-                    yield return constraint;
-            }
-        }
-
-        internal IEnumerable<DBForeignKey> GetForeigns()
-        {
-            foreach (var table in Tables)
-            {
-                if (table is IDBVirtualTable)
-                    continue;
-                foreach (var constraint in table.Foreigns)
-                    yield return constraint;
-            }
-        }
-
-        internal IEnumerable<DBIndex> GetIndexes()
-        {
-            foreach (var table in Tables)
-            {
-                if (table is IDBVirtualTable)
-                    continue;
-                foreach (var index in table.Indexes)
-                    yield return index;
-            }
+                Name = Name + "_log",
+                Connection = connection,
+                TargetSchema = this
+            };
         }
 
         public void ExportXHTML(string filename)
@@ -384,10 +361,10 @@ namespace DataWF.Data
                 writer.WriteStartElement("body");
                 writer.WriteElementString("H1", $"{DisplayName} ({ DisplayName})");
                 var tables = Tables.ToList();
-                tables.Sort(new InvokerComparer<DBTable>("Name"));
+                tables.Sort(new InvokerComparer<DBTable, string>("Name"));
                 foreach (var table in tables)
                 {
-                    if (table.Type == DBTableType.Table && !(table is IDBLogTable))
+                    if (table.TableType == DBTableType.Table && !(table is IDBTableLog))
                     {
                         writer.WriteElementString("H2", table.DisplayName + " (" + table.Name + ")");
                         writer.WriteStartElement("table");
@@ -435,7 +412,7 @@ namespace DataWF.Data
                             writer.WriteEndElement();//td
 
                             writer.WriteStartElement("td");
-                            writer.WriteElementString("p", column.Name);
+                            writer.WriteElementString("p", column.PropertyName);
                             writer.WriteEndElement();//td
 
                             writer.WriteStartElement("td");
@@ -470,7 +447,22 @@ namespace DataWF.Data
             }
         }
 
-        public DBTable ParseTable(string code)
+        public DBProcedure GetProcedure(string code, string category = "General")
+        {
+            return Provider?.ParseProcedure(code, category);
+        }
+
+        public DBColumn GetColumn(string code)
+        {
+            return Provider?.ParseColumn(code, this);
+        }
+
+        public DBTableGroup GetTableGroup(string name)
+        {
+            return TableGroups[name] ?? Provider?.ParseTableGroup(name);
+        }
+
+        public DBTable GetTable(string code)
         {
             if (string.IsNullOrEmpty(code))
                 return null;
@@ -479,34 +471,58 @@ namespace DataWF.Data
             int index = code.IndexOf('.');
             if (index >= 0)
             {
-                schema = Schems?[code.Substring(0, index++)];
+                schema = (DBSchema)Provider?.Schems[code.Substring(0, index++)];
                 int sindex = code.IndexOf('.', index);
                 code = sindex < 0 ? code.Substring(index) : code.Substring(index, sindex - index);
             }
             if (schema == null)
                 schema = this;
 
-            table = schema.Tables[code];
+            table = schema.Tables[code]
+                ?? schema.Tables.GetByTypeName(code);
 
             if (table == null)
             {
-                foreach (var sch in Schems)
-                {
-                    table = sch.Tables[code];
-                    if (table != null)
-                        break;
-                }
+                table = Provider?.GetDBTable(code);
             }
             return table;
         }
 
-        public Task LoadTablesInfoAsync()
+        public IEnumerable<DBTableInfo> GetTablesInfo(string schemaName = null, string tableName = null)
+        {
+            return System.GetTablesInfo(Connection, schemaName, tableName);
+        }
+
+        public void GenerateFromTablesInfo()
+        {
+            try
+            {
+                IsSynchronizing = true;
+
+                foreach (var tableInfo in GetTablesInfo())
+                {
+                    var table = GenerateTable(tableInfo.Name);
+                    table.TableType = tableInfo.View ? DBTableType.View : DBTableType.Table;
+                    table.Generate(tableInfo);
+                    if (!Tables.Contains(table))
+                    {
+                        Tables.Add(table);
+                    }
+                }
+            }
+            finally
+            {
+                IsSynchronizing = false;
+            }
+        }
+
+        public Task GenerateFromTablesInfoAsync()
         {
             return Task.Run(() =>
             {
                 try
                 {
-                    LoadTablesInfo();
+                    GenerateFromTablesInfo();
                 }
                 catch (Exception ex)
                 {
@@ -515,53 +531,153 @@ namespace DataWF.Data
             });
         }
 
-        public void Generate(IEnumerable<Assembly> assemblies)
+        public IDBTable GetTable<T>(int itemType) where T : DBItem
         {
-            Assemblies = new List<Assembly>(assemblies);
-            var logSchema = GenerateLogSchema();
-            Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Schema"));
-            var attributes = new HashSet<TableGenerator>();
-            foreach (var assembly in assemblies)
-            {
-                foreach (var type in assembly.GetExportedTypes().Where(item => item.IsClass))
-                {
-                    var tableGenerator = DBTable.GetTableAttribute(type);
-                    if (tableGenerator != null)
-                    {
-                        attributes.Add(tableGenerator);
-                    }
-                }
-                Procedures.Generate(assembly);
-            }
+            var table = GetTable<T>();
+            return table.GetVirtualTable(itemType);
+        }
 
-            foreach (var tableGenerator in attributes)
+        public IDBTable GetTable(Type type, int itemType)
+        {
+            var table = GetTable(type);
+            return table.GetVirtualTable(itemType);
+        }
+
+        public DBTable<T> GetTable<T>(bool generate = false) where T : DBItem
+        {
+            return (DBTable<T>)GetTable(typeof(T), generate);
+        }
+
+        public virtual DBTable GetTable(Type type, bool generate = false)
+        {
+            if (type == null)
+                return null;
+            if (!cacheTables.TryGetValue(type, out var table))
             {
-                if (tableGenerator is LogTableGenerator)
+                var itemGenerator = TableGenerator.GetItemType(type);
+                if (itemGenerator != null)
                 {
-                    tableGenerator.Generate(logSchema);
+                    if (!itemGenerator.IsGenerated(this, out table) && generate)
+                        table = itemGenerator.Generate(this);
+                    else if (!generate)
+                        table = Tables[itemGenerator.Type.Name];
+
+                    if (table != null)
+                        return cacheTables[type] = table;
                 }
                 else
                 {
-                    tableGenerator.Generate(this);
+                    var tableGenerator = TableGenerator.Get(type);
+                    if (tableGenerator != null && tableGenerator.ItemType == type)
+                    {
+                        if (!tableGenerator.IsGenerated(this, out table) && generate)
+                            table = tableGenerator.Generate(this);
+                        else if (!generate)
+                            table = Tables[tableGenerator.Attribute.TableName];
+
+                        if (table != null)
+                            return cacheTables[type] = table;
+                    }
+
                 }
-                tableGenerator.Table.RemoveDeletedColumns();
+                if (table == null && type.IsInterface)
+                    table = Tables.FirstOrDefault(p => p.ItemType.IsInterface(type));
+                cacheTables[type] = table;
             }
-
-            Procedures.CheckDeleted();
+            return table;
         }
 
-        public string GeneretePatch(IEnumerable<DBItem> items)
+        public virtual void Generate(string name = null)
         {
-            var rez = new StringBuilder();
-
-            foreach (var item in items)
-            {
-                rez.Append(item.FormatPatch());
-            }
-            return rez.ToString();
+            if (name != null)
+                Name = name;
         }
 
-        public IEnumerable<DBForeignKey> GetChildRelations(DBTable target)
+        public void Generate(IEnumerable<Assembly> assemblies)
+        {
+            var types = new List<Type>();
+            foreach (var assembly in assemblies)
+            {
+                types.AddRange(assembly.GetExportedTypes()
+                    .Where(item => item.IsClass));
+            }
+            Generate(types);
+        }
+
+        public void Generate(IEnumerable<Type> types)
+        {
+            this.Log($"Start generate {types.Count()} type(s)");
+            var assemblies = new HashSet<Assembly>();
+            var generators = new HashSet<TableGenerator>();
+            foreach (var type in types)
+            {
+                var tableGenerator = TableGenerator.Get(type);
+                if (tableGenerator != null)
+                {
+                    generators.Add(tableGenerator);
+                }
+                else if (TypeHelper.IsInterface(type, typeof(IExecutable)))
+                {
+                    Procedures.Generate(type);
+                }
+
+                assemblies.Add(type.Assembly);
+            }
+
+            foreach (var tableGenerator in generators)
+            {
+                var table = tableGenerator.Generate(this);
+            }
+
+            if (this is not IDBSchemaLog)
+            {
+                foreach (var assembly in assemblies)
+                    Procedures.Generate(assembly);
+
+                Procedures.CheckDeleted();
+            }
+            Helper.Log(this, $"Success");
+        }
+
+        public virtual void GenerateLogs()
+        {
+            var logSchema = GetLogSchema();
+            if (logSchema != this)
+            {
+                foreach (var table in Tables)
+                {
+                    if (!(table is IDBTableLog)
+                        && table.IsLoging)
+                    {
+                        table.GenerateLogTable();
+                    }
+                }
+            }
+        }
+
+        internal IEnumerable<DBConstraint> GetAllConstraints()
+        {
+            foreach (var table in Tables)
+            {
+                if (table.IsVirtual)
+                    continue;
+                foreach (var constraint in table.Constraints)
+                    yield return constraint;
+            }
+        }
+
+        internal IEnumerable<DBForeignKey> GetAllForeignConstraints()
+        {
+            foreach (var table in Tables)
+            {
+                if (table.IsVirtual)
+                    continue;
+                foreach (var constraint in table.Foreigns)
+                    yield return constraint;
+            }
+        }
+
+        public IEnumerable<DBForeignKey> GetAllForeignConstraints(DBTable target)
         {
             if (!cacheRelation)
             {
@@ -579,125 +695,28 @@ namespace DataWF.Data
             return target.ChildRelations;
         }
 
-
-        public class DataBaseInvoker<T> : Invoker<T, string> where T : DBSchema
+        internal IEnumerable<DBIndex> GetAllIndexes()
         {
-            public static readonly DataBaseInvoker<T> Instance = new DataBaseInvoker<T>();
-            public override string Name => nameof(DBSchema.DataBase);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.DataBase;
-
-            public override void SetValue(T target, string value) => target.DataBase = value;
+            foreach (var table in Tables)
+            {
+                if (table.IsVirtual)
+                    continue;
+                foreach (var index in table.Indexes)
+                    yield return index;
+            }
         }
 
-        public class ConnectionNameInvoker<T> : Invoker<T, string> where T : DBSchema
+        internal void OnChanged(DBSchemaItem item, DDLType type)
         {
-            public static readonly ConnectionNameInvoker<T> Instance = new ConnectionNameInvoker<T>();
-            public override string Name => nameof(DBSchema.ConnectionName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.ConnectionName;
-
-            public override void SetValue(T target, string value) => target.ConnectionName = value;
+            Provider?.OnChanged(item, type);
         }
 
-        public class ConnectionInvoker<T> : Invoker<T, DBConnection> where T : DBSchema
-        {
-            public static readonly ConnectionInvoker<T> Instance = new ConnectionInvoker<T>();
-            public override string Name => nameof(DBSchema.Connection);
+        IModelTable IModelSchema.GetTable(string name) => GetTable(name);
 
-            public override bool CanWrite => true;
+        IModelTable<T> IModelSchema.GetTable<T>() => (IModelTable<T>)GetTable(typeof(T));
 
-            public override DBConnection GetValue(T target) => target.Connection;
+        IModelTable IModelSchema.GetTable(Type type) => GetTable(type);
 
-            public override void SetValue(T target, DBConnection value) => target.Connection = value;
-        }
-
-        public class LogSchemaNameInvoker<T> : Invoker<T, string> where T : DBSchema
-        {
-            public static readonly LogSchemaNameInvoker<T> Instance = new LogSchemaNameInvoker<T>();
-            public override string Name => nameof(DBSchema.LogSchemaName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.LogSchemaName;
-
-            public override void SetValue(T target, string value) => target.LogSchemaName = value;
-        }
-
-        public class LogSchemaInvoker<T> : Invoker<T, DBLogSchema> where T : DBSchema
-        {
-            public static readonly LogSchemaInvoker<T> Instance = new LogSchemaInvoker<T>();
-            public override string Name => nameof(DBSchema.LogSchema);
-
-            public override bool CanWrite => true;
-
-            public override DBLogSchema GetValue(T target) => target.LogSchema;
-
-            public override void SetValue(T target, DBLogSchema value) => target.LogSchema = value;
-        }
-
-        public class TablesInvoker<T> : Invoker<T, DBTableList> where T : DBSchema
-        {
-            public static readonly TablesInvoker<T> Instance = new TablesInvoker<T>();
-            public override string Name => nameof(DBSchema.Tables);
-
-            public override bool CanWrite => true;
-
-            public override DBTableList GetValue(T target) => target.Tables;
-
-            public override void SetValue(T target, DBTableList value) => target.Tables = value;
-        }
-
-        public class TableGroupsInvoker<T> : Invoker<T, DBTableGroupList> where T : DBSchema
-        {
-            public static readonly TableGroupsInvoker<T> Instance = new TableGroupsInvoker<T>();
-            public override string Name => nameof(DBSchema.TableGroups);
-
-            public override bool CanWrite => true;
-
-            public override DBTableGroupList GetValue(T target) => target.TableGroups;
-
-            public override void SetValue(T target, DBTableGroupList value) => target.TableGroups = value;
-        }
-
-        public class ProceduresInvoker<T> : Invoker<T, DBProcedureList> where T : DBSchema
-        {
-            public static readonly ProceduresInvoker<T> Instance = new ProceduresInvoker<T>();
-            public override string Name => nameof(DBSchema.Procedures);
-
-            public override bool CanWrite => true;
-
-            public override DBProcedureList GetValue(T target) => target.Procedures;
-
-            public override void SetValue(T target, DBProcedureList value) => target.Procedures = value;
-        }
-
-        public class SequencesInvoker<T> : Invoker<T, DBSequenceList> where T : DBSchema
-        {
-            public static readonly SequencesInvoker<T> Instance = new SequencesInvoker<T>();
-            public override string Name => nameof(DBSchema.Sequences);
-
-            public override bool CanWrite => true;
-
-            public override DBSequenceList GetValue(T target) => target.Sequences;
-
-            public override void SetValue(T target, DBSequenceList value) => target.Sequences = value;
-        }
-
-        public class FileNameInvoker<T> : Invoker<T, string> where T : DBSchema
-        {
-            public static readonly FileNameInvoker<T> Instance = new FileNameInvoker<T>();
-            public override string Name => nameof(DBSchema.FileName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.FileName;
-
-            public override void SetValue(T target, string value) => target.FileName = value;
-        }
+        IModelTable IModelSchema.GetTable(Type type, int typeId) => GetTable(type, typeId);
     }
 }

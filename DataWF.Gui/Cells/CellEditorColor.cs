@@ -1,22 +1,23 @@
 ﻿using System;
-using Xwt;
-using Xwt.Drawing;
-using DataWF.Common;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using DataWF;
 
 namespace DataWF.Gui
 {
     public class CellEditorColor : CellEditorText
     {
-        private Color tempBack;
+        private IBrush tempBack;
 
         public CellEditorColor() : base()
         {
             HandleText = true;
         }
 
-        public ColorSelector Selector
+        public ColorPicker Selector
         {
-            get { return DropDown?.Target as ColorSelector; }
+            get { return DropDown?.Target as ColorPicker; }
         }
 
         public override object FormatValue(object value, object dataSource, Type valueType)
@@ -26,10 +27,10 @@ namespace DataWF.Gui
                             : base.FormatValue(value, dataSource, valueType);
         }
 
-        public override Widget InitDropDownContent()
+        public override IControl InitDropDownContent()
         {
-            var colors = Editor.GetCached<ColorSelector>();
-            colors.Sensitive = !ReadOnly;
+            var colors = Editor.GetCached<ColorPicker>();
+            colors.IsEnabled = !ReadOnly;
             if (!ReadOnly && HandleText)
                 colors.ColorChanged += OnColorChanged;
             return colors;
@@ -37,7 +38,7 @@ namespace DataWF.Gui
 
         public override object Value
         {
-            get { return base.Value; }
+            get => base.Value;
             set
             {
                 base.Value = value;
@@ -50,27 +51,27 @@ namespace DataWF.Gui
             if (Selector.Color != (Color)Value)
             {
                 Value = Selector.Color;
-                ((TextEntry)Editor.Widget).BackgroundColor = Selector.Color;
+                ((TextBox)Editor.Control).Background = new SolidColorBrush(Selector.Color);
             }
         }
 
         public override void InitializeEditor(LayoutEditor editor, object value, object dataSource)
         {
             base.InitializeEditor(editor, value, dataSource);
-            tempBack = ((TextEntry)base.Editor.Widget).BackgroundColor;
+            tempBack = ((TextBox)base.Editor.Control).Background;
         }
 
         public override void FreeEditor()
         {
             Selector.ColorChanged -= OnColorChanged;
-            ((TextEntry)Editor.Widget).BackgroundColor = tempBack;
+            ((TextBox)Editor.Control).Background = tempBack;
             base.FreeEditor();
         }
 
         public override void DrawCell(LayoutListDrawArgs e)
         {
-            var colorBound = new Rectangle(e.Bound.Location, new Size(e.Bound.Height, e.Bound.Height)).Inflate(-3, -3);
-            var textBound = new Rectangle(e.Bound.X + e.Bound.Height, e.Bound.Y, e.Bound.Width - e.Bound.Height, e.Bound.Height).Inflate(-3, -3);
+            var colorBound = new Rect(e.Bound.Position, new Size(e.Bound.Height, e.Bound.Height)).Inflate(new Thickness(-3, -3));
+            var textBound = new Rect(e.Bound.X + e.Bound.Height, e.Bound.Y, e.Bound.Width - e.Bound.Height, e.Bound.Height).Inflate(new Thickness(-3, -3));
             e.Context.DrawCell(e.Style, e.Formated, e.Bound, textBound, e.State);
             e.Context.FillRectangle((Color)e.Value, colorBound);
         }

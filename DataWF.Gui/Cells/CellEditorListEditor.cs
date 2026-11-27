@@ -1,18 +1,19 @@
-﻿using Xwt;
+﻿using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
     public class CellEditorListEditor : CellEditorList
     {
-        public override Widget InitDropDownContent()
+        public override IControl InitDropDownContent()
         {
             var list = Editor.GetCached<ListEditor>();
             if (list.DataSource != listSource)
-            {                
-                list.DataSource = listSource;                
+            {
+                list.DataSource = listSource;
             }
             list.List.CellDoubleClick += ListCellDoubleClick;
-            list.List.KeyPressed += ListCellKeyDown;
+            list.List.KeyDown += ListCellKeyDown;
             return list;
         }
 

@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 
 namespace DataWF.Data
 {
@@ -28,7 +28,7 @@ namespace DataWF.Data
             LoadRefrences(table.Schema, table);
         }
 
-        public static void LoadRefrences(DBSchema schema, DBTable table = null)
+        public static void LoadRefrences(IDBSchema schema, DBTable table = null)
         {
             var info = SMReference.Generate(schema, table);
             info.Parse(schema, table);
@@ -51,7 +51,7 @@ namespace DataWF.Data
             public string ReferenceTable { get; set; }
             public string ReferenceColumn { get; set; }
 
-            public static SMReference Generate(DBSchema schema, DBTable table)
+            public static SMReference Generate(IDBSchema schema, DBTable table)
             {
                 var info = new SMReference
                 {
@@ -116,7 +116,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU2
                 return info;
             }
 
-            public void Parse(DBSchema schema, DBTable table)
+            public void Parse(IDBSchema schema, DBTable table)
             {
                 QResult list = schema.Connection.ExecuteQResult(Filter);
 
@@ -130,10 +130,10 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU2
                 foreach (object[] item in list.Values)
                 {
                     var name = item[iName].ToString();
-                    var tab = table ?? schema.ParseTable(item[iTable].ToString());
-                    var col = tab?.ParseColumn(item[iName].ToString());
-                    var rtab = schema.ParseTable(item[iRefTable].ToString());
-                    var rcol = rtab?.ParseColumn(item[iRefColumn].ToString());
+                    var tab = table ?? schema.GetTable(item[iTable].ToString());
+                    var col = tab?.GetColumn(item[iName].ToString());
+                    var rtab = schema.GetTable(item[iRefTable].ToString());
+                    var rcol = rtab?.GetColumn(item[iRefColumn].ToString());
                     if (col != null && rcol != null)
                     {
                         var reference = col.Table.Foreigns.GetByColumns(col, rcol);

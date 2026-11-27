@@ -1,10 +1,14 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 using static System.Math;
+using INamed = DataWF.Invokers.INamed;
+using Avalonia.Media;
+using DataWF.Collections;
+using DataWF.Invokers;
 
 namespace DataWF.Gui
 {
@@ -19,25 +23,25 @@ namespace DataWF.Gui
 
         public string Name { get; set; }
 
-        public CellStyle GenerateStyle(string name, Font font, Color backColor, Color fontColor, double diff,
+        public CellStyle GenerateStyle(string name, FontFamily font, Color backColor, Color fontColor, double diff,
             int round = 0,
             bool alter = true,
             bool emptyBack = true,
             bool emptyBorder = true,
             double lineWidth = 0.8,
-            Alignment alignment = Alignment.Start,
+            TextAlignment alignment = TextAlignment.Start,
             CellStyleBrushType brushType = CellStyleBrushType.Solid)
         {
             //var fontColor = backColor.WithIncreasedLight(diff).Invert();
             return new CellStyle
             {
                 Name = name,
-                Font = font,
+                FontFamily = font,
                 BaseColor = backColor,
                 Round = round,
                 Alternate = alter,
                 LineWidth = lineWidth,
-                Alignment = alignment,
+                TextAlignment = alignment,
                 BackBrush = new CellStyleBrush
                 {
                     Type = brushType,
@@ -66,7 +70,7 @@ namespace DataWF.Gui
             };
         }
 
-        public void Generate(Font defaultFont, Color baseBackground, Color baseForeColor, double diff = -0.1)
+        public void Generate(FontFamily defaultFont, Color baseBackground, Color baseForeColor, double diff = -0.1)
         {
             if (Toolkit.CurrentEngine.Type == ToolkitType.Gtk)
             {
@@ -84,7 +88,7 @@ namespace DataWF.Gui
                     baseForeColor,
                     diff ),
                 GenerateStyle("Dock",
-                    defaultFont.WithWeight(FontWeight.Semibold),
+                    defaultFont.WithWeight(FontWeight.SemiBold),
                     baseBackground.WithIncreasedLight(diff),
                     baseForeColor,
                     diff,
@@ -148,13 +152,13 @@ namespace DataWF.Gui
                     baseBackground.WithIncreasedLight(diff * 3),
                     baseForeColor,
                     diff,
-                    alignment: Alignment.Center),
+                    alignment: TextAlignment.Center),
                 GenerateStyle("Calendar",
                     defaultFont,
                     baseBackground.WithIncreasedLight(diff * 2),
                     baseForeColor,
                     diff,
-                    alignment: Alignment.Center,
+                    alignment: TextAlignment.Center,
                     emptyBack: false,
                     emptyBorder: false),
                 GenerateStyle("CellFar",
@@ -162,7 +166,7 @@ namespace DataWF.Gui
                     baseBackground.WithIncreasedLight(diff * 3),
                     baseForeColor,
                     diff,
-                    alignment: Alignment.End),
+                    alignment: TextAlignment.End),
                 GenerateStyle("Column",
                     defaultFont.WithWeight(FontWeight.Semibold),
                     baseBackground.WithIncreasedLight(diff),
@@ -191,7 +195,7 @@ namespace DataWF.Gui
                     baseForeColor,
                     diff,
                     alter: false,
-                    alignment: Alignment.End),
+                    alignment: TextAlignment.End),
                 GenerateStyle("Field",
                     defaultFont,
                     baseBackground.WithIncreasedLight(diff * 3),
@@ -311,11 +315,6 @@ namespace DataWF.Gui
                 return base.AddInternal(item);
             }
             return -1;
-        }
-
-        public bool Contains(string name)
-        {
-            return this[name] != null;
         }
 
         public override void Dispose()

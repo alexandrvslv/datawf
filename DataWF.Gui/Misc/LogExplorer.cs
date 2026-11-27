@@ -1,7 +1,9 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.IO;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
+using System.Linq;
 
 namespace DataWF.Gui
 {
@@ -30,8 +32,8 @@ namespace DataWF.Gui
             tools = new Toolsbar(toolLoad, toolSave);
             Name = "LogEditor";
 
-            PackStart(tools, false, false);
-            PackStart(list, true, true);
+            Children.Add(tools);
+            Children.Add(list, true, true);
 
             Localize();
             //System.Drawing.SystemIcons.
@@ -39,14 +41,7 @@ namespace DataWF.Gui
 
         public void Add(string source, string message, string description, StatusType type)
         {
-            Helper.Logs.Add(new StateInfo
-            {
-                Date = DateTime.Now,
-                Module = source,
-                Message = message,
-                Description = description,
-                Type = type
-            });
+            Helper.Log(source, message, description, type);
         }
 
         public LogList List
@@ -78,10 +73,11 @@ namespace DataWF.Gui
         }
         #endregion
 
-        private void OnToolLoadClick(object sender, EventArgs e)
+        private async void OnToolLoadClick(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
-            if (dialog.Run(ParentWindow))
+            var files = await dialog.ShowAsync((Window)VisualRoot);
+            if (files?.Any() ?? false)
             {
                 StateInfoList newList = null;
                 using (var fileStream = File.Open(dialog.FileName, FileMode.Open, FileAccess.Read))
@@ -91,7 +87,7 @@ namespace DataWF.Gui
                         stream = Helper.GetUnGZipStrem(fileStream);
                     else
                         stream = fileStream;
-                    newList = Serialization.Deserialize(stream) as StateInfoList;
+                    newList = SerializeProvider.Deserialize(stream) as StateInfoList;
                     stream.Close();
                 }
                 var form = new ToolWindow();
@@ -102,21 +98,17 @@ namespace DataWF.Gui
             }
         }
 
-        private void OnToolSaveClick(object sender, EventArgs e)
+        private async void OnToolSaveClick(object sender, EventArgs e)
         {
             var dialog = new SaveFileDialog();
-            if (dialog.Run(ParentWindow))
+            var file = await dialog.ShowAsync((Window)VisualRoot);
+            if (file != null)
             {
-                using (Stream f = File.Open(dialog.FileName, FileMode.Create, FileAccess.Write))
-                    Serialization.Serialize(Helper.Logs, f);
+                using (Stream f = File.Open(file, FileMode.Create, FileAccess.Write))
+                    SerializeProvider.Serialize(Helper.Logs, f);
             }
         }
 
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-        }
 
         public bool Closing()
         {

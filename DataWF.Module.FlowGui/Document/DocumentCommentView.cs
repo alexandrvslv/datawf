@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using DataWF.Module.Flow;
 using DataWF.Module.Messanger;
@@ -30,12 +30,12 @@ namespace DataWF.Module.FlowGui
                 OnSending = new Action<Message>(OnSend),
                 HeightRequest = 100
             };
-            PackStart(editor, false);
+            Children.Add(editor, false);
         }
 
         private async void OnSend(Message message)
         {
-            var comment = new DocumentComment()
+            var comment = new DocumentComment(FlowExplorer.Schema.DocumentComment)
             {
                 Document = Document,
                 Message = message
@@ -60,6 +60,11 @@ namespace DataWF.Module.FlowGui
         {
             base.Localize();
             GuiService.Localize(this, Name, "Comments", GlyphType.Comments);
+        }
+
+        protected override DocumentComment GetNewItem()
+        {
+            throw new NotImplementedException();
         }
     }
 }

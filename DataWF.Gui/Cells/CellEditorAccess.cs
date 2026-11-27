@@ -1,12 +1,14 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
     public class CellEditorAccess : CellEditorText
     {
         AccessValue temp;
+        public static IAccessProvider Provider;
 
         public CellEditorAccess()
             : base()
@@ -33,7 +35,7 @@ namespace DataWF.Gui
                 temp = (AccessValue)value;
             if (value is byte[])
             {
-                temp = new AccessValue();
+                temp = new AccessValue(Provider);
                 temp.Deserialize((byte[])value);
             }
             if (temp != null)
@@ -42,7 +44,7 @@ namespace DataWF.Gui
             return base.ParseValue(value, dataSource, valueType);
         }
 
-        public override Widget InitDropDownContent()
+        public override IControl InitDropDownContent()
         {
             var target = Editor.GetCached<AccessEditor>();
             target.Access = ParseValue(Value, null, DataType) as AccessValue;

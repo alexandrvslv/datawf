@@ -1,24 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using DataWF.Common;
-using Xwt;
+using DataWF;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.VisualTree;
+using Avalonia.Media.Immutable;
+using Avalonia.Platform;
 
 namespace DataWF.Gui
 {
-    public class Menubar : PopupWindow, ILocalizable, ISerializableElement
+    public class Menubar : Window, ILocalizable, IXMLSerializable
     {
-        public Menubar() : base(PopupType.Menu)
+        public Menubar() : base()
         {
             Bar = new Toolsbar() { Indent = 0 };
             Bar.ItemClick += OnItemClick;
-            Bar.Items.GrowMode = Orientation.Vertical;
+            Bar.Items.GrowMode = BoxOrientation.Vertical;
+            Bar.Margin = new Thickness(8, 8, 8, 8);
+            Bar.Background = new ImmutableSolidColorBrush(GuiEnvironment.Theme["Window"].BaseColor);
 
-            BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor;
             Content = Bar;
-            Decorated = false;
-            Padding = new WidgetSpacing(8, 8, 8, 8);
-            Resizable = true;
-            InitialLocation = WindowLocation.Manual;
+            CanResize = true;
+            WindowStartupLocation = WindowStartupLocation.Manual;
             ShowInTaskbar = false;
             Name = nameof(Menubar);
         }
@@ -37,17 +41,17 @@ namespace DataWF.Gui
             get { return (ToolItem)Items[name]; }
         }
 
-        public Menubar Owner { get; set; }
+        public Menubar OwnerBar { get; set; }
 
         public ToolDropDown OwnerItem
         {
-            get { return Bar.Owner as ToolDropDown; }
-            set { Bar.Owner = value; }
+            get => Bar.Owner as ToolDropDown;
+            set => Bar.Owner = value;
         }
 
         public override string Name
         {
-            get { return base.Name; }
+            get => base.Name;
             set
             {
                 base.Name = value;
@@ -60,36 +64,40 @@ namespace DataWF.Gui
             Bar.Localize();
         }
 
-        public void Popup(Widget owner, Point point)
+        public void Popup(Control owner, Point point)
         {
-            if (owner?.ParentWindow != null)
+            if (owner?.GetParent<Window>() is Window window)
             {
-                Owner = owner.ParentWindow as Menubar;
-                if (TransientFor != null)
+                OwnerBar = window as Menubar;
+                if (Owner is WindowBase baseWindow)
                 {
-                    ((Window)TransientFor).Hidden -= BaseGetFocus;
-                    ((Window)TransientFor).Content.GotFocus -= BaseGetFocus;
+                    baseWindow.Closed -= BaseGetFocus;
+                    if (baseWindow.Content is Control content)
+                        content.GotFocus -= BaseGetFocus;
                 }
-                TransientFor = owner.ParentWindow;
-                if (TransientFor != null)
+                Owner = window;
+                if (Owner != null)
                 {
-                    ((Window)TransientFor).Hidden += BaseGetFocus;
-                    ((Window)TransientFor).Content.GotFocus += BaseGetFocus;
+                    window.Closed += BaseGetFocus;
+                    if (window.Content is Control content)
+                        content.GotFocus += BaseGetFocus;
                 }
             }
-            Size = Bar.Items.GetBound(0,0).Size;
-            var location = owner?.ConvertToScreenCoordinates(point) ?? point;
-            var screen = TransientFor?.Screen ?? Desktop.PrimaryScreen;
-            if ((ScreenBounds.Width + location.X) > screen.Bounds.Right)
-                location.X = screen.Bounds.Right - ScreenBounds.Width;
-            Location = location;
+            var size = Bar.Items.GetBound(0, 0);
+            Width = size.Width;
+            Height = size.Height;
+            var location = owner?.PointToScreen(point) ?? new PixelPoint((int)point.X, (int)point.Y);
+            var screen = Owner?.Screens.ScreenFromWindow((IWindowBaseImpl)Owner) ?? Owner?.Screens.Primary;
+            if ((Owner.Bounds.Width + location.X) > screen.Bounds.Right)
+                location = location.WithX((int)(screen.Bounds.Right - Owner.Bounds.Width));
+            Position = location;
             Show();
-            Location = location;
+            Position = location;
         }
 
         private void BaseGetFocus(object sender, EventArgs e)
         {
-            if (Visible)
+            if (IsVisible)
             {
                 if (OwnerItem != null)
                 {
@@ -104,12 +112,13 @@ namespace DataWF.Gui
 
         public new void Hide()
         {
-            TransientFor = null;
+            Owner = null;
             base.Hide();
         }
 
-        protected override void OnClosed()
+        protected override void OnClosed(EventArgs e)
         {
+            base.OnClosed(e);
             BaseGetFocus(null, null);
         }
 
@@ -124,12 +133,12 @@ namespace DataWF.Gui
             BaseGetFocus(null, null);
         }
 
-        public void Serialize(ISerializeWriter writer)
+        public void Serialize(XmlInvokerWriter writer)
         {
             writer.Write(Bar.Items);
         }
 
-        public void Deserialize(ISerializeReader reader)
+        public void Deserialize(XmlInvokerReader reader)
         {
             reader.Read(Bar.Items);
         }

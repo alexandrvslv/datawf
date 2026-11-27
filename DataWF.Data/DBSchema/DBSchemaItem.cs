@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using System.Text.Json.Serialization;
 using System;
@@ -25,24 +25,24 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
+using DataWF.Access;
 
-[assembly: Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.Name), typeof(DBSchemaItem.NameInvoker<>))]
-[assembly: Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.DisplayName), typeof(DBSchemaItem.DisplayNameInvoker<>))]
-[assembly: Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.OldName), typeof(DBSchemaItem.OldNameInvoker<>))]
-[assembly: Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.FullName), typeof(DBSchemaItem.FullNameInvoker<>))]
 namespace DataWF.Data
 {
-    public abstract class DBSchemaItem : IEntryNotifyPropertyChanged, IComparable, ICloneable, IAccessable, IDBSchemaItem
+    [Invoker(Instance = true)]
+    public abstract partial class DBSchemaItem : ModelEntry, IComparable, ICloneable, IAccessable, IDBSchemaItem
     {
         protected string name;
         protected string oldname;
-        protected DBSchema schema;
+        private IDBSchema schema;
         protected LocaleItem litem;
         protected AccessValue access;
-        private bool isSynchronized;
+        private bool isSynch;
 
         public DBSchemaItem()
         {
+            SyncStatus = SynchronizedStatus.Load;
         }
 
         public DBSchemaItem(string name)
@@ -57,12 +57,9 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
-
-        [Browsable(false), XmlIgnore, JsonIgnore]
-        public virtual DBSchema Schema
+        public new IDBSchema Schema
         {
-            get { return schema; }
+            get => schema;
             set
             {
                 if (schema == value)
@@ -71,6 +68,9 @@ namespace DataWF.Data
                 litem = null;
             }
         }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public new IDBProvider Provider => schema.Provider;
 
         [Browsable(false), Category("Policy"), XmlIgnore, JsonIgnore]
         public virtual string AccessorName => DisplayName;
@@ -84,15 +84,16 @@ namespace DataWF.Data
         [Browsable(false), Category("Policy"), XmlIgnore, JsonIgnore]
         public virtual AccessValue Access
         {
-            get { return access ?? (access = new AccessValue(AccessValue.Provider.GetGroups())); }
-            set { access = value; }
+            get { return access ?? (access = new AccessValue(Provider.GetGroups(), Provider)); }
+            set
+            {
+                access = value;
+                OnPropertyChanged();
+            }
         }
 
         [Browsable(false), Category("Naming"), XmlIgnore, JsonIgnore]
-        public virtual string FullName
-        {
-            get { return Name; }
-        }
+        public virtual string FullName => Name;
 
         [Browsable(false), Category("Naming"), XmlIgnore, JsonIgnore]
         public LocaleItem LocaleInfo
@@ -119,7 +120,7 @@ namespace DataWF.Data
         [Category("Naming")]
         public virtual string DisplayName
         {
-            get { return LocaleInfo?.Value ?? Name; }
+            get => LocaleInfo?.Value ?? Name;
             set
             {
                 if (LocaleInfo != null)
@@ -130,12 +131,12 @@ namespace DataWF.Data
         [Category("Naming"), Required]
         public virtual string Name
         {
-            get { return name; }
+            get => name;
             set
             {
-                if (value == name)
+                if (string.Equals(value, name, StringComparison.Ordinal))
                     return;
-                if (oldname == value)
+                if (string.Equals(oldname, value, StringComparison.Ordinal))
                     oldname = null;
                 else if (oldname == null)
                     oldname = name;
@@ -144,43 +145,45 @@ namespace DataWF.Data
                 {
                     litem.Name = Name;
                 }
-                OnPropertyChanged(nameof(Name), DDLType.Alter);
+                OnPropertyChanged(DDLType.Alter);
             }
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
         public string OldName
         {
-            get { return oldname; }
-            set { oldname = value; }
+            get => oldname;
+            set => oldname = value;
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public virtual bool IsSynchronized
+        public virtual bool IsSynch
         {
-            get { return isSynchronized; }
+            get => isSynch;
             set
             {
-                if (isSynchronized == value)
+                if (isSynch == value)
                     return;
-                isSynchronized = value;
+                isSynch = value;
             }
         }
+
+        public abstract DBSchemaItemType Type { get; }
 
         public virtual string GetLocalizeCategory()
         {
             return Schema?.Name ?? Name;
         }
 
-        public abstract string FormatSql(DDLType ddlType);
+        public abstract string FormatSql(DDLType ddlType, bool dependency = false);
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void OnPropertyChanged(string propertyName, DDLType type = DDLType.Default)
+        public void OnPropertyChanged(DDLType type = DDLType.None, [CallerMemberName] string propertyName = "")
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            if (type != DDLType.Default)
-                DBService.OnDBSchemaChanged(this, type);
+            base.OnPropertyChanged(propertyName);
+            if (type != DDLType.None)
+            {
+                ((DBSchema)Schema)?.OnChanged(this, type);
+            }
         }
 
         public override string ToString()
@@ -202,51 +205,5 @@ namespace DataWF.Data
         public abstract object Clone();
 
         #endregion
-
-        public class NameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
-        {
-            public static readonly NameInvoker<T> Instance = new NameInvoker<T>();
-
-            public override string Name => nameof(DBSchemaItem.Name);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.Name;
-
-            public override void SetValue(T target, string value) => target.Name = value;
-        }
-
-        public class DisplayNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
-        {
-            public override string Name => nameof(DBSchemaItem.DisplayName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.DisplayName;
-
-            public override void SetValue(T target, string value) => target.DisplayName = value;
-        }
-
-        public class OldNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
-        {
-            public override string Name => nameof(DBSchemaItem.OldName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.OldName;
-
-            public override void SetValue(T target, string value) => target.OldName = value;
-        }
-
-        public class FullNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
-        {
-            public override string Name => nameof(DBSchemaItem.FullName);
-
-            public override bool CanWrite => false;
-
-            public override string GetValue(T target) => target.FullName;
-
-            public override void SetValue(T target, string value) { }
-        }
     }
 }

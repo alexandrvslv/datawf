@@ -1,6 +1,8 @@
-﻿using DataWF.Common;
+﻿using DataWF;
+using DataWF.Access;
 using DataWF.Data;
-using DataWF.WebClient.Common;
+using ICSharpCode.SharpZipLib.Core;
+using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -22,7 +25,9 @@ namespace DataWF.WebService.Common
 
     [ResponseCache(CacheProfileName = "Never")]
     [LoggerAndFormatter]
-    public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
+    public abstract class BaseController<T, K, L> : ControllerBase
+        where T : DBItem
+        where L : DBItemLog
     {
         protected int MaxDeleteDepth = 4;
         protected static bool IsDenied(T value, IUserIdentity user)
@@ -35,18 +40,31 @@ namespace DataWF.WebService.Common
                 && !value.Access.GetFlag(AccessType.Update, user));
         }
 
-        protected DBTable<T> table;
+        protected DBColumn<K> primaryKey;
+        protected DBTableLog<L> logTable;
 
-        public BaseController()
+        public BaseController(IDBProvider provider)
         {
+#if DEBUG
             Interlocked.Increment(ref MemoryLeak.Controllers.DiagnosticsController.Requests);
-            table = DBTable.GetTable<T>();
+#endif
+            Table = (DBTable<T>)provider.GetTable<T>();
+            primaryKey = (DBColumn<K>)Table.PrimaryKey;
+            logTable = Table.LogTable as DBTableLog<L>;
         }
 
-        public IUserIdentity CurrentUser => User.GetCommonUser();
+        public IUserIdentity CurrentUser => Provider.GetUser(User);
 
-        [HttpGet("GetAll")]
-        public ValueTask<ActionResult<IEnumerable<T>>> GetAll()
+        public IDBProvider Provider => Table.Provider;
+
+        public IDBSchema Schema => Table.Schema;
+
+        public DBTable<T> Table { get; }
+
+        public DBTableLog<L> LogTable => logTable;
+
+        [HttpGet]
+        public ValueTask<ActionResult<IEnumerable<T>>> Get()
         {
             return Search(string.Empty);
         }
@@ -58,13 +76,14 @@ namespace DataWF.WebService.Common
             try
             {
                 var user = CurrentUser;
-                if (!table.Access.GetFlag(AccessType.Read, user))
+                if (!Table.Access.GetFlag(AccessType.Read, user))
                 {
                     return Forbid();
                 }
-                var result = await table.LoadCacheAsync(filter, DBLoadParam.Referencing);
+                var query = Table.Query(filter, DBLoadParam.Referencing);
+                var result = await Table.LoadAsync(query);
                 return new ActionResult<IEnumerable<T>>(result.Where(p => p.Access.GetFlag(AccessType.Read, user)
-                                                              && p.PrimaryId != null
+                                                              && !primaryKey.IsEmpty(p)
                                                               && (p.UpdateState & DBUpdateState.Insert) == 0));
             }
             catch (Exception ex)
@@ -79,30 +98,14 @@ namespace DataWF.WebService.Common
             try
             {
                 var user = CurrentUser;
-                if (!table.Access.GetFlag(AccessType.Read, user))
+                if (!Table.Access.GetFlag(AccessType.Read, user))
                 {
                     return Forbid();
                 }
-                if (!table.ParseQuery(filter, out var query))
-                {
-                    await table.LoadAsync(query, DBLoadParam.Referencing);
-                }
-
-                var result = table.Select(query).Where(p => p.Access.GetFlag(AccessType.Read, user)
-                                                         && p.PrimaryId != null
+                var query = Table.Query(filter, DBLoadParam.Referencing | DBLoadParam.Load);
+                var result = (await Table.LoadAsync(query)).Where(p => p.Access.GetFlag(AccessType.Read, user)
+                                                         && !primaryKey.IsEmpty(p)
                                                          && (p.UpdateState & DBUpdateState.Insert) == 0);
-                if (query.Orders.Count > 0)
-                {
-                    var list = result.ToList();
-                    query.Sort<T>(list);
-                    result = list;
-                }
-                else if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
-                {
-                    var list = result.ToList();
-                    ListHelper.QuickSort(list, TreeComparer<IGroup>.Default);
-                    result = list;
-                }
                 result = Pagination(result);
 
                 return new ActionResult<IEnumerable<T>>(result);
@@ -175,7 +178,7 @@ namespace DataWF.WebService.Common
             try
             {
                 var user = CurrentUser;
-                var value = table.LoadById(id, DBLoadParam.Referencing | DBLoadParam.Load);
+                var value = Table.LoadById(id, DBLoadParam.Referencing | DBLoadParam.Load);
                 if (value == null)
                 {
                     return NotFound();
@@ -199,7 +202,7 @@ namespace DataWF.WebService.Common
             try
             {
                 var user = CurrentUser;
-                value = await table.LoadByIdAsync(id, DBLoadParam.Referencing | DBLoadParam.Load);
+                value = await Table.LoadByIdAsync(id, DBLoadParam.Referencing | DBLoadParam.Load);
                 if (value == null)
                 {
                     return NotFound();
@@ -219,7 +222,7 @@ namespace DataWF.WebService.Common
         [HttpPost("PostPackage")]
         public async Task<ActionResult<IEnumerable<T>>> PostPackage([FromBody] List<T> values)
         {
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(Table, CurrentUser))
             {
                 T current = null;
                 try
@@ -256,7 +259,7 @@ namespace DataWF.WebService.Common
         [HttpPost]
         public async Task<ActionResult<T>> Post([FromBody] T value)
         {
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(Table, CurrentUser))
             {
                 try
                 {
@@ -267,7 +270,7 @@ namespace DataWF.WebService.Common
                     if ((value.UpdateState & DBUpdateState.Insert) != DBUpdateState.Insert)
                     {
                         value.Reject(transaction.Caller);
-                        return BadRequest($"Specified Id {value.PrimaryId} is used by another record!");
+                        return BadRequest($"Specified Id {primaryKey.FormatDisplay(value)} is used by another record!");
                     }
                     if (IsDenied(value, transaction.Caller))
                     {
@@ -289,7 +292,7 @@ namespace DataWF.WebService.Common
         [HttpPut]
         public async Task<ActionResult<T>> Put([FromBody] T value)
         {
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(Table, CurrentUser))
             {
                 try
                 {
@@ -317,16 +320,16 @@ namespace DataWF.WebService.Common
         [HttpDelete("Merge/{id}")]
         public async Task<ActionResult<T>> Merge([FromRoute] K id, [FromBody] List<string> ids)
         {
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(Table, CurrentUser))
             {
                 try
                 {
-                    var idValue = table.LoadById<T>(id, DBLoadParam.Load | DBLoadParam.Referencing);
+                    var idValue = Table.LoadById<T>(id, DBLoadParam.Load | DBLoadParam.Referencing);
                     if (idValue == null)
                     {
                         return NotFound();
                     }
-                    var items = table.LoadItemsById(ids, transaction);
+                    var items = Table.LoadById<T>(ids, transaction);
                     foreach (var item in items)
                     {
                         if (!item.Access.GetFlag(AccessType.Delete, transaction.Caller))
@@ -350,11 +353,11 @@ namespace DataWF.WebService.Common
         public virtual async Task<ActionResult<bool>> Delete([FromRoute] K id)
         {
             var value = default(T);
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            using (var transaction = new DBTransaction(Table, CurrentUser))
             {
                 try
                 {
-                    value = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                    value = Table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction);
                     if (value == null)
                     {
                         return NotFound();
@@ -384,12 +387,12 @@ namespace DataWF.WebService.Common
             try
             {
                 var user = CurrentUser;
-                value = table.LoadById(id, DBLoadParam.Referencing | DBLoadParam.Load);
+                value = Table.LoadById(id, DBLoadParam.Referencing | DBLoadParam.Load);
                 if (value == null)
                 {
                     return NotFound();
                 }
-                if (!table.Access.GetFlag(AccessType.Create, user))
+                if (!Table.Access.GetFlag(AccessType.Create, user))
                 {
                     value.Reject(user);
                     return Forbid();
@@ -407,7 +410,7 @@ namespace DataWF.WebService.Common
         {
             try
             {
-                return (K)table.PrimaryKey.ParseValue(table.Sequence.GetNext());
+                return (K)Table.PrimaryKey.ParseValue(Table.GenerateId());
             }
             catch (Exception ex)
             {
@@ -421,11 +424,11 @@ namespace DataWF.WebService.Common
             try
             {
                 var list = new List<K>();
-                using (var transaction = new DBTransaction(table.Connection))
+                using (var transaction = new DBTransaction(Table))
                 {
                     for (int i = 0; i < count; i++)
                     {
-                        list.Add((K)table.PrimaryKey.ParseValue(table.Sequence.GetNext(transaction)));
+                        list.Add((K)Table.PrimaryKey.ParseValue(Table.GenerateId(transaction)));
                     }
                     transaction.Commit();
                 }
@@ -434,6 +437,439 @@ namespace DataWF.WebService.Common
             catch (Exception ex)
             {
                 return BadRequest(ex, null);
+            }
+        }
+
+        [HttpGet("GetLogs/{filter}")]
+        public ActionResult<IEnumerable<L>> GetLogs([FromRoute] string filter)
+        {
+            try
+            {
+                var user = CurrentUser;
+                if (!Table.Access.GetFlag(AccessType.Read, user))
+                {
+                    return Forbid();
+                }
+
+                var result = logTable.Query(filter, DBLoadParam.Referencing)
+                        .Load()
+                        .Where(p => p.Access.GetFlag(AccessType.Read, user)
+                                && !primaryKey.IsEmpty(p)
+                                && (p.UpdateState & DBUpdateState.Insert) == 0)
+                        .OfType<L>();
+
+                result = Pagination(result);
+                return new ActionResult<IEnumerable<L>>(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex, null);
+            }
+        }
+
+        [HttpGet("GetItemLogs/{id}")]
+        public ActionResult<IEnumerable<L>> GetItemLogs([FromRoute] K id)
+        {
+            try
+            {
+                return GetLogs($"{Table.PrimaryKey.LogColumn.SqlName} = {id}");
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex, null);
+            }
+        }
+
+        [HttpGet("UndoLog/{logId}")]
+        public async Task<ActionResult<T>> UndoLog([FromRoute] long logId)
+        {
+            var user = CurrentUser;
+            var logItem = logTable.LoadById<long>(logId);
+            if (logItem == null)
+            {
+                return BadRequest($"Not Found!");
+            }
+
+            if (!Table.Access.GetFlag(AccessType.Update, user))
+            {
+                return Forbid();
+            }
+            using (var transaction = new DBTransaction(Table, user))
+            {
+                try
+                {
+                    var data = (T)await logItem.Undo(transaction);
+
+                    transaction.Commit();
+                    return data;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex);
+                }
+            }
+        }
+
+        [HttpGet("RedoLog/{logId}")]
+        public async Task<ActionResult<T>> RedoLog([FromRoute] long logId)
+        {
+            var user = CurrentUser;
+            var logItem = logTable.LoadById<long>(logId);
+            if (logItem == null)
+            {
+                return BadRequest($"Not Found!");
+            }
+
+            if (!Table.Access.GetFlag(AccessType.Update, user))
+            {
+                return Forbid();
+            }
+
+            using (var transaction = new DBTransaction(Table, user))
+            {
+                try
+                {
+                    var data = (T)await logItem.Redo(transaction);
+                    transaction.Commit();
+                    return data;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex);
+                }
+            }
+        }
+
+        [HttpGet("RemoveLog/{logId}")]
+        public virtual async Task<ActionResult<bool>> RemoveLog([FromRoute] long logId)
+        {
+            var user = CurrentUser;
+            if (!Table.Access.GetFlag(AccessType.Admin, user))
+            {
+                return Forbid();
+            }
+
+            var logItem = logTable.LoadById<long>(logId);
+            if (logItem == null)
+            {
+                return false;
+            }
+            using (var transaction = new DBTransaction(Table, user))
+            {
+                try
+                {
+                    if (logTable.FileOIDKey != null)
+                    {
+                        var lob = logItem.GetValue<long?>(Table.LogTable.FileOIDKey);
+                        if (lob != null
+                            && logItem.BaseItem != DBItem.EmptyItem
+                            && lob == logItem.BaseItem?.GetValue<long?>(Table.FileOIDKey))
+                        {
+                            return BadRequest($"Latest log entry. Deletion Canceled!");
+                        }
+                    }
+
+                    await logItem.Delete(transaction);
+                    transaction.Commit();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex);
+                }
+            }
+        }
+
+        [HttpGet("DownloadFile/{id}")]
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
+        public virtual async Task<ActionResult<Stream>> DownloadFile([FromRoute] K id)
+        {
+            var transaction = new DBTransaction(Table, CurrentUser);
+            try
+            {
+                var streamResult = await GetStream(id, transaction);
+                if (streamResult.Value.Stream == null)
+                {
+                    transaction.Dispose();
+                    return streamResult.Result;
+                }
+                return new TransactFileStreamResult(streamResult.Value.Stream,
+                    System.Net.Mime.MediaTypeNames.Application.Octet,
+                    transaction, streamResult.Value.FileName);
+            }
+            catch (Exception ex)
+            {
+                transaction.Dispose();
+                return BadRequest(ex);
+            }
+        }
+
+        [HttpPost("DownloadFiles")]
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
+        public virtual ActionResult<Stream> DownloadFiles([FromBody] List<K> ids)
+        {
+            try
+            {               
+                var zipName = "Package" + DateTime.UtcNow.ToString("o").Replace(":", "-") + ".zip";
+
+                return new FileCallbackResult(System.Net.Mime.MediaTypeNames.Application.Octet, async (outputStream, _) =>
+                {
+                    using (var transaction = new DBTransaction(Table, CurrentUser))
+                    using (var zipArchive = new ZipArchive(outputStream, ZipArchiveMode.Create))
+                    {
+                        foreach (var id in ids)
+                        {
+                            var streamResult = await GetStream(id, transaction);
+                            if (streamResult.Value.Stream == null)
+                                continue;
+
+                            var zipEntry = zipArchive.CreateEntry(streamResult.Value.FileName);
+                            using (var zipStream = zipEntry.Open())
+                            using (var stream = streamResult.Value.Stream)
+                                await stream.CopyToAsync(zipStream);
+                        }
+                    }
+                })
+                {
+                    FileDownloadName = zipName
+                };
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+        protected async Task<ActionResult<(Stream Stream, string FileName)>> GetStream(K id, DBTransaction transaction)
+        {
+            if (Table.FileNameKey == null)
+            {
+                return BadRequest("No file columns presented!");
+            }
+
+            var item = Table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction);
+            if (item == null)
+            {
+                return NotFound();
+            }
+            if (!(item.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
+                && !(item.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
+            {
+                return Forbid();
+            }
+            var fileName = item.GetValue(Table.FileNameKey);
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return BadRequest("File name was not specified!");
+            }
+            var stream = (Stream)null;
+            if (Table.FileOIDKey != null && item.GetValue(Table.FileOIDKey) != null)
+            {
+                stream = await item.GetBlob(Table.FileOIDKey, transaction);
+            }
+            else if (Table.FileKey != null)
+            {
+                stream = item.GetZipMemoryStream(Table.FileKey, transaction);
+            }
+            else
+            {
+                return BadRequest("No file columns presented!");
+            }
+            return (stream, fileName);
+        }
+
+        protected async Task<ActionResult<(Stream Stream, string FileName)>> GetLogStream(long logId, DBTransaction transaction)
+        {
+            var logItem = LogTable?.LoadById<L, long>(logId, transaction: transaction);
+            if (logItem == null)
+            {
+                return NotFound();
+            }
+            if (!(logItem.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
+                && !(logItem.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
+            {
+                return Forbid();
+            }
+            var baseItem = logItem.BaseItem;
+            if (baseItem != null && baseItem != DBItem.EmptyItem)
+            {
+                if (!(baseItem.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
+                && !(baseItem.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
+                {
+                    return Forbid();
+                }
+            }
+            var fileName = logItem.GetValue(LogTable.FileNameKey);
+            if (fileName == null)
+            {
+                return BadRequest($"Log with id {logId} no file name defined!");
+            }
+
+            var stream = (Stream)null;
+            if (LogTable.FileOIDKey != null && logItem.GetValue(LogTable.FileOIDKey) != null)
+            {
+                stream = await logItem.GetBlob(LogTable.FileOIDKey, transaction);
+            }
+            else if (LogTable.FileKey != null)
+            {
+                stream = logItem.GetZipMemoryStream(LogTable.FileKey, transaction);
+            }
+            return (stream, fileName);
+        }
+
+        [HttpPost("UploadFileModel")]
+        [DisableFormValueModelBinding]
+        [DisableRequestSizeLimit]
+        public virtual async Task<ActionResult<T>> UploadFileModel()
+        {
+            if (Table.FileNameKey == null)
+            {
+                return BadRequest("No file columns presented!");
+            }
+            if (!MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
+            {
+                return BadRequest($"Expected a multipart request, but got {Request.ContentType}");
+            }
+            using (var transaction = new DBTransaction(Table, CurrentUser))
+            {
+                try
+                {
+                    var upload = await Upload();
+                    if (upload != null)
+                    {
+                        var item = upload.Model as T;
+                        if (item == null)
+                        {
+                            return NotFound();
+                        }
+                        if (IsDenied(item, transaction.Caller))
+                        {
+                            item.Reject(transaction.Caller);
+                            return Forbid();
+                        }
+
+                        if (string.IsNullOrEmpty(item.GetValue<string>(Table.FileNameKey)))
+                        {
+                            item.SetValue(upload.FileName, Table.FileNameKey);
+                        }
+
+                        if (upload.Stream != null)
+                        {
+                            if (Table.FileLastWriteKey != null && !item.IsChangedKey(Table.FileLastWriteKey))
+                            {
+                                item.SetValue<DateTime?>(upload.ModificationDate ?? DateTime.UtcNow, Table.FileLastWriteKey);
+                            }
+
+                            if (Table.FileOIDKey != null)
+                            {
+                                await item.SetBlob(upload.Stream, Table.FileOIDKey, transaction);
+                            }
+                            else if (Table.FileKey != null)
+                            {
+                                await item.SetStream(upload.Stream, Table.FileKey, transaction);
+                            }
+                        }
+                        else
+                        {
+                            await item.Save(transaction);
+                        }
+                        transaction.Commit();
+                        return item;
+                    }
+                    return BadRequest("Expect mutipart request name=file");
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex);
+                }
+            }
+        }
+
+        [HttpPost("UploadFile/{id}")]
+        [DisableFormValueModelBinding]
+        [DisableRequestSizeLimit]
+        public virtual async Task<ActionResult<T>> UploadFile([FromRoute] K id)
+        {
+            if (Table.FileNameKey == null)
+            {
+                return BadRequest("No file columns presented!");
+            }
+            if (!MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
+            {
+                return BadRequest($"Expected a multipart request, but got {Request.ContentType}");
+            }
+            using (var transaction = new DBTransaction(Table, CurrentUser))
+            {
+                try
+                {
+                    var item = Table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, transaction);
+                    if (item == null)
+                    {
+                        return NotFound();
+                    }
+                    if (IsDenied(item, transaction.Caller))
+                    {
+                        return Forbid();
+                    }
+
+                    var upload = await Upload();
+                    if (upload != null)
+                    {
+                        if (string.IsNullOrEmpty(item.GetValue<string>(Table.FileNameKey)))
+                        {
+                            item.SetValue(upload.FileName, Table.FileNameKey);
+                        }
+
+                        if (Table.FileLastWriteKey != null)
+                        {
+                            item.SetValue<DateTime?>(upload.ModificationDate ?? DateTime.UtcNow, Table.FileLastWriteKey);
+                        }
+
+                        if (Table.FileOIDKey != null)
+                        {
+                            await item.SetBlob(upload.Stream, Table.FileOIDKey, transaction);
+                        }
+                        else if (Table.FileKey != null)
+                        {
+                            await item.SetStream(upload.Stream, Table.FileKey, transaction);
+                        }
+                        transaction.Commit();
+                    }
+                    return item;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex);
+                }
+            }
+        }
+
+        [HttpGet("DownloadLogFile/{logId}")]
+        public virtual async Task<ActionResult<Stream>> DownloadLogFile([FromRoute] long logId)
+        {
+            var transaction = new DBTransaction(Table, CurrentUser);
+            try
+            {
+                var streamResult = await GetLogStream(logId, transaction);
+                if (streamResult.Value.Stream == null)
+                {
+                    transaction.Dispose();
+                    return streamResult.Result;
+                }
+                return new TransactFileStreamResult(streamResult.Value.Stream,
+                       System.Net.Mime.MediaTypeNames.Application.Octet,
+                       transaction, streamResult.Value.FileName);                
+            }
+            catch (Exception ex)
+            {
+                transaction.Dispose();
+                return BadRequest(ex);
             }
         }
 
@@ -449,7 +885,7 @@ namespace DataWF.WebService.Common
             if (error is Exception exception)
             {
                 Helper.OnException(exception);
-                error = table.System.FormatException(exception, table, item);
+                error = Table.System.FormatException(exception, Table, item);
             }
             return base.BadRequest(error);
         }
@@ -478,7 +914,7 @@ namespace DataWF.WebService.Common
                     }
                     else if (MultipartRequestHelper.HasModel(contentDisposition))
                     {
-                        using (var factory = new DBItemConverterFactory(HttpContext))
+                        using (var factory = new DBItemConverterFactory(HttpContext, Provider))
                         {
                             var option = new JsonSerializerOptions();
                             option.InitDefaults(factory);

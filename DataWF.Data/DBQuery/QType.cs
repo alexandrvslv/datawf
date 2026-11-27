@@ -25,6 +25,14 @@ namespace DataWF.Data
 {
     public class QType : QItem
     {
+        private const string StrDate = "date";
+        private const string StrDateTime = "datetime";
+        private const string StrVarchar = "varchar";
+        private const string StrNumber = "number";
+        private const string StrInt = "int";
+        private const string StrInteger = "integer";
+        private const string StrDouble = "double";
+        private const string StrReal = "real";
         public static readonly QType None = new QType(DBDataType.None);
         // public static readonly QType Date = new QType(DBDataType.Date);
         // public static readonly QType String = new QType(DBDataType.String);
@@ -47,14 +55,14 @@ namespace DataWF.Data
 
         public DBDataType Type
         {
-            get { return type; }
-            set { type = value; }
+            get => type;
+            set => type = value;
         }
 
         public decimal Size
         {
-            get { return size; }
-            set { size = value; }
+            get => size;
+            set => size = value;
         }
 
         public override object GetValue(DBItem row = null)
@@ -68,16 +76,16 @@ namespace DataWF.Data
             switch (type)
             {
                 case DBDataType.String:
-                    rez = "varchar";
+                    rez = StrVarchar;
                     break;
                 case DBDataType.Date:
-                    rez = "date";
+                    rez = StrDate;
                     break;
                 case DBDataType.Decimal:
-                    rez = "number";
+                    rez = StrNumber;
                     break;
                 case DBDataType.DateTime:
-                    rez = "datetime";
+                    rez = StrDateTime;
                     break;
             }
             if (size > 0)
@@ -85,16 +93,42 @@ namespace DataWF.Data
             return rez;
         }
 
-        internal static QType ParseType(string word)
+        public static QType ParseType(string word)
         {
-            if (word.Equals("date", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(word, StrDate, StringComparison.OrdinalIgnoreCase))
                 return new QType(DBDataType.Date);
-            else if (word.Equals("datetime", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(word, StrDateTime, StringComparison.OrdinalIgnoreCase))
                 return new QType(DBDataType.DateTime);
-            else if (word.Equals("varchar", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(word, StrVarchar, StringComparison.OrdinalIgnoreCase))
                 return new QType(DBDataType.String);
-            else if (word.Equals("number", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(word, StrNumber, StringComparison.OrdinalIgnoreCase))
                 return new QType(DBDataType.Decimal);
+            else if (string.Equals(word, StrInt, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(word, StrInteger, StringComparison.OrdinalIgnoreCase))
+                return new QType(DBDataType.Int);
+            else if (string.Equals(word, StrDouble, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(word, StrReal, StringComparison.OrdinalIgnoreCase))
+                return new QType(DBDataType.Double);
+            else
+                return None;
+        }
+
+        public static QType ParseType(ReadOnlySpan<char> word)
+        {
+            if (MemoryExtensions.Equals(word, StrDate.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                return new QType(DBDataType.Date);
+            else if (MemoryExtensions.Equals(word, StrDateTime.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                return new QType(DBDataType.DateTime);
+            else if (MemoryExtensions.Equals(word, StrVarchar.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                return new QType(DBDataType.String);
+            else if (MemoryExtensions.Equals(word, StrNumber.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                return new QType(DBDataType.Decimal);
+            else if (MemoryExtensions.Equals(word, StrInt.AsSpan(), StringComparison.OrdinalIgnoreCase)
+                || MemoryExtensions.Equals(word, StrInteger.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                return new QType(DBDataType.Int);
+            else if (MemoryExtensions.Equals(word, StrDouble.AsSpan(), StringComparison.OrdinalIgnoreCase)
+                || MemoryExtensions.Equals(word, StrReal.AsSpan(), StringComparison.OrdinalIgnoreCase))
+                return new QType(DBDataType.Double);
             else
                 return None;
         }

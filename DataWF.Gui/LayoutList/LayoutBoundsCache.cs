@@ -1,49 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Gui
 {
     public partial class LayoutList
     {
-        internal class LayoutBoundsCache : Dictionary<LayoutColumn, Rectangle>
+        internal class LayoutBoundsCache : Dictionary<LayoutColumn, Rect>
         {
             public int Index = -2;
             public LayoutGroup Group;
-            public Rectangle Clip = new Rectangle();
-            public Rectangle Columns = new Rectangle();
-            public Rectangle TempColumns = new Rectangle();
-            public Rectangle Content = new Rectangle();
-            public Rectangle TempContent = new Rectangle();
-            public Rectangle Area = new Rectangle();
-            public Rectangle TempArea = new Rectangle();
-            public Rectangle Cell = new Rectangle();
-            public Rectangle CellGlyph = new Rectangle();
-            public Rectangle CellText = new Rectangle();
-            public Rectangle ColumnGlyph = new Rectangle();
-            public Rectangle ColumnFilter = new Rectangle();
-            public Rectangle ColumnSort = new Rectangle();
-            public Rectangle ColumnText = new Rectangle();
-            public Rectangle Editor = new Rectangle();
-            public Rectangle Row = new Rectangle();
-            public Rectangle RowHeader = new Rectangle();
-            public Rectangle Aggregate = new Rectangle();
-            public Rectangle CacheRow = new Rectangle();
-            public Rectangle GroupHeader = new Rectangle();
-            public Rectangle GroupGlyph = new Rectangle();
-            public Rectangle Middle = new Rectangle();
-            public Rectangle Filter = new Rectangle();
-            public Rectangle Selection = new Rectangle(-1D, -1D, -1D, -1D);
+            public Rect Clip = new Rect();
+            public Rect Columns = new Rect();
+            public Rect TempColumns = new Rect();
+            public Rect Content = new Rect();
+            public Rect TempContent = new Rect();
+            public Rect Area = new Rect();
+            public Rect TempArea = new Rect();
+            public Rect Cell = new Rect();
+            public Rect CellGlyph = new Rect();
+            public Rect CellText = new Rect();
+            public Rect ColumnGlyph = new Rect();
+            public Rect ColumnFilter = new Rect();
+            public Rect ColumnSort = new Rect();
+            public Rect ColumnText = new Rect();
+            public Rect Editor = new Rect();
+            public Rect Row = new Rect();
+            public Rect RowHeader = new Rect();
+            public Rect Aggregate = new Rect();
+            public Rect CacheRow = new Rect();
+            public Rect GroupHeader = new Rect();
+            public Rect GroupGlyph = new Rect();
+            public Rect Middle = new Rect();
+            public Rect Filter = new Rect();
+            public Rect Selection = new Rect(-1D, -1D, -1D, -1D);
             public List<LayoutColumn> VisibleColumns;
 
             public new void Clear()
             {
                 ClearItems();
                 Index = -1;
-                Columns = Rectangle.Zero;
-                TempArea = Rectangle.Zero;
-                TempColumns = Rectangle.Zero;
-                TempContent = Rectangle.Zero;
+                Columns = default;
+                TempArea = default;
+                TempColumns = default;
+                TempContent = default;
             }
 
             public void ClearItems()

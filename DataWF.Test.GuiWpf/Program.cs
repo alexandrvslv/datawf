@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using Xwt;
+using Avalonia;
 using DataWF.Gui;
-using DataWF.Common;
+using DataWF;
 
 namespace DataWF.TestGui
 {

@@ -1,9 +1,9 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt;
+using Avalonia;
 
 
 namespace DataWF.Data.Gui
@@ -24,11 +24,10 @@ namespace DataWF.Data.Gui
             {
                 if (existingParam.ContainsKey(param.Name.ToString()))
                     continue;
-                DBColumn col = new DBColumn
-                {
-                    Name = param.Name != null && param.Name.Length > 0 ? param.Name : "NewColumn",
-                    Table = table
-                };
+                DBColumn col = DBColumnFactory.Create(param.DataType,
+                    name: !string.IsNullOrEmpty(param.Name) ? param.Name : "NewColumn",
+                    table: table
+                );
                 if (param.Column != null)
                 {
                     if (param.Column.IsPrimaryKey)
@@ -36,7 +35,6 @@ namespace DataWF.Data.Gui
                     if (param.Column.IsReference)
                         col.ReferenceTable = param.Column.ReferenceTable;
                 }
-                col.DataType = param.DataType;
                 table.Columns.Add(col);
             }
 
@@ -84,10 +82,10 @@ namespace DataWF.Data.Gui
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += (sender, e) =>
             {
-                using (var transaction = new DBTransaction(procedure.Schema.Connection, GuiEnvironment.User))
+                using (var transaction = new DBTransaction(procedure.Schema, GuiEnvironment.User))
                     try
                     {
-                        var args = new ExecuteArgs(document);
+                        var args = new ExecuteArgs(document.Schema, document);
                         e.Result = Execute(procedure, args);
                         transaction.Commit();
                     }
@@ -126,7 +124,7 @@ namespace DataWF.Data.Gui
 
         public static object Execute(DBProcedure procedure, DBItem document = null)
         {
-            return Execute(procedure, new ExecuteArgs(document));
+            return Execute(procedure, new ExecuteArgs(procedure.Schema, document));
         }
 
         public static object Execute(DBProcedure procedure, ExecuteArgs args)

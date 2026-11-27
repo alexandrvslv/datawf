@@ -1,99 +1,84 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using DataWF;
 using DataWF.Data;
 using DataWF.Module.Common;
 using DataWF.Module.Counterpart;
 
 namespace DataWF.Module.Finance
 {
-    public class PaymentList : DBTableView<Payment>
-    {
-        public PaymentList()
-        {
-        }
-    }
 
     [DataContract, Table("dpayment", "Finance", BlockSize = 5000)]
-    public class Payment : DBItem
+    public partial class Payment : DBItem
     {
         private Account debit;
         private Payment parent;
-        private Book type;
+        private PaymentType type;
         private Account credit;
         private Currency currency;
         private Currency creditCurrency;
         private Currency debitCurrency;
 
-        public static DBTable<Payment> DBTable
-        {
-            get { return GetTable<Payment>(); }
-        }
-
-        public Payment()
-        {
-            Build(DBTable);
-        }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = ColumnFlags.Primary)]
         public int? Id
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
-        [Column("typeid", Keys = DBColumnKeys.ElementType)]
+        [Column("typeid", Keys = ColumnFlags.ElementType)]
         public int? TypeId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.TypeIdKey);
+            set => SetValue(value, Table.TypeIdKey);
         }
 
         [Reference(nameof(TypeId))]
-        public Book Type
+        public PaymentType Type
         {
-            get { return GetPropertyReference<Book>(ref type); }
-            set { type = SetPropertyReference(value); }
+            get => GetReference(Table.TypeIdKey, ref type);
+            set => SetReference(type = value, Table.TypeIdKey);
         }
 
         [Browsable(false)]
-        [Column("parentid", Keys = DBColumnKeys.Group)]
+        [Column("parentid", Keys = ColumnFlags.Group)]
         public int? ParentId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.ParentIdKey);
+            set => SetValue(value, Table.ParentIdKey);
         }
 
         [Reference(nameof(ParentId))]
         public Payment Parent
         {
-            get { return GetPropertyReference<Payment>(ref parent); }
-            set { parent = SetPropertyReference(value); }
+            get => GetReference(Table.ParentIdKey, ref parent);
+            set => SetReference(parent = value, Table.ParentIdKey);
         }
 
         [Column("paymentdate")]
         public DateTime? PaymentDate
         {
-            get { return GetProperty<DateTime?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.PaymentDateKey);
+            set => SetValue(value, Table.PaymentDateKey);
         }
 
         [Browsable(false)]
         [Column("debitid")]
         public int? DebitId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.DebitIdKey);
+            set => SetValue(value, Table.DebitIdKey);
         }
 
         [Reference(nameof(DebitId))]
         public Account Debit
         {
-            get { return GetPropertyReference<Account>(ref debit); }
+            get => GetReference<Account>(Table.DebitIdKey, ref debit);
             set
             {
-                debit = SetPropertyReference(value);
+                SetReference(debit = value, Table.DebitIdKey);
                 if (value != null)
                     DebitCurrency = value.Currency;
             }
@@ -103,17 +88,17 @@ namespace DataWF.Module.Finance
         [Column("creditid")]
         public int? CreditId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.CreditIdKey);
+            set => SetValue(value, Table.CreditIdKey);
         }
 
         [Reference(nameof(CreditId))]
         public Account Credit
         {
-            get { return GetPropertyReference<Account>(ref credit); }
+            get => GetReference(Table.CreditIdKey, ref credit);
             set
             {
-                credit = SetPropertyReference(value);
+                SetReference(credit = value, Table.CreditIdKey);
                 if (value != null)
                     CreditCurrency = value.Currency;
             }
@@ -122,88 +107,88 @@ namespace DataWF.Module.Finance
         [Column("amount")]
         public decimal? Amount
         {
-            get { return GetProperty<decimal?>(nameof(Amount)); }
-            set { SetProperty(value, nameof(Amount)); }
+            get => GetValue(Table.AmountKey);
+            set => SetValue(value, Table.AmountKey);
         }
 
         [Browsable(false)]
         [Column("currencyid")]
         public int? CurrencyId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.CurrencyIdKey);
+            set => SetValue(value, Table.CurrencyIdKey);
         }
 
         [Reference(nameof(CurrencyId))]
         public Currency Currency
         {
-            get { return GetPropertyReference<Currency>(ref currency); }
-            set { currency = SetPropertyReference(value); }
+            get => GetReference(Table.CurrencyIdKey, ref currency);
+            set => currency = SetReference(value, Table.CurrencyIdKey);
         }
 
         [Column("debitrate")]
         public decimal? DebitRate
         {
-            get { return GetProperty<decimal?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.DebitRateKey);
+            set => SetValue(value, Table.DebitRateKey);
         }
 
         [Column("debitamount")]
         public decimal? DebitAmount
         {
-            get { return GetProperty<decimal?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.DebitAmountKey);
+            set => SetValue(value, Table.DebitAmountKey);
         }
 
         [Browsable(false)]
         [Column("debitcurrencyid")]
         public int? DebitCurrencyId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.DebitCurrencyIdKey);
+            set => SetValue(value, Table.DebitCurrencyIdKey);
         }
 
         [Reference(nameof(DebitCurrencyId))]
         public Currency DebitCurrency
         {
-            get { return GetPropertyReference<Currency>(ref debitCurrency); }
-            set { debitCurrency = SetPropertyReference(value); }
+            get => GetReference<Currency>(Table.DebitCurrencyIdKey, ref debitCurrency);
+            set => SetReference(debitCurrency = value, Table.DebitCurrencyIdKey);
         }
 
         [Column("creditrate")]
         public decimal? CreditRate
         {
-            get { return GetProperty<decimal?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.CreditRateKey);
+            set => SetValue(value, Table.CreditRateKey);
         }
 
         [Column("creditamount")]
         public decimal? CreditAmount
         {
-            get { return GetProperty<decimal?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.CreditAmountKey);
+            set => SetValue(value, Table.CreditAmountKey);
         }
 
         [Browsable(false)]
         [Column("creditcurrencyid")]
         public int? CreditCurrencyId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.CreditCurrencyIdKey);
+            set => SetValue(value, Table.CreditCurrencyIdKey);
         }
 
         [Reference(nameof(DebitCurrencyId))]
         public Currency CreditCurrency
         {
-            get { return GetPropertyReference<Currency>(ref creditCurrency); }
-            set { creditCurrency = SetPropertyReference(value); }
+            get => GetReference(Table.CreditCurrencyIdKey, ref creditCurrency);
+            set => SetReference(creditCurrency = value, Table.CreditCurrencyIdKey);
         }
 
         [Column("description")]
         public string Description
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.DescriptionKey);
+            set => SetValue(value, Table.DescriptionKey);
         }
     }
 }

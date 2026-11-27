@@ -1,15 +1,17 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Xml.Serialization;
-using Xwt.Drawing;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 
 namespace DataWF.Gui
 {
-    public class Node : IGroup, IEntryNotifyPropertyChanged, IComparable, IGlyph, ICheck
+    public class Node : DefaultItem, IGroup, IComparable, IGlyph, ICheck
     {
         protected bool expand;
         protected bool check;
@@ -24,7 +26,7 @@ namespace DataWF.Gui
         protected List<Node> nodes = new List<Node>();
         protected internal Node group;
         protected internal Category category;
-        protected Image image;
+        protected Bitmap image;
 
         public Node()
         {
@@ -52,7 +54,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool Visible
         {
-            get { return visible; }
+            get => visible;
             set
             {
                 if (visible != value)
@@ -65,7 +67,7 @@ namespace DataWF.Gui
 
         public string CategoryName
         {
-            get { return categoryName; }
+            get => categoryName;
             set
             {
                 if (categoryName != value)
@@ -78,7 +80,7 @@ namespace DataWF.Gui
 
         public string GroupName
         {
-            get { return groupName; }
+            get => groupName;
             set
             {
                 if (groupName != value)
@@ -91,7 +93,7 @@ namespace DataWF.Gui
 
         public int Order
         {
-            get { return order; }
+            get => order;
             set
             {
                 if (order != value)
@@ -105,7 +107,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public Category Category
         {
-            get { return category; }
+            get => category;
             set
             {
                 if (category == value)
@@ -125,7 +127,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool Check
         {
-            get { return check; }
+            get => check;
             set
             {
                 check = value;
@@ -139,7 +141,7 @@ namespace DataWF.Gui
 
         public string Text
         {
-            get { return text; }
+            get => text;
             set
             {
                 if (text != value)
@@ -152,7 +154,7 @@ namespace DataWF.Gui
 
         public string Name
         {
-            get { return name; }
+            get => name;
             set
             {
                 if (name != value)
@@ -181,8 +183,8 @@ namespace DataWF.Gui
         #region IGroup implementation
         IGroup IGroup.Group
         {
-            get { return Group; }
-            set { Group = value as Node; }
+            get => Group;
+            set => Group = value as Node;
         }
 
         public Node TopGroup
@@ -193,7 +195,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public Node Group
         {
-            get { return group; }
+            get => group;
             set
             {
                 if (group == value)
@@ -238,7 +240,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public virtual bool Expand
         {
-            get { return expand; }
+            get => expand;
             set
             {
                 if (expand != value)
@@ -252,7 +254,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool IsCompaund
         {
-            get { return complex || nodes.Count > 0; }
+            get => complex || nodes.Count > 0;
             set
             {
                 if (complex != value)
@@ -264,9 +266,9 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore]
-        public Image Image
+        public Bitmap Image
         {
-            get { return image; }
+            get => image;
             set
             {
                 if (image != value)
@@ -276,11 +278,12 @@ namespace DataWF.Gui
                 }
             }
         }
+        #endregion
 
         [DefaultValue(GlyphType.None)]
         public GlyphType Glyph
         {
-            get { return glyph; }
+            get => glyph;
             set
             {
                 if (glyph != value)
@@ -292,18 +295,6 @@ namespace DataWF.Gui
         }
 
         public Color GlyphColor { get; set; }
-
-        [XmlIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
-
-        #endregion
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
 
         public IEnumerable<Node> GetNodes()
         {

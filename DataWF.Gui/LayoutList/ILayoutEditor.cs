@@ -1,4 +1,7 @@
-﻿namespace DataWF.Gui
+﻿using Avalonia;
+using Avalonia.Controls;
+
+namespace DataWF.Gui
 {
     public interface ILayoutEditor
     {
@@ -6,7 +9,7 @@
 
         object Value { get; set; }
 
-        Xwt.Widget Widget { get; set; }
+        Visual Control { get; set; }
 
         bool DropDownVisible { get; set; }
 

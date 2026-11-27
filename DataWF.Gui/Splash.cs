@@ -2,16 +2,19 @@
 using System.ComponentModel;
 using System.IO;
 using DataWF.Gui;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
+using DataWF;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media;
 using System.Threading.Tasks;
 using System.Collections.Specialized;
 using System.Linq;
+using Avalonia.Threading;
 
 namespace DataWF.Gui
 {
-    public class Splash : Dialog
+    public class Splash : Window
     {
         public Action LoadAction;
 
@@ -24,31 +27,36 @@ namespace DataWF.Gui
             labelHeader = new Label
             {
                 Name = "labelHeader",
-                Font = Font.SystemFont.WithScaledSize(1.7).WithStyle(FontStyle.Oblique).WithWeight(FontWeight.Bold),
-                Text = "Data/Document Workflow",
-                TextAlignment = Alignment.Center
+                FontStyle = FontStyle.Oblique,
+                FontWeight = FontWeight.Bold,
+                Content = "Data/Document Workflow",
+                HorizontalContentAlignment = HorizontalAlignment.Center
             };
 
             labelEvent = new Label
             {
                 Name = "labelEvent",
-                Text = "Load config",
-                TextAlignment = Alignment.Center,
-                VerticalPlacement = WidgetPlacement.Center,
-                Wrap = WrapMode.Word
+                Content = "Load config",
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                //Wrap = WrapMode.Word
             };
 
-            var vbox = new VBox();
-            vbox.PackStart(labelHeader);
-            vbox.PackStart(labelEvent, true, true);
+            var vbox = new StackPanel
+            {
+                Orientation = Orientation.Vertical
+            };
+            vbox.Children.Add(labelHeader);
+            vbox.Children.Add(labelEvent);
 
             Content = vbox;
             Name = "Splash";
             Title = "Splash";
             ShowInTaskbar = false;
-            Decorated = false;
+            SystemDecorations = SystemDecorations.None;
             //Icon = Image.FromResource(GetType(), "datawf.png");
-            Size = new Size(340, 220);
+            Width = 340;
+            Height = 220;
 
             Helper.Logs.CollectionChanged += OnLogListChanged;
 
@@ -76,24 +84,25 @@ namespace DataWF.Gui
             }
         }
 
-        public string HeaderText { get { return labelHeader.Text; } set { labelHeader.Text = value; } }
+        public string HeaderText
+        {
+            get => (string)labelHeader.Content;
+            set => labelHeader.Content = value;
+        }
 
-        public Command DialogResult { get; private set; }
+        public DialogResult? DialogResult { get; private set; }
 
         private void OnInitialized()
         {
             if (GuiService.InvokeRequired)
             {
-                Application.Invoke(() => OnInitialized());
+                _ = Dispatcher.UIThread.InvokeAsync(() => OnInitialized());
             }
             else
             {
                 Helper.Logs.CollectionChanged -= OnLogListChanged;
-                labelEvent.Text = "Initialization Complete!";
-                if (DialogResult == null)
-                {
-                    DialogResult = Command.Ok;
-                }
+                labelEvent.Content = "Initialization Complete!";
+                DialogResult ??= Gui.DialogResult.OK;
                 if (exeception)
                 {
                     MessageDialog.ShowError(this, "Some Exception during startup. For more deatail see startup.log");
@@ -106,7 +115,7 @@ namespace DataWF.Gui
         {
             if (GuiService.InvokeRequired)
             {
-                Application.Invoke(() => OnLogListChanged(sender, e));
+                _ = Dispatcher.UIThread.InvokeAsync(() => OnLogListChanged(sender, e));
             }
             else
             {
@@ -115,7 +124,7 @@ namespace DataWF.Gui
                     var log = e.NewItems?.Cast<StateInfo>().FirstOrDefault();
                     if (log.Type != StatusType.Warning)
                     {
-                        labelEvent.Text = $"{log.Module} {log.Message}\n{log.Description}";
+                        labelEvent.Content = $"{log.Module} {log.Message}\n{log.Description}";
                     }
                     if (log.Type == StatusType.Error)
                     {
@@ -123,14 +132,6 @@ namespace DataWF.Gui
                     }
                 }
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-            }
-            base.Dispose(disposing);
         }
 
     }

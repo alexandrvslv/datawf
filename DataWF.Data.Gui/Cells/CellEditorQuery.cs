@@ -1,8 +1,9 @@
 ﻿using DataWF.Data;
 using DataWF.Gui;
-using DataWF.Common;
+using DataWF;
 using System;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Data.Gui
 {
@@ -12,10 +13,10 @@ namespace DataWF.Data.Gui
         {
         }
 
-        public override Widget InitDropDownContent()
+        public override IControl InitDropDownContent()
         {
             var query = Editor.GetCached<QueryEditor>();
-            query.Initialize(SearchState.Reference, Value as QQuery, EditItem as QParam, null);
+            query.Initialize(SearchState.Reference, Value as IQQuery, EditItem as QParam, null);
             return query;
         }
 

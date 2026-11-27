@@ -19,35 +19,51 @@
 // DEALINGS IN THE SOFTWARE.
 using System;
 using System.Collections.Generic;
-using DataWF.Common;
+using DataWF;
+using DataWF.Collections.Indexes;
+using DataWF.Collections.Query;
 
 namespace DataWF.Data
 {
     public class DBTableList : DBSchemaItemList<DBTable>
     {
+        private IListIndex<DBTable, string> itemTypeNameIndex;
+        private IListIndex<DBTable, string> groupNameIndex;
+
 
         public DBTableList() : this(null)
         { }
 
         public DBTableList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(DBTable.GroupNameInvoker.Instance);
+            groupNameIndex = Indexes.AddIndex(DBTable.GroupNameInvoker.Instance);
+            itemTypeNameIndex = Indexes.AddIndex(DBTable.ItemTypeNameInvoker.Instance);
             ApplyDefaultSort();
         }
 
+        public override IDBSchema Schema { get; internal set; }
+
         public IEnumerable<DBTable> GetByGroup(string name)
         {
-            return Select(nameof(DBTable.GroupName), CompareType.Equal, name);
+            return groupNameIndex.Select(CompareOperator.Equal, name);
+        }
+
+        public DBTable GetByTypeName(string name)
+        {
+            return itemTypeNameIndex.SelectOne(name);
         }
 
         public override int AddInternal(DBTable item)
         {
             item.Schema = Schema;
             var index = base.AddInternal(item);
-            if (item is IDBVirtualTable virtualTable)
+            if (item.IsVirtual)
             {
-                virtualTable.BaseTable.AddVirtual(virtualTable);
+                item.ParentTable.AddVirtualTable(item);
             }
+            if (Schema is IDBSchemaLog
+                && !(item is IDBTableLog))
+            { }
             return index;
         }
 

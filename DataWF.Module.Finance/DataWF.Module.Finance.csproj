@@ -5,7 +5,8 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Module.Finance</RootNamespace>
     <AssemblyName>DataWF.Module.Finance</AssemblyName>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;</TargetFrameworks>
+    <TargetFrameworks>net10.0;</TargetFrameworks>
+    <LangVersion>9.0</LangVersion>
     <Platforms>AnyCPU</Platforms>
     
   </PropertyGroup>
@@ -27,9 +28,8 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup> 
   <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Core\DataWF.Core.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
-    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj" />
   </ItemGroup>
 </Project>

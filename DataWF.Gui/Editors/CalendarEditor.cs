@@ -1,10 +1,11 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Xwt;
+using Avalonia;
+using Avalonia.Media;
 
 namespace DataWF.Gui
 {
@@ -40,7 +41,7 @@ namespace DataWF.Gui
         protected override void OnDrawColumn(LayoutListDrawArgs e)
         {
             var format = (DayOfWeek)e.GridIndex;
-            var textBound = new Rectangle(new Point(e.Bound.Left + 3, e.Bound.Top + (e.Bound.Height - 20) / 2D),
+            var textBound = new Rect(new Point(e.Bound.Left + 3, e.Bound.Top + (e.Bound.Height - 20) / 2D),
                                  e.Bound.Size - new Size(6, 6));
             e.Context.DrawCell(listInfo.StyleColumn, format.ToString(), e.Bound, textBound, CellDisplayState.Default);
         }
@@ -60,7 +61,9 @@ namespace DataWF.Gui
             var bar = new Toolsbar(
                 lable = new ToolLabel()
                 {
-                    Font = Font.WithScaledSize(1.5).WithWeight(Xwt.Drawing.FontWeight.Bold)
+                    FontFamily = FontFamily,
+                    FontSize = WithScaledSize(1.5),
+                    FontWeight = FontWeight.Bold
                 },
                 new ToolSeparator { FillWidth = true },
                 new ToolItem((s, e) => Date = Date.AddMonths(-1)) { Name = "Prev Month", Glyph = Common.GlyphType.ChevronUp },
@@ -72,8 +75,8 @@ namespace DataWF.Gui
                 ListSource = month.Days
             };
             list.SelectionChanged += ListSelectionChanged;
-            PackStart(bar, false, false);
-            PackStart(list, true, true);
+            Children.Add(bar, false, false);
+            Children.Add(list, true, true);
             Date = DateTime.Today;
         }
 
@@ -99,7 +102,7 @@ namespace DataWF.Gui
 
         public DateTime Date
         {
-            get { return value; }
+            get => value;
             set
             {
                 this.value = value;

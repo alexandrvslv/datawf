@@ -1,9 +1,9 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Threading.Tasks;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Data.Gui
 {
@@ -19,7 +19,7 @@ namespace DataWF.Data.Gui
         }
         protected DBItem filter;
         protected DataLogMode mode = DataLogMode.None;
-        protected SelectableList<DBLogItem> listSource;
+        protected SelectableList<DBItemLog> listSource;
 
         protected VPaned split;
         protected Toolsbar bar;
@@ -38,7 +38,7 @@ namespace DataWF.Data.Gui
         protected TableLayoutList detailList;
         protected TableLayoutList detailRow;
         protected GroupBox map;
-        private DBTable table;
+        private IDBTable table;
         private DateInterval date = new DateInterval(DateTime.Today.AddMonths(-1), DateTime.Today);
 
         public DataLogView()
@@ -99,7 +99,7 @@ namespace DataWF.Data.Gui
                 GenerateToString = false,
                 Mode = LayoutListMode.List,
                 Name = "list",
-                ListSource = listSource = new SelectableList<DBLogItem>()
+                ListSource = listSource = new SelectableList<DBItemLog>()
             };
             list.GenerateColumns = true;
             list.CellMouseClick += ListCellMouseClick;
@@ -124,17 +124,17 @@ namespace DataWF.Data.Gui
             detailRow = new TableLayoutList();
 
             map = new GroupBox(
-                new GroupBoxItem { Name = "Details", Widget = detailList, Column = 0, FillWidth = true, FillHeight = true },
-                //new GroupBoxItem { Name = "Difference", Widget = detailText, Col = 1, FillWidth = true, FillHeight = true },
-                new GroupBoxItem { Name = "Record", Widget = detailRow, Column = 2, FillWidth = true, FillHeight = true });
+                new GroupBoxItem { Name = "Details", Control = detailList, Column = 0, FillWidth = true, FillHeight = true },
+                //new GroupBoxItem { Name = "Difference", Control = detailText, Col = 1, FillWidth = true, FillHeight = true },
+                new GroupBoxItem { Name = "Record", Control = detailRow, Column = 2, FillWidth = true, FillHeight = true });
             //list.ListInfo.Columns.Add(list.BuildColumn(null, "Text"));
 
             split = new VPaned();
             split.Panel1.Content = list;
             //split.Panel2.Content = map;
 
-            PackStart(bar, false, false);
-            PackStart(split, true, true);
+            Children.Add(bar, false, false);
+            Children.Add(split, true, true);
             Name = "DataLog";
         }
 
@@ -152,7 +152,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public DBTable Table
+        public IDBTable Table
         {
             get { return table; }
             set
@@ -189,7 +189,7 @@ namespace DataWF.Data.Gui
                 if (filter.Access.GetFlag(AccessType.Admin, GuiEnvironment.User) || filter.Access.GetFlag(AccessType.Update, GuiEnvironment.User))
                 {
                     toolRollback.Visible = filter.Access.GetFlag(AccessType.Update, GuiEnvironment.User);
-                    Table = filter.Table;
+                    Table = (DBTable)filter.Table;
                 }
                 else
                 {
@@ -199,8 +199,8 @@ namespace DataWF.Data.Gui
                     {
                         Text = "Access denied!",
                         TextColor = Colors.DarkRed,
-                        Font = Font.WithSize(24),
-                        TextAlignment = Alignment.Center,
+                        FontFamily = FontFamily.WithSize(24),
+                        TextAlignment = TextAlignment.Center,
                     };
                 }
             }
@@ -227,7 +227,7 @@ namespace DataWF.Data.Gui
 
         public static void RowReject(DBItem row, ref Command dr, Window form)
         {
-            DBLogItem changes = new DBLogItem(row);
+            DBItemLog changes = new DBItemLog(row);
             if (changes.BaseItem.Status == DBStatus.New)
             {
                 if (dr == Command.Save)
@@ -243,7 +243,7 @@ namespace DataWF.Data.Gui
             changes.Reject(GuiEnvironment.User);
         }
 
-        public static void RowAccept(DBItem row, ref Command dr, Widget form)
+        public static void RowAccept(DBItem row, ref Command dr, Control form)
         {
             if (row.Status != DBStatus.Actual)
             {
@@ -275,16 +275,16 @@ namespace DataWF.Data.Gui
 
         protected virtual void SelectData()
         {
-            if (list.SelectedItem is DBLogItem)
+            if (list.SelectedItem is DBItemLog)
             {
                 detailList.FieldSource = list.SelectedItem;
-                detailRow.FieldSource = ((DBLogItem)list.SelectedItem).BaseItem;
+                detailRow.FieldSource = ((DBItemLog)list.SelectedItem).BaseItem;
             }
         }
 
         protected void ListCellDoubleClick(object sender, LayoutHitTestEventArgs e)
         {
-            var log = list.SelectedItem as DBLogItem;
+            var log = list.SelectedItem as DBItemLog;
             var view = new DataLogView { Filter = log.BaseItem, Mode = DataLogMode.Default };
             view.ShowDialog(this);
         }
@@ -312,17 +312,17 @@ namespace DataWF.Data.Gui
             Task.Run(() =>
             {
                 var logTable = filter?.Table.LogTable ?? Table?.LogTable;
-                using (var query = new QQuery("", (DBTable)logTable))
+                var query = logTable.QQuery("");
                 {
                     if (Mode == DataLogMode.Default || mode == DataLogMode.Document)
                     {
-                        query.BuildParam(logTable.BaseKey, CompareType.Equal, filter.PrimaryId).IsDefault = true;
+                        query.Where(logTable.BaseKey, CompareOperator.Equal, filter.PrimaryId);//TODO .IsDefault = true;
                     }
                     if (Date != null)
                     {
-                        query.BuildParam(logTable.DateKey, CompareType.Between, interval);
+                        query.Where(logTable.DateCreateKey, CompareOperator.Between, interval);
                     }
-                    foreach (DBLogItem item in logTable.LoadItems(query))
+                    foreach (DBItemLog item in logTable.Load<DBItem>(query))
                         list.ListSource.Add(item);
                 }
                 if (mode == DataLogMode.Document)
@@ -330,23 +330,23 @@ namespace DataWF.Data.Gui
                     foreach (var refed in filter.Table.GetChildRelations())
                     {
                         if (refed.Table.LogTable == null
-                        || refed.Table is IDBVirtualTable
+                        || refed.Table.IsVirtual
                         || (Table != filter.Table && refed.Table != Table))
                             continue;
 
-                        using (var query = new QQuery("", (DBTable)refed.Table.LogTable))
+                        var query2 = refed.Table.LogTable.QQuery("");
                         {
-                            query.BuildParam(refed.Table.LogTable.GetLogColumn(refed.Column), CompareType.Equal, filter.PrimaryId);
+                            query2.Where(refed.Table.LogTable.GetLogColumn(refed.Column), CompareOperator.Equal, filter.PrimaryId);
                             if (Date != null)
                             {
-                                query.BuildParam(refed.Table.LogTable.DateKey, CompareType.Between, interval);
+                                query2.And(refed.Table.LogTable.DateCreateKey, CompareOperator.Between, interval);
                             }
-                            foreach (DBLogItem item in refed.Table.LogTable.LoadItems(query))
+                            foreach (DBItemLog item in refed.Table.LogTable.Load<DBItem>(query2))
                                 list.ListSource.Add(item);
                         }
                     }
                 }
-                Application.Invoke(() => toolProgress.Visible = false);
+                _ = Dispatcher.UIThread.InvokeAsync(() => toolProgress.Visible = false);
             }).ConfigureAwait(false);
         }
 
@@ -371,7 +371,7 @@ namespace DataWF.Data.Gui
             {
                 split.Panel2.Content = null;
             }
-            this.QueueForReallocate();
+            this.InvalidateArrange();
         }
 
         protected async void ToolRollbackClick(object sender, EventArgs e)
@@ -379,10 +379,10 @@ namespace DataWF.Data.Gui
             if (list.SelectedItem == null)
                 return;
 
-            var redo = list.Selection.GetItems<DBLogItem>();
+            var redo = list.Selection.GetItems<DBItemLog>();
             if (redo[0] != null && redo[0].Table.Access.GetFlag(AccessType.Update, GuiEnvironment.User))
             {
-                using (var transaction = new DBTransaction(GuiEnvironment.User))
+                using (var transaction = new DBTransaction(Table, GuiEnvironment.User))
                 {
                     var item = await redo[0].Redo(transaction);
                     transaction.Commit();

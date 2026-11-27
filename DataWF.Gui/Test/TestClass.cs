@@ -1,12 +1,16 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media.Imaging;
+using DataWF.Collections;
+using DataWF.Invokers;
+using DataWF.Comparers;
 
 namespace DataWF.TestGui
 {
@@ -37,13 +41,13 @@ namespace DataWF.TestGui
             var cDefault = typeof(TestClass).GetConstructor(Type.EmptyTypes);
             var cParam = typeof(TestClass).GetConstructor(new Type[] { typeof(int), typeof(string) });
 
-            var aOrder = EmitInvoker.Initialize(pOrder);
-            var aItem = EmitInvoker.Initialize(pItem, "fdsfds");
-            var aDefault = EmitInvoker.Initialize(cDefault);
-            var aParam = EmitInvoker.Initialize(cParam);
+            var aOrder = InvokeProvider.Initialize(pOrder);
+            var aItem = InvokeProvider.Initialize(pItem, "fdsfds");
+            var aDefault = InvokeProvider.Initialize(cDefault);
+            var aParam = InvokeProvider.Initialize(cParam);
 
             var param = new object[] { "cfsdf" };
-            var paramDefault = new object[] { };
+            var paramDefault = Array.Empty<object>();
             var paramParam = new object[] { 12, "1dasdas" };
 
             var actionBinder = new ActionInvoker<TestClass, int>(
@@ -199,7 +203,7 @@ namespace DataWF.TestGui
 
             watch.Reset();
             watch.Start();
-            //object[] obj = new object[] { };
+
             for (int i = 0; i <= c; i++)
             {
                 test = (TestClass)aDefault.Create(paramDefault);
@@ -279,10 +283,10 @@ namespace DataWF.TestGui
             //Compare Accessor string
             watch.Reset();
             watch.Start();
-            var ce = new InvokerComparer(EmitInvoker.Initialize(typeof(TestClass).GetProperty("Comment")), ListSortDirection.Ascending);
+            var commentComparer = new InvokerComparer<TestClass, string>("Comment", ListSortDirection.Ascending);
             for (int i = 0; i <= c; i++)
             {
-                ce.Compare(p1, p2);
+                commentComparer.Compare(p1, p2);
             }
             watch.Stop();
             list.Add(new TestResult("Compare String", "Emit Invoke Property", watch.Elapsed));
@@ -300,10 +304,10 @@ namespace DataWF.TestGui
             //Compare Accessor Int
             watch.Reset();
             watch.Start();
-            ce = new InvokerComparer(EmitInvoker.Initialize(typeof(TestClass).GetProperty("Order")), ListSortDirection.Ascending);
+            var orderComparer = new InvokerComparer<TestClass, int>("Order", ListSortDirection.Ascending);
             for (int i = 0; i <= c; i++)
             {
-                ce.Compare(p1, p2);
+                orderComparer.Compare(p1, p2);
             }
             watch.Stop();
             list.Add(new TestResult("Compare Int", "Emit Invoke Property", watch.Elapsed));
@@ -351,7 +355,7 @@ namespace DataWF.TestGui
             {
                 TestClass tc = new TestClass(i, "TestClass" + i);
                 if (Locale.Instance.Images.Count > 0)
-                    tc.Image = Locale.Instance.Images[i % Locale.Instance.Images.Count].Image as Image;
+                    tc.Image = Locale.Instance.Images[i % Locale.Instance.Images.Count].Image as Bitmap;
                 tc.Enum = (TestEnum)(i % 4);
                 tc.Flag = (TestFlag)(i % 15);
                 if (i > 10)
@@ -376,7 +380,7 @@ namespace DataWF.TestGui
         private List<TestClass> _list = new List<TestClass>();
         private bool _expand;
         private IGroup _group;
-        private Image image;
+        private Bitmap image;
 
         public TestClass()
         {
@@ -391,9 +395,9 @@ namespace DataWF.TestGui
 
         #region IPicture implementation
 
-        public Image Image
+        public Bitmap Image
         {
-            get { return image; }
+            get => image;
             set
             {
                 image = value;
@@ -404,7 +408,7 @@ namespace DataWF.TestGui
         [Browsable(false)]
         public GlyphType Glyph
         {
-            get { return GlyphType.None; }
+            get => GlyphType.None;
             set { }
         }
 
@@ -413,7 +417,7 @@ namespace DataWF.TestGui
         [Category("Value Type")]
         public override int Order
         {
-            get { return _order; }
+            get => _order;
             set
             {
                 _order = value;
@@ -424,7 +428,7 @@ namespace DataWF.TestGui
         [Category("Value Type")]
         public decimal Price
         {
-            get { return _price; }
+            get => _price;
             set
             {
                 _price = value;
@@ -435,7 +439,7 @@ namespace DataWF.TestGui
         [Category("Value Type")]
         public TestEnum Enum
         {
-            get { return _enum; }
+            get => _enum;
             set
             {
                 _enum = value;
@@ -446,7 +450,7 @@ namespace DataWF.TestGui
         [Category("Value Type")]
         public TestFlag Flag
         {
-            get { return _flag; }
+            get => _flag;
             set
             {
                 _flag = value;
@@ -457,7 +461,7 @@ namespace DataWF.TestGui
         [Category("Value Type")]
         public DateTime Date
         {
-            get { return _date; }
+            get => _date;
             set
             {
                 _date = value;
@@ -468,7 +472,7 @@ namespace DataWF.TestGui
         [Category("Value Type")]
         public string Comment
         {
-            get { return _comment; }
+            get => _comment;
             set
             {
                 _comment = value;
@@ -479,7 +483,7 @@ namespace DataWF.TestGui
         [Category("Compaund")]
         public LocaleString Name
         {
-            get { return _name; }
+            get => _name;
             set
             {
                 _name = value;
@@ -490,7 +494,7 @@ namespace DataWF.TestGui
         [Category("Compaund")]
         public Size Size
         {
-            get { return _size; }
+            get => _size;
             set
             {
                 _size = value;
@@ -506,7 +510,7 @@ namespace DataWF.TestGui
 
         public string this[string index]
         {
-            get { return index; }
+            get => index;
             set { }
         }
 
@@ -526,7 +530,7 @@ namespace DataWF.TestGui
         [Category("Tree")]
         public IGroup Group
         {
-            get { return _group; }
+            get => _group;
             set
             {
                 _group = value;
@@ -537,7 +541,7 @@ namespace DataWF.TestGui
         [Category("Tree")]
         public bool Expand
         {
-            get { return _expand; }
+            get => _expand;
             set
             {
                 _expand = value;

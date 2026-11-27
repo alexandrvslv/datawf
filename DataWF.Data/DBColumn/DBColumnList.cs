@@ -17,33 +17,39 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.ComponentModel;
-using DataWF.Common;
 using System.Linq;
-using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
-    public class DBColumnList<T> : DBTableItemList<T> where T : DBColumn, new()
+    public sealed class DBColumnList<T> : DBTableItemList<T> where T : DBColumn
     {
+        private HashSet<DBColumn> toReplace = new HashSet<DBColumn>();
+        private IListIndex<T, string> groupNameIndex;
+        private IListIndex<T, string> propertyNameIndex;
+        private IListIndex<T, string> refPropertyNameIndex;
+        private IListIndex<T, string> targetNameIndex;
+        private IListIndex<T, bool> isViewIndex;
+        private IListIndex<T, bool> isReferenceIndex;
+
         public DBColumnList(DBTable table)
             : base(table)
         {
-            Indexes.Add(DBColumn.GroupNameInvoker<T>.Instance);
-            Indexes.Add(DBColumn.PropertyNameInvoker<T>.Instance);
-            Indexes.Add(DBColumn.ReferencePropertyNameInvoker<T>.Instance);
-            Indexes.Add(DBColumn.IsViewInvoker<T>.Instance);
-            Indexes.Add(DBColumn.IsReferenceInvoker<T>.Instance);
+            groupNameIndex = Indexes.Add(DBColumn.GroupNameInvoker.Instance);
+            propertyNameIndex = Indexes.Add(DBColumn.PropertyNameInvoker.Instance);
+            refPropertyNameIndex = Indexes.Add(DBColumn.ReferencePropertyNameInvoker.Instance);
+            isViewIndex = Indexes.Add(DBColumn.IsViewInvoker.Instance);
+            isReferenceIndex = Indexes.Add(DBColumn.IsReferenceInvoker.Instance);
+            targetNameIndex = Indexes.Add(DBColumn.TargetNameInvoker.Instance);
             //Indexes.Add(DBColumn.ReferenceTableInvoker<T>.Instance);
         }
 
         protected override void OnPropertyChanged(string property)
         {
             base.OnPropertyChanged(property);
-            if (Table != null && Table.Schema != null)
+            if (Table != null && Schema != null)
             {
                 Table.ClearCache();
             }
@@ -52,12 +58,7 @@ namespace DataWF.Data
         public override void RemoveInternal(T item, int index)
         {
             base.RemoveInternal(item, index);
-            if (item.Index != null)
-            {
-                item.Clear();
-                item.Index.Dispose();
-                item.Index = null;
-            }
+            item.Clear();
         }
 
         public new void Clear()
@@ -71,11 +72,20 @@ namespace DataWF.Data
             {
                 return;
             }
-            if (Contains(item.Name))
+            var exist = this[item.Name];
+            if (exist != null)
             {
-                throw new InvalidOperationException($"Columns name duplication {item.Name}");
+                if (exist.DataType == item.DataType)
+                {
+                    throw new InvalidOperationException($"Columns name duplication {item.Name}");
+                }
+                else
+                {
+                    index = IndexOf(exist);
+                    RemoveInternal(exist, index);
+                    toReplace.Add(item);
+                }
             }
-            // if (col.Order == -1 || col.Order > this.Count)
             if (item.IsPrimaryKey && index > 1)
                 index = 1;
             if (item.IsTypeKey)
@@ -84,10 +94,24 @@ namespace DataWF.Data
 
             base.InsertInternal(index, item);
 
-            if (item.IsPrimaryKey)
+            if (exist != null)
+            {
+                Table.Constraints.Replace(exist, item);
+                Table.Foreigns.Replace(exist, item);
+                Table.Indexes.Replace(exist, item);
+                if (exist != null)
+                {
+                    Table.ClearCache();
+                    foreach (var relation in Table.ChildRelations)
+                    {
+                        relation.References.Replace(exist, item);
+                    }
+                }
+            }
+            if (item.IsPrimaryKey && Schema != null)
             {
                 DBConstraint primary = null;
-                foreach (var constraint in Table.Constraints.GetByColumn(Table.PrimaryKey))
+                foreach (var constraint in Table.Constraints.GetByColumn(item))
                 {
                     if (constraint.Type == DBConstraintType.Primary)
                     {
@@ -95,15 +119,25 @@ namespace DataWF.Data
                         break;
                     }
                 }
-                if (primary == null && Table.PrimaryKey != null)
+                if (primary == null)
                 {
-                    primary = new DBConstraint() { Column = Table.PrimaryKey, Type = DBConstraintType.Primary };
+                    primary = new DBConstraint() { Column = item, Type = DBConstraintType.Primary };
                     primary.GenerateName();
                     Table.Constraints.Add(primary);
                     //Table.DefaultComparer = item.CreateComparer(); Commented for poerformance of Index creation
                 }
             }
             item.CheckPull();
+        }
+
+        public override DDLType GetInsertType(T item)
+        {
+            var isReplace = toReplace.Remove(item);
+            if (Table.IsVirtual)
+                return DDLType.None;
+            return (item.ColumnType == DBColumnTypes.Default)
+                ? isReplace ? DDLType.Alter : DDLType.Create
+                : DDLType.None;
         }
 
         public DBColumn Add(string name)
@@ -127,7 +161,7 @@ namespace DataWF.Data
         {
             if (Contains(name))
                 return this[name];
-            var column = new DBColumn(name, t, size) { Table = Table };
+            var column = DBColumnFactory.Create(t, name, size: size, table: Table);
             Add((T)column);
             return column;
         }
@@ -139,45 +173,43 @@ namespace DataWF.Data
 
         public IEnumerable<DBColumn> GetByGroup(string groupName)
         {
-            return string.IsNullOrEmpty(groupName) ? null : Select(DBColumn.GroupNameInvoker<T>.Instance, CompareType.Equal, groupName);
+            return string.IsNullOrEmpty(groupName) ? null : groupNameIndex.Scan(CompareOperator.Equal, groupName);
         }
 
         public IEnumerable<DBColumn> GetByReference(DBTable table)
         {
-            return Select(DBColumn.ReferenceTableNameInvoker<T>.Instance, CompareType.Equal, table.Name);
+            return Select(DBColumn.ReferenceTableNameInvoker.Instance, CompareOperator.Equal, table.Name);
         }
 
         public IEnumerable<DBColumn> GetIsReference()
         {
-            return Select(DBColumn.IsReferenceInvoker<T>.Instance, CompareType.Equal, true);
+            return isReferenceIndex.Scan(CompareOperator.Equal, true);
         }
 
         public IEnumerable<DBColumn> GetIsView()
         {
-            return Select(DBColumn.IsViewInvoker<T>.Instance, CompareType.Equal, true);
+            return isViewIndex.Scan(CompareOperator.Equal, true);
+        }
+
+        public DBColumn GetByTarget(string name)
+        {
+            return string.IsNullOrEmpty(name) ? null : targetNameIndex.SelectOne(name);
         }
 
         public DBColumn GetByProperty(string property)
         {
-            var columns = Select(DBColumn.PropertyNameInvoker<T>.Instance, CompareType.Equal, property);
-            if (columns.Count() > 1)
-            {
-                return columns.Where(p => p.Culture == Locale.Instance.Culture).FirstOrDefault();
-            }
-            return columns.FirstOrDefault();
+            var columns = propertyNameIndex.Scan(CompareOperator.Equal, property);
+            return columns.FirstOrDefault(p => p.Culture == null
+                                            || !string.Equals(property, p.GroupName, StringComparison.Ordinal)
+                                            || p.Culture == Locale.Instance.Culture);
         }
 
         public DBColumn GetByReferenceProperty(string property)
         {
-            var columns = Select(DBColumn.ReferencePropertyNameInvoker<T>.Instance, CompareType.Equal, property);
-            if (columns.Count() > 1)
-            {
-                return columns.Where(p => p.Culture == Locale.Instance.Culture).FirstOrDefault();
-            }
-            return columns.FirstOrDefault();
+            return refPropertyNameIndex.SelectOne(property);
         }
 
-        public DBColumn GetByKey(DBColumnKeys key)
+        public DBColumn GetByKey(ColumnFlags key)
         {
             foreach (DBColumn column in this)
             {

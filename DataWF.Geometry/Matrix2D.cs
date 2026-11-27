@@ -17,14 +17,14 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.IO;
 
 namespace DataWF.Geometry
 {
     //Skia concept
-    public class Matrix2D : IByteSerializable, IEquatable<Matrix2D>
+    public class Matrix2D : IBinarySerializable, IEquatable<Matrix2D>
     {
         public static bool operator ==(Matrix2D a, Matrix2D b)
         {

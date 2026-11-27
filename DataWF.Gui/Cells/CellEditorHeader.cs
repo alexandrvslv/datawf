@@ -1,6 +1,7 @@
-﻿using Xwt;
-using DataWF.Common;
-using Xwt.Drawing;
+﻿using Avalonia;
+using DataWF;
+using Avalonia.Controls;
+using Avalonia.Media;
 
 namespace DataWF.Gui
 {
@@ -49,10 +50,10 @@ namespace DataWF.Gui
                 }
             }
             var textBound = layoutList.GetCellTextBound(e);
-            if (e.Formated is string)
-                e.Context.DrawText((string)e.Formated, textBound, e.Style, e.State);
-            else if (e.Formated is TextLayout)
-                e.Context.DrawText((TextLayout)e.Formated, textBound, e.Style, e.State);
+            if (e.Formated is string str)
+                e.Context.DrawText(str, textBound, e.Style, e.State);
+            else if (e.Formated is FormattedText formattedText)
+                e.Context.DrawText(formattedText, textBound, e.Style, e.State);
         }
     }
 }

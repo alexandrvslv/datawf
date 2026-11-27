@@ -22,7 +22,7 @@ using System;
 namespace DataWF.Data
 {
     [Flags]
-    public enum DBViewKeys
+    public enum DBViewKeys : byte
     {
         None = 0,
         Static = 2,
@@ -33,22 +33,34 @@ namespace DataWF.Data
         Lock = 64
     }
 
-    public enum DDLType
+    public enum DDLType : byte
     {
-        Alter,
+        None = 0,
         Create,
+        Alter,
         Drop,
-        Default
     }
 
-    public enum DBExecuteType
+    public enum DBSchemaItemType : byte
+    {
+        None = 0,
+        Schema,
+        Table,
+        Column,
+        Constraint,
+        ForeignKey,
+        Index,
+        View
+    }
+
+    public enum DBExecuteType : byte
     {
         Scalar,
         Reader,
         NoReader
     }
 
-    public enum DBConstraintType
+    public enum DBConstraintType : byte
     {
         Primary,
         Foreign,
@@ -57,7 +69,7 @@ namespace DataWF.Data
         Check
     }
 
-    public enum DBTableType
+    public enum DBTableType : byte
     {
         Table,
         View,
@@ -65,43 +77,20 @@ namespace DataWF.Data
     }
 
     [Flags()]
-    public enum DBLoadParam
+    public enum DBLoadParam : short
     {
         None = 0,
         Load = 2,
-        Synchronize = 4,
         GetCount = 8,
         CheckDeleted = 16,
         Reference = 32,
         Referencing = 64,
-        NoAttach = 128
+        NoAttach = 128,
+        NoCache = 256,
+        DownloadFiles = 512
     }
 
-    public enum DBDataType
-    {
-        None,
-        String,
-        Clob,
-        Date,
-        DateTime,
-        TimeStamp,
-        TimeSpan,
-        Blob,
-        ByteArray,
-        Decimal,
-        Double,
-        Float,
-        BigInt,
-        Int,
-        ShortInt,
-        TinyInt,
-        Bool,
-        LargeObject,
-        Object,
-        ByteSerializable,
-    }
-
-    public enum DBCommandTypes
+    public enum DBCommandTypes : byte
     {
         Insert,
         InsertSequence,
@@ -110,7 +99,7 @@ namespace DataWF.Data
         Query
     }
 
-    public enum DBColumnTypes
+    public enum DBColumnTypes : byte
     {
         Default,
         Query,
@@ -120,7 +109,7 @@ namespace DataWF.Data
     }
 
     [Flags()]
-    public enum DBUpdateState
+    public enum DBUpdateState : byte
     {
         Default = 0,
         Commit = 1,
@@ -133,71 +122,18 @@ namespace DataWF.Data
     }
 
     [Flags()]
-    public enum DBItemState
+    public enum DBItemState : byte
     {
         New = 0,
         Attached = 1,
         Check = 2,
-        Expand = 4
+        Expand = 4,
+        Load = 8,
     }
 
-    public enum DBQueryTarget
-    {
-        UserDefined,
-        TableSearch,
-        Other
-    }
 
-    public enum QParcerState
-    {
-        Where,
-        Select,
-        From,
-        OrderBy,
-        GroupBy
-    }
 
-    public enum QFunctionType
-    {
-        none,
-        avg,
-        concat,
-        coalesce,
-        initcap,
-        trim,
-        rtrim,
-        ltrim,
-        convert,
-        cast,
-        sum,
-        distinct,
-        upper,
-        lower,
-        group,
-        to_char,
-        to_date,
-        getdate,
-        datename,
-        format,
-        parse,
-        max,
-        min,
-        count
-        
-    }
-
-    public enum DBRowBinarySeparator
-    {
-        None,
-        ColumnsStart,
-        ColumnsEnd,
-        RowStart,
-        RowEnd,
-        End,
-        Null
-    }
-
-    public enum DBLogType
+    public enum DBLogType : byte
     {
         None,
         Insert,
@@ -205,7 +141,7 @@ namespace DataWF.Data
         Delete
     }
 
-    public enum DBSetValueMode
+    public enum DBSetValueMode : byte
     {
         Default,
         Loading

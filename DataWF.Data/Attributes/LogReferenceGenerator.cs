@@ -28,9 +28,18 @@ namespace DataWF.Data
         {
         }
 
-        public override DBForeignKey Generate()
+        public override DBTable CheckReference(IDBSchema schema)
+        {
+            if (schema is DBSchemaLog logSchema)
+                schema = logSchema.TargetSchema;
+
+            return base.CheckReference(schema);
+        }
+
+        public override DBForeignKey Generate(DBTable table)
         {
             return null;
         }
+
     }
 }

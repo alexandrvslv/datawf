@@ -5,32 +5,12 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Gui</RootNamespace>
     <AssemblyName>DataWF.Gui</AssemblyName>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU</Platforms>
     
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <NoStdLib>false</NoStdLib>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <NoStdLib>false</NoStdLib>
-  </PropertyGroup>  
   <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
-    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
+    <ProjectReference Include="..\DataWF.Core\DataWF.Core.csproj" />    
   </ItemGroup>
   <ItemGroup>
     <Content Include="fontawesome-webfont.ttf">
@@ -44,5 +24,9 @@
     <EmbeddedResource Include="..\datawf.png" Link="datawf.png">
       <LogicalName>datawf.png</LogicalName>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="12.1.4" />
   </ItemGroup>
 </Project>

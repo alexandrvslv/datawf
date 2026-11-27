@@ -1,7 +1,6 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
-using Xwt.Drawing;
-using System.Reflection;
+using Avalonia.Media.Imaging;
 
 namespace DataWF.Gui
 {
@@ -19,7 +18,7 @@ namespace DataWF.Gui
     public interface IGlyph
     {
         GlyphType Glyph { get; set; }
-        Image Image { get; set; }
+        Bitmap Image { get; set; }
     }
 
     public interface IText
@@ -125,7 +124,7 @@ namespace DataWF.Gui
         CheckClearBase = 1 << 17
     }
 
-    public enum Orientation
+    public enum BoxOrientation
     {
         Horizontal,
         Vertical

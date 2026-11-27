@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,10 +8,7 @@ namespace DataWF.Gui
 {
     public class PGroupComparer : IComparer<LayoutGroup>
     {
-        public int Compare(LayoutGroup x, LayoutGroup y)
-        {
-            return x.IndexStart.CompareTo(y.IndexStart);
-        }
+        public int Compare(LayoutGroup x, LayoutGroup y) => x.IndexStart.CompareTo(y.IndexStart);
     }
 
     public class LayoutGroupList : ICollection<LayoutGroup>
@@ -33,31 +30,21 @@ namespace DataWF.Gui
             get
             {
                 foreach (LayoutGroup lg in items)
-                    if (ListHelper.Compare(lg.Value, value, null) == 0)
+                    if (ListHelper.Compare(lg.Value, value, (IComparer)null) == 0)
                         return lg;
                 return null;
             }
         }
 
-        public void Add(LayoutGroup value)
-        {
-            items.Add(value);
-        }
+        public void Add(LayoutGroup value) => items.Add(value);
 
-        public void Sort()
-        {
-            items.Sort();
-        }
+        public void Sort() => items.Sort();
 
-        public IEnumerator<LayoutGroup> GetEnumerator()
-        {
-            return items.GetEnumerator();
-        }
+        IEnumerator<LayoutGroup> IEnumerable<LayoutGroup>.GetEnumerator() => items.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return items.GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => items.GetEnumerator();
+
+        public OneListEnumerator<LayoutGroup> GetEnumerator() => items.GetEnumerator();
 
         public void RefreshGroup(int starIndex)
         {
@@ -144,25 +131,16 @@ namespace DataWF.Gui
             items.Clear();
         }
 
-        public int IndexOf(LayoutGroup g)
-        {
-            return items.IndexOf(g);
-        }
+        public int IndexOf(LayoutGroup g) => items.IndexOf(g);
 
         public LayoutGroup this[int index]
         {
             get { return items[index]; }
         }
 
-        public bool Contains(LayoutGroup item)
-        {
-            return items.Contains(item);
-        }
+        public bool Contains(LayoutGroup item) => items.Contains(item);
 
-        public void CopyTo(LayoutGroup[] array, int arrayIndex)
-        {
-            items.CopyTo(array, arrayIndex);
-        }
+        public void CopyTo(LayoutGroup[] array, int arrayIndex) => items.CopyTo(array, arrayIndex);
 
         public int Count
         {
@@ -174,9 +152,6 @@ namespace DataWF.Gui
             get { return items.IsReadOnly; }
         }
 
-        public bool Remove(LayoutGroup item)
-        {
-            return items.Remove(item);
-        }
+        public bool Remove(LayoutGroup item) => items.Remove(item);
     }
 }

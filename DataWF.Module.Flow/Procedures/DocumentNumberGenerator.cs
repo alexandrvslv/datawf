@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using System;
 using System.Threading.Tasks;
@@ -10,18 +10,19 @@ namespace DataWF.Module.Flow
     {
         public virtual long GenerateIdentifier(string name, DBTransaction transaction)
         {
-            var sequence = Document.DBTable.Schema.Sequences[name];
+
+            var sequence = transaction.Schema.Sequences[name];
             if (sequence == null)
             {
                 sequence = new DBSequence(name) { };
-                Document.DBTable.Schema.Sequences.Add(sequence);
-                try { DBService.CommitChanges(); }
+                transaction.Schema.Sequences.Add(sequence);
+                try { transaction.Schema.Provider.CommitChanges(); }
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
-                    DBService.Changes.Clear();
+                    transaction.Schema.Provider.Changes.Clear();
                 }
-                DBService.Save();
+                transaction.Schema.Provider.Save();
             }
             //return DBService.ExecuteQuery(FlowEnvironment.Config.Schema, FlowEnvironment.Config.Schema.Sequence.Create(name, 0, 1));
             return sequence.GetNext(transaction);

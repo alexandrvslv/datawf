@@ -1,8 +1,8 @@
 ﻿using System;
-using DataWF.Common;
+using DataWF;
 using System.ComponentModel;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
@@ -21,20 +21,20 @@ namespace DataWF.Gui
 
         public string LableText
         {
-            get { return Label.Text; }
-            set { Label.Text = value; }
+            get => Label.Text;
+            set => Label.Text = value;
         }
 
         public string ContentText
         {
-            get { return ((ToolTipControl)Target).Text; }
+            get => ((ToolTipControl)Target).Text;
             set
             {
                 if (((ToolTipControl)Target).Text == value)
                     return;
                 ((ToolTipControl)Target).Text = value;
-                var s = GraphContext.MeasureString(value, ((ToolTipControl)Target).Font, 640F);
-                var h = Padding.Bottom + Padding.Top + s.Height + 30;//(tools.Visible ? tools.Height : 0)
+                var s = GraphContext.MeasureString(value, ((ToolTipControl)Target).FontFamily, 640F);
+                var h = Padding.Bottom + Padding.Top + s.Height + 30;//(tools.IsVisible ? tools.Height : 0)
                 if (h > 600)
                     h = 600;
                 var w = Padding.Left + Padding.Right + s.Width + 20;
@@ -45,7 +45,7 @@ namespace DataWF.Gui
             }
         }
 
-        public void Show(Widget c, Point location, string content, string label)
+        public void Show(Control c, Point location, string content, string label)
         {
             mode = ToolShowMode.ToolTip;
             ContentText = content;

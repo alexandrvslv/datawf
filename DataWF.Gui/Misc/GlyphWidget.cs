@@ -1,74 +1,76 @@
 ﻿using System;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
+using DataWF;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Input;
+using Avalonia.Media.Imaging;
 
 namespace DataWF.Gui
 {
-    public class GlyphWidget : Canvas, IGlyph
+    public class GlyphControl : Control, IGlyph
     {
         private CellDisplayState state;
         private CellStyle style;
 
-        public GlyphWidget()
+        public GlyphControl()
         {
         }
 
         public CellStyle Style
         {
-            get { return style ?? (style = GuiEnvironment.Theme["Window"]); }
-            set { style = value; }
+            get => style ??= GuiEnvironment.Theme["Window"];
+            set => style = value;
         }
 
         public GlyphType Glyph { get; set; }
 
-        public Image Image { get; set; }
+        public Bitmap Image { get; set; }
 
         public CellDisplayState State
         {
-            get { return state; }
+            get => state;
             set
             {
-                if (state == value || !Sensitive)
+                if (state == value || !IsEnabled)
                     return;
 
                 state = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
         public event EventHandler<EventArgs> Click;
 
-        protected override void OnDraw(Context ctx, Rectangle dirtyRect)
+        public override void Render(DrawingContext ctx)
         {
-            base.OnDraw(ctx, dirtyRect);
-            var bound = new Rectangle(dirtyRect.Right - Bounds.Height, dirtyRect.Top, Bounds.Height, Bounds.Height);
+            base.Render(ctx);
             using (var context = new GraphContext(ctx))
-                context.DrawCell(Style, Image ?? (object)Glyph, bound, bound.Inflate(-1, 1), State);
+                context.DrawCell(Style, Image ?? (object)Glyph, Bounds, Bounds.Inflate(new Thickness(-1, 1)), State);
         }
 
-        protected override void OnMouseEntered(EventArgs args)
+        protected override void OnPointerEntered(PointerEventArgs e)
         {
-            base.OnMouseEntered(args);
+            base.OnPointerEntered(e);
             State = CellDisplayState.Hover;
         }
 
-        protected override void OnMouseExited(EventArgs args)
+        protected override void OnPointerExited(PointerEventArgs e)
         {
-            base.OnMouseExited(args);
+            base.OnPointerExited(e);
             State = CellDisplayState.Default;
         }
 
-        protected override void OnButtonPressed(ButtonEventArgs args)
+        protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
-            base.OnButtonPressed(args);
+            base.OnPointerPressed(e);
             State = CellDisplayState.Pressed;
         }
 
-        protected override void OnButtonReleased(ButtonEventArgs args)
+        protected override void OnPointerReleased(PointerReleasedEventArgs e)
         {
-            base.OnButtonReleased(args);
-            Click?.Invoke(this, args);
+            base.OnPointerReleased(e);
+            Click?.Invoke(this, e);
             State = CellDisplayState.Default;
         }
     }

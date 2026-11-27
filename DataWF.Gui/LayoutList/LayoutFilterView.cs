@@ -1,9 +1,9 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Gui
 {
@@ -13,7 +13,7 @@ namespace DataWF.Gui
         {
             Target = new LayoutFilterView(list);
             HeaderVisible = false;
-            Size = new Size(400, 300);
+            FrameSize = new Size(400, 300);
         }
 
         public LayoutFilterView FilterView
@@ -29,12 +29,12 @@ namespace DataWF.Gui
         static readonly Invoker<LayoutFilter, object> valueInvoker = new ActionInvoker<LayoutFilter, object>(nameof(LayoutFilter.Value),
                                                                  (item) => item.Value,
                                                                  (item, value) => item.Value = value);
-        static readonly Invoker<LayoutFilter, LogicType> logicInvoker = new ActionInvoker<LayoutFilter, LogicType>(nameof(LayoutFilter.Logic),
+        static readonly Invoker<LayoutFilter, CompareOperator> logicInvoker = new ActionInvoker<LayoutFilter, CompareOperator>(nameof(LayoutFilter.Logic),
                                                                (item) => item.Logic,
                                                                (item, value) => item.Logic = value);
         static readonly Invoker<LayoutFilter, string> headerInvoker = new ActionInvoker<LayoutFilter, string>(nameof(LayoutFilter.Header),
                                                             (item) => item.Header);
-        static readonly Invoker<LayoutFilter, CompareType> comparerInvoker = new ActionInvoker<LayoutFilter, CompareType>(nameof(LayoutFilter.Comparer),
+        static readonly Invoker<LayoutFilter, CompareOperator> comparerInvoker = new ActionInvoker<LayoutFilter, CompareOperator>(nameof(LayoutFilter.Comparer),
                                                                  (item) => item.Comparer,
                                                                  (item, value) => item.Comparer = value);
         private LayoutColumn valueColumn;
@@ -98,22 +98,22 @@ namespace DataWF.Gui
         {
             var filter = new LayoutFilter(column)
             {
-                Comparer = CompareType.Equal,
+                Comparer = CompareOperator.Equal,
                 Value = value
             };
             if (column.DataType == typeof(string)
                 || column.DataType == typeof(object))
             {
-                filter.Comparer = CompareType.Like;
+                filter.Comparer = CompareOperator.Like;
             }
             else if (column.DataType == typeof(DateTime))
             {
-                filter.Comparer = CompareType.Between;
+                filter.Comparer = CompareOperator.Between;
             }
 
             if (Filters.GetByName(column.Name) != null)
             {
-                filter.Logic = LogicType.Or;
+                filter.Logic = CompareOperator.Or;
             }
             Filters.Add(filter);
             OnCellEditBegin(filter, valueColumn);
@@ -122,7 +122,7 @@ namespace DataWF.Gui
 
         public void Remove(LayoutColumn column)
         {
-            var toremove = Filters.Select((nameof(LayoutFilter)), CompareType.Equal, column.Name).ToList();
+            var toremove = Filters.Select((nameof(LayoutFilter)), CompareOperator.Equal, column.Name).ToList();
             foreach (var item in toremove)
                 Filters.RemoveInternal(item, Filters.IndexOf(item));
             Filters.OnCollectionChanged(NotifyCollectionChangedAction.Reset);
@@ -177,20 +177,20 @@ namespace DataWF.Gui
             }
         }
 
-        public Rectangle GetRowCloseBound(int index)
+        public Rect GetRowCloseBound(int index)
         {
             var bound = GetRowBound(index, GetRowGroup(index));
             return GetRowCloseBound(GetHeaderBound(bound));
         }
 
-        public Rectangle GetRowCloseBound(Rectangle bound)
+        public Rect GetRowCloseBound(Rect bound)
         {
-            return new Rectangle(bound.X + (bound.Width - 14) / 2.0, bound.Y + (bound.Height - 14) / 2.0, 14, 14);
+            return new Rect(bound.X + (bound.Width - 14) / 2.0, bound.Y + (bound.Height - 14) / 2.0, 14, 14);
         }
 
-        protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
+        protected override Size MeasureOverride(Size availableSize)
         {
-            var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);
+            var size = base.MeasureOverride(availableSize);
             var content = GetContentBound();
             return content.Size + new Size(10, 10);
         }

@@ -1,8 +1,8 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.ComponentModel;
-using Xwt;
+using Avalonia;
 
 
 namespace DataWF.Data.Gui
@@ -82,7 +82,7 @@ namespace DataWF.Data.Gui
 
             groupAttributes.Autosize = true;
             groupAttributes.Column = 0;
-            groupAttributes.Widget = fields;
+            groupAttributes.Control = fields;
             groupAttributes.DefaultHeight = 110;
             groupAttributes.FillWidth = false;
             groupAttributes.Name = "groupAttributes";
@@ -92,7 +92,7 @@ namespace DataWF.Data.Gui
             groupAttributes.Text = "Attributes";
 
             groupParams.Column = 1;
-            groupParams.Widget = parameterView;
+            groupParams.Control = parameterView;
             groupParams.DefaultHeight = 100;
             groupParams.FillWidth = true;
             groupParams.Name = "groupParams";
@@ -110,7 +110,7 @@ namespace DataWF.Data.Gui
             groupSource.Width = 747;
             groupSource.Height = 381;
             groupSource.Text = "Source";
-            groupSource.Widget = scroll;
+            groupSource.Control = scroll;
 
             groupMap.Add(groupAttributes);
             groupMap.Add(groupParams);
@@ -141,8 +141,8 @@ namespace DataWF.Data.Gui
 
             scroll.Content = source;
 
-            PackStart(toolStrip1, false, false);
-            PackStart(groupMap, true, true);
+            Children.Add(toolStrip1, false, false);
+            Children.Add(groupMap, true, true);
             parameterView.Text = "Parameters";
             //source.Document.FoldingManager.FoldingStrategy = new SharpRegionFolding();
             fields.Text = "Attributes";
@@ -209,7 +209,7 @@ namespace DataWF.Data.Gui
                 Name = GetName(procedure);
                 Text = procedure.ToString();
                 FieldTypeValueChanged(null, null);
-                toolSave.Sensitive = !procedure.IsSynchronized;
+                //TODO toolSave.Sensitive = !procedure.IsSynchronized;
             }
         }
 
@@ -231,7 +231,7 @@ namespace DataWF.Data.Gui
             {
                 Text = procedure.ToString();
             }
-            toolSave.Sensitive = !procedure.IsSynchronized;
+            //TODO toolSave.Sensitive = !procedure.IsSynchronized;
         }
 
         private void OnSourceTextChanged(object sender, EventArgs e)
@@ -339,7 +339,7 @@ namespace DataWF.Data.Gui
             if (list.SelectedItem is System.CodeDom.Compiler.CompilerError error)
             {
                 string code = System.IO.Path.GetFileNameWithoutExtension(error.FileName);
-                DBProcedure p = DBService.Schems.ParseProcedure(code);
+                DBProcedure p = DataExplorer.Provider.ParseProcedure(code);
                 if (GuiService.Main == null)
                     Select(error.Column, error.Line);
                 else if (p != null)
@@ -361,20 +361,20 @@ namespace DataWF.Data.Gui
             procedure.Save();
             if (procedure.ProcedureType == ProcedureTypes.Source || procedure.ProcedureType == ProcedureTypes.Assembly)
             {
-                var args = new ExecuteArgs();
+                var args = new ExecuteArgs(procedure.Schema);
                 var obj = procedure.CreateObject(args);
 
                 if (obj is Window)
                 {
-                    ((Window)obj).TransientFor = ParentWindow;
+                    ((Window)obj).Owner = ParentWindow;
                     ((Window)obj).Show();
                 }
-                else if (obj is Widget)
+                else if (obj is Control)
                 {
                     var window = new ToolWindow
                     {
                         Mode = ToolShowMode.Dialog,
-                        Target = (Widget)obj,
+                        Target = (Control)obj,
                         Title = procedure.Name
                     };
                     window.Show(this, Point.Zero);
@@ -400,7 +400,7 @@ namespace DataWF.Data.Gui
             }
             else
             {
-                var args = new ExecuteArgs { Parameters = ProcedureProgress.CreateParam(procedure) };
+                var args = new ExecuteArgs(procedure.Schema) { Parameters = ProcedureProgress.CreateParam(procedure) };
                 var obj = procedure.CreateObject(args);
                 object result = procedure.ExecuteObject(obj, args);
                 MessageDialog.ShowMessage(ParentWindow, result == null ? "Succesfull!" : result.ToString(), "Execute complete!");

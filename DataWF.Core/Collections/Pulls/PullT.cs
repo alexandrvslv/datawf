@@ -1,0 +1,92 @@
+﻿using System;
+using System.Linq;
+using System.Threading;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace DataWF.Collections.Pulls;
+
+public class Pull<T> : GenericPull<T>, IEnumerable<T>
+{
+    private readonly List<T[]?> array = new();
+    private int maxIndex;
+
+    public Pull(int blockSize) : base(blockSize)
+    { }
+
+    public override int Capacity => array.Count * blockSize;
+
+    public int Count => maxIndex;
+
+    public override void Clear()
+    {
+        foreach (var a in array)
+        {
+            if (a != null)
+            {
+                a.AsSpan(0, a.Length).Clear();
+            }
+        }
+        blockCount = 0;
+        array.Clear();
+    }
+
+    public override bool EqualNull(object value)
+    {
+        return value == null;
+    }
+
+    public override T GetValue(in PullHandler handler)
+    {
+        if (handler.Block >= blockCount)
+        {
+            return default!;
+        }
+        var block = array[handler.Block];
+        return block != null ? block[handler.BlockIndex] : default!;
+    }
+
+    public override void SetValue(in PullHandler handler, T value)
+    {
+        if (handler.Block >= blockCount)
+        {
+            var blockAdd = (handler.Block + 1) - blockCount;
+            array.AddRange(Enumerable.Repeat((T[]?)null, blockAdd));
+            Interlocked.Add(ref blockCount, blockAdd);
+        }
+        var block = array[handler.Block];
+        if (block == null)
+        {
+            array[handler.Block] = block = new T[blockSize];
+        }
+        block[handler.BlockIndex] = value;
+        maxIndex = Math.Max(maxIndex, handler.GetSeqence(BlockSize));
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        for (int i = 0; i <= maxIndex; i++)
+        {
+            yield return GetValue(i);
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public override void Trunc(int maxIndex)
+    {
+        (short block, short blockIndex) = Helper.OneToTwoShift(maxIndex);
+        while (block < blockCount - 1)
+        {
+            array.RemoveAt(blockCount - 1);
+            Interlocked.Decrement(ref blockCount);
+        }
+        if (block < array.Count && blockIndex + 1 < BlockSize)
+        {
+            Memset<T>(array[block], default(T), blockIndex + 1);
+        }
+    }
+}

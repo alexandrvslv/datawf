@@ -1,12 +1,12 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Gui;
 using DataWF.Module.Flow;
 using System;
 using System.IO;
 using System.Linq;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Module.FlowGui
 {
@@ -163,6 +163,11 @@ namespace DataWF.Module.FlowGui
                     DocumentEditor.Execute(filePath);
                 }
             }
+        }
+
+        protected override T GetNewItem()
+        {
+            throw new NotImplementedException();
         }
     }
 }

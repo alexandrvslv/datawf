@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using System;
 using System.Collections.Generic;
@@ -32,37 +32,12 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using PathHelper = System.IO.Path;
 
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Name), typeof(DBConnection.NameInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.SystemName), typeof(DBConnection.SystemNameInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Host), typeof(DBConnection.HostInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Port), typeof(DBConnection.PortInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.DataBase), typeof(DBConnection.DataBaseInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Schema), typeof(DBConnection.SchemaInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.User), typeof(DBConnection.UserInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Password), typeof(DBConnection.PasswordInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Path), typeof(DBConnection.PathInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.IntegratedSecurity), typeof(DBConnection.IntegratedSecurityInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Pool), typeof(DBConnection.PoolInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Encrypt), typeof(DBConnection.EncryptInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.TimeOut), typeof(DBConnection.TimeOutInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.IsolationLevel), typeof(DBConnection.IsolationLevelInvoker))]
-[assembly: Invoker(typeof(DBConnection), nameof(DBConnection.Extend), typeof(DBConnection.ExtendInvoker))]
 namespace DataWF.Data
 {
-    public class DBConnectionList : SelectableList<DBConnection>
-    {
-        public DBConnectionList()
-        {
-            Indexes.Add(DBConnection.NameInvoker.Instance);
-        }
-
-        public DBConnection this[string name]
-        {
-            get { return SelectOne(nameof(DBConnection.Name), CompareType.Equal, name); }
-        }
-    }
-    public class DBConnection : INotifyPropertyChanged, IDisposable
+    [Invoker(Instance = true)]
+    public partial class DBConnection : INotifyPropertyChanged, IDisposable
     {
         private string name = "";
         private string host = "";
@@ -82,6 +57,8 @@ namespace DataWF.Data
         private DBSystem system;
         internal HashSet<IDbConnection> Buffer = new HashSet<IDbConnection>();
         private string path;
+        private string filesPath;
+        private byte dataBaseId;
 
         public DBConnection()
         { }
@@ -93,13 +70,13 @@ namespace DataWF.Data
 
         public string Name
         {
-            get { return name; }
+            get => name;
             set
             {
                 if (name != value)
                 {
                     name = value;
-                    OnPropertyChanged(nameof(Name));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -107,19 +84,19 @@ namespace DataWF.Data
         [Browsable(false)]
         public string SystemName
         {
-            get { return systemName; }
+            get => systemName;
             set
             {
                 systemName = value;
                 system = GetSystem();
-                OnPropertyChanged(nameof(System));
+                OnPropertyChanged();
             }
         }
 
         [XmlIgnore, JsonIgnore, Category("1. Host")]
         public DBSystem System
         {
-            get { return system ?? (system = GetSystem()); }
+            get => system ?? (system = GetSystem());
             set
             {
                 system = value;
@@ -142,65 +119,65 @@ namespace DataWF.Data
         [Category("1. Host")]
         public string Host
         {
-            get { return host; }
+            get => host;
             set
             {
                 if (host == value)
                     return;
                 host = value;
-                OnPropertyChanged(nameof(Host));
+                OnPropertyChanged();
             }
         }
 
         [Category("1. Host")]
         public uint Port
         {
-            get { return port; }
+            get => port;
             set
             {
                 if (port == value)
                     return;
                 port = value;
-                OnPropertyChanged(nameof(Port));
+                OnPropertyChanged();
             }
         }
 
         [Category("2. Database")]
         public string DataBase
         {
-            get { return database; }
+            get => database;
             set
             {
                 if (database == value)
                     return;
                 database = value;
-                OnPropertyChanged(nameof(DataBase));
+                OnPropertyChanged();
             }
         }
 
         [Category("2. Database")]
         public string Schema
         {
-            get { return schem; }
+            get => schem;
             set
             {
                 if (schem == value)
                     return;
                 schem = value;
-                OnPropertyChanged(nameof(Schema));
+                OnPropertyChanged();
             }
         }
 
         [Category("2. Database")]
         public string User
         {
-            get { return user; }
+            get => user;
             set
             {
                 if (user == value)
                     return;
                 user = value;
-                OnPropertyChanged(nameof(User));
+                OnPropertyChanged();
             }
         }
 
@@ -208,63 +185,63 @@ namespace DataWF.Data
         [PasswordPropertyText(true)]
         public string Password
         {
-            get { return Coding.DecodeString(password); }
+            get => Coding.DecodeString(password);
             set
             {
                 if (value == Password)
                     return;
                 password = Coding.EncodeString(value);
-                OnPropertyChanged(nameof(Password));
+                OnPropertyChanged();
             }
         }
 
         [Category("3. Additional")]
         public bool IntegratedSecurity
         {
-            get { return integrSec; }
+            get => integrSec;
             set
             {
                 if (integrSec == value)
                     return;
                 integrSec = value;
-                OnPropertyChanged(nameof(IntegratedSecurity));
+                OnPropertyChanged();
             }
         }
 
         [Category("3. Additional")]
         public bool? Pool
         {
-            get { return pool; }
+            get => pool;
             set
             {
                 if (pool == value)
                     return;
                 pool = value;
-                OnPropertyChanged(nameof(Pool));
+                OnPropertyChanged();
             }
         }
 
         [DefaultValue(false), Category("3. Additional")]
         public bool Encrypt
         {
-            get { return encrypt; }
+            get => encrypt;
             set
             {
                 encrypt = value;
-                OnPropertyChanged(nameof(Encrypt));
+                OnPropertyChanged();
             }
         }
 
         [Category("3. Additional")]
         public int TimeOut
         {
-            get { return timeout; }
+            get => timeout;
             set
             {
                 if (timeout != value)
                 {
                     timeout = value;
-                    OnPropertyChanged(nameof(TimeOut));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -272,13 +249,13 @@ namespace DataWF.Data
         [Category("3. Additional")]
         public IsolationLevel IsolationLevel
         {
-            get { return System == DBSystem.SQLite ? global::System.Data.IsolationLevel.Unspecified : level; }
+            get => System == DBSystem.SQLite ? global::System.Data.IsolationLevel.Unspecified : level;
             set
             {
                 if (level != value)
                 {
                     level = value;
-                    OnPropertyChanged(nameof(IsolationLevel));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -286,26 +263,63 @@ namespace DataWF.Data
         [Category("3. Additional")]
         public string Extend
         {
-            get { return extend; }
+            get => extend;
             set
             {
                 if (extend == value)
                     return;
                 extend = value;
-                OnPropertyChanged(nameof(Extend));
+                OnPropertyChanged();
             }
-        }
+        }        
 
         [Category("3. Additional")]
         public string Path
         {
-            get { return path ?? Helper.GetDirectory(); }
+            get => path ?? Helper.GetDirectory();
             set
             {
                 if (path != value)
                 {
                     path = value;
-                    OnPropertyChanged(nameof(Path));
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string FilesPath
+        {
+            get => filesPath ?? (filesPath = PathHelper.Combine(Path, "Files"));
+            set
+            {
+                if (!string.Equals(filesPath, value, StringComparison.Ordinal))
+                {
+                    filesPath = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string GetFilePath(long id)
+        {
+            var path = FilesPath;
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+            return PathHelper.Combine(path, id.ToString("D20"));
+        }
+
+        //https://www.enterprisedb.com/blog/generated-primary-and-foreign-keys-distributed-databases
+        public byte DataBaseId
+        {
+            get => dataBaseId;
+            set
+            {
+                if (dataBaseId != value)
+                {
+                    dataBaseId = value;
+                    OnPropertyChanged();
                 }
             }
         }
@@ -346,7 +360,7 @@ namespace DataWF.Data
             return System.CreateCommand(this, query, commandType);
         }
 
-        public bool CheckConnection()
+        public bool CheckConnection(bool throwException = false)
         {
             try
             {
@@ -357,6 +371,10 @@ namespace DataWF.Data
             catch (Exception ex)
             {
                 Helper.OnException(ex);
+                if (throwException)
+                {
+                    throw;
+                }
             }
             return false;
         }
@@ -411,7 +429,7 @@ namespace DataWF.Data
             public static byte[] DecodeBlock(byte[] block)
             {
                 if (block == null || block.Length == 0)
-                    return new byte[] { };
+                    return Array.Empty<byte>();
                 byte[] buffer = new byte[block.Length];
 
                 try
@@ -456,7 +474,7 @@ namespace DataWF.Data
 
         public void OnPropertyChanged([CallerMemberName] string property = null)
         {
-            //Debug.WriteLine($"Connection set property {property} = {EmitInvoker.GetValue(GetType(), property, this)}");
+            //Debug.WriteLine($"Connection set property {property} = {InvokeProvider.GetValue(GetType(), property, this)}");
             OnPropertyChanged(new PropertyChangedEventArgs(property));
         }
 
@@ -472,7 +490,7 @@ namespace DataWF.Data
             var table = new DBTable<T>(tableName) { Schema = schema };
             using (var transaction = new DBTransaction(this, null, true))
             {
-                table.Load(transaction.AddCommand(query));
+                table.Load(transaction.AddCommand(query), null);
             }
             return table;
         }
@@ -481,8 +499,7 @@ namespace DataWF.Data
         {
             using (var transaction = new DBTransaction(this, null, true))
             {
-                transaction.AddCommand(query);
-                return transaction.ExecuteQResult();
+                return transaction.ExecuteQResult(transaction.AddCommand(query));
             }
         }
 
@@ -499,7 +516,7 @@ namespace DataWF.Data
             using (var transaction = new DBTransaction(this, null, true))
             {
                 var list = new List<List<KeyValuePair<string, object>>>();
-                using (var reader = transaction.ExecuteQuery(transaction.AddCommand(query), DBExecuteType.Reader) as IDataReader)
+                using (var reader = transaction.ExecuteReader(transaction.AddCommand(query)))
                 {
                     int fCount = reader.FieldCount;
                     while (reader.Read())
@@ -548,6 +565,30 @@ namespace DataWF.Data
             }
         }
 
+        public object ExecuteQuery(IDbCommand command, bool noTransaction = false, DBExecuteType type = DBExecuteType.Scalar)
+        {
+            if (command == null)
+                return null;
+            using (var transaction = new DBTransaction(this, null, noTransaction))
+            {
+                var result = transaction.ExecuteQuery(command, type);
+                transaction.Commit();
+                return result;
+            }
+        }
+
+        public async Task<object> ExecuteQueryAsync(IDbCommand command, bool noTransaction = false, DBExecuteType type = DBExecuteType.Scalar)
+        {
+            if (command == null)
+                return null;
+            using (var transaction = new DBTransaction(this, null, noTransaction))
+            {
+                var result = await transaction.ExecuteQueryAsync(command, type);
+                transaction.Commit();
+                return result;
+            }
+        }
+
         public IEnumerable<string> SplitGoQuery(string query)
         {
             var regex = new Regex(@"\s*go\s*(\n|$)", RegexOptions.IgnoreCase);
@@ -584,186 +625,6 @@ namespace DataWF.Data
         public void Dispose()
         {
             ClearConnectionCache();
-        }
-
-        public class NameInvoker : Invoker<DBConnection, string>
-        {
-            public static readonly NameInvoker Instance = new NameInvoker();
-            public override string Name => nameof(DBConnection.Name);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBConnection target) => target.Name;
-
-            public override void SetValue(DBConnection target, string value) => target.Name = value;
-        }
-
-        public class SystemNameInvoker : Invoker<DBConnection, string>
-        {
-            public static readonly SystemNameInvoker Instance = new SystemNameInvoker();
-            public override string Name => nameof(DBConnection.SystemName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBConnection target) => target.SystemName;
-
-            public override void SetValue(DBConnection target, string value) => target.SystemName = value;
-        }
-
-        public class HostInvoker : Invoker<DBConnection, string>
-        {
-            public static readonly HostInvoker Instance = new HostInvoker();
-            public override string Name => nameof(DBConnection.Host);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBConnection target) => target.Host;
-
-            public override void SetValue(DBConnection target, string value) => target.Host = value;
-        }
-
-        public class PortInvoker : Invoker<DBConnection, uint>
-        {
-            public static readonly PortInvoker Instance = new PortInvoker();
-            public override string Name => nameof(DBConnection.Port);
-
-            public override bool CanWrite => true;
-
-            public override uint GetValue(DBConnection target) => target.Port;
-
-            public override void SetValue(DBConnection target, uint value) => target.Port = value;
-        }
-
-        public class DataBaseInvoker : Invoker<DBConnection, string>
-        {
-            public static readonly DataBaseInvoker Instance = new DataBaseInvoker();
-            public override string Name => nameof(DBConnection.DataBase);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBConnection target) => target.DataBase;
-
-            public override void SetValue(DBConnection target, string value) => target.DataBase = value;
-        }
-
-        public class SchemaInvoker : Invoker<DBConnection, string>
-        {
-            public static readonly SchemaInvoker Instance = new SchemaInvoker();
-            public override string Name => nameof(DBConnection.Schema);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBConnection target) => target.Schema;
-
-            public override void SetValue(DBConnection target, string value) => target.Schema = value;
-        }
-
-        public class UserInvoker : Invoker<DBConnection, string>
-        {
-            public static readonly UserInvoker Instance = new UserInvoker();
-            public override string Name => nameof(DBConnection.User);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBConnection target) => target.User;
-
-            public override void SetValue(DBConnection target, string value) => target.User = value;
-        }
-
-        public class PasswordInvoker : Invoker<DBConnection, string>
-        {
-            public static readonly PasswordInvoker Instance = new PasswordInvoker();
-            public override string Name => nameof(DBConnection.Password);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBConnection target) => target.Password;
-
-            public override void SetValue(DBConnection target, string value) => target.Password = value;
-        }
-
-        public class PathInvoker : Invoker<DBConnection, string>
-        {
-            public static readonly PathInvoker Instance = new PathInvoker();
-            public override string Name => nameof(DBConnection.Path);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBConnection target) => target.Path;
-
-            public override void SetValue(DBConnection target, string value) => target.Path = value;
-        }
-
-        public class IntegratedSecurityInvoker : Invoker<DBConnection, bool>
-        {
-            public static readonly IntegratedSecurityInvoker Instance = new IntegratedSecurityInvoker();
-            public override string Name => nameof(DBConnection.IntegratedSecurity);
-
-            public override bool CanWrite => true;
-
-            public override bool GetValue(DBConnection target) => target.IntegratedSecurity;
-
-            public override void SetValue(DBConnection target, bool value) => target.IntegratedSecurity = value;
-        }
-
-        public class PoolInvoker : Invoker<DBConnection, bool?>
-        {
-            public static readonly PoolInvoker Instance = new PoolInvoker();
-            public override string Name => nameof(DBConnection.Pool);
-
-            public override bool CanWrite => true;
-
-            public override bool? GetValue(DBConnection target) => target.Pool;
-
-            public override void SetValue(DBConnection target, bool? value) => target.Pool = value;
-        }
-
-        public class EncryptInvoker : Invoker<DBConnection, bool>
-        {
-            public static readonly EncryptInvoker Instance = new EncryptInvoker();
-            public override string Name => nameof(DBConnection.Encrypt);
-
-            public override bool CanWrite => true;
-
-            public override bool GetValue(DBConnection target) => target.Encrypt;
-
-            public override void SetValue(DBConnection target, bool value) => target.Encrypt = value;
-        }
-
-        public class TimeOutInvoker : Invoker<DBConnection, int>
-        {
-            public static readonly EncryptInvoker Instance = new EncryptInvoker();
-            public override string Name => nameof(DBConnection.TimeOut);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(DBConnection target) => target.TimeOut;
-
-            public override void SetValue(DBConnection target, int value) => target.TimeOut = value;
-        }
-
-        public class IsolationLevelInvoker : Invoker<DBConnection, IsolationLevel>
-        {
-            public static readonly IsolationLevelInvoker Instance = new IsolationLevelInvoker();
-            public override string Name => nameof(DBConnection.IsolationLevel);
-
-            public override bool CanWrite => true;
-
-            public override IsolationLevel GetValue(DBConnection target) => target.IsolationLevel;
-
-            public override void SetValue(DBConnection target, IsolationLevel value) => target.IsolationLevel = value;
-        }
-
-        public class ExtendInvoker : Invoker<DBConnection, string>
-        {
-            public static readonly ExtendInvoker Instance = new ExtendInvoker();
-            public override string Name => nameof(DBConnection.Extend);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBConnection target) => target.Extend;
-
-            public override void SetValue(DBConnection target, string value) => target.Extend = value;
         }
 
     }

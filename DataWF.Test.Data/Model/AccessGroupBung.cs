@@ -1,13 +1,14 @@
-﻿using DataWF.Common;
+﻿using DataWF;
+using DataWF.Access;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace DataWF.Test.Data
 {
-    public class AccessGroupBung : IGroupIdentity, IPrimaryKey
+    public class AccessGroupBung : IUserGroupIdentity, IPrimaryKey<int>
     {
-        public int? Id { get; set; }
+        public int Id { get; set; }
 
         public string Name { get; set; }
         public bool Expand { get; set; }
@@ -21,14 +22,15 @@ namespace DataWF.Test.Data
 
         public bool IsAuthenticated => true;
 
-        public object PrimaryKey { get => Id; set => Id = (int)value; }
+        public int PrimaryKey { get => Id; set => Id = value; }
+
+        object IPrimaryKey.PrimaryKey { get => Id; set => Id = (int)value; }
 
         public bool Required => true;
 
-        public int CompareTo(object obj)
-        {
-            throw new NotImplementedException();
-        }
+        public int CompareTo(object obj) => CompareTo((AccessGroupBung)obj);
+
+        public int CompareTo(AccessGroupBung obj) => Id.CompareTo(obj.Id);
 
         public bool ContainsIdentity(IUserIdentity user)
         {

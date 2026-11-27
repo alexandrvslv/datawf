@@ -1,7 +1,9 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Net;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
 
 namespace DataWF.Gui
 {
@@ -41,11 +43,11 @@ namespace DataWF.Gui
             list.FilterQuery.Parameters.Clear();
             if (filter.Length > 0)
             {
-                list.FilterQuery.Parameters.Add(LogicType.And, LayoutNodeList<Node>.FullPathInvoker, CompareType.Like, filter);
+                list.FilterQuery.Parameters.Add(CompareOperator.And, LayoutNodeList<Node>.FullPathInvoker, CompareOperator.Like, filter);
             }
             else
             {
-                list.FilterQuery.Parameters.Add(LogicType.Undefined, TreeInvoker<Node>.Instance, CompareType.Equal, true);
+                list.FilterQuery.Parameters.Add(CompareOperator.Undefined, TreeInvoker<Node>.Instance, CompareOperator.Equal, true);
             }
             list.UpdateFilter();
             if (list.Count == 1 && list[0].Tag.GetType() == typeof(IPAddress))
@@ -53,9 +55,9 @@ namespace DataWF.Gui
 
                 string value = FormatValue(list[0].Tag, EditItem, DataType) as string;
                 int index = value.IndexOf(filter, StringComparison.OrdinalIgnoreCase);
-                EntryWidget.Text = value;
-                EntryWidget.SelectionStart = index + filter.Length;
-                EntryWidget.SelectionLength = value.Length - EntryWidget.SelectionStart;
+                EntryControl.Text = value;
+                EntryControl.SelectionStart = index + filter.Length;
+                EntryControl.SelectionEnd = value.Length;
 
                 Value = list[0].Tag;
             }
@@ -66,7 +68,7 @@ namespace DataWF.Gui
             HandleText = true;
         }
 
-        public override Widget InitDropDownContent()
+        public override IControl InitDropDownContent()
         {
             var tree = Editor.GetCached<NetTree>();
 
@@ -81,14 +83,14 @@ namespace DataWF.Gui
             if (!ReadOnly)
             {
                 tree.CellDoubleClick += HandleAfterSelect;
-                tree.KeyPressed += TreeCellKeyDown;
+                tree.KeyDown += TreeCellKeyDown;
             }
             return tree;
         }
 
         protected void TreeCellKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Return || e.Key == Key.NumPadEnter)
+            if (e.Key == Key.Return || e.Key == Key.Enter)
             {
                 var node = ((LayoutList)sender).SelectedNode;
                 Value = node.Tag;
@@ -98,12 +100,10 @@ namespace DataWF.Gui
 
         protected virtual void HandleAfterSelect(object sender, EventArgs e)
         {
-            if (Editor != null && sender is NetTree &&
-                ((NetTree)sender).SelectedNode != null &&
-                ((NetTree)sender).SelectedNode.Tag != null &&
-                (((NetTree)sender).SelectedNode.Tag.GetType() == typeof(IPAddress)))
+            if (Editor != null && sender is NetTree netTree &&
+                (netTree.SelectedNode?.Tag?.GetType() == typeof(IPAddress)))
             {
-                Value = ((NetTree)sender).SelectedNode.Tag;
+                Value = netTree.SelectedNode.Tag;
             }
         }
 
@@ -112,7 +112,7 @@ namespace DataWF.Gui
             if (Tree != null)
             {
                 Tree.CellDoubleClick -= HandleAfterSelect;
-                Tree.KeyPressed -= TreeCellKeyDown;
+                Tree.KeyDown -= TreeCellKeyDown;
             }
             base.FreeEditor();
         }

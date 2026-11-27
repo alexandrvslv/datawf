@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
-using DataWF.Common;
+using DataWF;
 
 namespace DataWF.Gui
 {
@@ -21,8 +21,8 @@ namespace DataWF.Gui
             nodes = new LayoutNodeList<Node>(cats);
             columns = new LayoutListInfo(
                 new LayoutColumn { Name = nameof(Node.ToString), Editable = false, Width = 120, FillWidth = true, Invoker = ToStringInvoker<object>.Instance },
-                new LayoutColumn { Name = nameof(Node.Category), Visible = false, Invoker = categoryInvoker },
-                new LayoutColumn { Name = nameof(Node.Order), Visible = false, Invoker = orderInvoker })
+                new LayoutColumn { Name = nameof(Node.Category), IsVisible = false, Invoker = categoryInvoker },
+                new LayoutColumn { Name = nameof(Node.Order), IsVisible = false, Invoker = orderInvoker })
             {
                 CollectingRow = false,
                 CalcHeigh = false,
@@ -55,8 +55,8 @@ namespace DataWF.Gui
 
         public LayoutListInfo Columns
         {
-            get { return columns; }
-            set { columns = value; }
+            get => columns;
+            set => columns = value;
         }
 
         public virtual void Dispose()

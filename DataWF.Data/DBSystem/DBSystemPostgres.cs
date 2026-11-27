@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using Npgsql;
 using System;
 using System.Collections;
@@ -33,13 +33,18 @@ namespace DataWF.Data
 {
     public class DBSystemPostgres : DBSystem
     {
+        static DBSystemPostgres()
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        }
+
         public DBSystemPostgres()
         {
             Name = "Postgres";
             DataTypeMap = new Dictionary<DBDataType, string>(){
                     {DBDataType.String, "varchar{0}"},
                     {DBDataType.Clob, "text"},
-                    {DBDataType.DateTime, "timestamp"},
+                    {DBDataType.DateTime, "timestamp{0}"},
                     {DBDataType.ByteArray, "bytea"},
                     {DBDataType.ByteSerializable, "bytea"},
                     {DBDataType.Blob, "bytea"},
@@ -47,12 +52,11 @@ namespace DataWF.Data
                     {DBDataType.Int, "integer"},
                     {DBDataType.ShortInt, "smallint"},
                     {DBDataType.TinyInt, "smallint"},
-                    {DBDataType.Float, "float4"},
-                    {DBDataType.Double, "float8"},
-                    {DBDataType.Decimal, "numeric{0}"},
+                    {DBDataType.Float, "real"},
+                    {DBDataType.Double, "double precision"},
+                    {DBDataType.Decimal, "decimal{0}"},
                     {DBDataType.TimeSpan, "interval"},
                     {DBDataType.Bool, "bool"},
-                    {DBDataType.LargeObject, "oid"}
                 };
         }
 
@@ -86,7 +90,7 @@ namespace DataWF.Data
                     nConnection.NoResetOnClose = true;
                 }
             }
-            nConnection.IncludeErrorDetails = true;
+            nConnection.IncludeErrorDetail = true;
             nConnection.MaxPoolSize = 400;
             nConnection.ConnectionIdleLifetime = 200;
             nConnection.Timeout = 100;
@@ -123,7 +127,10 @@ namespace DataWF.Data
 
         public override void CreateDatabase(DBSchema schema, DBConnection connection)
         {
-            //DropDatabase(schema);
+            if (!Directory.Exists(connection.Path))
+            {
+                Directory.CreateDirectory(connection.Path);
+            }
 
             connection.DataBase = "postgres";
 
@@ -165,7 +172,7 @@ namespace DataWF.Data
             switch (ddlType)
             {
                 case DDLType.Create://if not exists  pg 9.5 or above
-                    ddl.AppendLine($"create sequence {sequence.Name} start with {sequence.Current} increment by {sequence.Increment}");
+                    ddl.AppendLine($"create sequence {sequence.Name} start with {sequence.StartWith} increment by {sequence.Increment}");
                     break;
                 case DDLType.Alter:
                     ddl.AppendLine($"alter sequence {sequence.Name} restart with {sequence.Current + 1} increment by {sequence.Increment}");
@@ -216,6 +223,20 @@ namespace DataWF.Data
             {
                 ddl.AppendLine($"alter table {column.Table.SqlName} alter column {column.SqlName} drop not null;");
             }
+            if (column.DBDataType == DBDataType.Blob)
+            {
+                ddl.AppendLine($"alter table {column.Table.SqlName} alter column {column.SqlName} set storage external;");
+            }
+        }
+
+        public override void Format(StringBuilder ddl, DBTable table, DDLType ddlType, bool constraints = true, bool indexes = true)
+        {
+            base.Format(ddl, table, ddlType, constraints, indexes);
+            if (ddlType == DDLType.Create
+                && table.FileKey != null)
+            {
+                ddl.AppendLine($"; alter table {table.SqlName} alter column {table.FileKey.SqlName} set storage external;");
+            }
         }
 
         public override string FormatCreateView(string name)
@@ -223,10 +244,10 @@ namespace DataWF.Data
             return $"drop view if exists {name}; create view {name} as";
         }
 
-        public override object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        public override object FillParameter(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
             var isArray = value is IList && value.GetType() != typeof(byte[]);
-            value = base.WriteValue(command, parameter, value, column);
+            value = base.FillParameter(command, parameter, value, column);
             if (column != null)
             {
                 if (isArray)
@@ -244,16 +265,14 @@ namespace DataWF.Data
                 {
                     ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Interval;
                 }
-                else if (column.DBDataType == DBDataType.LargeObject)
+                else if (column.DBDataType == DBDataType.Decimal)
                 {
-                    ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Oid;
-                }
-                else if (column.DataType == typeof(uint))
-                {
-                    ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer;
+                    if (column.Size > 0)
+                        ((NpgsqlParameter)parameter).Precision = (byte)column.Size;
+                    if (column.Scale > 0)
+                        ((NpgsqlParameter)parameter).Scale = (byte)column.Scale;
                 }
             }
-
 
             return value;
         }
@@ -308,14 +327,14 @@ namespace DataWF.Data
         private string FormatMessage(PostgresException pex, DBTable table, DBItem dbItem)
         {
             var text = string.IsNullOrEmpty(pex.Detail) ? pex.MessageText : pex.Detail;
-            var refTable = string.IsNullOrEmpty(pex.TableName) ? null : DBService.Schems.ParseTable(pex.TableName);
+            var refTable = string.IsNullOrEmpty(pex.TableName) ? null : table.Schema.GetTable(pex.TableName);
             var builder = new StringBuilder();
             text = text.Replace("character varying", "Text");
             foreach (var item in text.Split(new char[] { ',', ' ', '"', '(', ')' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 if (table != null)
                 {
-                    var column = refTable?.ParseColumnProperty(item) ?? table?.ParseColumnProperty(item);
+                    var column = refTable?.GetColumnOrProperty(item) ?? table?.GetColumnOrProperty(item);
                     if (column != null)
                     {
                         builder.Append(column.DisplayName);
@@ -329,97 +348,6 @@ namespace DataWF.Data
             }
 
             return builder.ToString();
-        }
-
-        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
-        {
-            return await SetLOBBuffered(value, transaction);
-        }
-
-        public async Task<uint> SetLOBBuffered(Stream value, DBTransaction transaction)
-        {
-            if (value.CanSeek)
-            {
-                value.Position = 0;
-            }
-            var count = 0;
-            var bufferSize = 81920;
-            var buffer = new byte[bufferSize];
-            var tempFileName = Helper.GetDocumentsFullPath(Path.GetRandomFileName(), "Temp");
-            try
-            {
-                using (var tempStream = new FileStream(tempFileName, FileMode.Create, FileAccess.ReadWrite))
-                {
-                    while ((count = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
-                    {
-                        tempStream.Write(buffer, 0, count);
-                    }
-                }
-
-                var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
-
-                var result = await (Task<object>)manager.ImportRemoteAsync(tempFileName, 0, CancellationToken.None);
-
-                return (uint)result;
-            }
-            finally
-            {
-                File.Delete(tempFileName);
-            }
-        }
-
-        public static async Task<uint> SetLOBDirect(Stream value, DBTransaction transaction)
-        {
-            if (value.CanSeek)
-            {
-                value.Position = 0;
-            }
-            var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
-            var bufferSize = 81920;
-            var buffer = new byte[bufferSize];
-
-            var oid = await manager.CreateAsync(0, CancellationToken.None);
-
-            using (var lobStream = await manager.OpenReadWriteAsync(oid, CancellationToken.None))
-            {
-                //await value.CopyToAsync(lobStream);
-                int count;
-                while ((count = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
-                {
-                    lobStream.Write(buffer, 0, count);
-                }
-            }
-            return oid;
-        }
-
-        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
-        {
-            var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
-            return await manager.OpenReadAsync(oid, CancellationToken.None);
-        }
-
-        public async Task<Stream> GetLOBBuffered(uint oid, DBTransaction transaction)
-        {
-            var outStream = new MemoryStream();
-            var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
-            var bufferSize = 81920;
-            var buffer = new byte[bufferSize];
-            using (var lobStream = await manager.OpenReadAsync(oid, CancellationToken.None))
-            {
-                int count;
-                while ((count = await lobStream.ReadAsync(buffer, 0, bufferSize)) != 0)
-                {
-                    outStream.Write(buffer, 0, count);
-                }
-            }
-            outStream.Position = 0;
-            return outStream;
-        }
-
-        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
-        {
-            var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
-            await manager.UnlinkAsync(oid, CancellationToken.None);
         }
 
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
@@ -437,25 +365,29 @@ namespace DataWF.Data
             return null;
         }
 
-        public override Task<bool> ReadAsync(IDataReader reader)
-        {
-            var sqlReader = (NpgsqlDataReader)reader;
-            return sqlReader.ReadAsync();
-        }
-
-        public override uint GetOID(IDataReader reader, int index)
+        public override uint GetUInt(DbDataReader reader, int index)
         {
             return ((NpgsqlDataReader)reader).GetFieldValue<uint>(index);
         }
 
-        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        public override TimeSpan GetTimeSpan(DbDataReader reader, int index)
         {
             return ((NpgsqlDataReader)reader).GetTimeSpan(index);
         }
 
+        public override void PrepareStatements(IDbCommand command)
+        {
+            if (!((NpgsqlCommand)command).IsPrepared)
+            {
+                ((NpgsqlCommand)command).Prepare();
+            }
+            else
+            { }
+        }
+
         //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)
         //{
-        //    var Conn = (NpgsqlConnection)CreateConnection(item.Table.Schema.Connection);
+        //    var Conn = (NpgsqlConnection)CreateConnection(item.Schema.Connection);
         //    // Retrieve a Large Object Manager for this connection
         //    var manager = new NpgsqlLargeObjectManager(Conn);
 

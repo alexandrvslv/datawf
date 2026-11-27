@@ -1,12 +1,12 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt;
-using Xwt.Drawing;
-
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 
 namespace DataWF.Data.Gui
 {
@@ -34,10 +34,10 @@ namespace DataWF.Data.Gui
                 {
                     var item = new MenuItem
                     {
-                        Label = filter.ToString(),
+                        Header = filter.ToString(),
                         Tag = filter
                     };
-                    item.Clicked += MenuStatusItemClick;
+                    item.Click += MenuStatusItemClick;
                     contextStatusFilter.Items.Add(item);
                 }
 
@@ -72,7 +72,7 @@ namespace DataWF.Data.Gui
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public DBTable Table
+        public IDBTable Table
         {
             get
             {
@@ -140,7 +140,7 @@ namespace DataWF.Data.Gui
         {
             if (e.Item is DBItem row)
             {
-                var imgRect = new Rectangle(e.Bound.X + 1, e.Bound.Y + 1, 0, 0);
+                var imgRect = new Rect(e.Bound.X + 1, e.Bound.Y + 1, 0, 0);
                 var glyph = row.UpdateState == DBUpdateState.Default
                     ? row.Status == DBStatus.Archive ? GlyphType.FlagCheckered : GlyphType.Flag
                     : row.UpdateState == DBUpdateState.Insert ? GlyphType.PlusCircle : GlyphType.Pencil;
@@ -165,10 +165,10 @@ namespace DataWF.Data.Gui
                 {
                     color = Colors.Purple;
                 }
+                var imgSize = 14 * listInfo.Scale;
+                imgRect = new Rect(imgRect.Left, imgRect.Top, imgSize, imgSize);
 
-                imgRect.Width = imgRect.Height = 14 * listInfo.Scale;
-
-                var textRect = new Rectangle(imgRect.Right + 3, imgRect.Top + 2, e.Bound.Width - (imgRect.Width + 7), e.Bound.Height - 3);
+                var textRect = new Rect(imgRect.Right + 3, imgRect.Top + 2, e.Bound.Width - (imgRect.Width + 7), e.Bound.Height - 3);
                 string val = (e.Index + 1).ToString();
                 e.Context.DrawCell(listInfo.StyleHeader, val, e.Bound, textRect, e.State);
                 e.Context.DrawGlyph(glyph, imgRect, color);
@@ -179,7 +179,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        protected override void OnDrawMiddle(GraphContext context, Rectangle rect)
+        protected override void OnDrawMiddle(GraphContext context, Rect rect)
         {
             if (rect.Right > 0 && rect.Height > 0)
             {
@@ -198,7 +198,7 @@ namespace DataWF.Data.Gui
         {
             if (args.Properties == null)
             {
-                DBTable table = Table;
+                var table = Table;
 
                 if (args.Cell != null)
                 {
@@ -214,7 +214,7 @@ namespace DataWF.Data.Gui
 
                     foreach (DBColumn column in table.Columns)
                     {
-                        if ((column.Keys & DBColumnKeys.System) != DBColumnKeys.System && column.Access.GetFlag(AccessType.Read, GuiEnvironment.User))
+                        if ((column.Keys & ColumnFlags.System) != ColumnFlags.System && column.Access.GetFlag(AccessType.Read, GuiEnvironment.User))
                             args.Properties.Add((args.Cell == null ? string.Empty : args.Cell.Name + ".") + column.Name);
                     }
                 }
@@ -308,7 +308,7 @@ namespace DataWF.Data.Gui
             {
                 cell.Invoker = dbcolumn;
                 cell.ReadOnly = !dbcolumn.Access.GetFlag(AccessType.Update, GuiEnvironment.User);
-                cell.Password = (dbcolumn.Keys & DBColumnKeys.Password) == DBColumnKeys.Password;
+                cell.Password = (dbcolumn.Keys & ColumnFlags.Password) == ColumnFlags.Password;
                 if (cell is LayoutDBColumn)
                 {
                     ((LayoutColumn)cell).Collect = dbcolumn.DataType == typeof(decimal) && !dbcolumn.IsReference ? CollectedType.Sum : CollectedType.None;
@@ -333,7 +333,7 @@ namespace DataWF.Data.Gui
 
         protected virtual DBColumn ParseDBColumn(string name)
         {
-            return Table?.ParseColumn(name);
+            return Table?.GetColumnOrProperty(name);
         }
 
         public override ILayoutCellEditor InitCellEditor(ILayoutCell cell)
@@ -352,16 +352,7 @@ namespace DataWF.Data.Gui
         public static ILayoutCellEditor InitCellEditor(DBColumn column)
         {
             ILayoutCellEditor editor = null;
-            if ((column.Keys & DBColumnKeys.Boolean) == DBColumnKeys.Boolean)
-            {
-                editor = new CellEditorCheck();
-
-                ((CellEditorCheck)editor).ValueNull = null;
-                ((CellEditorCheck)editor).ValueTrue = column.BoolTrue;
-                ((CellEditorCheck)editor).ValueFalse = column.BoolFalse;
-                ((CellEditorCheck)editor).TreeState = (column.Keys & DBColumnKeys.Notnull) != DBColumnKeys.Notnull;
-            }
-            else if (column.IsReference)
+            if (column.IsReference)
             {
                 editor = new CellEditorTable();
                 ((CellEditorTable)editor).Table = column.ReferenceTable;
@@ -370,7 +361,7 @@ namespace DataWF.Data.Gui
             }
             else if (column.DataType == typeof(string))
             {
-                if ((column.Keys & DBColumnKeys.Password) == DBColumnKeys.Password)
+                if ((column.Keys & ColumnFlags.Password) == ColumnFlags.Password)
                 {
                     editor = new CellEditorPassword();
                 }
@@ -391,9 +382,9 @@ namespace DataWF.Data.Gui
             }
             else if (column.DataType == typeof(byte[]))
             {
-                if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
+                if ((column.Keys & ColumnFlags.Access) == ColumnFlags.Access)
                     editor = new CellEditorAccess();
-                else if ((column.Keys & DBColumnKeys.Image) == DBColumnKeys.Image)
+                else if ((column.Keys & ColumnFlags.Image) == ColumnFlags.Image)
                     editor = new CellEditorDBImage() { Column = column };
                 else
                     editor = new CellEditorFile();

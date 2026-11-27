@@ -1,64 +1,39 @@
-﻿using DataWF.Data;
+﻿using DataWF;
+using DataWF.Data;
 using DataWF.Module.Counterpart;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    [Table("ddocument_customer", "Document", BlockSize = 400)]
-    public class DocumentCustomer : DBItem, IDocumentDetail
+    [Table("ddocument_customer", "Document", BlockSize = 400), Invoker]
+    public partial class DocumentCustomer : DocumentItem
     {
-        public static readonly DBTable<DocumentCustomer> DBTable = GetTable<DocumentCustomer>();
-        public static readonly DBColumn CustomerKey = DBTable.ParseProperty(nameof(CustomerId));
-        public static readonly DBColumn AddressKey = DBTable.ParseProperty(nameof(AddressId));
-        public static readonly DBColumn EMailKey = DBTable.ParseProperty(nameof(EMail));
-        public static readonly DBColumn PhoneKey = DBTable.ParseProperty(nameof(Phone));
-        public static readonly DBColumn DocumentKey = DBTable.ParseProperty(nameof(DocumentId));
-
         private Customer customer;
         private Address address;
-        private Document document;
 
-        public DocumentCustomer()
-        { }
-
-        [Browsable(false)]
-        [Column("document_id"), Index("ddocument_customer_document_id")]
-        public virtual long? DocumentId
+        [Column("unid", Keys = ColumnFlags.Primary)]
+        public long Id
         {
-            get => GetValue<long?>(DocumentKey);
-            set => SetValue(value, DocumentKey);
-        }
-
-        [Reference(nameof(DocumentId))]
-        public Document Document
-        {
-            get => GetReference(DocumentKey, ref document);
-            set => SetReference(document = value, DocumentKey);
-        }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public long? Id
-        {
-            get => GetValue<long?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
-        [Column("customer_id", Keys = DBColumnKeys.View)]
+        [Column("customer_id", Keys = ColumnFlags.View)]
         public int? CustomerId
         {
-            get => GetValue<int?>(CustomerKey);
-            set => SetValue(value, CustomerKey);
+            get => GetValue(Table.CustomerIdKey);
+            set => SetValue(value, Table.CustomerIdKey);
         }
 
         [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get => GetReference(CustomerKey, ref customer);
+            get => GetReference(Table.CustomerIdKey, ref customer);
             set
             {
-                SetReference(customer = value, CustomerKey);
+                SetReference(customer = value, Table.CustomerIdKey);
                 Address = value?.Address;
                 EMail = value?.EMail;
                 Phone = value?.Phone;
@@ -69,29 +44,29 @@ namespace DataWF.Module.Flow
         [Column("address_id")]
         public int? AddressId
         {
-            get => GetValue<int?>(AddressKey);
-            set => SetValue(value, AddressKey);
+            get => GetValue(Table.AddressIdKey);
+            set => SetValue(value, Table.AddressIdKey);
         }
 
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get => GetReference(AddressKey, ref address);
-            set => SetReference(address = value, AddressKey);
+            get => GetReference(Table.AddressIdKey, ref address);
+            set => SetReference(address = value, Table.AddressIdKey);
         }
 
         [Column("email", 1024)]
         public string EMail
         {
-            get => GetValue<string>(EMailKey);
-            set => SetValue(value, EMailKey);
+            get => GetValue(Table.EMailKey);
+            set => SetValue(value, Table.EMailKey);
         }
 
         [Column("phone", 1024)]
         public string Phone
         {
-            get => GetValue<string>(PhoneKey);
-            set => SetValue(value, PhoneKey);
+            get => GetValue(Table.PhoneKey);
+            set => SetValue(value, Table.PhoneKey);
         }
 
         protected override void RaisePropertyChanged(string property)

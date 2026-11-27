@@ -2,10 +2,10 @@
 using DataWF.Gui;
 using DataWF.Data;
 using DataWF.Data.Gui;
-using DataWF.Common;
+using DataWF;
 using DataWF.Module.Common;
 using DataWF.Module.Flow;
-using Xwt;
+using Avalonia;
 using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
@@ -49,7 +49,7 @@ namespace DataWF.Module.FlowGui
 
         public object DataFilter { get; set; }
 
-        public override Widget InitDropDownContent()
+        public override Control InitDropDownContent()
         {
             var tree = Editor.GetCached<FlowTree>();
             tree.FlowKeys = FlowKeys;
@@ -59,7 +59,7 @@ namespace DataWF.Module.FlowGui
             if (!ReadOnly)
             {
                 tree.CellDoubleClick += ListCellDoubleClick;
-                tree.KeyPressed += ListCellKeyDown;
+                tree.KeyDown += ListCellKeyDown;
                 //list.SelectionChanged += PListSelectionChanged;
             }
             return tree;
@@ -86,7 +86,7 @@ namespace DataWF.Module.FlowGui
         public override void FreeEditor()
         {
             FlowTree.CellDoubleClick -= ListCellDoubleClick;
-            FlowTree.KeyPressed -= ListCellKeyDown;
+            FlowTree.KeyDown -= ListCellKeyDown;
             base.FreeEditor();
         }
     }

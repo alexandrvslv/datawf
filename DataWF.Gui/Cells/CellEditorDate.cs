@@ -1,6 +1,8 @@
 ﻿using System;
-using Xwt;
-using DataWF.Common;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using DataWF;
 
 namespace DataWF.Gui
 {
@@ -26,8 +28,8 @@ namespace DataWF.Gui
 
         public bool TwoDate
         {
-            get { return twoDate; }
-            set { twoDate = value; }
+            get => twoDate;
+            set => twoDate = value;
         }
 
         public IntervalSelector Selector
@@ -46,7 +48,7 @@ namespace DataWF.Gui
             return base.ParseValue(value, dataSource, valueType);
         }
 
-        public override Widget InitDropDownContent()
+        public override Visual InitDropDownContent()
         {
             var interval = Editor.GetCached<IntervalSelector>();
             interval.TwoDate = twoDate;
@@ -62,8 +64,8 @@ namespace DataWF.Gui
             //{
             //    e.Handled = true;
             //}
-            //var box = sender as TextEntry;
-            //if (Keyboard.CurrentModifiers == ModifierKeys.None && !box.ReadOnly && box.SelectionLength > 1)
+            //var box = sender as TextBox;
+            //if (Keyboard.CurrentModifiers == KeyModifiers.None && !box.ReadOnly && box.SelectionLength > 1)
             //{
             //    int start = box.SelectionStart;
             //    string temp = string.Empty;
@@ -100,7 +102,7 @@ namespace DataWF.Gui
 
         public override object Value
         {
-            get { return base.Value; }
+            get => base.Value;
             set
             {
                 bool flag = HandleText;

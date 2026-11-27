@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 
 namespace DataWF.Gui
 {
@@ -19,7 +19,7 @@ namespace DataWF.Gui
 
         public Category Find(string name)
         {
-            return SelectOne(nameof(Category.Name), CompareType.Equal, name);
+            return SelectOne(nameof(Category.Name), CompareOperator.Equal, name);
         }
 
         public override int Add(Category item)

@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
@@ -79,7 +79,7 @@ namespace DataWF.Module.CommonGui
                     {
                         tableView.Dispose();
                     }
-                    list.ListSource = view = new DBTableView<UserReg>((string)null, DBViewKeys.Empty);
+                    list.ListSource = view = new DBTableView<UserReg>(filter.Schema.GetTable<UserReg>(), (string)null, DBViewKeys.Empty);
                 }
                 var query = view.Query;
 
@@ -91,24 +91,24 @@ namespace DataWF.Module.CommonGui
                         f.Add((int)(UserRegType)toolItem.Tag);
                     }
                 }
-                query.BuildPropertyParam(nameof(UserReg.RegType), CompareType.In, f);
+                query.BuildPropertyParam(nameof(UserReg.RegType), CompareOperator.In, f);
 
                 if (Date != null)
                 {
-                    query.BuildPropertyParam(nameof(UserReg.DateCreate), CompareType.GreaterOrEqual, Date.Min);
-                    query.BuildPropertyParam(nameof(UserReg.DateCreate), CompareType.LessOrEqual, Date.Max.AddDays(1));
+                    query.BuildPropertyParam(nameof(UserReg.DateCreate), CompareOperator.GreaterOrEqual, Date.Min);
+                    query.BuildPropertyParam(nameof(UserReg.DateCreate), CompareOperator.LessOrEqual, Date.Max.AddDays(1));
                 }
                 if (filter is User && mode == DataLogMode.User)
                 {
-                    query.BuildPropertyParam(nameof(UserReg.UserId), CompareType.Equal, filter.PrimaryId);
+                    query.BuildPropertyParam(nameof(UserReg.UserId), CompareOperator.Equal, filter.PrimaryId);
                 }
                 else if (filter is UserGroup && mode == DataLogMode.Group)
                 {
-                    query.BuildPropertyParam(nameof(UserReg.UserId), CompareType.In, ((UserGroup)filter).GetUsers().ToList());
+                    query.BuildPropertyParam(nameof(UserReg.UserId), CompareOperator.In, ((UserGroup)filter).GetUsers().ToList());
                 }
                 else if (filter is UserReg)
                 {
-                    query.BuildPropertyParam(nameof(UserReg.ParentId), CompareType.Equal, filter.PrimaryId);
+                    query.BuildPropertyParam(nameof(UserReg.ParentId), CompareOperator.Equal, filter.PrimaryId);
                 }
             }
             base.UpdateFilter();

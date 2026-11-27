@@ -1,11 +1,11 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 using Xwt.Formats;
 
 namespace DataWF.Data.Gui
@@ -16,11 +16,11 @@ namespace DataWF.Data.Gui
         Reference
     }
 
-    [Project(typeof(QQuery), ".dbq")]
+    [Project(typeof(IQQuery), ".dbq")]
     public class QueryEditor : VPanel, IProjectEditor, ILocalizable
     {
         private DBTable table;
-        private QQuery query;
+        private IQQuery query;
         private QParam owner;
         private SearchState state;
         private ProjectHandler project;
@@ -53,21 +53,21 @@ namespace DataWF.Data.Gui
 
         public QueryEditor()
         {
-            gparam.Widget = listParams;
+            gparam.Control = listParams;
             gparam.FillHeight = true;
             gparam.FillWidth = true;
             gparam.Expand = true;
             gparam.Glyph = GlyphType.Paragraph;
             gparam.Row = 0;
             //
-            gcolumn.Widget = listColumns;
+            gcolumn.Control = listColumns;
             gcolumn.FillHeight = true;
             gcolumn.FillWidth = true;
             gcolumn.Expand = false;
             gcolumn.Glyph = GlyphType.At;
             gcolumn.Row = 1;
             //
-            gtable.Widget = listTables;
+            gtable.Control = listTables;
             gtable.FillHeight = false;
             gtable.FillWidth = true;
             gtable.DefaultHeight = 100;
@@ -75,7 +75,7 @@ namespace DataWF.Data.Gui
             gtable.Glyph = GlyphType.Table;
             gtable.Row = 2;
             //
-            gtext.Widget = textQuery;
+            gtext.Control = textQuery;
             gtext.FillHeight = false;
             gtext.FillWidth = true;
             gtext.DefaultHeight = 100;
@@ -83,7 +83,7 @@ namespace DataWF.Data.Gui
             gtable.Glyph = GlyphType.Question;
             gtext.Row = 3;
             //
-            gresult.Widget = viewResult;
+            gresult.Control = viewResult;
             gresult.FillHeight = true;
             gresult.FillWidth = true;
             gresult.Expand = false;
@@ -167,8 +167,8 @@ namespace DataWF.Data.Gui
 
             this.Name = "QueryEditor";
             this.Text = "Search";
-            PackStart(tools, false, false);
-            PackStart(map, true, true);
+            Children.Add(tools, false, false);
+            Children.Add(map, true, true);
 
             Localize();
 
@@ -201,7 +201,7 @@ namespace DataWF.Data.Gui
             {
                 Name = nameof(QParam.Query),
                 Visible = false,
-                Invoker = new ActionInvoker<QParam, IQuery>(nameof(QParam.Query),
+                Invoker = new ActionInvoker<QParam, IQQuery>(nameof(QParam.Query),
                                                    (item) => item.Query)
                 //(item, value) => item.Query = value
             });
@@ -209,61 +209,61 @@ namespace DataWF.Data.Gui
             {
                 Name = nameof(QParam.Logic),
                 Width = 70,
-                Invoker = new ActionInvoker<QParam, LogicType>(nameof(QParam.Logic),
+                Invoker = new ActionInvoker<QParam, CompareOperator>(nameof(QParam.Logic),
                                                           (item) => item.Logic,
                                                           (item, value) => item.Logic = value),
                 CellEditor = new CellEditorList()
                 {
-                    DataType = typeof(LogicType),
-                    DataSource = new SelectableList<LogicType>(new[] {
-                        LogicType.And,
-                        LogicType.Or,
-                        LogicType.AndNot,
-                        LogicType.OrNot })
+                    DataType = typeof(CompareOperator),
+                    DataSource = new SelectableList<CompareOperator>(new[] {
+                        CompareOperator.And,
+                        CompareOperator.Or,
+                        CompareOperator.AndNot,
+                        CompareOperator.OrNot })
                 }
             });
             listParams.ListInfo.Columns.Add(new LayoutColumn()
             {
-                Name = nameof(QParam.Column),
+                Name = nameof(QParam.LeftColumn),
                 Width = 80,
                 Visible = false,
-                Invoker = new ActionInvoker<QParam, DBColumn>(nameof(QParam.Column),
-                                                         (item) => item.Column,
-                                                         (item, value) => item.Column = value),
+                Invoker = new ActionInvoker<QParam, DBColumn>(nameof(QParam.LeftColumn),
+                                                         (item) => item.LeftColumn,
+                                                         (item, value) => item.LeftColumn = value),
                 CellEditor = new CellEditorList() { DataType = typeof(DBColumn) }
             });
             listParams.ListInfo.Columns.Add(new LayoutColumn()
             {
                 Name = nameof(QParam.Comparer),
                 Width = 80,
-                Invoker = new ActionInvoker<QParam, CompareType>(nameof(QParam.Comparer),
+                Invoker = new ActionInvoker<QParam, CompareOperator>(nameof(QParam.Comparer),
                                                         (item) => item.Comparer,
                                                         (item, value) => item.Comparer = value),
                 CellEditor = new CellEditorList()
                 {
-                    DataType = typeof(CompareType),
-                    DataSource = new SelectableList<CompareType>(new[]{
-                        CompareType.Equal,
-                        CompareType.NotEqual,
-                        CompareType.Like,
-                        CompareType.NotLike,
-                        CompareType.In,
-                        CompareType.NotIn,
-                        CompareType.Greater,
-                        CompareType.GreaterOrEqual,
-                        CompareType.Less,
-                        CompareType.LessOrEqual,
-                        CompareType.Between,
-                        CompareType.NotBetween})
+                    DataType = typeof(CompareOperator),
+                    DataSource = new SelectableList<CompareOperator>(new[]{
+                        CompareOperator.Equal,
+                        CompareOperator.NotEqual,
+                        CompareOperator.Like,
+                        CompareOperator.NotLike,
+                        CompareOperator.In,
+                        CompareOperator.NotIn,
+                        CompareOperator.Greater,
+                        CompareOperator.GreaterOrEqual,
+                        CompareOperator.Less,
+                        CompareOperator.LessOrEqual,
+                        CompareOperator.Between,
+                        CompareOperator.NotBetween})
                 }
             });
             listParams.ListInfo.Columns.Add(new LayoutColumn()
             {
-                Name = nameof(QParam.Value),
+                Name = "RightValue",
                 Width = 250,
-                Invoker = new ActionInvoker<QParam, object>(nameof(QParam.Value),
-                                                           (item) => item.Value,
-                                                           (item, value) => item.Value = value)
+                Invoker = new ActionInvoker<QParam, object>("RightValue",
+                                                           (item) => item.RightItem.GetValue(),
+                                                           (item, value) => item.SetRightValue(value))
             });
             listParams.ListInfo.Sorters.Add(new LayoutSort(nameof(QParam.Query), ListSortDirection.Ascending, true));
             listParams.ListInfo.Sorters.Add(new LayoutSort(nameof(QParam.Order), ListSortDirection.Ascending, false));
@@ -282,26 +282,26 @@ namespace DataWF.Data.Gui
 
         ILayoutCellEditor ListParamsRetriveCellEditor(object listItem, object value, ILayoutCell cell)
         {
-            if (cell.Name == nameof(QParam.Value))
+            if (cell.Name == "RightValue")
             {
                 QParam param = (QParam)listItem;
                 ILayoutCellEditor editor = null;
-                if (param != null && param.Column != null && !editors.TryGetValue(param, out editor))
+                if (param != null && param.LeftColumn != null && !editors.TryGetValue(param, out editor))
                 {
-                    if ((param.Column.IsPrimaryKey || param.Column.IsReference) && param.Comparer.Type == CompareTypes.In)
+                    if ((param.LeftColumn.IsPrimaryKey || param.LeftColumn.IsReference) && param.Comparer.Type == CompareOperatorType.In)
                     {
-                        if (!(param.Value is QQuery) && param.Column.IsReference && param.Value == null)
+                        if (!(param.RightItem is IQQuery) && param.LeftColumn.IsReference && param.RightItem.GetValue() == null)
                         {
-                            var sub = new QQuery(string.Empty, param.Column.ReferenceTable);
-                            sub.BuildColumn(param.Column.ReferenceTable.PrimaryKey);
-                            param.ValueRight = sub;
+                            var sub = param.LeftColumn.ReferenceTable.QQuery(string.Empty);
+                            sub.Column(param.LeftColumn.ReferenceTable.PrimaryKey);
+                            param.SetRightValue((DBItem)sub);
                         }
                         editor = new CellEditorQuery();
                     }
                     else
                     {
-                        editor = TableLayoutList.InitCellEditor(param.Column);
-                        if (param.Column.DataType == typeof(DateTime) && param.Comparer.Equals(CompareType.Between))
+                        editor = TableLayoutList.InitCellEditor(param.LeftColumn);
+                        if (param.LeftColumn.DataType == typeof(DateTime) && param.Comparer.Equals(CompareOperator.Between))
                             ((CellEditorDate)editor).TwoDate = true;
                     }
                     editors[param] = editor;
@@ -326,19 +326,19 @@ namespace DataWF.Data.Gui
                     return;
                 project = value;
                 if (project != null)
-                    Query = project.Project as QQuery;
+                    Query = project.Project as IQQuery;
             }
         }
 
         public void Reload()
         {
             if (project != null)
-                Query = project.Project as QQuery;
+                Query = project.Project as IQQuery;
         }
 
         #endregion
 
-        public QQuery Query
+        public IQQuery Query
         {
             get { return query; }
             set
@@ -347,10 +347,11 @@ namespace DataWF.Data.Gui
 
                 if (value != null)
                 {
-                    Table = value.Table;
+                    Table = (DBTable)value.Table;
 
-                    value.AllParameters.CollectionChanged += ParametersListChanged;
-                    listParams.ListSource = value.AllParameters.DefaultView;
+                    value.Parameters.CollectionChanged += ParametersListChanged;
+                    var parameterList = new SelectableList<QParam>(value.GetAllParameters());
+                    listParams.ListSource = parameterList.DefaultView;
                     listColumns.ListSource = value.Columns;
                     listTables.ListSource = value.Tables;
                 }
@@ -377,7 +378,7 @@ namespace DataWF.Data.Gui
                 if (table != value)
                 {
                     if (Query == null)
-                        Query = new QQuery(string.Empty, value);
+                        Query = value.QQuery(string.Empty);
 
                     toolAdd.DropDownItems.Clear();
 
@@ -402,7 +403,7 @@ namespace DataWF.Data.Gui
                             toolAdd.DropDownItems.Add(itemL);
                         }
                     }
-                    var column = (LayoutColumn)listParams.ListInfo.Columns[nameof(QParam.Column)];
+                    var column = (LayoutColumn)listParams.ListInfo.Columns[nameof(QParam.LeftColumn)];
                     ((CellEditorList)column.CellEditor).DataSource = value?.Columns;
 
                     OnPropertyChanged(nameof(Table));
@@ -470,7 +471,7 @@ namespace DataWF.Data.Gui
         private void ColumnItemClick(object sender, EventArgs e)
         {
             var column = ((ToolMenuItem)sender).Tag as DBColumn;
-            Query.Parameters.Add(new QParam(column) { Logic = LogicType.And });
+            Query.Parameters.Add(new QParam(column) { Logic = CompareOperator.And });
         }
 
         private void TableClick(object sender, EventArgs e)
@@ -478,7 +479,7 @@ namespace DataWF.Data.Gui
             Table = ((ToolMenuItem)sender).Tag as DBTable;
         }
 
-        private ToolMenuItem InitQueryTool(QQuery query)
+        private ToolMenuItem InitQueryTool(IQQuery query)
         {
             return new ToolMenuItem
             {
@@ -488,14 +489,14 @@ namespace DataWF.Data.Gui
             };
         }
 
-        protected void SetQuery(SearchState state, QQuery query, QParam owner)
+        protected void SetQuery(SearchState state, IQQuery query, QParam owner)
         {
             this.state = state;
             this.owner = owner;
             Query = query;
         }
 
-        public void Initialize(SearchState state, QQuery expression, QParam owner, IDockMain mainForm)
+        public void Initialize(SearchState state, IQQuery expression, QParam owner, IDockMain mainForm)
         {
             //this.mainForm = mainForm;
             SetQuery(state, expression, owner);
@@ -507,7 +508,7 @@ namespace DataWF.Data.Gui
             if (listParams.SelectedItem == null)
                 return;
             QParam param = (QParam)listParams.SelectedItem;
-            param.List.Delete(param);
+            param.Container.Delete(param);
         }
 
         private void ToolUpClick(object sender, EventArgs e)
@@ -553,20 +554,20 @@ namespace DataWF.Data.Gui
             //}
 
             Table = Table;
-            Query = new QQuery { Table = Table };
+            Query = Table.QQuery();
             //DataEnvir.Items.Queries.Add (expression);
         }
 
         //private void toolExpression_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
         //{
-        //    QQuery exp = e.ClickedItem.Tag as QQuery;
+        //    IQQuery exp = e.ClickedItem.Tag as IQQuery;
         //    Query = exp;
         //}
 
         private void ToolParseClick(object sender, EventArgs e)
         {
             if (Query == null)
-                Query = new QQuery();
+                Query = Table.QQuery();
 
             var test = textQuery.PlainText;
             Query.Parse(test);
@@ -582,11 +583,12 @@ namespace DataWF.Data.Gui
             var list = listParams.Selection.GetItems<QParam>();
             if (list.Count > 0)
             {
-                QParam group = Query.Parameters.Add();
+                QParam group = new QParam();
                 foreach (var s in list)
                 {
                     group.Parameters.Add(s);
                 }
+                Query.Add(group);
             }
         }
 

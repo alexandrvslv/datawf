@@ -1,5 +1,5 @@
 ﻿using System;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Gui
 {
@@ -15,14 +15,14 @@ namespace DataWF.Gui
 
         public Point Point
         {
-            get { return point; }
-            set { point = value; }
+            get => point;
+            set => point = value;
         }
 
         public DockPage Page
         {
-            get { return page; }
-            set { page = value; }
+            get => page;
+            set => page = value;
         }
     }
 }

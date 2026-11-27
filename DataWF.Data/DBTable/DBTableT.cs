@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -25,79 +25,84 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using System.Linq.Expressions;
+using DataWF.Operators;
 
 namespace DataWF.Data
 {
-    public class DBTable<T> : DBTable, IIdCollection<T> where T : DBItem, new()
+    [Invoker(Instance = true)]
+    public partial class DBTable<T> : DBTable, IDBTable<T>, IIdCollection<T> where T : DBItem
     {
         protected readonly List<T> items = new List<T>();
         protected readonly List<T> insertItems = new List<T>();
         protected readonly List<IDBTableView> queryViews = new List<IDBTableView>(1);
+        private IQQuery filterQuery;
 
-        public DBTable()
-        {
-            SetItemType(typeof(T));
-        }
+        public DBTable() : this(null)
+        { }
 
         public DBTable(string name) : base(name)
         {
+            DefaultComparer = DBItemDefaultComparer<T>.Instance;
             SetItemType(typeof(T));
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override IQQuery FilterQuery
+        {
+            get => ParentTable == null ? null : (filterQuery ??= ParentTable.QQuery(subQuery).Where(typeof(T)));
+            set => filterQuery = value;
+        }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public override bool IsSynch
+        {
+            get => base.IsSynch || (IsVirtual && (ParentTable?.IsSynch ?? false));
+            set => base.IsSynch = value;
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public int Capacity
         {
-            get { return items.Capacity; }
-            set { items.Capacity = value; }
+            get => items.Capacity;
+            set => items.Capacity = value;
         }
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public override int Count
-        {
-            get { return items.Count; }
-        }
+        public override int Count => items.Count;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public override IDBTableView DefaultItemsView
-        {
-            get { return DefaultView; }
-        }
+        public override IDBTableView DefaultItemsView => DefaultView;
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
-        public DBTableView<T> DefaultView
-        {
-            get
-            {
-                if (queryViews.Count == 0)
-                    CreateView();
-                return queryViews.Count > 0 ? (DBTableView<T>)queryViews[0] : null;
-            }
-        }
+        public DBTableView<T> DefaultView => (queryViews.FirstOrDefault() as DBTableView<T>) ?? CreateTableView();
 
         [JsonIgnore, XmlIgnore, Browsable(false)]
         public override bool IsEdited
         {
-            get { return GetChanged().Any(); }
+            get => GetChanged().Any();
         }
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public override object SyncRoot => items;
+
+        public IEnumerable<T> Items => items;
 
         public override DBItem this[int index]
         {
-            get { return items[index]; }
+            get => items[index];
         }
 
         public override bool Contains(DBItem item)
         {
             return Contains((T)item);
-        }
-
-        public IEnumerable<T1> Select<T1>(QQuery query) where T1 : T
-        {
-            return Select(query).Cast<T1>();
         }
 
         public bool Contains(T item)
@@ -112,32 +117,56 @@ namespace DataWF.Data
             Add(row);
         }
 
-        public override void Add(DBItem item)
+        void ICollection<T>.Add(T item) => Add(item);
+
+        public override bool Add(DBItem item)
         {
-            Add((T)item);
+            return Add((T)item);
         }
 
-        public virtual void Add(T item)
+        public virtual bool Add(T item)
         {
-            if (item.Table != this)
+            if (IsVirtual)
             {
-                throw new ArgumentException("Wrong Table item!");
+                if (!item.Attached)
+                {
+                    return ParentTable.Add(item);
+                }
+                else
+                {
+                    items.Add(item);
+                    AddIndexes(item);
+                    CheckViews(item, NotifyCollectionChangedAction.Add);
+                }
             }
+            //if (item.Table != this)
+            //{
+            //    throw new ArgumentException("Wrong Table item!");
+            //}
             if (item.Attached)
             {
-                return;
+                return false;
             }
             items.Add(item);
             AddIndexes(item);
             item.OnAttached();
             CheckViews(item, NotifyCollectionChangedAction.Add);
+            return true;
         }
 
         protected void AddIndexes(T item)
         {
-            foreach (var column in Columns.Where(p => p.Index != null))
+            foreach (var column in Columns)
             {
-                column.Index.Add(item);
+                column.AddIndex<T>(item);
+            }
+        }
+
+        protected void RemoveIndexes(T item)
+        {
+            foreach (var column in Columns)
+            {
+                column.RemoveIndex<T>(item);
             }
         }
 
@@ -148,6 +177,23 @@ namespace DataWF.Data
 
         public virtual bool Remove(T item)
         {
+            if (IsVirtual)
+            {
+                if (item.Attached)
+                {
+                    return ParentTable.Remove(item);
+                }
+                else
+                {
+                    if (items.Remove(item))
+                    {
+                        CheckViews(item, NotifyCollectionChangedAction.Remove);
+                        RemoveIndexes(item);
+                        return true;
+                    }
+                    return false;
+                }
+            }
             if (!item.Attached)
             {
                 return false;
@@ -159,30 +205,154 @@ namespace DataWF.Data
             return true;
         }
 
-        protected void RemoveIndexes(T item)
-        {
-            foreach (var column in Columns.Where(p => p.Index != null))
-            {
-                column.Index.Remove(item);
-            }
-        }
-
         public override void Accept(DBItem item)
         {
+            if (IsVirtual)
+            {
+                if (item is not T tItem || tItem.GetType() != typeof(T))
+                {
+                    return;
+                }
+            }
             if (!item.Attached)
             {
                 Add(item);
             }
             else
             {
-                foreach (var column in Columns.Where(p => p.Index != null))
+                foreach (var column in Columns)
                 {
-                    column.Index.RefreshSort(item);
+                    column.PullIndex?.RefreshSort(item);
                 }
             }
             foreach (var collection in virtualTables)
             {
                 collection.Accept(item);
+            }
+        }
+
+        protected internal override void OnBaseTableChanged(DBItem item, NotifyCollectionChangedAction type)
+        {
+            if (item is T view && view.GetType() == typeof(T))
+            {
+                switch (type)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        if (FilterQuery.CheckItem(item))
+                        {
+                            Add(view);
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        Remove(view);
+                        break;
+                }
+            }
+            else if (type == NotifyCollectionChangedAction.Reset)
+            {
+                Clear();
+                foreach (T sitem in ParentTable.Select<T>(FilterQuery))
+                {
+                    Add(sitem);
+                }
+            }
+        }
+
+        public override void RefreshVirtualTable(DBTable value)
+        {
+            ParentTable = value;
+            GroupName = value.GroupName;
+            BlockSize = value.BlockSize;
+            SequenceName = value.SequenceName;
+            Keys = value.Keys | DBTableKeys.Virtual;
+            FilterQuery = null;
+            ParentTable?.AddVirtualTable(this);
+            var type = typeof(T);
+
+            foreach (DBColumnGroup group in ParentTable.ColumnGroups)
+            {
+                var exist = ColumnGroups[group.Name];
+                if (exist == null)
+                {
+                    ColumnGroups.Add(DBColumnFactory.CreateGroup(group));
+                }
+                else
+                {
+                    exist.Order = group.Order;
+                }
+            }
+
+            foreach (DBColumn column in ParentTable.Columns)
+            {
+                var exist = Columns[column.Name];
+                if (exist == null || exist.DataType != column.DataType)
+                {
+                    if (!(column.Invoker?.TargetType.IsAssignableFrom(type) ?? true))
+                        continue;
+                    Columns.Add(DBColumnFactory.CreateVirtual(column, this));
+                }
+                else
+                {
+                    exist.RefreshVirtualColumn(column);
+                }
+            }
+
+            foreach (DBForeignKey reference in ParentTable.Foreigns)
+            {
+                var existColumn = Columns[reference.Column.Name];
+                if (existColumn == null || reference.Reference == null)
+                    continue;
+                var exist = Foreigns.GetByColumns(existColumn, reference.Reference);
+                if (exist == null)
+                {
+                    exist = new DBForeignKey()
+                    {
+                        Column = existColumn,
+                        Reference = reference.Reference,
+                        Property = reference.Property
+                    };
+                    exist.GenerateName();
+                    Foreigns.Add(exist);
+                }
+            }
+
+            foreach (DBReferencing reference in ParentTable.Referencings)
+            {
+                if (!(reference.PropertyInfo?.DeclaringType.IsAssignableFrom(type) ?? true))
+                    continue;
+                var exist = Referencings[reference.PropertyInfo.Name];
+                if (exist == null)
+                {
+                    exist = new DBReferencing()
+                    {
+                        Name = reference.PropertyInfo.Name,
+                        PropertyInfo = reference.PropertyInfo,
+                        ReferenceTable = reference.ReferenceTable,
+                        ReferenceColumn = reference.ReferenceColumn,
+                        ForceLoadReference = reference.ForceLoadReference
+                    };
+
+                    Referencings.Add(exist);
+                }
+            }
+
+            foreach (DBConstraint constraint in ParentTable.Constraints)
+            {
+                var existColumn = Columns[constraint.Column.Name];
+                if (existColumn == null)
+                    continue;
+                var exist = Constraints.GetByColumnAndType(existColumn, constraint.Type).FirstOrDefault();
+                if (exist == null)
+                {
+                    exist = new DBConstraint
+                    {
+                        Column = existColumn,
+                        Type = constraint.Type,
+                        Value = constraint.Value
+                    };
+                    exist.GenerateName();
+                    Constraints.Add(exist);
+                }
             }
         }
 
@@ -196,8 +366,20 @@ namespace DataWF.Data
             items.CopyTo((T[])array, arrayIndex);
         }
 
+        public override void CopyTo(Array array, int arrayIndex)
+        {
+            items.CopyTo((T[])array, arrayIndex);
+        }
+
         public override void Clear()
         {
+            if (IsVirtual)
+            {
+                items.Clear();
+                ClearColumnsData(false);
+                CheckViews(null, NotifyCollectionChangedAction.Reset);
+                return;
+            }
             lock (Lock)
             {
                 Hash = -1;
@@ -213,7 +395,7 @@ namespace DataWF.Data
                 }
                 GC.Collect();
             }
-            IsSynchronized = false;
+            IsSynch = false;
         }
 
         //public IEnumerable<T> SelectParents() where T : DBGroupItem
@@ -223,24 +405,23 @@ namespace DataWF.Data
 
         public IEnumerable<T> SelectParents()
         {
-            return Select(GroupKey, CompareType.Is, null);
+            return GroupKey.Select<T>(CompareOperator.IsNull, (object)null, null);
         }
 
         #region IEnumerable Members
 
-        IEnumerator IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+
+        public override IEnumerator<DBItem> GetItemEnumerator()
         {
-            return items.Count == 0 ? (IEnumerator)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
+            return GetEnumerator();
         }
 
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        public OneListEnumerator<T> GetEnumerator()
         {
-            return items.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
-        }
-
-        public override IEnumerator<DBItem> GetEnumerator()
-        {
-            return items.Count == 0 ? (IEnumerator<T>)EmptyEnumerator<T>.Default : new ThreadSafeEnumerator<T>(items);
+            return items.Count == 0 ? OneListEnumerator<T>.Empty : new OneListEnumerator<T>(items);
         }
 
         #endregion
@@ -255,25 +436,28 @@ namespace DataWF.Data
             queryViews.Add(view);
         }
 
-        public override void OnItemChanging<V>(DBItem item, string property, DBColumn column, V value)
+        protected internal override void OnItemChanging<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
-            column?.Index?.Remove<T, V>((T)item, value);
+            if (IsVirtual)
+            {
+                if (item.GetType() != typeof(T))
+                {
+                    return;
+                }
+                column = column == null ? null : (DBColumn<V>)Columns[column.Name];
+            }
+            if (column.PullIndex is IPullInIndex<T, V> pullIndex)
+                pullIndex.Remove(item, value);
             foreach (var table in virtualTables)
             {
-                table.OnItemChanging<V>(item, property, column, value);
+                if (table.Columns[column.Name] is DBColumn<V> vColumn)
+                {
+                    table.OnItemChanging<V>(item, property, column, value);
+                }
             }
         }
 
-        public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
-        {
-            column?.Index?.Remove((object)item, value);
-            foreach (var table in virtualTables)
-            {
-                table.OnItemChanging(item, property, column, value);
-            }
-        }
-
-        public override void OnItemChanged<V>(DBItem item, string property, DBColumn column, V value)
+        protected internal override void OnItemChanged<V>(DBItem item, string property, DBColumn<V> column, V value)
         {
             if (string.Equals(property, nameof(DBItem.Attached), StringComparison.Ordinal)
                 || string.Equals(property, nameof(DBItem.UpdateState), StringComparison.Ordinal))
@@ -281,26 +465,32 @@ namespace DataWF.Data
                 return;
             }
 
-            column?.Index?.Add<T, V>((T)item, value);
+            if (IsVirtual)
+            {
+                if (item is T tItem && tItem.GetType() == typeof(T))
+                {
+                    if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(column?.Name) && !FilterQuery.CheckItem(tItem)))
+                    {
+                        if (items.Remove(tItem))
+                        {
+                            CheckViews(item, NotifyCollectionChangedAction.Remove);
+                            RemoveIndexes(tItem);
+                            return;
+                        }
+                    }
+                    column = column == null ? null : (DBColumn<V>)Columns[column.Name];
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            if (column?.PullIndex is IPullInIndex<T, V> pullIndex)
+                pullIndex.Add(item, value);
             foreach (var table in virtualTables)
             {
                 table.OnItemChanged<V>(item, property, column, value);
-            }
-            CheckViews(item, property, column);
-        }
-
-        public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
-        {
-            if (string.Equals(property, nameof(DBItem.Attached), StringComparison.Ordinal)
-                || string.Equals(property, nameof(DBItem.UpdateState), StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            column?.Index?.Add((object)item, value);
-            foreach (var table in virtualTables)
-            {
-                table.OnItemChanged(item, property, column, value);
             }
             CheckViews(item, property, column);
         }
@@ -317,7 +507,7 @@ namespace DataWF.Data
         {
             foreach (var collection in virtualTables)
             {
-                collection.OnTableChanged(item, type);
+                collection.OnBaseTableChanged(item, type);
             }
             for (int i = 0; i < queryViews.Count; i++)
             {
@@ -331,7 +521,7 @@ namespace DataWF.Data
             {
                 var maxIndex = 0;
                 foreach (var item in this)
-                    maxIndex = item.handler > maxIndex ? item.handler : maxIndex;
+                    maxIndex = Math.Max(item.handler.GetSeqence(blockSize), maxIndex);
                 if (Hash > maxIndex)
                 {
                     Hash = maxIndex;
@@ -343,178 +533,197 @@ namespace DataWF.Data
             }
         }
 
-        public override IDBTableView CreateItemsView(string query, DBViewKeys mode, DBStatus filter)
+        public override IDBTableView CreateView(string query, DBViewKeys mode, DBStatus filter)
         {
-            return CreateView(query, mode, filter);
+            return CreateTableView(query, mode, filter);
         }
 
-        public DBTableView<T> CreateView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty)
+        public DBTableView<T> CreateTableView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty)
         {
             return new DBTableView<T>(this, query, mode, filter);
         }
 
-        public override IEnumerable<DBItem> LoadItemsCache(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
+        private int GetCount(IDbCommand command, DBTransaction transaction)
         {
-            return LoadCache(filter, loadParam, transaction);
+            var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
+            string w = whereInd == -1 ? string.Empty : command.CommandText.Substring(whereInd);
+            var val = transaction.ExecuteQuery(transaction.AddCommand(DBCommand.CloneCommand(command, BuildQuery(w, "a", DBLoadParam.None, "count(*)"))), DBExecuteType.Scalar);
+            int count = val is Exception ? -1 : int.Parse(val.ToString());
+
+            if (count < 0 || count == 0)
+                return count;
+            if (items.Capacity < count)
+                items.Capacity = count;
+            return count;
         }
 
-        public IEnumerable<T> LoadCache(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
+        //public override IEnumerable<TT> Load<TT>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        //{
+        //    return (IEnumerable<TT>)Load(whereText, param, transaction);
+        //}
+
+        //public IEnumerable<T> Load(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        //{
+        //    if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
+        //        whereText = string.Empty;
+        //    else if (whereText.Length > 3
+        //             && whereText.IndexOf("where", StringComparison.OrdinalIgnoreCase) < 0
+        //             && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
+        //        whereText = "where " + whereText;
+
+        //    return Load(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", param)), param, transaction);
+        //}
+
+        //public Task<IEnumerable<T>> LoadAsync(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        //{
+        //    if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
+        //        whereText = string.Empty;
+        //    else if (whereText.Length > 3
+        //             && whereText.IndexOf("where", StringComparison.OrdinalIgnoreCase) < 0
+        //             && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
+        //        whereText = "where " + whereText;
+
+        //    return LoadAsync(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", param)), param, transaction);
+        //}
+
+        public override IEnumerable<TT> Load<TT>(DBLoadParam param = DBLoadParam.Referencing, DBTransaction transaction = null)
         {
-            if (!queryChache.TryGetValue(filter, out var query))
-            {
-                query = new QQuery(filter, this);
-                Load(query, loadParam, transaction);
-                queryChache.TryAdd(filter, query);
-            }
-            if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
-            {
-                var temp = Select(query).ToList();
-                ListHelper.QuickSort(temp, TreeComparer<IGroup>.Default);
-                return temp;
-            }
-            else
-            {
-                return Select(query);
-            }
+            return Load<TT>(Query(param), transaction);
         }
 
-        public async ValueTask<IEnumerable<T>> LoadCacheAsync(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
+        public IEnumerable<T> Load(DBLoadParam param = DBLoadParam.Referencing, DBTransaction transaction = null)
         {
-            if (!ParseQuery(filter, out var query))
-            {
-                await LoadAsync(query, loadParam, transaction);
-            }
-            var result = Select(query);
-            if (TypeHelper.IsInterface(typeof(T), typeof(IGroup)))
-            {
-                var temp = result.ToList();
-                ListHelper.QuickSort(temp, TreeComparer<IGroup>.Default);
-                return temp;
-            }
-            else
-            {
-                return result;
-            }
+            return Load(Query(param), transaction);
         }
 
-        public override IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public ValueTask<IEnumerable<T>> LoadAsync(DBLoadParam param = DBLoadParam.Referencing, DBTransaction transaction = null)
         {
-            return Load(whereText, param, cols, transaction);
+            return LoadAsync(Query(param), transaction);
         }
 
-        public IEnumerable<T> Load(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public override IEnumerable<TT> Load<TT>(IQQuery<TT> query, DBTransaction transaction = null)
         {
-            if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
-                whereText = string.Empty;
-            else if (whereText.Length > 3
-                     && whereText.IndexOf("where", StringComparison.OrdinalIgnoreCase) < 0
-                     && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
-                whereText = "where " + whereText;
-
-            return Load(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", cols)), param, transaction);
+            return (IEnumerable<TT>)Load(query, transaction);
         }
 
-        public Task<IEnumerable<T>> LoadAsync(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public override IEnumerable<TT> Load<TT>(IQQuery query, DBTransaction transaction = null)
         {
-            if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
-                whereText = string.Empty;
-            else if (whereText.Length > 3
-                     && whereText.IndexOf("where", StringComparison.OrdinalIgnoreCase) < 0
-                     && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
-                whereText = "where " + whereText;
-
-            return LoadAsync(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", cols)), param, transaction);
+            return (IEnumerable<TT>)Load(query, transaction);
         }
 
-        public override IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
-        {
-            return Load(query, param, transaction);
-        }
-
-        public IEnumerable<T> Load(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        public IEnumerable<T> Load(IQQuery query, DBTransaction transaction = null)
         {
             if (query.Table != this)
                 throw new ArgumentException(nameof(query));
-            if (Count == 0)
-            {
-                param &= ~DBLoadParam.CheckDeleted;
-            }
-            var buf = Load(query.ToCommand(true), param, transaction);
 
-            if (buf != null && (param & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
-            {
-                CheckDelete(query, buf, param, transaction);
-            }
-            if (query.Parameters.Count == 0)
-            {
-                IsSynchronized = true;
-            }
+            CheckCacheState(query);
 
-            return buf;
+            if (!IsSynch
+                && query.CacheState == DBCacheState.None)
+            {
+                query.CacheState = DBCacheState.Actualazing;
+                if (Count == 0)
+                {
+                    query.LoadParam &= ~DBLoadParam.CheckDeleted;
+                }
+                if ((query.LoadParam & DBLoadParam.Referencing) == DBLoadParam.Referencing
+                    && query.Tables.Count > 1)
+                {
+                    query.JoinAllReferencing();
+                    query.LoadParam &= ~DBLoadParam.Referencing;
+                }
+                var buf = Load(query.ToCommand(true), query, query.LoadParam, transaction);
+
+                if (buf != null && (query.LoadParam & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
+                {
+                    CheckDelete(query, buf, transaction);
+                }
+                if (query.Parameters.Count == 0)
+                {
+                    IsSynch = true;
+                }
+                query.CacheState = DBCacheState.Actual;
+            }
+            return Select(query);
         }
 
-        public async Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        public async ValueTask<IEnumerable<T>> LoadAsync(IQQuery query, DBTransaction transaction = null)
         {
             if (query.Table != this)
                 throw new ArgumentException(nameof(query));
-            if (Count == 0)
-            {
-                param &= ~DBLoadParam.CheckDeleted;
-            }
-            var buf = await LoadAsync(query.ToCommand(true), param, transaction);
 
-            if (buf != null && (param & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
+            CheckCacheState(query);
+            if (!IsSynch
+                && query.CacheState == DBCacheState.None)
             {
-                CheckDelete(query, buf, param, transaction);
+                query.CacheState = DBCacheState.Actualazing;
+                if (Count == 0)
+                {
+                    query.LoadParam &= ~DBLoadParam.CheckDeleted;
+                }
+                if ((query.LoadParam & DBLoadParam.Referencing) == DBLoadParam.Referencing
+                    && query.Tables.Count > 1)
+                {
+                    query.JoinAllReferencing();
+                    query.LoadParam &= ~DBLoadParam.Referencing;
+                }
+                var buf = await LoadAsync(query.ToCommand(true), query, query.LoadParam, transaction);
+
+                if (buf != null && (query.LoadParam & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
+                {
+                    CheckDelete(query, buf, transaction);
+                }
+                if (query.Parameters.Count == 0)
+                {
+                    IsSynch = true;
+                }
+                query.CacheState = DBCacheState.Actual;
             }
-            if (query.Parameters.Count == 0)
-            {
-                IsSynchronized = true;
-            }
-            return buf;
+            return Select(query);
         }
 
-        public override IEnumerable<DBItem> LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        private void CheckCacheState(IQQuery query)
         {
-            return Load(command, param, transaction);
+            if ((query.LoadParam & DBLoadParam.NoCache) != DBLoadParam.NoCache)
+            {
+                if (queryChache.TryGetValue(query.WhereText, out var cacheQuery))
+                {
+                    query.CacheState = cacheQuery.CacheState;
+                }
+                else
+                {
+                    queryChache[query.WhereText] = query;
+                }
+            }
         }
 
-        public override async Task<IEnumerable<DBItem>> LoadItemsAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        public override IEnumerable<TT> Load<TT>(IDbCommand command, IQQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
-            return await LoadAsync(command, param, transaction);
+            return (IEnumerable<TT>)Load(command, query, param, transaction);
         }
 
-        public List<T> Load(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
+        public override async Task<IEnumerable<TT>> LoadAsync<TT>(IDbCommand command, IQQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        {
+            return (IEnumerable<TT>)await LoadAsync(command, query, param, transaction);
+        }
+
+        public IEnumerable<T> Load(IDbCommand command, IQQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
         {
             var list = new List<T>();
-            var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);
-            if (transaction.ReaderParam == DBLoadParam.None)
-                transaction.ReaderParam = param;
+            var transaction = baseTransaction ?? new DBTransaction(this, null, true);
+            int count = -1;
             try
             {
                 transaction.AddCommand(command);
 
-                var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
-                var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
+                transaction.ClearView(this);
 
-                if (transaction.View != null && transaction.View.Table == this && transaction.View.IsStatic)
-                    transaction.View.Clear();
-
-                if ((transaction.ReaderParam & DBLoadParam.GetCount) == DBLoadParam.GetCount)
+                if ((param & DBLoadParam.GetCount) == DBLoadParam.GetCount)
                 {
-                    string w = whereInd == -1 ? string.Empty : command.CommandText.Substring(whereInd);
-                    var val = transaction.ExecuteQuery(transaction.AddCommand(DBCommand.CloneCommand(command, BuildQuery(w, "a", null, "count(*)"))), DBExecuteType.Scalar);
-                    arg.TotalCount = val is Exception ? -1 : int.Parse(val.ToString());
+                    count = GetCount(command, transaction);
 
-                    if (arg.TotalCount < 0 || arg.TotalCount == 0)
+                    if (count == 0 || transaction.State != DBTransactionState.Default)
                         return list;
-                    if (items.Capacity < arg.TotalCount)
-                        items.Capacity = arg.TotalCount;
-                    //arg.TotalCount = Rows._items.Capacity;
-                }
-                if (transaction.Canceled)
-                {
-                    return list;
                 }
 
                 if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
@@ -527,37 +736,21 @@ namespace DataWF.Data
                     LoadReferencingBlock(command, transaction);
                 }
 
-                if (transaction.Canceled)
+                if (transaction.State != DBTransactionState.Default)
                 {
                     return list;
                 }
 
-                using (transaction.Reader = transaction.ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
+                using (var reader = transaction.ExecuteReader(command, CommandBehavior.SequentialAccess))
                 {
-                    CheckColumns(transaction);
-                    while (!transaction.Canceled && transaction.Reader.Read())
-                    {
-                        T row = null;
-                        lock (Lock)
-                        {
-                            row = LoadFromReader(transaction);
+                    var dbReader = new DBReader(transaction, this, query, reader, param, count);
 
-                            if (!row.Attached && (transaction.ReaderParam & DBLoadParam.NoAttach) != DBLoadParam.NoAttach)
-                            {
-                                Add(row);
-                            }
-                        }
-                        if (arg.TotalCount > 0)
-                        {
-                            arg.Current++;
-                            arg.CurrentRow = row;
-                            RaiseLoadProgress(arg);
-                        }
-                        list.Add(row);
-                        if (transaction.View?.Table == this && transaction.View.IsStatic)
-                            transaction.View.Add(row);
+                    while (transaction.State == DBTransactionState.Default
+                        && reader.Read())
+                    {
+                        list.Add((T)dbReader.Load());
                     }
-                    transaction.Reader.Close();
+                    reader.Close();
                 }
 
                 //Check IsSynchronized
@@ -565,16 +758,10 @@ namespace DataWF.Data
                 {
                     transaction.View.IsSynchronized = true;
                 }
-
-                if (whereInd < 0)
-                {
-                    IsSynchronized = true;
-                }
-                //return buffer;
             }
             finally
             {
-                transaction.Reader = null;
+                transaction.CurrentReader = null;
                 if (baseTransaction == null)
                 {
                     transaction.Dispose();
@@ -584,37 +771,22 @@ namespace DataWF.Data
             return list;
         }
 
-        public async Task<IEnumerable<T>> LoadAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
+        public async Task<IEnumerable<T>> LoadAsync(IDbCommand command, IQQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
         {
             var list = new List<T>();
-            var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);
-            if (transaction.ReaderParam == DBLoadParam.None)
-                transaction.ReaderParam = param;
+            var transaction = baseTransaction ?? new DBTransaction(this, null, true);
+            int count = 0;
             try
             {
                 transaction.AddCommand(command);
 
-                var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
-                var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
+                transaction.ClearView(this);
 
-                if (transaction.View != null && transaction.View.Table == this && transaction.View.IsStatic)
-                    transaction.View.Clear();
-
-                if ((transaction.ReaderParam & DBLoadParam.GetCount) == DBLoadParam.GetCount)
+                if ((param & DBLoadParam.GetCount) == DBLoadParam.GetCount)
                 {
-                    string w = whereInd == -1 ? string.Empty : command.CommandText.Substring(whereInd);
-                    var val = transaction.ExecuteQuery(transaction.AddCommand(DBCommand.CloneCommand(command, BuildQuery(w, "a", null, "count(*)"))), DBExecuteType.Scalar);
-                    arg.TotalCount = val is Exception ? -1 : int.Parse(val.ToString());
-
-                    if (arg.TotalCount < 0 || arg.TotalCount == 0)
+                    count = GetCount(command, transaction);
+                    if (count == 0 || transaction.State != DBTransactionState.Default)
                         return list;
-                    if (items.Capacity < arg.TotalCount)
-                        items.Capacity = arg.TotalCount;
-                    //arg.TotalCount = Rows._items.Capacity;
-                }
-                if (transaction.Canceled)
-                {
-                    return list;
                 }
 
                 if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
@@ -627,37 +799,21 @@ namespace DataWF.Data
                     LoadReferencingBlock(command, transaction);
                 }
 
-                if (transaction.Canceled)
+                if (transaction.State != DBTransactionState.Default)
                 {
                     return list;
                 }
 
-                using (transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader))
+                using (var reader = (DbDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
                 {
-                    CheckColumns(transaction);
-                    while (!transaction.Canceled && await transaction.ReadAsync())
-                    {
-                        T row = null;
-                        lock (Lock)
-                        {
-                            row = LoadFromReader(transaction);
+                    var dbReader = new DBReader(transaction, this, query, reader, param, count);
 
-                            if (!row.Attached && (transaction.ReaderParam & DBLoadParam.NoAttach) != DBLoadParam.NoAttach)
-                            {
-                                Add(row);
-                            }
-                        }
-                        if (arg.TotalCount > 0)
-                        {
-                            arg.Current++;
-                            arg.CurrentRow = row;
-                            RaiseLoadProgress(arg);
-                        }
-                        list.Add(row);
-                        if (transaction.View?.Table == this && transaction.View.IsStatic)
-                            transaction.View.Add(row);
+                    while (transaction.State == DBTransactionState.Default
+                        && await reader.ReadAsync())
+                    {
+                        list.Add((T)dbReader.Load());
                     }
-                    transaction.Reader.Close();
+                    reader.Close();
                 }
 
                 //Check IsSynchronized
@@ -665,16 +821,10 @@ namespace DataWF.Data
                 {
                     transaction.View.IsSynchronized = true;
                 }
-
-                if (whereInd < 0)
-                {
-                    IsSynchronized = true;
-                }
-                //return buffer;
             }
             finally
             {
-                transaction.Reader = null;
+                transaction.CurrentReader = null;
                 if (baseTransaction == null)
                 {
                     transaction.Dispose();
@@ -684,81 +834,145 @@ namespace DataWF.Data
             return list;
         }
 
-        public override void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
+        public override void Reload(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
             LoadItem(id, param);
         }
 
-        public T LoadItem(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public T LoadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
-            return LoadItem(id, PrimaryKey, param, cols, transaction);
+            return LoadItem(id, PrimaryKey, param, transaction);
         }
 
-        public T LoadItem(object id, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public T LoadItem(object id, DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
-            return Load(CreateKeyCommmand(id, column, cols), param, transaction).FirstOrDefault();
+            return Load(CreateKeyCommmand(id, column, param), null, param, transaction).FirstOrDefault();
         }
 
-        public async Task<T> LoadItemAsync(object id, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public T LoadItem<K>(K id, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
-            return (await LoadAsync(CreateKeyCommmand(id, column, cols), param, transaction)).FirstOrDefault();
+            return Load(CreateKeyCommmand(id, column, param), null, param, transaction).FirstOrDefault();
         }
 
-        public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public async Task<T> LoadItemAsync<K>(K id, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
-            return LoadById(id, param, cols, transaction);
+            return (await LoadAsync(CreateKeyCommmand(id, column, param), null, param, transaction)).FirstOrDefault();
         }
 
-        public T1 LoadById<T1>(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null) where T1 : T
+        public async Task<T> LoadItemAsync(object id, DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
-            return (T1)LoadById(id, param, cols, transaction);
+            return (await LoadAsync(CreateKeyCommmand(id, column, param), null, param, transaction)).FirstOrDefault();
         }
 
-        public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public override TT LoadById<TT>(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
-            return LoadByKey(id, PrimaryKey, param, cols, transaction);
+            return LoadById(id, param, transaction) as TT;
         }
 
-        public ValueTask<T> LoadByIdAsync(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
-            return LoadByKeyAsync(id, PrimaryKey, param, cols, transaction);
+            return LoadByKey(id, PrimaryKey, param, transaction).FirstOrDefault();
+        }
+
+        public override TT LoadById<TT, K>(K? id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
+        {
+            return LoadById(id, param, transaction) as TT;
+        }
+
+        public T LoadById<K>(K? id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where K : struct
+        {
+            if (id == null)
+                return null;
+            if (PrimaryKey is DBColumn<K> typedColumn)
+                return LoadByKey(id.Value, typedColumn, param, transaction).FirstOrDefault();
+            else if (PrimaryKey is DBColumn<K?> typedNColumn)
+                return LoadByKey(id, typedNColumn, param, transaction).FirstOrDefault();
+            return LoadByKey((object)id, PrimaryKey, param, transaction).FirstOrDefault();
+        }
+
+        public async ValueTask<T> LoadByIdAsync(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
+        {
+            return (await LoadByKeyAsync(id, PrimaryKey, param, transaction)).FirstOrDefault();
+        }
+
+        public async ValueTask<T> LoadByIdAsync<K>(K? id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where K : struct
+        {
+            if (id == null)
+                return null;
+            if (PrimaryKey is DBColumn<K> typedColumn)
+                return (await LoadByKeyAsync(id.Value, typedColumn, param, transaction)).FirstOrDefault();
+            else if (PrimaryKey is DBColumn<K?> typedNColumn)
+                return (await LoadByKeyAsync(id, typedNColumn, param, transaction)).FirstOrDefault();
+            return (await LoadByKeyAsync((object)id, PrimaryKey, param, transaction)).FirstOrDefault();
         }
 
         public T GetById(object id)
         {
-            return LoadByKey(id, PrimaryKey);
+            return LoadByKey(id, PrimaryKey).FirstOrDefault();
         }
 
-        public T LoadByKey(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public override IEnumerable<R> LoadByKey<R, K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
+        {
+            return LoadByKey(key, column, param, transaction).TypeOf<R>();
+        }
+
+        public IEnumerable<T> LoadByKey<K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
+        {
+            var items = column.Select<T>(CompareOperator.Equal, key);
+
+            if (!items.Any() && (param & DBLoadParam.Load) == DBLoadParam.Load)
+            {
+                items = Load(CreateKeyCommmand(key, column, param), null, param, transaction);
+            }
+            return items;
+        }
+
+        public override IEnumerable<R> LoadByKey<R>(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
+        {
+            return LoadByKey(key, column, param, transaction).TypeOf<R>();
+        }
+
+        public IEnumerable<T> LoadByKey(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
             object val = column?.ParseValue(key);
 
             if (val == null || column == null)
                 return null;
 
-            T row = SelectOne(column, key) as T;
+            var items = column.Select<T>(CompareOperator.Equal, val);
 
-            if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
+            if (!items.Any() && (param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                row = LoadItem(val, column, param, cols, transaction);
+                items = Load(CreateKeyCommmand(val, column, param), null, param, transaction);
             }
-            return row;
+            return items;
         }
 
-        public async ValueTask<T> LoadByKeyAsync(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null)
+        public async ValueTask<IEnumerable<T>> LoadByKeyAsync<K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
+        {
+            var items = column.Select<T>(CompareOperator.Equal, key);
+
+            if (!items.Any() && (param & DBLoadParam.Load) == DBLoadParam.Load)
+            {
+                items = await LoadAsync(CreateKeyCommmand(key, column, param), null, param, transaction);
+            }
+            return items;
+        }
+
+        public async ValueTask<IEnumerable<T>> LoadByKeyAsync(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
             object val = column?.ParseValue(key);
 
             if (val == null || column == null)
                 return null;
 
-            T row = SelectOne(column, key) as T;
+            var items = column.Select<T>(CompareOperator.Equal, key);
 
-            if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
+            if (!items.Any() && (param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                row = await LoadItemAsync(val, column, param, cols, transaction);
+                items = await LoadAsync(CreateKeyCommmand(val, column, param), null, param, transaction);
             }
-            return row;
+            return items;
         }
 
         public T LoadByCode(string code, DBLoadParam param = DBLoadParam.None)
@@ -770,41 +984,30 @@ namespace DataWF.Data
 
         public T LoadByCode(string code, string column, DBLoadParam param = DBLoadParam.None)
         {
-            return LoadByCode(code, ParseColumn(column), param);
+            return LoadByCode(code, (DBColumn<string>)GetColumn(column), param);
         }
 
-        public override DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        public override TT LoadByCode<TT>(string code, DBColumn<string> column, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
-            return LoadByCode(code, column, param);
+            return LoadByCode(code, column, param) as TT;
         }
 
-        public T LoadByCode(string code, DBColumn column, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        public T LoadByCode(string code, DBColumn<string> column, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
         {
-            var row = SelectOne(column, code);
+            var row = column.FirstOrDefault<T>(code, this);
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)//&& !IsSynchronized
             {
-                var command = System.CreateCommand(Schema.Connection, CreateQuery($"where a.{column.Name}={Schema.System.ParameterPrefix}{column.Name}", "a", Columns));
-                System.CreateParameter(command, Schema.System.ParameterPrefix + column.Name, code, column);
-                row = Load(command, param, transaction).FirstOrDefault();
+                var command = System.CreateCommand(Schema.Connection, CreateQuery($"where a.{column.SqlName}={Schema.System.ParameterPrefix}{column.SqlName}", "a", param));
+                System.CreateParameter(command, Schema.System.ParameterPrefix + column.SqlName, code, column);
+                row = Load(command, null, param, transaction).FirstOrDefault();
             }
             return row;
         }
 
-        public IEnumerable<T> LoadByStamp(QQuery query, DBTransaction transaction = null)
+        private void CheckDelete(IQQuery query, IEnumerable<T> buf, DBTransaction transaction)
         {
-            if (items.Count == 0)
-                return Load(query);
-
-            query.Columns.Clear();
-            query.Columns.Add(new QColumn(PrimaryKey));
-            query.Columns.Add(new QColumn(StampKey));
-
-            return Load(query.ToCommand(), DBLoadParam.Synchronize, transaction);
-        }
-
-        private void CheckDelete(QQuery filter, IEnumerable<T> buf, DBLoadParam param, DBTransaction transaction)
-        {
-            var list = Select(filter).ToList();
+            var param = query.LoadParam;
+            var list = Select(query).ToList();
             var bufList = buf.ToList();
             if (list.Count > bufList.Count)
             {
@@ -820,177 +1023,21 @@ namespace DataWF.Data
             }
         }
 
-        public override DBItem LoadItemFromReader(DBTransaction transaction)
+        private IEnumerable<DBTuple> AsTuple(IEnumerable<T> items = null)
         {
-            return LoadFromReader(transaction);
-        }
-
-        public virtual T LoadFromReader(DBTransaction transaction)
-        {
-            T item = null;
-
-            if (transaction.ReaderPrimaryKey >= 0)
+            if (items == null || items == this || items == this.items)
             {
-                item = PrimaryKey.SelectOneFromReader<T>(transaction, transaction.ReaderPrimaryKey);
-            }
-            if (transaction.ReaderStampKey >= 0 && !transaction.Reader.IsDBNull(transaction.ReaderStampKey))
-            {
-                if (item != null && (transaction.ReaderParam & DBLoadParam.Referencing) != 0)
+                for (int i = 0; i < this.items.Count; i++)
                 {
-                    var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
-                    stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
-                    if (Nullable.Compare(item.Stamp, stamp) >= 0)
-                    {
-                        return item;
-                    }
+                    yield return new DBTuple { Item0 = this.items[i] };
                 }
-                else if ((transaction.ReaderParam & DBLoadParam.Synchronize) != 0)
-                {
-                    var stamp = transaction.Reader.GetDateTime(transaction.ReaderStampKey);
-                    stamp = DateTime.SpecifyKind(stamp, DateTimeKind.Utc);
-                    if (item != null && Nullable.Compare(item.Stamp, stamp) >= 0)
-                    {
-                        return item;
-                    }
-                    else if (transaction.ReaderColumns.Count < 4)
-                    {
-                        return LoadById(transaction.Reader.GetValue(transaction.ReaderPrimaryKey));
-                    }
-                }
-            }
-            if (item == null)
-            {
-                var typeIndex = 0;
-                if (transaction.ReaderItemTypeKey >= 0)
-                    typeIndex = transaction.Reader.IsDBNull(transaction.ReaderItemTypeKey) ? 0 : transaction.Reader.GetInt32(transaction.ReaderItemTypeKey);
-                item = (T)NewItem(transaction.ReaderState, false, typeIndex);
-            }
-
-            for (int i = 0; i < transaction.ReaderColumns.Count; i++)
-            {
-                var column = transaction.ReaderColumns[i];
-                column.LoadFromReader(transaction, item, i);
-            }
-            return item;
-        }
-
-        public override IEnumerable<DBItem> GetChangedItems()
-        {
-            return GetChanged();
-        }
-
-        public IEnumerable<T> GetChanged()
-        {
-            foreach (var item in (ICollection<T>)this)
-            {
-                if (item.IsChanged)
-                    yield return item;
-            }
-        }
-
-        public override IEnumerable<DBItem> SelectItems(string filter)
-        {
-            return Select(filter);
-        }
-
-        public IEnumerable<T> Select(string filter, IEnumerable<T> list = null)
-        {
-            using (var query = new QQuery(filter, this))
-            {
-                return Select(query, list);
-            }
-        }
-
-        public IEnumerable<T> Select(QItemList<QParam> parameters, IEnumerable<T> list = null)
-        {
-            IEnumerable<T> buffer = null;
-            for (int i = 0; i < parameters.Count; i++)
-            {
-                QParam param = parameters[i];
-                if (buffer != null && param.Logic.Type == LogicTypes.And)
-                {
-                    if (!buffer.Any())
-                        break;
-                    list = buffer;
-                }
-                var temp = Select(param, list);
-
-                if (buffer == null)
-                    buffer = temp;
-                else if (param.Logic.Type == LogicTypes.Undefined)
-                    buffer = buffer.Concat(temp);
-                else if (param.Logic.Type == LogicTypes.Or)
-                    buffer = param.Logic.Not
-                               ? buffer.Except(temp)
-                               : buffer.Union(temp);
-                else if (param.Logic.Type == LogicTypes.And)
-                    buffer = param.Logic.Not
-                               ? buffer.Except(temp).Union(temp.Except(buffer))
-                               : buffer.Intersect(temp);
-            }
-
-            return buffer;
-        }
-
-        public override IEnumerable<DBItem> SelectItems(QQuery query)
-        {
-            return Select(query);
-        }
-
-        public IEnumerable<T> Select(QQuery query, IEnumerable<T> list = null)
-        {
-            IEnumerable<T> buf = null;
-            if (query.Parameters.Count == 0)
-            {
-                buf = list ?? AsReadOnly();
-            }
-            else if (query.Parameters.Count == 1)
-            {
-                buf = Select(query.Parameters[0], list);
             }
             else
             {
-                buf = Select(query.Parameters, list);
-            }
-            return buf;
-        }
-
-        public IEnumerable<T> Select(QParam param, IEnumerable<T> list = null)
-        {
-            if (param.ValueLeft is QFunc func
-                && func.Type == QFunctionType.distinct
-                && func.Items.FirstOrDefault() is QItem item)
-            {
-                return ListHelper.Distinct(list ?? items, item, param.Query?.GetComparer());//
-            }
-            IEnumerable<T> buf = param.IsCompaund ? Select(param.Parameters, list) : null;
-            if (buf == null)
-            {
-                if (param.ValueLeft is QColumn)
+                foreach (var item in items)
                 {
-                    buf = Select(param.Column, param.Comparer, param.Value, list);
+                    yield return new DBTuple { Item0 = item };
                 }
-                else if (param.ValueLeft is QReflection)
-                {
-                    buf = Select(((QReflection)param.ValueLeft).Invoker, param.Comparer, param.Value, list);
-                }
-                else
-                {
-                    buf = Search(param, list);
-                }
-            }
-            return buf;
-        }
-
-        public IEnumerable<T> Search(QParam param, IEnumerable<T> list = null)
-        {
-            list = list ?? AsReadOnly();
-            foreach (T row in list)
-            {
-                if (param.ValueLeft == null || param.ValueRight == null)
-                { }
-                if (CheckItem(row, param.ValueLeft.GetValue(row), param.ValueRight.GetValue(row), param.Comparer))
-                    yield return row;
             }
         }
 
@@ -1002,135 +1049,452 @@ namespace DataWF.Data
             }
         }
 
-        public object Optimisation(DBColumn column, CompareType comparer, object value)
+        public override IEnumerable<DBItem> GetChangedItems()
         {
-            if (value == null)
-                return value;
-            if (value is QQuery)
-            {
-                if (column.IsPrimaryKey)
-                {
-                    var query = (QQuery)value;
-                    if (query.Columns[0] is QColumn qcolumn && !query.IsRefence)
-                    {
-                        var buf = new List<T>();
-                        foreach (DBItem item in query.Select())
-                        {
-                            var reference = item.GetReference<T>(qcolumn.Column, DBLoadParam.None);
-                            //if (reference != null && reference.Table != this)
-                            //{
-                            //    throw new Exception(string.Format("Value {0} Table {1}", reference.Table, this));
-                            //}
-                            if (reference != null)
-                            {
+            return GetChanged();
+        }
 
-                                var index = buf.BinarySearch(reference);
-                                if (index < 0)
-                                    buf.Insert(-index - 1, reference);
-                            }
+        public IEnumerable<T> GetChanged()
+        {
+            foreach (var item in this.items)
+            {
+                if (item.IsChanged)
+                    yield return item;
+            }
+        }
+
+        public IEnumerable<DBTuple> Join(IQQuery query, IEnumerable<DBTuple> list)
+        {
+            var joins = query.Tables.Skip(1)
+                                    .Where(table => !table.Join.IsLeft
+                                                || table.HasParameters)
+                                    .ToList();
+
+            var count = joins.Count;
+            foreach (var tuple in list)
+            {
+                var tuples = Enumerable.Repeat(tuple, 1);
+                foreach (var table in joins)
+                {
+                    tuples = Join(table, tuples);
+                }
+                foreach (var joinedTuple in tuples)
+                {
+                    yield return joinedTuple;
+                }
+            }
+
+            int Compare(QTable x, QTable y) // TODO if order of join is not inclusive
+            {
+                var raiting = ((QColumn)x.On.LeftItem).Column.Table == this;
+                return x.Order.CompareTo(y.Order);
+            }
+        }
+
+        public IEnumerable<DBTuple> Join(QTable rtable, IEnumerable<DBTuple> list)
+        {
+            foreach (var tuple in list)
+            {
+                foreach (var joined in Join(rtable, tuple))
+                {
+                    yield return joined;
+                }
+            }
+        }
+
+        public IEnumerable<DBTuple> Join(QTable rtable, DBTuple tuple)
+        {
+            //if(!rtable.On.IsCompaund)
+            {
+                var rcolumn = (QColumn)(rtable.On.LeftItem.QTable == rtable ? rtable.On.LeftItem : rtable.On.RightItem);
+                var lcolumn = (QColumn)(rtable.On.LeftItem != rcolumn ? rtable.On.LeftItem : rtable.On.RightItem);
+
+                //if(rtable.On.Comparer == CompareType.Equal)
+                {
+                    var litem = tuple.Get(lcolumn.QTable);
+                    if (litem == null)
+                    {
+                        yield break;
+                    }
+                    var items = lcolumn.Column.IsPrimaryKey
+                        ? rcolumn.Column.Select<DBItem>(rtable.On.Comparer, litem)
+                        : rcolumn.Column.Select<DBItem>(rtable.On.Comparer, lcolumn.GetValue(litem));
+
+                    bool first = true;
+                    foreach (var item in items)
+                    {
+                        //if (QParam.CheckItem(item, rtable.GetParameters()))
+                        {
+                            var itemTurple = first ? tuple : tuple.Clone();
+                            itemTurple.Set(rtable, item);
+                            yield return itemTurple;
+                            first = false;
                         }
-                        value = buf;
+                    }
+                    if (first && rtable.Join.IsLeft)// && !rtable.HasParameters)
+                    {
+                        yield return tuple;
                     }
                 }
-                else
+            }
+        }
+
+        public IEnumerable<T> Select(DBColumn column, CompareOperator comparer, object value)
+        {
+            return column.Select<T>(comparer, value);
+        }
+
+        public IEnumerable<T> Select<V>(DBColumn<V> column, CompareOperator comparer, V value)
+        {
+            return column.Select<T>(comparer, value);
+        }
+
+        public override IEnumerable<TT> Select<TT>(IQQuery query)
+        {
+            return Select(query).Cast<TT>();
+        }
+
+        public override IEnumerable<TT> Select<TT>(IQQuery<TT> query)
+        {
+            return Select(query).Cast<TT>();
+        }
+
+        public IEnumerable<T> Select(IQQuery query, IEnumerable<T> list = null)
+        {
+            IEnumerable<T> buf = null;
+            if (query.IsJoinAffectResult)
+            {
+                var joinSource = Join(query, AsTuple(list));
+                buf = Select(query, joinSource);
+            }
+            else if (query.Parameters.Count == 0)
+            {
+                buf = list ?? AsReadOnly();
+            }
+            else if (query.Parameters.Count == 1)
+            {
+                buf = Select(query.Parameters[0], list);
+            }
+            else
+            {
+                buf = Select(query.Parameters, list);
+            }
+            var comparers = query.GetComparer<T>();
+            if (query.TreeComparer is ITreeComparer treeComparer)
+            {
+                treeComparer.Comparer = comparers;
+                var bufList = buf.ToList();
+                buf = bufList;
+                ListHelper.QuickSort<T>(bufList, (IComparer<T>)treeComparer);
+            }
+            else if (comparers != null)
+            {
+                var bufList = buf.ToList();
+                buf = bufList;
+                ListHelper.QuickSort<T>(bufList, comparers);
+            }
+
+            return buf;
+        }
+
+        private IEnumerable<T> Select(IQQuery query, IEnumerable<DBTuple> joinSource)
+        {
+            IEnumerable<DBTuple> buf = null;
+            if (query.Parameters.Count == 0)
+            {
+                buf = joinSource;
+            }
+            else if (query.Parameters.Count == 1)
+            {
+                buf = Select(query.Parameters[0], joinSource);
+            }
+            else
+            {
+                buf = Select(query.Parameters, joinSource);
+            }
+
+            return buf.Select(p => p.Item0 as T).Distinct();
+        }
+
+        private IEnumerable<T> Select(IEnumerable<QParam> parameters, IEnumerable<T> list = null)
+        {
+            IEnumerable<T> buffer = null;
+            foreach (QParam param in parameters)
+            {
+                if (buffer != null && param.Logic.Type == LogicOperatorType.And)
                 {
-                    value = SelectQuery(null, (QQuery)value, comparer);
+                    //if (!buffer.Any())
+                    //    break;
+                    list = buffer;
                 }
+                var temp = Select(param, list);
+
+                if (buffer == null)
+                    buffer = temp;
+                else if (param.Logic.Type == LogicOperatorType.Undefined)
+                    buffer = buffer.Concat(temp);
+                else if (param.Logic.Type == LogicOperatorType.Or)
+                    buffer = param.Logic.Not
+                               ? buffer.Except(temp)
+                               : buffer.Union(temp);
+                else if (param.Logic.Type == LogicOperatorType.And)
+                    buffer = param.Logic.Not
+                               ? buffer.Except(temp).Union(temp.Except(buffer))
+                               : buffer.Intersect(temp);
             }
-            else if (value.GetType() == typeof(QEnum))
-            {
-                value = ((QEnum)value).Items;
-            }
-            else if (comparer.Type == CompareTypes.In && value is string)
-            {
-                value = value.ToString().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            }
-            else if (comparer.Type == CompareTypes.Like)
-            {
-                value = Helper.BuildLike(value == null ? string.Empty : value.ToString());
-            }
-            return value;
+
+            return buffer;
         }
 
-        public IEnumerable<T> Select(IInvoker invoker, CompareType comparer, object value, IEnumerable<T> list = null)
+        private IEnumerable<DBTuple> Select(IEnumerable<QParam> parameters, IEnumerable<DBTuple> joinSourc)
         {
-            list = list ?? this;
-            if (invoker == null)
-                yield break;
-
-            value = Optimisation(null, comparer, value);
-
-            foreach (T row in list)
+            IEnumerable<DBTuple> buffer = null;
+            foreach (QParam param in parameters)
             {
-                if (CheckItem(row, invoker.GetValue(row), value, comparer))
-                    yield return row;
-            }
-        }
+                if (buffer != null && param.Logic.Type == LogicOperatorType.And)
+                {
+                    //if (!buffer.Any())
+                    //    break;
+                    joinSourc = buffer;
+                }
+                var temp = Select(param, joinSourc);
 
-        public T SelectOne(DBColumn column, object val)
-        {
-            var value = column.ParseValue(val);
-            if (column.Index != null)
-            {
-                return column.Index.SelectOne<T>(value);
-            }
-            return Select(column, CompareType.Equal, value).FirstOrDefault();
-        }
-
-        public override IEnumerable<DBItem> SelectItems(DBColumn column, CompareType comparer, object val)
-        {
-            return Select(column, comparer, val);
-        }
-
-        public IEnumerable<T> Select(DBColumn column, CompareType comparer, object value, IEnumerable<T> list = null)
-        {
-            list = list ?? this;
-            if (column == null)
-                return list;
-
-            value = Optimisation(column, comparer, value);
-            if (value is IEnumerable<T> enumerabble)
-            {
-                return enumerabble;
+                if (buffer == null)
+                    buffer = temp;
+                else if (param.Logic.Type == LogicOperatorType.Undefined)
+                    buffer = buffer.Concat(temp);
+                else if (param.Logic.Type == LogicOperatorType.Or)
+                    buffer = param.Logic.Not
+                               ? buffer.Except(temp)
+                               : buffer.Union(temp);
+                else if (param.Logic.Type == LogicOperatorType.And)
+                    buffer = param.Logic.Not
+                               ? buffer.Except(temp).Union(temp.Except(buffer))
+                               : buffer.Intersect(temp);
             }
 
-            if (column.Index != null)
-            {
-                return column.Index.Select<T>(value, comparer);
-            }
-            return Search(column, comparer, value, list);
+            return buffer;
         }
 
-        public IEnumerable<T> Search(DBColumn column, CompareType comparer, object value, IEnumerable<T> list)
+        private IEnumerable<T> Select(QParam param, IEnumerable<T> list = null)
         {
-            list = list ?? this;
-            foreach (T row in list)
+            if (param.LeftItem is QFunction func
+                && func.Type == QFunctionType.distinct
+                && Enumerable.FirstOrDefault(func.Items) is QItem item)
             {
-                if (CheckItem(row, row.GetValue(column), value, comparer))
-                    yield return row;
+                return ListHelper.Distinct(list ?? items, item, param.Query?.GetComparer<T>());//
             }
+            if (param.IsCompaund)
+            {
+                return Select(param.Parameters.OfType<QParam>(), list);
+            }
+            if (param.LeftItem is QColumn lqColumn
+                && param.LeftItem.IsReference)
+            {
+                var lColumn = lqColumn.Column;
+                if (param.RightItem is QColumn rqColumn)
+                {
+                    if (rqColumn.Value != null)
+                        return lColumn.Select(param.Comparer, rqColumn.Value, list);
+
+                    return lColumn.Search(param.Comparer, rqColumn.Column, list ?? this);
+                }
+                if (!param.RightItem.IsReference)
+                    return lColumn.Select(param.Comparer, param.RightItem.GetValue<T>(), list);
+            }
+            else if (param.RightItem is QColumn rqColumn
+                && !param.LeftItem.IsReference)
+            {
+                var rColumn = rqColumn.Column;
+                return rColumn.Select(param.Comparer, param.LeftItem.GetValue<T>(), list);
+            }
+            return param.Search<T>(list ?? this);
         }
 
-        public T SelectRow(DBColumn column, CompareType comparer, object value, IEnumerable<T> list = null)
+        private IEnumerable<DBTuple> Select(QParam param, IEnumerable<DBTuple> list)
         {
-            return Select(column, comparer, value, list).FirstOrDefault();
+            if (param.LeftItem is QFunction func
+               && func.Type == QFunctionType.distinct
+               && Enumerable.FirstOrDefault(func.Items) is QItem item)
+            {
+                return ListHelper.Distinct(list, item, param.Query?.GetComparer<T>());//
+            }
+            if (param.IsCompaund)
+            {
+                return Select(param.Parameters.OfType<QParam>(), list);
+            }
+            if (param.LeftItem is QColumn lqColumn
+                && param.LeftItem.IsReference)
+            {
+                var lColumn = lqColumn.Column;
+                if (param.RightItem is QColumn rqColumn)
+                {
+                    if (rqColumn.Value != null)
+                        return lColumn.Select<DBItem>(param.Comparer, rqColumn.Value, lqColumn.QTable, list);
+
+                    return lColumn.Search<DBItem>(param.Comparer, rqColumn, lqColumn.QTable, list);
+                }
+                if (!param.RightItem.IsReference)
+                    return lColumn.Select<DBItem>(param.Comparer, param.RightItem.GetValue<T>(), lqColumn.QTable, list);
+            }
+            else if (param.RightItem is QColumn rqColumn
+                && !param.LeftItem.IsReference)
+            {
+                var rColumn = rqColumn.Column;
+                return rColumn.Select<DBItem>(param.Comparer, param.LeftItem.GetValue<T>(), rqColumn.QTable, list);
+            }
+            return param.Search<DBItem>(list);
+        }
+
+        public override IQQuery QQuery(DBLoadParam loadParam = DBLoadParam.None)
+        {
+            return Query(loadParam);
+        }
+
+        public override IQQuery QQuery(IQQuery baseQuery)
+        {
+            return Query(baseQuery);
+        }
+
+        public override IQQuery QQuery(string filter, DBLoadParam loadParam = DBLoadParam.None)
+        {
+            return Query(filter, loadParam);
+        }
+
+        public QQuery<T> Query(IQQuery query) => new QQuery<T>(query, string.Empty)
+        {
+            Table = this
+        };
+
+        public QQuery<T> Query(DBLoadParam loadParam = DBLoadParam.Load) => new QQuery<T>(this)
+        {
+            LoadParam = loadParam
+        };
+
+        public QQuery<T> Query(Expression<Func<T, bool>> expression, DBLoadParam loadParam = DBLoadParam.Load) => new QQuery<T>(this, expression)
+        {
+            LoadParam = loadParam
+        };
+
+        public QQuery<T> Query(string filter, DBLoadParam loadParam = DBLoadParam.Load)
+        {
+            if (!queryChache.TryGetValue(filter, out var query))
+            {
+                query = new QQuery<T>(this, filter) { LoadParam = loadParam };
+                queryChache.TryAdd(filter, query);
+            }
+            return (QQuery<T>)query;
         }
 
         public override void Dispose()
         {
+            if (IsVirtual)
+            {
+                ParentTable?.RemoveVirtual(this);
+                filterQuery = null;
+            }
             base.Dispose();
             Clear();
             queryViews.Clear();
             queryViews.TrimExcess();
         }
 
+        public override DBItem NewItem(DBUpdateState state, bool def, int typeIndex)
+        {
+            if (IsVirtual)
+            {
+                if (typeIndex == 0)
+                    typeIndex = GetTypeIndex(typeof(T));
+                return ParentTable.NewItem(state, def, typeIndex);
+            }
+
+            return base.NewItem(state, def, typeIndex);
+        }
+
         public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true)
         {
             var item = (T)FormatterServices.GetUninitializedObject(typeof(T));
-            item.Build(this, def, ItemTypeIndex);
+            item.Build(this, def, TypeId);
             item.update = state;
             return item;
         }
+
+        public override void SaveFile(string fileName)
+        {
+            if (Count == 0)
+                return;
+
+            if (File.Exists(fileName))
+                File.Delete(fileName);
+
+            string directory = Path.GetDirectoryName(fileName);
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+            File.Create(fileName).Close();
+
+            using (var file = File.Open(fileName, FileMode.Open, FileAccess.Write))
+            {
+                using (var writer = new BinaryWriter(file))
+                using (var invokerWriter = new BinaryInvokerWriter(writer))
+                {
+                    invokerWriter.WriteArrayBegin();
+                    invokerWriter.WriteArrayLength(Count);
+                    var itemSerializer = new DBItemSerializer<T>(this);
+                    var map = itemSerializer.WriteMap(invokerWriter, ItemType);
+                    foreach (var item in this)
+                    {
+                        invokerWriter.WriteArrayEntry();
+                        itemSerializer.Write(invokerWriter, item, null, map);
+                    }
+                    invokerWriter.WriteArrayEnd();
+                }
+            }
+        }
+
+        public override void LoadFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName) || !File.Exists(fileName))
+                return;
+            using (var file = File.Open(fileName, FileMode.Open, FileAccess.Read))
+            {
+                using (var reader = new BinaryReader(file))
+                using (var invokerReader = new BinaryInvokerReader(reader))
+                {
+                    var itemSerializer = new DBItemSerializer<T>(this);
+                    invokerReader.ReadToken();
+                    if (invokerReader.CurrentToken == BinaryToken.ArrayBegin)
+                    {
+                        invokerReader.ReadToken();
+                    }
+                    if (invokerReader.CurrentToken == BinaryToken.ArrayLength)
+                    {
+                        var count = Int32Serializer.Instance.Read(invokerReader.Reader);
+                        invokerReader.ReadToken();
+                    }
+                    var type = ItemType;
+                    var map = (Dictionary<ushort, ISerializationPropertyInfo>)null;
+                    if (invokerReader.CurrentToken == BinaryToken.SchemaBegin)
+                    {
+                        map = itemSerializer.ReadMap(invokerReader, out type);
+                        invokerReader.ReadToken();
+                    }
+
+                    while (invokerReader.CurrentToken == BinaryToken.ArrayEntry)
+                    {
+                        var item = (T)NewItem(DBUpdateState.Default, false, type);
+                        itemSerializer.Read(invokerReader, item, null, map);
+                        Add(item);
+                        item.Accept((IUserIdentity)null);
+                    }
+                }
+            }
+        }
     }
 
+    public enum DBCacheState
+    {
+        None,
+        Actual,
+        Actualazing
+    }
 }

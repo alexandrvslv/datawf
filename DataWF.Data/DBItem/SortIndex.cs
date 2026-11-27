@@ -17,7 +17,9 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using DataWF.Collections.Query;
+using DataWF.Comparers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -33,19 +35,15 @@ namespace DataWF.Data
         private readonly IComparer comparer;
         private readonly DBColumn column;
         //private string property;
-        public SortIndex(DBTable list, string property)
+        public SortIndex(DBTable table, string property)
         {
-            this.row = list.NewItem(DBUpdateState.Default);
-            this.list = list;
+            this.row = table.NewItem(DBUpdateState.Default);
+            this.list = table;
             //this.property = property;
-            if (list.Columns.Contains(property))
+            if (table.Columns.Contains(property))
             {
-                column = list.Columns[property];
+                column = table.Columns[property];
                 comparer = column.CreateComparer(ListSortDirection.Ascending);
-            }
-            else
-            {
-                comparer = new InvokerComparer(typeof(DBItem), property, ListSortDirection.Ascending);
             }
             Refresh();
         }
@@ -103,11 +101,11 @@ namespace DataWF.Data
         {
             if (column != null)
                 row[column] = value;
-            else if (comparer is InvokerComparer)
+            else if (comparer is IInvokerComparer invokerComparer)
             {
-                if (value.GetType() != ((InvokerComparer)comparer).Invoker.DataType)
-                    value = Helper.TextParse(value.ToString(), ((InvokerComparer)comparer).Invoker.DataType, "");
-                ((InvokerComparer)comparer).Invoker.SetValue(row, value);
+                if (value.GetType() != invokerComparer.Invoker.DataType)
+                    value = Helper.TextParse(value.ToString(), invokerComparer.Invoker.DataType, "");
+                invokerComparer.Invoker.SetValue(row, value);
             }
         }
 
@@ -132,16 +130,16 @@ namespace DataWF.Data
                 else
                     break;
         }
-        public List<DBItem> Select(object value, CompareType compare)
+        public List<DBItem> Select(object value, CompareOperator compare)
         {
             List<DBItem> buf = new List<DBItem>();
             if (index != null && index.Count == 0)
                 return buf;
 
-            if (compare.Type == CompareTypes.Is)
+            if (compare.Type == CompareOperatorType.Is)
             {
                 value = DBNull.Value;
-                compare = new CompareType(CompareTypes.Equal, compare.Not);
+                compare = new CompareOperator(CompareOperatorType.NotEqual, compare.Not);
             }
 
             SetValue(value);
@@ -155,13 +153,13 @@ namespace DataWF.Data
 
             switch (compare.Type)
             {
-                case CompareTypes.Equal:
+                case CompareOperatorType.Equal:
                     if (itemIndex >= 0)
                         buf = (List<DBItem>)ListHelper.ORNOT(index, buf, null);
                     else
                         buf = (List<DBItem>)ListHelper.Copy(index);
                     break;
-                case CompareTypes.Less:
+                case CompareOperatorType.Less:
                     if (itemIndex >= 0)
                         buf = (List<DBItem>)ListHelper.Copy(index, 0, first - 1);
                     else
@@ -170,7 +168,7 @@ namespace DataWF.Data
                             buf = (List<DBItem>)ListHelper.Copy(index);
                     }
                     break;
-                case CompareTypes.LessOrEqual:
+                case CompareOperatorType.LessOrEqual:
                     if (itemIndex >= 0)
                         buf = (List<DBItem>)ListHelper.Copy(index, 0, last);
                     else
@@ -179,7 +177,7 @@ namespace DataWF.Data
                             buf = (List<DBItem>)ListHelper.Copy(index);
                     }
                     break;
-                case CompareTypes.GreaterOrEqual:
+                case CompareOperatorType.GreaterOrEqual:
                     if (itemIndex >= 0)
                         buf = (List<DBItem>)ListHelper.Copy(index, first, index.Count - 1);
                     else
@@ -188,7 +186,7 @@ namespace DataWF.Data
                             buf = (List<DBItem>)ListHelper.Copy(index);
                     }
                     break;
-                case CompareTypes.Greater:
+                case CompareOperatorType.Greater:
                     if (itemIndex >= 0)
                         buf = (List<DBItem>)ListHelper.Copy(index, last + 1, index.Count - 1);
                     else

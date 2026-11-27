@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 
 namespace DSBarCode
 {
@@ -17,145 +20,130 @@ namespace DSBarCode
         private bool showFooter;
         private String headerText = "BarCode Demo";
         private BarCodeWeight weight = BarCodeWeight.Small;
-        private Font headerFont;
-        private Font footerFont;
+        private Typeface headerFont;
+        private Typeface footerFont;
 
         public BarCodeCtrl()
         {
-            headerFont = Font.FromName("Courier").WithSize(18);
-            footerFont = Font.FromName("Courier").WithSize(8);
-            BackgroundColor = Colors.White;
+            headerFont = new Typeface("Courier");
+            footerFont = new Typeface("Courier");
+            Background = Brushes.White;
             Name = "BarCodeCtrl";
         }
 
         public AlignType VertAlign
         {
-            get { return align; }
+            get => align;
             set
             {
                 align = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
         public String BarCode
         {
-            get { return code; }
+            get => code;
             set
             {
                 code = value.ToUpper();
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
         public int BarCodeHeight
         {
-            get { return height; }
+            get => height;
             set
             {
                 height = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
         public int LeftMargin
         {
-            get { return leftMargin; }
+            get => leftMargin;
             set
             {
                 leftMargin = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
         public int TopMargin
         {
-            get { return topMargin; }
+            get => topMargin;
             set
             {
                 topMargin = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
         public bool ShowHeader
         {
-            get { return showHeader; }
+            get => showHeader;
             set
             {
                 showHeader = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
         public bool ShowFooter
         {
-            get { return showFooter; }
+            get => showFooter;
             set
             {
                 showFooter = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
         public String HeaderText
         {
-            get { return headerText; }
+            get => headerText;
             set
             {
                 headerText = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
         public BarCodeWeight Weight
         {
-            get { return weight; }
+            get => weight;
             set
             {
                 weight = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
-        public Font HeaderFont
+        public Typeface HeaderFont
         {
-            get { return headerFont; }
+            get => headerFont;
             set
             {
                 headerFont = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
-        public Font FooterFont
+        public Typeface FooterFont
         {
-            get { return footerFont; }
+            get => footerFont;
             set
             {
                 footerFont = value;
-                QueueDraw();
+                InvalidateVisual();
             }
         }
 
-        public double Width
-        {
-            get { return Size.Width; }
-        }
-
-        public double Height
-        {
-            get { return Size.Height; }
-        }
-
-        protected override void OnDraw(Context context, Rectangle bound)
+        public override void Render(DrawingContext context)
         {
             PaintBar(context);
-        }
-
-        protected override void Dispose(bool dispose)
-        {
-            base.Dispose(dispose);
         }
 
         String alphabet39 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. $/+%*";
@@ -207,7 +195,7 @@ namespace DSBarCode
         };
 
 
-        private void PaintBar(Context g)
+        private void PaintBar(DrawingContext g)
         {
             String intercharacterGap = "0";
             String str = '*' + code.ToUpper() + '*';
@@ -217,12 +205,8 @@ namespace DSBarCode
             {
                 if (alphabet39.IndexOf(code[i]) == -1 || code[i] == '*')
                 {
-                    g.SetColor(Colors.Red);
-                    using (var textLayout = new TextLayout(this))
-                    {
-                        textLayout.Text = "INVALID BAR CODE TEXT";
-                        g.DrawTextLayout(textLayout, 10, 10);
-                    }
+                    var formattedText = new FormattedText("INVALID BAR CODE", FlowDirection.LeftToRight, HeaderFont, 10, Brushes.Red);
+                    g.DrawText(formattedText, new Point(10, 10));
                     return;
                 }
             }
@@ -257,11 +241,11 @@ namespace DSBarCode
             double wid = 0;
             double yTop = 0;
 
-            var tlHeader = new TextLayout() { Font = headerFont, Text = headerText };
-            var tlCode = new TextLayout() { Font = footerFont, Text = code };
+            var tlHeader = new FormattedText(headerText, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, headerFont, 10, Brushes.Black);
+            var tlCode = new FormattedText(code, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, footerFont, 8, Brushes.Black);
 
-            Size hSize = tlHeader.GetSize();
-            Size fSize = tlCode.GetSize();
+            Size hSize = tlHeader.Bounds.Size;
+            Size fSize = tlCode.Bounds.Size;
 
             double headerX = 0;
             double footerX = 0;
@@ -288,8 +272,7 @@ namespace DSBarCode
             if (showHeader)
             {
                 yTop = (int)hSize.Height + topMargin;
-                g.SetColor(Colors.Black);
-                g.DrawTextLayout(tlHeader, headerX, topMargin);
+                g.DrawText(tlHeader, new Point(headerX, topMargin));
             }
             else
             {
@@ -303,7 +286,7 @@ namespace DSBarCode
                 else
                     wid = (int)weight;
                 g.SetColor(i % 2 == 0 ? Colors.Black : Colors.White);
-                g.Rectangle(x, yTop, wid, height);
+                g.DrawRectangle(x, yTop, wid, height);
                 g.Fill();
                 x += wid;
             }
@@ -311,7 +294,7 @@ namespace DSBarCode
             yTop += height;
 
             if (showFooter)
-                g.DrawTextLayout(tlCode, footerX, yTop);
+                g.DrawText(tlCode, new Point(footerX, yTop));
         }
 
         public void SaveImage(string file)
@@ -324,16 +307,14 @@ namespace DSBarCode
 
         public void SaveImage(Stream stream)
         {
-            using (var builder = new ImageBuilder(Width, Height))
+            var size = new PixelSize((int)Width, (int)Height);
+            using (var builder = new RenderTargetBitmap(size))
+            using (var context = builder.CreateDrawingContext(null))
+            using (var drawingContext = new DrawingContext(context))
             {
-                builder.Context.SetColor(Colors.White);
-                builder.Context.Rectangle(0, 0, Width, Height);
-                builder.Context.Fill();
-                PaintBar(builder.Context);
-                using (var bitmap = builder.ToBitmap())
-                {
-                    bitmap.Save(stream, ImageFileType.Png);
-                }
+                context.DrawRectangle(Brushes.White, null, new RoundedRect(new Rect(0, 0, Width, Height)));
+                PaintBar(drawingContext);
+                builder.Save(stream);
             }
         }
 

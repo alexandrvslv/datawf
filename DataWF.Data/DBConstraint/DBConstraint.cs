@@ -17,20 +17,17 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.Type), typeof(DBConstraint.TypeInvoker<>))]
-[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.Columns), typeof(DBConstraint.ColumnsInvoker<>))]
-[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.ColumnName), typeof(DBConstraint.ColumnNameInvoker<>))]
-[assembly: Invoker(typeof(DBConstraint), nameof(DBConstraint.Value), typeof(DBConstraint.ValueInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBConstraint : DBTableItem, IDBTableContent
+    [Invoker(Instance = true)]
+    public partial class DBConstraint : DBTableItem, IDBTableContent
     {
         protected DBConstraintType type;
         protected string value;
@@ -45,7 +42,9 @@ namespace DataWF.Data
             name = string.Format("{0}{1}{2}", type.ToString().Substring(0, 2).ToLower(), Table.Name, Columns.Names);
         }
 
-        public DBConstraintType Type
+        public override DBSchemaItemType Type => DBSchemaItemType.Constraint;
+
+        public DBConstraintType ConstraintType
         {
             get { return type; }
             set
@@ -53,7 +52,7 @@ namespace DataWF.Data
                 if (type == value)
                     return;
                 type = value;
-                OnPropertyChanged(nameof(Type), DDLType.Alter);
+                OnPropertyChanged(DDLType.Alter);
             }
         }
 
@@ -65,7 +64,7 @@ namespace DataWF.Data
                 if (value == this.value)
                     return;
                 this.value = value;
-                OnPropertyChanged(nameof(Value), DDLType.Alter);
+                OnPropertyChanged(DDLType.Alter);
             }
         }
 
@@ -74,10 +73,11 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
-            get { return Columns.GetFirst()?.Column; }
+            get { return Columns.FirstOrDefault()?.Column; }
             set
             {
-                if (Columns.Contains(value))
+                var exist = Columns.Get(value?.FullName);
+                if (exist?.Column == value)
                     return;
                 if (value == null)
                     Columns.Clear();
@@ -85,7 +85,10 @@ namespace DataWF.Data
                 {
                     if (Table == null)
                         Table = value.Table;
-                    Columns.Add(value);
+                    if (exist != null)
+                        exist.Column = value;
+                    else
+                        Columns.Add(value);
                 }
             }
         }
@@ -93,7 +96,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public string ColumnName
         {
-            get { return Columns.GetFirst().ColumnName; }
+            get { return Columns.FirstOrDefault().ColumnName; }
             set
             {
                 if (Columns.Contains(value))
@@ -110,7 +113,7 @@ namespace DataWF.Data
             return string.Format("{0} {1} {2}", type, Column, value);
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             var builder = new StringBuilder();
             Table?.System.Format(builder, this, ddlType);
@@ -131,54 +134,6 @@ namespace DataWF.Data
                 constraint.Columns.Add(item.Clone());
             }
             return constraint;
-        }
-
-        public class TypeInvoker<T> : Invoker<T, DBConstraintType> where T : DBConstraint
-        {
-            public static readonly TypeInvoker<T> Instance = new TypeInvoker<T>();
-            public override string Name => nameof(DBConstraint.Type);
-
-            public override bool CanWrite => true;
-
-            public override DBConstraintType GetValue(T target) => target.Type;
-
-            public override void SetValue(T target, DBConstraintType value) => target.Type = value;
-        }
-
-        public class ColumnsInvoker<T> : Invoker<T, DBColumnReferenceList> where T : DBConstraint
-        {
-            public static readonly ColumnsInvoker<T> Instance = new ColumnsInvoker<T>();
-            public override string Name => nameof(DBConstraint.Columns);
-
-            public override bool CanWrite => true;
-
-            public override DBColumnReferenceList GetValue(T target) => target.Columns;
-
-            public override void SetValue(T target, DBColumnReferenceList value) => target.Columns = value;
-        }
-
-        public class ColumnNameInvoker<T> : Invoker<T, string> where T : DBConstraint
-        {
-            public static readonly ColumnNameInvoker<T> Instance = new ColumnNameInvoker<T>();
-            public override string Name => nameof(DBConstraint.ColumnName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.ColumnName;
-
-            public override void SetValue(T target, string value) => target.ColumnName = value;
-        }
-
-        public class ValueInvoker<T> : Invoker<T, string> where T : DBConstraint
-        {
-            public static readonly ValueInvoker<T> Instance = new ValueInvoker<T>();
-            public override string Name => nameof(DBConstraint.Value);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(T target) => target.Value;
-
-            public override void SetValue(T target, string value) => target.Value = value;
-        }
+        }        
     }
 }

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
+using DataWF;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Threading;
 
 namespace DataWF.Gui
 {
@@ -22,7 +23,7 @@ namespace DataWF.Gui
 
         public string Text
         {
-            get { return label?.Text; }
+            get => label?.Content as string;
             set
             {
                 if (Text != value)
@@ -30,10 +31,10 @@ namespace DataWF.Gui
                     if (label == null)
                     {
                         label = new Label { Name = "label" };
-                        AddChild(label, 0D, 0D);
+                        Children.Add(label);
                     }
-                    label.Text = value;
-                    SetChildBounds(label, new Rectangle(Point.Zero, label.Surface.GetPreferredSize()));
+                    label.Content = value;
+                    label.Arrange(new Rect(default(Point), label.GetPreferredSize()));
                 }
             }
         }
@@ -41,7 +42,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool ReadOnly
         {
-            get { return cellEditor?.ReadOnly ?? false; }
+            get => cellEditor?.ReadOnly ?? false;
             set
             {
                 if (ReadOnly == value)
@@ -57,7 +58,7 @@ namespace DataWF.Gui
 
         public override CellStyle Style
         {
-            get { return style ?? (style = GuiEnvironment.Theme[StyleName]); }
+            get => style ??= GuiEnvironment.Theme[StyleName];
             set
             {
                 style = value;
@@ -67,7 +68,7 @@ namespace DataWF.Gui
 
         public string Format
         {
-            get { return cellEditor?.Format; }
+            get => cellEditor?.Format;
             set
             {
                 if (cellEditor != null)
@@ -75,7 +76,7 @@ namespace DataWF.Gui
             }
         }
 
-        public IInvoker Invoker { get { return Binding?.DataInvoker; } set { Binding.DataInvoker = value; } }
+        public IInvoker Invoker { get => Binding?.DataInvoker; set => Binding.DataInvoker = value; }
         public bool Editable { get; set; }
         public bool Validate { get; set; }
         public bool Password { get; set; }
@@ -83,13 +84,13 @@ namespace DataWF.Gui
 
         public object DataSource
         {
-            get { return Binding?.GetData(); }
-            set { Binding?.Bind(value, this); }
+            get => Binding?.GetData();
+            set => Binding?.Bind(value, this);
         }
 
         public object DataValue
         {
-            get { return base.Value; }
+            get => base.Value;
             set
             {
                 if (Value == value)
@@ -105,13 +106,13 @@ namespace DataWF.Gui
             set
             {
                 base.Value = value;
-                OnPropertyChanged(nameof(DataValue));
+                //OnPropertyChanged(nameof(DataValue));
             }
         }
 
         public Type DataType
         {
-            get { return dataType; }
+            get => dataType;
             set
             {
                 if (dataType == value || value == null)
@@ -128,7 +129,7 @@ namespace DataWF.Gui
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ILayoutCellEditor CellEditor
         {
-            get { return cellEditor; }
+            get => cellEditor;
             set
             {
                 if (cellEditor == value)
@@ -166,16 +167,16 @@ namespace DataWF.Gui
 
         public double LabelSize
         {
-            get { return label.Size.Width; }
+            get => label.Width;
             set
             {
                 if (value <= 0)
                 {
-                    label.WidthRequest = -1;
+                    label.Width = -1;
                 }
                 else
                 {
-                    label.WidthRequest = value;
+                    label.Width = value;
                 }
             }
         }
@@ -199,7 +200,9 @@ namespace DataWF.Gui
 
         public virtual void Localize()
         {
-            if (DataSource != null && Binding != null && string.IsNullOrEmpty(label.Text))
+            if (DataSource != null
+                && Binding != null
+                && string.IsNullOrEmpty(label.Content as string))
             {
                 Text = Locale.Get(DataSource.GetType(), Binding.DataInvoker.Name, " ");
             }
@@ -207,12 +210,12 @@ namespace DataWF.Gui
 
         protected override void Dispose(bool disposing)
         {
-            Application.Invoke(() =>
+            _ = Dispatcher.UIThread.InvokeAsync(() =>
             {
                 if (cellEditor.Editor != null)
                     cellEditor?.FreeEditor();
                 Binding?.Dispose();
-                label?.Dispose();
+                label = null;
             });
             base.Dispose(disposing);
         }

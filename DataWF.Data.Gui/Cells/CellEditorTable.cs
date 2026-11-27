@@ -1,17 +1,18 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Data.Gui
 {
     public class CellEditorTable : CellEditorList
     {
-        protected DBTable table;
+        protected IDBTable table;
         protected DBColumn column;
         protected string viewFilter = string.Empty;
 
@@ -45,7 +46,7 @@ namespace DataWF.Data.Gui
             get { return TableEditor?.List; }
         }
 
-        public DBTable Table
+        public IDBTable Table
         {
             get { return table; }
             set
@@ -66,7 +67,7 @@ namespace DataWF.Data.Gui
             get
             {
                 if ((listSource == null || ((IDBTableView)listSource).Disposed) && table != null)
-                    listSource = table.CreateItemsView(viewFilter, DBViewKeys.None, DBStatus.Actual | DBStatus.New | DBStatus.Edit);
+                    listSource = table.CreateView(viewFilter, DBViewKeys.None, DBStatus.Actual | DBStatus.New | DBStatus.Edit);
                 return listSource as IDBTableView;
             }
             set
@@ -102,10 +103,10 @@ namespace DataWF.Data.Gui
                         }
                     }
                     else
-                        obj = column.ReferenceTable.LoadItemById(obj);
+                        obj = column.ReferenceTable.LoadById<DBItem>(obj);
                 }
                 else if (table != null)
-                    obj = table.LoadItemById(obj);
+                    obj = table.LoadById<DBItem>(obj);
             return obj as DBItem;
         }
 
@@ -119,7 +120,7 @@ namespace DataWF.Data.Gui
 
         private void LoadReference()
         {
-            using (var transaction = new DBTransaction(Table.Schema.Connection, GuiEnvironment.User))
+            using (var transaction = new DBTransaction(Table, GuiEnvironment.User))
             {
                 Debug.WriteLine("Get References {0}", getReferenceStack.Count);
                 while (getReferenceStack.TryPop(out PDBTableParam item))
@@ -145,7 +146,7 @@ namespace DataWF.Data.Gui
                 return value;
             if (value is string)
             {
-                value = table.LoadItemById(value, DBLoadParam.None);
+                value = table.LoadById<DBItem>(value, DBLoadParam.None);
             }
             if (value is DBItem)
             {
@@ -156,12 +157,12 @@ namespace DataWF.Data.Gui
             return base.ParseValue(value, dataSource, valueType);
         }
 
-        public override Widget InitDropDownContent()
+        public override IControl InitDropDownContent()
         {
             var tableEditor = Editor.GetCached<TableEditor>();
 
             tableEditor.ReadOnly = ReadOnly;
-            tableEditor.KeyPressed -= OnTextKeyPressed;
+            tableEditor.KeyDown -= OnTextKeyPressed;
 
             if (table != null)
             {
@@ -173,7 +174,7 @@ namespace DataWF.Data.Gui
                 }
                 if (viewFilter != null && viewFilter.Length > 0)
                 {
-                    View.DefaultParam = new QParam(table, viewFilter);
+                    View.DefaultParam = new QParam((DBTable)table, viewFilter);
                 }
             }
             return tableEditor;
@@ -184,11 +185,9 @@ namespace DataWF.Data.Gui
             var row = GetItem(Editor.Value, EditItem);
             if (Editor != null && row != null)
             {
-                using (var te = new TableExplorer())
-                {
-                    te.Initialize(row, TableEditorMode.Item, false);
-                    te.ShowDialog(Editor);
-                }
+                var te = new TableExplorer();
+                te.Initialize(row, TableEditorMode.Item, false);
+                te.ShowDialog(Editor);
             }
         }
 
@@ -203,16 +202,16 @@ namespace DataWF.Data.Gui
 
             if (Table.CodeKey != null)
             {
-                DBItem item = Table.LoadItemByCode(filter.Trim(), Table.CodeKey, Table.IsSynchronized ? DBLoadParam.None : DBLoadParam.Load | DBLoadParam.Synchronize);
+                DBItem item = Table.LoadByCode<DBItem>(filter.Trim(), Table.CodeKey, Table.IsSynchronized ? DBLoadParam.None : DBLoadParam.Load);
                 if (item != null)
                     list = new object[] { item };
             }
             if (list == null)
             {
-                var query = new QQuery("", Table);
-                query.SimpleFilter(EntryText);
+                var query = Table.QQuery("");
+                query.WhereViewColumns(EntryText);
                 TableEditor.Loader.LoadAsync(query);
-                list = query.Select();
+                list = query.Select<DBItem>();
             }
             return list;
         }
@@ -242,9 +241,9 @@ namespace DataWF.Data.Gui
             {
                 var item = (DBItem)e.Item;
                 Value = ParseValue(item);
-                ((TextEntry)Editor.Widget).Changed -= OnTextChanged;
-                ((TextEntry)Editor.Widget).Text = item.ToString();
-                ((TextEntry)Editor.Widget).Changed += OnTextChanged;
+                ((TextBox)Editor.Control).TextInput -= OnTextChanged;
+                ((TextBox)Editor.Control).Text = item.ToString();
+                ((TextBox)Editor.Control).TextInput += OnTextChanged;
                 DropDown.Hide();
             }
         }

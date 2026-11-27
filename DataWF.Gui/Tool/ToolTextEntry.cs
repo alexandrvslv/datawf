@@ -1,24 +1,25 @@
 ﻿using System;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
     public class ToolTextEntry : ToolContentItem
     {
-        public ToolTextEntry() : base(new TextEntry())
+        public ToolTextEntry() : base(new TextBox())
         {
             FillWidth = true;
         }
 
-        public TextEntry Entry
+        public TextBox Entry
         {
-            get { return content as TextEntry; }
+            get { return content as TextBox; }
         }
 
-        public event EventHandler EntryTextChanged
+        public event EventHandler<TextChangedEventArgs> EntryTextChanged
         {
-            add { Entry.Changed += value; }
-            remove { Entry.Changed -= value; }
+            add => Entry.TextChanged += value;
+            remove => Entry.TextChanged -= value;
         }
     }
 }

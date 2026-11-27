@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,7 +27,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Geometry
 {
-    public class Polygon3D : IByteSerializable, IComparable<Polygon3D>, IEquatable<Polygon3D>
+    public class Polygon3D : IBinarySerializable, IComparable<Polygon3D>, IEquatable<Polygon3D>
     {
         public static bool operator ==(Polygon3D a, Polygon3D b)
         {
@@ -47,14 +47,16 @@ namespace DataWF.Geometry
         }
 
         public Polygon3D()
-        { }
+        {
+            Points = new List<Point3D>();
+        }
 
-        public Polygon3D(IEnumerable<Point3D> points)
+        public Polygon3D(IEnumerable<Point3D> points) : this()
         {
             Points.AddRange(points);
         }
 
-        public List<Point3D> Points { get; set; } = new List<Point3D>();
+        public List<Point3D> Points { get; set; }
 
         [XmlIgnore, JsonIgnore]
         public Rectangle3D Bounds => RefreshBounds();
@@ -100,14 +102,19 @@ namespace DataWF.Geometry
             using (var stream = new MemoryStream(data))
             using (var reader = new BinaryReader(stream))
             {
-                Points.Clear();
-                Points.Capacity = reader.ReadInt32();
-                while (Points.Count < Points.Capacity)
-                {
-                    var point = new Point3D();
-                    point.Deserialize(reader);
-                    Points.Add(point);
-                }
+                Deserialize(reader);
+            }
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Points = new List<Point3D>();
+            Points.Capacity = reader.ReadInt32();
+            while (Points.Count < Points.Capacity)
+            {
+                var point = new Point3D();
+                point.Deserialize(reader);
+                Points.Add(point);
             }
         }
 
@@ -116,14 +123,19 @@ namespace DataWF.Geometry
             using (var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write(Points.Count);
-                foreach (var point in Points)
-                {
-                    point.Serialize(writer);
-                }
-                writer.Flush();
+                Serialize(writer);
                 return stream.ToArray();
             }
+        }
+
+        public void Serialize(BinaryWriter writer)
+        {
+            writer.Write(Points.Count);
+            foreach (var point in Points)
+            {
+                point.Serialize(writer);
+            }
+            writer.Flush();
         }
 
         public override bool Equals(object obj)

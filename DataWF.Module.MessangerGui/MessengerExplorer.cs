@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Gui;
 using DataWF.Module.Common;
@@ -7,15 +7,15 @@ using DataWF.Module.Messanger;
 using System;
 using System.Collections.Specialized;
 using System.Linq;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Module.MessangerGui
 {
-    [DataWF.Common.Module(true)]
+    [DataWF.Module(true)]
     public class MessageExplorer : VPanel, IDockContent
     {
         private UserTree tree;
-
+        public static MessageSchema Schema;
         public MessageExplorer()
         {
             tree = new UserTree
@@ -31,13 +31,13 @@ namespace DataWF.Module.MessangerGui
             Name = "MessageExplorer";
             Text = "Messanger";
 
-            PackStart(tree, true, true);
+            Children.Add(tree, true, true);
 
             Localize();
 
-            if (MessageAddress.DBTable != null)
+            if (Schema.MessageAddress != null)
             {
-                MessageAddress.DBTable.DefaultView.CollectionChanged += OnListChanged;
+                Schema.MessageAddress.DefaultView.CollectionChanged += OnListChanged;
             }
             SynchMessage();
         }
@@ -46,7 +46,7 @@ namespace DataWF.Module.MessangerGui
         {
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                Application.Invoke(() => OnLoad(MessageAddress.DBTable.DefaultView[e.NewStartingIndex]));
+                _ = Dispatcher.UIThread.InvokeAsync(() => OnLoad(Schema.MessageAddress.DefaultView[e.NewStartingIndex]));
             }
         }
 
@@ -70,12 +70,12 @@ namespace DataWF.Module.MessangerGui
 
         public static void SynchMessage()
         {
-            if (MessageAddress.DBTable == null)
+            if (Schema.MessageAddress == null)
                 return;
-            var query = new QQuery(string.Empty, MessageAddress.DBTable);
-            query.BuildPropertyParam(nameof(MessageAddress.UserId), CompareType.Equal, GuiEnvironment.User?.Id);
-            query.BuildPropertyParam(nameof(MessageAddress.DateRead), CompareType.Is, DBNull.Value);
-            MessageAddress.DBTable.Load(query, DBLoadParam.Synchronize, null).LastOrDefault();
+            var query = new QQuery(string.Empty, Schema.MessageAddress);
+            query.BuildParam(Schema.MessageAddress.UserIdKey, CompareOperator.Equal, GuiEnvironment.User?.Id);
+            query.BuildParam(Schema.MessageAddress.DateReadKey, CompareOperator.Is, DBNull.Value);
+            Schema.MessageAddress.Load(query, DBLoadParam.Synchronize, null).LastOrDefault();
         }
 
         public DockType DockType

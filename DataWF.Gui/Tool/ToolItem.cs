@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
+using DataWF;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Media.TextFormatting;
+using Avalonia.Input;
 
 namespace DataWF.Gui
 {
@@ -14,11 +18,11 @@ namespace DataWF.Gui
     {
         protected GlyphType glyph;
         protected Color glyphColor;
-        protected Image image;
-        protected TextLayout text;
+        protected Bitmap image;
+        protected FormattedText text;
         protected ToolItemDisplayStyle displayStyle = ToolItemDisplayStyle.Image;
-        protected Rectangle imageBound;
-        protected Rectangle textBound;
+        protected Rect imageBound;
+        protected Rect textBound;
         protected CellDisplayState state = CellDisplayState.Default;
 
         private bool checkOnClick;
@@ -40,7 +44,7 @@ namespace DataWF.Gui
 
         public event EventHandler Click;
         public event EventHandler DoubleClick;
-        public event EventHandler<MouseMovedEventArgs> MouseMove;
+        public event EventHandler<PointerEventArgs> MouseMove;
         public event EventHandler TextChanged;
 
         [Browsable(false)]
@@ -49,7 +53,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle Style
         {
-            get { return style ?? (style = GuiEnvironment.Theme[StyleName]); }
+            get => style ??= GuiEnvironment.Theme[StyleName];
             set
             {
                 style = value;
@@ -60,7 +64,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public virtual Toolsbar Bar
         {
-            get { return bar; }
+            get => bar;
             set
             {
                 if (bar != value)
@@ -100,20 +104,19 @@ namespace DataWF.Gui
         public override void Clear()
         {
             base.Clear();
-            bar?.Clear();
-
+            //bar?.Clear();
         }
 
         protected override void OnPropertyChanged(string property)
         {
             base.OnPropertyChanged(property);
-            bar?.QueueForReallocate();
-            bar?.QueueDraw();
+            bar?.InvalidateArrange();
+            bar?.InvalidateVisual();
         }
 
         public ToolItemDisplayStyle DisplayStyle
         {
-            get { return displayStyle; }
+            get => displayStyle;
             set
             {
                 if (displayStyle != value)
@@ -128,37 +131,32 @@ namespace DataWF.Gui
         {
             Click = null;
             TextChanged = null;
-            text?.Dispose();
+            //text?.Dispose();
             base.Dispose();
         }
 
         public string Text
         {
-            get { return text?.Text; }
+            get => text?.Text;
             set
             {
                 if (Text != value)
                 {
-                    if (text == null)
+                    text ??= new FormattedText()
                     {
-                        text = new TextLayout()
-                        {
-                            Font = Style.Font,
-                            Trimming = TextTrimming.WordElipsis
-                        };
-                    }
-                    text.Text = value;
-                    text.Height = -1;
-                    text.Width = -1;
+                        Text = value,
+                        TextWrapping = TextWrapping.NoWrap,
+                        Typeface = Style.Typeface,
+                    };
                     OnTextChanged(EventArgs.Empty);
                 }
             }
         }
 
         [XmlIgnore]
-        public Image Image
+        public Bitmap Image
         {
-            get { return image; }
+            get => image;
             set
             {
                 if (image != value)
@@ -171,34 +169,35 @@ namespace DataWF.Gui
 
         public Color GlyphColor
         {
-            get { return glyphColor == CellStyleBrush.ColorEmpty ? (glyphColor = Style.FontBrush.Color) : glyphColor; }
+            get => glyphColor == CellStyleBrush.ColorEmpty ? (glyphColor = Style.FontBrush.Color) : glyphColor;
             set
             {
                 if (GlyphColor == value)
                     return;
                 glyphColor = value.BlendWith(Style.FontBrush.Color, 0.5);
-                Bar?.QueueDraw();
+                Bar?.InvalidateVisual();
             }
         }
 
         [XmlIgnore]
-        public Font Font
+        public Typeface Typeface
         {
-            get { return text?.Font ?? Style.Font; }
+            get => text?.Typeface ?? Style.Typeface;
             set
             {
-                if (text == null)
+                text ??= new FormattedText()
                 {
-                    text = new TextLayout() { Trimming = TextTrimming.WordElipsis };
-                }
-                text.Font = value;
+                    Text = Text,
+                    TextWrapping = TextWrapping.NoWrap,
+                    Typeface = value,
+                };
                 CheckSize();
             }
         }
 
         public GlyphType Glyph
         {
-            get { return glyph; }
+            get => glyph;
             set
             {
                 if (glyph != value)
@@ -212,46 +211,46 @@ namespace DataWF.Gui
         [XmlIgnore]
         public virtual CellDisplayState State
         {
-            get { return state; }
+            get => state;
             set
             {
                 if (state != value && sensitive)
                 {
                     state = value;
-                    Bar?.QueueDraw();
+                    Bar?.InvalidateVisual();
                 }
             }
         }
 
         public bool Sensitive
         {
-            get { return sensitive; }
+            get => sensitive;
             set
             {
                 if (sensitive != value)
                 {
                     sensitive = value;
-                    Bar?.QueueDraw();
+                    Bar?.InvalidateVisual();
                 }
             }
         }
 
         public virtual bool Checked
         {
-            get { return check; }
+            get => check;
             set
             {
                 if (check != value)
                 {
                     check = value;
-                    Bar?.QueueDraw();
+                    Bar?.InvalidateVisual();
                 }
             }
         }
 
         public bool CheckOnClick
         {
-            get { return checkOnClick; }
+            get => checkOnClick;
             set
             {
                 if (checkOnClick != value)
@@ -267,9 +266,9 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore]
-        public Rectangle Bound { get; set; }
+        public Rect Bound { get; set; }
 
-        public override void ApplyBound(Rectangle value)
+        public override void ApplyBound(Rect value)
         {
             base.ApplyBound(value);
             if (Count > 0)
@@ -277,17 +276,17 @@ namespace DataWF.Gui
                 return;
             }
             var halfIndent = Bar.Indent / 2D;
-            value = value.Inflate(-halfIndent, -halfIndent);
+            value = value.Inflate(new Thickness(-halfIndent, -halfIndent));
             var imaged = DisplayStyle.HasFlag(ToolItemDisplayStyle.Image) && GetFormattedImage() != null;
             if (imaged)
             {
-                imageBound.X = value.X + (Bar.MinItemWidth - imageBound.Width) / 2D;
-                imageBound.Y = value.Y + (value.Height - imageBound.Height) / 2D;
+                imageBound = imageBound.WithX(value.X + (Bar.MinItemWidth - imageBound.Width) / 2D);
+                imageBound = imageBound.WithY(value.Y + (value.Height - imageBound.Height) / 2D);
             }
             if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
             {
-                textBound.X = imaged ? imageBound.Right : value.X + 4D;
-                textBound.Y = value.Y + (value.Height - textBound.Height) / 2D;
+                textBound = textBound.WithX(imaged ? imageBound.Right : value.X + 4D);
+                textBound = textBound.WithY(value.Y + (value.Height - textBound.Height) / 2D);
             }
             Bound = value;
             //Console.WriteLine($"ToolItem {Name} Bound:{value}");
@@ -300,9 +299,9 @@ namespace DataWF.Gui
                                    : null;
         }
 
-        public virtual void OnDraw(GraphContext context)
+        public virtual void Render(GraphContext context)
         {
-            Style.Angle = Bar.ItemOrientation == Orientation.Horizontal ? 0 : 90;
+            Style.Angle = Bar.ItemOrientation == BoxOrientation.Horizontal ? 0 : 90;
 
             var dstate = !Sensitive ? CellDisplayState.Pressed : state == CellDisplayState.Default && Checked ? CellDisplayState.Selected : state;
             context.DrawCell(Style, null, Bound, Bound, dstate);
@@ -329,37 +328,36 @@ namespace DataWF.Gui
         {
             if (Bar == null)
                 return;
-            imageBound.Location = Point.Zero;
+            imageBound = new Rect(default(Point), imageBound.Size);
             if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Image))
-                imageBound.Size = Image != null || Glyph != GlyphType.None ? new Size(Bar.MinItemHeight - 2, Bar.MinItemHeight - 2) : Size.Zero;
+                imageBound = new Rect(imageBound.Position, Image != null || Glyph != GlyphType.None ? new Size(Bar.MinItemHeight - 2, Bar.MinItemHeight - 2) : Size.Empty);
             else
-                imageBound.Size = Size.Zero;
+                imageBound = new Rect(imageBound.Position, Size.Empty);
 
-            textBound.Location = new Point(imageBound.Right, 0);
+            textBound = new Rect(imageBound.Right, 0, textBound.Width, textBound.Height);
             if (text != null && DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
             {
-                textBound.Size = text.GetSize();
-                textBound.Width += 6;
+                textBound = new Rect(textBound.Position, text.Bounds.Size);
+                textBound = textBound.WithWidth(textBound.Width + 6);
             }
             else
             {
-                textBound.Width = 0;
+                textBound = textBound.WithWidth(0);
             }
-            if (Bar.ItemOrientation == Orientation.Vertical)
+            if (Bar.ItemOrientation == BoxOrientation.Vertical)
             {
-                textBound.Location = new Point(0, imageBound.Bottom);
-                textBound.Size = new Size(textBound.Height, textBound.Width);
+                textBound = new Rect(0, imageBound.Bottom, textBound.Height, textBound.Width);
             }
 
             width = Math.Max(textBound.Right, Bar.MinItemWidth) + Bar.Indent;
             height = Math.Max(Math.Max(textBound.Height, textBound.Height), Bar.MinItemHeight) + Bar.Indent;
-            if (Bar.ItemOrientation == Orientation.Vertical)
+            if (Bar.ItemOrientation == BoxOrientation.Vertical)
             {
                 InvertSize();
             }
             if (queue)
             {
-                Bar?.QueueForReallocate();
+                Bar?.InvalidateArrange();
             }
         }
 
@@ -370,13 +368,14 @@ namespace DataWF.Gui
             width = temp;
         }
 
-        protected virtual internal void OnMouseMove(MouseMovedEventArgs args)
+        protected virtual internal void OnMouseMove(PointerEventArgs args)
         {
             MouseMove?.Invoke(this, args);
             if (State == CellDisplayState.Pressed)
             {
-                var dX = pressLocation.X - args.Position.X;
-                var dY = pressLocation.Y - args.Position.Y;
+                var position = args.GetPosition(bar);
+                var dX = pressLocation.X - position.X;
+                var dY = pressLocation.Y - position.Y;
                 if (Math.Max(Math.Abs(dX), Math.Abs(dY)) > 5)
                     OnMove();
             }
@@ -392,22 +391,22 @@ namespace DataWF.Gui
             State = CellDisplayState.Hover;
         }
 
-        protected virtual internal void OnMouseExited(EventArgs args)
+        protected virtual internal void OnPointerExited(PointerEventArgs args)
         {
             State = CellDisplayState.Default;
         }
 
-        protected virtual internal void OnButtonPressed(ButtonEventArgs args)
+        protected virtual internal void OnPointerPressed(PointerPressedEventArgs args)
         {
-            pressLocation = args.Position;
-            pressCount = args.MultiplePress;
+            pressLocation = args.GetPosition(null);
+            pressCount = args.ClickCount;
             State = CellDisplayState.Pressed;
         }
 
-        protected virtual internal void OnButtonReleased(ButtonEventArgs args)
+        protected virtual internal void OnPointerReleased(PointerReleasedEventArgs args)
         {
             State = CellDisplayState.Hover;
-            if (Sensitive && args.Button == PointerButton.Left)
+            if (Sensitive && args.MouseButton == MouseButton.Left)
             {
                 if (pressCount == 1)
                 {

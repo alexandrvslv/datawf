@@ -1,18 +1,19 @@
 ﻿using DataWF.Data;
 using DataWF.Gui;
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Linq;
 using System.ComponentModel;
 using System.Data;
-using Xwt;
+using Avalonia;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 
 namespace DataWF.Data.Gui
 {
-    public class QueryResultView : VPanel, ISync, IReadOnly
+    public class QueryResultView : StackPanel, ISync, IReadOnly
     {
-        protected DBSchema schema;
+        protected IDBSchema schema;
         protected IDbCommand command;
 
         private QueryResultList list = new QueryResultList();
@@ -53,8 +54,8 @@ namespace DataWF.Data.Gui
 
             this.Name = "QueryView";
 
-            this.PackStart(tools, false, false);
-            this.PackStart(list, true, true);
+            this.Children.Add(tools);
+            this.Children.Add(list);
 
             Localizing();
         }
@@ -72,7 +73,7 @@ namespace DataWF.Data.Gui
             get { return command; }
         }
 
-        public void SetCommand(IDbCommand command, DBSchema schema, string name)
+        public void SetCommand(IDbCommand command, IDBSchema schema, string name)
         {
             if (Query == null)
                 Query = new QResult() { Name = name };
@@ -118,7 +119,7 @@ namespace DataWF.Data.Gui
 
         private void OnColumnsLoaded(object sender, EventArgs e)
         {
-            Application.Invoke(() => OnColumnsLoaded());
+            _ = Dispatcher.UIThread.InvokeAsync(() => OnColumnsLoaded());
         }
 
         private void OnColumnsLoaded()
@@ -131,7 +132,7 @@ namespace DataWF.Data.Gui
 
         private void OnLoaded(object sender, EventArgs e)
         {
-            Application.Invoke(() => OnLoaded());
+            _ = Dispatcher.UIThread.InvokeAsync(() => OnLoaded());
         }
 
         private void OnLoaded()
@@ -150,7 +151,7 @@ namespace DataWF.Data.Gui
         protected virtual void ToolExportClick(object sender, EventArgs e)
         {
             string fileName = "list" + DateTime.Now.ToString("yyMMddHHmmss") + ".xlsx";
-            using (var dialog = new SaveFileDialog() { InitialFileName = fileName })
+            var dialog = new SaveFileDialog() { InitialFileName = fileName };
             {
                 if (dialog.Run(ParentWindow))
                 {
@@ -180,7 +181,7 @@ namespace DataWF.Data.Gui
             {
                 toolProgress.Visible = true;
 
-                using (var transaction = new DBTransaction(schema.Connection))
+                using (var transaction = new DBTransaction(schema))
                 {
                     transaction.ExecuteQResult(transaction.AddCommand(command), Query);
                 }

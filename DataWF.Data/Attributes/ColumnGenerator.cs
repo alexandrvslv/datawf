@@ -17,21 +17,18 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 
-[assembly: Invoker(typeof(ColumnGenerator), nameof(ColumnGenerator.ColumnName), typeof(ColumnGenerator.ColumnNameInvoker))]
-[assembly: Invoker(typeof(ColumnGenerator), nameof(ColumnGenerator.PropertyName), typeof(ColumnGenerator.PropertyNameInvoker))]
 namespace DataWF.Data
 {
-    public class ColumnGenerator
+    [Invoker(Instance = true)]
+    public partial class ColumnGenerator
     {
-        private DBColumn cache;
-
         public ColumnGenerator(TableGenerator table, PropertyInfo property, ColumnAttribute columnAttribute, CultureInfo culture)
         {
             Attribute = columnAttribute;
@@ -59,17 +56,6 @@ namespace DataWF.Data
 
         public TableGenerator Table { get; set; }
 
-        public DBColumn Column
-        {
-            get
-            {
-                if (cache == null)
-                    cache = Table?.Table?.Columns[ColumnName];
-                return cache;
-            }
-            internal set { cache = value; }
-        }
-
         public CultureInfo Culture { get; set; }
 
         public string DisplayName { get; set; }
@@ -84,101 +70,76 @@ namespace DataWF.Data
 
         public string ColumnName { get; set; }
 
-        public bool IsPrimaryKey => (Attribute.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary;
+        public bool IsPrimaryKey => (Attribute.Keys & ColumnFlags.Primary) == ColumnFlags.Primary;
 
-        public bool IsTypeKey => (Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType;
+        public bool IsTypeKey => (Attribute.Keys & ColumnFlags.ItemType) == ColumnFlags.ItemType;
 
         public Dictionary<Type, string> DefaultValues { get; set; }
 
         public virtual int Size => Attribute?.Size ?? 0;
 
-        public Type GetDataType()
+        public Type DataType
         {
-            return TypeHelper.CheckNullable(Attribute.DataType);
+            get => Attribute.DataType;
         }
 
-        public virtual DBColumn CreateColumn(string name)
+        public virtual DBColumn CreateColumn(DBTable table, string name)
         {
-            return new DBColumn(name) { Table = Table.Table };
+            return DBColumnFactory.Create(DataType, name, table: table);
         }
 
-        public DBColumn Generate()
+        public DBColumn Generate(DBTable table)
         {
-            if (Table == null || Table.Table == null)
+            if (Table == null || table == null)
                 throw new Exception("Table Not Initialized!");
 
-            GenerateColumn(Table.Table);
-            return Column;
+            return GenerateColumn(table);
         }
 
-        public virtual void GenerateColumn(DBTable table)
+        public virtual DBColumn GenerateColumn(DBTable table)
         {
             if (!string.IsNullOrEmpty(GroupName) && table.ColumnGroups[GroupName] == null)
             {
                 var cgroup = new DBColumnGroup(GroupName);
                 table.ColumnGroups.Add(cgroup);
             }
-            Column = table.Columns[ColumnName];
-            if (Column == null)
+            var column = table.Columns[ColumnName];
+            if (column == null || column.DataType != DataType)
             {
-                Column = CreateColumn(ColumnName);
+                column = CreateColumn(table, ColumnName);
             }
-            if (Column.DisplayName.Equals(Column.Name, StringComparison.Ordinal)
-                || (Column.DisplayName.Equals(PropertyInfo.Name, StringComparison.Ordinal)
-                && ReferencePropertyInfo != null))
+
+            //|| (Column.DisplayName.Equals(PropertyInfo.Name, StringComparison.Ordinal)
+            //&& ReferencePropertyInfo != null)
+            if (string.Equals(column.DisplayName, column.Name, StringComparison.Ordinal))
             {
-                Column.DisplayName = DisplayName;
+                column.DisplayName = DisplayName;
             }
 
             if (Attribute.DBDataType != DBDataType.None)
             {
-                Column.DBDataType = Attribute.DBDataType;
+                column.DBDataType = Attribute.DBDataType;
             }
-            Column.DataType = GetDataType();
-            Column.Size = Attribute.Size;
-            Column.Scale = Attribute.Scale;
-            Column.ColumnType = Attribute.ColumnType;
-            Column.Keys = Attribute.Keys;
-            Column.Culture = Culture;
-            Column.GroupName = GroupName;
-            Column.Property = PropertyName;
-            Column.PropertyInfo = PropertyInfo;
-            Column.ReferencePropertyInfo = ReferencePropertyInfo;
-            Column.DefaultValues = DefaultValues;
+            column.Size = Attribute.Size;
+            column.Scale = Attribute.Scale;
+            column.ColumnType = Attribute.ColumnType;
+            column.Keys = Attribute.Keys;
+            column.Culture = Culture;
+            column.GroupName = GroupName;
+            column.PropertyName = PropertyName;
+            column.PropertyInfo = PropertyInfo;
+            column.ReferencePropertyInfo = ReferencePropertyInfo;
+            column.DefaultValues = DefaultValues;
             if (DefaultValues != null && DefaultValues.TryGetValue(PropertyInfo.DeclaringType, out var defaultValue))
             {
-                Column.DefaultValue = defaultValue;
+                column.DefaultValue = defaultValue;
             }
 
-            if (!table.Columns.Contains(Column.Name))
+            if (!table.Columns.Contains(column))
             {
-                table.Columns.Add(Column);
+                table.Columns.Add(column);
             }
-        }
-
-        public class ColumnNameInvoker : Invoker<ColumnGenerator, string>
-        {
-            public static readonly ColumnNameInvoker Instance = new ColumnNameInvoker();
-            public override string Name => nameof(ColumnGenerator.ColumnName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(ColumnGenerator target) => target.ColumnName;
-
-            public override void SetValue(ColumnGenerator target, string value) => target.ColumnName = value;
-        }
-
-        public class PropertyNameInvoker : Invoker<ColumnGenerator, string>
-        {
-            public static readonly PropertyNameInvoker Instance = new PropertyNameInvoker();
-
-            public override string Name => nameof(ColumnGenerator.PropertyName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(ColumnGenerator target) => target.PropertyName;
-
-            public override void SetValue(ColumnGenerator target, string value) => target.PropertyName = value;
+            return column;
         }
     }
 

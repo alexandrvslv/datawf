@@ -17,18 +17,18 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBTableItem), nameof(DBTableItem.Table), typeof(DBTableItem.TableInvoker<>))]
 namespace DataWF.Data
 {
-    public abstract class DBTableItem : DBSchemaItem, IDBTableContent
+    [Invoker(Instance = true)]
+    public abstract partial class DBTableItem : DBSchemaItem, IDBTableContent
     {
-        private DBTable table;
+        private IDBTable table;
 
         protected DBTableItem()
         { }
@@ -37,7 +37,7 @@ namespace DataWF.Data
         { }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBTable Table
+        public IDBTable Table
         {
             get { return table; }
             set
@@ -51,7 +51,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public override DBSchema Schema
+        public new IDBSchema Schema
         {
             get { return Table?.Schema; }
         }
@@ -59,18 +59,6 @@ namespace DataWF.Data
         public override string GetLocalizeCategory()
         {
             return Table?.FullName;
-        }
-
-        public class TableInvoker<T> : Invoker<T, DBTable> where T : DBTableItem
-        {
-            public static readonly TableInvoker<T> Instance = new TableInvoker<T>();
-            public override string Name => nameof(DBTableItem.Table);
-
-            public override bool CanWrite => true;
-
-            public override DBTable GetValue(T target) => target.Table;
-
-            public override void SetValue(T target, DBTable value) => target.Table = value;
         }
     }
 }

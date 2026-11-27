@@ -22,7 +22,7 @@ namespace DataWF.Module.FlowGui
                     Row = 0,
                     FillWidth = true,
                     FillHeight = true,
-                    Widget = attribures = new ListEditor { AccessVisible = true }
+                    Control = attribures = new ListEditor { AccessVisible = true }
                 },
                 new GroupBoxItem
                 {
@@ -31,15 +31,15 @@ namespace DataWF.Module.FlowGui
                     Row = 0,
                     FillWidth = true,
                     FillHeight = true,
-                    Widget = datas = new TableEditor
+                    Control = datas = new TableEditor
                     {
-                        TableView = new DBTableView<TemplateData>((QParam)null, DBViewKeys.Empty),
-                        OwnerColumn = TemplateData.DBTable.ParseProperty(nameof(TemplateData.TemplateId)),
+                        TableView = new DBTableView<TemplateData>(FlowExplorer.Schema.TemplateData, (QParam)null, DBViewKeys.Empty),
+                        OwnerColumn = FlowExplorer.Schema.TemplateData.TemplateIdKey,
                         OpenMode = TableEditorMode.Referencing
                     }
                 })
             { Name = "GroupBox" };
-            PackStart(groupBox, true, true);
+            Children.Add(groupBox, true, true);
             Name = nameof(TemplateEditor);
         }
 

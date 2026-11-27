@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 
 namespace DataWF.Data.Gui
@@ -36,7 +36,7 @@ namespace DataWF.Data.Gui
                     {
                         ((CellEditorTable)CellEditor).Table = refer;
                     }
-                    Binding = new InvokeBinder<DBItem, FieldEditor>(dataSource, column, this, EmitInvoker.Initialize<FieldEditor>(nameof(Value)));
+                    Binding = new InvokeBinder<DBItem, FieldEditor>(dataSource, column, this, InvokeProvider.Initialize<FieldEditor>(nameof(Value)));
                 }
             }
             DataSource = dataSource;

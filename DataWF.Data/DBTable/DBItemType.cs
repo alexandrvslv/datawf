@@ -17,11 +17,12 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -29,12 +30,11 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [TypeConverter(typeof(DBItemTypeConverter))]
+    [ElementSerializer(typeof(DBItemTypeSerializer))]
     public class DBItemType
     {
         private Type type;
-        private DBTable table;
-        
+
         public DBItemType()
         { }
 
@@ -42,40 +42,32 @@ namespace DataWF.Data
         {
             get => type;
             set => type = value;
-        }
-
-        [XmlIgnore, JsonIgnore]
-        public DBTable Table => table ?? (table = DBTable.GetTable(Type));
-
-       
-
-        public DBItem Create()
-        {
-            return Table.NewItem(DBUpdateState.Insert, true, Type);
-        }
+        }        
     }
 
-    public class DBItemTypeConverter : TypeConverter
+    public class DBItemTypeSerializer : ElementSerializer<DBItemType>
     {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-        {
-            return sourceType == typeof(string);
-        }
+        public override bool CanConvertString => true;
 
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
-        {
-            return destinationType == typeof(string);
-        }
-
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        public override DBItemType FromString(string value)
         {
             var type = TypeHelper.ParseType(value.ToString());
             return type == null ? null : new DBItemType { Type = type };
         }
 
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        public override DBItemType Read(BinaryReader reader)
         {
-            return TypeHelper.FormatBinary(((DBItemType)value).Type);
+            return FromString(StringSerializer.Instance.Read(reader));
+        }
+
+        public override string ToString(DBItemType value)
+        {
+            return TypeHelper.FormatBinary(value.Type);
+        }
+
+        public override void Write(BinaryWriter writer, DBItemType value, bool writeToken)
+        {
+            StringSerializer.Instance.Write(writer, TypeHelper.FormatBinary(value.Type), writeToken);
         }
     }
 }

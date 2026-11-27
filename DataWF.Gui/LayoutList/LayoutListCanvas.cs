@@ -1,13 +1,15 @@
 ﻿using System;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Media;
 
 namespace DataWF.Gui
 {
     public class LayoutListCanvas : Canvas
     {
-        private ScrollAdjustment scrollHorizontal;
-        private ScrollAdjustment scrollVertical;
+        //private ScrollAdjustment scrollVertical;
 
         public LayoutListCanvas(LayoutList layoutList)
         {
@@ -16,43 +18,41 @@ namespace DataWF.Gui
 
         public LayoutList List { get; set; }
 
-        public ScrollAdjustment ScrollHorizontal
-        {
-            get { return scrollHorizontal; }
-            set
-            {
-                scrollHorizontal = value;
-                scrollHorizontal.ValueChanged += List.ScrollValueChanged;
-            }
-        }
-        public ScrollAdjustment ScrollVertical
-        {
-            get { return scrollVertical; }
-            set
-            {
-                scrollVertical = value;
-                scrollVertical.ValueChanged += List.ScrollValueChanged;
-            }
-        }
+        //public ScrollAdjustment ScrollHorizontal
+        //{
+        //    get => scrollHorizontal;
+        //    set
+        //    {
+        //        scrollHorizontal = value;
+        //        scrollHorizontal.ValueChanged += List.ScrollValueChanged;
+        //    }
+        //}
+        //public ScrollAdjustment ScrollVertical
+        //{
+        //    get => scrollVertical;
+        //    set
+        //    {
+        //        scrollVertical = value;
+        //        scrollVertical.ValueChanged += List.ScrollValueChanged;
+        //    }
+        //}
 
-        protected override bool SupportsCustomScrolling { get { return true; } }
+        //public Point Location
+        //{
+        //    get { return new Point(ScrollHorizontal.Value, ScrollVertical.Value); }
+        //}
 
-        public Point Location
+        //protected override void SetScrollAdjustments(ScrollAdjustment horizontal, ScrollAdjustment vertical)
+        //{
+        //    //base.SetScrollAdjustments(horizontal, vertical);
+        //    ScrollHorizontal = horizontal;
+        //    ScrollVertical = vertical;
+        //}
+
+        public override void Render(DrawingContext ctx)
         {
-            get { return new Point(ScrollHorizontal.Value, ScrollVertical.Value); }
-        }
-
-        protected override void SetScrollAdjustments(ScrollAdjustment horizontal, ScrollAdjustment vertical)
-        {
-            //base.SetScrollAdjustments(horizontal, vertical);
-            ScrollHorizontal = horizontal;
-            ScrollVertical = vertical;
-        }
-
-        protected override void OnDraw(Context ctx, Rectangle dirtyRect)
-        {
-            base.OnDraw(ctx, dirtyRect);
-
+            base.Render(ctx);
+            Rect dirtyRect = Bounds;
             using (var context = new GraphContext(ctx))
             {
                 context.FillRectangle(GuiEnvironment.Theme["List"].BaseColor, dirtyRect);
@@ -63,57 +63,10 @@ namespace DataWF.Gui
             }
         }
 
-        protected override void OnReallocate()
+        protected override Size MeasureOverride(Size availableSize)
         {
-            base.OnReallocate();
             List.RefreshBounds(false);
-        }
-
-        protected override void OnButtonPressed(ButtonEventArgs args)
-        {
-            base.OnButtonPressed(args);
-            List.CanvasButtonPress(args);
-        }
-
-        protected override void OnButtonReleased(ButtonEventArgs args)
-        {
-            base.OnButtonReleased(args);
-            List.CanvasButtonReleased(args);
-        }
-
-        protected override void OnMouseMoved(MouseMovedEventArgs args)
-        {
-            base.OnMouseMoved(args);
-            List.CanvasMouseMoved(args);
-        }
-
-        protected override void OnMouseExited(EventArgs args)
-        {
-            base.OnMouseExited(args);
-            List.CanvasMouseExited(args);
-        }
-
-        protected override void OnMouseScrolled(MouseScrolledEventArgs args)
-        {
-            base.OnMouseScrolled(args);
-            List.CanvasMouseScrolled(args);
-        }
-
-        protected override void OnLostFocus(EventArgs args)
-        {
-            base.OnLostFocus(args);
-            List.CanvasLostFocus(args);
-        }
-
-        //protected override void OnKeyPressed(KeyEventArgs args)
-        //{
-        //    base.OnKeyPressed(args);
-        //    List.CanvasKeyPressed(args);
-        //}
-
-        protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
-        {
-            var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);
+            var size = base.MeasureOverride(availableSize);
             //if (List.AutoSize && List.ListInfo != null)
             //{
             //    if (List.ListInfo.Columns.Bound.Width == 0)
@@ -128,5 +81,47 @@ namespace DataWF.Gui
             }
             return size;
         }
+
+        protected override void OnPointerPressed(PointerPressedEventArgs args)
+        {
+            base.OnPointerPressed(args);
+            List.CanvasButtonPress(args);
+        }
+
+        protected override void OnPointerReleased(PointerReleasedEventArgs args)
+        {
+            base.OnPointerReleased(args);
+            List.CanvasButtonReleased(args);
+        }
+
+        protected override void OnPointerMoved(PointerEventArgs args)
+        {
+            base.OnPointerMoved(args);
+            List.CanvasMouseMoved(args);
+        }
+
+        protected override void OnPointerExited(PointerEventArgs args)
+        {
+            base.OnPointerExited(args);
+            List.CanvasMouseExited(args);
+        }
+
+        protected override void OnPointerWheelChanged(PointerWheelEventArgs args)
+        {
+            base.OnPointerWheelChanged(args);
+            List.CanvasMouseScrolled(args);
+        }
+
+        protected override void OnLostFocus(RoutedEventArgs args)
+        {
+            base.OnLostFocus(args);
+            List.CanvasLostFocus(args);
+        }
+
+        //protected override void OnKeyPressed(KeyEventArgs args)
+        //{
+        //    base.OnKeyPressed(args);
+        //    List.CanvasKeyPressed(args);
+        //}
     }
 }

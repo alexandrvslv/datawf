@@ -1,9 +1,14 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Linq;
-using Xwt;
+using Avalonia;
+using Avalonia.Input;
+using Avalonia.Controls;
+using ISelectable = DataWF.Collections.ISelectable;
+using DataWF.Collections.Query.Evaluators;
+using DataWF.Invokers;
 
 namespace DataWF.Gui
 {
@@ -20,7 +25,7 @@ namespace DataWF.Gui
 
         public IList DataSource
         {
-            get { return listSource; }
+            get => listSource;
             set
             {
                 listSource = value;
@@ -41,10 +46,10 @@ namespace DataWF.Gui
         {
             if (listSource is ISelectable selectable)
             {
-                return selectable.Select(ListProperty, CompareType.Like, filter);
+                return selectable.Select(ListProperty, CompareOperator.Like, filter);
             }
 
-            return ListHelper.Search(listSource, EmitInvoker.Initialize(listSource[0].GetType(), ListProperty), filter, CompareType.Like, null);
+            return ListHelper.Search(listSource, InvokeProvider.Initialize(listSource[0].GetType(), ListProperty), CompareOperator.Like, filter, null);
         }
 
         protected virtual void ListSelect(IEnumerable flist)
@@ -71,10 +76,10 @@ namespace DataWF.Gui
                 if (count == 1)
                 {
                     Value = ParseValue(flist.First(), EditItem, DataType);
-                    string value = EntryWidget.Text;
+                    string value = EntryControl.Text;
                     int index = value.IndexOf(filter, StringComparison.OrdinalIgnoreCase);
-                    EntryWidget.SelectionStart = index + filter.Length;
-                    EntryWidget.SelectionLength = value.Length - EntryWidget.SelectionStart;
+                    EntryControl.SelectionStart = index + filter.Length;
+                    EntryControl.SelectionEnd = value.Length;
 
                     DropDown.Hide();
                 }
@@ -89,7 +94,7 @@ namespace DataWF.Gui
             }
         }
 
-        public override Widget InitDropDownContent()
+        public override IControl InitDropDownContent()
         {
             var list = Editor.GetCached<LayoutList>();
             list.AllowCheck = false;
@@ -110,7 +115,7 @@ namespace DataWF.Gui
             if (!ReadOnly)
             {
                 list.CellDoubleClick += ListCellDoubleClick;
-                list.KeyPressed += ListCellKeyDown;
+                list.KeyDown += ListCellKeyDown;
                 //list.SelectionChanged += PListSelectionChanged;
             }
             return list;
@@ -128,7 +133,7 @@ namespace DataWF.Gui
 
         public override object Value
         {
-            get { return base.Value; }
+            get => base.Value;
             set
             {
                 base.Value = value;
@@ -141,7 +146,7 @@ namespace DataWF.Gui
 
         protected void ListCellKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Return || e.Key == Key.NumPadEnter)
+            if (e.Key == Key.Return || e.Key == Key.Enter)
             {
                 Value = GetDropDownValue();
                 DropDown.Hide();
@@ -164,7 +169,7 @@ namespace DataWF.Gui
             if (List != null)
             {
                 List.CellDoubleClick -= ListCellDoubleClick;
-                List.KeyPressed -= ListCellKeyDown;
+                List.KeyDown -= ListCellKeyDown;
             }
             base.FreeEditor();
         }

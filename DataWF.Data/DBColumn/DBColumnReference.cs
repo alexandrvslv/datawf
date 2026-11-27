@@ -17,24 +17,25 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBColumnReference), nameof(DBColumnReference.ColumnName), typeof(DBColumnReference.ColumnNameInvoker))]
 namespace DataWF.Data
 {
-    public class DBColumnReference : IEntryNotifyPropertyChanged
+    [Invoker(Instance = true)]
+    public sealed partial class DBColumnReference : DefaultItem
     {
         private string columnName;
         private DBColumn column;
 
         [XmlIgnore, JsonIgnore]
-        public DBSchema Schema { get { return List?.Schema; } }
+        public IDBSchema Schema => List?.Schema;
 
         [Browsable(false)]
         public string ColumnName
@@ -46,7 +47,7 @@ namespace DataWF.Data
                 {
                     columnName = value;
                     column = null;
-                    OnPropertyChanged(nameof(ColumnName));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -54,7 +55,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
-            get { return column ?? DBService.Schems.ParseColumn(columnName, Schema); }
+            get { return column ?? Schema?.GetColumn(columnName); }
             set
             {
                 if (Column != value)
@@ -66,20 +67,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
-
-        [Browsable(false), XmlIgnore, JsonIgnore]
-        public DBColumnReferenceList List
-        {
-            get { return Containers.FirstOrDefault() as DBColumnReferenceList; }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
+        public DBColumnReferenceList List => (DBColumnReferenceList)Containers.FirstOrDefault(p => p is DBColumnReferenceList);
 
         public override string ToString()
         {
@@ -89,18 +77,6 @@ namespace DataWF.Data
         public DBColumnReference Clone()
         {
             return new DBColumnReference { ColumnName = ColumnName };
-        }
-
-        public class ColumnNameInvoker : Invoker<DBColumnReference, string>
-        {
-            public static readonly ColumnNameInvoker Instance = new ColumnNameInvoker();
-            public override string Name => nameof(DBColumnReference.ColumnName);
-
-            public override bool CanWrite => true;
-
-            public override string GetValue(DBColumnReference target) => target.ColumnName;
-
-            public override void SetValue(DBColumnReference target, string value) => target.ColumnName = value;
         }
     }
 }

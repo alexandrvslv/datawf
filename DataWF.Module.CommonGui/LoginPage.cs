@@ -3,10 +3,10 @@ using System;
 using System.ComponentModel;
 using System.Security;
 using System.Text;
-using DataWF.Common;
+using DataWF;
 using DataWF.Gui;
 using DataWF.Module.Common;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Data.CommonGui
 {
@@ -35,8 +35,8 @@ namespace DataWF.Data.CommonGui
             bCancel = new Button { Name = "buttonCancel", Label = "Cancel" };
             bCancel.Clicked += BCancelClicked;
 
-            PackStart(listUser, true, true);
-            //PackStart(bLogin, false, false);
+            Children.Add(listUser, true, true);
+            //Children.Add(bLogin, false, false);
 
             User = new UserCredential();
             Name = nameof(LoginPage);

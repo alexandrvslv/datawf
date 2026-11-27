@@ -1,16 +1,17 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
     public class ToolContentItem : ToolItem
     {
-        protected Widget content;
-        protected Rectangle contentBound;
+        protected Control content;
+        protected Rect contentBound;
 
-        public ToolContentItem(Widget content)
+        public ToolContentItem(Control content)
         {
             Content = content;
         }
@@ -19,33 +20,33 @@ namespace DataWF.Gui
         public double ContentMinWidth { get; set; } = 120D;
 
         [XmlIgnore]
-        public Widget Content
+        public Control Content
         {
-            get { return content; }
+            get => content;
             set
             {
                 if (content != value)
                 {
                     if (Bar != null && content != null)
-                        Bar.RemoveChild(content);
+                        Bar.Children.Remove(content);
                     content = value;
                     if (Bar != null && content != null)
-                        Bar.AddChild(content);
+                        Bar.Children.Add(content);
                     CheckSize();
                 }
             }
         }
 
-        public Rectangle ContentBound => contentBound;
+        public Rect ContentBound => contentBound;
 
         public override bool Visible
         {
-            get { return base.Visible; }
+            get => base.IsVisible;
             set
             {
                 if (content != null)
                     content.Visible = value;
-                base.Visible = value;
+                base.IsVisible = value;
             }
         }
 
@@ -60,28 +61,29 @@ namespace DataWF.Gui
                     if (Bar != null)
                     {
                         if (Content != null)
-                            Bar.RemoveChild(Content);
+                            Bar.Children.Remove(Content);
                     }
                     base.Bar = value;
                     if (Bar != null)
                     {
                         if (Content != null)
-                            Bar.AddChild(Content);
+                            Bar.Children.Add(Content);
                     }
                 }
             }
         }
 
-        public override void ApplyBound(Rectangle value)
+        public override void ApplyBound(Rect value)
         {
             base.ApplyBound(value);
-            contentBound.X = DisplayStyle.HasFlag(ToolItemDisplayStyle.Text)
+            contentBound = new Rect(DisplayStyle.HasFlag(ToolItemDisplayStyle.Text)
                ? textBound.Right - 2
                : DisplayStyle.HasFlag(ToolItemDisplayStyle.Image)
                    ? imageBound.Right - 2
-                   : Bound.X + 1;
-            contentBound.Y = Bound.Y + (Bound.Height - contentBound.Height) / 2D;
-            contentBound.Width = Bound.Width - (contentBound.Left - Bound.Left);
+                   : Bound.X + 1,
+                Bound.Y + (Bound.Height - contentBound.Height) / 2D,
+                Bound.Width - (contentBound.Left - Bound.Left),
+                contentBound.Height);
         }
 
         protected internal override void CheckSize(bool queue = true)
@@ -91,16 +93,17 @@ namespace DataWF.Gui
                 return;
             if (content != null)
             {
-                contentBound.Size = content.Surface.GetPreferredSize(SizeConstraint.Unconstrained, SizeConstraint.Unconstrained);
+                contentBound = new Rect(
+                    new Point(DisplayStyle.HasFlag(ToolItemDisplayStyle.Text) ? textBound.Right : imageBound.Right, 0),
+                    content.PreviousMeasure.Value);
                 // contentBound.Width += indent;
             }
             else
             {
-                contentBound.Width = 0;
+                contentBound = Rect.Empty;
             }
 
-            contentBound.X = (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text) ? textBound.Right : imageBound.Right);
-            contentBound.Y = 0;
+
             //contentBound.Height = MinHeight - Bar.Indent;
 
             width = Math.Max(contentBound.Right, ContentMinWidth) + (Bar?.Indent ?? 0);
@@ -109,8 +112,7 @@ namespace DataWF.Gui
 
         public override void Dispose()
         {
-            if (content != null)
-                content.Dispose();
+            //content?.Dispose();
             base.Dispose();
         }
     }

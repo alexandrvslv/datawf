@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,7 +27,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Geometry
 {
-    public class Polygon2D : IByteSerializable, IComparable<Polygon2D>, IEquatable<Polygon2D>
+    public class Polygon2D : IBinarySerializable, IComparable<Polygon2D>, IEquatable<Polygon2D>
     {
         public static bool operator ==(Polygon2D a, Polygon2D b)
         {
@@ -47,14 +47,16 @@ namespace DataWF.Geometry
         }
 
         public Polygon2D()
-        { }
+        {
+            Points = new List<Point2D>();
+        }
 
-        public Polygon2D(IEnumerable<Point2D> points)
+        public Polygon2D(IEnumerable<Point2D> points) : this()
         {
             Points.AddRange(points);
         }
 
-        public List<Point2D> Points { get; set; } = new List<Point2D>();
+        public List<Point2D> Points { get; set; }
 
         [XmlIgnore, JsonIgnore]
         public Rectangle2D Bounds => RefreshBounds();
@@ -104,7 +106,7 @@ namespace DataWF.Geometry
 
         public void Deserialize(BinaryReader reader)
         {
-            Points.Clear();
+            Points = new List<Point2D>();
             Points.Capacity = reader.ReadInt32();
             while (Points.Count < Points.Capacity)
             {

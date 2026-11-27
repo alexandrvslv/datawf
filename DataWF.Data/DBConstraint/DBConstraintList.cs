@@ -17,7 +17,8 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -25,30 +26,39 @@ namespace DataWF.Data
 {
     public class DBConstraintList<T> : DBTableItemList<T> where T : DBConstraint, new()
     {
+        protected IListIndex<T, string> columnNameIndex;
 
         public DBConstraintList(DBTable table) : base(table)
         {
-            Indexes.Add(DBConstraint.ColumnNameInvoker<T>.Instance);
+            columnNameIndex = Indexes.Add(DBConstraint.ColumnNameInvoker.Instance);
         }
 
         public IEnumerable<T> GetByColumn(DBColumn column)
         {
-            return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName);
+            return columnNameIndex.Scan(CompareOperator.Equal, column.FullName);
         }
 
-        public IEnumerable<T> GetByColumnAndTYpe(DBColumn column, DBConstraintType type)
+        public IEnumerable<T> GetByColumnAndType(DBColumn column, DBConstraintType type)
         {
-            return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName).Where(p => p.Type == type);
+            return columnNameIndex.Scan(CompareOperator.Equal, column.FullName).Where(p => p.Type == type);
         }
 
         public IEnumerable<T> GetByValue(string value)
         {
-            return Select(DBConstraint.ValueInvoker<T>.Instance, CompareType.Equal, value);
+            return Select(DBConstraint.ValueInvoker.Instance, CompareOperator.Equal, value);
         }
 
         public override DDLType GetInsertType(T item)
         {
-            return (item.Column?.ColumnType == DBColumnTypes.Default) ? DDLType.Create : DDLType.Default;
+            return (item.Column?.ColumnType == DBColumnTypes.Default) ? DDLType.Create : DDLType.None;
+        }
+
+        internal void Replace(DBColumn exist, DBColumn replacer)
+        {
+            foreach (var item in this)
+            {
+                item.Columns.Replace(exist, replacer);
+            }
         }
     }
 

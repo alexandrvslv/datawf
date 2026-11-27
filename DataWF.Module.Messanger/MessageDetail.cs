@@ -1,10 +1,12 @@
-﻿using DataWF.Data;
+﻿using DataWF;
+using DataWF.Data;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Messanger
 {
-    public abstract class MessageDetail : DBItem
+    [AbstractTable, Invoker]
+    public abstract partial class MessageDetail : DBItem
     {
         private Message message;
 
@@ -12,16 +14,15 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("message_id")]
         public long? MessageId
         {
-            get { return GetProperty<long?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.MessageIdKey);
+            set => SetValue(value, Table.MessageIdKey);
         }
 
         [Reference(nameof(MessageId))]
         public Message Message
         {
-            get { return GetPropertyReference(ref message); }
-            set { SetPropertyReference(message = value); }
+            get => GetReference(Table.MessageIdKey, ref message);
+            set => SetReference((message = value), Table.MessageIdKey);
         }
     }
-
 }

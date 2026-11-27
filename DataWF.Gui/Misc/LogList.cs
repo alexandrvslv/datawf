@@ -1,8 +1,9 @@
 ﻿using DataWF.Gui;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
+using DataWF;
+using Avalonia;
+using Avalonia.Controls;
 using System;
+using Avalonia.Media;
 
 namespace DataWF.Gui
 {

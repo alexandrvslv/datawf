@@ -25,7 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using DataWF.Common;
+using DataWF;
 using Microsoft.Data.Sqlite;
 
 namespace DataWF.Data
@@ -41,7 +41,6 @@ namespace DataWF.Data
                     {DBDataType.DateTime, "datetime"},
                     {DBDataType.ByteArray, "blob"},
                     {DBDataType.ByteSerializable, "blob"},
-                    {DBDataType.LargeObject, "integer"},
                     {DBDataType.Blob, "blob"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
@@ -49,7 +48,7 @@ namespace DataWF.Data
                     {DBDataType.TinyInt, "tinyint"},
                     {DBDataType.Float, "float"},
                     {DBDataType.Double, "double"},
-                    {DBDataType.Decimal, "numeric"},
+                    {DBDataType.Decimal, "TEXT"},
                     {DBDataType.TimeSpan, "bigint"},
                     {DBDataType.Bool, "bool"},
                 };
@@ -70,8 +69,10 @@ namespace DataWF.Data
             var file = schema.Connection.DataBase;
             if (File.Exists(file))
             {
-                try { File.Delete(file); }
-                catch (Exception ex) { Helper.OnException(ex); }
+                schema.Connection.ClearConnectionCache();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                File.Delete(file);                
             }
         }
 
@@ -126,7 +127,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
             switch (ddlType)
             {
                 case DDLType.Create:
-                    ddl.AppendLine($"insert into db_sequence(name, seq) values('{sequence.Name}', {sequence.Current - 1});");
+                    ddl.AppendLine($"insert into db_sequence(name, seq) values('{sequence.Name}', {sequence.StartWith - 1});");
                     break;
                 case DDLType.Alter:
                     ddl.AppendLine($"update db_sequence set seq = {sequence.Current} where name = '{sequence.Name}';");
@@ -142,12 +143,10 @@ select seq from db_sequence where name = '{sequence.Name}';";
             if (ddlType == DDLType.Create)
             {
                 ddl.AppendLine($"create table db_sequence(name varchar(512) not null primary key, seq long);");
-                ddl.AppendLine($"create table db_lob(oid bigint not null primary key, lob_data blob);");
             }
             else if (ddlType == DDLType.Drop)
             {
                 ddl.AppendLine($"drop table db_sequence;");
-                ddl.AppendLine($"drop table db_lob;");
             }
         }
 
@@ -245,40 +244,6 @@ select seq from db_sequence where name = '{sequence.Name}';";
             }
         }
 
-        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
-        {
-            var command = (SqliteCommand)transaction.AddCommand($"delete from db_lob where oid = $oid");
-            command.Parameters.AddWithValue($"$oid", (long)oid);
-            await transaction.ExecuteQueryAsync(command);
-        }
-
-        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
-        {
-            var command = (SqliteCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = $oid");
-            command.Parameters.AddWithValue($"$oid", (long)oid);
-            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (await transaction.ReadAsync())
-            {
-                return ((SqliteDataReader)transaction.Reader).GetStream(1);
-            }
-            throw new Exception("No Data Found!");
-        }
-
-        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
-        {
-            var command = (SqliteCommand)transaction.AddCommand(@"insert into db_lob (lob_data) values (zeroblob($length));
-select last_insert_rowid();");
-            command.Parameters.AddWithValue("$length", value.Length);
-            var oid = (long)await transaction.ExecuteQueryAsync(command);
-
-            // Open a stream to write the data
-            using (var blobStream = new SqliteBlob((SqliteConnection)transaction.Connection, "db_lob", "lob_data", oid))
-            {
-                await value.CopyToAsync(blobStream);
-            }
-            return (uint)oid;
-        }
-
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
         {
             var sqliteCommand = (SqliteCommand)command;
@@ -294,18 +259,12 @@ select last_insert_rowid();");
             return null;
         }
 
-        public override Task<bool> ReadAsync(IDataReader reader)
-        {
-            var sqlReader = (SqliteDataReader)reader;
-            return sqlReader.ReadAsync();
-        }
-
-        public override uint GetOID(IDataReader reader, int index)
+        public override uint GetUInt(DbDataReader reader, int index)
         {
             return ((SqliteDataReader)reader).GetFieldValue<uint>(index);
         }
 
-        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        public override TimeSpan GetTimeSpan(DbDataReader reader, int index)
         {
             return ((SqliteDataReader)reader).GetTimeSpan(index);
         }

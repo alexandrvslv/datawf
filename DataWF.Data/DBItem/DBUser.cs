@@ -21,23 +21,33 @@ using System.Collections.Generic;
 using System.Security.Principal;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
-using DataWF.Common;
+using DataWF;
 
 namespace DataWF.Data
 {
-    public abstract class DBUser : DBItem, IUserIdentity
+    [AbstractTable]
+    public abstract partial class DBUser : DBItem, IUserIdentity
     {
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public abstract int? Id { get; set; }
+        [Column("unid", Keys = ColumnFlags.Primary)]
+        public int Id
+        {
+            get => GetValue<int>(Table.IdKey);
+            set => SetValue<int>(value, Table.IdKey);
+        }
 
-        [Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
-        public abstract string Login { get; set; }
+        [Column("login", 256, Keys = ColumnFlags.Code | ColumnFlags.Indexing), Index("ruser_login", true)]
+        public string Login
+        {
+            get => GetValue(Table.LoginKey);
+            set => SetValue(value, Table.LoginKey);
+        }
 
-        [Column("email", 1024, Keys = DBColumnKeys.Indexing), Index("ruser_email", true)]
-        public abstract string EMail { get; set; }
-
-        [JsonIgnore, XmlIgnore]
-        public abstract string Name { get; set; }
+        [Column("email", 1024, Keys = ColumnFlags.Indexing), Index("ruser_email", true)]
+        public string EMail
+        {
+            get => GetValue(Table.EMailKey);
+            set => SetValue(value, Table.EMailKey);
+        }
 
         [JsonIgnore, XmlIgnore]
         public abstract HashSet<IAccessIdentity> Groups { get; }
@@ -47,6 +57,7 @@ namespace DataWF.Data
 
         [JsonIgnore, XmlIgnore]
         public abstract bool IsAuthenticated { get; }
+        public abstract string Name { get; set; }
 
         string IIdentity.Name => EMail;
     }

@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Threading;
+using Avalonia.Input;
 
 namespace DataWF.TestGui
 {
@@ -15,8 +18,8 @@ namespace DataWF.TestGui
     {
         private LayoutList directoryTree = new LayoutList();
         private LayoutList directoryView = new LayoutList();
-        private HPaned split = new HPaned();
-        private HBox status = new HBox();
+        private SplitView split = new SplitView();
+        private StackPanel status = new StackPanel();
         private Label statusLablel = new Label();
 
         private DirectoryNode current;
@@ -42,13 +45,13 @@ namespace DataWF.TestGui
             directoryView.ListSource = files;
 
             status.Name = "status";
-            status.PackStart(statusLablel);
+            status.Children.Add(statusLablel);
 
-            split.Panel1.Content = directoryTree;
-            split.Panel2.Content = directoryView;
+            split.Pane = directoryTree;
+            split.Content = directoryView;
 
-            PackStart(split, true, true);
-            PackStart(status, false, false);
+            Children.Add(split);
+            Children.Add(status);
             Text = "Files";
 
             var task = new Task(CheckQueue, TaskCreationOptions.LongRunning);
@@ -91,14 +94,13 @@ namespace DataWF.TestGui
         private DirectoryNode InitDirectory(DirectoryInfo directory)
         {
             var node = (DirectoryNode)directoryTree.Nodes.Find(directory.FullName);
-            if (node == null)
-                node = new DirectoryNode()
-                {
-                    Name = directory.FullName,
-                    Text = directory.Name,
-                    Glyph = Locale.GetGlyph("Files", "Directory", GlyphType.Folder),
-                    File = new FileItem() { Info = directory }
-                };
+            node ??= new DirectoryNode()
+            {
+                Name = directory.FullName,
+                Text = directory.Name,
+                Glyph = Locale.GetGlyph("Files", "Directory", GlyphType.Folder),
+                File = new FileItem() { Info = directory }
+            };
 
             return node;
         }
@@ -122,9 +124,9 @@ namespace DataWF.TestGui
                     var node = actions.Dequeue();
                     if (node != null)
                     {
-                        Application.Invoke(() =>
+                        _ = Dispatcher.UIThread.InvokeAsync(() =>
                         {
-                            statusLablel.Text = string.Format("Check: {0}", node.Name);
+                            statusLablel.Content = string.Format("Check: {0}", node.Name);
                         });
 
                         CheckNode(node);
@@ -144,9 +146,9 @@ namespace DataWF.TestGui
 
                     }
 
-                    Application.Invoke(() =>
+                    _ = Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        statusLablel.Text += string.Format("      Nodes: {0} Queue: {1}",
+                        statusLablel.Content = string.Format("      Nodes: {0} Queue: {1}",
                                                           directoryTree.Nodes.Count,
                                                          actions.Count);
                     });
@@ -184,7 +186,7 @@ namespace DataWF.TestGui
 
         public DirectoryNode Current
         {
-            get { return current; }
+            get => current;
             set
             {
                 if (current != value)
@@ -194,9 +196,9 @@ namespace DataWF.TestGui
                     {
                         var drive = current.Group == null ? current.Drive : null;
                         var text = drive == null ? current.File.Info.FullName : string.Format("{0} free {1} of {2}", current.File.Info.FullName,
-                                       Helper.LenghtFormat(drive.TotalFreeSpace),
-                                       Helper.LenghtFormat(drive.TotalSize));
-                        statusLablel.Text = text;
+                                       Helper.SizeFormat(drive.TotalFreeSpace),
+                                       Helper.SizeFormat(drive.TotalSize));
+                        statusLablel.Content = text;
 
                         CheckSubDirectory(current);
                     }
@@ -242,11 +244,13 @@ namespace DataWF.TestGui
                     SelectNode(item);
                 }
             }
-            if (e.Key == Key.BackSpace && Current != null && Current.Group != null)
+            if (e.Key == Key.OemBackslash && Current != null && Current.Group != null)
             {
                 SelectNode((FileItem)Current.Group.Tag);
             }
-            if (e.Key == Key.F && e.Modifiers == ModifierKeys.Control && directoryView.CurrentCell != null)
+            if (e.Key == Key.F 
+                && e.KeyModifiers == KeyModifiers.Control 
+                && directoryView.CurrentCell != null)
             {
                 directoryView.AddFilter(directoryView.CurrentCell, true);
             }
@@ -257,18 +261,7 @@ namespace DataWF.TestGui
             var node = InitDirectory((DirectoryInfo)item.Info);
             directoryTree.SelectedNode = node;
         }
-
-        /// <summary> 
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-            }
-            base.Dispose(disposing);
-        }
+        
     }
 
     public class DirectoryNode : Node

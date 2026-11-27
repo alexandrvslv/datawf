@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
 using DataWF.Module.Common;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.TestGui
 {
@@ -19,7 +19,7 @@ namespace DataWF.TestGui
         {
             //DBService.Execute += (e) =>
             //{
-            //    Helper.Logs.Add(new StateInfo(
+            //    Helper.Log(
             //        "DBService",
             //        "Execute" + e.Type,
             //        e.Query,
@@ -67,15 +67,15 @@ namespace DataWF.TestGui
 
             await Task.Run(() =>
             {
-                var schema = DBSchema.Generate(typeof(User).Assembly, "common_data");
+                var schema = DBSchema.Generate("common_data", typeof(User).Assembly);
                 schema.Connection = new DBConnection
                 {
                     Name = "test.common",
                     System = DBSystem.SQLite,
                     DataBase = "test.common.sqlite"
                 };
-                schema.DropDatabase();
-                schema.CreateDatabase();
+                schema.ExecuteDropDatabase();
+                schema.ExecuteCreateDatabase();
             }).ConfigureAwait(false);
         }
 
@@ -112,7 +112,7 @@ namespace DataWF.TestGui
             st.Text = @"using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using DataWF.Common;
+using DataWF;
 using DataWF.Gui;
 using System.IO;
 

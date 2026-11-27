@@ -1,51 +1,61 @@
-﻿using DataWF.Common;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Media.TextFormatting;
+using DataWF;
 using System;
-using System.Text.RegularExpressions;
-using Xwt.Drawing;
-using Xwt;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace DataWF.Gui
 {
     public class GraphContext : IDisposable
     {
-        private static TextLayout measure;
-        private static Font glyphFont = null;
-        private static Dictionary<GlyphType, TextLayout> glyphCache = new Dictionary<GlyphType, TextLayout>();
+        private const string DefaultFontName = "FontAwesome";
+        private static FormattedText measure;
+        private static FontFamily glyphFont = FontFamily.Default;
+        private static Dictionary<GlyphType, TextFormatter> glyphCache = new Dictionary<GlyphType, TextFormatter>();
         //public static GraphContext Default = new GraphContext();
 
-        public static TextLayout GetGlyphLayout(GlyphType type, double maxSize)
+        public static FormattedText GetGlyphLayout(GlyphType type, double maxSize)
         {
-            if (glyphFont == null)
+            if (glyphFont == FontFamily.Default)
             {
-                glyphFont = Font.FromName("FontAwesome");
-                if (glyphFont.Family != "FontAwesome")
+                glyphFont = FontFamily.Parse(DefaultFontName);
+                if (glyphFont.Name != DefaultFontName)
                 {
                     string name = System.IO.Path.Combine(Helper.GetDirectory(), "fontawesome-webfont.ttf");
-                    if (Font.RegisterFontFromFile(name))
-                    {
-                        glyphFont = Font.FromName("FontAwesome");
-                    }
+                    var glyphFont = new FontFamily(new Uri(name), DefaultFontName);
+                    FontManager.Current.GetOrAddGlyphTypeface(new Typeface(glyphFont));
                 }
-                var fontLit = new TextLayout() { TextAlignment = Alignment.Center, Trimming = TextTrimming.Word, Font = glyphFont };
-                fontLit.Text = char.ConvertFromUtf32((int)GlyphType.GearAlias);
-                var litSize = fontLit.GetSize();
-                if (litSize.Height >= 15)
-                    glyphFont = glyphFont.WithSize(glyphFont.Size * 0.9);
-                else if (litSize.Height <= 12)
-                    glyphFont = glyphFont.WithSize(glyphFont.Size * 1.15);
+                var fontLit = new FormattedText
+                (
+                    textToFormat: char.ConvertFromUtf32((int)GlyphType.GearAlias),
+                    culture: CultureInfo.InvariantCulture,
+                    flowDirection: FlowDirection.LeftToRight,
+                    typeface: new Typeface(glyphFont),
+                    emSize: 8,
+                    foreground: null
+                );
+                var litSize = fontLit.BuildGeometry(new Point(0, 0));
+                if (litSize.Bounds.Height >= 15)
+                    fontLit.SetFontSize(8 * 0.9);
+                else if (litSize.Bounds.Height <= 12)
+                    fontLit.SetFontSize(8 * 1.15);
             }
             if (type == GlyphType.FolderOColumn || type == GlyphType.FolderOTable)
                 type = GlyphType.FolderO;
             if (!glyphCache.TryGetValue(type, out var layout))
             {
-                layout = new TextLayout()
-                {
-                    Font = glyphFont,
-                    //TextAlignment = Alignment.Center,
+                layout = new FormattedText
+                (
+                    typeface: new Typeface(glyphFont),
+                    //TextAlignment = TextAlignment.Center,
                     Trimming = TextTrimming.Word,
                     Text = char.ConvertFromUtf32((int)type)
-                };
+                );
                 var temp = layout.GetSize();
                 layout.Width = temp.Width + 3;
                 layout.Height = temp.Height + 3;
@@ -57,7 +67,7 @@ namespace DataWF.Gui
         public static Size MeasureGlyph(GlyphType type, double maxSize)
         {
             if (type == GlyphType.None)
-                return Size.Zero;
+                return default;
             var text = GetGlyphLayout(type, maxSize);
             var factor = maxSize / text.Height;
             return new Size(text.Width * factor, text.Height * factor);
@@ -65,23 +75,20 @@ namespace DataWF.Gui
 
         public static Size MeasureString(string text, CellStyle style, double w)
         {
-            return MeasureString(text, style.Font, w);
+            return MeasureString(text, style.FontFamily, w);
         }
 
-        public static Size MeasureString(string text, Font font, double w)
+        public static Size MeasureString(string text, FontFamily font, double w)
         {
             if (text == null)
-                return Size.Zero;
+                return default;
             if (text.Length < 2000)
             {
-                if (measure == null)
-                {
-                    measure = new TextLayout();
-                }
+                measure ??= new FormattedText();
                 lock (measure)
                 {
                     measure.Width = w;
-                    measure.Font = font;
+                    measure.FontFamily = font;
                     measure.Text = text;
                     return measure.GetSize();
                 }
@@ -92,7 +99,7 @@ namespace DataWF.Gui
             }
         }
 
-        public static Size MeasureStringDefault(string text, Font font, double w)
+        public static Size MeasureStringDefault(string text, FontFamily font, double w)
         {
             //var length = s.Length * f.Size;
             var cw = w <= 0;
@@ -117,10 +124,10 @@ namespace DataWF.Gui
         }
 
         private double scale = 1f;
-        public Context Context;
-        private static TextLayout cacheTextLayout;
+        public DrawingContext Context;
+        private static FormattedText cacheFormattedText;
 
-        public GraphContext(Context g)
+        public GraphContext(DrawingContext g)
         {
             Context = g;
         }
@@ -137,21 +144,21 @@ namespace DataWF.Gui
 
         public double Scale
         {
-            get { return scale; }
-            set { scale = value; }
+            get => scale;
+            set => scale = value;
         }
 
-        public void DrawCheckBox(CheckedState formated, Rectangle bound, Color color)
+        public void DrawCheckBox(CheckedState formated, Rect bound, Color color)
         {
             DrawGlyph(formated == CheckedState.Checked ? GlyphType.CheckSquareO : formated == CheckedState.Unchecked ? GlyphType.SquareO : GlyphType.Square, bound, color);
         }
 
-        public void DrawGlyph(GlyphType type, Rectangle bound, CellStyle style, CellDisplayState state = CellDisplayState.Default)
+        public void DrawGlyph(GlyphType type, Rect bound, CellStyle style, CellDisplayState state = CellDisplayState.Default)
         {
             DrawGlyph(type, bound, style.FontBrush.GetColorByState(state));
         }
 
-        public void DrawGlyph(GlyphType type, Rectangle bound, Color color)
+        public void DrawGlyph(GlyphType type, Rect bound, Color color)
         {
             var text = GetGlyphLayout(type, bound.Height);
             var otext = GlyphType.None;
@@ -170,50 +177,49 @@ namespace DataWF.Gui
             Context.Translate(bound.Location.X + diff.X, bound.Location.Y + diff.Y);
             Context.Scale(factor, factor);
             Context.SetColor(color);
-            Context.DrawTextLayout(text, Point.Zero);
+            Context.DrawText(text, Point.Zero);
             Context.Restore();
             if (otext != GlyphType.None)
             {
-                var sbound = new Rectangle(bound.TopLeft + new Size(bound.Width * 0.3, bound.Height * 0.3), new Size(bound.Width * 0.6, bound.Height * 0.6));
+                var sbound = new Rect(bound.TopLeft + new Size(bound.Width * 0.3, bound.Height * 0.3), new Size(bound.Width * 0.6, bound.Height * 0.6));
                 DrawGlyph(otext, sbound, color);
             }
         }
 
-        public void DrawGroup(CellStyle style, LayoutGroup group, Rectangle bound, CellDisplayState state, Rectangle gliph)
+        public void DrawGroup(CellStyle style, LayoutGroup group, Rect bound, CellDisplayState state, Rect gliph)
         {
-            var textLayout = group.GetTextLayout();
-            var text = new Rectangle(bound.X + 11, bound.Y + (bound.Height - group.TextSize.Height) / 2D, group.TextSize.Width, group.TextSize.Height);
+            var FormattedText = group.GetFormattedText();
+            var text = new Rect(bound.X + 11, bound.Y + (bound.Height - group.TextSize.Height) / 2D, group.TextSize.Width, group.TextSize.Height);
 
-            DrawCell(style, textLayout, bound, text, state);
+            DrawCell(style, FormattedText, bound, text, state);
 
             DrawGlyph(group.IsExpand ? GlyphType.ChevronDown : GlyphType.ChevronRight, gliph, style, state);
 
             var pen = style.FontBrush.GetColorByState(state);
             if (pen != CellStyleBrush.ColorEmpty)
             {
-                Context.SetColor(pen);
-                Context.MoveTo(bound.X + text.Width + 25, bound.Y + bound.Height / 2);
-                Context.LineTo(bound.Right - 30, bound.Y + bound.Height / 2);
-                Context.Stroke();
+                Context.DrawLine(pen,
+                    new Point(bound.X + text.Width + 25, bound.Y + bound.Height / 2),
+                    new Point(bound.Right - 30, bound.Y + bound.Height / 2));
             }
         }
 
-        public void DrawCell(CellStyle style, object formated, Rectangle bound, Rectangle textBound, CellDisplayState state)
+        public void DrawCell(CellStyle style, object formated, Rect bound, Rect textBound, CellDisplayState state)
         {
             if (bound.Width <= 0)
                 return;
             //Context.Save();
-            //Context.Rectangle(bound);
+            //Context.Rect(bound);
             //Context.Clip();
             var backColor = style.BackBrush.GetColorByState(state);
             if (backColor != CellStyleBrush.ColorEmpty)
             {
-                using (DrawingPath path = GetRoundedRect(bound, style.Round))
+                using (var path = GetRoundedRect(bound, style.Round))
                 {
                     Context.SetColor(backColor);
                     var pattern = style.BackBrush.GetBrushByState(bound, state);
                     if (pattern != null)
-                        Context.Pattern = pattern;
+                        Context.Brush = pattern;
                     Context.AppendPath(path);
                     Context.Fill();
                     if (pattern != null)
@@ -225,26 +231,26 @@ namespace DataWF.Gui
 
             if (formated != null)
             {
-                if (formated is string && ((string)formated).Length > 0)
+                if (formated is string str && str.Length > 0)
                 {
-                    DrawText((string)formated, textBound, style, state);
+                    DrawText(str, textBound, style, state);
                 }
-                else if (formated is TextLayout)
+                else if (formated is FormattedText text)
                 {
-                    DrawText((TextLayout)formated, textBound, style, state);
+                    DrawText(text, textBound, style, state);
                 }
-                else if (formated is GlyphType)
+                else if (formated is GlyphType glyph)
                 {
-                    DrawGlyph((GlyphType)formated, textBound, style, state);
+                    DrawGlyph(glyph, textBound, style, state);
                 }
-                else if (formated is Image)
+                else if (formated is Bitmap bitmap)
                 {
-                    DrawImage((Image)formated, textBound);
+                    DrawImage(bitmap, textBound);
                 }
-                else if (formated is CheckedState)
+                else if (formated is CheckedState checkedState)
                 {
-                    textBound.Width = textBound.Height;
-                    DrawCheckBox((CheckedState)formated, textBound, style.FontBrush.GetColorByState(state));
+                    textBound = textBound.WithWidth(textBound.Height);
+                    DrawCheckBox(checkedState, textBound, style.FontBrush.GetColorByState(state));
                 }
             }
 
@@ -255,8 +261,9 @@ namespace DataWF.Gui
                 Context.SetColor(penColor);
                 var pattern = style.BorderBrush.GetBrushByState(bound, state);
                 if (pattern != null)
-                    Context.Pattern = pattern;
-                using (var borderPath = GetRoundedRect(bound.Inflate(-0.5, -0.5), style.Round))
+                    Context.Brush = pattern;
+                var pen = style.BorderBrush.GetPenByState(state);
+                using (var borderPath = GetRoundedRect(bound.Inflate(new Thickness(-0.5, -0.5)), style.Round))
                 {
                     Context.AppendPath(borderPath);
                     Context.Stroke();
@@ -265,105 +272,88 @@ namespace DataWF.Gui
             //Context.Restore();
         }
 
-        public void DrawImage(Image image, Rectangle bound)
+        public void DrawImage(Bitmap image, Rect bound)
         {
             Context.DrawImage(image, bound, 1);
         }
 
-        public void FillRectangle(Color color, Rectangle bound)
+        public void FillRectangle(Color color, Rect bound)
         {
             Context.SetColor(color);
-            FillRectangle(bound);
+            Context.FillRectangle(bound);
         }
 
-        public void FillRectangle(Rectangle bound)
+        public void FillRectangle(CellStyle style, Rect bound, CellDisplayState state = CellDisplayState.Default)
         {
-            Context.Rectangle(bound);
-            Context.Fill();
-        }
-
-        public void FillRectangle(CellStyle style, Rectangle bound, CellDisplayState state = CellDisplayState.Default)
-        {
-            Context.SetColor(style.BackBrush.GetColorByState(state));
             var pattern = style.BackBrush.GetBrushByState(bound, state);
             if (pattern != null)
-                Context.Pattern = pattern;
-
-            FillRectangle(bound);
+            {
+                Context.FillRectangle(pattern, bound);
+            }
         }
 
-        public void DrawRectangle(Color color, Rectangle bound, double lineWidth = 2)
+        public void DrawRectangle(Color color, Rect bound, double lineWidth = 2)
         {
-            Context.SetLineWidth(lineWidth);
-            Context.SetColor(color);
-            DrawRectangle(bound);
+            var brush = new SolidColorBrush(color);
+            var pen = new Pen(brush, lineWidth);
+            Context.DrawRectangle(pen, bound);
         }
 
-        public void DrawRectangle(Rectangle bound)
+
+        public void DrawRectangle(CellStyle style, Rect bound, CellDisplayState state = CellDisplayState.Default)
         {
-            Context.Rectangle(bound);
-            Context.Stroke();
+            var pen = style.BorderBrush.GetPenByState(state, style.LineWidth);
+            Context.DrawRectangle(pen, bound);
         }
 
-        public void DrawRectangle(CellStyle style, Rectangle bound, CellDisplayState state = CellDisplayState.Default)
-        {
-            Context.SetLineWidth(style.LineWidth);
-            Context.SetColor(style.BorderBrush.GetColorByState(state));
-            DrawRectangle(bound);
-        }
-
-        public void DrawText(string text, Rectangle bound, CellStyle style, CellDisplayState state = CellDisplayState.Default)
+        public void DrawText(string text, Rect bound, CellStyle style, CellDisplayState state = CellDisplayState.Default)
         {
             //var pattern = style.FontBrush.GetBrushByState(bound, state);
             //if (pattern != null)
-            //    Context.Pattern = pattern;
+            //    Context.Brush = pattern;
 
-            DrawText(text, bound, style.Font, style.FontBrush.GetColorByState(state), style.Alignment);
+            DrawText(text, bound, style.Typeface, style.FontBrush.GetColorByState(state), style.TextAlignment);
         }
 
-        public void DrawText(string text, Rectangle bound, Font font, Color color, Alignment alignment = Alignment.Start)
+        public void DrawText(string text, Rect bound, Typeface font, Color color, TextAlignment alignment = TextAlignment.Left)
         {
-            if (cacheTextLayout == null)
-            {
-                cacheTextLayout = new TextLayout();
-                //cacheTextLayout.Trimming = TextTrimming.WordElipsis;
-            }
-            cacheTextLayout.Font = font;
-            cacheTextLayout.TextAlignment = alignment;
-            cacheTextLayout.Text = text;
-            DrawText(cacheTextLayout, bound, color);
+            cacheFormattedText ??= new FormattedText(textToFormat: text, 
+                culture:CultureInfo.InvariantCulture,
+                flowDirection: FlowDirection.LeftToRight,
+                typeface: font,
+                emSize: 0,
+                foreground: null);
+            cacheFormattedText.TextAlignment = alignment;
+            DrawText(cacheFormattedText, bound, color);
         }
 
-        public void DrawText(TextLayout textLayout, Rectangle bound, CellStyle style, CellDisplayState state = CellDisplayState.Default)
+        public void DrawText(FormattedText formattedText, Rect bound, CellStyle style, CellDisplayState state = CellDisplayState.Default)
         {
-            if (textLayout.Font != style.Font)
-                textLayout.Font = style.Font;
-            if (textLayout.TextAlignment != style.Alignment)
-                textLayout.TextAlignment = style.Alignment;
-            DrawText(textLayout, bound, style.FontBrush.GetColorByState(state));
+            if (formattedText.Ty != style.Typeface)
+                formattedText.SetFontTypeface(style.Typeface);
+            if (formattedText.TextAlignment != style.TextAlignment)
+                formattedText.TextAlignment = style.TextAlignment;
+            DrawText(formattedText, bound, style.FontBrush.GetBrushByState(bound, state));
         }
 
-        public void DrawText(TextLayout textLayout, Rectangle bound, Color color)
+        public void DrawText(FormattedText formattedText, Rect bound, Color color)
         {
-            if (textLayout.Height != bound.Height)
-                textLayout.Height = bound.Height;
-            if (textLayout.Width != bound.Width)
-                textLayout.Width = bound.Width;
-            Context.SetColor(color);
-            Context.DrawTextLayout(textLayout, bound.Location);
+            DrawText(formattedText, bound, new SolidColorBrush(color));
         }
 
-        public static DrawingPath GetRoundedRect(Rectangle baseRect, float radius)
+        public void DrawText(FormattedText formattedText, Rect bound, IBrush brush)
         {
-            var path = new DrawingPath();
-            if (radius != 0)
-                path.RoundRectangle(baseRect, radius);
-            else
-                path.Rectangle(baseRect.Location, baseRect.Width, baseRect.Height);
+            var textBound = formattedText.Width;
+            formattedText.SetForegroundBrush(brush);
+            if (textBound.Height != bound.Height)
+                formattedText.Height = bound.Height;
+            if (formattedText.Width != bound.Width)
+                formattedText.Width = bound.Width;
 
-            path.ClosePath();
-            return path;
+            Context.DrawText(formattedText, bound.Position);
         }
+
+        
     }
 }
 

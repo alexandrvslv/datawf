@@ -17,23 +17,28 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    [DataContract]
-    public class DBGroupItem : DBItem, IGroup
+    [AbstractTable]
+    [Invoker]
+    public partial class DBGroupItem : DBItem, IGroup
     {
         private DBItem group;
+
+        public DBGroupItem(IDBTable table) : base(table)
+        { }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public object GroupId
@@ -89,7 +94,7 @@ namespace DataWF.Data
                 if (Expand != value)
                 {
                     state = value ? state | DBItemState.Expand : state & ~DBItemState.Expand;
-                    OnPropertyChanged();
+                    OnPropertyChanged<bool>();
                 }
             }
         }
@@ -105,24 +110,9 @@ namespace DataWF.Data
             }
         }
 
-        public T? GetGroupValueNullable<T>() where T : struct
-        {
-            return GetValueNullable<T>(Table.GroupKey);
-        }
-
         public T GetGroupValue<T>()
         {
             return GetValue<T>(Table.GroupKey);
-        }
-
-        public void SetGroupValueNullable<T>(T? value) where T : struct
-        {
-            if (value != null && value.Equals(PrimaryId))
-            {
-                throw new InvalidOperationException("Self reference detected!");
-            }
-            SetValueNullable(value, Table.GroupKey);
-            group = null;
         }
 
         public void SetGroupValue<T>(T value)
@@ -135,7 +125,7 @@ namespace DataWF.Data
             group = null;
         }
 
-        public T GetGroupReference<T>(DBLoadParam loadParam = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBGroupItem, new()
+        public T GetGroupReference<T>(DBLoadParam loadParam = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBGroupItem
         {
             GetReference(Table.GroupKey, ref group, loadParam);
             //Check recursion
@@ -144,9 +134,9 @@ namespace DataWF.Data
             return (T)group;
         }
 
-        public void SetGroupReference<T>(T value) where T : DBGroupItem, new()
+        public void SetGroupReference<T>(T value) where T : DBGroupItem
         {
-            if (value != null && value.GroupId != null && value.GroupId == PrimaryId)
+            if (value != null && value.GroupId != null && value.GroupId.Equals(PrimaryId))
             {
                 throw new InvalidOperationException("Circle reference detected!");
             }
@@ -164,17 +154,18 @@ namespace DataWF.Data
             return true;
         }
 
-        public IEnumerable<T> GetParents<T>(bool addCurrent = false)
+        public IEnumerable<T> GetParents<T>(bool addCurrent = false) where T : DBGroupItem
         {
-            return GroupHelper.GetAllParent<T>(this, addCurrent);
+            return GroupHelper.GetAllParent<T>((T)this, addCurrent);
         }
 
         public string GetParentIds()
         {
-            string rez = PrimaryId.ToString();
+            var primaryKey = Table.PrimaryKey;
+            string rez = primaryKey.FormatQuery(this);
             foreach (var item in GroupHelper.GetAllParent<DBGroupItem>(this))
             {
-                rez += "," + item.PrimaryId;
+                rez += "," + primaryKey.FormatQuery(item);
             }
             return rez;
         }
@@ -188,7 +179,7 @@ namespace DataWF.Data
 
         public IEnumerable SelectChilds()
         {
-            return Table.SelectItems(Table.GroupKey, CompareType.Equal, this);
+            return Table.GroupKey.Select<DBItem>(CompareOperator.Equal, this);
         }
 
         public bool AllParentExpand()
@@ -198,16 +189,16 @@ namespace DataWF.Data
 
         public IEnumerable<DBGroupItem> GetSubGroups(DBLoadParam param)
         {
-            if (PrimaryId == null)
-                return new List<DBGroupItem>(0);
-            return GetReferencing(Table, Table.GroupKey, param).Cast<DBGroupItem>();
+            if (Table.PrimaryKey.IsEmpty(this))
+                return Enumerable.Empty<DBGroupItem>();
+            return GetReferencing(Table.GroupKey, param).Cast<DBGroupItem>();
         }
 
-        public IEnumerable<T> GetSubGroups<T>(DBLoadParam param) where T : DBGroupItem, new()
+        public IEnumerable<T> GetSubGroups<T>(DBLoadParam param) where T : DBGroupItem
         {
-            if (PrimaryId == null)
-                return new List<T>(0);
-            return GetReferencing<T>((DBTable<T>)Table, Table.GroupKey, param);
+            if (Table.PrimaryKey.IsEmpty(this))
+                return Enumerable.Empty<T>();
+            return GetReferencing<T>(Table.GroupKey, param);
         }
 
         public List<DBGroupItem> GetSubGroupFull(bool addCurrent = false)
@@ -218,16 +209,22 @@ namespace DataWF.Data
                 rez.Add(this);
             rez.AddRange(buf);
             foreach (var row in buf)
+            {
                 rez.AddRange(row.GetSubGroupFull());
+            }
+
             return rez;
         }
 
         public string GetSubGroupFullIds()
         {
-            string rez = "";
-            rez = PrimaryId.ToString();
+            var primaryKey = Table.PrimaryKey;
+            var rez = primaryKey.FormatQuery(this);
             foreach (var row in GetSubGroupFull())
-                rez += "," + row.PrimaryId;
+            {
+                rez += "," + primaryKey.FormatQuery(row);
+            }
+
             return rez;
         }
 

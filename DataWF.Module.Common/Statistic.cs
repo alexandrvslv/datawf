@@ -1,36 +1,32 @@
-﻿using DataWF.Data;
+﻿using DataWF;
+using DataWF.Data;
+using DataWF.Module.Counterpart;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [Table("dstats", "Reference Book")]
-    public class Statistic : DBItem//, IComparable
-    {
-        public static readonly DBTable<Statistic> DBTable = GetTable<Statistic>();
-        public static readonly DBColumn SchedulerKey = DBTable.ParseProperty(nameof(SchedulerId));
-        public static readonly DBColumn ResultKey = DBTable.ParseProperty(nameof(Result));
 
+    [Table("dstats", "Reference Book"), Invoker]
+    public sealed partial class Statistic : DBItem//, IComparable
+    {
         private Scheduler scheduler;
 
-        public Statistic()
-        { }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        [Column("unid", Keys = ColumnFlags.Primary)]
+        public long Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
-        //[Column("code", Keys = DBColumnKeys.Code)]
+        //[Column("code", Keys = ColumnFlags.Code)]
         //public string Code
         //{
         //    get { return GetValue<string>(Table.CodeKey); }
         //    set { SetValue(value, Table.CodeKey); }
         //}
 
-        //[Column("name", Keys = DBColumnKeys.Culture)]
+        //[Column("name", Keys = ColumnFlags.Culture)]
         //public override string Name
         //{
         //    get { return GetName("name"); }
@@ -41,22 +37,22 @@ namespace DataWF.Module.Common
         [Column("scheduler_id")]
         public int? SchedulerId
         {
-            get => GetValue<int?>(SchedulerKey);
-            set => SetValue(value, SchedulerKey);
+            get => GetValue(Table.SchedulerIdKey);
+            set => SetValue(value, Table.SchedulerIdKey);
         }
 
         [Reference(nameof(SchedulerId))]
         public Scheduler Scheduler
         {
-            get => GetReference(SchedulerKey, ref scheduler);
-            set => SetReference(scheduler = value, SchedulerKey);
+            get => GetReference(Table.SchedulerIdKey, ref scheduler);
+            set => SetReference(scheduler = value, Table.SchedulerIdKey);
         }
 
         [Column("stat_result")]
         public decimal? Result
         {
-            get => GetValue<decimal?>(ResultKey);
-            set => SetValue(value, ResultKey);
+            get => GetValue(Table.ResultKey);
+            set => SetValue(value, Table.ResultKey);
         }
     }
 }

@@ -1,15 +1,15 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Data.Gui
 {
     public class TableExplorer : ListExplorer
     {
-        private DBTable table;
+        private IDBTable table;
 
         public TableExplorer() : base(new TableEditor())
         {
@@ -43,7 +43,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public DBTable Table
+        public IDBTable Table
         {
             get { return table; }
             set
@@ -59,7 +59,7 @@ namespace DataWF.Data.Gui
             Initialize(row.Table, row, null, openmode, readOnly);
         }
 
-        public void Initialize(DBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
+        public void Initialize(IDBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
         {
             if (this.table == null)
             {
@@ -84,7 +84,7 @@ namespace DataWF.Data.Gui
             Current = node;
         }
 
-        public TableExplorerNode InitToolTable(DBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
+        public TableExplorerNode InitToolTable(IDBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
         {
             TableExplorerNode node = Find(table, ownColumn, row);
             if (node == null)
@@ -95,7 +95,7 @@ namespace DataWF.Data.Gui
                     {
                         Table = table,
                         TableView = openmode == TableEditorMode.Item ? null
-                        : table.CreateItemsView("", DBViewKeys.None, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error),
+                        : table.CreateView("", DBViewKeys.None, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error),
                         Item = row,
                         Column = ownColumn,
                         Mode = openmode,
@@ -106,7 +106,7 @@ namespace DataWF.Data.Gui
             return node;
         }
 
-        public TableExplorerNode Find(DBTable table, DBColumn column, DBItem row)
+        public TableExplorerNode Find(IDBTable table, DBColumn column, DBItem row)
         {
             if (table == null)
                 return null;
@@ -147,7 +147,7 @@ namespace DataWF.Data.Gui
             node.Check = true;
         }
 
-        public TableExplorerNode SelectRow(TableExplorerNode owner, DBTable table, DBItem row, DBColumn column, bool readOnly)
+        public TableExplorerNode SelectRow(TableExplorerNode owner, IDBTable table, DBItem row, DBColumn column, bool readOnly)
         {
             var node = InitToolTable(table, row, column, TableEditorMode.Item, readOnly);
             if (node.ToolParent == null)
@@ -238,17 +238,17 @@ namespace DataWF.Data.Gui
             //GuiService.Localize(this, "TableExplorer", "Table Explorer", GlyphType.Table);
         }
 
-        public override void Serialize(ISerializeWriter writer)
+        public override void Serialize(XmlInvokerWriter writer)
         {
             writer.WriteAttribute("TableName", Table?.FullName);
         }
 
-        public override void Deserialize(ISerializeReader reader)
+        public override void Deserialize(XmlInvokerReader reader)
         {
             var tableName = reader.ReadAttribute<string>("TableName");
             if (!string.IsNullOrEmpty(tableName))
             {
-                Table = DBService.Schems.ParseTable(tableName);
+                Table = DataExplorer.Provider.ParseTable(tableName);
             }
         }
     }

@@ -1,8 +1,9 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.ComponentModel;
 using System.Linq;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
@@ -65,7 +66,7 @@ namespace DataWF.Gui
                 ListInfo = new LayoutListInfo(
                     new LayoutColumn { Name = nameof(LayoutColumn.ToString), Editable = false, Width = 180 },
                     new LayoutColumn { Name = nameof(LayoutColumn.Text), FillWidth = true },
-                    new LayoutColumn { Name = nameof(LayoutColumn.Visible), Width = 50 },
+                    new LayoutColumn { Name = nameof(LayoutColumn.IsVisible), Width = 50 },
                     new LayoutColumn { Name = nameof(LayoutColumn.Format) })
                 {
                     HeaderVisible = false,
@@ -102,7 +103,7 @@ namespace DataWF.Gui
             gColumns = new GroupBoxItem()
             {
                 Name = "columns",
-                Widget = columns,
+                Control = columns,
                 Text = "Columns",
                 FillHeight = true,
                 FillWidth = true
@@ -110,7 +111,7 @@ namespace DataWF.Gui
             gFields = new GroupBoxItem()
             {
                 Name = "fields",
-                Widget = fields,
+                Control = fields,
                 Text = "Fields",
                 Row = 1,
                 FillHeight = true,
@@ -119,7 +120,7 @@ namespace DataWF.Gui
             gSorters = new GroupBoxItem()
             {
                 Name = "sorts",
-                Widget = sorts,
+                Control = sorts,
                 Text = "Sort",
                 Row = 2,
                 FillHeight = true,
@@ -131,7 +132,7 @@ namespace DataWF.Gui
             gOptions = new GroupBoxItem()
             {
                 Name = "properties",
-                Widget = options,
+                Control = options,
                 Text = "Properties",
                 FillHeight = true,
                 Width = 340
@@ -139,8 +140,8 @@ namespace DataWF.Gui
 
             map = new GroupBox(gOptions, mColumns);
 
-            PackStart(bar, false, false);
-            PackStart(map, true, true);
+            Children.Add(bar);
+            Children.Add(map);
             //BackgroundColor = GuiEnvironment.Theme["Page"].BaseColor;
         }
 
@@ -408,7 +409,7 @@ namespace DataWF.Gui
 
         private void OnMenuSortRemoveClick(object sender, EventArgs e)
         {
-            LayoutSort sort = ContextList.ListInfo.Sorters.Find("Name", CompareType.Equal, ContextColumn.Name);
+            LayoutSort sort = ContextList.ListInfo.Sorters.SearchOne("Name", CompareOperator.Equal, ContextColumn.Name);
             if (sort != null)
             {
                 ContextList.ListInfo.Sorters.Remove(sort);

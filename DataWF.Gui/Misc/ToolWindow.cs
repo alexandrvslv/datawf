@@ -1,9 +1,14 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Platform;
+using Avalonia.Input;
+using Avalonia.Layout;
+using Avalonia.Threading;
 
 namespace DataWF.Gui
 {
@@ -12,32 +17,33 @@ namespace DataWF.Gui
         protected System.Timers.Timer timerHide = new System.Timers.Timer();
         protected System.Timers.Timer timerStart = new System.Timers.Timer();
         protected ToolShowMode mode = ToolShowMode.Default;
-        protected Widget senderWidget;
-        protected WindowFrame senderWindow;
-        protected Widget target;
+        protected Visual senderControl;
+        protected Window senderWindow;
+        protected Visual target;
         protected ToolLabel toolLabel;
         protected ToolItem toolAccept;
         protected ToolItem toolClose;
-        protected VBox vbox;
+        protected StackPanel vbox;
         protected Toolsbar bar;
-        protected ScrollView panel;
+        protected ScrollViewer panel;
         private Point movePoint;
         private bool byDeactivate;
         private bool closeOnAccept = true;
         private bool closeOnClose = true;
-        private Widget tempSender;
-        private Point tempLocation;
-        private PointerButton moveButton;
-        private Point moveBounds;
-        private TaskCompletionSource<Command> token;
+        private Visual tempSender;
+        private PixelPoint tempLocation;
+        private MouseButton moveButton;
+        private PixelPoint moveBounds;
+        private TaskCompletionSource<DialogResult> token;
 
         public ToolWindow()// : base(PopupType.Menu)
         {
             var p = 6;
 
-            panel = new ScrollView
+            panel = new ScrollViewer
             {
-                Name = "panel"
+                Name = "panel",
+                VerticalAlignment = VerticalAlignment.Stretch,
             };
 
             toolLabel = new ToolLabel
@@ -66,33 +72,34 @@ namespace DataWF.Gui
                 toolClose,
                 toolAccept)
             { Name = "Bar" };
-            bar.ButtonPressed += OnContentMouseDown;
-            bar.ButtonReleased += OnContentMouseUp;
-            bar.MouseEntered += OnContentMouseEntered;
-            bar.MouseExited += OnContentMouseExited;
-            bar.MouseMoved += OnContentMouseMove;
-            //hbox.Margin = new WidgetSpacing(padding, 0, padding, padding);
+            bar.PointerPressed += OnContentMouseDown;
+            bar.PointerReleased += OnContentMouseUp;
+            bar.PointerEntered += OnContentMouseEntered;
+            bar.PointerExited += OnContentMouseExited;
+            bar.PointerMoved += OnContentMouseMove;
+            //hbox.Margin = new Thickness(padding, 0, padding, padding);
 
-            vbox = new VBox
+            vbox = new StackPanel
             {
-                //Margin = new WidgetSpacing(padding, padding, padding, padding),
+                //Margin = new Thickness(padding, padding, padding, padding),
+                Orientation = Orientation.Vertical,
                 Name = "tools"
             };
-            vbox.PackStart(panel, true, true);
-            vbox.PackStart(bar, false, false);
-            vbox.KeyPressed += OnContentKeyPress;
+            vbox.Children.Add(panel);
+            vbox.Children.Add(bar);
+            vbox.KeyDown += OnContentKeyPress;
 
 
-            BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor.WithIncreasedLight(0.1D);
+            Background = GuiEnvironment.Theme["Window"].BaseColor.WithIncreasedLight(0.1D);
             Content = vbox;
-            Decorated = false;
+            SystemDecorations = SystemDecorations.None;
             Name = "ToolWindow";
-            //Resizable = false;
-            Resizable = true;
-            Size = new Size(360, 320);
+            CanResize = true;
+            Width = 360;
+            Height = 320;
             ShowInTaskbar = false;
-            InitialLocation = WindowLocation.Manual;
-            Padding = new WidgetSpacing(p, p, p, p);
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Padding = new Thickness(p, p, p, p);
 
             timerHide.Interval = 8000;
             timerHide.Elapsed += TimerHideTick;
@@ -103,20 +110,20 @@ namespace DataWF.Gui
 
         public bool HeaderVisible
         {
-            get { return bar.Visible; }
+            get => bar.IsVisible;
             set
             {
-                if (bar.Visible != value)
+                if (bar.IsVisible != value)
                 {
-                    bar.Visible = value;
+                    bar.IsVisible = value;
                 }
             }
         }
 
         public ToolShowMode Mode
         {
-            get { return mode; }
-            set { mode = value; }
+            get => mode;
+            set => mode = value;
         }
 
         public ToolWindow OwnerToolForm
@@ -131,13 +138,13 @@ namespace DataWF.Gui
 
         public double TimerInterval
         {
-            get { return timerHide.Interval; }
-            set { timerHide.Interval = value; }
+            get => timerHide.Interval;
+            set => timerHide.Interval = value;
         }
 
-        public virtual Widget Target
+        public virtual IControl Target
         {
-            get { return target; }
+            get => target;
             set
             {
                 if (target == value)
@@ -148,14 +155,15 @@ namespace DataWF.Gui
                     localizeable.Localize();
                 }
                 panel.Content = target;
-                var size = target.Surface.GetPreferredSize();
-                if (size.Width > Size.Width || size.Height > Size.Height)
-                    Size = new Size(Math.Max(Size.Width, Math.Min(size.Width, 1024)) + 35,
-                                   Math.Max(Size.Height, Math.Min(size.Height, 768)) + 70);
+                var size = target.DesiredSize;
+                if (size.Width > Width || size.Height > Height)
+                    FrameSize = new Size(
+                        Math.Max(Width, Math.Min(size.Width, 1024)) + 35,
+                        Math.Max(Height, Math.Min(size.Height, 768)) + 70);
             }
         }
 
-        public Command DResult { get; set; }
+        public DialogResult? DResult { get; set; }
 
         public ToolLabel Label
         {
@@ -169,20 +177,20 @@ namespace DataWF.Gui
 
         public string ButtonAcceptText
         {
-            get { return toolAccept.Text; }
-            set { toolAccept.Text = value; }
+            get => toolAccept.Text;
+            set => toolAccept.Text = value;
         }
 
         public bool ButtonAcceptEnabled
         {
-            get { return toolAccept.Sensitive; }
-            set { toolAccept.Sensitive = value; }
+            get => toolAccept.Sensitive;
+            set => toolAccept.Sensitive = value;
         }
 
         public event EventHandler ButtonAcceptClick
         {
-            add { toolAccept.Click += value; }
-            remove { toolAccept.Click -= value; }
+            add => toolAccept.Click += value;
+            remove => toolAccept.Click -= value;
         }
 
         public ToolItem ButtonClose
@@ -192,57 +200,48 @@ namespace DataWF.Gui
 
         public string ButtonCloseText
         {
-            get { return toolClose.Text; }
-            set { toolClose.Text = value; }
+            get => toolClose.Text;
+            set => toolClose.Text = value;
         }
 
         public event EventHandler ButtonCloseClick
         {
-            add { toolClose.Click += value; }
-            remove { toolClose.Click -= value; }
+            add => toolClose.Click += value;
+            remove => toolClose.Click -= value;
         }
 
-        public Widget Sender
+        public IControl Sender
         {
-            get { return senderWidget; }
+            get => senderControl;
             set
             {
                 byDeactivate = false;
-                senderWidget = value;
-                Owner = senderWidget?.ParentWindow as WindowFrame;
+                senderControl = value;
+                Owner = senderControl?.VisualRoot as Window;
             }
         }
 
-        public WindowFrame Owner
-        {
-            get { return senderWindow; }
-            set
-            {
-                senderWindow = value;
-                TransientFor = value;
-            }
-        }
-
-        protected void OnSenderClick(object sender, ButtonEventArgs e)
+        protected void OnSenderClick(object sender, PointerEventArgs e)
         {
             Hide();
         }
 
-        protected void OnContentMouseDown(object sender, ButtonEventArgs e)
+        protected void OnContentMouseDown(object sender, PointerPressedEventArgs e)
         {
-            if (e.Button == PointerButton.Left)
+            var point = e.GetCurrentPoint(this);
+            if (point.Properties.IsLeftButtonPressed)
             {
                 movePoint = Desktop.MouseLocation;
-                moveButton = e.Button;
-                bar.Cursor = CursorType.Move;
+                moveButton = e.MouseButton;
+                bar.Cursor = new Cursor(StandardCursorType.DragMove);
             }
         }
 
-        protected void OnContentMouseUp(object sender, ButtonEventArgs e)
+        protected void OnContentMouseUp(object sender, PointerEventArgs e)
         {
             moveButton = 0;
             moveBounds = Location;
-            bar.Cursor = CursorType.Arrow;
+            bar.Cursor = new Cursor(StandardCursorType.Arrow);
         }
 
         private void OnContentMouseExited(object sender, EventArgs e)
@@ -254,7 +253,7 @@ namespace DataWF.Gui
             }
         }
 
-        private void OnContentMouseEntered(object sender, EventArgs e)
+        private void OnContentMouseEntered(object sender, PointerEventArgs e)
         {
             if (Mode == ToolShowMode.ToolTip)
             {
@@ -263,23 +262,25 @@ namespace DataWF.Gui
             }
         }
 
-        protected void OnContentMouseMove(object sender, MouseMovedEventArgs e)
+        protected void OnContentMouseMove(object sender, PointerEventArgs e)
         {
-            if (moveButton == PointerButton.Left)
+            if (moveButton == MouseButton.Left)
             {
                 var location = Desktop.MouseLocation;
                 var diff = new Point(location.X - movePoint.X, location.Y - movePoint.Y);
                 Debug.WriteLine($"Location Diff:{diff} Bound:{moveBounds}");
 
-                if (bar.Cursor == CursorType.Move)
+                if (bar.Cursor == StandardCursorType.Move)
                 {
-                    Location = new Point(moveBounds.X + diff.X, moveBounds.Y + diff.Y);
+                    Position = new PixelPoint(
+                        (int)(moveBounds.X + diff.X),
+                        (int)(moveBounds.Y + diff.Y));
                 }
 
             }
         }
 
-        public virtual void Show(Widget sender, Point location)
+        public virtual void Show(IControl sender, PixelPoint location)
         {
             DResult = null;
             if (mode == ToolShowMode.ToolTip)
@@ -294,10 +295,10 @@ namespace DataWF.Gui
                 }
             }
             Sender = sender;
-
-            CheckLocation(sender?.ConvertToScreenCoordinates(location) ?? location);
+            var locationPoint = location.ToPoint(1);
+            CheckLocation(sender?.PointToScreen(locationPoint) ?? locationPoint);
             base.Show();
-            CheckLocation(sender?.ConvertToScreenCoordinates(location) ?? location);
+            CheckLocation(sender?.PointToScreen(locationPoint) ?? locationPoint);
 
             //if (Owner != null) Owner.Show();
             if (mode == ToolShowMode.AutoHide || mode == ToolShowMode.ToolTip)
@@ -310,10 +311,10 @@ namespace DataWF.Gui
             byDeactivate = false;
         }
 
-        public async Task<Command> ShowAsync(Widget sender, Point location)
+        public async Task<DialogResult> ShowAsync(Control sender, PixelPoint location)
         {
             Show(sender, location);
-            token = new TaskCompletionSource<Command>();
+            token = new TaskCompletionSource<DialogResult>();
             return await token.Task;
         }
 
@@ -323,19 +324,19 @@ namespace DataWF.Gui
             Hide();
         }
 
-        private void CheckLocation(Point location)
+        private void CheckLocation(PixelPoint location)
         {
-            Rectangle screen = (TransientFor?.Screen ?? Desktop.PrimaryScreen).VisibleBounds;
+            Rect screen = (Owner?.Screen ?? Desktop.PrimaryScreen).VisibleBounds;
             if (location.Y + Height > screen.Height)
             {
-                location.Y -= (location.Y + Height) - screen.Height;
+                location = location.WithY(location.Y - ((location.Y + (int)Height) - (int)screen.Height));
                 //Left += 10;
             }
             if (location.X + Width > screen.Right)
             {
-                location.X -= (location.X + Width) - screen.Right;
+                location = location.WithX(location.X - ((location.X + (int)Width) - (int)screen.Right));
             }
-            Location = moveBounds = location;
+            Position = moveBounds = location;
             //moveBounds.Size = Size = Content.Surface.GetPreferredSize();
         }
 
@@ -349,9 +350,9 @@ namespace DataWF.Gui
             }
         }
 
-        protected override void OnHidden()
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
-            base.OnHidden();
+            base.OnDetachedFromVisualTree(e);
             var temp = Owner;
             Owner = null;
 
@@ -364,7 +365,7 @@ namespace DataWF.Gui
                     if (!byDeactivate)
                         ((ToolWindow)temp).byDeactivate = true;
                 }
-                // temp.Visible = true;
+                // temp.IsVisible = true;
             }
 
             if (timerHide.Enabled)
@@ -386,7 +387,7 @@ namespace DataWF.Gui
         protected void OnContentKeyPress(object sender, KeyEventArgs e)
         {
             //prevent alt from closing it and allow alt+menumonic to work
-            if (Keyboard.CurrentModifiers == ModifierKeys.Alt)
+            if (e.KeyModifiers == KeyModifiers.Alt)
                 e.Handled = true;
             if (e.Key == Key.Escape)
                 Hide();
@@ -394,7 +395,7 @@ namespace DataWF.Gui
 
         private void TimerHideTick(object sender, EventArgs e)
         {
-            Application.Invoke(() =>
+            _ = Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Hide();
                 timerHide.Stop();
@@ -403,7 +404,7 @@ namespace DataWF.Gui
 
         private void TimerStartTick(object sender, EventArgs e)
         {
-            Application.Invoke(() =>
+            _ = Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Show(tempSender, tempLocation);
                 timerStart.Stop();
@@ -412,19 +413,19 @@ namespace DataWF.Gui
 
         protected virtual void OnCloseClick(object sender, EventArgs e)
         {
-            DResult = Command.Cancel;
+            DResult = DialogResult.Cancel;
             if (CloseOnClose)
                 Hide();
         }
 
         protected virtual void OnAcceptClick(object sender, EventArgs e)
         {
-            DResult = Command.Ok;
+            DResult = DialogResult.OK;
             if (CloseOnAccept)
                 Hide();
         }
 
-        protected override void Dispose(bool disposing)
+        protected void Dispose(bool disposing)
         {
             if (disposing)
             {
@@ -437,12 +438,11 @@ namespace DataWF.Gui
                 if (timerStart != null)
                     timerStart.Dispose();
             }
-            base.Dispose(disposing);
         }
 
         public new string Title
         {
-            get { return base.Title; }
+            get => base.Title;
             set
             {
                 base.Title = value;
@@ -475,22 +475,20 @@ namespace DataWF.Gui
                 Target = list
             };
             window.Label.Text = label;
-            if (dispose)
-                window.Closed += (s, e) => window.Dispose();
 
             return window;
         }
 
         public bool CloseOnAccept
         {
-            get { return closeOnAccept; }
-            set { closeOnAccept = value; }
+            get => closeOnAccept;
+            set => closeOnAccept = value;
         }
 
         public bool CloseOnClose
         {
-            get { return closeOnClose; }
-            set { closeOnClose = value; }
+            get => closeOnClose;
+            set => closeOnClose = value;
         }
 
 

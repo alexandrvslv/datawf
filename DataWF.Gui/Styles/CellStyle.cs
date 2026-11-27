@@ -1,19 +1,22 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Xml.Serialization;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Styling;
 
 namespace DataWF.Gui
 {
-    public class CellStyle : IDisposable, INamed
+    public class CellStyle : Style, IDisposable, DataWF.Invokers.INamed
     {
-        protected Font font = null;
+        protected FontFamily font = FontFamily.Default;
         protected CellStyleBrush back = null;
         protected CellStyleBrush border = null;
         protected CellStyleBrush text = null;
         private Color baseColor;
-        private string fontName = "Tahoma, 9";
+        private string fontName = "Tahoma";
+        private Typeface typeface = Typeface.Default;
 
         public CellStyle()
         {
@@ -21,11 +24,8 @@ namespace DataWF.Gui
 
         public Color BaseColor
         {
-            get { return baseColor; }
-            set
-            {
-                baseColor = value;
-            }
+            get => baseColor;
+            set => baseColor = value;
         }
 
         public bool Alternate { get; set; } = true;
@@ -36,7 +36,7 @@ namespace DataWF.Gui
 
         public string FontName
         {
-            get { return fontName; }
+            get => fontName;
             set
             {
                 if (fontName != value)
@@ -48,9 +48,9 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore]
-        public Font Font
+        public FontFamily FontFamily
         {
-            get { return font ?? (font = Font.FromName(fontName)); }
+            get => font ??= FontFamily.Parse(fontName);
             set
             {
                 if (font != value)
@@ -61,43 +61,42 @@ namespace DataWF.Gui
             }
         }
 
+        [XmlIgnore]
+        public Typeface Typeface => new Typeface(FontFamily, FontStyle, FontWeight);
+
+        public FontStyle FontStyle { get; set; }
+        public FontWeight FontWeight { get; private set; }
+
         public int Round { get; set; }
 
         public double LineWidth { get; set; } = 1;
 
         public CellStyleBrush BackBrush
         {
-            get { return back ?? (back = new CellStyleBrush()); }
-            set { back = value; }
+            get => back ??= new CellStyleBrush();
+            set => back = value;
         }
 
         public CellStyleBrush BorderBrush
         {
-            get { return border ?? (border = new CellStyleBrush()); }
-            set { border = value; }
+            get => border ??= new CellStyleBrush();
+            set => border = value;
         }
 
         public CellStyleBrush FontBrush
         {
-            get
+            get => text ??= new CellStyleBrush()
             {
-                if (text == null)
-                {
-                    text = new CellStyleBrush()
-                    {
-                        Color = Colors.Black,
-                        ColorSelect = Colors.Black,
-                        ColorHover = Colors.Black,
-                        ColorPress = Colors.Black,
-                        ColorAlternate = Colors.Black,
-                    };
-                }
-                return text;
-            }
-            set { text = value; }
+                Color = Colors.Black,
+                ColorSelect = Colors.Black,
+                ColorHover = Colors.Black,
+                ColorPress = Colors.Black,
+                ColorAlternate = Colors.Black,
+            };
+            set => text = value;
         }
 
-        public Alignment Alignment { get; set; }
+        public TextAlignment TextAlignment { get; set; }
 
         public CellStyle Clone()
         {
@@ -105,7 +104,7 @@ namespace DataWF.Gui
             {
                 Name = Name,
                 Alternate = Alternate,
-                Alignment = Alignment,
+                TextAlignment = TextAlignment,
                 FontName = FontName,
                 BaseColor = BaseColor,
                 Round = Round

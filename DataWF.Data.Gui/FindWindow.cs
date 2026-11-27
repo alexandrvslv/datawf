@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using DataWF.Gui;
-using DataWF.Common;
+using DataWF;
 using Mono.TextEditor;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Data.Gui
 {
@@ -96,10 +96,10 @@ namespace DataWF.Data.Gui
 
         private void FindComplete(IAsyncResult result)
         {
-            Application.Invoke(() =>
+            _ = Dispatcher.UIThread.InvokeAsync(() =>
             {
                 toolLabel.Text = "found (" + list.Count + ")";
-                editor.QueueDraw();
+                editor.InvalidateVisual();
             });
         }
 
@@ -122,10 +122,10 @@ namespace DataWF.Data.Gui
                 if (editor == value)
                     return;
                 if (editor != null)
-                    editor.TextArea.KeyPressed -= QueryTextKeyDown;
+                    editor.TextArea.KeyDown -= QueryTextKeyDown;
                 editor = value;
                 if (editor != null)
-                    editor.TextArea.KeyPressed += QueryTextKeyDown;
+                    editor.TextArea.KeyDown += QueryTextKeyDown;
             }
         }
 
@@ -134,7 +134,7 @@ namespace DataWF.Data.Gui
             if ((e.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.F)
             {
                 //if (this.Parent != editor)
-                //    editor.AddChild(this);//TextArea.
+                //    editor.Children.Add(this);//TextArea.
                 this.Visible = true;
             }
             if ((e.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.Q)

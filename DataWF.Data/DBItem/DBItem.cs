@@ -17,8 +17,13 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using DataWF.Access;
+using DataWF.Collections.Pulls;
+using DataWF.Collections.Query;
+using DataWF.Invokers;
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -30,37 +35,36 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-
-    [DataContract]
-    //[JsonConverter(typeof(DBItemJsonConverter))]
-    public class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IDBTableContent, IPullHandler
+    [ElementSerializer(typeof(DBItemSerializer))]
+    [Invoker]
+    public partial class DBItem : ICloneable, IComparable<DBItem>, IComparable, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IPullHandler, IDBTableContent
     {
-        public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
+        public static readonly DBItem EmptyItem = new DBItem((IDBTable)null) { cacheToString = "Loading" };
 
-        public static DBTable<T> GetTable<T>() where T : DBItem, new()
-        {
-            return DBTable.GetTable<T>();
-        }
-
-        public object Tag;
-        internal int handler = -1;
-        internal short block = -1;
-        internal short blockIndex = -1;
+        internal PullHandler? oldHandler;
+        internal PullHandler handler;
+        internal int rowId;
         internal string cacheToString = string.Empty;
         protected DBTable table;
         protected DBItemState state = DBItemState.New;
         protected internal DBUpdateState update = DBUpdateState.Insert;
         private AccessValue access;
-        protected object saveLock = new object();
 
-        public DBItem()
+        public DBItem(IDBSchema schema)
         {
-            var table = DBTable.GetTable(GetType());
+            var table = schema.GetTable(GetType());
+            if (table != null)
+                Build(table);
+        }
+
+        public DBItem(IDBTable table)
+        {
             if (table != null)
                 Build(table);
         }
@@ -69,16 +73,30 @@ namespace DataWF.Data
         public virtual string AccessorName => ToString();
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public bool Attached => (state & DBItemState.Attached) == DBItemState.Attached;
+        public IDBProvider Provider => (IDBProvider)table.Provider;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public int Handler { get => handler; set => handler = value; }
+        public bool Loading
+        {
+            get => (state & DBItemState.Load) == DBItemState.Load;
+            set
+            {
+                if (Loading != value)
+                {
+                    state = value ? state | DBItemState.Load : state & ~DBItemState.Load;
+                    //OnPropertyChanged<bool>();
+                }
+            }
+        }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public short Block { get => block; set => block = value; }
+        public bool Attached
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (state & DBItemState.Attached) == DBItemState.Attached;
+        }
 
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public short BlockIndex { get => blockIndex; set => blockIndex = value; }
+        public ref readonly PullHandler GetRefHandler() => ref handler;
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual string ParametersCategory
@@ -90,7 +108,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool IsChanged
         {
-            get { return UpdateState != DBUpdateState.Default && (UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit; }
+            get => UpdateState != DBUpdateState.Default && (UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit;
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -102,12 +120,12 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public byte[] Image
         {
-            get => this[Table.ImageKey] as byte[];
+            get => Table.ImageKey == null ? null : GetValue(Table.ImageKey);
             set
             {
                 if (Table.ImageKey == null)
                     return;
-                this[Table.ImageKey] = value;
+                SetValue(value, Table.ImageKey);
             }
         }
 
@@ -115,56 +133,57 @@ namespace DataWF.Data
         public object PrimaryId
         {
             get => Table.PrimaryKey?.GetValue(this);
-            set => SetValue(Table.PrimaryKey.ParseValue(value), Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public string PrimaryCode
         {
-            get => Table.CodeKey?.GetValue<string>(this);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
         [Browsable(false), DefaultValue(0)]
-        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]// | DBColumnKeys.Indexing
-        public virtual int? ItemType
+        [Column("item_type", GroupName = "system", Keys = ColumnFlags.ItemType, Order = 0)]// | ColumnFlags.Indexing
+        public virtual int ItemType
         {
-            get => Table.ItemTypeKey?.GetValueNullable<int>(this);
-            set => SetValueNullable(value, Table.ItemTypeKey);
+            get => GetValue<int>(Table.ItemTypeKey);
+            set => SetValue(value, Table.ItemTypeKey);
         }
 
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        DBStatus IStatusable.Status
+        [DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = ColumnFlags.State | ColumnFlags.Indexing, Order = 1000)]
+        public DBStatus Status
         {
-            get => (DBStatus)Status;
-            set => Status = value;
+            get => GetValue(Table.StatusKey);
+            set => SetValue(value, Table.StatusKey);
         }
 
-        [DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.Indexing, Order = 99)]
-        public DBStatus? Status
+        [Column("date_create", GroupName = "system", Keys = ColumnFlags.Date | ColumnFlags.System | ColumnFlags.UtcDate, Order = 1001)]
+        public virtual DateTime DateCreate
         {
-            get => Table.StatusKey?.GetValueNullable<DBStatus>(this) ?? DBStatus.Empty;
-            set => SetValueNullable(value, Table.StatusKey);
-        }
-
-        [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 100)]
-        public virtual DateTime? DateCreate
-        {
-            get => Table.DateKey?.GetValueNullable<DateTime>(this);
-            set => SetValueNullable(value, Table.DateKey);
+            get => GetValue(Table.DateCreateKey);
+            set => SetValue(value, Table.DateCreateKey);
         }
 
         [Browsable(false)]
-        [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System | DBColumnKeys.UtcDate, Order = 101)]
-        public DateTime? Stamp
+        [Column("date_update", GroupName = "system", Keys = ColumnFlags.Stamp | ColumnFlags.NoLog | ColumnFlags.System | ColumnFlags.UtcDate, Order = 2)]
+        public DateTime Stamp
         {
-            get => Table.StampKey?.GetValueNullable<DateTime>(this);
-            set => SetValueNullable(value, Table.StampKey);
+            get => GetValue(Table.StampKey);
+            set => SetValue(value, Table.StampKey);
+        }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        [Column("date_replicate", GroupName = "system", Keys = ColumnFlags.ReplicateStamp | ColumnFlags.NoLog | ColumnFlags.NoReplicate | ColumnFlags.System | ColumnFlags.UtcDate, Order = 1003)]
+        public DateTime? ReplicateStamp
+        {
+            get => GetValue(Table.ReplicateStampKey);
+            set => SetValue(value, Table.ReplicateStampKey);
         }
 
         IAccessValue IAccessable.Access { get => Access; set => Access = (AccessValue)value; }
 
-        [Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
+        [Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = ColumnFlags.Access | ColumnFlags.System, Order = 1004)]
         public virtual AccessValue Access
         {
             get => InternalAccess ?? Table.Access;
@@ -189,23 +208,29 @@ namespace DataWF.Data
         //}
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual DBTable Table
+        public virtual IDBSchema Schema
+        {
+            get => Table.Schema;
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public IDBTable Table
         {
             get => table;
             set
             {
                 if (table != value)
                 {
-                    table = value is IDBVirtualTable virtualTable ? virtualTable.BaseTable : value;
-                    handler = table.GetNextHandler(out block, out blockIndex);
+                    table = (DBTable)value.GetVirtualTable(GetType());
+                    handler = table.GetNextHandler(out rowId);
                 }
             }
         }
 
         public object this[int columnIndex]
         {
-            get => this[Table.Columns[columnIndex]];
-            set => this[Table.Columns[columnIndex]] = value;
+            get => GetValue(Table.Columns[columnIndex]);
+            set => SetValue(value, Table.Columns[columnIndex]);
         }
 
         public object this[string code]
@@ -218,7 +243,7 @@ namespace DataWF.Data
                 int pi = 0, i = code.IndexOf('.');
                 while (i > 0)
                 {
-                    var scolumn = row.Table.ParseColumnProperty(code.Substring(pi, i - pi));
+                    var scolumn = row.Table.GetColumnOrProperty(code.Substring(pi, i - pi));
                     if (scolumn == null)
                         return null;
                     var item = row.GetReference(scolumn);
@@ -228,7 +253,7 @@ namespace DataWF.Data
                     pi = i + 1;
                     i = code.IndexOf('.', pi);
                 }
-                return row[row.Table.ParseColumnProperty(code.Substring(pi))];
+                return row.GetValue(row.Table.GetColumnOrProperty(code.Substring(pi)));
             }
             set
             {
@@ -236,14 +261,14 @@ namespace DataWF.Data
                 int pi = 0, i = code.IndexOf('.');
                 while (i > 0)
                 {
-                    var item = row.GetReference(row.Table.ParseColumnProperty(code.Substring(pi, i - pi)));
+                    var item = row.GetReference(row.Table.GetColumnOrProperty(code.Substring(pi, i - pi)));
                     if (item == null)
                         return;
                     row = item;
                     pi = i + 1;
                     i = code.IndexOf('.', pi);
                 }
-                row[row.Table.ParseColumnProperty(code.Substring(pi))] = value;
+                row.SetValue(value, row.Table.GetColumnOrProperty(code.Substring(pi)));
             }
         }
 
@@ -263,9 +288,7 @@ namespace DataWF.Data
                 if (column == null)
                     return;
 
-                SetValue(column.ParseValue(value),
-                         column,
-                         DBSetValueMode.Default);
+                SetValue(value, column, DBSetValueMode.Default);
             }
         }
 
@@ -291,7 +314,7 @@ namespace DataWF.Data
                 if (update != value)
                 {
                     update = value;
-                    OnPropertyChanged(nameof(UpdateState));
+                    OnPropertyChanged<DBUpdateState>();
                     //var arg = new DBItemEventArgs(this) { State = update };
                     //DBService.OnStateEdited(arg);
                 }
@@ -307,35 +330,43 @@ namespace DataWF.Data
                 if (Check != value)
                 {
                     state = value ? state | DBItemState.Check : state & ~DBItemState.Check;
-                    OnPropertyChanged();
+                    OnPropertyChanged<bool>();
                 }
             }
         }
 
         public bool GetOld(DBColumn column, out object value)
         {
-            return column.GetOld(handler, out value);
+            return column.GetOld(this, out value);
         }
 
-        public void RemoveOld(DBColumn column)
+        public bool GetOld<T>(DBColumn<T> column, out T value)
         {
-            column.RemoveOld(handler);
-        }
-
-        public void SetOld(DBColumn column, object value)
-        {
-            column.SetOld(handler, value);
+            return column.GetOld(this, out value);
         }
 
         protected object GetPropertyValue(DBColumn column)
         {
-            return column.PropertyInvoker != null ? column.PropertyInvoker.GetValue(this) : GetValue(column);
+            return column.Invoker != null ? column.Invoker.GetValue(this) : GetValue(column);
+        }
+
+        protected T GetPropertyValue<T>(DBColumn<T> column)
+        {
+            return column.Invoker is IValuedInvoker<T> valueInvoker ? valueInvoker.GetValue(this) : GetValue(column);
         }
 
         protected void SetPropertyValue(object value, DBColumn column, DBSetValueMode mode = DBSetValueMode.Default)
         {
-            if (column.PropertyInvoker != null)
-                column.PropertyInvoker.SetValue(this, value);
+            if (column.Invoker != null)
+                column.Invoker.SetValue(this, value);
+            else
+                SetValue(value, column, mode);
+        }
+
+        protected void SetPropertyValue<T>(T value, DBColumn<T> column, DBSetValueMode mode = DBSetValueMode.Default)
+        {
+            if (column.Invoker is IValuedInvoker<T> valueInvoker)
+                valueInvoker.SetValue(this, value);
             else
                 SetValue(value, column, mode);
         }
@@ -347,42 +378,63 @@ namespace DataWF.Data
 
         public T GetValue<T>(DBColumn column)
         {
-            return column.GetValue<T>(this);
+            if (column is DBColumn<T> typedColumn)
+                return typedColumn.GetValue(this);
+            throw new Exception($"Wrong Type {typeof(T)} for column {column}");
         }
 
-        public T? GetValueNullable<T>(DBColumn column) where T : struct
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T GetValue<T>(DBColumn<T> column)
         {
-            return column.GetValueNullable<T>(this);
+            return column.GetValue(this);
         }
 
-        public T GetProperty<T>([CallerMemberName] string property = null)
+        public T GetValue<T>([CallerMemberName] string property = null)
         {
-            return GetValue<T>(Table.Columns.GetByProperty(property));
+            return GetValue<T>((DBColumn<T>)Table.Columns.GetByProperty(property));
         }
 
-        private void RefreshOld(DBColumn column, object value, object field)
+        protected virtual internal void ClearBackup(bool accept)
         {
-            if (GetOld(column, out object old))
+            if (oldHandler is PullHandler oldHandlerValue)
             {
-                if (DBService.Equal(old, value))
+                if (accept)
                 {
-                    RemoveOld(column);
+                    FreeHandler(oldHandlerValue);
                 }
-            }
-            else
-            {
-                SetOld(column, field);
+                else
+                {
+                    foreach (var column in GetChangeKeys())
+                    {
+                        column.Reject(this);
+                    }
+                    var newHandler = handler;
+                    handler = oldHandlerValue;
+                    FreeHandler(newHandler);
+                }
+                oldHandler = null;
             }
         }
 
-        private void CheckState(DBTransaction transaction)
+        protected virtual internal void Backup()
+        {
+            if (oldHandler == null && (UpdateState & DBUpdateState.Insert) == 0)
+            {
+                var newHandler = table.GetNextHandler(out _);
+                CopyTo(newHandler);
+                //swap
+                oldHandler = handler;
+                handler = newHandler;
+            }
+        }
+
+        internal void CheckState()
         {
             var temp = UpdateState;
             if (temp == DBUpdateState.Default || (temp & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
                 temp &= ~DBUpdateState.Commit;
                 temp |= DBUpdateState.Update;
-                transaction?.AddItem(this);
             }
             else if (temp == DBUpdateState.Update && !GetIsChanged())
             {
@@ -391,168 +443,66 @@ namespace DataWF.Data
             UpdateState = temp;
             //DBService.OnEdited(args);
         }
-        public void SetProperty<T>(T value, [CallerMemberName] string property = null)
+
+        public void SetValue<T>(T value, [CallerMemberName] string property = null)
         {
-            SetValue<T>(value, Table.Columns.GetByProperty(property));
+            SetValue<T>(value, (DBColumn<T>)Table.Columns.GetByProperty(property));
         }
 
-        public void SetPropertyNullable<T>(T? value, [CallerMemberName] string property = null) where T : struct
+        public void SetValue<T>(T value, DBColumn column, DBSetValueMode mode = DBSetValueMode.Default)
         {
-            SetValueNullable<T>(value, Table.Columns.GetByProperty(property));
-        }
-
-        public void SetPropertyClass<T>(T value, [CallerMemberName] string property = null) where T : class
-        {
-            SetValueClass<T>(value, Table.Columns.GetByProperty(property));
-        }
-
-        public void SetValue<T>(T value, DBColumn column)
-        {
-            SetValue<T>(value, column, DBSetValueMode.Default);
-        }
-
-        public void SetValueClass<T>(T value, DBColumn column) where T : class
-        {
-            SetValueClass<T>(value, column, DBSetValueMode.Default);
-        }
-
-        public void SetValueNullable<T>(T? value, DBColumn column) where T : struct
-        {
-            SetValueNullable<T>(value, column, DBSetValueMode.Default);
-        }
-
-        public void SetValue(object value, DBColumn column)
-        {
-            SetValue(value, column, DBSetValueMode.Default);
-        }
-
-        public void SetValue<T>(T value, DBColumn column, DBSetValueMode mode)
-        {
-            if (mode == DBSetValueMode.Loading && !Attached)
+            if (column is DBColumn<T> typedColumn)
             {
-                column.SetValue<T>(this, value);
+                SetValue(value, typedColumn, mode);
+            }
+            else throw new Exception($"Wrong Type {typeof(T)} for column {column}");
+        }
+
+        public void SetValue<T>(T value, DBColumn<T> column, DBSetValueMode mode = DBSetValueMode.Default)
+        {
+            column.SetValue(this, value, mode);
+        }
+
+        public void SetValue(object value, DBColumn column, DBSetValueMode mode = DBSetValueMode.Default)
+        {
+            column.SetValue(this, value, mode);
+        }
+
+        public void SetValues(object[] values, DBSetValueMode mode = DBSetValueMode.Loading)
+        {
+            if (values == null)
                 return;
-            }
-            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
-            var oldValue = column.GetValue<T>(this);
 
-            if (DBService.Equal<T>(oldValue, value))
+            for (int i = 0; i < values.Length; i++)
             {
-                return;
-            }
-            if (check)
-            {
-                RefreshOld(column, value, oldValue);
-            }
+                var column = Table.Columns[i];
 
-            OnPropertyChanging<T>(column.Property ?? column.Name, column, oldValue);
-
-            column.SetValue<T>(this, value);
-
-            OnPropertyChanged<T>(column.Property ?? column.Name, column, value);
-
-            if (check)
-            {
-                CheckState(null);
+                if (column.ColumnType == DBColumnTypes.Default || column.ColumnType == DBColumnTypes.Query)
+                {
+                    SetValue(values[i], column, mode);
+                }
             }
         }
 
-        public void SetValueClass<T>(T value, DBColumn column, DBSetValueMode mode) where T : class
+        public void SetValues(Dictionary<string, object> values, DBSetValueMode mode = DBSetValueMode.Loading)
         {
-            if (mode == DBSetValueMode.Loading && !Attached)
-            {
-                column.SetValue<T>(this, value);
+            if (values == null)
                 return;
-            }
-            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
-            var oldValue = column.GetValue<T>(this);
 
-            if (DBService.EqualClass<T>(oldValue, value))
+            foreach (var kvp in values)
             {
-                return;
-            }
-            if (check)
-            {
-                RefreshOld(column, value, oldValue);
-            }
+                var column = Table.GetColumn(kvp.Key);
 
-            OnPropertyChanging<T>(column.Property ?? column.Name, column, oldValue);
-
-            column.SetValue<T>(this, value);
-
-            OnPropertyChanged<T>(column.Property ?? column.Name, column, value);
-
-            if (check)
-            {
-                CheckState(null);
-            }
-        }
-
-        public void SetValueNullable<T>(T? value, DBColumn column, DBSetValueMode mode) where T : struct
-        {
-            if (mode == DBSetValueMode.Loading && !Attached)
-            {
-                column.SetValueNullable<T>(this, value);
-                return;
-            }
-            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
-            var oldValue = column.GetValueNullable<T>(this);
-
-            if (Nullable.Equals<T>(oldValue, value))
-            {
-                return;
-            }
-            if (check)
-            {
-                RefreshOld(column, value, oldValue);
-            }
-
-            OnPropertyChanging<T?>(column.Property ?? column.Name, column, oldValue);
-
-            column.SetValueNullable<T>(this, value);
-
-            OnPropertyChanged<T?>(column.Property ?? column.Name, column, value);
-
-            if (check)
-            {
-                CheckState(null);
-            }
-        }
-
-        public void SetValue(object value, DBColumn column, DBSetValueMode mode)
-        {
-            if (mode == DBSetValueMode.Loading && !Attached)
-            {
-                column.SetValue(this, value);
-                return;
-            }
-            var check = mode == DBSetValueMode.Default && column.ColumnType == DBColumnTypes.Default;
-            var oldValue = column.GetValue(this);
-
-            if (DBService.Equal(oldValue, value))
-            {
-                return;
-            }
-            if (check)
-            {
-                RefreshOld(column, value, oldValue);
-            }
-
-            OnPropertyChanging(column.Property ?? column.Name, column, oldValue);
-
-            column.SetValue(this, value);
-
-            OnPropertyChanged(column.Property ?? column.Name, column, value);
-
-            if (check)
-            {
-                CheckState(null);
+                if (column != null)
+                {
+                    SetValue(kvp.Value, column, mode);
+                }
             }
         }
 
         public bool IsChangedKey(DBColumn column)
         {
-            return column.GetOld(handler, out object value);
+            return column.IsChanged(this);
         }
 
         public virtual bool GetIsChanged()
@@ -564,49 +514,10 @@ namespace DataWF.Data
         {
             foreach (var column in Table.Columns)
             {
-                if (column.GetOld(handler, out object value))
+                if (column.IsChanged(this))
                 {
                     yield return column;
                 }
-            }
-        }
-
-        public void SetValues(object[] values)
-        {
-            if (values == null)
-                return;
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                var Column = Table.Columns[i];
-
-                if (Column.ColumnType == DBColumnTypes.Default || Column.ColumnType == DBColumnTypes.Query)
-                {
-                    SetValue(values[i], Column, DBSetValueMode.Loading);
-                }
-            }
-        }
-
-        public void SetValues(Dictionary<string, object> values, DBTable Table)
-        {
-            if (values == null)
-                return;
-
-            foreach (var kvp in values)
-            {
-                var column = Table.ParseColumn(kvp.Key);
-                if (column != null)
-                {
-                    SetValue(kvp.Value, column, DBSetValueMode.Loading);
-                }
-            }
-        }
-
-        protected virtual internal void RemoveOld()
-        {
-            foreach (DBColumn column in Table.Columns)
-            {
-                RemoveOld(column);
             }
         }
 
@@ -625,50 +536,24 @@ namespace DataWF.Data
             }
             return row.GetReference(row.Table.Columns[code.Substring(pi)], param);
         }
-
         public DBItem GetReference(DBColumn column, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
         {
-            if (column == null)
-                return null;
-            if (!column.IsReference)
-                return null;
-            if (column.IsPrimaryKey)
-                return this;
-            object value = GetPropertyValue(column);
-            if (value == null)
-                return null;
-            return column.ReferenceTable.LoadItemById(value, param);
+            return GetReference<DBItem>(column, param);
         }
 
-        public DBItem GetReference(string code, ref DBItem item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
+        public R GetReference<R>(DBColumn column, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where R : DBItem
         {
-            if (item != null)
-                return item;
-            return item = GetReference(code, param);
+            return column?.GetReference<R>(this, param);
         }
 
-        public DBItem GetReference(DBColumn column, ref DBItem item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
+        public R GetReference<R>(DBColumn column, ref R item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where R : DBItem
         {
-            object value = GetPropertyValue(column);
-            if (value != null && value.Equals(item?.PrimaryId))
-                return item;
-
-            return item = value == null ? null : column.ReferenceTable.LoadItemById(value, param);
+            return column?.GetReference<R>(this, ref item, param);
         }
 
-        public T GetReference<T>(DBColumn column, ref T item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBItem
+        public R GetReference<R>(ref R item, [CallerMemberName] string property = null) where R : DBItem
         {
-            object value = GetPropertyValue(column);
-            if (value != null && value.Equals(item?.PrimaryId))
-                return item;
-
-            return item = value == null ? (T)null : (T)column.ReferenceTable.LoadItemById(value, param);
-        }
-
-        public T GetPropertyReference<T>(ref T item, [CallerMemberName] string property = null) where T : DBItem
-        {
-            var column = Table.Columns.GetByReferenceProperty(property);
-            return GetReference(column, ref item);
+            return GetReference(Table.Columns.GetByReferenceProperty(property), ref item);
         }
 
         //public T GetReference<T>(string code, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBItem, new()
@@ -687,57 +572,25 @@ namespace DataWF.Data
         //    return row.GetReference<T>(row.Table.Columns[code.Substring(pi)], param);
         //}
 
-        public T GetReference<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBItem
-        {
-            return GetReference(column, param) is T typedValue ? typedValue : null;
-        }
-
-        public DBItem SetReference(DBItem value, string column)
-        {
-            return SetReference(value, Table.Columns[column]);
-        }
-
-        public T SetPropertyReference<T>(T value, [CallerMemberName] string property = null) where T : DBItem
+        public T SetReference<T>(T value, [CallerMemberName] string property = null) where T : DBItem
         {
             return SetReference(value, Table.Columns.GetByReferenceProperty(property));
         }
 
+        public DBItem SetReference(DBItem value, string column)
+        {
+            return SetReference<DBItem>(value, Table.Columns[column]);
+        }
+
         public DBItem SetReference(DBItem value, DBColumn column)
         {
-            SetPropertyValue(value?.PrimaryId, column);
+            return SetReference<DBItem>(value, column);
+        }
+
+        public R SetReference<R>(R value, DBColumn column) where R : DBItem
+        {
+            column.SetReference<R>(this, value);
             return value;
-        }
-
-        public T SetReference<T>(T value, DBColumn column) where T : DBItem
-        {
-            SetPropertyValue(value?.PrimaryId, column);
-            return value;
-        }
-
-        public bool GetBool(DBColumn column)
-        {
-            if (column == null || (column.Keys & DBColumnKeys.Boolean) != DBColumnKeys.Boolean)
-                return false;
-
-            return this[column].ToString() == column.BoolTrue;
-        }
-
-        public bool GetBool(string ColumnCode)
-        {
-            return GetBool(Table.Columns[ColumnCode]);
-        }
-
-        public void SetBool(DBColumn Column, bool value)
-        {
-            if (Column == null || (Column.Keys & DBColumnKeys.Boolean) != DBColumnKeys.Boolean)
-                return;
-
-            this[Column] = value ? Column.BoolTrue : Column.BoolFalse;
-        }
-
-        public void SetBool(string ColumnCode, bool value)
-        {
-            SetBool(Table.Columns[ColumnCode], value);
         }
 
         public Task Delete(DBTransaction transaction)
@@ -759,7 +612,7 @@ namespace DataWF.Data
             }
         }
 
-        public void SetReferencing<T>(IEnumerable<T> items, DBColumn column) where T : DBItem, new()
+        public void SetReferencing<T>(IEnumerable<T> items, DBColumn column) where T : DBItem
         {
             if (items == null)
             {
@@ -774,84 +627,61 @@ namespace DataWF.Data
             }
         }
 
-        public void SetReferencing<T>(IEnumerable<T> items, string property) where T : DBItem, new()
+        public void SetReferencing<T>(IEnumerable<T> items, string property) where T : DBItem
         {
-            var table = DBTable.GetTable<T>();
-            SetReferencing<T>(items, table.ParseProperty(property));
+            var table = Schema.GetTable<T>();
+            SetReferencing<T>(items, table.GetColumnByProperty(property));
         }
 
-        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, QQuery query, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem
         {
-            //query.TypeFilter = typeof(T);
-            if ((param & DBLoadParam.Load) == DBLoadParam.Load)
-            {
-                table.Load(query, param);
-            }
-            return table.Select(query);
+            var table = Schema.GetTable<T>();
+            return GetReferencing<T>(table, table.GetColumnByProperty(property), param);
         }
 
-        public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(DBColumn column, DBLoadParam param) where T : DBItem
         {
-            var table = DBTable.GetTable<T>();
-            return GetReferencing<T>(table, table.ParseProperty(property), param);
+            return GetReferencing(column.Table.GetVirtualTable<T>(), column, param);
         }
 
-        public IEnumerable<T> GetReferencing<T>(DBColumn column, DBLoadParam param) where T : DBItem, new()
-        {
-            return GetReferencing<T>(GetTable<T>(), column, param);
-        }
-
-        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, DBColumn column, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, DBColumn column, DBLoadParam param) where T : DBItem
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                using (var query = new QQuery("", table))
-                {
-                    query.BuildParam(column, CompareType.Equal, PrimaryId);
-                    return GetReferencing<T>(table, query, param);
-                }
+                return column.Load<T>(this, param);
             }
             else
             {
-                return table.Select(column, CompareType.Equal, PrimaryId);
+                return column.Select<T>(CompareOperator.Equal, PrimaryId);
             }
         }
 
-        public IEnumerable<T> GetReferencing<T>(string tableCode, string columnCode, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(string tableCode, string columnCode, DBLoadParam param) where T : DBItem
         {
-            var table = (DBTable<T>)Table.Schema.ParseTable(tableCode);
-            return table != null ? GetReferencing<T>(table, table.ParseColumn(columnCode), param) : null;
+            var table = (DBTable<T>)Schema.GetTable(tableCode);
+            return table != null ? GetReferencing<T>(table, table.GetColumn(columnCode), param) : null;
         }
 
-        public IEnumerable<T> GetReferencing<T>(DBForeignKey relation, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(DBForeignKey relation, DBLoadParam param) where T : DBItem
         {
             return GetReferencing<T>((DBTable<T>)relation.Table, relation.Column, param);
         }
 
-        public IEnumerable<DBItem> GetReferencing(DBTable table, DBColumn column, DBLoadParam param)
+        public IEnumerable<DBItem> GetReferencing(DBColumn column, DBLoadParam param)
+        {
+            return GetReferencing(column.Table, column, param);
+        }
+
+        public IEnumerable<DBItem> GetReferencing(IDBTable table, DBColumn column, DBLoadParam param)
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                using (var query = new QQuery("", table))
-                {
-                    query.BuildParam(column, CompareType.Equal, PrimaryId);
-                    return GetReferencing(table, query, param);
-                }
+                return column.Load(this, param);
             }
             else
             {
-                return table.SelectItems(column, CompareType.Equal, PrimaryId);
+                return column.Select<DBItem>(CompareOperator.Equal, PrimaryId);
             }
-        }
-
-        public IEnumerable<DBItem> GetReferencing(DBTable table, QQuery query, DBLoadParam param)
-        {
-            if ((param & DBLoadParam.Load) == DBLoadParam.Load)
-            {
-                return table.LoadItems(query);
-            }
-
-            return table.SelectItems(query);
         }
 
         public IEnumerable<DBItem> GetReferencing(DBForeignKey relation, DBLoadParam param)
@@ -868,7 +698,7 @@ namespace DataWF.Data
 
         public string Format(DBColumn column)
         {
-            return column.FormatValue(GetValue(column));
+            return column.FormatDisplay(this);
         }
 
         public string Format(string code)
@@ -876,7 +706,7 @@ namespace DataWF.Data
             return Format(Table.Columns[code]);
         }
 
-        public void Build(DBTable table, bool setDefauilts = true, int itemType = -1)
+        public void Build(IDBTable table, bool setDefauilts = true, int typeId = -1)
         {
             Table = table;
             if (setDefauilts)
@@ -885,7 +715,7 @@ namespace DataWF.Data
             }
             if (Table.ItemTypeKey != null)
             {
-                SetValueNullable<int>(itemType < 0 ? table.GetTypeIndex(GetType()) : itemType, table.ItemTypeKey, DBSetValueMode.Loading);
+                SetValue(typeId < 0 ? table.GetTypeIndex(GetType()) : typeId, table.ItemTypeKey, DBSetValueMode.Loading);
             }
         }
 
@@ -894,7 +724,7 @@ namespace DataWF.Data
             foreach (DBColumn column in Table.Columns)
             {
                 if (!string.IsNullOrEmpty(column.DefaultValue))
-                    SetValue(column.ParseValue(column.DefaultValue), column, DBSetValueMode.Loading);
+                    SetValue((object)column.DefaultValue, column, DBSetValueMode.Loading);
             }
         }
 
@@ -902,7 +732,7 @@ namespace DataWF.Data
         {
             foreach (LocaleString c in value)
             {
-                SetName(c.Culture, c.Value, @group);
+                SetName(c.Value, c.Culture, @group);
             }
         }
 
@@ -919,7 +749,7 @@ namespace DataWF.Data
             }
             else
             {
-                var temp = cultures.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                var temp = cultures.Split(Helper.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
                 foreach (string s in temp)
                 {
                     string ts = s.Trim();
@@ -933,23 +763,23 @@ namespace DataWF.Data
 
         public string GetName([CallerMemberName] string @group = null)
         {
-            return GetValue<string>(Table.GetNameKey(@group));
+            return GetValue<string>(Table.GetCultureColumn(@group));
         }
 
         public void SetName(string value, [CallerMemberName] string @group = null)
         {
-            SetValue(value, Table.GetNameKey(@group));
+            SetValue(value, Table.GetCultureColumn(@group));
         }
 
-        public void SetName(CultureInfo culture, string value, [CallerMemberName] string @group = null)
+        public void SetName(string value, CultureInfo culture, [CallerMemberName] string @group = null)
         {
             if (culture == null)
                 return;
-            foreach (var column in Table.Columns.GetByGroup(@group))
+            foreach (DBColumn<string> column in Table.Columns.GetByGroup(@group))
             {
                 if (column.Culture.ThreeLetterISOLanguageName == culture.ThreeLetterISOLanguageName)
                 {
-                    this[column] = value;
+                    SetValue(value, column);
                     break;
                 }
             }
@@ -957,18 +787,8 @@ namespace DataWF.Data
 
         private AccessValue ReadAccess()
         {
-            var accessData = Table.AccessKey != null ? GetValue<byte[]>(Table.AccessKey) : null;
-            return accessData != null ? new AccessValue(accessData) { Owner = this } : null;
-        }
-
-        public void Accept(string column)
-        {
-            Accept(Table.Columns[column]);
-        }
-
-        public void Accept(DBColumn column)
-        {
-            RemoveOld(column);
+            var accessData = Table.AccessKey != null ? GetValue(Table.AccessKey) : null;
+            return accessData != null ? new AccessValue(accessData, table.Provider) { Owner = this } : null;
         }
 
         public virtual void Accept(IUserIdentity user)
@@ -986,7 +806,7 @@ namespace DataWF.Data
                     Table.Accept(this);
                     UpdateState = DBUpdateState.Default;
                 }
-                RemoveOld();
+                ClearBackup(true);
             }
             OnAccepted(user, oldState);
         }
@@ -1003,13 +823,7 @@ namespace DataWF.Data
 
         public void Reject(DBColumn column)
         {
-            if (GetOld(column, out object value))
-                SetValue(value, column);
-        }
-
-        public bool Changed(DBColumn column)
-        {
-            return column != null ? GetOld(column, out object value) : false;
+            column.Reject(this);
         }
 
         public virtual void Reject(IUserIdentity user)
@@ -1023,14 +837,7 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    foreach (var column in Table.Columns)
-                    {
-                        if (GetOld(column, out object old))
-                        {
-                            SetValue(old, column, DBSetValueMode.Loading);
-                            RemoveOld(column);
-                        }
-                    }
+                    ClearBackup(false);
                     UpdateState = DBUpdateState.Default;
                 }
                 DBService.OnReject(new DBItemEventArgs(this, null, user));
@@ -1041,7 +848,7 @@ namespace DataWF.Data
 
         public virtual object Clone()
         {
-            var item = Table.NewItem(DBUpdateState.Insert, false, ItemType ?? 0);
+            var item = Table.NewItem(DBUpdateState.Insert, false, ItemType);
             CopyTo(item);
             if (Table.PrimaryKey != null)
             {
@@ -1053,15 +860,16 @@ namespace DataWF.Data
 
         public void CopyTo(DBItem item)
         {
+            CopyTo(item.handler);
+        }
+
+        public void CopyTo(PullHandler hindex)
+        {
             foreach (var column in Table.Columns)
             {
-                if (column.ColumnType == DBColumnTypes.Default)
+                if (column.Pull != null)
                 {
-                    var value = GetValue(column);
-                    if (value != null)
-                    {
-                        item.SetValue(value, column);
-                    }
+                    column.Copy(this.handler, hindex);
                 }
             }
         }
@@ -1089,7 +897,7 @@ namespace DataWF.Data
             if (Attached)
                 return;
             State |= DBItemState.Attached;
-            OnPropertyChanged(nameof(Attached), null);
+            OnPropertyChanged<bool>(nameof(Attached), null, Attached);
             //DBService.OnAdded(this);
         }
 
@@ -1098,18 +906,18 @@ namespace DataWF.Data
             if (!Attached)
                 return;
             State &= ~DBItemState.Attached;
-            OnPropertyChanged(nameof(Attached), null);
+            OnPropertyChanged<bool>(nameof(Attached), null, Attached);
             //DBService.OnRemoved(this);
         }
 
         public virtual bool OnUpdating(DBItemEventArgs arg)
         {
-            return Table.OnUpdating(arg);
+            return table.OnUpdating(arg);
         }
 
         public virtual void OnUpdated(DBItemEventArgs arg)
         {
-            Table.OnUpdated(arg);
+            table.OnUpdated(arg);
         }
 
         #region INotifyPropertyChanged Members
@@ -1117,20 +925,11 @@ namespace DataWF.Data
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangingEventHandler PropertyChanging;
 
-        protected void OnPropertyChanging<V>(string property, DBColumn column = null, V value = default(V))
+        protected internal void OnPropertyChanging<V>(string property, DBColumn<V> column = null, V value = default(V))
         {
             if (Attached)
             {
-                Table.OnItemChanging<V>(this, property, column, value);
-            }
-            RaisePropertyChanging(property);
-        }
-
-        protected void OnPropertyChanging(string property, DBColumn column = null, object value = null)
-        {
-            if (Attached)
-            {
-                Table.OnItemChanging(this, property, column, value);
+                table.OnItemChanging<V>(this, property, column, value);
             }
             RaisePropertyChanging(property);
         }
@@ -1140,32 +939,15 @@ namespace DataWF.Data
             PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(property));
         }
 
-        protected void OnPropertyChanged<V>([CallerMemberName] string property = null, DBColumn column = null, V value = default(V))
+        protected internal void OnPropertyChanged<V>([CallerMemberName] string property = null, DBColumn<V> column = null, V value = default(V))
         {
-            if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
+            if (column != null && (column.Keys & ColumnFlags.View) == ColumnFlags.View)
             {
                 cacheToString = string.Empty;
             }
             if (Attached)
             {
-                Table.OnItemChanged<V>(this, property, column, value);
-                if (property == nameof(Access) && access != null)
-                {
-                    access = ReadAccess();
-                }
-            }
-            RaisePropertyChanged(property);
-        }
-
-        protected void OnPropertyChanged([CallerMemberName] string property = null, DBColumn column = null, object value = null)
-        {
-            if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
-            {
-                cacheToString = string.Empty;
-            }
-            if (Attached)
-            {
-                Table.OnItemChanged(this, property, column, value);
+                table.OnItemChanged<V>(this, property, column, value);
                 if (property == nameof(Access) && access != null)
                 {
                     access = ReadAccess();
@@ -1184,31 +966,33 @@ namespace DataWF.Data
         public void Refresh(IUserIdentity user)
         {
             Reject(user);
-            Table.ReloadItem(PrimaryId);
+            Table.Reload(PrimaryId);
         }
 
         public void GenerateId(DBTransaction transaction = null)
         {
-            if (Table.Sequence == null || Table.PrimaryKey == null)
+            if (Table.Sequence == null || Table.PrimaryKey == null || UpdateState != DBUpdateState.Insert)
                 return;
-            if (PrimaryId == null)
+            if (Table.PrimaryKey.IsEmpty(this))
             {
-                PrimaryId = transaction != null ? Table.Sequence.GetNext(transaction) : Table.Sequence.GetNext();
-            }
-            else
-            {
-                Table.Sequence.SetCurrent(PrimaryId);
+                Table.PrimaryKey.SetId(this, Table.GenerateId(transaction));
             }
         }
 
         public void Free()
         {
             Detach();
+            FreeHandler(handler);
+        }
+
+        private void FreeHandler(PullHandler handler)
+        {
             foreach (DBColumn column in Table.Columns)
             {
-                column.SetValue(this, null);
+                if (column.Pull != null)
+                    column.Clear(handler);
             }
-            Table.FreeHandlers.Enqueue(handler);
+            table.FreeHandlers.Enqueue(handler);
         }
 
         public Task Save()
@@ -1218,7 +1002,7 @@ namespace DataWF.Data
 
         public async Task Save(IUserIdentity user)
         {
-            using (var transaction = new DBTransaction(Table.Connection, user))
+            using (var transaction = new DBTransaction(Table, user))
             {
                 try
                 {
@@ -1241,7 +1025,7 @@ namespace DataWF.Data
                 if (await OnSaving(transaction))
                 {
                     await SaveReferenced(transaction);
-                    await Table.SaveItem(this, transaction);
+                    await Table.Save(this, transaction);
                     await SaveReferencing(transaction);
                     await OnSaved(transaction);
                 }
@@ -1269,17 +1053,19 @@ namespace DataWF.Data
 
         public virtual int CompareTo(DBItem obj)
         {
-            return obj == null ? 1 : table.index == obj.table.index ? handler.CompareTo(obj.handler) :
-                table.index.CompareTo(obj.table.index);
+            if (obj == null)
+                return 1;
+            var index = table.index.CompareTo(obj.table.index);
+            return index == 0 ? handler.CompareTo(in obj.handler) : index;
         }
 
         public string FormatPatch()
         {
             var rez = new StringBuilder();
-            rez.AppendLine(string.Format("if exists(select * from {0} where {1}={2})", Table.Name, Table.PrimaryKey.Name, PrimaryId));
-            rez.AppendLine("    " + Table.System.FormatCommand(Table, DBCommandTypes.Update, this) + ";");
+            rez.AppendLine($"if exists(select * from {Table.Name} where {Table.PrimaryKey.SqlName}={Table.PrimaryKey.FormatQuery(this)})");
+            rez.AppendLine("    " + Table.System.FormatCommand(table, DBCommandTypes.Update, this) + ";");
             rez.AppendLine("else");
-            rez.AppendLine("    " + Table.System.FormatCommand(Table, DBCommandTypes.Insert, this) + ";");
+            rez.AppendLine("    " + Table.System.FormatCommand(table, DBCommandTypes.Insert, this) + ";");
             rez.AppendLine();
             return rez.ToString();
         }
@@ -1322,7 +1108,7 @@ namespace DataWF.Data
             foreach (DBColumn column in parameters)
             {
                 string header = (showColumn) ? header = $"{column}: " : string.Empty;
-                string value = column.FormatValue(GetValue(column));
+                string value = column.FormatDisplay(this);
                 if (column.IsCulture)
                 {
                     if (value.Length != 0)
@@ -1359,7 +1145,7 @@ namespace DataWF.Data
 
         public async Task Delete(int recurs, DBLoadParam param = DBLoadParam.None)
         {
-            using (DBTransaction transaction = new DBTransaction(Table.Schema.Connection))
+            using (DBTransaction transaction = new DBTransaction(Table))
             {
                 try
                 {
@@ -1402,9 +1188,9 @@ namespace DataWF.Data
             }
             foreach (var relation in Table.GetChildRelations())
             {
-                if (relation.Table is IDBLogTable
-                    || relation.Table is IDBVirtualTable
-                    || relation.Table.Type != DBTableType.Table
+                if (relation.Table is IDBTableLog
+                    || relation.Table.IsVirtual
+                    || relation.Table.TableType != DBTableType.Table
                     || relation.Column.ColumnType != DBColumnTypes.Default)
                     continue;
 
@@ -1427,13 +1213,13 @@ namespace DataWF.Data
 
         public Task Merge(List<string> ids, DBTransaction transaction)
         {
-            var items = Table.LoadItemsById(ids, transaction);
+            var items = Table.LoadById<DBItem>(ids, transaction);
             return Merge(items, transaction);
         }
 
         public async Task Merge(IEnumerable<DBItem> list)
         {
-            using (var transaction = new DBTransaction(Table.Connection))
+            using (var transaction = new DBTransaction(Table))
             {
                 try
                 {
@@ -1466,23 +1252,24 @@ namespace DataWF.Data
                 {
                     if (column.ColumnType != DBColumnTypes.Default)
                         continue;
-                    if (GetValue(column) == null && item.GetValue(column) != null)
+                    if (column.IsEmpty(this))
                     {
-                        SetValue(item.GetValue(column), column);
+                        column.Copy(item, this);
                     }
                 }
 
                 foreach (DBForeignKey relation in relations)
                 {
-                    if (relation.Table.Type == DBTableType.Table)
+                    if (relation.Table.TableType == DBTableType.Table)
                     {
                         var referencing = item.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Referencing).ToList();
                         if (referencing.Count > 0)
                         {
+                            var primaryKey = Table.PrimaryKey;
                             foreach (DBItem subItem in referencing)
                             {
-                                subItem.SetValue(PrimaryId, relation.Column);
-                                await relation.Table.SaveItem(subItem, transaction);
+                                relation.Column.Copy(this, primaryKey, subItem);
+                                await relation.Table.Save(subItem, transaction);
                             }
                         }
                     }
@@ -1490,7 +1277,20 @@ namespace DataWF.Data
             }
             foreach (var item in rows)
             {
-                await Table.SaveItem(item, transaction);
+                await Table.Save(item, transaction);
+            }
+        }
+
+        public Task SaveOrUpdate(IUserIdentity user, DBLoadParam param = DBLoadParam.None)
+        {
+            var exist = FindAndUpdate(param);
+            if (exist != null)
+            {
+                return exist.Save(user);
+            }
+            else
+            {
+                return Save(user);
             }
         }
 
@@ -1526,10 +1326,7 @@ namespace DataWF.Data
                     if (item != null && item != this && item.IsChanged)
                     {
                         await item.Save(transaction);
-                        if (GetValue(column) == null)
-                        {
-                            SetValue(item.PrimaryId, column);
-                        }
+                        column.Copy(item, item.Table.PrimaryKey, this);
                     }
                 }
             }
@@ -1556,9 +1353,9 @@ namespace DataWF.Data
 
         public IEnumerable<DBItem> GetPropertyReferencing()
         {
-            foreach (var referencing in Table.GetPropertyReferencing(GetType()))
+            foreach (var referencing in Table.GetReferencingByProperty(GetType()))
             {
-                var references = (IEnumerable)referencing.PropertyInvoker.GetValue(this);
+                var references = (IEnumerable<DBItem>)referencing.PropertyInvoker.GetValue(this);
                 if (references != null)
                 {
                     foreach (DBItem item in references)
@@ -1573,7 +1370,7 @@ namespace DataWF.Data
         {
             foreach (var relation in Table.GetChildRelations())
             {
-                if (relation.Table != Table && !(relation.Table is IDBVirtualTable))
+                if (relation.Table != Table && !relation.Table.IsVirtual)
                 {
                     var references = GetReferencing(relation, DBLoadParam.None);
                     foreach (DBItem reference in references)
@@ -1620,87 +1417,94 @@ namespace DataWF.Data
             }
         }
 
-        public void AttachOrUpdate(DBLoadParam param = DBLoadParam.None)
+        public DBItem AttachOrUpdate(DBLoadParam param = DBLoadParam.None)
         {
             var exist = FindAndUpdate(param);
             if (exist == null)
             {
                 Attach();
             }
+            else
+            {
+                Free();
+            }
+            return exist ?? this;
         }
 
         public DBItem FindAndUpdate(DBLoadParam param = DBLoadParam.None)
         {
-            var exist = PrimaryId == null
-                ? Table.LoadItemByCode(PrimaryCode, Table.CodeKey, param)
-                : Table.LoadItemById(PrimaryId, param);
+            var exist = (Table.PrimaryKey?.IsEmpty(this) ?? true) ? null : Table.PrimaryKey.Load(this, param).FirstOrDefault();
             if (exist != null)
             {
-                PrimaryId = exist.PrimaryId;
-
-                foreach (var column in Table.Columns)
+                foreach (var column in GetChangeKeys())
                 {
-                    // || (column.Keys & DBColumnKeys.State) == DBColumnKeys.State
-                    if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
-                        || (column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp)
-                    {
+                    if (column == Table.PrimaryKey
+                        || column == Table.ItemTypeKey)
                         continue;
-                    }
-                    var value = GetValue(column);
-                    if (value != null)
-                    {
-                        exist.SetValue(value, column);
-                    }
+                    column.Copy(this, exist);
                 }
-
             }
             return exist;
         }
 
-        public static DateTime GetDateVal(object val)
+        public DateTime GetDate(string column)
         {
-            if (val == null)
-                return DateTime.MinValue;
-            if (val is DateTime)
-                return (DateTime)val;
-            return DateTime.Parse(val.ToString());
+            return GetDate(Table.GetColumnOrProperty(column));
         }
 
         public DateTime GetDate(DBColumn column)
         {
-            return GetDateVal(this[column]);
-        }
-
-        public DateTime GetDate(string column)
-        {
-            return GetDateVal(this[column]);
+            if (column is DBColumn<DateTime> dateColumn)
+                return dateColumn.GetValue(this);
+            if (column is DBColumn<DateTime?> nDateColumn)
+                return nDateColumn.GetValue(this) ?? DateTime.MinValue;
+            if (column is DBColumn<string> stringColumn)
+                return DateTime.Parse(stringColumn.GetValue(this));
+            else
+                throw new Exception("Unsupported Column type");
         }
 
         public void SetDate(DBColumn column, DateTime value)
         {
-            this[column] = value;
+            if (column is DBColumn<DateTime> dateColumn)
+                SetValue(value, dateColumn);
+            if (column is DBColumn<DateTime?> nDateColumn)
+                SetValue<DateTime?>(value, nDateColumn);
+            if (column is DBColumn<string> stringColumn)
+                SetValue(value.ToString("u"), stringColumn);
+            else
+                throw new Exception("Unsupported Column type");
         }
 
         public TimeSpan GetTimeSpan(DBColumn column)
         {
-            object val = this[column];
-            if (val == null)
-                return new TimeSpan();
-            if (val is TimeSpan)
-                return (TimeSpan)val;
-            return TimeSpan.Parse(val.ToString());
+            if (column is DBColumn<TimeSpan> dateColumn)
+                return dateColumn.GetValue(this);
+            if (column is DBColumn<TimeSpan?> nDateColumn)
+                return nDateColumn.GetValue(this) ?? TimeSpan.MinValue;
+            if (column is DBColumn<string> stringColumn)
+                return TimeSpan.Parse(stringColumn.GetValue(this));
+            else
+                throw new Exception("Unsupported Column type");
         }
 
         public void SetTimeSpan(DBColumn column, TimeSpan value)
         {
-            this[column] = value;
+            if (column is DBColumn<TimeSpan> dateColumn)
+                SetValue(value, dateColumn);
+            if (column is DBColumn<TimeSpan?> nDateColumn)
+                SetValue<TimeSpan?>(value, nDateColumn);
+            if (column is DBColumn<string> stringColumn)
+                SetValue(value.ToString(), stringColumn);
+            else
+                throw new Exception("Unsupported Column type");
         }
 
-        public async Task<Stream> GetStream(DBTransaction transaction, int bufferSize = 81920)
+        public async Task<Stream> GetStream(DBTransaction transaction, int bufferSize = Helper.DefaultBufferSize)
         {
-            if (Table.FileLOBKey != null && GetValue(table.FileLOBKey) != null)
+            if (!(Table.FileOIDKey?.IsEmpty(this) ?? true))
             {
-                return await GetLOB(Table.FileLOBKey, transaction);
+                return await GetBlob(Table.FileOIDKey, transaction);
             }
             else if (Table.FileKey != null)
             {
@@ -1709,23 +1513,23 @@ namespace DataWF.Data
             return null;
         }
 
-        public async Task SetStream(string filepath, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public async Task SetStream(string filePath, DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = Helper.DefaultBufferSize)
         {
-            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 await SetStream(stream, column, transaction, bufferSize);
             }
         }
 
-        public async Task SetStream(Stream stream, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public async Task SetStream(Stream stream, DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = Helper.DefaultBufferSize)
         {
-            SetValue(await Helper.GetBytesAsync(stream), column);
+            SetValue(await Helper.GetBufferedBytesAsync(stream), column);
             await Save(transaction);
             SetValue(null, column, DBSetValueMode.Loading);
             await OnSetStream(column, transaction);
         }
 
-        public virtual MemoryStream GetMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public virtual MemoryStream GetMemoryStream(DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = Helper.DefaultBufferSize)
         {
             OnGetStream(column, transaction);
             var memoryStream = (MemoryStream)null;
@@ -1739,7 +1543,7 @@ namespace DataWF.Data
             return memoryStream;
         }
 
-        public virtual FileStream GetFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public virtual FileStream GetFileStream(DBColumn<byte[]> column, string path, DBTransaction transaction, int bufferSize = Helper.DefaultBufferSize)
         {
             OnGetStream(column, transaction);
             var fileStream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
@@ -1764,77 +1568,92 @@ namespace DataWF.Data
             return Task.CompletedTask;
         }
 
-        public Stream GetZipMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public Stream GetZipMemoryStream(DBColumn<byte[]> column, DBTransaction transaction, int bufferSize = Helper.DefaultBufferSize)
         {
             var memoryStream = GetMemoryStream(column, transaction, bufferSize);
             return Helper.IsGZip(memoryStream) ? Helper.GetGZipStrem(memoryStream) : memoryStream;
         }
 
-        public FileStream GetZipFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public FileStream GetZipFileStream(DBColumn<byte[]> column, string path, DBTransaction transaction, int bufferSize = Helper.DefaultBufferSize)
         {
             var fileStream = GetFileStream(column, path, transaction, bufferSize);
             if (Helper.IsGZip(fileStream))
             {
                 using (var gzip = Helper.GetGZipStrem(fileStream))
-                using (var newFileStream = File.Open(path + ".zip", FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
+                using (var newFileStream = File.Open(path + ".unzip", FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
                     gzip.CopyTo(newFileStream, bufferSize);
                 }
                 File.Delete(path);
-                File.Move(path + ".zip", path);
+                File.Move(path + ".unzip", path);
                 return File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
             }
             return fileStream;
         }
 
-        public byte[] GetZip(DBColumn column)
+        public ArraySegment<byte>? GetZip(DBColumn<byte[]> column)
         {
             var data = GetValue<byte[]>(column);
-            if (data != null && Helper.IsGZip(data))
-                data = Helper.ReadGZip(data);
-            return data;
+            if (data != null)
+            {
+                var bytes = new ArraySegment<byte>(data);
+                return Helper.IsGZip(data) ? Helper.ReadGZip(bytes) : bytes;
+            }
+            return null;
         }
 
-        public byte[] SetZip(DBColumn column, byte[] data)
+        public ArraySegment<byte>? SetZip(DBColumn<byte[]> column, byte[] data)
         {
-            byte[] temp = data != null && data.Length > 500 ? Helper.WriteGZip(data) : data;
+            var temp = data != null && data.Length > 500
+                ? Helper.WriteGZip(new ArraySegment<byte>(data))
+                : new ArraySegment<byte>(data);
             SetValue(temp, column);
             return temp;
         }
 
-        public async Task SetLOB(Stream value, DBColumn column, DBTransaction transaction)
+        public Task<long> SetBlob(Stream value, DBTransaction transaction)
         {
-            var oid = await Table.System.SetLOB(value, transaction);
-            SetValueNullable<uint>(oid, column);
+            return SetBlob(value, Table.FileOIDKey, transaction);
+        }
+
+        public async Task<long> SetBlob(Stream value, DBColumn<long?> column, DBTransaction transaction)
+        {
+            var id = await Schema.FileProvider.AddFile(value, transaction);
+            SetValue<long?>(id, column);
             await Save(transaction);
             await OnSetStream(column, transaction);
+            return id;
         }
 
-        public Task<Stream> GetLOB(DBTransaction transaction, int bufferSize = 81920)
+        public Task<Stream> GetBlob(DBTransaction transaction, int bufferSize = Helper.DefaultBufferSize)
         {
-            return GetLOB(Table.FileLOBKey, transaction, bufferSize);
+            return GetBlob(Table.FileOIDKey, transaction, bufferSize);
         }
 
-        public virtual Task<Stream> GetLOB(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public virtual Task<Stream> GetBlob(DBColumn<long?> column, DBTransaction transaction, int bufferSize = Helper.DefaultBufferSize)
         {
             OnGetStream(column, transaction);
-            var oid = GetValue<uint?>(column);
+            var oid = GetValue<long?>(column);
             if (oid == null)
                 return null;
-            return Table.System.GetLOB(oid.Value, transaction, bufferSize);
+            if (transaction.Schema == null)
+            {
+                transaction.Schema = Schema;
+            }
+            return Schema.FileProvider.GetFile(oid.Value, transaction, bufferSize);
         }
 
-        public async Task<FileStream> GetLOBFileStream(DBColumn column, string path, int bufferSize = 81920)
+        public async Task<FileStream> GetBlob(DBColumn<long?> column, string path, int bufferSize = Helper.DefaultBufferSize)
         {
-            using (var transaction = new DBTransaction(Table.Connection))
+            using (var transaction = new DBTransaction(Table))
             {
-                return await GetLOBFileStream(column, path, transaction, bufferSize);
+                return await GetBlob(column, path, transaction, bufferSize);
             }
         }
 
-        public async Task<FileStream> GetLOBFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
+        public async Task<FileStream> GetBlob(DBColumn<long?> column, string path, DBTransaction transaction, int bufferSize = Helper.DefaultBufferSize)
         {
-            using (var lobStream = await GetLOB(column, transaction))
+            using (var lobStream = await GetBlob(column, transaction))
             {
                 if (lobStream == null)
                 {
@@ -1842,7 +1661,8 @@ namespace DataWF.Data
                 }
                 var fileStream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
 
-                var buffer = new byte[bufferSize];
+                var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+                bufferSize = buffer.Length;
                 int count;
                 while ((count = lobStream.Read(buffer, 0, bufferSize)) != 0)
                 {
@@ -1851,16 +1671,38 @@ namespace DataWF.Data
                 fileStream.Position = 0;
                 return fileStream;
             }
-
         }
 
         public LinkModel GetLink()
         {
             return new LinkModel
             {
-                ProtocolLink = $"{ProtocolSetting.Current.Protocol}://{ProtocolSetting.Current.Host}/{GetType().Name}/{PrimaryId}",
-                WebLink = $"http://{ProtocolSetting.Current.Host}/api/{GetType().Name}/{PrimaryId}",
+                ProtocolLink = $"{ProtocolSetting.Current.Protocol}://{ProtocolSetting.Current.Host}/{GetType().Name}/{Table.PrimaryKey.FormatDisplay(this)}",
+                WebLink = $"{ProtocolSetting.Current.WebProtocol}://{ProtocolSetting.Current.Host}/api/{GetType().Name}/{Table.PrimaryKey.FormatDisplay(this)}",
             };
+        }
+
+        internal int CompareByHandler(DBItem y)
+        {
+            ref readonly var xHandler = ref handler;
+            ref readonly var yHandler = ref y.handler;
+            return xHandler.Value.CompareTo(yHandler.Value);
+        }
+
+        internal int CompareByRowId(DBItem y)
+        {
+            return rowId.CompareTo(y.rowId);
+        }
+
+        public string GeneretePatch(IEnumerable<DBItem> items)
+        {
+            var rez = new StringBuilder();
+
+            foreach (var item in items)
+            {
+                rez.Append(item.FormatPatch());
+            }
+            return rez.ToString();
         }
 
     }

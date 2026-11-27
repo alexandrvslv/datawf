@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using System;
 using System.Collections.Generic;
@@ -25,11 +25,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
-[assembly: Invoker(typeof(DBIndex), nameof(DBIndex.Unique), typeof(DBIndex.UniqueInvoker<>))]
-[assembly: Invoker(typeof(DBIndex), nameof(DBIndex.Columns), typeof(DBIndex.ColumnsInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBIndex : DBTableItem
+    [Invoker(Instance = true)]
+    public partial class DBIndex : DBTableItem
     {
         private bool unique;
 
@@ -37,6 +36,8 @@ namespace DataWF.Data
         {
             Columns = new DBColumnReferenceList();
         }
+
+        public override DBSchemaItemType Type => DBSchemaItemType.Index;
 
         public bool Unique
         {
@@ -46,7 +47,7 @@ namespace DataWF.Data
                 if (unique = value)
                     return;
                 unique = value;
-                OnPropertyChanged(nameof(Unique), DDLType.Alter);
+                OnPropertyChanged(DDLType.Alter);
             }
         }
 
@@ -66,35 +67,11 @@ namespace DataWF.Data
             return index;
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             var builder = new StringBuilder();
             Schema?.System?.Format(builder, this, ddlType);
             return builder.ToString();
-        }
-
-        public class UniqueInvoker<T> : Invoker<T, bool> where T : DBIndex
-        {
-            public static readonly UniqueInvoker<T> Instance = new UniqueInvoker<T>();
-            public override string Name => nameof(DBIndex.Unique);
-
-            public override bool CanWrite => true;
-
-            public override bool GetValue(T target) => target.Unique;
-
-            public override void SetValue(T target, bool value) => target.Unique = value;
-        }
-
-        public class ColumnsInvoker<T> : Invoker<T, DBColumnReferenceList> where T : DBIndex
-        {
-            public static readonly ColumnsInvoker<T> Instance = new ColumnsInvoker<T>();
-            public override string Name => nameof(DBIndex.Columns);
-
-            public override bool CanWrite => true;
-
-            public override DBColumnReferenceList GetValue(T target) => target.Columns;
-
-            public override void SetValue(T target, DBColumnReferenceList value) => target.Columns = value;
         }
     }
 }

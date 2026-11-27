@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
@@ -30,7 +30,7 @@ namespace DataWF.Module.FlowGui
                     Row = 0,
                     Width = 400,
                     FillHeight = true,
-                    Widget = attribures = new ListEditor { AccessVisible = true }
+                    Control = attribures = new ListEditor { AccessVisible = true }
                 },
                 new GroupBoxItem
                 (
@@ -42,9 +42,9 @@ namespace DataWF.Module.FlowGui
                         RadioGroup = 1,
                         FillWidth = true,
                         FillHeight = true,
-                        Widget = relations = new ListEditor
+                        Control = relations = new ListEditor
                         {
-                            DataSource = new DBTableView<StageReference>(new QParam(StageParam.DBTable.ParseProperty(nameof(StageParam.StageId)), null), DBViewKeys.Empty)
+                            DataSource = new DBTableView<StageReference>(FlowExplorer.Schema.StageReference, new QParam(FlowExplorer.Schema.StageParam.StageIdKey, null), DBViewKeys.Empty)
                         }
                     },
                     new GroupBoxItem
@@ -56,9 +56,9 @@ namespace DataWF.Module.FlowGui
                         Expand = false,
                         FillWidth = true,
                         FillHeight = true,
-                        Widget = procedures = new ListEditor
+                        Control = procedures = new ListEditor
                         {
-                            DataSource = new DBTableView<StageProcedure>(new QParam(StageParam.DBTable.ParseProperty(nameof(StageParam.StageId)), null), DBViewKeys.Empty)
+                            DataSource = new DBTableView<StageProcedure>(FlowExplorer.Schema.StageProcedure, new QParam(FlowExplorer.Schema.StageParam.StageIdKey, null), DBViewKeys.Empty)
                         }
                     }
                 )
@@ -69,7 +69,7 @@ namespace DataWF.Module.FlowGui
                 }
             )
             { Name = "GroupBox" };
-            PackStart(groupBox, true, true);
+            Children.Add(groupBox, true, true);
         }
 
         public Stage Stage
@@ -84,10 +84,10 @@ namespace DataWF.Module.FlowGui
                 attribures.DataSource = value;
                 attribures.ReadOnly = false;
 
-                ((DBTableView<StageProcedure>)procedures.DataSource).DefaultParam.Value = value?.Id;
+                ((DBTableView<StageProcedure>)procedures.DataSource).DefaultParam.RightValue = value?.Id;
                 ((DBTableView<StageProcedure>)procedures.DataSource).ResetFilter();
 
-                ((DBTableView<StageReference>)relations.DataSource).DefaultParam.Value = value?.Id;
+                ((DBTableView<StageReference>)relations.DataSource).DefaultParam.RightValue = value?.Id;
                 ((DBTableView<StageReference>)relations.DataSource).ResetFilter();
             }
         }

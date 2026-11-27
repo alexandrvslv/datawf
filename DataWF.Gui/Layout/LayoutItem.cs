@@ -1,10 +1,11 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Xml.Serialization;
-using Xwt;
+using Avalonia;
+using DataWF.Collections;
 
 namespace DataWF.Gui
 {
@@ -20,7 +21,7 @@ namespace DataWF.Gui
         protected bool fillH;
         protected string name;
         protected object tag;
-        //protected Rectangle bound;
+        //protected Rect bound;
         public Func<ILayoutItem, double> CalcHeight;
         public Func<ILayoutItem, double> CalcWidth;
         private INotifyListPropertyChanged container;
@@ -34,7 +35,7 @@ namespace DataWF.Gui
         }
 
         //[XmlIgnore]
-        //public virtual Rectangle Bound
+        //public virtual Rect Bound
         //{
         //    get { return bound; }
         //    set { bound = value; }
@@ -43,12 +44,12 @@ namespace DataWF.Gui
         [DefaultValue(1D)]
         public virtual double Scale
         {
-            get { return scale; }
-            set { scale = value; }
+            get => scale;
+            set => scale = value;
         }
 
-        [DefaultValue(Orientation.Horizontal)]
-        public Orientation GrowMode { get; set; }
+        [DefaultValue(BoxOrientation.Horizontal)]
+        public BoxOrientation GrowMode { get; set; }
 
         public T this[int rowIndex, int colIndex]
         {
@@ -57,7 +58,7 @@ namespace DataWF.Gui
 
         public string Name
         {
-            get { return name; }
+            get => name;
             set
             {
                 if (name == value)
@@ -70,7 +71,7 @@ namespace DataWF.Gui
         [DefaultValue(-1)]
         public int Row
         {
-            get { return row; }
+            get => row;
             set
             {
                 if (row == value)
@@ -83,7 +84,7 @@ namespace DataWF.Gui
         [DefaultValue(-1)]
         public int Column
         {
-            get { return column; }
+            get => column;
             set
             {
                 if (column == value)
@@ -96,7 +97,7 @@ namespace DataWF.Gui
         [DefaultValue(22D)]
         public double Height
         {
-            get { return Count > 0 ? GetHeight(height, CalcHeight) : height; }
+            get => Count > 0 ? GetHeight(height, CalcHeight) : height;
             set
             {
                 if (value.Equals(height) || value < min)
@@ -109,7 +110,7 @@ namespace DataWF.Gui
         [DefaultValue(120D)]
         public double Width
         {
-            get { return Count > 0 ? GetWidth(width, CalcWidth) : width; }
+            get => Count > 0 ? GetWidth(width, CalcWidth) : width;
             set
             {
                 if (value.Equals(width) || value < min)
@@ -122,7 +123,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public virtual bool Visible
         {
-            get { return visible || IsVisible(); }
+            get => visible || IsVisible();
             set
             {
                 if (visible == value)
@@ -135,7 +136,7 @@ namespace DataWF.Gui
         //[DefaultValue(false)]
         public virtual bool FillWidth
         {
-            get { return Count > 0 ? IsFillWidth() : fillW; }
+            get => Count > 0 ? IsFillWidth() : fillW;
             set
             {
                 if (fillW == value)
@@ -150,7 +151,7 @@ namespace DataWF.Gui
         //[DefaultValue(false)]
         public virtual bool FillHeight
         {
-            get { return Count > 0 ? IsFillHeight() : fillH; }
+            get => Count > 0 ? IsFillHeight() : fillH;
             set
             {
                 if (fillH == value)
@@ -191,7 +192,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public object Tag
         {
-            get { return tag; }
+            get => tag;
             set
             {
                 if (tag == value)
@@ -204,7 +205,7 @@ namespace DataWF.Gui
         [DefaultValue(0D)]
         public virtual double Indent
         {
-            get { return indent; }
+            get => indent;
             set
             {
                 if (indent != value)
@@ -216,12 +217,12 @@ namespace DataWF.Gui
         }
 
         [Browsable(false)]
-        public bool IsExpanded { get { return GroupHelper.GetAllParentExpand(this); } }
+        public bool IsExpanded => GroupHelper.IsAllGroupsExpand(this);
 
         [XmlIgnore, Browsable(false)]
         public IGroup Group
         {
-            get { return Map; }
+            get => Map;
             set
             {
                 if (value != null)
@@ -234,7 +235,7 @@ namespace DataWF.Gui
         [XmlIgnore, DefaultValue(true)]
         public virtual bool Expand
         {
-            get { return expand; }
+            get => expand;
             set
             {
                 if (expand == value)
@@ -299,7 +300,7 @@ namespace DataWF.Gui
                 return -IndexOf(item);
             if (item.Row < 0)
             {
-                item.Row = GrowMode == Orientation.Vertical
+                item.Row = GrowMode == BoxOrientation.Vertical
                     ? GetRowMaxIndex() + 1 : 0;
             }
             if (item.Column < 0)
@@ -315,7 +316,7 @@ namespace DataWF.Gui
             Map.Insert(item, false);
         }
 
-        public virtual void ApplyBound(Rectangle value)
+        public virtual void ApplyBound(Rect value)
         {
             //throw new NotImplementedException();
         }
@@ -339,8 +340,8 @@ namespace DataWF.Gui
             {
                 item.Row = row;
                 item.Column = column;
-                Map.Insert(item, Map.GrowMode == Orientation.Vertical);
-                if (GrowMode == Orientation.Horizontal)
+                Map.Insert(item, Map.GrowMode == BoxOrientation.Vertical);
+                if (GrowMode == BoxOrientation.Horizontal)
                 {
                     column++;
                 }
@@ -362,7 +363,7 @@ namespace DataWF.Gui
             var column = Column;
             foreach (var item in items)
             {
-                if (Map.GrowMode == Orientation.Horizontal)
+                if (Map.GrowMode == BoxOrientation.Horizontal)
                 {
                     column++;
                 }
@@ -373,7 +374,7 @@ namespace DataWF.Gui
 
                 item.Row = row;
                 item.Column = column;
-                Map.Insert(item, Map.GrowMode == Orientation.Vertical);
+                Map.Insert(item, Map.GrowMode == BoxOrientation.Vertical);
             }
         }
 
@@ -530,36 +531,33 @@ namespace DataWF.Gui
         //    }
         //}
 
-        public virtual Rectangle GetBound()
+        public virtual Rect GetBound()
         {
             return GetBound(width, height, CalcWidth, CalcHeight);
         }
 
-        public virtual Rectangle GetBound(double maxWidth, double maxHeight)
+        public virtual Rect GetBound(double maxWidth, double maxHeight)
         {
             return GetBound(maxWidth, maxHeight, CalcWidth, CalcHeight);
         }
 
-        public virtual Rectangle GetBound(double maxWidth, double maxHeight, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
+        public virtual Rect GetBound(double maxWidth, double maxHeight, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
         {
-            var bound = new Rectangle(0, 0, GetWidth(maxWidth - Indent * 2, calcWidth), GetHeight(maxHeight - Indent * 2, calcHeight));
-            bound.X += Indent;
-            bound.Y += Indent;
-            bound.Width += Indent;
-            bound.Height += Indent;
-            return bound;
+            return new Rect(Indent, Indent,
+                GetWidth(maxWidth - Indent * 2, calcWidth) + Indent,
+                GetHeight(maxHeight - Indent * 2, calcHeight) + Indent);
         }
 
-        public virtual Rectangle GetBound(T item, Rectangle mapBound)
+        public virtual Rect GetBound(T item, Rect mapBound)
         {
             return GetBound(item, mapBound, CalcWidth, CalcHeight);
         }
 
-        public Rectangle GetBound(T item, Rectangle mapBound, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
+        public Rect GetBound(T item, Rect mapBound, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
         {
             double x = 0, y = 0;
             int r = -1;
-            var bound = new Rectangle();
+            var bound = new Rect();
             foreach (var entry in this)
             {
                 if (entry.Row != r)
@@ -571,7 +569,7 @@ namespace DataWF.Gui
                     //if (col.Row < column.Row)
                     //     continue;
                 }
-                if (!entry.Visible)
+                if (!entry.IsVisible)
                     continue;
                 if (entry == item)
                 {
@@ -606,7 +604,7 @@ namespace DataWF.Gui
         {
             foreach (var item in this)
             {
-                if (item.Visible && item.FillWidth)
+                if (item.IsVisible && item.FillWidth)
                     return true;
             }
             return false;
@@ -616,7 +614,7 @@ namespace DataWF.Gui
         {
             foreach (var item in this)
             {
-                if (item.Visible && item.FillHeight)
+                if (item.IsVisible && item.FillHeight)
                     return true;
             }
             return false;
@@ -642,7 +640,7 @@ namespace DataWF.Gui
         {
             foreach (var item in this)
             {
-                if (item.Visible)
+                if (item.IsVisible)
                     return true;
             }
             return false;
@@ -657,7 +655,7 @@ namespace DataWF.Gui
             {
                 if (entry.Row == Row)
                 {
-                    if (entry.Visible && entry.Column > Column)
+                    if (entry.IsVisible && entry.Column > Column)
                         return false;
                 }
                 else if (entry.Row > Row)
@@ -679,7 +677,7 @@ namespace DataWF.Gui
             int hh = 0;
             foreach (var item in this)
             {
-                if (item.Visible && item.Row == rowIndex)
+                if (item.IsVisible && item.Row == rowIndex)
                 {
                     if (item.Count > 0)
                     {
@@ -708,7 +706,7 @@ namespace DataWF.Gui
             double h = 0;
             foreach (var item in this)
             {
-                if (item.Visible && item.Row == rowIndex)
+                if (item.IsVisible && item.Row == rowIndex)
                 {
                     double hh = 0;
                     if (!item.FillHeight || calcFill)//|| max<=0 
@@ -736,7 +734,7 @@ namespace DataWF.Gui
             {
                 if (item.Row == row)
                 {
-                    if (item.Visible)
+                    if (item.IsVisible)
                     {
                         if (item.Count > 0)
                             w += item.GetWithdSpan();
@@ -755,7 +753,7 @@ namespace DataWF.Gui
             double w = 0;
             foreach (var item in this)
             {
-                if (item.Row == row && item.Visible)
+                if (item.Row == row && item.IsVisible)
                 {
                     if (!item.FillWidth || (max <= 0 && calc != null))
                         w += item.GetItemWidth(max, calc);
@@ -823,7 +821,7 @@ namespace DataWF.Gui
                 int r = Row;
                 foreach (var sitem in Map)
                 {
-                    if (sitem.Visible && sitem.FillHeight && sitem.Row != r && sitem.Row != Row)
+                    if (sitem.IsVisible && sitem.FillHeight && sitem.Row != r && sitem.Row != Row)
                     {
                         r = sitem.Row;
                         c++;
@@ -870,7 +868,7 @@ namespace DataWF.Gui
                 itemW = itemW < 30 ? 30 : itemW;
                 int c = 0;
                 foreach (var sitem in Map)
-                    if (sitem.Visible && sitem.FillWidth && sitem.Row == Row)
+                    if (sitem.IsVisible && sitem.FillWidth && sitem.Row == Row)
                         c++;
                 width = itemW / c;
             }
@@ -900,7 +898,7 @@ namespace DataWF.Gui
                     if (ww > w && !fill)
                         w = ww;
                 }
-                if (!fill && item.Visible && item.FillWidth)
+                if (!fill && item.IsVisible && item.FillWidth)
                     fill = true;
                 if (r == GetRowMaxIndex())
                     break;
@@ -968,7 +966,7 @@ namespace DataWF.Gui
         {
             foreach (var item in GetItems())
             {
-                if (item.Visible)
+                if (item.IsVisible)
                     yield return item;
             }
         }
@@ -1044,7 +1042,7 @@ namespace DataWF.Gui
             int tr = -100;
             foreach (var entry in this)
             {
-                if (entry.Visible)
+                if (entry.IsVisible)
                 {
                     int sc = 0, sr = 0;
 

@@ -1,25 +1,25 @@
-﻿using DataWF.Common;
+﻿using Avalonia;
+using Avalonia.Animation.Animators;
+using Avalonia.Markup.Xaml.Converters;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using DataWF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt.Drawing;
-using System.Runtime.InteropServices;
-using Xwt;
 
 namespace DataWF.Gui
 {
     public class CellStyleBrush : ICloneable, IDisposable
     {
         [NonSerialized()]
-        private static BitmapImage bmp;
+        private static Bitmap bmp;
 
-        public static ImagePattern GetTextureBrush(Color color)
+
+        public static ImageBrush CreateTextureBrush(Color color)
         {
-            if (bmp == null)
-            {
-                var builder = new ImageBuilder(3, 3);
-                bmp = builder.ToBitmap(ImageFormat.ARGB32);
-            }
+            bmp ??= new WriteableBitmap(new PixelSize(3, 3), Vector.Zero, PixelFormat.Rgba8888, AlphaFormat.Premul);
             //bmp.SetPixel (0, 0, ControlPaint.Dark (color));
             bmp.SetPixel(0, 0, color);
             bmp.SetPixel(0, 1, color.WithIncreasedLight(0.1));
@@ -35,35 +35,39 @@ namespace DataWF.Gui
 
             //bmp.SetPixel (0, 3, ControlPaint.Dark (color));
             //bmp.SetPixel (0, 5, ControlPaint.Light (color));
-            return new ImagePattern(bmp);
+            return new ImageBrush(bmp);
         }
 
-        public static LinearGradient GetGradientBrush(Color color, Rectangle bound)
+        public static LinearGradientBrush CreateGradientBrush(Color color, Rect bound)
         {
-            var pattern = new LinearGradient(bound.Left, bound.Top, bound.Left, bound.Bottom);
-            pattern.AddColorStop(0D, color.WithIncreasedLight(0.2D));
-            pattern.AddColorStop(1D, color);
+            var pattern = new LinearGradientBrush();
+            pattern.StartPoint = new RelativePoint(bound.TopLeft, RelativeUnit.Absolute);
+            pattern.EndPoint = new RelativePoint(bound.BottomRight, RelativeUnit.Absolute);
+            pattern.GradientStops.Add(new GradientStop(color.Light(0.2D), 0D));
+            pattern.GradientStops.Add(new GradientStop(color, 1D));
             return pattern;
         }
 
         public static Color ColorFromInt(int value)
         {
-            return Color.FromBytes((byte)(value >> 8), (byte)(value >> 16), (byte)(value >> 24), (byte)value);
+            return new Color((byte)(value >> 8), (byte)(value >> 16), (byte)(value >> 24), (byte)value);
         }
 
         public static int ColorToInt(Color color)
         {
-            byte a = (byte)(color.Alpha * 255);
-            byte r = (byte)(color.Red * 255);
-            byte g = (byte)(color.Green * 255);
-            byte b = (byte)(color.Blue * 255);
+            byte a = (byte)(color.A * 255);
+            byte r = (byte)(color.R * 255);
+            byte g = (byte)(color.G * 255);
+            byte b = (byte)(color.B * 255);
             return (int)(a | (r >> 8) | (g >> 16) | (b >> 24));
         }
 
         public static readonly Color ColorEmpty = new Color();
 
         [NonSerialized()]
-        private Dictionary<Color, Pattern> dictBrush = new Dictionary<Color, Pattern>();
+        private Dictionary<BrushToken, Brush> cacheBrush = new Dictionary<BrushToken, Brush>();
+        [NonSerialized()]
+        private Dictionary<PenToken, Pen> cachePen = new Dictionary<PenToken, Pen>();
 
         protected Color color = ColorEmpty;
         protected Color colorSelect = ColorEmpty;
@@ -80,7 +84,7 @@ namespace DataWF.Gui
         [DefaultValue(CellStyleBrushType.Solid)]
         public CellStyleBrushType Type
         {
-            get { return type; }
+            get => type;
             set
             {
                 if (type != value)
@@ -93,7 +97,7 @@ namespace DataWF.Gui
 
         public Color Color
         {
-            get { return color; }
+            get => color;
             set
             {
                 if (Color.Equals(value))
@@ -104,7 +108,7 @@ namespace DataWF.Gui
 
         public Color ColorSelect
         {
-            get { return colorSelect; }
+            get => colorSelect;
             set
             {
                 if (ColorSelect.Equals(value))
@@ -115,7 +119,7 @@ namespace DataWF.Gui
 
         public Color ColorHover
         {
-            get { return colorHover; }
+            get => colorHover;
             set
             {
                 if (ColorHover.Equals(value))
@@ -126,7 +130,7 @@ namespace DataWF.Gui
 
         public Color ColorPress
         {
-            get { return colorPress; }
+            get => colorPress;
             set
             {
                 if (ColorPress.Equals(value))
@@ -137,7 +141,7 @@ namespace DataWF.Gui
 
         public Color ColorAlternate
         {
-            get { return colorAlternate; }
+            get => colorAlternate;
             set
             {
                 if (ColorAlternate.Equals(value))
@@ -153,33 +157,55 @@ namespace DataWF.Gui
 
         protected void DisposeCache()
         {
-            foreach (var kvp in dictBrush)
-                kvp.Value.Dispose();
-            dictBrush.Clear();
+            //foreach (var kvp in dictBrush)
+            //    kvp.Value.Dispose();
+            cacheBrush.Clear();
         }
 
-        public Pattern GetBrush(Rectangle rect, Color color)
+        public Brush GetBrush(Rect rect, Color color)
         {
-            Pattern _brush = null;
-            if (color != ColorEmpty)// && !dictBrush.TryGetValue(color, out _brush))
+            Brush brush = null;
+            var token = new BrushToken
+            {
+                Color = color,
+                Type = type,
+                Bound = rect
+            };
+            if (color != ColorEmpty && !cacheBrush.TryGetValue(token, out brush))
             {
                 switch (type)
                 {
                     case CellStyleBrushType.Solid:
-                        _brush = null;
+                        brush = new SolidColorBrush(color);
                         break;
                     case CellStyleBrushType.Gradient:
-                        _brush = GetGradientBrush(color, rect);
+                        brush = CreateGradientBrush(color, rect);
                         break;
                     case CellStyleBrushType.Texture:
-                        _brush = GetTextureBrush(color);
+                        brush = CreateTextureBrush(color);
                         break;
                     default:
+                        brush = null;
                         break;
                 }
-                //dictBrush.Add(color, _brush);
+                cacheBrush[token] = brush;
             }
-            return _brush;
+            return brush;
+        }
+
+        public Pen GetPen(double thickness, Color color)
+        {
+            Pen pen = null;
+            var token = new PenToken
+            {
+                Color = color,
+                Thickness = thickness
+            };
+            if (Color != ColorEmpty && !cachePen.TryGetValue(token, out pen))
+            {
+                cachePen[token] = pen = new Pen(GetBrush(Rect.Empty, color), thickness);
+            }
+            return pen;
         }
 
         public Color GetColorByState(CellDisplayState state)
@@ -196,12 +222,20 @@ namespace DataWF.Gui
             return c;
         }
 
-        public Pattern GetBrushByState(Rectangle rect, CellDisplayState state)
+        public Brush GetBrushByState(Rect rect, CellDisplayState state)
         {
             Color color = GetColorByState(state);
             if (color == ColorEmpty)
                 return null;
             return GetBrush(rect, color);
+        }
+
+        public Pen GetPenByState(CellDisplayState state, double thikness = 2)
+        {
+            Color color = GetColorByState(state);
+            if (color == ColorEmpty)
+                return null;
+            return GetPen(thikness, color);
         }
 
         #region ICloneable implementation
@@ -218,6 +252,52 @@ namespace DataWF.Gui
             };
         }
         #endregion
+
+        private struct BrushToken : IEquatable<BrushToken>
+        {
+            public Color Color;
+            public CellStyleBrushType Type;
+            public Rect Bound;
+
+            public override bool Equals(object obj)
+            {
+                return obj is BrushToken token && Equals(token);
+            }
+
+            public bool Equals(BrushToken other)
+            {
+                return Color.Equals(other.Color) &&
+                       Type == other.Type &&
+                       Bound.Equals(other.Bound);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Color, Type, Bound);
+            }
+        }
+
+        public struct PenToken : IEquatable<PenToken>
+        {
+            public Color Color;
+            public double Thickness;
+
+            public override bool Equals(object obj)
+            {
+                return obj is PenToken token && Equals(token);
+            }
+
+            public bool Equals(PenToken other)
+            {
+                return Color.Equals(other.Color) &&
+                       Thickness == other.Thickness;
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Color, Thickness);
+            }
+        }
     }
 }
 

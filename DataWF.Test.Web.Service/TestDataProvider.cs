@@ -1,100 +1,74 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
-using Microsoft.AspNetCore.Mvc;
+using DataWF.Module.Common;
+using DataWF.Module.Flow;
 using System;
 using System.Threading.Tasks;
 
 namespace DataWF.Test.Web.Service
 {
-    public class TestDataProvider : DataProviderBase
+    [Provider]
+    [SchemaEntry(typeof(FlowSchema))]
+    [SchemaEntry(typeof(FlowSchemaLog))]
+    public partial class TestDataProvider : DBProvider
     {
-        public TestDataProvider()
-        {
-            SchemaName = "test";
-        }
-
-        public override void Generate()
-        {
-            Schema.Generate(new[] {
-                typeof(DataWF.Data.Instance).Assembly,
-                typeof(Module.Common.User).Assembly,
-                typeof(Module.Counterpart.Customer).Assembly,
-                typeof(Module.Messanger.Message).Assembly,
-                typeof(Module.Flow.Document).Assembly
-            });
-        }
+        public FlowSchema Schema => FlowSchema;
 
         public override void Load()
         {
-            DBService.Load();
+            base.Load("data.xml");
 
-            if (Schema == null || Schema.Connection == null)
+            if (Schema.Connection == null)
             {
-                CreateNew();
+                Schema.Connection = new DBConnection
+                {
+                    Name = Schema.Name,
+                    System = DBSystem.SQLite,
+                    DataBase = $"{Schema.Name}.sqlite"
+                };
             }
+            Schema.ExecuteDropDatabase();
+            Generate();
+            Schema.ExecuteCreateDatabase();
+            Save();
             if (!Schema.Connection.CheckConnection())
             {
                 throw new Exception("Check Connection FAIL!");
             }
             Generate();
-            DBService.CommitChanges();
+            CommitChanges();
 
-            Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Data"));
+            Helper.Log(this, "Generate Data");
 
-            foreach (var initializer in Helper.ModuleInitializer)
+            foreach (var initializer in Helper.Modules)
             {
-                initializer.Initialize();
+                initializer.Initialize(new[] { Schema });
             }
-        }
 
-        public override Task CreateNew()
-        {
-            Schema = new DBSchema()
+            _ = new UserGroup(Schema.UserGroup)
             {
-                Name = schemaName,
-                Connection = new DBConnection
-                {
-                    Name = schemaName,
-                    System = DBSystem.SQLite,
-                    DataBase = $"{schemaName}.sqlite"
-                }
-            };
+                Id = 1,
+                NameEN = "admin",
+            }.SaveOrUpdate((IUserIdentity)null);
 
-            Generate();
-            Schema.DropDatabase();
-            Schema.CreateDatabase();
-            Save();
-            return Task.CompletedTask;
+            _ = new User(Schema.User)
+            {
+                Id = 1,
+                Login = "admin",
+                EMail = "admin@domain.com",
+                AuthType = UserAuthType.Internal,
+                Password = "admin1!",
+                Super = true,
+            }.SaveOrUpdate((IUserIdentity)null);
         }
-    }
-    public class Class1
-    {
-        public int ItemType { get; set; }
-    }
 
-    public class Class2 : Class1
-    {
-        public string Class2Property { get; set; }
-    }
+        public UserTable Users => Schema.User;
 
-    public abstract class Class3 : Class2
-    {
-        public string Class3Property { get; set; }
-    }
-
-    public class Class4 : Class3
-    {
-        public string Class4Property { get; set; }
-    }
-
-    [Route("api/[controller]")]
-    [ApiController]
-    public class TestController : ControllerBase
-    {
-        [HttpGet]
-        public Class4 Get()
+        public override IUserIdentity GetUser(string email)
         {
-            return new Class4();
+            return Users.GetByEmail(email);
         }
     }
+
+
 }

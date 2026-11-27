@@ -1,6 +1,6 @@
 ﻿using System;
-using DataWF.Common;
-using Xwt;
+using DataWF;
+using Avalonia;
 
 namespace DataWF.Gui
 {

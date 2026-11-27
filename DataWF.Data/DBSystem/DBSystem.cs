@@ -17,13 +17,17 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using DataWF.Collections;
+using DataWF.Comparers;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -37,6 +41,11 @@ namespace DataWF.Data
         public static readonly DBSystem Postgres = new DBSystemPostgres();
         public static readonly DBSystem SQLite = new DBSystemSQLite();
         public static readonly DBSystem Default = new DBSystemDefault();
+        public static IEnumerable<DBSystem> GetSystems()
+        {
+            return new[] { DBSystem.MSSql, DBSystem.MySql, DBSystem.Oracle, DBSystem.Postgres, DBSystem.SQLite };
+        }
+
 
         public string Name { get; internal set; }
 
@@ -69,17 +78,19 @@ namespace DataWF.Data
             return command;
         }
 
+        public IDataParameter CreateParameter(IDbCommand command, DBColumn column, object value)
+        {
+            return CreateParameter(command, $"{ParameterPrefix}{column.SqlName}", value, column);
+        }
 
         public virtual IDataParameter CreateParameter(IDbCommand command, string name, object value, DBColumn column)
         {
             IDataParameter parameter = null;
-            foreach (IDataParameter param in command.Parameters)
-                if (param.ParameterName == name)
-                {
-                    parameter = param;
-                    break;
-                }
-            if (parameter == null)
+            if (command.Parameters.Contains(name))
+            {
+                parameter = (IDataParameter)command.Parameters[name];
+            }
+            else
             {
                 parameter = command.CreateParameter();
                 parameter.ParameterName = name;
@@ -87,13 +98,8 @@ namespace DataWF.Data
             }
             parameter.Direction = ParameterDirection.Input;
 
-            WriteValue(command, parameter, value, column);
+            FillParameter(command, parameter, value, column);
             return parameter;
-        }
-
-        public static IEnumerable<DBSystem> GetSystems()
-        {
-            return new[] { DBSystem.MSSql, DBSystem.MySql, DBSystem.Oracle, DBSystem.Postgres, DBSystem.SQLite };
         }
 
         public virtual IEnumerable<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName = null, string tableName = null)
@@ -176,15 +182,20 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
         }
 
-        public abstract Task DeleteLOB(uint oid, DBTransaction transaction);
 
-        public abstract Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920);
 
-        public abstract Task<uint> SetLOB(Stream value, DBTransaction transaction);
+        public virtual async ValueTask<IDataParameter> CreateStreamParameter(IDbCommand command, DBColumn<byte[]> dataColumn, Stream stream)
+        {
+            //Double buffering!!!
+            return CreateParameter(command, dataColumn, await Helper.GetBufferedBytesAsync(stream));
+        }
 
         public virtual void CreateDatabase(DBSchema schema, DBConnection connection)
         {
-            //DropDatabase(schema);
+            if (!Directory.Exists(connection.Path))
+            {
+                Directory.CreateDirectory(connection.Path);
+            }
 
             var ddl = new StringBuilder();
             Format(ddl, schema, DDLType.Create);
@@ -297,25 +308,38 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             ddl.AppendLine($"alter table {column.Table.SqlName} drop column {column.SqlName}");
         }
 
-        public virtual void Format(StringBuilder ddl, DBColumn column, DDLType ddlType)
+        public virtual void Format(StringBuilder ddl, DBColumn column, DDLType ddlType, bool inlineConstraints = false)
         {
-            var constraints = column.Table.Constraints.GetByColumn(column).ToList();
+            var constraints = column.Table.Constraints.GetByColumn(column)
+                .Union(column.Table.Foreigns.GetByColumn(column)).ToList();
+
             switch (ddlType)
             {
                 case DDLType.Create:
                     FormatCreate(ddl, column);
                     if (constraints.Count > 0)
                     {
-                        ddl.AppendLine("go");
-                        foreach (var item in constraints)
+                        if (inlineConstraints)
                         {
-                            Format(ddl, item, DDLType.Create);
+                            foreach (var item in constraints)
+                            {
+                                Format(ddl, item);
+                                ddl.AppendLine();
+                            }
+                        }
+                        else
+                        {
                             ddl.AppendLine("go");
+                            foreach (var item in constraints)
+                            {
+                                Format(ddl, item, DDLType.Create);
+                                ddl.AppendLine("go");
+                            }
                         }
                     }
                     break;
                 case DDLType.Alter:
-                    if (constraints.Count > 0)
+                    if (constraints.Count > 0 && !inlineConstraints)
                     {
                         foreach (var item in constraints)
                         {
@@ -324,7 +348,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                         }
                     }
                     FormatAlter(ddl, column);
-                    if (constraints.Count > 0)
+                    if (constraints.Count > 0 && !inlineConstraints)
                     {
                         ddl.AppendLine("go");
                         foreach (var item in constraints)
@@ -335,13 +359,14 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     }
                     break;
                 case DDLType.Drop:
-                    if (constraints.Count > 0)
+                    if (constraints.Count > 0 && !inlineConstraints)
                     {
-                        ddl.AppendLine("go"); foreach (var item in constraints)
+                        foreach (var item in constraints)
                         {
                             Format(ddl, item, DDLType.Drop);
                             ddl.AppendLine("go");
                         }
+                        ddl.AppendLine("go");
                     }
                     FormatDrop(ddl, column);
                     break;
@@ -393,43 +418,45 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual void Format(StringBuilder ddl, DBConstraint constraint)
         {
-            if (constraint.Type == DBConstraintType.Primary)
+            if (constraint.ConstraintType == DBConstraintType.Primary)
             {
                 ddl.AppendFormat("constraint {0} primary key ({1})", constraint.Name, constraint.Columns.Names);
             }
-            if (constraint.Type == DBConstraintType.Unique)
+            if (constraint.ConstraintType == DBConstraintType.Unique)
             {
                 ddl.AppendFormat("constraint {0} unique ({1})", constraint.Name, constraint.Columns.Names);
             }
-            if (constraint.Type == DBConstraintType.Default)
+            if (constraint.ConstraintType == DBConstraintType.Default)
             {
                 ddl.AppendFormat("constraint {0} default {1}", constraint.Name, constraint.Value);
             }
-            if (constraint.Type == DBConstraintType.Check)
+            if (constraint.ConstraintType == DBConstraintType.Check)
             {
                 ddl.AppendFormat("constraint {0} check ({1})", constraint.Name, constraint.Value);
             }
-            if (constraint.Type == DBConstraintType.Foreign)
+            if (constraint.ConstraintType == DBConstraintType.Foreign)
             {
                 Format(ddl, (DBForeignKey)constraint);
             }
             ddl.AppendLine();
         }
 
-        public abstract Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior);
+        public virtual void PrepareStatements(IDbCommand command)
+        {
+        }
 
-        public abstract Task<bool> ReadAsync(IDataReader reader);
+        public abstract Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior);
 
         public virtual void Format(StringBuilder ddl, DBForeignKey constraint)
         {
-            DBTable refer = constraint.ReferenceTable;
-            if (refer is IDBVirtualTable)
-                refer = ((IDBVirtualTable)refer).BaseTable;
+            var refer = constraint.ReferenceTable;
+            if (refer.IsVirtual)
+                refer = refer.ParentTable;
             ddl.AppendFormat(" constraint {0} foreign key ({1}) references {2}({3})",
                              constraint.Name,
-                             constraint.Column.Name,
+                             constraint.Column.SqlName,
                              refer.Name,
-                             constraint.Reference.Name);
+                             constraint.Reference.SqlName);
         }
 
         public virtual void Format(StringBuilder ddl, DBIndex index, DDLType ddlType)
@@ -456,26 +483,25 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return "create view " + name + " as";
         }
 
-        public virtual void Format(StringBuilder ddl, IDBVirtualTable virtualTable, DDLType ddlType)
+        public virtual void FormatView(StringBuilder ddl, DBTable virtualTable, DDLType ddlType)
         {
-            var table = virtualTable as DBTable;
             if (ddlType == DDLType.Create)
             {
-                ddl.AppendLine(FormatCreateView(table.Name));
+                ddl.AppendLine(FormatCreateView(virtualTable.Name));
                 ddl.Append("select ");
-                foreach (var column in table.Columns)
+                foreach (var column in virtualTable.Columns)
                 {
                     if (column.ColumnType == DBColumnTypes.Default)
-                        ddl.Append($"a.{column.Name} as {column.Name}");
+                        ddl.Append($"a.{column.SqlName} as {column.SqlName}");
                     else if (column.ColumnType == DBColumnTypes.Query)
-                        ddl.Append($"({column.Query}) as {column.Name}");
+                        ddl.Append($"({column.Query}) as {column.SqlName}");
                     else
                         continue;
                     ddl.Append(", ");
                 }
                 ddl.Length -= 2;
                 ddl.AppendLine();
-                ddl.AppendLine($"from {table.SqlName} a where {table.Query};");
+                ddl.AppendLine($"from {virtualTable.ParentTable.SqlName} a where {virtualTable.SubQuery};");
             }
         }
 
@@ -496,12 +522,12 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             switch (ddlType)
             {
                 case DDLType.Create:
-                    if (table.Type == DBTableType.View)
+                    if (table.TableType == DBTableType.View)
                     {
                         ddl.AppendLine($"create view {table.SqlName} as");
-                        ddl.Append(table.Query);
+                        ddl.Append(table.SubQuery);
                     }
-                    else if (table.Type == DBTableType.Table)
+                    else if (table.TableType == DBTableType.Table)
                     {
                         ddl.AppendLine($"create table {table.SqlName} (");
                         foreach (DBColumn column in table.Columns)
@@ -520,7 +546,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                             {
                                 if (constraint.Column.ColumnType == DBColumnTypes.Default)
                                 {
-                                    ddl.Append(",");
+                                    ddl.AppendLine(",");
                                     Format(ddl, constraint);
                                 }
                             }
@@ -528,7 +554,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                             {
                                 if (relation.Column.ColumnType == DBColumnTypes.Default)
                                 {
-                                    ddl.Append(",");
+                                    ddl.AppendLine(",");
                                     Format(ddl, relation);
                                 }
                             }
@@ -567,7 +593,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                         Format(ddl, item, DDLType.Drop);
                         ddl.AppendLine("go");
                     }
-                    ddl.AppendLine($"drop {(table.Type == DBTableType.View ? "view" : "table")} {table.OldName ?? table.Name}");
+                    ddl.AppendLine($"drop {(table.TableType == DBTableType.View ? "view" : "table")} {table.OldName ?? table.Name}");
                     break;
             }
         }
@@ -592,7 +618,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
         {
             foreach (var table in schema.Tables)
             {
-                if (table is IDBVirtualTable)
+                if (table.IsVirtual)
                     continue;
                 Format(ddl, table, DDLType.Create, schema.Connection.System == DBSystem.SQLite, false);
                 ddl.AppendLine("go");
@@ -600,17 +626,17 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
             if (schema.Connection.System != DBSystem.SQLite)
             {
-                foreach (var constraint in schema.GetConstraints())
+                foreach (var constraint in schema.GetAllConstraints())
                 {
-                    if (constraint.Table is IDBVirtualTable || constraint.Column.ColumnType != DBColumnTypes.Default)
+                    if (constraint.Table.IsVirtual || constraint.Column.ColumnType != DBColumnTypes.Default)
                         continue;
                     Format(ddl, constraint, DDLType.Create);
                     ddl.AppendLine("go");
                 }
 
-                foreach (var foreign in schema.GetForeigns())
+                foreach (var foreign in schema.GetAllForeignConstraints())
                 {
-                    if (foreign.Table is IDBVirtualTable || foreign.Column.ColumnType != DBColumnTypes.Default)
+                    if (foreign.Table.IsVirtual || foreign.Column.ColumnType != DBColumnTypes.Default)
                         continue;
                     Format(ddl, foreign, DDLType.Create);
                     ddl.AppendLine("go");
@@ -623,9 +649,9 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 ddl.AppendLine("go");
             }
 
-            foreach (var index in schema.GetIndexes())
+            foreach (var index in schema.GetAllIndexes())
             {
-                if (index.Table is IDBVirtualTable)
+                if (index.Table.IsVirtual)
                     continue;
                 Format(ddl, index, DDLType.Create);
                 ddl.AppendLine("go");
@@ -649,22 +675,22 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return command.ToString();
         }
 
-        public virtual void FormatInsert(StringBuilder command, DBTable table, DBItem row = null)
+        public virtual void FormatInsert(StringBuilder command, IDBTable table, DBItem row = null)
         {
-            var id = $"{ParameterPrefix}{table.PrimaryKey?.Name}";
-            if (table.PrimaryKey != null && row != null && row.PrimaryId == null)
+            var id = $"{ParameterPrefix}{table.PrimaryKey?.SqlName}";
+            if (table.PrimaryKey != null && row != null && row.UpdateState == DBUpdateState.Insert && table.PrimaryKey.IsEmpty(row))
             {
                 id = SequenceInline(table.Sequence);
             }
             FormatInsert(command, table, id, row);
         }
 
-        public virtual void FormatInsert(StringBuilder command, DBTable table, string id, DBItem row = null)
+        public virtual void FormatInsert(StringBuilder command, IDBTable table, string id, DBItem row = null)
         {
             command.AppendFormat("insert into {0}(", table.SqlName);
             foreach (var column in table.Columns)
             {
-                if (column.ColumnType == DBColumnTypes.Default && (column.Keys & DBColumnKeys.Increment) != DBColumnKeys.Increment)
+                if (column.ColumnType == DBColumnTypes.Default && (column.Keys & ColumnFlags.Increment) != ColumnFlags.Increment)
                 {
                     command.Append(column.SqlName);
                     command.Append(", ");
@@ -674,7 +700,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             command.Append(")\n    values(");
             foreach (var column in table.Columns)
             {
-                if (column.ColumnType != DBColumnTypes.Default || (column.Keys & DBColumnKeys.Increment) == DBColumnKeys.Increment)
+                if (column.ColumnType != DBColumnTypes.Default || (column.Keys & ColumnFlags.Increment) == ColumnFlags.Increment)
                     continue;
                 if (row == null)
                 {
@@ -685,12 +711,12 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     else
                     {
                         command.Append(ParameterPrefix);
-                        command.Append(column.Name);
+                        command.Append(column.SqlName);
                     }
                 }
                 else
                 {
-                    if (column.IsPrimaryKey && row.PrimaryId == null && table.Sequence != null)
+                    if (column.IsPrimaryKey && column.IsEmpty(row) && table.Sequence != null)
                     {
                         command.Append(id);
                     }
@@ -700,7 +726,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     }
                     else
                     {
-                        command.Append(FormatText(row[column]));
+                        command.Append(column.FormatQuery(row));
                     }
                 }
                 command.Append(", ");
@@ -719,14 +745,14 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             {
                 if (column.ColumnType == DBColumnTypes.Default && !column.IsPrimaryKey)
                 {
-                    command.AppendFormat("{0}={1}, ", column.SqlName, row == null ? ParameterPrefix + column.Name : FormatText(row[column]));
+                    command.AppendFormat("{0}={1}, ", column.SqlName, row == null ? ParameterPrefix + column.SqlName : column.FormatQuery(row));
                     flag = true;
                 }
             }
             if (flag)
             {
                 command.Length -= 2;
-                command.AppendFormat(" where {0}={1}", table.PrimaryKey.SqlName, row == null ? ParameterPrefix + table.PrimaryKey.Name : FormatText(row.PrimaryId));
+                command.AppendFormat(" where {0}={1}", table.PrimaryKey.SqlName, row == null ? ParameterPrefix + table.PrimaryKey.SqlName : table.PrimaryKey.FormatQuery(row));
             }
         }
 
@@ -737,8 +763,8 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             {
                 command.AppendFormat("delete from {0} where {1}={2}",
                     table.SqlName,
-                    table.PrimaryKey.Name,
-                    row == null ? prefix + table.PrimaryKey.Name : FormatText(row.PrimaryId));
+                    table.PrimaryKey.SqlName,
+                    row == null ? prefix + table.PrimaryKey.SqlName : table.PrimaryKey.FormatQuery(row));
             }
         }
 
@@ -767,10 +793,10 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public string FormatInsert(DBTable table, bool fill)
         {
-            var rows = fill ? table.LoadItems().ToList() : table.SelectItems("").ToList();
+            var rows = fill ? table.Load<DBItem>().ToList() : ((IEnumerable<DBItem>)table).ToList();
             if (table.GroupKey != null)
             {
-                ListHelper.QuickSort(rows, new TreeComparer<DBGroupItem>());
+                ListHelper.QuickSort(rows, new GroupComparer<DBGroupItem>());
             }
             return DMLInsert(rows, "");
         }
@@ -786,30 +812,18 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return builder.ToString();
         }
 
-        public virtual object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        public virtual object FillParameter(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
-            if (value == null)
-            {
-                value = DBNull.Value;
-            }
-            else if (column != null && column.DataType.IsEnum)
-            {
-                value = (int)value;
-            }
-            else if (value is IByteSerializable serializable)
-            {
-                value = serializable.Serialize();
-            }
             parameter.Value = value;
             return value;
         }
 
-        public virtual uint GetOID(IDataReader reader, int index)
+        public virtual uint GetUInt(DbDataReader reader, int index)
         {
             return (uint)reader.GetValue(index);
         }
 
-        public virtual TimeSpan GetTimeSpan(IDataReader reader, int index)
+        public virtual TimeSpan GetTimeSpan(DbDataReader reader, int index)
         {
             return (TimeSpan)reader.GetValue(index);
         }
@@ -858,19 +872,19 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return value;
         }
 
-        public virtual string FormatQColumn(DBColumn column, string tableAlias)
+        public virtual string FormatQColumn(DBColumn column, string tableAlias, string columnAlias = null)
         {
             if (column.ColumnType == DBColumnTypes.Internal
                 || column.ColumnType == DBColumnTypes.Expression
                 || column.ColumnType == DBColumnTypes.Code)
                 return string.Empty;
-            else if (column.ColumnType == DBColumnTypes.Query && column.Table.Type != DBTableType.View)
-                return string.Format("({0}) as \"{1}\"", column.Query, column.Name);
+            else if (column.ColumnType == DBColumnTypes.Query && column.Table.TableType != DBTableType.View)
+                return string.Format("({0}) as \"{1}\"", column.Query, column.SqlName);
             else
-                return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}{column.SqlName}";
+                return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}{column.SqlName}{(columnAlias != null ? " as \"" : string.Empty)}{columnAlias}{(columnAlias != null ? "\"" : string.Empty)}";
         }
 
-        public virtual string FormatQTable(DBTable table, string alias)
+        public virtual string FormatQTable(IDBTable table, string alias)
         {
             var schema = table.Schema?.Connection?.Schema;
             if (!string.IsNullOrEmpty(schema))
@@ -880,13 +894,13 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return $"{table.SqlName} {alias}";
         }
 
-        public virtual string FormatText(object value)
+        public virtual string FormatQuery(object value)
         {
             if (value == null)
                 return "null";
 
-            if (value is DBItem)
-                value = ((DBItem)value).PrimaryId;
+            if (value is DBItem item)
+                value = item.PrimaryId;
             else if (value.GetType().IsEnum)
                 value = (int)value;
 
@@ -915,24 +929,27 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
                 return sBuilder.ToString();
             }
+            else if (value is IFormattable formatable)
+                return formatable.ToString(null, CultureInfo.InvariantCulture);
             else
                 return value.ToString().Replace(",", ".");
         }
 
         public virtual Stream ReadSequential(DBItem item, DBColumn column, DBTransaction transaction)
         {
-            var command = transaction.AddCommand(item.Table.CreatePrimaryKeyCommmand(item.PrimaryId, new[] { column }));
-            transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (transaction.Reader.Read())
+            var query = item.Table.QQuery().Column(column).Where(item.Table.PrimaryKey, item.PrimaryId);
+            var command = transaction.AddCommand(query.ToCommand());
+            var reader = transaction.ExecuteReader(command, CommandBehavior.SequentialAccess);
+            if (reader.Read())
             {
-                return new DataReaderStream(transaction.Reader, false);
+                return new DataReaderStream(reader, false);
             }
             return null;
         }
 
         public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)
         {
-            using (var transaction = new DBTransaction(item.Table.Connection, null, true))
+            using (var transaction = new DBTransaction(item.Table, null, true))
             {
                 ReadSequential(item, column, stream, transaction, bufferSize);
             }
@@ -940,27 +957,32 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, DBTransaction transaction, int bufferSize = 81920)
         {
-            var command = transaction.AddCommand(item.Table.CreatePrimaryKeyCommmand(item.PrimaryId, new[] { column }));
-            using (transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
+            var query = item.Table.QQuery().Column(column).Where(item.Table.PrimaryKey, item.PrimaryId);
+            var command = transaction.AddCommand(query.ToCommand());
+            using (var reader = transaction.ExecuteReader(command, CommandBehavior.SequentialAccess))
             {
-                if (transaction.Reader.Read())
+                if (reader.Read())
                 {
-                    if (transaction.Reader.IsDBNull(0))
+                    if (reader.IsDBNull(0))
                     {
                         throw new Exception("No Data Found!");
                     }
+                    //using (var dbStream = reader.GetStream(1))
+                    //{
+                    //    dbStream.CopyTo(stream, bufferSize);
+                    //}
                     var buffer = new byte[bufferSize];
                     int position = 0;
                     int readed;
-                    while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                    while ((readed = (int)reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
                     {
                         stream.Write(buffer, 0, readed);
                         position += readed;
                     }
                 }
-                transaction.Reader.Close();
+                reader.Close();
             }
-            transaction.Reader = null;
+            transaction.CurrentReader = null;
             stream.Position = 0;
         }
 

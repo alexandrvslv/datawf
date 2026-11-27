@@ -20,30 +20,40 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Data;
 using System.Globalization;
 using System.Threading.Tasks;
-using DataWF.Common;
+using DataWF;
+using DataWF.Access;
+using DataWF.ModelProviders;
 
 namespace DataWF.Data
 {
-    public interface IDBTable : IDBSchemaItem, ICollection<DBItem>, IDisposable
+    public interface IDBTable<T> : IDBTable, IModelTable<T>
+    {
+    }
+
+    public interface IDBTable : IDBSchemaItem, IModelTable, ICollection, IDisposable
     {
         DBItem this[int index] { get; }
-        DBColumn AccessKey { get; }
-        DBColumn CodeKey { get; }
-        DBColumn DateKey { get; }
-        DBColumn ElementTypeKey { get; }
-        DBColumn FileKey { get; }
-        DBColumn FileLOBKey { get; }
-        DBColumn FileNameKey { get; }
-        DBColumn GroupKey { get; }
-        DBColumn ImageKey { get; }
-        DBColumn ItemTypeKey { get; }
         DBColumn PrimaryKey { get; }
-        DBColumn StampKey { get; }
-        DBColumn StatusKey { get; }
+        DBColumn<byte[]> AccessKey { get; }
+        DBColumn<string> CodeKey { get; }
+        DBColumn<DateTime> DateCreateKey { get; }
+        DBColumn ElementTypeKey { get; }
+        DBColumn<byte[]> FileKey { get; }
+        DBColumn<long?> FileOIDKey { get; }
+        DBColumn<string> FileNameKey { get; }
+        DBColumn<DateTime?> FileLastWriteKey { get; }
+        DBColumn GroupKey { get; }
+        DBColumn<byte[]> ImageKey { get; }
+        DBColumn<int> ItemTypeKey { get; }
+        DBColumn<DateTime> StampKey { get; }
+        DBColumn<DateTime?> ReplicateStampKey { get; }
+        DBColumn<DBStatus> StatusKey { get; }
         DBSystem System { get; }
+        IComparer DefaultComparer { get; set; }
         int BlockSize { get; set; }
         List<DBForeignKey> ChildRelations { get; }
         DBColumnGroupList ColumnGroups { get; set; }
@@ -51,9 +61,7 @@ namespace DataWF.Data
         DBConstraintList<DBConstraint> Constraints { get; set; }
         DBForeignList Foreigns { get; set; }
         DBIndexList Indexes { get; set; }
-        string ComDelete { get; set; }
-        string ComInsert { get; set; }
-        string ComUpdate { get; set; }
+        DBTableItemList<DBReferencing> Referencings { get; set; }
         DBConnection Connection { get; }
         IDBTableView DefaultItemsView { get; }
         DBTableGroup Group { get; set; }
@@ -61,17 +69,20 @@ namespace DataWF.Data
         bool IsCaching { get; set; }
         bool IsEdited { get; }
         bool IsLoging { get; set; }
-        DBItemType ItemType { get; }
-        int ItemTypeIndex { get; set; }
-        Dictionary<int, DBItemType> ItemTypes { get; set; }
-        IDBLogTable LogTable { get; set; }
+        bool IsVirtual { get; }
+        IDBTable ParentTable { get; }
+        Dictionary<int, Type> ItemTypes { get; set; }
+        IDBTableLog LogTable { get; set; }
         string LogTableName { get; set; }
-        string Query { get; set; }
+        string SubQuery { get; set; }
         DBSequence Sequence { get; set; }
         string SequenceName { get; set; }
         string SqlName { get; }
         TableGenerator Generator { get; }
-        DBTableType Type { get; set; }
+        DBTableType TableType { get; set; }
+        IQQuery FilterQuery { get; set; }
+        //bool IsSynchronized { get; }
+        string ItemTypeName { get; }
 
         event EventHandler<DBLoadColumnsEventArgs> LoadColumns;
         event EventHandler<DBLoadCompleteEventArgs> LoadComplete;
@@ -80,89 +91,93 @@ namespace DataWF.Data
         event EventHandler<DBItemEventArgs> RowUpdating;
 
         void Accept(DBItem item);
-        void AcceptChanges(IUserIdentity user);
-        void AddView(IDBTableView view);
-        void AddVirtual(IDBVirtualTable view);
-        string BuildQuery(string whereFilter, string alias, IEnumerable<DBColumn> cols, string function = null);
-        DBColumn CheckColumn(string name, Type type, ref bool newCol);
-        void CheckColumns(DBTransaction transaction);
-        bool CheckItem(DBItem item, object val1, object val2, CompareType comparer);
-        bool CheckItem(DBItem item, QItemList<QParam> parameters);
-        bool CheckItem(DBItem item, QParam param);
-        bool CheckItem(DBItem item, QQuery query);
-        bool CheckItem(DBItem item, string column, object val, CompareType comparer);
-        IDbCommand CreatePrimaryKeyCommmand(object id, IEnumerable<DBColumn> cols = null);
-        IDBTableView CreateItemsView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
-        string CreateQuery(string whereText, string alias, IEnumerable<DBColumn> cols = null);
+        bool Add(DBItem item);
+        void AcceptAll(IUserIdentity user);
+        void RejectAll(IUserIdentity user);
         void DeleteById(object id);
-        string FormatQColumn(DBColumn column, string tableAlias);
-        string FormatQTable(string alias);
-        void Generate(DBTableInfo tableInfo);
-        void GenerateDefaultColumns();
-        IDBLogTable GenerateLogTable();
-        DBSequence GenerateSequence(string sequenceName = null);
-        void GetAllChildTables(List<DBTable> parents);
-        void GetAllParentTables(List<DBTable> parents);
-        IEnumerable<DBItem> GetChangedItems();
-        IEnumerable<DBForeignKey> GetChildRelations();
-        IEnumerable<DBTable> GetVirtualTables();
-        IEnumerable<DBTable> GetChildTables();
-        DBColumn GetCultureColumn(string group, CultureInfo culture);
-        DBItemType GetItemType(int typeIndex);
-        DBColumn GetNameKey(string group);
-        IEnumerable<DBTable> GetParentTables();
-        int GetRowCount(DBTransaction transaction, string where);
-        string GetRowText(object id);
-        string GetRowText(object id, bool allColumns, bool showColumn, string separator);
-        string GetRowText(object id, IEnumerable<DBColumn> parameters);
-        string GetRowText(object id, IEnumerable<DBColumn> parametrs, bool showColumn, string separator);
-        QEnum GetStatusEnum(DBStatus status);
-        QParam GetStatusParam(DBStatus status);
-        int GetTypeIndex(Type type);
-        QParam GetTypeParam(Type type);
-        DBColumn InitColumn(string code);
-        DBColumnGroup InitColumnGroup(string code);
-        void LoadFile();
-        void LoadFile(string fileName);
-        DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null);
-        DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
-        DBItem LoadItemFromReader(DBTransaction transaction);
-        IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
-        IEnumerable<DBItem> LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
-        IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
-        void LoadReferenceBlock(IDbCommand command, DBTransaction transaction);
-        void LoadReferencingBlock(IDbCommand command, DBTransaction transaction);
+        bool Remove(DBItem item);
+        void Reload(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
+        T NewItem<T>(DBUpdateState state = DBUpdateState.Insert, bool def = true) where T : DBItem;
         DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true);
         DBItem NewItem(DBUpdateState state, bool def, int typeIndex);
-        int NextHash();
-        void OnItemChanged<V>(DBItem item, string proeprty, DBColumn column, V value);
-        void OnItemChanged(DBItem item, string proeprty, DBColumn column, object value);
-        void OnItemChanging<V>(DBItem item, string proeprty, DBColumn column, V value);
-        void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
-        void OnUpdated(DBItemEventArgs e);
-        bool OnUpdating(DBItemEventArgs e);
-        DBColumn ParseColumn(string name);
-        DBColumn ParseColumnProperty(string property);
-        IEnumerable<DBColumn> ParseColumns(ICollection<string> columns);
-        DBColumn ParseProperty(string property);
-        DBColumn ParseProperty(string property, ref DBColumn cache);
+        IEnumerable<DBItem> GetChangedItems();
+        int GetCount(DBTransaction transaction, string where);
+        Task Save(IEnumerable<DBItem> rows = null);
+        Task Save(DBTransaction transaction, IEnumerable<DBItem> rows = null);
+        Task<bool> Save(DBItem item, DBTransaction transaction);
+
+        void AddVirtualTable(IDBTable view);
+        IDBTable GetVirtualTable(Type type);
+        DBTable<T> GetVirtualTable<T>() where T : DBItem;
+        IEnumerable<IDBTable> GetVirtualTables();
+        void RemoveVirtual(IDBTable view);
+
+        string BuildQuery(string whereFilter, string alias, DBLoadParam loadParam = DBLoadParam.None, string function = null);
+
+        void AddView(IDBTableView view);
+        void RemoveView(IDBTableView view);
+        IDBTableView CreateView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
+
+        DBColumnGroup GetOrCreateColumnGroup(string code);
+        DBColumn GetOrCreateColumn(string name, Type type, ref bool newCol);
+        DBColumn GetOrCreateColumn(string code, Type type);
+        IEnumerable<DBColumn> GetTypeColumns<T>();
+        IEnumerable<DBColumn> GetTypeColumns(Type t);
+        IEnumerable<DBColumn> GetReferenceColumns();
+        DBColumn<string> GetCultureColumn(string group, CultureInfo culture);
+        DBColumn GetColumn(string name);
+        DBColumn<T> GetColumn<T>(string name);
+        DBColumn<T> GetColumn<T>(string property, ref DBColumn<T> cache);
+        DBColumn GetColumnOrProperty(string nameOrProperty);
+        DBColumn GetColumnByProperty(string property);
+        DBColumn GetColumnByProperty(string property, ref DBColumn cache);
+        DBColumn<T> GetColumnByProperty<T>(string property);
+        DBColumn<T> GetColumnByProperty<T>(string property, ref DBColumn<T> cache);
+        IEnumerable<DBColumn> GetQueryColumns(DBLoadParam param = DBLoadParam.None);
+        IEnumerable<DBColumn> GetColumns(ICollection<string> columns);
+        DBColumn<string> GetCultureColumn(string group);
+        DBReferencing GetReferencing(string property);
+        IEnumerable<DBReferencing> GetReferencingByProperty(Type type);
+        IEnumerable<DBReferencing> GetAllReferencing(Type valueType);
+
+        DBSequence GenerateSequence(string sequenceName = null);
+        long GenerateId(DBTransaction transaction);
         void RefreshSequence(bool truncate = false);
         void RefreshSequence(DBTransaction transaction, bool truncate = false);
-        void RejectChanges(IUserIdentity user);
-        void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
-        void RemoveView(IDBTableView view);
-        void RemoveVirtual(IDBVirtualTable view);
-        Task Save(IList rows = null);
-        Task Save(DBTransaction transaction, IList rows = null);
+
+        void Generate(DBTableInfo tableInfo);
+        IDBTableLog GenerateLogTable();
+
+        IEnumerable<DBForeignKey> GetChildRelations();
+        IEnumerable<IDBTable> GetChildTables();
+        IEnumerable<IDBTable> GetParentTables();
+        Type GetItemType(int typeIndex);
+        int GetTypeIndex(Type type);
+
+
+        T LoadByCode<T>(string code, DBColumn<string> column, DBLoadParam param, DBTransaction transaction = null) where T : DBItem;
+        T LoadById<T>(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
+        List<T> LoadById<T>(List<string> ids, DBTransaction transaction) where T : DBItem;
+        T LoadById<T, K>(K? id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where K : struct where T : DBItem;
+        IEnumerable<T> LoadByKey<T>(object key, DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
+        IEnumerable<T> LoadByKey<T, K>(K key, DBColumn<K> column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem;
+        //IEnumerable<T> Load<T>(string whereText, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
+        IEnumerable<T> Load<T>(IDbCommand command, IQQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null) where T : DBItem;
+        IEnumerable<T> Load<T>(IQQuery query, DBTransaction transaction = null) where T : DBItem;
+        IEnumerable<T> Load<T>(IQQuery<T> query, DBTransaction transaction = null) where T : DBItem;
+
+        IEnumerable<T> Select<T>(IQQuery qQuery) where T : DBItem;
+        IEnumerable<T> Select<T>(IQQuery<T> qQuery) where T : DBItem;
+
+        IQQuery QQuery(DBLoadParam loadParam = DBLoadParam.None);
+        IQQuery QQuery(string filter, DBLoadParam loadParam = DBLoadParam.None);
+        IQQuery QQuery(IQQuery baseQuery);
+
+        void Trunc();
+
+        void LoadFile();
+        void LoadFile(string fileName);
         void SaveFile();
         void SaveFile(string fileName);
-        Task<bool> SaveItem(DBItem item, DBTransaction transaction);
-        IEnumerable<DBItem> SelectItems(DBColumn column, CompareType comparer, object val);
-        IEnumerable<DBItem> SelectItems(QQuery qQuery);
-        IEnumerable<DBItem> SelectItems(string qQuery);
-        IEnumerable<object> SelectQuery(DBItem item, QQuery query, CompareType compare);
-
-        bool ParseQuery(string filter, out QQuery query);
-        void Trunc();
     }
 }

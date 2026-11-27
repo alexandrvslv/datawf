@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentDetailView<T> : ListEditor, IDocument, ISync
-        where T : DBItem, IDocumentDetail, new()
+    public abstract class DocumentDetailView<T> : ListEditor, IDocument, ISync
+        where T : DocumentItem
     {
         protected Document document;
         protected DBTableView<T> view;
 
         public DocumentDetailView() : base(new DocumentLayoutList())
         {
-            view = new DBTableView<T>(Table, new QParam(LogicType.And, Table.ParseProperty("DocumentId"), CompareType.Equal, 0), DBViewKeys.Empty);
+            view = new DBTableView<T>(Table, new QParam(CompareOperator.And, Table.ParseProperty("DocumentId"), CompareOperator.Equal, 0), DBViewKeys.Empty);
             DataSource = view;
 
             List.EditMode = EditModes.ByF2;
@@ -33,7 +33,7 @@ namespace DataWF.Module.FlowGui
 
         public DBTable<T> Table
         {
-            get { return DBTable.GetTable<T>(null, false); }
+            get { return FlowExplorer.Schema.GetTable<T>(false); }
         }
 
         public virtual Document Document
@@ -44,7 +44,7 @@ namespace DataWF.Module.FlowGui
                 if (document != value)
                 {
                     document = value;
-                    view.DefaultParam.Value = document?.Id ?? 0;
+                    view.DefaultParam.RightValue = document?.Id ?? 0;
                     view.UpdateFilter();
                     view.IsSynchronized = false;
                 }
@@ -85,9 +85,11 @@ namespace DataWF.Module.FlowGui
 
         protected override void OnToolInsertClick(object sender, EventArgs e)
         {
-            var newItem = new T { Document = Document };
+            var newItem = GetNewItem();
             ShowObject(newItem);
         }
+
+        protected abstract T GetNewItem();
 
         protected override void OnToolRemoveClick(object sender, EventArgs e)
         {

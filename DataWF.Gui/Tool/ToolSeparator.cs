@@ -1,6 +1,6 @@
-﻿using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
+﻿using DataWF;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
@@ -18,7 +18,7 @@ namespace DataWF.Gui
             Height = 6;
         }
 
-        public override void OnDraw(GraphContext context)
+        public override void Render(GraphContext context)
         {
             //context.Context.Save();
             //context.Context.SetColor(style.FontBrush.Color);

@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DataWF.Test.Invokers\Common\TestClass.cs" Link="Common\TestClass.cs" />
+    <Compile Include="..\DataWF.Test.Invokers\Common\TestClass.Invokers.cs" Link="Common\TestClass.Invokers.cs" />
+    <Compile Include="..\DataWF.Test.Invokers\Common\TestStruct.cs" Link="Common\TestStruct.cs" />
+    <Compile Include="..\DataWF.Test.Invokers\Common\TestStruct.Invokers.cs" Link="Common\TestStruct.Invokers.cs" />
+    <Compile Include="..\DataWF.Test.Invokers\Common\TestRecord.Invokers.cs" Link="Common\TestRecord.Invokers.cs" />
+    <Compile Include="..\DataWF.Test.Invokers\Common\TestIndexInvoker.cs" Link="Common\TestIndexInvoker.cs" />
+    <Compile Include="..\DataWF.Test.Invokers\Common\TestFieldInvoker.cs" Link="Common\TestFieldInvoker.cs" />
+    <Compile Include="..\DataWF.Test.Invokers\Common\TestIntPropertyInvoker.cs" Link="Common\TestIntPropertyInvoker.cs" />
+    <Compile Include="..\DataWF.Test.Invokers\Common\TestInlineFieldInvoker.cs" Link="Common\TestInlineFieldInvoker.cs" />
+    <Compile Include="..\DataWF.Test.Invokers\Common\TestInlinePropertyInvoker.cs" Link="Common\TestInlinePropertyInvoker.cs" />
+
+    <Compile Include="..\DataWF.Test.Invokers\Common\ReflectionFieldInvoker.cs" Link="Common\ReflectionFieldInvoker.cs" />
+    <Compile Include="..\DataWF.Test.Invokers\Common\ReflectionPropertyInvoker.cs" Link="Common\ReflectionPropertyInvoker.cs" />
+    <Compile Include="..\DataWF.Test.Invokers\Common\ReflectionUniversalInvoker.cs" Link="Common\ReflectionUniversalInvoker.cs" />
+</ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../DataWF.Invokers/DataWF.Invokers.csproj" />
+    <ProjectReference Include="../DataWF.Generator/DataWF.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

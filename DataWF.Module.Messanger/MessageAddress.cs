@@ -1,4 +1,5 @@
-﻿using DataWF.Data;
+﻿using DataWF;
+using DataWF.Data;
 using DataWF.Module.Common;
 using System;
 using System.ComponentModel;
@@ -6,120 +7,93 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Messanger
 {
-    public class MessageAddressList : DBTableView<MessageAddress>
+
+    [DataContract, Table("dmessage_address", "Message", Keys = DBTableKeys.NoLogs)]
+    public partial class MessageAddress : MessageDetail
     {
-        public MessageAddressList(string filter)
-            : base(MessageAddress.DBTable, filter)
-        {
-            //_ApplySort(new DBRowComparer(FlowEnvir.Config.StageParameter.Table, FlowEnvir.Config.StageParameter.Table.PrimaryKey.Code, ListSortDirection.Ascending));
-        }
-
-        public MessageAddressList()
-            : this(string.Empty)
-        { }
-
-        public MessageAddressList(Message message)
-            : this(string.Format("({0} = {1}",
-                                 MessageAddress.DBTable.ParseProperty(nameof(MessageAddress.MessageId)).Name, message.PrimaryId))
-        { }
-    }
-
-    [DataContract, Table("dmessage_address", "Message", IsLoging = false)]
-    public class MessageAddress : MessageDetail
-    {
-        public static readonly DBTable<MessageAddress> DBTable = GetTable<MessageAddress>();
-        public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(UserId));
-        public static readonly DBColumn PositionKey = DBTable.ParseProperty(nameof(PositionId));
-        public static readonly DBColumn DepartmentKey = DBTable.ParseProperty(nameof(DepartmentId));
-        public static readonly DBColumn DateReadKey = DBTable.ParseProperty(nameof(DateRead));
-
         private User user;
         private Position position;
         private Department department;
 
-        public MessageAddress()
+        [DataMember, Column("unid", Keys = ColumnFlags.Primary)]
+        public long Id
         {
-        }
-
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
-        {
-            get { return GetValue<int?>(table.PrimaryKey); }
-            set { SetValue(value, table.PrimaryKey); }
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
         [DataMember, Column("user_id"), Index("dmessage_address_user_id")]
         public int? UserId
         {
-            get { return GetValue<int?>(UserKey); }
-            set { SetValue(value, UserKey); }
+            get => GetValue(Table.UserIdKey);
+            set => SetValue(value, Table.UserIdKey);
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetReference(UserKey, ref user); }
+            get => GetReference(Table.UserIdKey, ref user);
             set
             {
-                SetReference(user = value, UserKey);
+                SetReference(user = value, Table.UserIdKey);
                 Position = value?.Position;
             }
         }
 
         [Browsable(false)]
-        [DataMember, Column("position_id", Keys = DBColumnKeys.View), Index("dmessage_address_position_id")]
+        [DataMember, Column("position_id", Keys = ColumnFlags.View), Index("dmessage_address_position_id")]
         public int? PositionId
         {
-            get { return GetValue<int?>(PositionKey); }
-            set { SetValue(value, PositionKey); }
+            get => GetValue(Table.PositionIdKey);
+            set => SetValue(value, Table.PositionIdKey);
         }
 
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get { return GetReference(PositionKey, ref position); }
+            get => GetReference(Table.PositionIdKey, ref position);
             set
             {
-                SetReference(position = value, PositionKey);
+                SetReference(position = value, Table.PositionIdKey);
                 Department = value?.Department;
             }
         }
 
         [Browsable(false)]
-        [DataMember, Column("department_id", Keys = DBColumnKeys.View), Index("dmessage_address_department_id")]
+        [DataMember, Column("department_id", Keys = ColumnFlags.View), Index("dmessage_address_department_id")]
         public int? DepartmentId
         {
-            get { return GetValue<int?>(DepartmentKey); }
-            set { SetValue(value, DepartmentKey); }
+            get => GetValue(Table.DepartmentIdKey);
+            set => SetValue(value, Table.DepartmentIdKey);
         }
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetReference(DepartmentKey, ref department); }
-            set { SetReference(department = value, DepartmentKey); }
+            get => GetReference(Table.DepartmentIdKey, ref department);
+            set => SetReference(department = value, Table.DepartmentIdKey);
         }
 
         [DataMember, Column("date_read")]
         public DateTime? DateRead
         {
-            get { return GetValue<DateTime?>(DateReadKey); }
-            set { SetValue(value, DateReadKey); }
+            get => GetValue(Table.DateReadKey);
+            set => SetValue(value, Table.DateReadKey);
         }
 
         [Browsable(false)]
         public DBItem Staff
         {
-            get { return (DBItem)User ?? (DBItem)Position ?? (DBItem)Department; }
+            get => (DBItem)User ?? (DBItem)Position ?? (DBItem)Department;
             set
             {
-                if (value is Department)
-                    Department = (Department)value;
-                else if (value is Position)
-                    Position = (Position)value;
-                else if (value is User)
-                    User = (User)value;
+                if (value is Department department)
+                    Department = department;
+                else if (value is Position position)
+                    Position = position;
+                else if (value is User user)
+                    User = user;
             }
         }
     }

@@ -1,9 +1,11 @@
 ﻿using System;
-using Xwt;
-using Xwt.Drawing;
-using DataWF.Common;
+using Avalonia;
+using Avalonia.Controls;
+using DataWF;
 using System.Collections;
 using System.ComponentModel;
+using Avalonia.Media;
+using Avalonia.Input;
 
 namespace DataWF.Gui
 {
@@ -17,7 +19,7 @@ namespace DataWF.Gui
         protected bool headerVisible = true;
         protected bool dropDownWindow = true;
         protected bool dropDownAutoHide;
-        protected Widget content;
+        protected Control content;
         public bool ListAutoSort = true;
         protected string filter = string.Empty;
 
@@ -33,8 +35,8 @@ namespace DataWF.Gui
 
         public bool DropDownWindow
         {
-            get { return dropDownWindow; }
-            set { DropDownVisible = dropDownWindow = value; }
+            get => dropDownWindow;
+            set => DropDownVisible = dropDownWindow = value;
         }
 
         public bool DropDownVisible { get; set; } = true;
@@ -49,7 +51,7 @@ namespace DataWF.Gui
 
         public ToolWindow DropDown
         {
-            get { return Editor?.DropDown; }
+            get => Editor?.DropDown;
             set
             {
                 if (Editor != null)
@@ -59,7 +61,7 @@ namespace DataWF.Gui
 
         public bool HeaderVisible
         {
-            get { return headerVisible; }
+            get => headerVisible;
             set
             {
                 if (headerVisible == value)
@@ -72,17 +74,17 @@ namespace DataWF.Gui
 
         public virtual string EntryText
         {
-            get { return EntryWidget?.Text; }
+            get => EntryControl?.Text;
             set
             {
                 bool flag = HandleText;
                 HandleText = false;
-                if (EntryWidget != null)
-                    EntryWidget.Text = value;
-                if (DropDown != null && DropDown.Target is RichTextView)
+                if (EntryControl != null)
+                    EntryControl.Text = value;
+                if (DropDown != null && DropDown.Target is TextBox textBox)
                 {
-                    ((RichTextView)DropDown.Target).LoadText(value ?? string.Empty, Xwt.Formats.TextFormat.Plain);
-                    ((RichTextView)DropDown.Target).ReadOnly = ReadOnly;
+                    textBox.Text = value ?? string.Empty;
+                    textBox.IsReadOnly = ReadOnly;
                 }
                 HandleText = flag;
             }
@@ -96,7 +98,7 @@ namespace DataWF.Gui
 
         public virtual object Value
         {
-            get { return Editor?.Value; }
+            get => Editor?.Value;
             set
             {
                 if (Editor != null)
@@ -107,9 +109,9 @@ namespace DataWF.Gui
             }
         }
 
-        public TextEntry EntryWidget
+        public TextBox EntryControl
         {
-            get { return Editor.Widget as TextEntry; }
+            get { return Editor.Control as TextBox; }
         }
 
         protected bool HandleText { get; set; } = true;
@@ -121,7 +123,7 @@ namespace DataWF.Gui
         {
             if (HandleText && Editor != null)
             {
-                var text = sender == Editor.Widget ? EntryText : sender is RichTextView ? ((RichTextView)sender).PlainText.TrimEnd() : string.Empty;
+                var text = sender == Editor.Control ? EntryText : sender is TextBox textBox ? textBox.Text.TrimEnd() : string.Empty;
                 HandleText = false;
                 if (Filtering && !text.Equals(filter, StringComparison.OrdinalIgnoreCase))
                 {
@@ -140,7 +142,7 @@ namespace DataWF.Gui
                         {
                             GuiService.ToolTip.LableText = "Input error";
                             GuiService.ToolTip.ContentText = ex.Message + "\n" + ex.StackTrace;
-                            GuiService.ToolTip.Show(Editor, new Point(0, Editor.Size.Height));
+                            GuiService.ToolTip.Show(Editor, new Point(0, Editor.Height));
                         }
                     }
                 }
@@ -209,52 +211,54 @@ namespace DataWF.Gui
             DropDown.Target = InitDropDownContent();
         }
 
-        public virtual Widget InitDropDownContent()
+        public virtual IControl InitDropDownContent()
         {
-            var reachText = Editor.GetCached<RichTextView>();
+            var reachText = Editor.GetCached<TextBox>();
             return reachText;
         }
 
-        public virtual Widget InitEditorContent()
+        public virtual Control InitEditorContent()
         {
             if (Masked && Format != null)
             {
-                var box = Editor.GetCached<TextEntry>();
-                box.MultiLine = MultiLine;
-                box.KeyPressed += OnTextKeyPressed;
-                box.KeyReleased += OnTextKeyReleased;
-                box.ShowFrame = false;
-                box.ReadOnly = ReadOnly;
+                var box = Editor.GetCached<MaskedTextBox>();
+                box.AcceptsReturn = MultiLine;
+                box.TextWrapping = MultiLine ? TextWrapping.Wrap : TextWrapping.NoWrap;
+                box.KeyDown += OnTextKeyPressed;
+                box.KeyUp += OnTextKeyReleased;
+                //box.Border = false;
+                box.IsReadOnly = ReadOnly;
                 var style = Editor?.Cell?.Style;
                 if (style != null)
                 {
-                    box.Font = style.Font;
-                    box.BackgroundColor = style.BackBrush.ColorSelect;
-                    box.TextColor = style.FontBrush.ColorSelect;
+                    box.FontFamily = style.FontFamily;
+                    box.Background = style.BackBrush.GetBrushByState(box.Bounds, CellDisplayState.Selected);
+                    box.Foreground = style.FontBrush.GetBrushByState(box.Bounds, CellDisplayState.Selected);
                 }
-                //box.Mask = format;
+                box.Mask = Format;
                 //box.ValidatingType = type;
                 if (!ReadOnly && HandleText)
-                    box.Changed += OnTextChanged;
+                    box.TextInput += OnTextChanged;
                 return box;
             }
             else
             {
-                var box = Editor.GetCached<TextEntry>();
-                box.MultiLine = MultiLine;
-                box.KeyPressed += OnTextKeyPressed;
-                box.KeyReleased += OnTextKeyReleased;
-                box.ShowFrame = false;
-                box.ReadOnly = ReadOnly;
+                var box = Editor.GetCached<TextBox>();
+                box.AcceptsReturn = MultiLine;
+                box.TextWrapping = MultiLine ? TextWrapping.Wrap : TextWrapping.NoWrap;
+                box.KeyDown += OnTextKeyPressed;
+                box.KeyUp += OnTextKeyReleased;
+                //box.ShowFrame = false;
+                box.IsReadOnly = ReadOnly;
                 var style = Editor?.Cell?.Style;
                 if (style != null)
                 {
-                    box.Font = style.Font;
-                    box.BackgroundColor = style.BackBrush.ColorSelect;
-                    box.TextColor = style.FontBrush.ColorSelect;
+                    box.FontFamily = style.FontFamily;
+                    box.Background = style.BackBrush.GetBrushByState(box.Bounds, CellDisplayState.Selected);
+                    box.Foreground = style.FontBrush.GetBrushByState(box.Bounds, CellDisplayState.Selected);
                 }
                 if (!ReadOnly && HandleText)
-                    box.Changed += OnTextChanged;
+                    box.TextInput += OnTextChanged;
                 return box;
             }
         }
@@ -265,16 +269,16 @@ namespace DataWF.Gui
             try
             {
                 InitDefault(editor, value, dataSource);
-                editor.Widget = InitEditorContent();
+                editor.Control = InitEditorContent();
                 if (DropDownWindow)
                 {
                     InitDropDown();
                 }
                 Value = value;
-                if (editor.Widget is TextEntry textEntry)
+                if (editor.Control is TextBox textEntry)
                 {
                     textEntry.SelectionStart = 0;
-                    textEntry.SelectionLength = textEntry.Text.Length;
+                    textEntry.SelectionEnd = textEntry.Text.Length;
                 }
                 editor.IsValueChanged = false;
             }
@@ -291,9 +295,9 @@ namespace DataWF.Gui
 
         protected virtual object GetDropDownValue()
         {
-            if (DropDown.Target is RichTextView)
+            if (DropDown.Target is TextBox textBox)
             {
-                return ((RichTextView)DropDown.Target).PlainText;
+                return textBox.Text;
             }
             return Value;
         }
@@ -302,14 +306,14 @@ namespace DataWF.Gui
         {
             if (e.Key == Key.Down)
             {
-                if (!DropDown.Visible && !e.Handled)
+                if (!DropDown.IsVisible && !e.Handled)
                 {
                     Editor.ShowDropDown(ToolShowMode.Default);
                 }
             }
             else if (e.Key == Key.Escape && DropDown?.Target != null)
             {
-                if (DropDown.Visible)
+                if (DropDown.IsVisible)
                     DropDown.Hide();
             }
         }
@@ -318,14 +322,14 @@ namespace DataWF.Gui
         {
             if (DataType.IsPrimitive || DataType == typeof(decimal))
             {
-                if (!char.IsControl((char)e.NativeKeyCode) && !char.IsDigit((char)e.NativeKeyCode) && e.Key != Key.Minus)
+                if (!char.IsControl((char)e.Key) && !char.IsDigit((char)e.Key) && e.Key != Key.OemMinus)
                 {
                     e.Handled = true;
                 }
 
                 // only allow one decimal point
                 bool dpoint = EntryText.IndexOf('.') != -1 || EntryText.IndexOf(',') != -1;
-                if (!dpoint && (e.Key == Key.Comma || e.Key == Key.Period))
+                if (!dpoint && (e.Key == Key.OemComma || e.Key == Key.OemPeriod))
                 {
                     e.Handled = false;
                 }
@@ -341,11 +345,11 @@ namespace DataWF.Gui
             }
             if (Editor != null)
             {
-                if (EntryWidget != null)
+                if (EntryControl != null)
                 {
-                    EntryWidget.Changed -= OnTextChanged;
-                    EntryWidget.KeyPressed -= OnTextKeyPressed;
-                    EntryWidget.KeyReleased -= OnTextKeyReleased;
+                    EntryControl.TextInput -= OnTextChanged;
+                    EntryControl.KeyDown -= OnTextKeyPressed;
+                    EntryControl.KeyUp -= OnTextKeyReleased;
                 }
                 Editor.Image = null;
                 Editor.DropDown = null;

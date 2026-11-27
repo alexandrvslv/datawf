@@ -17,6 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF;
 using System;
 using System.ComponentModel;
 using System.Data;
@@ -24,10 +25,11 @@ using System.Globalization;
 
 namespace DataWF.Data
 {
-    public class QValue : QColumn
+    public class QValue : QItem
     {
         [DefaultValue(null)]
-        protected object value = null;
+        protected object _value = null;
+        private DBColumn column;
 
         public QValue()
         { }
@@ -40,12 +42,7 @@ namespace DataWF.Data
 
         public object Value
         {
-            get
-            {
-                if (value == null && text != null)
-                    value = Column?.ParseValue(text) ?? text;
-                return value;
-            }
+            get => _value;
             set
             {
                 if (Column == null)
@@ -61,52 +58,38 @@ namespace DataWF.Data
 
                 }
                 else
-                    value = Column.ParseValue(value);
-                if (value?.GetType().IsEnum ?? false)
+                    value = value == null ? null : Column.ParseValue(value);
+                if (_value != value)
                 {
-                    value = (int)value;
-                }
-                if (this.value != value)
-                {
-                    this.value = value;
-                    this.text = DBSystem.FormatText(value);
-                    OnPropertyChanged(nameof(Value));
+                    _value = value;
+                    //OnPropertyChanged(nameof(Value));
                 }
             }
         }
 
-        public override DBColumn Column
+        public DBColumn Column
         {
-            get => base.Column;
+            get => column;
             set
             {
                 if (Column != value)
                 {
-                    ColumnName = value?.FullName;
-                    //prefix = value.Table.Code;
-                    columnn = value;
+                    column = value;
+                    //OnPropertyChanged();
                 }
-            }
-        }
-
-        public override string Text
-        {
-            get { return base.Text; }
-            set
-            {
-                base.Text = value;
-                this.value = null;
             }
         }
 
         public override string Format(IDbCommand command = null)
         {
-            return (command == null || Value == null) ? DBSystem.FormatText(Value) : CreateParameter(command, Value, Column);
+            return command == null
+                ? ToString()
+                : CreateCommandParameter(command, Column != null ? Column.GetParameterValue(Value) : Value, Column);
         }
 
         public override string ToString()
         {
-            return DBSystem.FormatText(Value);
+            return Column != null ? Column.FormatQuery(Value) : System.FormatQuery(Value);
         }
 
         public override object GetValue(DBItem row)
@@ -114,6 +97,28 @@ namespace DataWF.Data
             return Value;
         }
 
+        public override object GetValue<T>()
+        {
+            var value = GetValue((DBItem)null);
+            var param = Holder as QParam ?? Container?.Owner as QParam;
+            var comparer = param?.Comparer ?? CompareOperator.Equal;
 
+            if (value is string stringValue)
+            {
+                if (comparer.Type == CompareOperatorType.In)
+                {
+                    value = stringValue.Split(Helper.CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
+                }
+                else if (comparer.Type == CompareOperatorType.Like)
+                {
+                    value = Helper.BuildLike(stringValue);
+                }
+            }
+            else if (value is DBItem dbItem)
+            {
+                value = dbItem.PrimaryId;
+            }
+            return value;
+        }
     }
 }

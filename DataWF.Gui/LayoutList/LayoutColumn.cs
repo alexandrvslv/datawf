@@ -1,11 +1,13 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Xml.Serialization;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using DataWF.Invokers;
 
 namespace DataWF.Gui
 {
@@ -17,7 +19,7 @@ namespace DataWF.Gui
         protected ILayoutCellEditor editor;
         protected LayoutColumn owner;
         protected LayoutColumnList columns;
-        protected TextLayout textLayout;
+        protected FormattedText FormattedText;
         protected bool readOnly;
         protected bool validate;
         protected bool view = true;
@@ -42,8 +44,8 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public LayoutListInfo Info
         {
-            get { return info ?? Map?.Info; }
-            set { info = value; }
+            get => info ?? Map?.Info;
+            set => info = value;
         }
 
         protected override void OnPropertyChanged(string property)
@@ -86,15 +88,14 @@ namespace DataWF.Gui
         {
             get
             {
-                if (columns == null)
-                    columns = new LayoutColumnList();
+                columns ??= new LayoutColumnList();
                 return columns;
             }
         }
 
         public string Format
         {
-            get { return format; }
+            get => format;
             set
             {
                 if (format != value)
@@ -108,14 +109,14 @@ namespace DataWF.Gui
 
         public string OwnerName
         {
-            get { return ownerName; }
-            set { ownerName = value; }
+            get => ownerName;
+            set => ownerName = value;
         }
 
         [XmlIgnore]
         public LayoutColumn Owner
         {
-            get { return owner ?? (owner = Info?.Columns.GetItem(ownerName)); }
+            get => owner ??= Info?.Columns.GetItem(ownerName);
             set
             {
                 if (owner != value)
@@ -135,7 +136,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle ColumnStyle
         {
-            get { return columnStyle ?? (columnStyle = GuiEnvironment.Theme[ColumnStyleName]); }
+            get => columnStyle ??= GuiEnvironment.Theme[ColumnStyleName];
             set
             {
                 columnStyle = value;
@@ -150,7 +151,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle Style
         {
-            get { return style ?? (style = GuiEnvironment.Theme[StyleName]); }
+            get => style ??= GuiEnvironment.Theme[StyleName];
             set
             {
                 style = value;
@@ -165,8 +166,8 @@ namespace DataWF.Gui
         [XmlIgnore]
         public IInvoker Invoker
         {
-            get { return invoker; }
-            set { invoker = value; }
+            get => invoker;
+            set => invoker = value;
         }
 
         [XmlIgnore]
@@ -175,7 +176,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public ILayoutCellEditor CellEditor
         {
-            get { return editor; }
+            get => editor;
             set
             {
                 if (editor != value)
@@ -192,28 +193,32 @@ namespace DataWF.Gui
             return editor;
         }
 
-        public TextLayout GetTextLayout()
+        public FormattedText GetFormattedText()
         {
-            if (textLayout == null)
+            if (FormattedText == null)
             {
-                textLayout = new TextLayout() { Font = ColumnStyle.Font, Text = Text };
-                TextSize = textLayout.GetSize();
+                FormattedText = new FormattedText()
+                {
+                    Typeface = ColumnStyle.Typeface,
+                    Text = Text
+                };
+                TextSize = FormattedText.Bounds.Size;
             }
-            return textLayout;
+            return FormattedText;
         }
 
         public string Text
         {
-            get { return text; }
+            get => text;
             set
             {
                 if (Text != value)
                 {
                     text = value;
-                    if (textLayout != null)
+                    if (FormattedText != null)
                     {
-                        textLayout.Text = value;
-                        TextSize = textLayout.GetSize();
+                        FormattedText.Text = value;
+                        TextSize = FormattedText.Bounds.Size;
                     }
                 }
             }
@@ -222,7 +227,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool ReadOnly
         {
-            get { return readOnly; }
+            get => readOnly;
             set
             {
                 if (readOnly != value)
@@ -235,35 +240,34 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool Validate
         {
-            get { return validate; }
-            set { validate = value; }
+            get => validate;
+            set => validate = value;
         }
 
         [Browsable(false), DefaultValue(true)]
         public bool Editable
         {
-            get { return editable; }
-            set { editable = value; }
+            get => editable;
+            set => editable = value;
         }
 
         [XmlIgnore]
         public bool Password
         {
-            get { return password; }
-            set { password = value; }
+            get => password;
+            set => password = value;
         }
 
         public string Description
         {
-            get { return description; }
-            set { description = value; }
+            get => description;
+            set => description = value;
         }
 
 
         public override void Dispose()
         {
             base.Dispose();
-            textLayout?.Dispose();
         }
 
         public LayoutColumn Clone()
@@ -286,7 +290,7 @@ namespace DataWF.Gui
                 ownerName = ownerName,
                 ReadOnly = ReadOnly,
                 StyleName = StyleName,
-                Visible = Visible,
+                Visible = IsVisible,
                 Info = Info
             };
             foreach (var item in items.Where(e => e is ICloneable))

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using DataWF.Common;
-using Xwt;
+using DataWF;
+using Avalonia;
+using Avalonia.Input;
 
 namespace DataWF.Gui
 {
@@ -19,9 +20,9 @@ namespace DataWF.Gui
         {
         }
 
-        public Rectangle CarretBound
+        public Rect CarretBound
         {
-            get { return new Rectangle(Bound.Right - (CarretSize + 2), Bound.Top + (Bound.Height - CarretSize) / 2D, CarretSize, CarretSize); }
+            get { return new Rect(Bound.Right - (CarretSize + 2), Bound.Top + (Bound.Height - CarretSize) / 2D, CarretSize, CarretSize); }
         }
 
         [DefaultValue(16D)]
@@ -30,13 +31,13 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellDisplayState CarretState
         {
-            get { return carretState; }
+            get => carretState;
             set
             {
                 if (carretState != value)
                 {
                     carretState = value;
-                    Bar?.QueueDraw();
+                    Bar?.InvalidateVisual();
                 }
             }
         }
@@ -46,7 +47,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle CarretStyle
         {
-            get { return carretStyle ?? (carretStyle = GuiEnvironment.Theme[CarretStyleName]); }
+            get => carretStyle ??= GuiEnvironment.Theme[CarretStyleName];
             set
             {
                 carretStyle = value;
@@ -60,27 +61,29 @@ namespace DataWF.Gui
 
         public event EventHandler CarretClick;
 
-        protected override internal void OnButtonReleased(ButtonEventArgs args)
+        protected override internal void OnPointerReleased(PointerReleasedEventArgs args)
         {
-            if (CarretVisible && CarretBound.Contains(args.Position))
+            var position = args.GetPosition(Bar);
+            if (CarretVisible && CarretBound.Contains(position))
             {
                 OnCarretClick(args);
             }
             else
             {
-                base.OnButtonReleased(args);
+                base.OnPointerReleased(args);
             }
         }
 
-        protected virtual void OnCarretClick(ButtonEventArgs args)
+        protected virtual void OnCarretClick(PointerEventArgs args)
         {
             CarretClick?.Invoke(this, args);
         }
 
-        protected internal override void OnMouseMove(MouseMovedEventArgs args)
+        protected internal override void OnMouseMove(PointerEventArgs args)
         {
             base.OnMouseMove(args);
-            if (CarretVisible && CarretBound.Contains(args.Position))
+            var position = args.GetPosition(Bar);
+            if (CarretVisible && CarretBound.Contains(position))
             {
                 CarretState = CellDisplayState.Hover;
             }
@@ -90,9 +93,9 @@ namespace DataWF.Gui
             }
         }
 
-        protected override internal void OnMouseExited(EventArgs args)
+        protected override internal void OnPointerExited(PointerEventArgs args)
         {
-            base.OnMouseExited(args);
+            base.OnPointerExited(args);
             CarretState = CellDisplayState.Default;
         }
 
@@ -102,9 +105,9 @@ namespace DataWF.Gui
             width += CarretSize;
         }
 
-        public override void OnDraw(GraphContext context)
+        public override void Render(GraphContext context)
         {
-            base.OnDraw(context);
+            base.Render(context);
             if (CarretVisible)
             {
                 var carret = CarretBound;

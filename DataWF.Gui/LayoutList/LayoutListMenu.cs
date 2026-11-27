@@ -1,7 +1,7 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Generic;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Gui
 {
@@ -11,7 +11,7 @@ namespace DataWF.Gui
         public LayoutListMenu()
         {
             Target = new LayoutInfoEditor();
-            Size = new Size(900, 600);
+            FrameSize = new Size(900, 600);
             Title = Locale.Get(nameof(LayoutListMenu), "List Constructor");
         }
 
@@ -33,10 +33,7 @@ namespace DataWF.Gui
         public LayoutList ContextList
         {
             get => Editor.ContextList;
-            set
-            {
-                Editor.ContextList = value;
-            }
+            set => Editor.ContextList = value;
         }
 
         public LayoutField ContextField { get => Editor.ContextField; set => Editor.ContextField = value; }
@@ -58,15 +55,12 @@ namespace DataWF.Gui
         public static ToolMenuItem BuilMenuItem(LayoutField f)
         {
             var item = LayoutListMenu.GetCached(f);
-            if (item == null)
-            {
-                item = new ToolMenuItem((object sender, EventArgs e) => ((LayoutField)((ToolMenuItem)sender).Tag).Visible = true)
+            item ??= new ToolMenuItem((object sender, EventArgs e) => ((LayoutField)((ToolMenuItem)sender).Tag).Visible = true)
                 {
                     Name = f.Name,
                     Text = GroupHelper.GetFullName(f, " "),
                     Tag = f
                 };
-            }
             return item;
         }
 
@@ -130,7 +124,7 @@ namespace DataWF.Gui
 
             contextList.recs.Area.Set(0, 0, e.MarginBounds.Width, e.MarginBounds.Height);
 
-            Rectangle rect = new Rectangle();
+            Rect rect = new Rect();
             rect.Set(e.MarginBounds.X, e.MarginBounds.Y, e.MarginBounds.Width, e.MarginBounds.Height);
             rect.X = 0;
 

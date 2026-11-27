@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>DataWF.Benchmark.Invokers.Benchmarks.AccessField-20261122-125859</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.8, Linux Ubuntu 26.04.1 LTS (Resolute Raccoon)
+AMD Ryzen 7 2700U with Radeon Vega Mobile Gfx, 1 CPU, 8 logical and 4 physical cores
+.NET SDK 10.0.115
+  [Host]     : .NET 10.0.15 (10.0.15, 10.0.1526.53008), X64 RyuJIT x86-64-v3
+  DefaultJob : .NET 10.0.15 (10.0.15, 10.0.1526.53008), X64 RyuJIT x86-64-v3
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method </th><th>IterationCount</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Median</th><th>Gen0</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Exact</td><td>1000</td><td>2.278 &mu;s</td><td>0.0456 &mu;s</td><td>0.0682 &mu;s</td><td>2.263 &mu;s</td><td>-</td><td>-</td>
+</tr><tr><td>Generate</td><td>1000</td><td>2.393 &mu;s</td><td>0.0479 &mu;s</td><td>0.0746 &mu;s</td><td>2.384 &mu;s</td><td>-</td><td>-</td>
+</tr><tr><td>Delegate</td><td>1000</td><td>2.660 &mu;s</td><td>0.1034 &mu;s</td><td>0.2814 &mu;s</td><td>2.557 &mu;s</td><td>-</td><td>-</td>
+</tr><tr><td>Expression</td><td>1000</td><td>4.351 &mu;s</td><td>0.3948 &mu;s</td><td>1.1392 &mu;s</td><td>4.084 &mu;s</td><td>-</td><td>-</td>
+</tr><tr><td>GenerateBox</td><td>1000</td><td>26.927 &mu;s</td><td>1.8856 &mu;s</td><td>5.4103 &mu;s</td><td>25.051 &mu;s</td><td>22.9492</td><td>48000 B</td>
+</tr><tr><td>DelegateBox</td><td>1000</td><td>34.120 &mu;s</td><td>3.0825 &mu;s</td><td>9.0888 &mu;s</td><td>33.991 &mu;s</td><td>22.9492</td><td>48000 B</td>
+</tr><tr><td>ExpressionBox</td><td>1000</td><td>35.633 &mu;s</td><td>2.3762 &mu;s</td><td>7.0062 &mu;s</td><td>32.495 &mu;s</td><td>22.9492</td><td>48000 B</td>
+</tr><tr><td>ReflectionBox</td><td>1000</td><td>38.661 &mu;s</td><td>1.9951 &mu;s</td><td>5.4950 &mu;s</td><td>37.346 &mu;s</td><td>22.9492</td><td>48000 B</td>
+</tr><tr><td>Reflection</td><td>1000</td><td>49.125 &mu;s</td><td>3.9384 &mu;s</td><td>11.1083 &mu;s</td><td>52.334 &mu;s</td><td>22.9492</td><td>48000 B</td>
+</tr></tbody></table>
+</body>
+</html>

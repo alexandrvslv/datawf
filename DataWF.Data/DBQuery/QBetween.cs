@@ -17,34 +17,59 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using System;
+using System.Collections.Generic;
 using System.Data;
 
 namespace DataWF.Data
 {
-    public class QBetween : QItem, IBetween
+    public class QBetween : QItem, IBetween, IQItemList
     {
-        private QItem value1;
-        private QItem value2;
+        private QItem min;
+        private QItem max;
+        public QBetween()
+        { }
 
         public QBetween(object val1 = null, object val2 = null, DBColumn column = null)
         {
-            if (val1 is QItem)
-                value1 = (QItem)val1;
-            else if (val1 is DBColumn)
-                value1 = new QColumn((DBColumn)val1);
-            else if (val1 != null)
-                value1 = new QValue(val1, column);
-
-            if (val2 is QItem)
-                value2 = (QItem)val1;
-            else if (val2 is DBColumn)
-                value2 = new QColumn((DBColumn)val2);
-            else if (val2 != null)
-                value2 = new QValue(val2, column);
+            Min = QItem.Fabric(val1, column);
+            Max = QItem.Fabric(val2, column);
         }
 
-        public override object GetValue(DBItem row = null)
+        public IQItem Owner => Container.Owner;
+
+        public QItem Min
+        {
+            get => min;
+            set
+            {
+                min = value;
+                if (min != null)
+                {
+                    if (min is QColumn)
+                        IsReference = true;
+                    min.Holder = this;
+                }
+            }
+        }
+
+        public QItem Max
+        {
+            get => max;
+            set
+            {
+                max = value;
+                if (max != null)
+                {
+                    if (max is QColumn)
+                        IsReference = true;
+                    max.Holder = this;
+                }
+            }
+        }
+
+        public override object GetValue(DBItem row)
         {
             return this;
         }
@@ -56,39 +81,60 @@ namespace DataWF.Data
 
         public override string Format(IDbCommand command = null)
         {
-            string f1 = value1?.Format(command) ?? string.Empty;
-            string f2 = value2?.Format(command) ?? string.Empty;
-            if (f1.Length == 0 || f2.Length == 0)
+            string f1 = min?.Format(command);
+            string f2 = max?.Format(command);
+            if (string.IsNullOrEmpty(f1) || string.IsNullOrEmpty(f2))
                 return string.Empty;
 
-            if (Query?.Table?.Schema?.System == DBSystem.MSSql
-                || Query?.Table?.Schema?.System == DBSystem.Postgres
-                || Query?.Table?.Schema?.System == DBSystem.SQLite)
+            var system = Query?.Table?.Schema?.System;
+            if (system == DBSystem.MSSql
+                || system == DBSystem.Postgres
+                || system == DBSystem.SQLite)
                 return f1 + " and " + f2;
             else
                 return string.Format("({0}, {1})", f1, f2);
         }
 
-        public object MaxValue()
+        public object GetMin()
         {
-            return Max.GetValue();
+            return Min.GetValue<DBItem>();
         }
 
-        public object MinValue()
+        public object GetMax()
         {
-            return Min.GetValue();
+            return Max.GetValue<DBItem>();
         }
 
-        public QItem Min
+        public void Add(QItem value)
         {
-            get { return value1; }
-            set { value1 = value; }
+            if (min == null || GetMin() == null)
+                Min = value;
+            else if (max == null || GetMax() == null)
+                Max = value;
         }
 
-        public QItem Max
+        public void Delete(QItem item)
         {
-            get { return value2; }
-            set { value2 = value; }
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<IT> GetAllQItems<IT>(Func<IT, bool> predicate = null) where IT : IQItem
+        {
+            if (min is IT minTyped
+                && (predicate == null
+                    || predicate(minTyped)))
+                yield return minTyped;
+            else if (min is IQItemList minList)
+                foreach (var minItem in minList.GetAllQItems<IT>(predicate))
+                    yield return minItem;
+            if (max is IT maxTyped
+                && (predicate == null
+                    || predicate(maxTyped)))
+                yield return maxTyped;
+            else if (max is IQItemList maxList)
+                foreach (var maxItem in maxList.GetAllQItems<IT>(predicate))
+                    yield return maxItem;
+
         }
 
     }

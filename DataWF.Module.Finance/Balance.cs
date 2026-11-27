@@ -1,120 +1,100 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using DataWF;
 using DataWF.Data;
 using DataWF.Module.Common;
 using DataWF.Module.Counterpart;
 
 namespace DataWF.Module.Finance
 {
-    public class BalanceList : DBTableView<Balance>
+
+    [Table("dbalance", "Finance", BlockSize = 5000)]
+    public partial class Balance : DBItem
     {
-        public BalanceList()
-        {
-        }
-    }
-
-    [DataContract, Table("dbalance", "Finance", BlockSize = 5000)]
-    public class Balance : DBItem
-    {
-        private static DBTable<Balance> dbTable;
-        private static DBColumn balanceDateKey = DBColumn.EmptyKey;
-        public static DBTable<Balance> DBTable => dbTable ?? (dbTable = GetTable<Balance>());
-        public static DBColumn BalanceDateKey => DBTable.ParseProperty(nameof(BalanceDate), ref balanceDateKey);
-
-        public static DBTableView<Balance> DataView
-        {
-            get { return DBTable.DefaultView; }
-        }
-
         private Currency currency;
         private Account account;
-        private Book balanceType;
+        private BalanceType balanceType;
         private Balance parent;
 
-        public Balance()
-        {
-            Build(DBTable);
-        }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = ColumnFlags.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
         [Browsable(false)]
-        [Column("typeid", Keys = DBColumnKeys.ElementType), Index("daccountbalance_typeid")]
+        [Column("typeid", Keys = ColumnFlags.ElementType), Index("daccountbalance_typeid")]
         public int? TypeId
         {
-            get { return GetValue<int?>(Table.ElementTypeKey); }
-            set { SetValue(value, Table.ElementTypeKey); }
+            get => GetValue(Table.TypeIdKey);
+            set => SetValue(value, Table.TypeIdKey);
         }
 
         [Reference(nameof(TypeId))]
-        public Book Type
+        public BalanceType Type
         {
-            get { return GetReference<Book>(Table.ElementTypeKey, ref balanceType); }
-            set { SetReference(balanceType = value, Table.ElementTypeKey); }
+            get => GetReference(Table.TypeIdKey, ref balanceType);
+            set => SetReference(balanceType = value, Table.TypeIdKey);
         }
 
         [Browsable(false)]
-        [Column("parentid", Keys = DBColumnKeys.Group)]
+        [Column("parentid", Keys = ColumnFlags.Group)]
         [Index("daccountbalance_parentid")]
         public int? ParentId
         {
-            get { return GetValue<int?>(Table.GroupKey); }
-            set { SetValue(value, Table.GroupKey); }
+            get => GetValue(Table.ParentIdKey);
+            set => SetValue(value, Table.ParentIdKey);
         }
 
         [Reference(nameof(ParentId))]
         public Balance Parent
         {
-            get { return GetReference<Balance>(Table.GroupKey, ref parent); }
-            set { SetReference(parent = value, Table.GroupKey); }
+            get => GetReference(Table.ParentIdKey, ref parent);
+            set => SetReference(parent = value, Table.ParentIdKey);
         }
 
         [Column("balancedate"), Index("daccountbalance_balancedate")]
         public DateTime? BalanceDate
         {
-            get { return GetValue<DateTime?>(BalanceDateKey); }
-            set { SetValue(value, BalanceDateKey); }
+            get => GetValue(Table.BalanceDateKey);
+            set => SetValue(value, Table.BalanceDateKey);
         }
 
         [Column("accountid"), Index("daccountbalance_accountid")]
         public int? AccountId
         {
-            get { return GetProperty<int?>(nameof(AccountId)); }
-            set { SetProperty(value, nameof(AccountId)); }
+            get => GetValue(Table.AccountIdKey);
+            set => SetValue(value, Table.AccountIdKey);
         }
 
         [Reference("AccountId")]
         public Account Account
         {
-            get { return GetPropertyReference<Account>(ref account); }
-            set { account = SetPropertyReference(value); }
+            get => GetReference(Table.AccountIdKey, ref account);
+            set => SetReference(account = value, Table.AccountIdKey);
         }
 
         [Column("amount")]
         public decimal? Amount
         {
-            get { return GetProperty<decimal?>(nameof(Amount)); }
-            set { SetProperty(value, nameof(Amount)); }
+            get => GetValue(Table.AmountKey);
+            set => SetValue(value, Table.AmountKey);
         }
 
         [Column("currencyid"), Index("daccountbalance_currencyid")]
         public int? CurrencyId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get => GetValue(Table.CurrencyIdKey);
+            set => SetValue(value, Table.CurrencyIdKey);
         }
 
         [Reference(nameof(CurrencyId))]
         public Currency Currency
         {
-            get { return GetPropertyReference<Currency>(ref currency); }
-            set { currency = SetPropertyReference(value); }
+            get => GetReference(Table.CurrencyIdKey, ref currency);
+            set => SetReference(currency = value, Table.CurrencyIdKey);
         }
     }
 }

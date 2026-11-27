@@ -1,6 +1,7 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
@@ -12,7 +13,7 @@ namespace DataWF.Gui
             DropDownVisible = false;
         }
 
-        public bool TreeState { get; set; }
+        public bool ThreeState { get; set; }
 
         public object ValueTrue { get; set; }
 
@@ -23,35 +24,27 @@ namespace DataWF.Gui
         protected override void OnTextChanged(object sender, EventArgs e)
         {
             if (HandleText)
-                Value = ((CheckBox)sender).State;
+                Value = ((CheckBox)sender).IsChecked;
         }
 
         public override object ParseValue(object value, object dataSource, Type valueType)
         {
-            if (value is CheckBoxState)
+            if (value == null)
             {
-                if (((CheckBoxState)value) == CheckBoxState.On)
+                return ValueNull;
+            }
+            else if (value is CheckedState checkedState)
+            {
+                if (checkedState == CheckedState.Checked)
                     return ValueTrue;
-                else if (((CheckBoxState)value) == CheckBoxState.Off)
+                else if (checkedState == CheckedState.Unchecked)
                     return ValueFalse;
                 else
                     return ValueNull;
             }
-            else if (value is CheckedState)
+            else if (value is bool boolValue)
             {
-                if (((CheckedState)value) == CheckedState.Checked)
-                    return ValueTrue;
-                else if (((CheckedState)value) == CheckedState.Unchecked)
-                    return ValueFalse;
-                else
-                    return ValueNull;
-            }
-            else if (value is bool)
-            {
-                if (((bool)value))
-                    return ValueTrue;
-                else
-                    return ValueFalse;
+                return boolValue ? ValueTrue : ValueFalse;
             }
             return value;
         }
@@ -88,18 +81,18 @@ namespace DataWF.Gui
             }
         }
 
-        public override Widget InitEditorContent()
+        public override Control InitEditorContent()
         {
             var box = Editor.GetCached<CheckBox>();
-            box.AllowMixed = TreeState;
+            box.IsThreeState = ThreeState;
             if (!ReadOnly)
             {
-                box.Sensitive = true;
-                box.Toggled += OnTextChanged;
+                box.IsEnabled = true;
+                box.IsCheckedChanged += OnTextChanged;
             }
             else
             {
-                box.Sensitive = false;
+                box.IsEnabled = false;
             }
 
             return box;
@@ -107,20 +100,20 @@ namespace DataWF.Gui
 
         public override object Value
         {
-            get { return base.Value; }
+            get => base.Value;
             set
             {
                 bool flag = HandleText;
                 HandleText = false;
-                ((CheckBox)Editor.Widget).State = (CheckBoxState)(CheckedState)FormatValue(value);
+                ((CheckBox)Editor.Control).IsChecked = (CheckedState)FormatValue(value) == CheckedState.Checked;
                 HandleText = flag;
             }
         }
 
         public override void FreeEditor()
         {
-            if (Editor?.Widget is CheckBox)
-                ((CheckBox)Editor.Widget).Toggled -= OnTextChanged;
+            if (Editor?.Control is CheckBox checkBox)
+                checkBox.IsCheckedChanged -= OnTextChanged;
             base.FreeEditor();
         }
     }

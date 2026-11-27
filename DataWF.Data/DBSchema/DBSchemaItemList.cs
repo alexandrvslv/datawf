@@ -17,8 +17,13 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using DataWF.Collections;
+using DataWF.Comparers;
+using DataWF.Collections.Indexes;
+using DataWF.ModelProviders;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
@@ -27,26 +32,31 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-
-    public class DBSchemaItemList<T> : SelectableList<T> where T : DBSchemaItem
+    public abstract class DBSchemaItemList<T> : NamedList<T>, IModelItemList<T> where T : DBSchemaItem
     {
         public DBSchemaItemList()
             : this(null)
         { }
 
-        public DBSchemaItemList(DBSchema schema)
-            : base()
+        public DBSchemaItemList(IDBSchema schema)
+            : base(4, new ListIndex<T, string>(
+                DBSchemaItem.NameInvoker.Instance,
+                ListIndexFactory.GetNullKey<string>(),
+                DefaultComparer<T>.Default,
+                StringComparer.Ordinal,
+                false))
         {
-            Indexes.Add(DBSchemaItem.NameInvoker<T>.Instance);
             Schema = schema;
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual DBSchema Schema { get; internal set; }
+        public abstract IDBSchema Schema { get; internal set; }
 
-        public virtual T this[string name]
+        IModelSchema IModelItemList.Schema => Schema;
+
+        public override T this[string name]
         {
-            get { return SelectOne(nameof(DBSchemaItem.Name), CompareType.Equal, name); }
+            get => nameIndex.SelectOne(name);
             set
             {
                 int i = GetIndexByName(name);
@@ -64,44 +74,50 @@ namespace DataWF.Data
 
         protected int GetIndexByName(string name)
         {
-            var item = SelectOne(nameof(DBSchemaItem.Name), CompareType.Equal, name);
+            var item = this[name];
             return item == null ? -1 : IndexOf(item);
-        }
-
-        public bool Contains(string name)
-        {
-            return this[name] != null;
-        }
-
-        public void Remove(string name)
-        {
-            T item = this[name];
-            if (item != null)
-                Remove(item);
-        }
+        }        
 
         public override bool Remove(T item)
         {
             bool flag = base.Remove(item);
-            DBService.OnDBSchemaChanged(item, DDLType.Drop);
+            ((DBSchema)Schema)?.OnChanged(item, GetRemoveType(item));
             return flag;
+        }
+
+        public override int Add(T item)
+        {
+            if (item.Schema != null && item.Schema != Schema)
+            {
+                throw new Exception($"item {item} already attached to {item.Schema}");
+            }
+            var index = base.Add(item);
+            if (index > -1)
+            {
+                ((DBSchema)Schema)?.OnChanged(item, GetInsertType(item));
+            }
+            return index;
         }
 
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnItemPropertyChanged(sender, e);
-            if (Schema != null && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
+            if (Schema != null
+                && !Schema.IsSynchronizing
+                && Schema.Provider != null)
             {
-                schemaList.OnItemsListChanged(this, e);
+                Schema.Provider.OnItemsListChanged(this, e);
             }
         }
 
         public override NotifyCollectionChangedEventArgs OnCollectionChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
         {
             var args = base.OnCollectionChanged(type, item, index, oldIndex, oldItem);
-            if (Schema != null && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
+            if (Schema != null
+                && !Schema.IsSynchronizing
+                && Schema.Provider != null)
             {
-                schemaList.OnItemsListChanged(this, args ?? ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
+                Schema.Provider.OnItemsListChanged(this, args ?? ListHelper.GenerateArgs(type, item, index, oldIndex, oldItem));
             }
             return args;
         }
@@ -124,13 +140,16 @@ namespace DataWF.Data
                 item.Schema = Schema;
 
             base.InsertInternal(index, item);
-            if (Schema != null)
-                DBService.OnDBSchemaChanged(item, GetInsertType(item));
         }
 
         public virtual DDLType GetInsertType(T item)
         {
             return DDLType.Create;
+        }
+
+        public virtual DDLType GetRemoveType(T item)
+        {
+            return DDLType.Drop;
         }
 
         public override object NewItem()

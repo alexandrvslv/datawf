@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,10 +27,7 @@ namespace DataWF.Gui
                 TryGetValue(key, out LayoutListInfo info);
                 return info;
             }
-            set
-            {
-                base[key] = value;
-            }
+            set => base[key] = value;
         }
     }
 }

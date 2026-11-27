@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -19,7 +19,7 @@ namespace DataWF.Gui
 
         public override Type DataType
         {
-            get { return base.DataType; }
+            get => base.DataType;
             set
             {
                 if (DataType != value)
@@ -29,7 +29,7 @@ namespace DataWF.Gui
                     var temp = new SelectableList<EnumItem>();
                     foreach (var enumItem in Enum.GetValues(value))
                     {
-                        temp.Add(new EnumItem(enumItem) );
+                        temp.Add(new EnumItem(enumItem));
                     }
                     temp.ItemPropertyChanged += TempListChanged;
                     listSource = temp;

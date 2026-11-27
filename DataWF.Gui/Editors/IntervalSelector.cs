@@ -1,10 +1,12 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
 
 namespace DataWF.Gui
 {
-    public class IntervalSelector : HBox
+    public class IntervalSelector : StackPanel
     {
         protected DateInterval _value = new DateInterval(DateTime.Now, DateTime.Now);
         private CalendarEditor _pickerMin = new CalendarEditor();
@@ -19,19 +21,20 @@ namespace DataWF.Gui
             _pickerMax.Name = "_pickerMax";
             _pickerMax.ValueChanged += PickerMaxDateChanged;
 
-            PackStart(_pickerMin, true, true);
-            PackStart(_pickerMax, true, true);
+            Orientation = Orientation.Horizontal;
+            Children.Add(_pickerMin);
+            Children.Add(_pickerMax);
             Name = "IntervalPicker";
         }
 
         public bool TwoDate
         {
-            get { return _twoDate; }
+            get => _twoDate;
             set
             {
                 if (_twoDate != value)
                 {
-                    _pickerMax.Visible = _twoDate = value;
+                    _pickerMax.IsVisible = _twoDate = value;
                 }
             }
         }
@@ -48,7 +51,7 @@ namespace DataWF.Gui
 
         public DateInterval Value
         {
-            get { return _value; }
+            get => _value;
             set
             {
                 if (_value == value)

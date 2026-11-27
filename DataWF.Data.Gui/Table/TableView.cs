@@ -1,12 +1,13 @@
 ﻿using DataWF.Gui;
-using DataWF.Common;
+using DataWF;
 using System;
 using System.ComponentModel;
 using System.Data;
 using System.Collections.Generic;
 using DataWF.Data;
 using System.Reflection;
-using Xwt;
+using Avalonia;
+using Avalonia.Layout;
 
 namespace DataWF.Data.Gui
 {
@@ -27,7 +28,8 @@ namespace DataWF.Data.Gui
             {
                 EditState = EditListState.ReadOnly,
                 GenerateToString = false,
-                Name = "list"
+                Name = "list",
+                VerticalAlignment = VerticalAlignment.Stretch
             };
             list.PositionChanged += OnNotifyPositionChangedEV;
             list.SelectionChanged += OnSelectionChanged;
@@ -51,8 +53,8 @@ namespace DataWF.Data.Gui
             { Name = "Bar" };
 
             Name = "TableView";
-            PackStart(bar, false, false);
-            PackStart(list, true, true);
+            Children.Add(bar);
+            Children.Add(list);
         }
 
         public Toolsbar Tools { get { return bar; } }

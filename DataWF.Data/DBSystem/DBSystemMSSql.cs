@@ -17,11 +17,13 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Data.SqlTypes;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,19 +39,18 @@ namespace DataWF.Data
             DataTypeMap = new Dictionary<DBDataType, string>(){
                     {DBDataType.String, "nvarchar{0}"},
                     {DBDataType.Clob, "nvarchar(max)"},
-                    {DBDataType.DateTime, "datetime"},
+                    {DBDataType.DateTime, "datetime2"},
                     {DBDataType.ByteArray, "varbinary{0}"},
                     {DBDataType.ByteSerializable, "varbinary{0}"},
                     {DBDataType.Blob, "varbinary(max)"},
-                    {DBDataType.LargeObject, "integer"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
                     {DBDataType.ShortInt, "smallint"},
                     {DBDataType.TinyInt, "tinyint"},
-                    {DBDataType.Float, "float(24)"},
-                    {DBDataType.Double, "float(53)"},
-                    {DBDataType.Decimal, "decimal{0}"},
-                    {DBDataType.TimeSpan, "bigint"},
+                    {DBDataType.Float, "real"},
+                    {DBDataType.Double, "float"},
+                    {DBDataType.Decimal, "numeric{0}"},
+                    {DBDataType.TimeSpan, "time"},
                     {DBDataType.Bool, "bit"},
                 };
         }
@@ -92,6 +93,15 @@ namespace DataWF.Data
             return SqlClientFactory.Instance;
         }
 
+        public override void Format(StringBuilder ddl, DBColumn column)
+        {
+            base.Format(ddl, column);
+            if (column.DataType == typeof(DateTime?))
+            {
+                ddl.Append(" default NULL");
+            }
+        }
+
         public override string SequenceCurrentValue(DBSequence sequence)
         {
             return $@"select current_value from sys.sequences where name = '{sequence.Name}'";
@@ -107,7 +117,7 @@ namespace DataWF.Data
             switch (ddlType)
             {
                 case DDLType.Create:
-                    ddl.AppendLine($"create sequence {sequence.Name} as {FormatType(sequence.DBDataType, sequence.Size, sequence.Scale)} start with {sequence.Current} increment by {sequence.Increment};");
+                    ddl.AppendLine($"create sequence {sequence.Name} as {FormatType(sequence.DBDataType, sequence.Size, sequence.Scale)} start with {sequence.StartWith - 1} increment by {sequence.Increment};");
                     break;
                 case DDLType.Alter:
                     ddl.AppendLine($"alter sequence {sequence.Name} restart with {sequence.Current} increment by {sequence.Increment};");
@@ -129,13 +139,6 @@ namespace DataWF.Data
                 ddl.AppendLine($"filename = '{dataFile}',");
                 ddl.AppendLine("size = 10, maxsize = unlimited, filegrowth = 5MB);");
                 ddl.AppendLine($"alter database {schema.DataBase} set recovery simple;");
-                if (!schema.Sequences.Contains("db_lob_seq"))
-                {
-                    var lobSequence = new DBSequence("db_lob_seq");
-                    schema.Sequences.Add(lobSequence);
-                    Format(ddl, lobSequence, DDLType.Create);
-                }
-                ddl.AppendLine($"create table [db_lob]([oid] bigint not null primary key, [lob_data] varbinary(max));");
             }
             else if (ddlType == DDLType.Drop)
             {
@@ -158,13 +161,13 @@ namespace DataWF.Data
 
         public override void FormatInsertSequence(StringBuilder command, DBTable table, DBItem row)
         {
-            var idparam = ParameterPrefix + table.PrimaryKey.Name;
+            var idparam = ParameterPrefix + table.PrimaryKey.SqlName;
             command.AppendLine($"select {idparam} = next value for {table.SequenceName};");
             FormatInsert(command, table, idparam, row); command.AppendLine(";");
             command.AppendLine($"select {idparam};");
         }
 
-        public override object WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
+        public override object FillParameter(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
             var dbParameter = (SqlParameter)parameter;
             switch (dbParameter.DbType)
@@ -178,33 +181,49 @@ namespace DataWF.Data
                         dbParameter.Size = column.Size;
                     break;
                 case DbType.Decimal:
-                    if (column.Size != 0)
+                    if (column.Size > 0)
                         dbParameter.Precision = (byte)column.Size;
-                    if (column.Scale != 0)
-                        dbParameter.Scale = (byte)column.Scale;
+                    if (column.Scale > 0)
+                        dbParameter.Scale = (byte)(column.Scale);
                     break;
+            }
+            if (column.DBDataType == DBDataType.TimeSpan)
+            {
+                dbParameter.SqlDbType = SqlDbType.Time;
+            }
+            else if (column.DBDataType == DBDataType.DateTime)
+            {
+                dbParameter.SqlDbType = SqlDbType.DateTime2;
+                //dbParameter.SqlDbType = SqlDbType.DateTime;
+                //if (value is DateTime date)
+                //{
+                //    if (date < System.Data.SqlTypes.SqlDateTime.MinValue.Value)
+                //        value = System.Data.SqlTypes.SqlDateTime.MinValue.Value;
+                //    else if (date > System.Data.SqlTypes.SqlDateTime.MaxValue.Value)
+                //        value = System.Data.SqlTypes.SqlDateTime.MaxValue.Value;
+                //}
             }
 
             if (column.IsPrimaryKey && value == null)
             {
                 parameter.Direction = ParameterDirection.Output;
             }
-            return base.WriteValue(command, parameter, value, column);
+            return base.FillParameter(command, parameter, value, column);
         }
 
-        public override string FormatQColumn(DBColumn column, string tableAlias)
+        public override string FormatQColumn(DBColumn column, string tableAlias, string columnAlias = null)
         {
             if (column.ColumnType == DBColumnTypes.Internal
                 || column.ColumnType == DBColumnTypes.Expression
                 || column.ColumnType == DBColumnTypes.Code)
                 return string.Empty;
-            else if (column.ColumnType == DBColumnTypes.Query && column.Table.Type != DBTableType.View)
+            else if (column.ColumnType == DBColumnTypes.Query && column.Table.TableType != DBTableType.View)
                 return base.FormatQColumn(column, tableAlias);
             else
-                return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}[{column.SqlName}]";
+                return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}[{column.SqlName}]{(columnAlias != null ? " as \"" : string.Empty)}{columnAlias}{(columnAlias != null ? "\"" : string.Empty)}";
         }
 
-        public override string FormatQTable(DBTable table, string alias)
+        public override string FormatQTable(IDBTable table, string alias)
         {
             var schema = table.Schema?.Connection?.Schema;
             if (!string.IsNullOrEmpty(schema))
@@ -214,37 +233,11 @@ namespace DataWF.Data
             return $"[{table.SqlName}] {alias}";
         }
 
-        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
+        public override ValueTask<IDataParameter> CreateStreamParameter(IDbCommand command, DBColumn<byte[]> dataColumn, Stream stream)
         {
-            var command = (SqlCommand)transaction.AddCommand($"delete from db_lob where oid = @oid");
-            command.Parameters.AddWithValue($"@oid", (long)oid);
-            await transaction.ExecuteQueryAsync(command);
-        }
-
-        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
-        {
-            var command = (SqlCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = @oid");
-            command.Parameters.AddWithValue($"@oid", (long)oid);
-            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (await transaction.ReadAsync())
-            {
-                return ((SqlDataReader)transaction.Reader).GetStream(1);
-            }
-            throw new Exception("No Data Found!");
-        }
-
-        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
-        {
-            var command = (SqlCommand)transaction.AddCommand(@"select @oid = next value for db_lob_seq;
-insert into db_lob (oid, lob_data) values (@oid, @lob_data);
-select @oid;");
-            command.Parameters.Add("@lob_data", SqlDbType.Binary, -1).Value = value;
-            var oid = (long)await transaction.ExecuteQueryAsync(command, DBExecuteType.Scalar);
-
-            //command = (SqlCommand)transaction.AddCommand("select current_value from sys.sequences where name = 'db_lob_seq'");
-            //transaction.ExecuteQuery(command, DBExecuteType.Scalar);
-
-            return (uint)oid;
+            var parameter = ((SqlCommand)command).Parameters.Add($"@{dataColumn.SqlName}", SqlDbType.Binary, -1);
+            parameter.Value = stream;
+            return new ValueTask<IDataParameter>(parameter);
         }
 
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
@@ -262,18 +255,12 @@ select @oid;");
             return null;
         }
 
-        public override Task<bool> ReadAsync(IDataReader reader)
-        {
-            var sqlReader = (SqlDataReader)reader;
-            return sqlReader.ReadAsync();
-        }
-
-        public override uint GetOID(IDataReader reader, int index)
+        public override uint GetUInt(DbDataReader reader, int index)
         {
             return ((SqlDataReader)reader).GetFieldValue<uint>(index);
         }
 
-        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        public override TimeSpan GetTimeSpan(DbDataReader reader, int index)
         {
             return ((SqlDataReader)reader).GetTimeSpan(index);
         }

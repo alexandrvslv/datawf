@@ -17,7 +17,9 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using DataWF.Access;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
@@ -30,7 +32,6 @@ namespace DataWF.Data
         Change,
         Update
     }
-
     public class DBItemEventArgs : CancelEventArgs
     {
         public DBItemEventArgs(DBItem item, DBColumn column = null, string property = null, object value = null)
@@ -64,7 +65,7 @@ namespace DataWF.Data
 
         public DBItem Item { get; }
 
-        public DBLogItem LogItem { get; set; }
+        public DBItemLog LogItem { get; set; }
 
         public List<DBColumn> Columns { get; set; }
 

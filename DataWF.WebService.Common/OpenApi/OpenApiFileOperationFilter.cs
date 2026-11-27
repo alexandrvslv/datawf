@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Swagger;

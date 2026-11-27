@@ -1,109 +1,102 @@
 ﻿using DataWF.Data;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace DataWF.Test.Data
 {
-    [Table(TestORM.EmployerTableName, "Default")]
-    public class Employer : DBItem
+
+    [Table(Employer.TableName, "Default")]
+    public partial class Employer : DBItem
     {
+        public const string TableName = "tb_employer";
+
         private Position position;
 
-        public static DBTable<Employer> DBTable => GetTable<Employer>();
-
-        public Employer()
-        {
-        }
-
-        [Column("id", Keys = DBColumnKeys.Primary)]
+        [Column("id", Keys = ColumnFlags.Primary)]
         public int? Id
         {
-            get => GetProperty<int?>();
-            set => SetProperty(value);
+            get => GetValue<int?>();
+            set => SetValue(value);
         }
 
-        [Column("identifier", 20, Keys = DBColumnKeys.Code), Index("employeridentifier", true)]
+        [Column("identifier", 20, Keys = ColumnFlags.Code), Index("employeridentifier", true)]
         public string Identifier
         {
-            get => GetProperty<string>();
-            set => SetProperty(value);
+            get => GetValue<string>();
+            set => SetValue(value);
         }
 
         [Column("positionid")]
         public int? PositionId
         {
-            get => GetProperty<int?>();
-            set => SetProperty(value);
+            get => GetValue<int?>();
+            set => SetValue(value);
         }
 
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get => GetPropertyReference<Position>(ref position);
-            set => SetPropertyReference(position = value);
+            get => GetReference<Position>(ref position);
+            set => SetReference(position = value);
         }
 
-        [Column("typeid", Keys = DBColumnKeys.ElementType), DefaultValue(EmployerType.Type2)]
+        [Column("typeid", Keys = ColumnFlags.ElementType), DefaultValue(EmployerType.Type2)]
         public EmployerType? Type
         {
-            get => GetProperty<EmployerType?>();
-            set => SetProperty(value);
+            get => GetValue<EmployerType?>();
+            set => SetValue(value);
         }
 
         [Column("longid")]
         public long? LongId
         {
-            get => GetProperty<long?>();
-            set => SetProperty(value);
-        }
-
-        [Column("height")]
-        public short? Height
-        {
-            get => GetProperty<short?>();
-            set => SetProperty(value);
-        }
-
-        [Column("weight")]
-        public float? Weight
-        {
-            get => GetProperty<float?>();
-            set => SetProperty(value);
-        }
-
-        [Column("dweight")]
-        public double? DWeight
-        {
-            get => GetProperty<double?>();
-            set => SetProperty(value);
+            get => GetValue<long?>();
+            set => SetValue(value);
         }
 
         [Column("salary", 23, 3)]
         public decimal? Salary
         {
-            get => GetProperty<decimal?>();
-            set => SetProperty(value);
+            get => GetValue<decimal?>();
+            set => SetValue(value);
         }
 
         [Column("age")]
         public byte? Age
         {
-            get => GetProperty<byte?>();
-            set => SetProperty(value);
+            get => GetValue<byte?>();
+            set => SetValue(value);
         }
 
-        [Column("lodar")]
-        public bool? Lodar
+        [Column("is_active")]
+        public bool IsActive
         {
-            get => GetProperty<bool?>();
-            set => SetProperty(value);
+            get => GetValue<bool>();
+            set => SetValue(value);
         }
 
-        [Column("name", 20, Keys = DBColumnKeys.Culture)]
+        [Column("name", 20, Keys = ColumnFlags.Culture)]
         public string Name
         {
             get => GetName();
             set => SetName(value);
         }
+
+        [Referencing(nameof(EmployerReference.EmployerId))]
+        public IEnumerable<EmployerReference> SubEmployers
+        {
+            get => GetReferencing<EmployerReference>(Schema.EmployerReference.EmployerIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.EmployerReference.EmployerIdKey);
+        }
+
+        [Referencing(nameof(EmployerReference.ReferenceId))]
+        public IEnumerable<EmployerReference> TopEmployers
+        {
+            get => GetReferencing<EmployerReference>(Schema.EmployerReference.ReferenceIdKey, DBLoadParam.None);
+            set => SetReferencing(value, Schema.EmployerReference.ReferenceIdKey);
+        }
+
     }
+
 }

@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 
 namespace DataWF.Data
 {
@@ -27,9 +27,19 @@ namespace DataWF.Data
         {
         }
 
-        public QParamList(IQItemList owner) : base(owner)
+        public QParamList(IQItem owner) : base(owner)
         {
             //Indexes.Add(groupInvoker);
+        }
+
+        public override void InsertInternal(int index, QParam item)
+        {
+            if (item.Logic == CompareOperator.Undefined
+                && Count > 0)
+            {
+                item.Logic = CompareOperator.And;
+            }
+            base.InsertInternal(index, item);
         }
     }
 }

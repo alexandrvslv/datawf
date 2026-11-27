@@ -1,11 +1,11 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Data.Gui
 {
@@ -90,7 +90,7 @@ namespace DataWF.Data.Gui
         {
             try
             {
-                using (var transaction = new DBTransaction(row.Table.Schema.Connection, GuiEnvironment.User))
+                using (var transaction = new DBTransaction(row.Table, GuiEnvironment.User))
                 {
                     foreach (DBItem r in rowsDelete)
                     {
@@ -110,7 +110,7 @@ namespace DataWF.Data.Gui
 
         private void Callback()
         {
-            Application.Invoke(() =>
+            _ = Dispatcher.UIThread.InvokeAsync(() =>
             {
                 toolProgress.Visible = false;
                 list.RefreshBounds(false);

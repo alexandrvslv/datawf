@@ -1,9 +1,11 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.ComponentModel;
 using System.Linq;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Media;
 
 namespace DataWF.Gui
 {
@@ -26,28 +28,28 @@ namespace DataWF.Gui
 
         public int Row
         {
-            get { return items.Row; }
-            set { items.Row = value; }
+            get => items.Row;
+            set => items.Row = value;
         }
 
         public int Col
         {
-            get { return items.Column; }
-            set { items.Column = value; }
+            get => items.Column;
+            set => items.Column = value;
         }
 
         [DefaultValue(false)]
         public bool FillWidth
         {
-            get { return items.FillWidth; }
-            set { items.FillWidth = value; }
+            get => items.FillWidth;
+            set => items.FillWidth = value;
         }
 
         [DefaultValue(false)]
         public bool FillHeight
         {
-            get { return items.FillHeight; }
-            set { items.FillHeight = value; }
+            get => items.FillHeight;
+            set => items.FillHeight = value;
         }
 
         public GroupBoxItem Items { get { return items; } }
@@ -59,9 +61,9 @@ namespace DataWF.Gui
                 double height = 0;
                 if (box.Expand)
                 {
-                    if (box.Widget != null && box.Autosize)
+                    if (box.Control != null && box.Autosize)
                     {
-                        var size = box.Widget.Surface.GetPreferredSize(SizeConstraint.Unconstrained, SizeConstraint.Unconstrained);
+                        var size = box.Control.Measure(box.Bound.Size);
                         //if (box.Autosize);// || size.Height > box.DefaultHeight)
                         return size.Height + box.HeaderHeight + 10;
                     }
@@ -84,10 +86,10 @@ namespace DataWF.Gui
                 items.Add(item);
             if (item.Count == 0)
             {
-                if (item.Widget != null && item.Widget.Parent != this)
+                if (item.Control != null && item.Control.Parent != this)
                 {
-                    if (!Children.Contains(item.Widget))
-                        base.AddChild(item.Widget);
+                    if (!Children.Contains(item.Control))
+                        base.Children.Add(item.Control);
                 }
             }
             else
@@ -96,7 +98,7 @@ namespace DataWF.Gui
                 if (item.GroupBox != null && item.GroupBox != this)
                 {
                     if (!Children.Contains(item.GroupBox))
-                        base.AddChild(item.GroupBox);
+                        base.Children.Add(item.GroupBox);
                 }
                 else
                 {
@@ -109,39 +111,40 @@ namespace DataWF.Gui
             }
         }
 
-        protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
+        protected override Size MeasureOverride(Size aSize)
         {
-            base.OnGetPreferredSize(widthConstraint, heightConstraint);
+            base.MeasureOverride(aSize);
             //foreach (ILayoutItem item in map.Items)
             //{
-            //    if (item is GroupBoxItem && ((GroupBoxItem)item).Widget != null)
+            //    if (item is GroupBoxItem && ((GroupBoxItem)item).Control != null)
             //    {
             //        item.Height = CalcHeight(item);
             //    }
             //    else if (item is GroupBoxMap)
             //    {
             //        var box = (GroupBoxMap)item;
-            //        box.GroupBox.OnGetPreferredSize(widthConstraint, heightConstraint);
+            //        box.GroupBox.MeasureOverride(widthConstraint, heightConstraint);
             //    }
             //}
-            var bound = items.GetBound(widthConstraint.AvailableSize, heightConstraint.AvailableSize);
+            var bound = items.GetBound(aSize.Width, aSize.Height);
             foreach (var item in items.GetVisibleItems())
             {
-                item.Widget.Surface.GetPreferredSize();
+                item.Control.Measure(aSize);
             }
             return bound.Size;
         }
 
-        protected override void OnButtonReleased(ButtonEventArgs args)
+        protected override void OnPointerReleased(PointerReleasedEventArgs args)
         {
-            base.OnButtonReleased(args);
+            base.OnPointerReleased(args);
+            var position = args.GetPosition(this);
             foreach (var box in items.GetVisibleItems())
             {
                 if (box.Visible)
                 {
-                    if (box.Bound.Contains(args.X, args.Y))
+                    if (box.Bound.Contains(position))
                     {
-                        if (box.GetExpandBound(box.Bound).Contains(args.X, args.Y))
+                        if (box.GetExpandBound(box.Bound).Contains(position))
                         {
                             box.Expand = !box.Expand;
                         }
@@ -150,9 +153,10 @@ namespace DataWF.Gui
             }
         }
 
-        protected override void OnDraw(Context ctx, Rectangle dirtyRect)
+        public override void Render(DrawingContext ctx)
         {
-            base.OnDraw(ctx, dirtyRect);
+            base.Render(ctx);
+            var dirtyRect = Bounds;
             using (var context = new GraphContext(ctx))
             {
                 foreach (ILayoutItem item in items.GetVisibleItems())
@@ -162,27 +166,27 @@ namespace DataWF.Gui
             }
         }
 
-        public new void AddChild(Widget widget)
+        public void Add(IControl Control)
         {
-            base.AddChild(widget);
-            if (!(widget is GroupBox))
+            base.Children.Add(Control);
+            if (!(Control is GroupBox))
             {
-                Add(new GroupBoxItem() { Widget = widget });
+                Add(new GroupBoxItem() { Control = Control });
             }
         }
 
-        protected override void OnReallocate()
+        protected override Size ArrangeOverride(Size finalSize)
         {
-            base.OnReallocate();
-            items.Width = Size.Width;
-            items.Height = Size.Height;
+            items.Width = Width;
+            items.Height = Height;
             var mapBound = items.GetBound();
 
             foreach (GroupBoxItem item in items.GetVisibleItems())
             {
                 items.GetBound(item, mapBound);
             }
-            QueueDraw();
+            InvalidateVisual();
+            return base.ArrangeOverride(finalSize);
         }
 
         public bool Contains(ILayoutItem item)
@@ -201,13 +205,6 @@ namespace DataWF.Gui
             {
                 item.Localize();
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            items.Dispose();
-
-            base.Dispose(disposing);
         }
     }
 }

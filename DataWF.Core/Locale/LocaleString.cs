@@ -1,0 +1,115 @@
+﻿using DataWF.Invokers;
+using DataWF.Serialization;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
+using System.Xml.Serialization;
+
+namespace DataWF;
+
+[Invoker(Instance = true)]
+public sealed partial class LocaleString : DefaultItem, ICloneable
+{
+    internal string culture = "ru-RU";
+    private string value;
+    private string? description;
+    private CultureInfo? info;
+
+    public LocaleString()
+    {
+    }
+
+    public LocaleString(string value)
+    {
+        this.value = value;
+    }
+
+    public LocaleString(string value, string culture)
+        : this(value)
+    {
+        this.culture = culture;
+    }
+
+    public LocaleString(string value, CultureInfo culture)
+        : this(value, culture.Name)
+    {
+        info = culture;
+    }
+
+    [Browsable(false)]
+    public string CultureName
+    {
+        get => culture;
+        set
+        {
+            if (culture == value)
+                return;
+            culture = value;
+            info = null;
+            OnPropertyChanged(nameof(CultureName));
+        }
+    }
+
+    [ElementSerializer(Ignore = true)]
+    public CultureInfo Culture
+    {
+        get => info ??= CultureInfo.GetCultureInfo(culture);
+        set
+        {
+            CultureName = value?.Name;
+            info = value;
+        }
+    }
+
+    public string Value
+    {
+        get => value;
+        set
+        {
+            if (this.value != value)
+            {
+                this.value = value;
+                OnPropertyChanged(nameof(Value));
+            }
+        }
+    }
+
+    public string? Description
+    {
+        get => description;
+        set
+        {
+            if (description != value)
+            {
+                description = value;
+                OnPropertyChanged(nameof(Description));
+            }
+        }
+    }
+
+    public override string ToString()
+    {
+        return string.Format("{0}({1})", Value, CultureName);
+    }
+
+    #region IClonable
+    /// <summary>
+    /// Clone this instance.
+    /// </summary>
+    public object Clone()
+    {
+        return new LocaleString
+        {
+            culture = culture,
+            info = info,
+            value = value,
+            description = description
+        };
+    }
+
+    #endregion
+
+
+}
+

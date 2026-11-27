@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Globalization;
 using System.IO;
@@ -26,7 +26,7 @@ using System.Text.Json.Serialization;
 namespace DataWF.Geometry
 {
     [JsonConverter(typeof(SystemJsonPoint3DConverter)), Newtonsoft.Json.JsonConverter(typeof(NewtonJsonPoint3DConverter))]
-    public struct Point3D : IByteSerializable, IComparable<Point3D>, IEquatable<Point3D>
+    public struct Point3D : IBinarySerializable, IComparable<Point3D>, IEquatable<Point3D>
     {
         public static readonly Point3D Empty = new Point3D();
         public static bool TryParse(string text, out Point3D point)

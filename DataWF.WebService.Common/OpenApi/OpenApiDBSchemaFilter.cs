@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
@@ -17,13 +17,20 @@ namespace DataWF.WebService.Common
     {
         public void Apply(OpenApiSchema schema, SchemaFilterContext context)
         {
+            var name = context.Type.Name;
+
+            if (context.Type.IsBaseType(typeof(System.IO.Stream))
+                || context.Type.IsBaseType(typeof(Microsoft.AspNetCore.Mvc.FileStreamResult)))
+            {
+                schema.Type = "file";
+                schema.Properties.Clear();
+                return;
+            }
+
             if (!TypeHelper.IsSerializeAttribute(context.Type)
                 && !TypeHelper.IsEnumerable(context.Type)
                 && context.Type != typeof(object))
             {
-                //if (context.Type.Name == "UserReg")
-                //{ }
-
                 schema.Type = "object";
                 schema.Properties.Clear();
                 schema.AdditionalPropertiesAllowed = true;
@@ -36,7 +43,7 @@ namespace DataWF.WebService.Common
 
                 if (TypeHelper.IsBaseType(context.Type, typeof(DBItem)))
                 {
-                    var table = DBTable.GetTableAttributeInherit(context.Type);
+                    var table = TableGenerator.GetInherit(context.Type);
                     if (table != null)
                     {
                         ApplyTable(schema, context, table);
@@ -102,15 +109,15 @@ namespace DataWF.WebService.Common
 
         private static void ApplyObjectProperties(OpenApiSchema schema, Type type, SchemaFilterContext context)
         {
-            var info = Serialization.Instance.GetTypeInfo(context.Type);
-            foreach (var property in info.Properties.Where(p => p.Property?.GetGetMethod()?.GetBaseDefinition()?.DeclaringType == context.Type))
+            var info = SerializeProvider.Instance.GetTypeInfo(context.Type);
+            foreach (var property in info.Properties.Where(p => p.PropertyInfo?.GetGetMethod()?.GetBaseDefinition()?.DeclaringType == context.Type))
             {
                 var propertyType = TypeHelper.CheckNullable(property.DataType);
-                var columnAttribute = property.Property.GetCustomAttribute<ColumnAttribute>()
-                    ?? property.Property.GetCustomAttribute<LogColumnAttribute>();
-                var referenceAttribute = property.Property.GetCustomAttribute<ReferenceAttribute>();
+                var columnAttribute = property.PropertyInfo.GetCustomAttribute<ColumnAttribute>()
+                    ?? property.PropertyInfo.GetCustomAttribute<LogColumnAttribute>();
+                var referenceAttribute = property.PropertyInfo.GetCustomAttribute<ReferenceAttribute>();
                 if (columnAttribute != null
-                    && (columnAttribute.Keys & DBColumnKeys.Access) != 0
+                    && (columnAttribute.Keys & ColumnFlags.Access) != 0
                     && propertyType == typeof(AccessValue))
                 {
                     propertyType = typeof(AccessType);
@@ -123,9 +130,13 @@ namespace DataWF.WebService.Common
                         AllOf = new List<OpenApiSchema> { propertySchema },
                     };
                 }
+                if (propertyType != property.DataType)
+                {
+                    propertySchema.Nullable = true;
+                }
                 if (columnAttribute != null)
                 {
-                    ApplyColumnAttribute(schema, propertySchema, columnAttribute, property.Property);
+                    ApplyColumnAttribute(schema, propertySchema, columnAttribute, property.PropertyInfo);
                 }
                 else
                 {
@@ -141,6 +152,12 @@ namespace DataWF.WebService.Common
                 if (referenceAttribute != null)
                 {
                     propertySchema.Extensions.Add("x-id", new OpenApiString(referenceAttribute.ColumnProperty));
+                    if (propertyType.IsAbstract)
+                    {
+                        var tablGen = TableGenerator.GetDerived(propertyType).FirstOrDefault();
+                        if (tablGen != null)
+                            propertySchema.Extensions.Add("x-derived", new OpenApiString(tablGen.ItemType.Name));
+                    }
                 }
                 if (property.Default != null)
                 {
@@ -164,14 +181,14 @@ namespace DataWF.WebService.Common
 
             if (!context.Type.IsAbstract)
             {
-                var itemType = DBTable.GetItemTypeAttribute(context.Type);
+                var itemType = TableGenerator.GetItemType(context.Type);
                 schema.Extensions.Add("x-type-id", new OpenApiInteger(itemType?.Attribute.Id ?? 0));
                 if (context.Type == table.ItemType)
                 {
                     var mapping = new Dictionary<string, string>();
                     foreach (var type in table.Types)
                     {
-                        var itemTypeAttribute = DBTable.GetItemTypeAttribute(type);
+                        var itemTypeAttribute = TableGenerator.GetItemType(type);
                         if (itemTypeAttribute != null)
                         {
                             var itemTypeSchema = context.SchemaGenerator.GenerateSchema(type, context.SchemaRepository);
@@ -204,7 +221,7 @@ namespace DataWF.WebService.Common
                                                          && !TypeHelper.IsNonSerialize(p.PropertyInfo)))
             {
                 var propertyType = TypeHelper.CheckNullable(column.PropertyInfo.PropertyType);
-                if ((column.Attribute.Keys & DBColumnKeys.Access) != 0
+                if ((column.Attribute.Keys & ColumnFlags.Access) != 0
                     && propertyType == typeof(AccessValue))
                 {
                     propertyType = typeof(AccessType);
@@ -216,6 +233,10 @@ namespace DataWF.WebService.Common
                     {
                         AllOf = new List<OpenApiSchema> { columnSchema },
                     };
+                }
+                if (propertyType != column.PropertyInfo.PropertyType)
+                {
+                    columnSchema.Nullable = true;
                 }
                 ApplyColumn(schema, columnSchema, column);
                 if (column.ReferencePropertyInfo != null)
@@ -250,13 +271,19 @@ namespace DataWF.WebService.Common
             var referenceSchema = context.SchemaGenerator.GenerateSchema(refPropertyType, context.SchemaRepository);
             var propertySchema = new OpenApiSchema() { AllOf = new List<OpenApiSchema> { referenceSchema } };
             propertySchema.Extensions.Add("x-id", new OpenApiString(column.PropertyName));
+            if (refPropertyType.IsAbstract)
+            {
+                var tablGen = TableGenerator.GetDerived(refPropertyType).FirstOrDefault();
+                if (tablGen != null)
+                    propertySchema.Extensions.Add("x-derived", new OpenApiString(tablGen.ItemType.Name));
+            }
             schema.Properties.Add(column.ReferencePropertyInfo.Name, propertySchema);
         }
 
         public void ApplyColumn(OpenApiSchema schema, OpenApiSchema columnSchema, ColumnGenerator column)
         {
-            if ((column.Attribute.Keys & DBColumnKeys.Password) == DBColumnKeys.Password
-                || (column.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File)
+            if ((column.Attribute.Keys & ColumnFlags.Password) == ColumnFlags.Password
+                || (column.Attribute.Keys & ColumnFlags.File) == ColumnFlags.File)
                 return;
 
             ApplyColumnAttribute(schema, columnSchema, column.Attribute, column.PropertyInfo);
@@ -285,27 +312,27 @@ namespace DataWF.WebService.Common
             {
                 property.MaxLength = column.Size;
             }
-            if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
-                || (column.Keys & DBColumnKeys.Date) == DBColumnKeys.Date
-                || (column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp
-                || (column.Keys & DBColumnKeys.System) == DBColumnKeys.System
+            if ((column.Keys & ColumnFlags.Access) == ColumnFlags.Access
+                || (column.Keys & ColumnFlags.Date) == ColumnFlags.Date
+                || (column.Keys & ColumnFlags.Stamp) == ColumnFlags.Stamp
+                || (column.Keys & ColumnFlags.System) == ColumnFlags.System
                 || propertyInfo?.GetSetMethod() == null)
             {
                 property.ReadOnly = true;
             }
-            if (((column.Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull
-                || (column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
-                || (column.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
+            if (((column.Keys & ColumnFlags.Notnull) == ColumnFlags.Notnull
+                || (column.Keys & ColumnFlags.ItemType) == ColumnFlags.ItemType)
+                || (column.Keys & ColumnFlags.Primary) == ColumnFlags.Primary)
             {
                 if (schema.Required == null)
                     schema.Required = new HashSet<string>();
                 schema.Required.Add(propertyInfo.Name);
             }
-            if ((column.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
+            if ((column.Keys & ColumnFlags.Primary) == ColumnFlags.Primary)
             {
                 schema.Extensions.Add("x-id", new OpenApiString(propertyInfo.Name));
             }
-            if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
+            if ((column.Keys & ColumnFlags.ItemType) == ColumnFlags.ItemType)
             {
                 schema.Extensions.Add("x-type", new OpenApiString(propertyInfo.Name));
             }

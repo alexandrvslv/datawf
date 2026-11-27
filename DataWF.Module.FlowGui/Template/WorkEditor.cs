@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
@@ -30,7 +30,7 @@ namespace DataWF.Module.FlowGui
                     Row = 0,
                     Width = 400,
                     FillHeight = true,
-                    Widget = attribures = new ListEditor { AccessVisible = true }
+                    Control = attribures = new ListEditor { AccessVisible = true }
                 },
                 new GroupBoxItem
                 {
@@ -39,10 +39,10 @@ namespace DataWF.Module.FlowGui
                     Row = 0,
                     FillWidth = true,
                     FillHeight = true,
-                    Widget = stages = new TableEditor
+                    Control = stages = new TableEditor
                     {
-                        TableView = new DBTableView<Stage>((QParam)null, DBViewKeys.Empty),
-                        OwnerColumn = Stage.DBTable.ParseProperty(nameof(Stage.WorkId)),
+                        TableView = new DBTableView<Stage>(FlowExplorer.Schema.Stage, (QParam)null, DBViewKeys.Empty),
+                        OwnerColumn = FlowExplorer.Schema.Stage.WorkIdKey,
                         OpenMode = TableEditorMode.Referencing
                     }
                 },
@@ -53,11 +53,11 @@ namespace DataWF.Module.FlowGui
                     Row = 1,
                     FillWidth = true,
                     FillHeight = true,
-                    Widget = stageEditor = new StageEditor()
+                    Control = stageEditor = new StageEditor()
                 })
             { Name = "GroupBox" };
             stages.SelectionChanged += StagesSelectionChanged;
-            PackStart(groupBox, true, true);
+            Children.Add(groupBox, true, true);
         }
 
         public Work Work

@@ -1,6 +1,7 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System.Collections.Generic;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
@@ -10,17 +11,17 @@ namespace DataWF.Gui
 
         IEnumerable<IDockContainer> GetDocks();
 
-        bool Contains(Widget c);
+        bool Contains(IControl c);
 
-        bool Delete(Widget control);
+        bool Delete(IControl control);
 
-        DockPage Put(Widget control);
+        DockPage Put(IControl control);
 
-        DockPage Put(Widget control, DockType type);
+        DockPage Put(IControl control, DockType type);
 
-        IEnumerable<Widget> GetControls();
+        IEnumerable<IControl> GetControls();
 
-        Widget Find(string name);
+        IControl Find(string name);
     }
 
     public interface IDocked

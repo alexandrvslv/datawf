@@ -1,30 +1,31 @@
 ﻿using System;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
     public class ToolSearchEntry : ToolContentItem
     {
-        public ToolSearchEntry() : base(new TextEntry())
+        public ToolSearchEntry() : base(new TextBox())
         {
             DisplayStyle = ToolItemDisplayStyle.Content;
             FillWidth = true;
         }
 
-        public ToolSearchEntry(EventHandler textChenged) : base(new TextEntry())
+        public ToolSearchEntry(EventHandler<TextChangedEventArgs> textChenged) : base(new TextBox())
         {
             EntryTextChanged += textChenged;
         }
 
-        public TextEntry Entry
+        public TextBox Entry
         {
-            get { return content as TextEntry; }
+            get { return content as TextBox; }
         }
 
-        public event EventHandler EntryTextChanged
+        public event EventHandler<TextChangedEventArgs> EntryTextChanged
         {
-            add { Entry.Changed += value; }
-            remove { Entry.Changed -= value; }
+            add => Entry.TextChanged += value;
+            remove => Entry.TextChanged -= value;
         }
 
         public override void Localize()

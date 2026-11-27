@@ -2,14 +2,14 @@
 using DataWF.Gui;
 using System;
 
-namespace DataWF.StarterWpf
+namespace DataWF.StarterWin
 {
     static class Program
     {
         [STAThread]
         static void Main(string[] args)
         {
-            GuiService.Start(args, Xwt.ToolkitType.Wpf, typeof(Splash), typeof(Main));
+            GuiService.Start(args, typeof(Splash), typeof(Main));
         }
     }
 }

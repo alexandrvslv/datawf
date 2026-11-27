@@ -17,11 +17,12 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -54,7 +55,7 @@ namespace DataWF.Data
                 foreach (var file in files)
                 {
                     if (file.EndsWith("xml", StringComparison.OrdinalIgnoreCase))
-                        export = Serialization.Deserialize(file) as DBExport;
+                        export = SerializeProvider.Deserialize(file) as DBExport;
                     if (file.EndsWith("sdb", StringComparison.OrdinalIgnoreCase))
                         dbfile = file;
                 }
@@ -67,7 +68,7 @@ namespace DataWF.Data
         {
             List<DBTable> list = tables.Select(p => p.SourceTable).ToList();
             var builder = new StringBuilder("");
-            builder.AppendLine("using DataWF.Common;");
+            builder.AppendLine("using DataWF;");
             builder.AppendLine("using DataWF.Data;");
             builder.AppendLine("using DataWF.Module.Flow;");
             builder.AppendLine("using System;");
@@ -75,9 +76,9 @@ namespace DataWF.Data
             foreach (var table in list)
             {
                 builder.AppendLine($"    public class {table.DisplayName.Replace(" ", "")}Generator {{");
-                builder.AppendLine($"        public void Generate() {{");
-                builder.AppendLine($"            using(var transaction = new DBTransaction({table.ItemType.Type.Name}.DBTable.Schema.Connection)){{");
-                var enumer = table.SelectItems("");
+                builder.AppendLine($"        public void Generate(IDBSchema schema) {{");
+                builder.AppendLine($"            using(var transaction = new DBTransaction(schema)){{");
+                var enumer = (IEnumerable<DBItem>)table;
                 if (table.GroupKey != null)
                 {
                     var groupList = enumer.Cast<DBGroupItem>().ToList();
@@ -91,16 +92,16 @@ namespace DataWF.Data
                     builder.AppendLine($"                new {type.Name}{{");
                     foreach (var column in table.Columns)
                     {
-                        if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
+                        if ((column.Keys & ColumnFlags.ItemType) == ColumnFlags.ItemType)
                             continue;
-                        if (column.Property != null)
+                        if (column.PropertyName != null)
                         {
-                            builder.AppendLine($"                    {column.Property} = {column.FormatCode(row.GetValue(column))},");
+                            builder.AppendLine($"                    {column.PropertyName} = {column.FormatCode(row.GetValue(column))},");
                         }
                     }
                     builder.AppendLine("                }.Save();");
                 }
-                builder.AppendLine($"                {table.ItemType.Type.Name}.DBTable.Save();");
+                builder.AppendLine($"                {table.ItemType.Name}.DBTable.Save();");
                 builder.AppendLine("                transaction.Commit();");
                 builder.AppendLine("            }");
                 builder.AppendLine("        }");
@@ -117,7 +118,7 @@ namespace DataWF.Data
 
         public string GeneratePatch(List<DBTable> list)
         {
-            list.Sort(new Comparison<DBTable>(DBService.CompareDBTable));
+            list.Sort(new Comparison<DBTable>(DBProvider.CompareDBTable));
             var builder = new StringBuilder();
 
             if ((Mode & ExportMode.DropTable) == ExportMode.DropTable)
@@ -158,13 +159,13 @@ namespace DataWF.Data
                 {
                     if ((Mode & ExportMode.Patch) == ExportMode.Patch)
                     {
-                        foreach (DBItem row in table.LoadItems())
+                        foreach (DBItem row in table.Load<DBItem>())
                         {
                             if (row.Stamp != null && row.Stamp >= Stamp)//((DateTime)row.Stamp >= param.PatchDate)
                             {
                                 builder.AppendLine(string.Format("if exists(select * from {0} where {1}={2})",
                                                             table.Name,
-                                                            table.PrimaryKey.Name,
+                                                            table.PrimaryKey.SqlName,
                                                             row.PrimaryId));
                                 builder.AppendLine("    " + table.Schema.System.FormatCommand(table, DBCommandTypes.Update, row));
                                 builder.AppendLine("else");
@@ -213,11 +214,13 @@ namespace DataWF.Data
             this.tables = new DBETableList(this);
         }
 
+        public DBProvider Provider { get; set; }
+
         public override string ToString()
         {
             return string.Format("Source: {0}; Target: {1}", SourceName, TargetName);
         }
-        
+
         public string Name { get; set; }
 
         public string Prefix
@@ -269,13 +272,13 @@ namespace DataWF.Data
 
         public DBSchema Source
         {
-            get { return dbsource ?? DBService.Schems[source]; }
+            get { return dbsource ?? (dbsource = (DBSchema)Provider.Schems[SourceName]); }
             set
             {
                 if (Source != value)
                 {
                     SourceName = value?.Name;
-                    if (value == null || DBService.Schems.Contains(value))
+                    if (value == null || Provider.Schems.Contains(value))
                         dbsource = null;
                     else
                         dbsource = value;
@@ -299,13 +302,13 @@ namespace DataWF.Data
 
         public DBSchema Target
         {
-            get { return dbtarget ?? DBService.Schems[target]; }
+            get { return dbtarget ?? (dbtarget = (DBSchema)Provider.Schems[target]); }
             set
             {
                 if (Target != value)
                 {
                     TargetName = value?.Name;
-                    if (value == null || DBService.Schems.Contains(value))
+                    if (value == null || Provider.Schems.Contains(value))
                         dbtarget = null;
                     else
                         dbtarget = value;
@@ -334,9 +337,9 @@ namespace DataWF.Data
                     if (table.SourceTable != null && table.SourceTable.StampKey != null)
                     {
                         if (table.SourceTable.Schema.Connection.System == DBSystem.MSSql)
-                            table.Query = string.Format("where {0} >= parse('{1:yyyy-MM-dd}' as datetime using 'ru-RU')", table.SourceTable.StampKey.Name, stamp);
+                            table.Query = string.Format("where {0} >= parse('{1:yyyy-MM-dd}' as datetime using 'ru-RU')", table.SourceTable.StampKey.SqlName, stamp);
                         else
-                            table.Query = string.Format("where {0} >= '{1:yyyy-MM-dd}'", table.SourceTable.StampKey.Name, stamp);
+                            table.Query = string.Format("where {0} >= '{1:yyyy-MM-dd}'", table.SourceTable.StampKey.SqlName, stamp);
 
                     }
                 }
@@ -484,7 +487,7 @@ namespace DataWF.Data
         {
             DBItem newRow = null;
             if (table.TargetTable.PrimaryKey != null && table.SourceTable.PrimaryKey != null)
-                newRow = table.TargetTable.LoadItemById(row.PrimaryId, DBLoadParam.None);
+                newRow = table.TargetTable.PrimaryKey.Load(row.PrimaryId, DBLoadParam.None).FirstOrDefault();
             if (newRow == null)
                 newRow = table.TargetTable.NewItem(DBUpdateState.Insert, false);
 
@@ -493,7 +496,7 @@ namespace DataWF.Data
                 if (!column.Check || column.UserDefined || column.TargetColumn == null || column.SourceColumn == null)
                     continue;
                 if ((mode & ExportMode.ExcludeAccess) == ExportMode.ExcludeAccess && (mode & ExportMode.Patch) == ExportMode.Patch &&
-                    (column.TargetColumn.Keys & DBColumnKeys.Access) == DBColumnKeys.Access && newRow.Attached)
+                    (column.TargetColumn.Keys & ColumnFlags.Access) == ColumnFlags.Access && newRow.Attached)
                     continue;
                 object val = row[column.SourceColumn];
                 if ((mode & ExportMode.DateValidation) == ExportMode.DateValidation && val is DateTime && ((DateTime)val).Year < 1900)
@@ -516,27 +519,27 @@ namespace DataWF.Data
                     table.SourceTable.Clear();
                     table.TargetTable.Clear();
                 }
-                using (var transacton = new DBTransaction(table.SourceTable.Connection))
+                using (var transacton = new DBTransaction(table.SourceTable))
                 {
                     ea.Current = 0;
-                    ea.Count = table.SourceTable.GetRowCount(transacton, table.Query);
+                    ea.Count = table.SourceTable.GetCount(transacton, table.Query);
                     ea.Description = null;
                     OnExportProgress(ea);
 
-                    using (transacton.Reader = transacton.ExecuteQuery(table.SourceTable.CreateQuery(table.Query, null), DBExecuteType.Reader) as IDataReader)
+                    using (var reader = (DbDataReader)transacton.ExecuteQuery(table.SourceTable.CreateQuery(table.Query, "a", DBLoadParam.DownloadFiles), DBExecuteType.Reader))
                     {
-                        table.SourceTable.CheckColumns(transacton);
-                        while (transacton.Reader.Read())
+                        var dbReader = new DBReader(transacton, table.SourceTable, null, reader, DBLoadParam.NoAttach, ea.Count);
+                        while (reader.Read())
                         {
                             if (ea.Cancel)
                             {
                                 transacton.Cancel();
                                 return;
                             }
-                            var row = table.SourceTable.LoadItemFromReader(transacton);
+                            var row = dbReader.Load();
                             var newRow = ExportRow(table, row);
 
-                            await table.TargetTable.SaveItem(newRow, null);
+                            await table.TargetTable.Save(newRow, null);
 
                             ea.Current++;
                             ea.Row = newRow;
@@ -549,7 +552,7 @@ namespace DataWF.Data
                                 table.TargetTable.Clear();
                             }
                         }
-                        transacton.Reader.Close();
+                        reader.Close();
                     }
                     transacton.Commit();
                 }

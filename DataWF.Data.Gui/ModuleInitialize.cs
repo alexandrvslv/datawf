@@ -1,17 +1,19 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Xwt;
+using Avalonia;
+using Avalonia.Threading;
 
 namespace DataWF.Data.Gui
 {
     public class ModuleInitialize : IModuleInitialize
     {
-        public Task Initialize()
+        public Task Initialize(object[] args)
         {
+            var schema = args[0] as IDBSchema;
             GuiEnvironment.CellEditorFabric[typeof(DBColumn)] = (cell) =>
             {
                 return new CellEditorDataTree();
@@ -42,7 +44,7 @@ namespace DataWF.Data.Gui
             };
             GuiEnvironment.CellEditorFabric[typeof(DBConnection)] = (cell) =>
             {
-                return new CellEditorListEditor() { DataSource = DBService.Connections };
+                return new CellEditorListEditor() { DataSource = DataExplorer.Provider.Schems };
             };
             GuiEnvironment.CellEditorFabric[typeof(DBSystem)] = (cell) =>
             {
@@ -50,11 +52,11 @@ namespace DataWF.Data.Gui
             };
             GuiEnvironment.CellEditorFabric[typeof(DBItem)] = (cell) =>
             {
-                var table = DBTable.GetTable(cell.Invoker.DataType);
+                var table = schema.GetTable(cell.Invoker.DataType);
                 return table == null ? null : new CellEditorTable() { Table = table };
             };
 
-            Application.Invoke(() =>
+            _ = Dispatcher.UIThread.InvokeAsync(() =>
             {
                 LayoutList.DefaultMenu = new LayoutListMenu();
                 var menuExportTxt = new ToolItem(MenuExportTxtClick) { Glyph = GlyphType.FileTextO, Text = Locale.Get("TableEditor", "Export Text") };

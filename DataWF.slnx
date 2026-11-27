@@ -1,0 +1,47 @@
+<Solution>
+  <Folder Name="/Common/">
+    <Project Path="DataWF.Generator/DataWF.Generator.csproj" />
+    <Project Path="DataWF.Invokers/DataWF.Invokers.csproj" />
+    <Project Path="DataWF.Serialization/DataWF.Serialization.csproj" />
+    <Project Path="DataWF.Core/DataWF.Core.csproj" />
+    <Project Path="DataWF.Data/DataWF.Data.csproj" />
+    <Project Path="DataWF.Geometry/DataWF.Geometry.csproj" />
+    <Project Path="DataWF.Odf/DataWF.Odf.csproj" />
+    <Project Path="DataWF.WebService.Common/DataWF.WebService.Common.csproj" />
+  </Folder>
+  <Folder Name="/Modules/">
+    <Project Path="DataWF.Module.Common/DataWF.Module.Common.csproj" />
+    <Project Path="DataWF.Module.Finance/DataWF.Module.Finance.csproj" />
+    <Project Path="DataWF.Module.Flow/DataWF.Module.Flow.csproj" />
+    <Project Path="DataWF.Module.Messanger/DataWF.Module.Messanger.csproj" />
+  </Folder>
+  <Folder Name="/Test/">
+    <Project Path="DataWF.Test.Generator/DataWF.Test.Generator.csproj" />
+    <Project Path="DataWF.Test.Invokers/DataWF.Test.Invokers.csproj" />
+    <Project Path="DataWF.Test.Serialization/DataWF.Test.Serialization.csproj" />
+    <Project Path="DataWF.Test.Core/DataWF.Test.Core.csproj" />
+    <Project Path="DataWF.Test.Data/DataWF.Test.Data.csproj" />
+    <Project Path="DataWF.Test.Module.Common/DataWF.Test.Module.Common.csproj" />
+    <Project Path="DataWF.Test.Module.Counterpart/DataWF.Test.Module.Counterpart.csproj" />
+    <Project Path="DataWF.Test.Web.CodeGenerator/DataWF.Test.Web.CodeGenerator.csproj" />
+    <Project Path="DataWF.Test.Web.Service/DataWF.Test.Web.Service.csproj" />
+    <Project Path="DataWF.Test.GuiGtk/DataWF.Test.GuiGtk.csproj" />
+    <Project Path="DataWF.Test.GuiShare/DataWF.Test.GuiShare.shproj" />
+    <Project Path="DataWF.Test.GuiWpf/DataWF.Test.GuiWpf.csproj" />
+  </Folder>
+  <Folder Name="/Benchmark/">
+    <Project Path="DataWF.Benchmark.Invokers/DataWF.Benchmark.Invokers.csproj" />
+    <Project Path="DataWF.Benchmark.Serialization/DataWF.Benchmark.Serialization.csproj" />
+    <Project Path="DataWF.Profile/DataWF.Profile.csproj" />
+  </Folder>
+  <Folder Name="/UI/">
+    <Project Path="DataWF.Data.Gui/DataWF.Data.Gui.csproj" />
+    <Project Path="DataWF.Gui/DataWF.Gui.csproj" />
+    <Project Path="DataWF.Module.CommonGui/DataWF.Module.CommonGui.csproj" />
+    <Project Path="DataWF.Module.FlowGui/DataWF.Module.FlowGui.csproj" />
+    <Project Path="DataWF.Module.MessangerGui/DataWF.Module.MessangerGui.csproj" />
+    <Project Path="DataWF.OdfGui/DataWF.OdfGui.csproj" />
+    <Project Path="DataWF.StarterGtk/DataWF.StarterGtk.csproj" />
+    <Project Path="DataWF.StarterWpf/DataWF.StarterWin.csproj" />
+  </Folder>
+</Solution>

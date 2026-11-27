@@ -1,9 +1,9 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using Doc.Odf;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Gui
 {

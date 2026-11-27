@@ -1,8 +1,8 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt;
+using Avalonia;
 using System.Xml.Serialization;
 
 namespace DataWF.Gui
@@ -49,14 +49,14 @@ namespace DataWF.Gui
 
         public LayoutListInfoKeys Keys
         {
-            get { return keys; }
-            set { keys = value; }
+            get => keys;
+            set => keys = value;
         }
 
         [XmlIgnore, Browsable(false)]
         public bool GridMode
         {
-            get { return (keys & LayoutListInfoKeys.GridMode) == LayoutListInfoKeys.GridMode; }
+            get => (keys & LayoutListInfoKeys.GridMode) == LayoutListInfoKeys.GridMode;
             set
             {
                 if (value)
@@ -70,7 +70,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool CollectingRow
         {
-            get { return (keys & LayoutListInfoKeys.CollectingRow) == LayoutListInfoKeys.CollectingRow; }
+            get => (keys & LayoutListInfoKeys.CollectingRow) == LayoutListInfoKeys.CollectingRow;
             set
             {
                 if (value)
@@ -84,7 +84,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool HeaderVisible
         {
-            get { return (keys & LayoutListInfoKeys.HeaderVisible) == LayoutListInfoKeys.HeaderVisible; }
+            get => (keys & LayoutListInfoKeys.HeaderVisible) == LayoutListInfoKeys.HeaderVisible;
             set
             {
                 if (value)
@@ -98,7 +98,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool HeaderFrosen
         {
-            get { return (keys & LayoutListInfoKeys.HeaderFrosen) == LayoutListInfoKeys.HeaderFrosen; }
+            get => (keys & LayoutListInfoKeys.HeaderFrosen) == LayoutListInfoKeys.HeaderFrosen;
             set
             {
                 if (value)
@@ -111,7 +111,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool ColumnsVisible
         {
-            get { return (keys & LayoutListInfoKeys.ColumnsVisible) == LayoutListInfoKeys.ColumnsVisible; }
+            get => (keys & LayoutListInfoKeys.ColumnsVisible) == LayoutListInfoKeys.ColumnsVisible;
             set
             {
                 if (value)
@@ -125,7 +125,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool HotTrackingRow
         {
-            get { return (keys & LayoutListInfoKeys.HotTrackingRow) == LayoutListInfoKeys.HotTrackingRow; }
+            get => (keys & LayoutListInfoKeys.HotTrackingRow) == LayoutListInfoKeys.HotTrackingRow;
             set
             {
                 if (value)
@@ -138,7 +138,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool HotTrackingCell
         {
-            get { return (keys & LayoutListInfoKeys.HotTrackingCell) == LayoutListInfoKeys.HotTrackingCell; }
+            get => (keys & LayoutListInfoKeys.HotTrackingCell) == LayoutListInfoKeys.HotTrackingCell;
             set
             {
                 if (value)
@@ -151,7 +151,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool HotSelection
         {
-            get { return (keys & LayoutListInfoKeys.HotSelectRow) == LayoutListInfoKeys.HotSelectRow; }
+            get => (keys & LayoutListInfoKeys.HotSelectRow) == LayoutListInfoKeys.HotSelectRow;
             set
             {
                 if (value)
@@ -164,7 +164,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool ShowToolTip
         {
-            get { return (keys & LayoutListInfoKeys.ShowToolTip) == LayoutListInfoKeys.ShowToolTip; }
+            get => (keys & LayoutListInfoKeys.ShowToolTip) == LayoutListInfoKeys.ShowToolTip;
             set
             {
                 if (value)
@@ -177,7 +177,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool GroupName
         {
-            get { return (keys & LayoutListInfoKeys.GroupName) == LayoutListInfoKeys.GroupName; }
+            get => (keys & LayoutListInfoKeys.GroupName) == LayoutListInfoKeys.GroupName;
             set
             {
                 if (value)
@@ -190,7 +190,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool GroupCount
         {
-            get { return (keys & LayoutListInfoKeys.GroupCount) == LayoutListInfoKeys.GroupCount; }
+            get => (keys & LayoutListInfoKeys.GroupCount) == LayoutListInfoKeys.GroupCount;
             set
             {
                 if (value)
@@ -203,7 +203,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool GridAuto
         {
-            get { return (keys & LayoutListInfoKeys.GridAuto) == LayoutListInfoKeys.GridAuto; }
+            get => (keys & LayoutListInfoKeys.GridAuto) == LayoutListInfoKeys.GridAuto;
             set
             {
                 if (value)
@@ -216,7 +216,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool CalcHeigh
         {
-            get { return (keys & LayoutListInfoKeys.CalcHeigh) == LayoutListInfoKeys.CalcHeigh; }
+            get => (keys & LayoutListInfoKeys.CalcHeigh) == LayoutListInfoKeys.CalcHeigh;
             set
             {
                 if (value)
@@ -229,7 +229,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool CalcWidth
         {
-            get { return (keys & LayoutListInfoKeys.CalcWidth) == LayoutListInfoKeys.CalcWidth; }
+            get => (keys & LayoutListInfoKeys.CalcWidth) == LayoutListInfoKeys.CalcWidth;
             set
             {
                 if (value)
@@ -242,7 +242,7 @@ namespace DataWF.Gui
         [XmlIgnore, Browsable(false)]
         public bool GroupHeader
         {
-            get { return (keys & LayoutListInfoKeys.GroupHeader) == LayoutListInfoKeys.GroupHeader; }
+            get => (keys & LayoutListInfoKeys.GroupHeader) == LayoutListInfoKeys.GroupHeader;
             set
             {
                 if (value)
@@ -255,7 +255,7 @@ namespace DataWF.Gui
         //[DefaultValue(GridOrientation.Horizontal)]
         public GridOrientation GridOrientation
         {
-            get { return gridOrient; }
+            get => gridOrient;
             set
             {
                 if (gridOrient != value)
@@ -269,7 +269,7 @@ namespace DataWF.Gui
         [DefaultValue(1)]
         public int GridCol
         {
-            get { return gridCol; }
+            get => gridCol;
             set
             {
                 if (gridCol != value)
@@ -282,8 +282,8 @@ namespace DataWF.Gui
 
         public int GliphSize
         {
-            get { return gliphSize; }
-            set { gliphSize = value; }
+            get => gliphSize;
+            set => gliphSize = value;
         }
 
         [DefaultValue(10)]
@@ -292,7 +292,7 @@ namespace DataWF.Gui
         [DefaultValue(1D)]
         public double Scale
         {
-            get { return scale; }
+            get => scale;
             set
             {
                 if (scale == value)
@@ -303,7 +303,7 @@ namespace DataWF.Gui
         }
 
         [DefaultValue(0)]
-        public double Indent { get { return columns.Indent; } set { columns.Indent = value; } }
+        public double Indent { get => columns.Indent; set => columns.Indent = value; }
 
         [DefaultValue(19)]
         public int LevelIndent { get; set; } = 19;
@@ -326,7 +326,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle StyleCell
         {
-            get { return this.styleCell ?? (styleCell = GuiEnvironment.Theme[StyleCellName]); }
+            get => this.styleCell ?? (styleCell = GuiEnvironment.Theme[StyleCellName]);
             set
             {
                 styleCell = value;
@@ -337,7 +337,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle StyleRow
         {
-            get { return styleRow ?? (styleRow = GuiEnvironment.Theme[StyleRowName]); }
+            get => styleRow ??= GuiEnvironment.Theme[StyleRowName];
             set
             {
                 styleRow = value;
@@ -348,7 +348,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle StyleColumn
         {
-            get { return styleColumn ?? (styleColumn = GuiEnvironment.Theme[StyleColumnName]); }
+            get => styleColumn ??= GuiEnvironment.Theme[StyleColumnName];
             set
             {
                 styleColumn = value;
@@ -359,7 +359,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle StyleGroup
         {
-            get { return styleGroup ?? (styleGroup = GuiEnvironment.Theme[StyleGroupName]); }
+            get => styleGroup ??= GuiEnvironment.Theme[StyleGroupName];
             set
             {
                 styleGroup = value;
@@ -370,7 +370,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle StyleHeader
         {
-            get { return styleHeader ?? (styleHeader = GuiEnvironment.Theme[StyleHeaderName]); }
+            get => styleHeader ??= GuiEnvironment.Theme[StyleHeaderName];
             set
             {
                 styleHeader = value;
@@ -387,19 +387,19 @@ namespace DataWF.Gui
 
         public string Filter
         {
-            get { return filter; }
-            set { filter = value; }
+            get => filter;
+            set => filter = value;
         }
 
         public bool Tree
         {
-            get { return tree; }
-            set { tree = value; }
+            get => tree;
+            set => tree = value;
         }
 
         public LayoutSortList Sorters
         {
-            get { return sorters; }
+            get => sorters;
             set
             {
                 value.Info = this;
@@ -409,7 +409,7 @@ namespace DataWF.Gui
 
         public LayoutColumn Columns
         {
-            get { return columns; }
+            get => columns;
             set
             {
                 value.Info = this;
@@ -420,7 +420,7 @@ namespace DataWF.Gui
         [DefaultValue(40)]
         public int HeaderWidth
         {
-            get { return HeaderVisible ? headerWidth : 0; }
+            get => HeaderVisible ? headerWidth : 0;
             set
             {
                 if (headerWidth == value)
@@ -456,14 +456,11 @@ namespace DataWF.Gui
 
 
 
-        public void ScaleRec(ref Rectangle rec)
+        public void ScaleRec(ref Rect rec)
         {
             if (!scale.Equals(1D))
             {
-                rec.X *= scale;
-                rec.Y *= scale;
-                rec.Width *= scale;
-                rec.Height *= scale;
+                rec *= scale;
             }
         }
 

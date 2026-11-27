@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,7 +27,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Geometry
 {
-    public class Polygon2DArray : IByteSerializable, IEquatable<Polygon2DArray>
+    public class Polygon2DArray : IBinarySerializable, IEquatable<Polygon2DArray>
     {
         public static bool operator ==(Polygon2DArray a, Polygon2DArray b)
         {
@@ -47,14 +47,16 @@ namespace DataWF.Geometry
         }
 
         public Polygon2DArray()
-        { }
+        {
+            Polygons = new List<Polygon2D>();
+        }
 
-        public Polygon2DArray(IEnumerable<Polygon2D> polygons)
+        public Polygon2DArray(IEnumerable<Polygon2D> polygons) : this()
         {
             Polygons.AddRange(polygons);
         }
 
-        public List<Polygon2D> Polygons { get; set; } = new List<Polygon2D>();
+        public List<Polygon2D> Polygons { get; set; }
 
         [XmlIgnore, JsonIgnore]
         public Rectangle2D Bounds => RefreshBounds();
@@ -101,14 +103,19 @@ namespace DataWF.Geometry
             using (var stream = new MemoryStream(data))
             using (var reader = new BinaryReader(stream))
             {
-                Polygons.Clear();
-                Polygons.Capacity = reader.ReadInt32();
-                while (Polygons.Count < Polygons.Capacity)
-                {
-                    var polygon = new Polygon2D();
-                    polygon.Deserialize(reader);
-                    Polygons.Add(polygon);
-                }
+                Deserialize(reader);
+            }
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Polygons = new List<Polygon2D>();
+            Polygons.Capacity = reader.ReadInt32();
+            while (Polygons.Count < Polygons.Capacity)
+            {
+                var polygon = new Polygon2D();
+                polygon.Deserialize(reader);
+                Polygons.Add(polygon);
             }
         }
 
@@ -117,14 +124,19 @@ namespace DataWF.Geometry
             using (var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write(Polygons.Count);
-                foreach (var polygon in Polygons)
-                {
-                    polygon.Serialize(writer);
-                }
-                writer.Flush();
+                Serialize(writer);
                 return stream.ToArray();
             }
+        }
+
+        public void Serialize(BinaryWriter writer)
+        {
+            writer.Write(Polygons.Count);
+            foreach (var polygon in Polygons)
+            {
+                polygon.Serialize(writer);
+            }
+            writer.Flush();
         }
 
         public override bool Equals(object obj)

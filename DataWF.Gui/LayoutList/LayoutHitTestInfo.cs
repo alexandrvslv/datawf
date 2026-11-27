@@ -1,13 +1,14 @@
-﻿using DataWF.Common;
-using Xwt;
+﻿using DataWF;
+using Avalonia;
+using Avalonia.Input;
 
 namespace DataWF.Gui
 {
     public class LayoutHitTestInfo
     {
-        public Rectangle RowBound = new Rectangle();
-        public Rectangle ItemBound = new Rectangle();
-        public Rectangle SubItemBound = new Rectangle();
+        public Rect RowBound = new Rect();
+        public Rect ItemBound = new Rect();
+        public Rect SubItemBound = new Rect();
         public Point Point = new Point();
 
         public LayoutHitTestInfo()
@@ -24,7 +25,7 @@ namespace DataWF.Gui
 
         public bool MouseDown { get; set; }
 
-        public PointerButton MouseButton { get; set; }
+        public MouseButton MouseButton { get; set; }
 
         public LayoutGroup Group { get; set; }
 

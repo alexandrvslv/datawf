@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
@@ -6,8 +6,8 @@ using DataWF.Module.Flow;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Module.FlowGui
 {
@@ -112,11 +112,11 @@ namespace DataWF.Module.FlowGui
             //hSplit.Panel2.Resize = true;
             //hSplit.Panel2.Content = vSplit;
 
-            PackStart(bar, false, false);
-            PackStart(list, true, true);
+            Children.Add(bar, false, false);
+            Children.Add(list, true, true);
             Name = "DocumentListView";
-            Documents = new DBTableView<Document>();
-            Filter = new DocumentFilter();
+            Documents = new DBTableView<Document>(FlowExplorer.Schema.Document);
+            Filter = new DocumentFilter(FlowExplorer.Schema);
         }
 
         [DefaultValue(true)]
@@ -403,7 +403,7 @@ namespace DataWF.Module.FlowGui
 
         protected override void Dispose(bool disposing)
         {
-            Application.Invoke(() =>
+            _ = Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Documents?.Dispose();
                 filter?.Dispose();
@@ -490,7 +490,7 @@ namespace DataWF.Module.FlowGui
                     foreach (string fileName in ofDialog.FileNames)
                     {
                         string name = System.IO.Path.GetFileName(fileName);
-                        var drow = DocumentData.DBTable.LoadByCode(name, DocumentData.DBTable.ParseProperty(nameof(DocumentData.FileName)), DBLoadParam.Load);
+                        var drow = FlowExplorer.Schema.DocumentData.LoadByCode(name, FlowExplorer.Schema.DocumentData.FileNameKey, DBLoadParam.Load);
                         if (drow != null)
                         {
                             if (dr == Command.Save)
@@ -525,7 +525,7 @@ namespace DataWF.Module.FlowGui
             }
             else if (documents.Count > 1)
             {
-                var list = new DBTableView<Document>((QParam)null, DBViewKeys.Static | DBViewKeys.Empty)
+                var list = new DBTableView<Document>(FlowExplorer.Schema.Document, (QParam)null, DBViewKeys.Static | DBViewKeys.Empty)
                 {
                     ItemType = documents[0].GetType()
                 };

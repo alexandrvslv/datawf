@@ -33,7 +33,7 @@ namespace DataWF.Gui
 
         public object Value
         {
-            get { return item; }
+            get => item;
             set
             {
                 if (item != value)

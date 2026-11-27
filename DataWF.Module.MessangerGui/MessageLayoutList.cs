@@ -1,11 +1,11 @@
 ﻿using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
-using DataWF.Common;
+using DataWF;
 using System;
 using System.ComponentModel;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 using DataWF.Module.Common;
 using DataWF.Module.Messanger;
 

@@ -1,4 +1,6 @@
-﻿using DataWF.Common;
+﻿using DataWF;
+using DataWF.ModelProviders;
+using DataWF.Settings;
 using DataWF.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -54,22 +56,6 @@ namespace DataWF.WebService.Common
             return app.UseResponseCompression();
         }
 
-        public static IServiceCollection AddDBProvider(this IServiceCollection services, IDBProvider dataProvider, bool load = false)
-        {
-            if (load)
-            {
-                dataProvider.Load();
-            }
-            return services.AddSingleton(dataProvider);
-        }
-
-        public static IApplicationBuilder UseDBProvider(this IApplicationBuilder app)
-        {
-            var service = app.ApplicationServices.GetService<IDBProvider>();
-            service.Load();
-            return app;
-        }
-
         public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
             var jwtConfig = new JwtSetting();
@@ -108,8 +94,32 @@ namespace DataWF.WebService.Common
                 .UseAuthorization();
         }
 
-        public static IServiceCollection AddDefaults(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddDefaults(this IServiceCollection services, IConfiguration configuration, IDBProvider dbProvider)
         {
+            dbProvider.Load();
+
+
+            foreach (var interfaceType in TypeHelper.GetDerivedInterfaces<IModelProvider>(dbProvider.GetType()))
+                services.AddSingleton(interfaceType, dbProvider);
+
+            if (dbProvider is DBProvider)
+                services.AddSingleton<DBProvider>((DBProvider)dbProvider);
+
+            if (dbProvider.GetType() != typeof(DBProvider))
+                services.AddSingleton(dbProvider.GetType(), dbProvider);
+
+            var schema = dbProvider.Schems.OfType<DBSchema>().FirstOrDefault();
+            if (schema != null)
+            {
+                foreach (var interfaceType in TypeHelper.GetDerivedInterfaces<IDBSchema>(schema.GetType()))
+                    services.AddSingleton(interfaceType, schema);
+
+                services.AddSingleton<DBSchema>(schema);
+
+                if (schema.GetType() != typeof(DBSchema))
+                    services.AddSingleton(schema.GetType(), schema);
+            }
+
             var protocolSetting = new ProtocolSetting();
             var protocolSection = configuration.GetSection("ProtocolSetting");
             if (protocolSection != null)
@@ -134,6 +144,7 @@ namespace DataWF.WebService.Common
             }
             services.Configure<SMTPSetting>(ldapSection);
 
+            var formatter = new DBItemOutputFormatter(dbProvider);
             services.AddControllers(options =>
             {
                 options.CacheProfiles.Add("Never", new CacheProfile()
@@ -143,10 +154,10 @@ namespace DataWF.WebService.Common
                     Duration = 0
                 });
                 options.SuppressOutputFormatterBuffering = true;
-                options.OutputFormatters.Insert(0, new DBItemOutputFormatter());
+                options.OutputFormatters.Insert(0, formatter);
             }).AddJsonOptions(options =>
             {
-                options.JsonSerializerOptions.InitDefaults();
+                options.JsonSerializerOptions.InitDefaults(formatter.GetFactory());
             });
 
 
@@ -204,7 +215,7 @@ namespace DataWF.WebService.Common
                                   Id = JwtBearerDefaults.AuthenticationScheme
                               }
                           }
-                          , new string[] { }
+                          , Array.Empty<string>()
                       }
                   });
               });
@@ -222,37 +233,26 @@ namespace DataWF.WebService.Common
             });
         }
 
-        public static IServiceCollection AddWebSocketNotify(this IServiceCollection services, EventHandler<WebNotifyEventArgs> removeHandler = null)
+        public static IServiceCollection AddWebSocketNotify(this IServiceCollection services)
         {
-            var service = new WebNotifyService();
+            return services.AddSingleton<IWebNotifyService, WebNotifyService>();
+        }
+
+        public static IApplicationBuilder UseWebSocketNotify(this IApplicationBuilder app, EventHandler<WebNotifyEventArgs> removeHandler = null)
+        {
+            var service = (WebNotifyService)app.ApplicationServices.GetService<IWebNotifyService>();
+            service.Start();
             if (removeHandler != null)
             {
                 service.RemoveConnection += removeHandler;
             }
-            return services.AddSingleton<IWebNotifyService>(service);
-        }
-
-        public static IApplicationBuilder UseWebSocketNotify(this IApplicationBuilder app)
-        {
-            var service = app.ApplicationServices.GetService<IWebNotifyService>();
-            service.Start();
 
             var webSocketOptions = new WebSocketOptions()
             {
                 KeepAliveInterval = TimeSpan.FromSeconds(100),
-                ReceiveBufferSize = 8 * 1024
             };
             app.UseWebSockets(webSocketOptions);
             return app;
         }
-
-        public static IUserIdentity GetCommonUser(this ClaimsPrincipal claims)
-        {
-            var emailClaim = claims?.FindFirst(ClaimTypes.Email);
-            return emailClaim != null ? FindUser?.Invoke(emailClaim.Value) : null;
-        }
-
-        public static Func<string, IUserIdentity> FindUser;
-
     }
 }

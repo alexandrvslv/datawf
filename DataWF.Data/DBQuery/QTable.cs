@@ -17,84 +17,88 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF.Operators;
+using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace DataWF.Data
 {
     public class QTable : QItem
     {
-        protected JoinType join;
+        protected JoinOperator join = JoinOperator.Undefined;
         protected DBTable table;
-        protected string tableName = null;
+        private QParam onParam;
+        private IEnumerable<QParam> parameters;
 
         public QTable()
         { }
 
-        public QTable(DBTable table, string alias = null)
+        public QTable(IDBTable table, string alias = null)
         {
             Table = table;
-            this.alias = alias;
+            TableAlias = alias;
         }
 
-
-        public string TableName
+        public override string Name
         {
-            get { return tableName; }
-            set
-            {
-                if (tableName != value)
-                {
-                    tableName = value;
-                    table = null;
-                    OnPropertyChanged(nameof(TableName));
-                }
-            }
+            get => Table?.Name;
+            set { }
         }
 
-        public JoinType Join
+        public JoinOperator Join
         {
-            get { return join; }
+            get => join;
             set
             {
                 if (join != value)
                 {
                     join = value;
-                    OnPropertyChanged(nameof(Join));
+                    //OnPropertyChanged();
                 }
             }
         }
 
-        public DBTable BaseTable
+        public override IDBTable Table
         {
-            get => Table is IDBVirtualTable virtualTable ? virtualTable.BaseTable : Table;
-        }
-
-        public override DBTable Table
-        {
-            get
-            {
-                if (table == null)
-                    table = DBService.Schems.ParseTable(tableName);
-                return table;
-            }
+            get => table;
             set
             {
-                if (Table != value)
+                if (table != value)
                 {
-                    TableName = value?.FullName;
-                    Text = value?.Name;
-                    table = value;
-                    OnPropertyChanged(nameof(Table));
+                    table = (DBTable)value;
+                    //OnPropertyChanged();
                 }
             }
         }
+
+        public QParam On
+        {
+            get => onParam;
+            set
+            {
+                onParam = value;
+                onParam.Holder = this;
+                //OnPropertyChanged();
+            }
+        }
+
+        public bool HasParameters => GetParameters().Any();
 
         public override string Format(IDbCommand command = null)
         {
-            var schema = Table.Schema.Connection.Schema;
+            return $"{Join.Format()} {System.FormatQTable(Table, TableAlias)} {(On != null ? $" on {On.Format(command)}" : string.Empty)}";
+        }
 
-            return $"{Join.Format()} {Table?.FormatQTable(alias) ?? ($"{text} {alias}")}";
+        public override object GetValue(DBItem row)
+        {
+            return Name;
+        }
+
+        public IEnumerable<QParam> GetParameters()
+        {
+            return parameters ??=  Query.GetAllParameters(p => p.GetAllQItems<QColumn>(c => c.QTable == this).Any()).ToList();
         }
     }
 }

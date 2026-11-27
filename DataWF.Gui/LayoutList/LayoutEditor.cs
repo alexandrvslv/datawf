@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt;
-using DataWF.Common;
-using Xwt.Drawing;
+using Avalonia;
+using DataWF;
+using Avalonia.Controls;
 using System.Threading.Tasks;
+using Avalonia.Media;
+using Avalonia.Media.Immutable;
+using Avalonia.Media.Imaging;
+using Avalonia.Input;
 
 namespace DataWF.Gui
 {
@@ -22,20 +26,20 @@ namespace DataWF.Gui
         protected Dictionary<string, object> Cache = new Dictionary<string, object>(StringComparer.Ordinal);
         protected ILayoutCellEditor currentEditor;
         protected object value;
-        protected Widget widget;
+        protected Visual control;
         protected bool changed;
         protected bool dropDownVisible = true;
         protected bool dropDownExVisible = true;
         protected PEditorHover hover = PEditorHover.None;
         protected ToolWindow dropDown;
-        private Image image;
-        private CellStyle style;
-        Rectangle recte = new Rectangle();
-        Rectangle rectd = new Rectangle();
-        Rectangle rectg = new Rectangle();
-        Rectangle recti = new Rectangle(0, 0, 18D, 18D);
-        private ILayoutCell cell;
-        private CellStyle buttonStyle;
+        Bitmap image;
+        CellStyle style;
+        Rect recte = new Rect();
+        Rect rectd = new Rect();
+        Rect rectg = new Rect();
+        Rect recti = new Rect(0, 0, 18D, 18D);
+        ILayoutCell cell;
+        CellStyle buttonStyle;
 
         public LayoutEditor() : base()
         {
@@ -45,7 +49,7 @@ namespace DataWF.Gui
 
         public CellStyle ButtonStyle
         {
-            get { return buttonStyle ?? (buttonStyle = GuiEnvironment.Theme[ButtonStyleName]); }
+            get => buttonStyle ??= GuiEnvironment.Theme[ButtonStyleName];
             set
             {
                 buttonStyle = value;
@@ -55,7 +59,7 @@ namespace DataWF.Gui
 
         public ILayoutCell Cell
         {
-            get { return cell; }
+            get => cell;
             set
             {
                 cell = value;
@@ -69,13 +73,13 @@ namespace DataWF.Gui
 
         public ILayoutCellEditor CurrentEditor
         {
-            get { return currentEditor; }
-            set { currentEditor = value; }
+            get => currentEditor;
+            set => currentEditor = value;
         }
 
         public bool IsValueChanged
         {
-            get { return changed; }
+            get => changed;
             set
             {
                 changed = value;
@@ -85,7 +89,7 @@ namespace DataWF.Gui
 
         public virtual object Value
         {
-            get { return value; }
+            get => value;
             set
             {
                 if (this.value == value)
@@ -97,7 +101,7 @@ namespace DataWF.Gui
 
         public ToolWindow DropDown
         {
-            get { return dropDown; }
+            get => dropDown;
             set
             {
                 if (dropDown != value)
@@ -113,71 +117,71 @@ namespace DataWF.Gui
 
         public virtual CellStyle Style
         {
-            get { return style; }
+            get => style;
             set
             {
                 style = value;
-                BackgroundColor = style?.BaseColor ?? Colors.Transparent;
+                Background = new ImmutableSolidColorBrush(style?.BaseColor ?? Colors.Transparent);
             }
         }
 
         public bool DropDownVisible
         {
-            get { return dropDownVisible; }
+            get => dropDownVisible;
             set
             {
                 if (dropDownVisible != value)
                 {
                     dropDownVisible = value;
-                    OnReallocate();
-                    QueueDraw();
+                    InvalidateArrange();
+                    InvalidateVisual();
                 }
             }
         }
 
         public bool DropDownExVisible
         {
-            get { return dropDownExVisible; }
+            get => dropDownExVisible;
             set
             {
                 if (dropDownExVisible != value)
                 {
                     dropDownExVisible = value;
-                    OnReallocate();
-                    QueueDraw();
+                    InvalidateArrange();
+                    InvalidateVisual();
                 }
             }
         }
 
-        public Image Image
+        public Bitmap Image
         {
-            get { return image; }
+            get => image;
             set
             {
                 if (image != value)
                 {
                     image = value;
-                    QueueDraw();
+                    InvalidateVisual();
                 }
             }
         }
 
-        public Widget Widget
+        public Visual Control
         {
-            get { return widget; }
+            get => control;
             set
             {
-                if (value != widget)
+                if (value != Control)
                 {
-                    if (widget != null)
+                    if (Control != null)
                     {
-                        RemoveChild(widget);
+                        Children.Remove(Control);
                     }
-                    widget = value;
-                    if (widget != null)
+                    Control = value;
+                    if (Control != null)
                     {
-                        widget.Visible = true;
-                        AddChild(widget, GetControlBound());
+                        Control.IsVisible = true;
+                        Children.Add(Control);
                     }
                 }
             }
@@ -188,8 +192,6 @@ namespace DataWF.Gui
         public event EventHandler DropDownClick;
 
         public event EventHandler DropDownExClick;
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnDropClick()
         {
@@ -207,15 +209,10 @@ namespace DataWF.Gui
             if (!Initialize)
             {
                 changed = true;
-                if (DropDown != null && DropDown.Visible && DropDownAutoHide)
+                if (DropDown != null && DropDown.IsVisible && DropDownAutoHide)
                     DropDown.Hide();
-                OnPropertyChanged(nameof(Value));
+                //OnPropertyChanged(nameof(Value));
             }
-        }
-
-        protected virtual void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
         public void ClearValue()
@@ -227,9 +224,9 @@ namespace DataWF.Gui
         {
             int h = w;
             if (dropDownExVisible)
-                recte = new Rectangle(Size.Width - (w + 1), 1, w, h < Size.Height ? h : Size.Height - 2);
+                recte = new Rect(Width - (w + 1), 1, w, h < Height ? h : Height - 2);
             else
-                recte = new Rectangle(0, 0, 0, 0);
+                recte = new Rect(0, 0, 0, 0);
         }
 
         public void GetDropDownBound()
@@ -238,46 +235,47 @@ namespace DataWF.Gui
             GetDropDownExtBound();
             if (dropDownVisible)
             {
-                rectd = new Rectangle(Size.Width - w - (recte.Width + 2), 1, w, h < Size.Height ? h : Size.Height - 2);
+                rectd = new Rect(Width - w - (recte.Width + 2), 1, w, h < Height ? h : Height - 2);
             }
             else
             {
-                rectd = new Rectangle(Size.Width - (recte.Width + 2), 0, 0, 0);
+                rectd = new Rect(Width - (recte.Width + 2), 0, 0, 0);
             }
         }
 
-        protected virtual Rectangle GetControlBound()
+        protected virtual Rect GetControlBound()
         {
-            return new Rectangle(image != null ? 19 : 1,
+            return new Rect(image != null ? 19 : 1,
                                  0,
-                                 Size.Width - (Size.Width - (int)rectd.Left) - (image != null ? 19 : 1),
-                                 Size.Height);
+                                 Width - (Width - (int)rectd.Left) - (image != null ? 19 : 1),
+                                 Height);
         }
 
-        protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
+        protected override Size MeasureOverride(Size availableSize)
         {
-            var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);
-            size.Height = 20;
-            size.Width += DropDownVisible ? w : 0;
-            size.Width += DropDownExVisible ? w : 0;
-            //if (widget != null)
-            //    size.Width += widget.Surface.GetPreferredSize(widthConstraint, heightConstraint).Width;
+            var size = base.MeasureOverride(availableSize);
+            size = new Size(
+                size.Width + (DropDownVisible ? w : 0) + (DropDownExVisible ? w : 0),
+                20);
+            //if (Control != null)
+            //    size.Width += Control.Measure(availableSize);
             return size;
         }
 
-        protected override void OnReallocate()
+        protected override void ArrangeCore(Rect finalRect)
         {
-            base.OnReallocate();
+            base.ArrangeCore(finalRect);
             GetDropDownBound();
             GetDropDownExtBound();
-            if (widget != null)
-                SetChildBounds(widget, GetControlBound());
-            QueueDraw();
+            if (Control != null)
+                Control.Arrange(GetControlBound());
+            InvalidateVisual();
         }
 
-        protected override void OnDraw(Context ctx, Rectangle dirtyRect)
+        public override void Render(DrawingContext ctx)
         {
-            base.OnDraw(ctx, dirtyRect);
+            base.Render(ctx);
+            var dirtyRect = Bounds;
             using (var context = new GraphContext(ctx))
             {
                 if (image != null)
@@ -289,7 +287,7 @@ namespace DataWF.Gui
                     var state = CellDisplayState.Default;
                     if (hover == PEditorHover.DropDown)
                         state = CellDisplayState.Hover;
-                    rectg = new Rectangle(rectd.X, rectd.Y, 16, 16);
+                    rectg = new Rect(rectd.X, rectd.Y, 16, 16);
                     context.DrawCell(ButtonStyle, GlyphType.AngleDoubleDown, rectd, rectd, state);
                 }
                 if (dropDownExVisible)
@@ -297,33 +295,35 @@ namespace DataWF.Gui
                     var state = CellDisplayState.Default;
                     if (hover == PEditorHover.DropDownEx)
                         state = CellDisplayState.Hover;
-                    rectg = new Rectangle(recte.X, recte.Y, 16, 16);
+                    rectg = new Rect(recte.X, recte.Y, 16, 16);
                     context.DrawCell(ButtonStyle, GlyphType.AngleDoubleRight, recte, recte, state);
                 }
             }
         }
 
-        protected override void OnButtonReleased(ButtonEventArgs e)
+        protected override void OnPointerReleased(PointerReleasedEventArgs e)
         {
-            base.OnButtonReleased(e);
-            if (dropDownVisible && rectd.Contains(e.Position))
+            base.OnPointerReleased(e);
+            var position = e.GetPosition(this);
+            if (dropDownVisible && rectd.Contains(position))
                 OnDropClick();
-            if (dropDownExVisible && recte.Contains(e.Position))
+            if (dropDownExVisible && recte.Contains(position))
                 OnDropExClick();
         }
 
-        protected override void OnMouseMoved(MouseMovedEventArgs e)
+        protected override void OnPointerMoved(PointerEventArgs e)
         {
-            base.OnMouseMoved(e);
-            if (dropDownVisible && rectd.Contains(e.X, e.Y))
+            base.OnPointerMoved(e);
+            var position = e.GetPosition(this);
+            if (dropDownVisible && rectd.Contains(position))
             {
                 hover = PEditorHover.DropDown;
-                QueueDraw();
+                InvalidateVisual();
             }
-            else if (dropDownExVisible && recte.Contains(e.X, e.Y))
+            else if (dropDownExVisible && recte.Contains(position))
             {
                 hover = PEditorHover.DropDownEx;
-                QueueDraw();
+                InvalidateVisual();
             }
             else
             {
@@ -331,22 +331,21 @@ namespace DataWF.Gui
             }
         }
 
-        protected override void OnMouseExited(EventArgs e)
+        protected override void OnPointerExited(PointerEventArgs e)
         {
-            base.OnMouseExited(e);
+            base.OnPointerExited(e);
             hover = PEditorHover.None;
-            QueueDraw();
+            InvalidateVisual();
         }
 
         private void DropDownFormClosed(object sender, EventArgs e)
         {
-            if (widget != null && !dropDown.Visible)
-                widget.SetFocus();
+            if (Control != null && !dropDown.IsVisible)
+                Control.Focus();
         }
 
-        protected override void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
             foreach (KeyValuePair<string, object> kv in Cache)
                 if (kv.Value is IDisposable)
                     ((IDisposable)kv.Value).Dispose();
@@ -355,24 +354,26 @@ namespace DataWF.Gui
 
         public void ShowDropDown(ToolShowMode mode)
         {
-            if (dropDown != null && !dropDown.Visible)
+            if (dropDown != null && !dropDown.IsVisible)
             {
-                if (dropDown.ScreenBounds.Width < Bounds.Width && Bounds.Width > 200)
-                    dropDown.Size = new Size(Bounds.Width, dropDown.ScreenBounds.Height);
+                if (dropDown.Bounds.Width < Bounds.Width && Bounds.Width > 200)
+                {
+                    dropDown.Width = Bounds.Width;
+                }
                 if (mode == ToolShowMode.AutoHide)
                     dropDown.TimerInterval = 10000;
                 dropDown.Mode = mode;
-                dropDown.Show(this, new Point(0, Bounds.Height));
+                dropDown.Show(this, new PixelPoint(0, (int)Bounds.Height));
             }
         }
 
-        public async Task<Command> ShowDropDownAsync()
+        public async Task<DialogResult?> ShowDropDownAsync()
         {
-            if (dropDown != null && !dropDown.Visible)
+            if (dropDown != null && !dropDown.IsVisible)
             {
-                if (dropDown.ScreenBounds.Width < Bounds.Width && Bounds.Width > 200)
-                    dropDown.Size = new Size(Bounds.Width, dropDown.ScreenBounds.Height);
-                return await dropDown.ShowAsync(this, new Point(0, Bounds.Height));
+                if (dropDown.Bounds.Width < Bounds.Width && Bounds.Width > 200)
+                    dropDown.Width = Bounds.Width;
+                return await dropDown.ShowAsync(this, new PixelPoint(0, (int)Bounds.Height));
             }
             return null;
         }
@@ -386,7 +387,7 @@ namespace DataWF.Gui
         {
             if (!Cache.TryGetValue(name, out object o))
             {
-                Cache[name] = o = EmitInvoker.CreateObject(typeof(T), true);
+                Cache[name] = o = InvokeProvider.CreateObject(typeof(T), true);
             }
             return (T)o;
         }
@@ -396,7 +397,7 @@ namespace DataWF.Gui
             var name = typeof(T).Name;
             if (!GlobalCache.TryGetValue(name, out object o))
             {
-                GlobalCache[name] = o = EmitInvoker.CreateObject(typeof(T), true);
+                GlobalCache[name] = o = InvokeProvider.CreateObject(typeof(T), true);
             }
             return (T)o;
         }

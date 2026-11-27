@@ -1,14 +1,13 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
 
     public class ToolMenuItem : ToolDropDown
     {
-
         public ToolMenuItem() : base()
         {
             Initialize();
@@ -26,9 +25,9 @@ namespace DataWF.Gui
             CarretGlyph = GlyphType.CaretRight;
         }
 
-        public override void OnDraw(GraphContext context)
+        public override void Render(GraphContext context)
         {
-            base.OnDraw(context);
+            base.Render(context);
         }
 
         protected internal override void OnMouseEntered(EventArgs args)

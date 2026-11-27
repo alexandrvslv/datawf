@@ -7,7 +7,7 @@ namespace DataWF.Module.Flow
     {
         public virtual string Check(DBItem item, string property)
         {
-            var column = item.Table.ParseProperty(property);
+            var column = item.Table.GetColumnByProperty(property);
             return string.IsNullOrEmpty(item[column]?.ToString()) ? $"{column} not filled!; " : string.Empty;
         }
 

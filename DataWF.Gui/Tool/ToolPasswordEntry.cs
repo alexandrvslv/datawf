@@ -1,24 +1,25 @@
 ﻿using System;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
     public class ToolPasswordEntry : ToolContentItem
     {
-        public ToolPasswordEntry() : base(new PasswordEntry())
+        public ToolPasswordEntry() : base(new TextBox { RevealPassword = true })
         {
             FillHeight = true;
         }
 
-        public PasswordEntry Entry
+        public TextBox Entry
         {
-            get { return content as PasswordEntry; }
+            get { return content as TextBox; }
         }
 
         public event EventHandler EntryTextChanged
         {
-            add { Entry.Changed += value; }
-            remove { Entry.Changed -= value; }
+            add => Entry.TextInput += value;
+            remove => Entry.TextInput -= value;
         }
     }
 }

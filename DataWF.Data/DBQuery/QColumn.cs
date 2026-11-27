@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -27,147 +27,93 @@ using System.Linq;
 
 namespace DataWF.Data
 {
-    public class QColumn : QItem, IInvokerExtension
+    public sealed class QColumn : QItem
     {
-        protected DBColumn columnn;
-        private object temp;
-        protected string columnName;
-        private string prefix;
+        private DBColumn column;
+        private object value;
 
         public QColumn()
         {
+            IsReference = true;
         }
 
-        public QColumn(string name)
-            : base(name)
-        {
-            columnName = name;
-        }
-
-        public QColumn(DBColumn column)
-            : base(column.Name)
+        public QColumn(DBColumn column) : this()
         {
             Column = column;
         }
 
-        public string ColumnName
+        public override string Name
         {
-            get { return columnName; }
-            set
-            {
-                if (columnName != value)
-                {
-                    columnName = value;
-                    columnn = null;
-                }
-                OnPropertyChanged(nameof(ColumnName));
-            }
+            get => Column?.Name;
+            set { }
         }
 
-        public virtual DBColumn Column
+        public override IDBTable Table
         {
-            get
-            {
-                if (columnn == null && columnName != null)
-                    columnn = base.Table?.ParseColumn(columnName) ?? DBService.Schems.ParseColumn(columnName);
-                return columnn;
-            }
+            get => Column?.Table;
+            set { }
+        }
+
+        public override bool IsReference
+        {
+            get => base.IsReference && Value == null;
+            set => base.IsReference = value;
+        }
+
+        public DBColumn Column
+        {
+            get => column;
             set
             {
                 if (Column != value)
                 {
-                    ColumnName = value?.FullName;
-                    base.Text = value?.Name;
-                    //prefix = value.Table.Code;
-                    columnn = value;
+                    Name = value?.Name;
+                    column = value;
                 }
             }
         }
 
-        public DBTable BaseTable
+        public string FullName
         {
-            get => Table is IDBVirtualTable virtualTable ? virtualTable.BaseTable : Table;
+            get => $"{Table}.{Column}";
         }
 
-        public override DBTable Table
-        {
-            get { return Column?.Table ?? base.Table; }
-            set { }
-        }
-
-        public QTable QTable
-        {
-            get { return Query.Tables.FirstOrDefault(p => p.BaseTable == BaseTable); }
-        }
+        public object Value { get => value; set => this.value = value; }
 
         public override void Dispose()
         {
-            columnn = null;
+            column = null;
             base.Dispose();
-        }
-
-        public string FullName
-        {
-            get { return $"{Table}.{Column}"; }
         }
 
         public override string Format(IDbCommand command = null)
         {
             if (Column == null)
-                return text;
+                return Name;
             else if (command != null
                 && (Column.ColumnType == DBColumnTypes.Internal
                 || Column.ColumnType == DBColumnTypes.Expression
                 || Column.ColumnType == DBColumnTypes.Code))
                 return string.Empty;
             else if (Column.ColumnType == DBColumnTypes.Query && Column.Table.Type != DBTableType.View)
-                return $"({Column.Query}) as {text}";
+                return $"({Column.Query}) as {Name}";
             else
-                return $"{(Prefix != null ? (Prefix + ".") : "")}{text}{(alias != null ? (" as " + alias) : "")}";
+                return $"{(TableAlias != null ? (TableAlias + ".") : "")}{Name}";
         }
 
-        public override object GetValue(DBItem row)
+        public override object GetValue(DBItem item)
         {
-            return temp ?? Column.GetValue(row);
+            return value ?? (item == null ? null : Column.GetValue(item));
         }
 
-        public string Prefix
+        public override bool CheckItem(DBItem item, object val2, CompareOperator comparer)
         {
-            get { return prefix ?? QTable?.Alias; }
-            set
-            {
-                if (prefix != value)
-                {
-                    prefix = value;
-                    OnPropertyChanged(nameof(Prefix));
-                }
-            }
+            return Column.CheckItem(item, val2, comparer);
         }
-        public object Temp { get { return temp; } set { temp = value; } }
 
         public override string ToString()
         {
             return Column == null ? base.ToString() : Column.ToString();
-        }
-
-        public IListIndex CreateIndex(bool concurrent)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IListIndex CreateIndex<T>(bool concurrent)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryParameter CreateParameter(Type type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public QueryParameter<TT> CreateParameter<TT>()
-        {
-            throw new NotImplementedException();
         }
 
         public IComparer CreateComparer(Type type, ListSortDirection direction = ListSortDirection.Ascending)
@@ -175,9 +121,9 @@ namespace DataWF.Data
             return Column?.CreateComparer(type, direction);
         }
 
-        public IComparer<TT> CreateComparer<TT>(ListSortDirection direction = ListSortDirection.Ascending)
+        public IComparer<T> CreateComparer<T>(ListSortDirection direction = ListSortDirection.Ascending)
         {
-            return (IComparer<TT>)Column?.CreateComparer(typeof(TT), direction);
+            return (IComparer<T>)Column?.CreateComparer(typeof(T), direction);
         }
     }
 }

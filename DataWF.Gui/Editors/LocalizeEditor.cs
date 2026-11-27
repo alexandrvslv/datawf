@@ -1,7 +1,7 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.IO;
-using Xwt;
+using Avalonia;
 
 
 namespace DataWF.Gui
@@ -65,7 +65,7 @@ namespace DataWF.Gui
         private void ToolLoadImagesClick(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog { Multiselect = true };
-            if (dialog.Run(ParentWindow))
+            if (dialog.Run(VisualRoot))
             {
                 foreach (string name in dialog.FileNames)
                 {

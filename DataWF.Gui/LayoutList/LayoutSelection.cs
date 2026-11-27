@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Avalonia.Threading;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -32,8 +33,8 @@ namespace DataWF.Gui
 
         public object EditorValue
         {
-            get { return editor.Value; }
-            set { editor.Value = value; }
+            get => editor.Value;
+            set => editor.Value = value;
         }
 
         public LayoutSelectionRow HoverRow
@@ -106,7 +107,7 @@ namespace DataWF.Gui
             {
                 if (GuiService.InvokeRequired)
                 {
-                    Xwt.Application.Invoke(() => OnSelectionChanged(type, item));
+                    _ = Dispatcher.UIThread.InvokeAsync(() => OnSelectionChanged(type, item));
                 }
                 else
                 {
@@ -119,7 +120,7 @@ namespace DataWF.Gui
 
         public bool All
         {
-            get { return _items.Count == List.ListSource.Count; }
+            get => _items.Count == List.ListSource.Count;
             set
             {
                 if (value != All)
@@ -316,14 +317,14 @@ namespace DataWF.Gui
 
         public LayoutColumn HoverColumn
         {
-            get { return hover.Value as LayoutColumn; }
-            set { SetHover(value); }
+            get => hover.Value as LayoutColumn;
+            set => SetHover(value);
         }
 
         public LayoutColumn CurrentColumn
         {
-            get { return current.Value as LayoutColumn; }
-            set { SetCurrent(value); }
+            get => current.Value as LayoutColumn;
+            set => SetCurrent(value);
         }
     }
 }

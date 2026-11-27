@@ -17,12 +17,12 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF;
 using System;
 using System.ComponentModel;
 
 namespace DataWF.Data
 {
-
     [AttributeUsage(AttributeTargets.Property)]
     public class ColumnAttribute : Attribute
     {
@@ -51,7 +51,7 @@ namespace DataWF.Data
         [DefaultValue((short)0)]
         public short Scale { get; set; }
 
-        public DBColumnKeys Keys { get; set; }
+        public ColumnFlags Keys { get; set; }
 
         public DBDataType DBDataType { get; set; }
 

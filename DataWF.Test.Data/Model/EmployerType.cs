@@ -1,6 +1,6 @@
 ﻿namespace DataWF.Test.Data
 {
-    public enum EmployerType
+    public enum EmployerType : int
     {
         Type1,
         Type2,

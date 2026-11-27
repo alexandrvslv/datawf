@@ -1,8 +1,8 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections;
 using System.ComponentModel;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Gui
 {
@@ -48,11 +48,8 @@ namespace DataWF.Gui
 
         public IList TaskList
         {
-            get { return taskList.ListSource; }
-            set
-            {
-                taskList.ListSource = value;
-            }
+            get => taskList.ListSource;
+            set => taskList.ListSource = value;
         }
     }
 
@@ -86,7 +83,7 @@ namespace DataWF.Gui
             notifyInfo.CalcHeigh = false;
             notifyInfo.Indent = 5;
 
-            notifies.ApplySort(new InvokerComparer(typeof(StateInfo), "Date", ListSortDirection.Descending));
+            notifies.ApplySort(new InvokerComparer<StateInfo, DateTime>("Date", ListSortDirection.Descending));
 
             notifyList.Text = "Notify";
             notifyList.GenerateColumns = false;

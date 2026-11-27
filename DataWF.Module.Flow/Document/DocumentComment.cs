@@ -1,60 +1,36 @@
-﻿using DataWF.Data;
+﻿using DataWF;
+using DataWF.Data;
 using DataWF.Module.Messanger;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    [Table("ddocument_comment", "Document", BlockSize = 400, IsLoging = false)]
-    public class DocumentComment : DBItem, IDocumentDetail
-    {   
-        public static readonly DBTable<DocumentComment> DBTable = GetTable<DocumentComment>();
-        public static readonly DBColumn MessageKey = DBTable.ParseProperty(nameof(MessageId));
-        public static readonly DBColumn DocumentKey = DBTable.ParseProperty(nameof(DocumentId));
-
+    [Table("ddocument_comment", "Document", BlockSize = 400, Keys = DBTableKeys.NoLogs), Invoker(Instance = true)]
+    public partial class DocumentComment : DocumentItem
+    {
         private Message message;
 
-        public DocumentComment()
+        [Column("unid", Keys = ColumnFlags.Primary)]
+        public long Id
         {
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
-
-        private Document document;
-        [Browsable(false)]
-        [Column("document_id"), Index("ddocument_comment_document_id")]
-        public virtual long? DocumentId
-        {
-            get => GetValue<long?>(DocumentKey);
-            set => SetValue(value, DocumentKey);
-        }
-
-        [Reference(nameof(DocumentId))]
-        public Document Document
-        {
-            get => GetReference(DocumentKey, ref document);
-            set => SetReference(document = value, DocumentKey);
-        }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public long? Id
-        {
-            get => GetValue<long?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
-        }
-
 
         [Browsable(false)]
         [Column("message_id")]
         public long? MessageId
         {
-            get => GetValue<long?>(MessageKey);
-            set => SetValue(value, MessageKey);
+            get => GetValue(Table.MessageIdKey);
+            set => SetValue(value, Table.MessageIdKey);
         }
 
         [Reference(nameof(MessageId))]
         public Message Message
         {
-            get => GetReference(MessageKey, ref message);
-            set => SetReference(message = value, MessageKey);
+            get => GetReference(Table.MessageIdKey, ref message);
+            set => SetReference(message = value, Table.MessageIdKey);
         }
 
         protected override void RaisePropertyChanged(string property)

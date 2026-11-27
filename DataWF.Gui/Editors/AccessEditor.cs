@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System.Linq;
 
 namespace DataWF.Gui
@@ -103,7 +103,7 @@ namespace DataWF.Gui
             };
             alist.CellValueChanged += CellValueChanged;
 
-            PackStart(alist, true, true);
+            Children.Add(alist, true, true);
         }
 
         private void CellValueChanged(object sender, LayoutValueChangedEventArgs e)
@@ -114,7 +114,7 @@ namespace DataWF.Gui
 
         public AccessValue Access
         {
-            get { return access; }
+            get => access;
             set
             {
                 access = value?.Clone();
@@ -124,14 +124,13 @@ namespace DataWF.Gui
 
         public IAccessable Accessable
         {
-            get { return accessable; }
+            get => accessable;
             set
             {
                 accessable = value;
                 if (accessable != null)
                 {
-                    if (accessable.Access == null)
-                        accessable.Access = new AccessValue();
+                    accessable.Access ??= new AccessValue(null);
                     Access = (AccessValue)accessable.Access;
                     Readonly = !access.GetFlag(AccessType.Update, user) && !Access.GetFlag(AccessType.Admin, user);
                 }
@@ -142,13 +141,13 @@ namespace DataWF.Gui
         {
             alist.ListInfo.ColumnsVisible = false;
             foreach (var column in alist.ListInfo.Columns)
-                column.Visible = column.Name == "Group" || column.Name == type.ToString();
+                column.IsVisible = column.Name == "Group" || column.Name == type.ToString();
 
         }
 
         public bool Readonly
         {
-            get { return alist.ReadOnly; }
+            get => alist.ReadOnly;
             set
             {
                 alist.ReadOnly = value;

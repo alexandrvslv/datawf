@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 
 namespace DataWF.Data
@@ -41,7 +41,7 @@ namespace DataWF.Data
         #region IFSerialize implementation
         public void Save(string file)
         {
-            Serialization.Serialize(this, file);
+            SerializeProvider.Serialize(this, file);
         }
 
         public void Save()
@@ -51,7 +51,7 @@ namespace DataWF.Data
 
         public void Load(string file)
         {
-            Serialization.Deserialize(file, this);
+            SerializeProvider.Deserialize(file, this);
         }
 
         public void Load()

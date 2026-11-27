@@ -1,11 +1,11 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System.Collections.Generic;
 
 namespace DataWF.Gui
 {
     public interface ILayoutItem : IEntryNotifyPropertyChanged, INamed, IEnumerable<ILayoutItem>
     {
-        //Rectangle Bound { get; set; }
+        //Rect Bound { get; set; }
 
         double Height { get; set; }
 

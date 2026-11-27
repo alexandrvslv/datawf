@@ -1,14 +1,15 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 
 namespace DataWF.Gui
 {
-    public class LayoutGroup : IComparable, IEntryNotifyPropertyChanged, IDisposable
+    public class LayoutGroup : DefaultItem, IComparable, IDisposable
     {
         protected int startIndex = -1;
         protected int endIndex = -1;
@@ -16,11 +17,11 @@ namespace DataWF.Gui
         protected bool visible = true;
         protected DateTime stamp;
         private string text;
-        private TextLayout textLayout;
+        private FormattedText FormattedText;
         protected Dictionary<LayoutColumn, decimal> cache = new Dictionary<LayoutColumn, decimal>();
         public LayoutListInfo Info;
         public int GridRows;
-        public Rectangle Bound;
+        public Rect Bound;
         public Size TextSize;
 
         public LayoutGroup()
@@ -47,7 +48,7 @@ namespace DataWF.Gui
 
         public string TextValue
         {
-            get { return text; }
+            get => text;
             set
             {
                 if (text != value)
@@ -60,7 +61,7 @@ namespace DataWF.Gui
 
         public int IndexEnd
         {
-            get { return endIndex; }
+            get => endIndex;
             set
             {
                 if (endIndex != value)
@@ -73,7 +74,7 @@ namespace DataWF.Gui
 
         public int IndexStart
         {
-            get { return startIndex; }
+            get => startIndex;
             set
             {
                 if (startIndex != value)
@@ -86,7 +87,7 @@ namespace DataWF.Gui
 
         public bool IsExpand
         {
-            get { return isExpand; }
+            get => isExpand;
             set
             {
                 if (isExpand != value)
@@ -102,26 +103,16 @@ namespace DataWF.Gui
             get { return endIndex - startIndex + 1; }
         }
 
-        public bool Visible
+        public bool IsVisible
         {
-            get { return startIndex < 0 || endIndex < 0 ? false : visible; }
-            set { visible = value; }
+            get => startIndex < 0 || endIndex < 0 ? false : visible;
+            set => visible = value;
         }
 
         public DateTime Stamp
         {
-            get { return stamp; }
-            set { stamp = value; }
-        }
-
-        [XmlIgnore]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            get => stamp;
+            set => stamp = value;
         }
 
         public bool Contains(int index)
@@ -134,26 +125,23 @@ namespace DataWF.Gui
             return ListHelper.Compare(TextValue, ((LayoutGroup)obj).TextValue, null);
         }
 
-        public TextLayout GetTextLayout()
+        public FormattedText GetFormattedText()
         {
-            if (textLayout == null)
-            {
-                textLayout = new TextLayout() { Font = Info.StyleGroup.Font };
-            }
+            FormattedText ??= new FormattedText() { Typeface = Info.StyleGroup.Typeface };
             var toString = ToString();
-            if (toString != textLayout.Text)
+            if (toString != FormattedText.Text)
             {
-                textLayout.Text = toString;
-                textLayout.Width = -1;
-                TextSize = textLayout.GetSize();
+                FormattedText.Text = toString;
+                FormattedText.Width = -1;
+                TextSize = FormattedText.GetSize();
             }
-            return textLayout;
+            return FormattedText;
         }
 
         public void Dispose()
         {
-            textLayout?.Dispose();
-            textLayout = null;
+            FormattedText?.Dispose();
+            FormattedText = null;
         }
     }
 }

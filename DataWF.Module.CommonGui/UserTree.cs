@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
@@ -10,8 +10,8 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Module.CommonGui
 {
@@ -34,12 +34,12 @@ namespace DataWF.Module.CommonGui
         private List<IDBTableView> views = new List<IDBTableView>();
         private UserTreeKeys userKeys;
         //private ListChangedEventHandler handler;
-        private Rectangle imgRect = new Rectangle();
-        private Rectangle textRect = new Rectangle();
+        private Rect imgRect = new Rect();
+        private Rect textRect = new Rect();
         private TextEntry filterEntry;
 
         private CellStyle userStyle;
-
+        private ICommonSchema schema;
 
         public UserTree()
         {
@@ -77,7 +77,7 @@ namespace DataWF.Module.CommonGui
                 if (userKeys != value)
                 {
                     userKeys = value;
-                    RefreshData();
+                    RefreshData(null);
                 }
             }
         }
@@ -144,14 +144,15 @@ namespace DataWF.Module.CommonGui
         public bool ShowListNode { get; set; } = true;
 
 
-        private void RefreshData()
+        private void RefreshData(ICommonSchema schema)
         {
-            InitItem(Department.DBTable?.DefaultView, ShowDepartment, GlyphType.Home, Colors.SandyBrown);
+            this.schema = schema;
+            InitItem(schema.Department.DefaultView, ShowDepartment, GlyphType.Home, Colors.SandyBrown);
             //InitItem(Position.DBTable?.DefaultView, ShowPosition);
             //InitItem(User.DBTable?.DefaultView, ShowUser);
-            InitItem(UserGroup.DBTable?.DefaultView, ShowGroup, GlyphType.Users, Colors.LightSeaGreen);
-            InitItem(Scheduler.DBTable?.DefaultView, ShowScheduler, GlyphType.TimesCircle, Colors.LightPink);
-            InitItem(GroupPermission.DBTable?.DefaultView, ShowPermission, GlyphType.Database, Colors.LightSteelBlue);
+            InitItem(schema.UserGroup.DefaultView, ShowGroup, GlyphType.Users, Colors.LightSeaGreen);
+            InitItem(schema.Scheduler.DefaultView, ShowScheduler, GlyphType.TimesCircle, Colors.LightPink);
+            InitItem(schema.GroupPermission.DefaultView, ShowPermission, GlyphType.Database, Colors.LightSteelBlue);
         }
 
         private void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -254,7 +255,7 @@ namespace DataWF.Module.CommonGui
                         {
                             userStyle = ListInfo.StyleCell.Clone();
                             userStyle.Name = "TreeUser";
-                            userStyle.Font = userStyle.Font.WithStyle(FontStyle.Oblique);
+                            userStyle.FontFamily = userStyle.FontFamily.WithStyle(FontStyle.Oblique);
                             GuiEnvironment.Theme.Add(userStyle);
                         }
                     }
@@ -299,7 +300,7 @@ namespace DataWF.Module.CommonGui
                 IEnumerable enumer = view;
                 if (view.Table.GroupKey != null)
                 {
-                    enumer = view.Table.SelectItems(view.Table.GroupKey, CompareType.Is, null);
+                    enumer = view.Table.SelectItems(view.Table.GroupKey, CompareOperator.Is, null);
                 }
 
                 foreach (DBItem item in enumer)
@@ -419,7 +420,7 @@ namespace DataWF.Module.CommonGui
             }
             else if (item.Table.GroupKey != null && item.PrimaryId != null)
             {
-                InitItems(item.Table.SelectItems(item.Table.GroupKey, CompareType.Equal, item.PrimaryId), node, node.Visible);
+                InitItems(item.Table.SelectItems(item.Table.GroupKey, CompareOperator.Equal, item.PrimaryId), node, node.Visible);
             }
             if (item is Department)
             {
@@ -465,8 +466,8 @@ namespace DataWF.Module.CommonGui
                         color = Colors.Purple;
 
 
-                    imgRect = new Rectangle(e.Bound.X + 1, e.Bound.Y + 1, 15 * listInfo.Scale, 15 * listInfo.Scale);
-                    textRect = new Rectangle(imgRect.Right, imgRect.Top, e.Bound.Width - imgRect.Width, e.Bound.Height);
+                    imgRect = new Rect(e.Bound.X + 1, e.Bound.Y + 1, 15 * listInfo.Scale, 15 * listInfo.Scale);
+                    textRect = new Rect(imgRect.Right, imgRect.Top, e.Bound.Width - imgRect.Width, e.Bound.Height);
                     //string val = (index + 1).ToString() + (row.DBState != DBUpdateState.Default ? (" " + row.DBState.ToString()[0]) : "");
                     e.Context.DrawCell(listInfo.StyleHeader, null, e.Bound, textRect, e.State);
                     e.Context.DrawGlyph(glyph, imgRect, color);
@@ -532,7 +533,7 @@ namespace DataWF.Module.CommonGui
             if (entry.Text?.Length != 0)
             {
                 TreeMode = false;
-                list.FilterQuery.Parameters.Add(LogicType.And, LayoutNodeList<Node>.FullPathInvoker, CompareType.Like, entry.Text);
+                list.FilterQuery.Parameters.Add(CompareOperator.And, LayoutNodeList<Node>.FullPathInvoker, CompareOperator.Like, entry.Text);
             }
             else
             {

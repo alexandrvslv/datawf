@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>DataWF.Benchmark.Serialization.Streammed-20261116-093808</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.8, Linux Ubuntu 26.04.1 LTS (Resolute Raccoon)
+AMD Ryzen 7 2700U with Radeon Vega Mobile Gfx, 1 CPU, 8 logical and 4 physical cores
+.NET SDK 10.0.115
+  [Host]     : .NET 10.0.15 (10.0.15, 10.0.1526.53008), X64 RyuJIT x86-64-v3
+  DefaultJob : .NET 10.0.15 (10.0.15, 10.0.1526.53008), X64 RyuJIT x86-64-v3
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method     </th><th>Mean </th><th>Error</th><th>StdDev</th><th>Median</th><th>Gen0</th><th>Gen1</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>MemoryPack</td><td>71.18 ms</td><td>1.420 ms</td><td>3.691 ms</td><td>72.31 ms</td><td>7666.6667</td><td>1333.3333</td><td>22.26 MB</td>
+</tr><tr><td>InvokeMemoryPack</td><td>83.46 ms</td><td>1.492 ms</td><td>1.396 ms</td><td>83.74 ms</td><td>7333.3333</td><td>2000.0000</td><td>22.3 MB</td>
+</tr><tr><td>MessagePack</td><td>176.35 ms</td><td>5.006 ms</td><td>14.760 ms</td><td>177.72 ms</td><td>8000.0000</td><td>2000.0000</td><td>22.61 MB</td>
+</tr><tr><td>InvokeMessagePack</td><td>187.91 ms</td><td>3.564 ms</td><td>5.443 ms</td><td>188.23 ms</td><td>7000.0000</td><td>2000.0000</td><td>22.82 MB</td>
+</tr><tr><td>InvokeJson</td><td>647.52 ms</td><td>12.713 ms</td><td>14.640 ms</td><td>646.91 ms</td><td>10000.0000</td><td>3000.0000</td><td>28.94 MB</td>
+</tr><tr><td>SystemJson</td><td>875.22 ms</td><td>19.407 ms</td><td>57.223 ms</td><td>890.61 ms</td><td>10000.0000</td><td>2000.0000</td><td>31.53 MB</td>
+</tr><tr><td>InvokeXml</td><td>1,170.97 ms</td><td>22.789 ms</td><td>34.110 ms</td><td>1,179.31 ms</td><td>19000.0000</td><td>13000.0000</td><td>92.12 MB</td>
+</tr><tr><td>SystemXml</td><td>2,057.32 ms</td><td>107.588 ms</td><td>296.328 ms</td><td>1,967.96 ms</td><td>32000.0000</td><td>9000.0000</td><td>93.5 MB</td>
+</tr></tbody></table>
+</body>
+</html>

@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,10 +34,13 @@ namespace DataWF.Data
         private Dictionary<string, object> parameters;
         private DBItem document;
 
-        public ExecuteArgs(DBItem document = null)
+        public ExecuteArgs(IDBSchema schema, DBItem document = null)
         {
+            Schema = schema;
             Document = document;
         }
+
+        public IDBSchema Schema { get; }
 
         public DBItem Document
         {

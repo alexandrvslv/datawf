@@ -1,11 +1,10 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System.Xml.Serialization;
 
 namespace DataWF.Gui
 {
     public class ToolFieldEditor : ToolContentItem
     {
-
         public ToolFieldEditor() : base(new FieldEditor())
         {
             DisplayStyle = ToolItemDisplayStyle.Content;
@@ -19,7 +18,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public ILayoutCellEditor Editor
         {
-            get { return Field.CellEditor; }
+            get => Field.CellEditor;
             set
             {
                 Field.CellEditor = value;
@@ -30,8 +29,8 @@ namespace DataWF.Gui
         [XmlIgnore]
         public object DataValue
         {
-            get { return Field.DataValue; }
-            set { Field.DataValue = value; }
+            get => Field.DataValue;
+            set => Field.DataValue = value;
         }
     }
 }

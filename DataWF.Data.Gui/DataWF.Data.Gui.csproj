@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Data.Gui</RootNamespace>
     <AssemblyName>DataWF.Data.Gui</AssemblyName>
-    <TargetFrameworks>net461</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
     
   </PropertyGroup>
@@ -27,15 +27,9 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>  
   <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Core\DataWF.Core.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
     <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />
-    <ProjectReference Include="..\External\Mono.Texteditor\Mono.TextEditor.csproj" />
     <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj" />
-    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="DocumentFormat.OpenXml" Version="2.11.3" />
-    <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1" />
-  </ItemGroup>  
 </Project>

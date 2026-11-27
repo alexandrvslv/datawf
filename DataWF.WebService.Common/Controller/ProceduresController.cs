@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.WebService.Common
 {
@@ -13,16 +14,25 @@ namespace DataWF.WebService.Common
     [LoggerAndFormatter]
     public class ProceduresController : ControllerBase
     {
+        public ProceduresController(DBProvider provider)
+        {
+            Provider = provider;
+        }
+
+        public DBProvider Provider { get; }
+
+        public DBSchema Schema => Provider.Schems.OfType<DBSchema>().FirstOrDefault();
+
         [HttpGet]
         public ActionResult<IEnumerable<DBProcedure>> Get()
         {
-            return DBService.Schems.DefaultSchema.Procedures;
+            return Schema.Procedures;
         }
 
         [HttpPut]
         public ActionResult<DBProcedure> Put(DBProcedure value)
         {
-            var procedure = DBService.Schems.DefaultSchema.Procedures[value.Name];
+            var procedure = Schema.Procedures[value.Name];
             if (procedure != null)
             {
                 procedure.DisplayName = value.DisplayName;

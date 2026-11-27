@@ -18,14 +18,27 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 
-using DataWF.Common;
+using DataWF;
+using DataWF.ModelProviders;
+using System;
+using System.Collections.Generic;
 
 namespace DataWF.Data
 {
 
-    public interface IDBProvider
+    public interface IDBProvider : IModelProvider
     {
+        IFileProvider FileProvider { get; set; }
+        DBConnectionList Connections { get; }
+        new IModelItemList<IDBSchema> Schems { get; }
+
+        new IDBTable<T> GetTable<T>() where T : DBItem;
+        new IDBTable GetTable(string name);
+        new IDBTable GetTable(Type itemType);
+        new IDBTable GetTable(Type baseType, int typeId);
+
         void Load();
         void Save();
+
     }
 }

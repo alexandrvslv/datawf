@@ -3,7 +3,7 @@ using System.ComponentModel;
 using DataWF.Gui;
 using DataWF.Module.CommonGui;
 using DataWF.Module.Flow;
-using Xwt;
+using Avalonia;
 
 namespace DataWF.Module.FlowGui
 {
@@ -11,7 +11,7 @@ namespace DataWF.Module.FlowGui
     {
         public DocumentFilterView DocumentFilter { get { return Editor?.DropDown?.Target as DocumentFilterView; } }
 
-        public override Widget InitDropDownContent()
+        public override Control InitDropDownContent()
         {
             var filterView = Editor?.GetCached<DocumentFilterView>();
             filterView.Templates.PropertyChanged += TemplatesPropertyChanged;

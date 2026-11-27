@@ -1,15 +1,15 @@
 ﻿using DataWF.Data;
 using DataWF.Gui;
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt.Drawing;
+using Avalonia.Controls;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using Xwt;
+using Avalonia;
 using System.Linq;
 using Mono.Cecil;
 
@@ -74,26 +74,26 @@ namespace DataWF.Data.Gui
         private void CheckAssembly(Assembly assembly)
         {
             var hasModule = false;
-            Helper.Logs.Add(new StateInfo("Main Form", "Assembly Loadind", assembly.FullName));
+            Helper.Log(this, assembly.FullName);
             foreach (Type type in assembly.GetExportedTypes())
             {
                 if (TypeHelper.IsInterface(type, typeof(IDockContent)))
                 {
-                    Helper.Logs.Add(new StateInfo("Main Form", "Module Initialize", Locale.Get(type)));
+                    Helper.Log(this, Locale.Get(type));
                     try
                     {
                         foreach (var attribute in type.GetCustomAttributes<ModuleAttribute>(false))
                         {
                             if (attribute.IsModule)
                             {
-                                AddModuleWidget(type);
+                                AddModuleControl(type);
                                 hasModule = true;
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Helper.Logs.Add(new StateInfo("Main Form", ex.Message, ex.StackTrace, StatusType.Error));
+                        Helper.OnException(ex);
                     }
                 }
                 if (TypeHelper.IsInterface(type, typeof(IProjectEditor)))
@@ -109,7 +109,7 @@ namespace DataWF.Data.Gui
                     }
                     catch (Exception ex)
                     {
-                        Helper.Logs.Add(new StateInfo("Main Form", ex.Message, ex.StackTrace, StatusType.Error));
+                        Helper.OnException(ex);
                     }
                 }
             }
@@ -119,7 +119,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        private void AddModuleWidget(Type moduleType)
+        private void AddModuleControl(Type moduleType)
         {
             if (GetControl(moduleType.Name) != null)
             {
@@ -130,14 +130,14 @@ namespace DataWF.Data.Gui
 
     }
 
-    public class ToolWidgetHandler : ToolItem
+    public class ToolControlHandler : ToolItem
     {
-        public ToolWidgetHandler(EventHandler click) : base(click)
+        public ToolControlHandler(EventHandler click) : base(click)
         {
             DisplayStyle = ToolItemDisplayStyle.ImageAndText;
         }
 
-        public Widget Widget { get; set; }
+        public Control Control { get; set; }
 
         public override void Localize()
         { }

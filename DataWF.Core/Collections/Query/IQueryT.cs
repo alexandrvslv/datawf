@@ -1,0 +1,61 @@
+﻿//  The MIT License (MIT)
+//
+// Copyright © 2020 Vassilyev Alexandr
+//
+//   email:alexandr_vslv@mail.ru
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
+// documentation files (the “Software”), to deal in the Software without restriction, including without limitation 
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, 
+// and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of 
+// the Software.
+//
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
+// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+// DEALINGS IN THE SOFTWARE.
+using DataWF.Invokers;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Linq.Expressions;
+
+namespace DataWF.Collections.Query;
+
+public interface IQQuery<out T> : IQQuery, IEnumerable<T>, IQueryable<T>
+{
+    new IQQuery<T> Join(IQueryInvoker column);
+    new IQQuery<T> Join(IQueryInvoker column, IQueryInvoker refColumn);
+
+    new IQQuery<T> Where(string filter);
+    new IQQuery<T> Where(Expression expression);
+    new IQQuery<T> Where(Type typeFilter);
+    new IQQuery<T> Where(IQCompareParameter parameter);
+    new IQQuery<T> Where(Action<IQCompareParameter> parameter);
+    new IQQuery<T> Where(IQueryInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+    new IQQuery<T> Where(IQueryInvoker column, CompareOperator comparer, object value);
+    new IQQuery<T> Where(string column, CompareOperator comparer, object value);
+
+    new IQQuery<T> And(IQCompareParameter parameter);
+    new IQQuery<T> And(Action<IQCompareParameter> parameter);
+    new IQQuery<T> And(IQueryInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+    new IQQuery<T> And(IQueryInvoker column, CompareOperator comparer, object value);
+    new IQQuery<T> And(string column, CompareOperator comparer, object value);
+
+    new IQQuery<T> Or(IQCompareParameter parameter);
+    new IQQuery<T> Or(Action<IQCompareParameter> parameter);
+    new IQQuery<T> Or(IQueryInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+    new IQQuery<T> Or(IQueryInvoker column, CompareOperator comparer, object value);
+    new IQQuery<T> Or(string column, CompareOperator comparer, object value);
+
+    new IQQuery<T> OrderBy(IQueryInvoker column, ListSortDirection direction = ListSortDirection.Ascending);
+    IQQuery<T> OrderBy(Expression keySelector);
+    IQQuery<T> OrderByDescending(Expression keySelector);
+
+    IEnumerable<T> Load(object? transaction = null);
+}
+

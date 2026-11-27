@@ -35,27 +35,27 @@ namespace DataWF.Data
         public int Compare(DBTable a, DBTable b, bool referenceCheck)
         {
             var rez = 0;
-            if (a is IDBLogTable)
+            if (a is IDBTableLog)
             {
-                if (!(b is IDBLogTable))
+                if (!(b is IDBTableLog))
                 {
                     rez = 1;
                 }
             }
-            else if (b is IDBLogTable)
+            else if (b is IDBTableLog)
             {
                 rez = -1;
             }
             if (rez == 0)
             {
-                if (a is IDBVirtualTable)
+                if (a.IsVirtual)
                 {
-                    if (!(b is IDBVirtualTable))
+                    if (!b.IsVirtual)
                     {
                         rez = 1;
                     }
                 }
-                else if (b is IDBVirtualTable)
+                else if (b.IsVirtual)
                 {
                     rez = -1;
                 }

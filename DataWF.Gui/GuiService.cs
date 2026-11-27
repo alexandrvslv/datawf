@@ -1,9 +1,20 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.IO;
 using System.Threading;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
+using Avalonia.Media.Imaging;
+using Avalonia.Media;
+using Avalonia.Layout;
+using Avalonia.Dialogs;
+using Avalonia.Media.Immutable;
+using Avalonia.VisualTree;
+using System.Collections.Generic;
+using System.Linq;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace DataWF.Gui
 {
@@ -11,8 +22,19 @@ namespace DataWF.Gui
     {
         public static Thread UIThread;
 
-        public static void Start(string[] args, ToolkitType type, Type splashType, Type mainType)
+        public static void Start<App>(string[] args, Type splashType, Type mainType) where App : Application, new()
         {
+            if (args.Contains("--wait-for-attach"))
+            {
+                Console.WriteLine("Attach debugger and use 'Set next statement'");
+                while (true)
+                {
+                    Thread.Sleep(100);
+                    if (Debugger.IsAttached)
+                        break;
+                }
+            }
+            var builder = BuildAvaloniaApp<App>();
             Application.Initialize(type);
             GuiService.UIThread = Thread.CurrentThread;
             //exceptions
@@ -26,36 +48,56 @@ namespace DataWF.Gui
             for (int i = 0; i < args.Length; i++)
             {
                 string s = args[i];
-                if (s.Equals("-config"))
+                if (s.Equals("-config", StringComparison.OrdinalIgnoreCase))
                 {
-                    var obj = Serialization.Deserialize(args[++i]);
-                    using (var op = new ListExplorer())
+                    var obj = SerializeProvider.Deserialize(args[++i]);
+                    var op = new ListExplorer
                     {
-                        op.DataSource = obj;
-                        op.ShowWindow((WindowFrame)null);
-                    }
+                        DataSource = obj
+                    };
+                    op.ShowWindow((Window)null);
                     Application.Run();
-                    Serialization.Serialize(obj, args[i]);
+                    SerializeProvider.Serialize(obj, args[i]);
                     return;
                 }
             }
-            using (var splash = (Splash)EmitInvoker.CreateObject(splashType))
-            {
-                splash.Run();
-            }
+            var splash = (Splash)InvokeProvider.CreateObject(splashType);
+            splash.Show();
+            splash.Closed += Splash_Closed;
 
-            using (var main = (MainWindow)EmitInvoker.CreateObject(mainType))
+
+            Application.Dispose();
+        }
+
+        private static void Splash_Closed(object sender, EventArgs e)
+        {
+            using (var main = (MainWindow)InvokeProvider.CreateObject(mainType))
             {
                 main.LoadConfiguration();
                 main.Show();
                 Application.Run();
             }
-            Application.Dispose();
+        }
+
+        /// <summary>
+        /// This method is needed for IDE previewer infrastructure
+        /// </summary>
+        public static AppBuilder BuildAvaloniaApp<App>()
+            where App : Application, new()
+        {
+            AppBuilder.Configure<App>()
+                .UsePlatformDetect()
+                .UseSkia()
+                .AfterSetup(builder =>
+                {
+                    
+                })
+                .LogToTrace();
         }
 
         public static bool InvokeRequired { get { return UIThread != System.Threading.Thread.CurrentThread; } }
 
-        public static MenuItem GetByName(this MenuItemCollection items, string name)
+        public static MenuItem GetByName(this IEnumerable<MenuItem> items, string name)
         {
             foreach (var item in items)
             {
@@ -67,12 +109,17 @@ namespace DataWF.Gui
 
         public static Color Invert(this Color color)
         {
-            return new Color(1D - color.Red, 1D - color.Green, 1D - color.Blue, color.Alpha);
+            return new Color(1D - color.R, 1D - color.G, 1D - color.B, color.A);
         }
 
-        public static T GetParent<T>(this Widget widget) where T : Widget
+        public static Color WithAlfa(this Color color, byte a)
         {
-            var parent = (Widget)widget;
+            return new Color(a, color.R, color.G, color.B);
+        }
+
+        public static T GetParent<T>(this Control control) where T : Control
+        {
+            var parent = control;
             while (parent != null)
             {
                 parent = parent.Parent;
@@ -82,86 +129,87 @@ namespace DataWF.Gui
             return (T)parent;
         }
 
-        public static Command ShowDialog(this Widget widget, Widget owner)
+        public static Task<DialogResult> ShowDialog(this Control Control, Control owner)
         {
-            return widget.ShowDialog(owner.ParentWindow);
+            return Control.ShowDialog((Window)owner.GetVisualRoot());
         }
 
-        public static Command ShowDialog(this Widget widget, WindowFrame owner)
+        public static Task<DialogResult> ShowDialog(this Control Control, Window owner)
         {
-            if (widget is ILocalizable)
+            if (Control is ILocalizable)
             {
-                ((ILocalizable)widget).Localize();
+                ((ILocalizable)Control).Localize();
             }
-            var window = new Dialog
-            {
-                BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor,
-                Content = widget,
-                Title = widget.Name,
-                Padding = new WidgetSpacing(5, 5, 5, 5),
-                Size = new Size(800, 600),
-                TransientFor = owner
-            };
-            if (widget is IText)
-            {
-                window.Title = ((IText)widget).Text;
-                ((IText)widget).TextChanged += WindowContentTextChanged;
-            }
-            window.CloseRequested += (s, e) =>
-            {
-                //((Dialog)s).TransientFor = null;
-                if (widget is IText)
-                {
-                    ((IText)widget).TextChanged -= WindowContentTextChanged;
-                }
-            };
-            return window.Run(owner);
-        }
-
-        public static void ShowWindow(this Widget widget, Widget owner)
-        {
-            widget.ShowWindow(owner.ParentWindow);
-        }
-
-        public static void ShowWindow(this Widget widget, WindowFrame owner)
-        {
-            ShowWindow(widget, owner, new Size(800, 600));
-        }
-
-        public static void ShowWindow(this Widget widget, WindowFrame owner, Size size)
-        {
-            if (widget is ILocalizable)
-            {
-                ((ILocalizable)widget).Localize();
-            }
-            var vbox = new VBox();
-            vbox.PackStart(widget, true, true);
             var window = new Window
             {
-                BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor,
-                Content = vbox,
-                Resizable = true,
-                InitialLocation = WindowLocation.CenterParent,
-                Title = widget.Name,
-                Padding = new WidgetSpacing(5, 5, 5, 5),
-                Size = size,
-                TransientFor = owner
+                Background = new ImmutableSolidColorBrush(GuiEnvironment.Theme["Window"].BaseColor),
+                Content = Control,
+                Title = Control.Name,
+                Padding = new Thickness(5, 5, 5, 5),
+                Width = 800,
+                Height = 600,
+                Owner = owner
             };
-            window.Closed += (s, e) => ((Window)s).Dispose();
-            if (widget is IText)
+            if (Control is IText)
             {
-                if (!string.IsNullOrEmpty(((IText)widget).Text))
-                {
-                    window.Title = ((IText)widget).Text;
-                }
-                ((IText)widget).TextChanged += WindowContentTextChanged;
+                window.Title = ((IText)Control).Text;
+                ((IText)Control).TextChanged += WindowContentTextChanged;
             }
-            window.CloseRequested += (s, e) =>
+            window.Closing += (s, e) =>
             {
-                ((Window)s).TransientFor = null;
-                if (widget is IText)
+                //((Dialog)s).Owner = null;
+                if (Control is IText)
                 {
-                    ((IText)widget).TextChanged -= WindowContentTextChanged;
+                    ((IText)Control).TextChanged -= WindowContentTextChanged;
+                }
+            };
+            return window.ShowDialog<DialogResult>(owner);
+        }
+
+        public static void ShowWindow(this Control Control, Control owner)
+        {
+            Control.ShowWindow((Window)owner.GetVisualRoot());
+        }
+
+        public static void ShowWindow(this Control Control, Window owner)
+        {
+            ShowWindow(Control, owner, new Size(800, 600));
+        }
+
+        public static void ShowWindow(this Control Control, Window owner, Size size)
+        {
+            if (Control is ILocalizable)
+            {
+                ((ILocalizable)Control).Localize();
+            }
+            var vbox = new StackPanel { Orientation = Orientation.Vertical };
+            vbox.Children.Add(Control);
+            var window = new Window
+            {
+                Background = new SolidColorBrush(GuiEnvironment.Theme["Window"].BaseColor),
+                Content = vbox,
+                CanResize = true,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Title = Control.Name,
+                Padding = new Thickness(5, 5, 5, 5),
+                Width = size.Width,
+                Height = size.Height,
+                Owner = owner
+            };
+            if (Control is IText)
+            {
+                if (!string.IsNullOrEmpty(((IText)Control).Text))
+                {
+                    window.Title = ((IText)Control).Text;
+                }
+                ((IText)Control).TextChanged += WindowContentTextChanged;
+            }
+            window.Closing += (s, e) =>
+            {
+                ((Window)s).Owner = null;
+                if (Control is IText)
+                {
+                    ((IText)Control).TextChanged -= WindowContentTextChanged;
                 }
             };
             window.Show();
@@ -169,7 +217,7 @@ namespace DataWF.Gui
 
         private static void WindowContentTextChanged(object sender, EventArgs arg)
         {
-            ((Widget)sender).ParentWindow.Title = ((IText)sender).Text;
+            ((Window)((Control)sender).GetVisualRoot()).Title = ((IText)sender).Text;
         }
 
         public static void Localize(object obj, string category, string name, GlyphType def = GlyphType.None)
@@ -179,7 +227,7 @@ namespace DataWF.Gui
                 item.Glyph = def;
             if (obj is IGlyph picture)
             {
-                picture.Image = Locale.GetImage(item.ImageKey) as Image;
+                picture.Image = Locale.GetImage(item.ImageKey) as Bitmap;
                 if (item.Glyph != GlyphType.None)
                     picture.Glyph = item.Glyph;
             }
@@ -190,40 +238,28 @@ namespace DataWF.Gui
             }
         }
 
-        public static LayoutAlignType GetAlignRect(Rectangle bound, double size, double x, double y, ref Rectangle rec)
+        public static LayoutAlignType GetAlignRect(Rect bound, double size, Point point, ref Rect rec)
         {
             var sizes = (size + 3);
             LayoutAlignType type = LayoutAlignType.None;
-            if (x >= bound.Right - sizes && x <= bound.Right)
+            if (point.X >= bound.Right - sizes && point.X <= bound.Right)
             {
-                rec.X = bound.Right - sizes;
-                rec.Y = bound.Top;
-                rec.Width = sizes;
-                rec.Height = bound.Height;
+                rec = new Rect(bound.Right - sizes, bound.Top, sizes, bound.Height);
                 type = LayoutAlignType.Right;
             }
-            else if (x <= bound.Left + (size + 2) && x >= bound.Left)
+            else if (point.X <= bound.Left + (size + 2) && point.X >= bound.Left)
             {
-                rec.X = bound.Left;
-                rec.Y = bound.Top;
-                rec.Width = sizes;
-                rec.Height = bound.Height;
+                rec = new Rect(bound.Left, bound.Top, sizes, bound.Height);
                 type = LayoutAlignType.Left;
             }
-            else if (y <= bound.Top + size && y >= bound.Top)
+            else if (point.Y <= bound.Top + size && point.Y >= bound.Top)
             {
-                rec.X = bound.Left;
-                rec.Y = bound.Top;
-                rec.Width = bound.Width;
-                rec.Height = size;
+                rec = new Rect(bound.Left, bound.Top, bound.Width, size);
                 type = LayoutAlignType.Top;
             }
-            else if (y >= bound.Bottom - size && y <= bound.Bottom)
+            else if (point.Y >= bound.Bottom - size && point.Y <= bound.Bottom)
             {
-                rec.X = bound.Left;
-                rec.Y = bound.Bottom - size;
-                rec.Width = bound.Width;
-                rec.Height = size;
+                rec = new Rect(bound.Left, bound.Bottom - size, bound.Width, size);
                 type = LayoutAlignType.Bottom;
             }
             else
@@ -231,7 +267,7 @@ namespace DataWF.Gui
             return type;
         }
 
-        public static Image ImageFromBase64(string text)
+        public static Bitmap ImageFromBase64(string text)
         {
             try
             {
@@ -241,29 +277,29 @@ namespace DataWF.Gui
             }
             catch (Exception ex)
             {
-                Helper.Logs.Add(new StateInfo(ex));
+                Helper.OnException(ex);
                 return null;
             }
         }
 
-        public static Image ImageFromByte(byte[] bytes)
+        public static Bitmap ImageFromByte(byte[] bytes)
         {
             using (var stream = new MemoryStream(bytes))
             {
-                return Image.FromStream(stream);
+                return new Bitmap(stream);
             }
         }
 
-        public static byte[] ImageToByte(Image img)
+        public static byte[] ImageToByte(Bitmap img)
         {
             using (var stream = new MemoryStream())
             {
-                img.Save(stream, ImageFileType.Png);
+                img.Save(stream);
                 return stream.ToArray();
             }
         }
 
-        public static string ImageToBase64(Image img)
+        public static string ImageToBase64(Bitmap img)
         {
             return Convert.ToBase64String(ImageToByte(img));
         }
@@ -285,7 +321,7 @@ namespace DataWF.Gui
 
         public static IDockMain Main { get; set; }
 
-        public static Window Wrap(Widget c)
+        public static Window Wrap(Control c)
         {
             return new Window() { Content = c };
         }
@@ -294,10 +330,10 @@ namespace DataWF.Gui
 
         public static ToolTipWindow ToolTip
         {
-            get { return toolTipCache ?? (toolTipCache = new ToolTipWindow()); }
+            get { return toolTipCache ??= new ToolTipWindow(); }
         }
 
-        public static IDockContainer GetDockParent(Widget control)
+        public static IDockContainer GetDockParent(Control control)
         {
             var c = control.Parent;
             while (c != null)
@@ -308,14 +344,14 @@ namespace DataWF.Gui
             return null;
         }
 
-        public static IDockContainer GetDockParent(Widget control, string name)
+        public static IDockContainer GetDockParent(Control control, string name)
         {
             IDockContainer c = GetDockParent(control);
             while (c != null)
-                if (((Widget)c).Name == name)
+                if (((Control)c).Name == name)
                     return c;
                 else
-                    c = GetDockParent((Widget)c);
+                    c = GetDockParent((Control)c);
             return null;
         }
     }

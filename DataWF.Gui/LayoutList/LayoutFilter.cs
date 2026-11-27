@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,12 +7,12 @@ using System.Xml.Serialization;
 
 namespace DataWF.Gui
 {
-    public class LayoutFilter : IEntryNotifyPropertyChanged
+    public class LayoutFilter : DefaultItem
     {
         private string name;
         [DefaultValue(false)]
-        private CompareType comparer = CompareType.Equal;
-        private LogicType logic = LogicType.And;
+        private CompareOperator comparer = CompareOperator.Equal;
+        private CompareOperator logic = CompareOperator.And;
         [NonSerialized]
         private LayoutColumn column;
         private object value;
@@ -30,18 +30,15 @@ namespace DataWF.Gui
             Column = column;
         }
 
-        [XmlIgnore, Browsable(false)]
-        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers<INotifyListPropertyChanged>(PropertyChanged);
-
         [XmlIgnore]
         public LayoutList List
         {
             get { return ((LayoutFilterList)Containers.FirstOrDefault())?.List; }
         }
 
-        public LogicType Logic
+        public CompareOperator Logic
         {
-            get { return logic; }
+            get => logic;
             set
             {
                 if (!logic.Equals(value))
@@ -54,7 +51,7 @@ namespace DataWF.Gui
 
         public string Name
         {
-            get { return name; }
+            get => name;
             set
             {
                 if (name != value)
@@ -70,8 +67,7 @@ namespace DataWF.Gui
         {
             get
             {
-                if (column == null)
-                    column = List?.ListInfo?.Columns.GetItem(name) as LayoutColumn;
+                column ??= List?.ListInfo?.Columns.GetItem(name) as LayoutColumn;
                 return column;
             }
             set
@@ -83,9 +79,9 @@ namespace DataWF.Gui
 
         public string Header { get { return Column?.Text; } }
 
-        public CompareType Comparer
+        public CompareOperator Comparer
         {
-            get { return comparer; }
+            get => comparer;
             set
             {
                 if (!comparer.Equals(value))
@@ -98,7 +94,7 @@ namespace DataWF.Gui
 
         public object Value
         {
-            get { return value; }
+            get => value;
             set
             {
                 if (this.value != value)
@@ -107,13 +103,6 @@ namespace DataWF.Gui
                     OnPropertyChanged(nameof(Value));
                 }
             }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
     }
 }

@@ -17,20 +17,96 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF;
+using System;
 using System.Data;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq.Expressions;
+using DataWF.Invokers;
 
 namespace DataWF.Data
 {
-    public interface IQuery
+
+    public interface IQQuery : IQItem, IQItemList, IEnumerable
     {
-        string Format(IDbCommand command);
-        DBTable Table { get; }
         QParamList Parameters { get; }
         QItemList<QItem> Columns { get; }
         QItemList<QOrder> Orders { get; }
-        QItemList<QTable> Tables { get; }
+        QTableList Tables { get; }
+        DBLoadParam LoadParam { get; set; }
+        DBCacheState CacheState { get; set; }
+        DBStatus StatusFilter { get; set; }
+        IQQuery BaseQuery { get; set; }
+        Type TypeFilter { get; set; }
+        string WhereText { get; }
+        string QueryText { get; }
+        ITreeComparer TreeComparer { get; set; }
+        bool IsJoinAffectResult { get; }
+        bool IsNoParameters();
 
-        DBComparerList GetComparer();
+        string Format(IDbCommand command = null);
+        IDbCommand ToCommand(bool defcolumns = false);
+
+        IEnumerable<QParam> GetAllParameters(Func<QParam, bool> predicate = null);
+        bool Contains(string columnName);
+        bool Contains(DBColumn column);
+
+        string GenerateTableAlias(IDBTable Table);
+        QTable GetTableByAlias(string alias);
+        QTable GetTable(IDBTable table);
+
+        DBColumn ParseColumn(string name, string prefix, out QTable qTable);
+        DBTable ParseTable(string name);
+
+        bool CheckItem(DBItem item);
+        QParam CreateParam(CompareOperator logic, IInvoker invoker, object value, QBuildParam buildParam = QBuildParam.None);
+        QParam CreateParam(CompareOperator logic, IInvoker invoker, CompareOperator comparer, object value);
+
+        IQQuery Column(QFunctionType function, params object[] args);
+        IQQuery Column(IInvoker invoker);
+
+        IQQuery Join(DBColumn column);
+        IQQuery Join(DBReferencing referencing);
+        IQQuery JoinAllReferencing();
+        IQQuery Join(DBColumn column, DBColumn refColumn);
+
+        IQQuery WhereViewColumns(string filter, QBuildParam buildParam = QBuildParam.AutoLike);
+        IQQuery Where(string filter);
+        IQQuery Where(Type typeFilter);
+        IQQuery Where(QParam parameter);
+        IQQuery Where(Action<QParam> parameter);
+        IQQuery Where(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+        IQQuery Where(IInvoker column, CompareOperator comparer, object value);
+        IQQuery Where(string column, CompareOperator comparer, object value);
+
+        IQQuery And(QParam parameter);
+        IQQuery And(Action<QParam> parameter);
+        IQQuery And(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+        IQQuery And(IInvoker column, CompareOperator comparer, object value);
+        IQQuery And(string column, CompareOperator comparer, object value);
+
+        IQQuery Or(QParam parameter);
+        IQQuery Or(Action<QParam> parameter);
+        IQQuery Or(IInvoker column, object value, QBuildParam buildParam = QBuildParam.None);
+        IQQuery Or(IInvoker column, CompareOperator comparer, object value);
+        IQQuery Or(string column, CompareOperator comparer, object value);
+
+        IQQuery OrderBy(IInvoker column, ListSortDirection direction = ListSortDirection.Ascending);
+
+        DBComparerList<T> GetComparer<T>() where T : DBItem;
+        List<T> Sort<T>(List<T> ts) where T : DBItem;
+
+        IEnumerable<T> Select<T>() where T : DBItem;
+
+        IEnumerable<T> Load<T>(DBTransaction transaction = null) where T : DBItem;
+
+        T FirstOrDefault<T>(DBTransaction transaction = null) where T : DBItem;
+
+        T FirstOrDefault<T>(Func<T, bool> predicate, DBTransaction transaction = null) where T : DBItem;
+        
+        void Parse(string test);
     }
 
 }

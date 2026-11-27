@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,26 +31,18 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBTableView<T> : SelectableList<T>, IDBTableView, IIdCollection<T> where T : DBItem, new()
+    public class DBTableView<T> : SelectableList<T>, IDBTableView<T>, IIdCollection<T> where T : DBItem
     {
         protected DBViewKeys keys = DBViewKeys.Lock;
         protected QParam defaultParam;
-        protected QQuery query;
+        protected IQQuery query;
 
         protected IDbCommand command;
         protected DBTable<T> table;
         private Query<T> filterQuery;
 
-        public DBTableView()
-           : this(DBTable.GetTable<T>(null, false), (QParam)null, DBViewKeys.None, DBStatus.Empty)
-        { }
-
-        public DBTableView(string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
-            : this(DBTable.GetTable<T>(null, false), defaultFilter, mode, statusFilter)
-        { }
-
-        public DBTableView(QParam defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
-            : this(DBTable.GetTable<T>(null, false), defaultFilter, mode, statusFilter)
+        public DBTableView(DBTable<T> table)
+           : this(table, (QParam)null, DBViewKeys.None, DBStatus.Empty)
         { }
 
         public DBTableView(DBTable<T> table, string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
@@ -62,7 +54,7 @@ namespace DataWF.Data
             propertyHandler = null;
             this.table = table;
             FilterQuery = new Query<T>();
-            Query = new QQuery();
+            Query = new QQuery<T>(table);
             TypeFilter = typeof(T);
             DefaultParam = defaultFilter;
             StatusFilter = statusFilter;
@@ -81,7 +73,7 @@ namespace DataWF.Data
 
         public bool AutoAttach
         {
-            get { return (keys & DBViewKeys.NoAttach) != DBViewKeys.NoAttach; }
+            get => (keys & DBViewKeys.NoAttach) != DBViewKeys.NoAttach;
             set
             {
                 if (value)
@@ -93,7 +85,7 @@ namespace DataWF.Data
 
         public bool CheckAccess
         {
-            get { return (keys & DBViewKeys.Access) == DBViewKeys.Access; }
+            get => (keys & DBViewKeys.Access) == DBViewKeys.Access;
             set
             {
                 if (CheckAccess == value)
@@ -111,7 +103,7 @@ namespace DataWF.Data
 
         public bool IsStatic
         {
-            get { return (keys & DBViewKeys.Static) == DBViewKeys.Static; }
+            get => (keys & DBViewKeys.Static) == DBViewKeys.Static;
             set
             {
                 if (IsStatic == value)
@@ -126,7 +118,7 @@ namespace DataWF.Data
 
         public override bool IsSynchronized
         {
-            get { return (keys & DBViewKeys.Synch) == DBViewKeys.Synch; }
+            get => (keys & DBViewKeys.Synch) == DBViewKeys.Synch;
             set
             {
                 if (IsSynchronized != value)
@@ -145,13 +137,13 @@ namespace DataWF.Data
             {
                 if (table.CodeKey == null)
                     return null;
-                return (T)table.LoadItemByCode(code, table.CodeKey, DBLoadParam.Load);
+                return table.LoadByCode<T>(code, table.CodeKey, DBLoadParam.Load);
             }
         }
 
-        public QQuery Query
+        public IQQuery Query
         {
-            get { return query; }
+            get => query;
             set
             {
                 if (value == null)
@@ -173,7 +165,7 @@ namespace DataWF.Data
 
         public Query<T> FilterQuery
         {
-            get { return filterQuery; }
+            get => filterQuery;
             set
             {
                 filterQuery = value;
@@ -186,7 +178,7 @@ namespace DataWF.Data
 
         public DBStatus StatusFilter
         {
-            get { return Query.StatusFilter; }
+            get => Query.StatusFilter;
             set
             {
                 if (Query.StatusFilter == value)
@@ -199,7 +191,7 @@ namespace DataWF.Data
 
         public Type TypeFilter
         {
-            get { return Query.TypeFilter; }
+            get => Query.TypeFilter;
             set
             {
                 if (Query.TypeFilter == value)
@@ -210,12 +202,9 @@ namespace DataWF.Data
             }
         }
 
-        public event EventHandler DefaultFilterChanged;
-        public event EventHandler FilterChanged;
-
         public virtual QParam DefaultParam
         {
-            get { return defaultParam; }
+            get => defaultParam;
             set
             {
                 if (defaultParam == value)
@@ -237,27 +226,30 @@ namespace DataWF.Data
 
         public IDbCommand Command
         {
-            get { return command; }
-            set { command = value; }
+            get => command;
+            set => command = value;
         }
 
-        public bool IsEdited
+        public bool IsEdited => GetEdited().Any();
+
+        public IEnumerable Source { get => table; set { return; } }
+        
+        public IDBSchema Schema => Table?.Schema;
+
+        public DBTable<T> Table
         {
-            get { return GetEdited().Any(); }
+            get => table;
+            set => table = value as DBTable<T>;
         }
 
-        public DBSchema Schema
+        IDBTable IDBTableContent.Table
         {
-            get { return Table?.Schema; }
+            get => Table;
+            set => Table = (DBTable<T>)value;
         }
 
-        public DBTable Table
-        {
-            get { return table; }
-            set { table = value as DBTable<T>; }
-        }
-
-        public IEnumerable Source { get { return table; } set { return; } }
+        public event EventHandler DefaultFilterChanged;
+        public event EventHandler FilterChanged;
 
         public IList ToList()
         {
@@ -274,23 +266,25 @@ namespace DataWF.Data
 
         public IEnumerable<T> Load(DBLoadParam param = DBLoadParam.None)
         {
-            using (var transaction = new DBTransaction(Table.Connection, null, true) { View = this })
+            using (var transaction = new DBTransaction(Table, null, true) { View = this })
             {
-                return table.Load(Query, param, transaction);
+                Query.LoadParam = param;
+                return table.Load(Query, transaction);
             }
         }
 
         public async void LoadAsynch(DBLoadParam param = DBLoadParam.None)
         {
-            using (var transaction = new DBTransaction(Table.Connection, null, true) { View = this })
+            using (var transaction = new DBTransaction(Table, null, true) { View = this })
             {
-                var items = await table.LoadAsync(Query, param, transaction).ConfigureAwait(false);
+                Query.LoadParam = param;
+                var items = await table.LoadAsync(Query, transaction).ConfigureAwait(false);
             }
         }
 
         public void OnSourceItemChanged(object sender, PropertyChangedEventArgs args)
         {
-            OnSourceItemChanged((T)sender, args.PropertyName, Table.ParseColumnProperty(args.PropertyName));
+            OnSourceItemChanged((T)sender, args.PropertyName, Table.GetColumnOrProperty(args.PropertyName));
         }
 
         public void OnSourceItemChanged(DBItem item, string propertyName, DBColumn column)
@@ -307,10 +301,10 @@ namespace DataWF.Data
 
             if (indexes.Item1 < 0)
             {
-                if (table.CheckItem(item, query))
+                if (query.CheckItem(item))
                     Insert(indexes.Item2, item);
             }
-            else if (!table.CheckItem(item, query))
+            else if (!query.CheckItem(item))
             {
                 RemoveAt(indexes.Item1);
             }
@@ -367,7 +361,7 @@ namespace DataWF.Data
                         }
                         break;
                     case NotifyCollectionChangedAction.Add:
-                        if ((keys & DBViewKeys.Static) != DBViewKeys.Static && table.CheckItem(item, query))
+                        if ((keys & DBViewKeys.Static) != DBViewKeys.Static && query.CheckItem(item))
                         {
                             Add(item);
                         }
@@ -406,7 +400,7 @@ namespace DataWF.Data
                 return;
 
             ClearInternal();
-            if (!query.IsEmpty())
+            if (!query.IsNoParameters())
             {
                 AddRangeInternal(table.Select(query), false);
             }
@@ -425,40 +419,44 @@ namespace DataWF.Data
 
             foreach (var filter in FilterQuery.Parameters)
             {
-                if (filter.Invoker == null
-                    || filter.Value == null
-                    || filter.Value == DBNull.Value
-                    || filter.Value.ToString().Length == 0)
-                    if (filter.Comparer.Type != CompareTypes.Is)
+                if (filter.LeftProperty == null
+                    || filter.RightValue == null
+                    || filter.RightValue == DBNull.Value
+                    || filter.RightValue.ToString().Length == 0)
+                    if (filter.Comparer.Type != CompareOperatorType.Is)
                         continue;
-                var pcolumn = filter.Invoker as DBColumn;
+                var pcolumn = filter.LeftProperty as DBColumn;
 
-                if (filter.Invoker.Name == nameof(Object.ToString))
+                if (filter.LeftProperty.Name == nameof(Object.ToString))
                 {
-                    Query.SimpleFilter(filter.Value as string);
+                    Query.Where(filter.RightValue as string);
                 }
                 else if (pcolumn != null)
                 {
                     string code = pcolumn.Name;
-                    QParam param = new QParam()
+                    var value = pcolumn.ParseValue(filter.RightValue);
+                    if (value is string strParam && filter.Comparer.Type == CompareOperatorType.Like)
                     {
-                        Column = pcolumn,
+                        if (strParam.IndexOf('%') < 0)
+                            strParam = $"%{strParam}%";
+                        value = strParam;
+                    }
+
+                    var param = new QParam()
+                    {
+                        LeftColumn = pcolumn,
                         Logic = filter.Logic,
                         Comparer = filter.Comparer,
-                        Value = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
+                        RightItem = QItem.Fabric(filter.Comparer.Type != CompareOperatorType.Is ? value : null, pcolumn)
                     };
-                    if (param.Value is string && param.Comparer.Type == CompareTypes.Like)
-                    {
-                        string s = (string)param.Value;
-                        if (s.IndexOf('%') < 0)
-                            param.Value = string.Format("%{0}%", s);
-                    }
+
+
                     int i = code.IndexOf('.');
                     if (i >= 0)
                     {
                         int s = 0;
-                        QQuery sexpression = Query;
-                        QQuery newQuery = null;
+                        var sexpression = Query;
+                        IQQuery newQuery = null;
                         while (i > 0)
                         {
                             string iname = code.Substring(s, i - s);
@@ -471,8 +469,7 @@ namespace DataWF.Data
                             var c = sexpression.Table.Columns[iname];
                             if (c.IsReference)
                             {
-                                newQuery = new QQuery(string.Empty, c.ReferenceTable);
-                                sexpression.BuildParam(c, CompareType.In, newQuery);
+                                newQuery = c.ReferenceTable.QQuery().Where(c, CompareOperator.In, newQuery);
                                 sexpression = newQuery;
                             }
                             s = i + 1;
@@ -489,10 +486,10 @@ namespace DataWF.Data
                 {
                     var param = new QParam()
                     {
-                        ValueLeft = new QReflection(filter.Invoker),
+                        LeftItem = new QInvoker(filter.LeftProperty),
                         Logic = filter.Logic,
                         Comparer = filter.Comparer,
-                        Value = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
+                        RightItem = QItem.Fabric(filter.Comparer.Type != CompareOperatorType.Is ? filter.RightValue : null, pcolumn)
                     };
                     Query.Parameters.Add(param);
                 }
@@ -529,7 +526,7 @@ namespace DataWF.Data
 
         public async Task Save()
         {
-            using (var transaction = new DBTransaction(Table.Connection))
+            using (var transaction = new DBTransaction(Table))
             {
                 try
                 {
@@ -606,12 +603,11 @@ namespace DataWF.Data
                 table.RemoveView(this);
             }
             base.Dispose();
-            Query?.Dispose();
         }
 
         public IEnumerable<T> GetTop()
         {
-            return (IEnumerable<T>)table.SelectItems(Table.GroupKey, CompareType.Is, null);
+            return Table.GroupKey.Select<T>(CompareOperator.Is, (object)null);
         }
 
         public IEnumerable<T> GetItems()

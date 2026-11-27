@@ -1,7 +1,7 @@
-﻿using Xwt;
-using Xwt.Drawing;
+﻿using Avalonia;
+using Avalonia.Controls;
 using System;
-using DataWF.Common;
+using DataWF;
 
 namespace DataWF.Gui
 {
@@ -14,7 +14,7 @@ namespace DataWF.Gui
 
         public override object Value
         {
-            get { return base.Value; }
+            get => base.Value;
             set
             {
                 base.Value = value;
@@ -32,7 +32,7 @@ namespace DataWF.Gui
                 return base.FormatValue(value, dataSource, valueType);
         }
 
-        public override Widget InitDropDownContent()
+        public override IControl InitDropDownContent()
         {
             if (listSource == null)
             {

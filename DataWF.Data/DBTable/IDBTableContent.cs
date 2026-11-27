@@ -17,10 +17,12 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
+using DataWF;
+
 namespace DataWF.Data
 {
-    public interface IDBTableContent
+    public interface IDBTableContent : IModelTableContent
     {
-        DBTable Table { get; set; }
+        new IDBTable Table { get; set; }
     }
 }

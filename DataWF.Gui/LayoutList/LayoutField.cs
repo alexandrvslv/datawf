@@ -1,4 +1,5 @@
-﻿using DataWF.Common;
+﻿using DataWF;
+using DataWF.Invokers;
 using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
@@ -32,20 +33,20 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool Validate
         {
-            get { return validate; }
-            set { validate = value; }
+            get => validate;
+            set => validate = value;
         }
 
         [DefaultValue(true)]
         public bool Editable
         {
-            get { return edit; }
-            set { edit = value; }
+            get => edit;
+            set => edit = value;
         }
 
         public string Format
         {
-            get { return format; }
+            get => format;
             set
             {
                 if (format != value)
@@ -63,7 +64,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle Style
         {
-            get { return style ?? GuiEnvironment.Theme[StyleName]; }
+            get => style ?? GuiEnvironment.Theme[StyleName];
             set
             {
                 style = value;
@@ -74,7 +75,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public ILayoutCellEditor CellEditor
         {
-            get { return editor; }
+            get => editor;
             set
             {
                 if (editor != value)
@@ -94,7 +95,7 @@ namespace DataWF.Gui
         [DefaultValue(false)]
         public bool ReadOnly
         {
-            get { return readOnly; }
+            get => readOnly;
             set
             {
                 if (readOnly != value)
@@ -107,7 +108,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public ILayoutCell Owner
         {
-            get { return owner ?? group as ILayoutCell; }
+            get => owner ?? group as ILayoutCell;
             set
             {
                 if (owner == value || group == value)
@@ -119,8 +120,8 @@ namespace DataWF.Gui
         [XmlIgnore]
         public IInvoker Invoker
         {
-            get { return invoker; }
-            set { invoker = value; }
+            get => invoker;
+            set => invoker = value;
         }
 
         [XmlIgnore]
@@ -129,14 +130,14 @@ namespace DataWF.Gui
         [XmlIgnore]
         public bool Password
         {
-            get { return password; }
-            set { password = value; }
+            get => password;
+            set => password = value;
         }
 
         public string Description
         {
-            get { return description; }
-            set { description = value; }
+            get => description;
+            set => description = value;
         }
 
         public virtual object ReadValue(object listItem)

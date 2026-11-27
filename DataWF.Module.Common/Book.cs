@@ -1,35 +1,27 @@
-﻿using DataWF.Data;
+﻿using DataWF;
+using DataWF.Data;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [Table("rbook", "Reference Book", BlockSize = 100)]
-    public class Book : DBGroupItem
+    [Table("rbook", "Reference Book", BlockSize = 100, Type = typeof(BookTable<>))]
+    public partial class Book : DBGroupItem
     {
-        public static readonly DBTable<Book> DBTable = GetTable<Book>();
-        public static readonly DBColumn ValueKey = DBTable.ParseProperty(nameof(Value));
-        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
-        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
-        public static readonly DBColumn ExternalIdKey = DBTable.ParseProperty(nameof(ExternalId));
-
-        public Book()
-        { }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        [Column("unid", Keys = ColumnFlags.Primary)]
+        public int Id
         {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
-        [Column("code", 512, Keys = DBColumnKeys.Code)]
+        [Column("code", 512, Keys = ColumnFlags.Code)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
-        [Column("group_id", Keys = DBColumnKeys.Group)]
+        [Column("group_id", Keys = ColumnFlags.Group)]
         public int? ParentId
         {
             get => GetGroupValue<int?>();
@@ -43,37 +35,39 @@ namespace DataWF.Module.Common
             set => SetGroupReference(value);
         }
 
-        [Column("name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [Column("name", 1024, Keys = ColumnFlags.View | ColumnFlags.Culture)]
         public string Name
         {
             get => GetName();
             set => SetName(value);
         }
 
+        [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
+        [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         [Column("book_value")]
         public string Value
         {
-            get => GetValue<string>(ValueKey);
-            set => SetValue(value, ValueKey);
+            get => GetValue(Table.ValueKey);
+            set => SetValue(value, Table.ValueKey);
         }
 
         [Column("ext_id")]
         public int? ExternalId
         {
-            get => GetValue<int?>(ExternalIdKey);
-            set => SetValue(value, ExternalIdKey);
+            get => GetValue(Table.ExternalIdKey);
+            set => SetValue(value, Table.ExternalIdKey);
         }
     }
 }

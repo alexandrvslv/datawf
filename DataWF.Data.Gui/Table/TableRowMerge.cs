@@ -1,11 +1,12 @@
 ﻿using DataWF.Gui;
 using System;
 using System.Collections.Generic;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Data.Gui
 {
-    public class TableRowMerge : Dialog
+    public class TableRowMerge : Window
     {
         ToolItem toolMerge = new ToolItem();
         TableLayoutList list = new TableLayoutList();
@@ -19,9 +20,10 @@ namespace DataWF.Data.Gui
 
             tools.Add(toolMerge);
             var box = new VPanel();
-            box.PackStart(tools, false, false);
-            box.PackStart(list, true, true);
-            Size = new Size(640, 480);
+            box.Children.Add(tools);
+            box.Children.Add(list);
+            Width = 640;
+            Height = 480;
             Title = "Merge rows";
         }
 
@@ -45,7 +47,7 @@ namespace DataWF.Data.Gui
             {
                 DBItem main = (DBItem)list.SelectedItem;
                 await main.Merge(itemlist);
-                //list.QueueDraw(false, false);
+                //list.InvalidateVisual(false, false);
                 MessageDialog.ShowMessage(this, "Merge complete!");
             }
         }

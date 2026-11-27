@@ -6,7 +6,7 @@
     <RootNamespace>DataWF.Test.GuiGtk</RootNamespace>
     <AssemblyName>DataWF.Test.GuiGtk</AssemblyName>
     <StartupObject>DataWF.TestGui.Program</StartupObject>
-    <TargetFrameworks>net461</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -25,14 +25,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Core\DataWF.Core.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
     <ProjectReference Include="..\DataWF.Data.Gui\DataWF.Data.Gui.csproj" />
     <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />
     <ProjectReference Include="..\DataWF.OdfGui\DataWF.OdfGui.csproj" />
-    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
-    <ProjectReference Include="..\External\xwt\Xwt.Gtk\Xwt.Gtk.csproj" />
-    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />    
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />    
   </ItemGroup>
    <Import Project="..\DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems" Label="Shared" />
 </Project>

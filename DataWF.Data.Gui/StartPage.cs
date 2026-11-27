@@ -1,8 +1,8 @@
 ﻿using System;
-using DataWF.Common;
+using DataWF;
 using DataWF.Gui;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Data.Gui
 {
@@ -33,19 +33,19 @@ namespace DataWF.Data.Gui
 			listLinks.ListInfo.HotSelection = true;
 
 			box = new GroupBox(
-				new GroupBoxItem { Column = 0, Widget = listProjects, FillHeight = true, Name = "Projects", Width = 370, Height = 400 },
-				new GroupBoxItem { Column = 1, Widget = listLinks, FillWidth = true, FillHeight = true, Name = "Links", Width = 370, Height = 400 })
+				new GroupBoxItem { Column = 0, Control = listProjects, FillHeight = true, Name = "Projects", Width = 370, Height = 400 },
+				new GroupBoxItem { Column = 1, Control = listLinks, FillWidth = true, FillHeight = true, Name = "Links", Width = 370, Height = 400 })
 			{ Name = "StartPage" };
 
 			label = new Label
 			{
-				Font = Font.WithSize(22D),
+				FontFamily = FontFamily.WithSize(22D),
 				Name = "label",
 				Text = "Data\\Document Workflow Solution"
 			};
 
-			PackStart(label, false, false);
-			PackStart(box, true, true);
+			Children.Add(label, false, false);
+			Children.Add(box, true, true);
 			Name = "StartPage";
 
 			Localize();

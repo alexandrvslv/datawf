@@ -1,0 +1,87 @@
+﻿using System;
+using System.Threading;
+
+namespace DataWF
+{
+    public class ProgressToken : IDisposable
+    {
+        public static readonly ProgressToken None = new ProgressToken();
+
+        public CancellationToken CancellationToken = CancellationToken.None;
+        public CancellationTokenSource? CancellationTokenSource = null;
+
+        private CopyProcess process;
+
+        public ProgressToken(IProgressable prograssable = null)
+        {
+            Progressable = prograssable;
+            if (Progressable != null)
+            {
+                Progressable.Progress = 0;
+                CancellationTokenSource = new CancellationTokenSource
+                {
+
+                };
+                CancellationToken = CancellationTokenSource.Token;
+            }
+            JsonSettings = HttpJsonSettings.Default;
+        }
+
+        public HttpPageSettings Pages { get; set; }
+
+        public HttpJsonSettings JsonSettings { get; set; }
+
+        public CopyProcess Process
+        {
+            get => process;
+            set
+            {
+                if (process != value)
+                {
+                    if (process != null && Progressable != null)
+                    {
+                    }
+                    process = value;
+                    if (process != null)
+                    {
+                        process.Token = this;
+                        process.Progressable = Progressable;
+                        process.File = File;
+                    }
+                }
+            }
+        }
+
+        public bool IsCancelled => CancellationTokenSource?.IsCancellationRequested ?? false;
+
+        public IProgressable Progressable { get; }
+
+        public IFileModel File { get; set; }
+
+        public Exception Error { get; private set; }
+
+        public void Cancel()
+        {
+            if (CancellationTokenSource != null)
+            {
+                CancellationTokenSource.Cancel();
+            }
+        }
+
+        public void Dispose()
+        {
+            if (CancellationTokenSource != null)
+            {
+                CancellationTokenSource.Dispose();
+                CancellationTokenSource = null;
+            }
+        }
+
+        public void OnException(Exception ex)
+        {
+            if (this != ProgressToken.None)
+                Error = ex;
+        }
+    }
+
+}

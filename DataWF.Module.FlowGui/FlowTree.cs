@@ -1,11 +1,11 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Module.CommonGui;
 using DataWF.Module.Flow;
 using System;
 using System.ComponentModel;
-using Xwt.Drawing;
+using Avalonia.Controls;
 
 namespace DataWF.Module.FlowGui
 {
@@ -78,8 +78,8 @@ namespace DataWF.Module.FlowGui
 
         private void RefreshData()
         {
-            InitItem(Template.DBTable?.DefaultView, ShowTemplate, GlyphType.Book, Colors.LightBlue);
-            InitItem(Work.DBTable?.DefaultView, ShowWork, GlyphType.GearsAlias, Colors.Silver);
+            InitItem(FlowExplorer.Schema.Template?.DefaultView, ShowTemplate, GlyphType.Book, Colors.LightBlue);
+            InitItem(FlowExplorer.Schema.Work?.DefaultView, ShowWork, GlyphType.GearsAlias, Colors.Silver);
         }
 
         public override TableItemNode InitItem(DBItem item)

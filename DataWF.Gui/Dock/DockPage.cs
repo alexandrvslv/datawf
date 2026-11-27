@@ -1,16 +1,17 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
+using DataWF;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
 
 namespace DataWF.Gui
 {
     public class DockPage : ToolCarret
     {
         private bool closing = false;
-        private Widget widget;
+        private IControl control;
 
         public DockPage()
         {
@@ -39,54 +40,54 @@ namespace DataWF.Gui
                     Panel.RemovePage(this);
                 }
                 base.Bar = value;
-                if (Bar != null && Widget != null && Visible && Checked)
+                if (Bar != null && Control != null && Visible && Checked)
                 {
                     Panel.CurrentPage = this;
                 }
             }
         }
 
-        public Widget Widget
+        public IControl Control
         {
-            get { return widget; }
+            get => Control;
             set
             {
-                if (widget == value)
+                if (Control == value)
                     return;
 
-                if (widget is IText)
-                    ((IText)widget).TextChanged -= ControlTextChanged;
-                widget = value;
-                if (widget != null)
+                if (Control is IText)
+                    ((IText)Control).TextChanged -= ControlTextChanged;
+                Control = value;
+                if (Control != null)
                 {
-                    if (widget.Name != Name)
+                    if (Control.Name != Name)
                     {
-                        widget.Name = Name;
+                        Control.Name = Name;
                     }
-                    if (widget is ILocalizable)
-                        ((ILocalizable)widget).Localize();
-                    if (widget is IText)
-                        ((IText)widget).TextChanged += ControlTextChanged;
-                    Text = widget is IText
-                        ? ((IText)widget).Text
-                                           : string.IsNullOrEmpty(widget.TooltipText)
-                                           ? widget.GetType().FullName
-                                           : widget.TooltipText; ;
-                    if (widget is IGlyph)
+                    if (Control is ILocalizable)
+                        ((ILocalizable)Control).Localize();
+                    if (Control is IText)
+                        ((IText)Control).TextChanged += ControlTextChanged;
+                    Text = Control is IText
+                        ? ((IText)Control).Text
+                                           : string.IsNullOrEmpty(Control.Tooltip)
+                                           ? Control.GetType().FullName
+                                           : Control.TooltipText;
+                    if (Control is IGlyph)
                     {
-                        Image = ((IGlyph)widget).Image;
-                        Glyph = ((IGlyph)widget).Glyph;
+                        Image = ((IGlyph)Control).Image;
+                        Glyph = ((IGlyph)Control).Glyph;
                     }
                 }
-                OnPropertyChanged(nameof(Widget));
+                OnPropertyChanged(nameof(Control));
             }
         }
 
-        public bool HideOnClose { get { return widget is IDockContent ? ((IDockContent)widget).HideOnClose : false; } }
+        public bool HideOnClose { get { return Control is IDockContent ? ((IDockContent)Control).HideOnClose : false; } }
 
         public override bool Checked
         {
-            get { return base.Checked; }
+            get => base.Checked;
             set
             {
                 if (value)
@@ -97,7 +98,7 @@ namespace DataWF.Gui
                 {
                     base.Checked = value;
 
-                    Bar?.QueueDraw();
+                    Bar?.InvalidateVisual();
                 }
             }
         }
@@ -134,7 +135,7 @@ namespace DataWF.Gui
             }
         }
 
-        protected override void OnCarretClick(ButtonEventArgs args)
+        protected override void OnCarretClick(PointerEventArgs args)
         {
             base.OnCarretClick(args);
             Close();
@@ -143,7 +144,7 @@ namespace DataWF.Gui
 
         private void ControlTextChanged(object sender, EventArgs e)
         {
-            Text = ((IText)widget).Text;
+            Text = ((IText)Control).Text;
         }
 
         private void UncheckExcept()
@@ -160,17 +161,16 @@ namespace DataWF.Gui
         public override void Localize()
         {
             //base.Localize();
-            if (widget is ILocalizable)
+            if (Control is ILocalizable)
             {
-                ((ILocalizable)widget).Localize();
+                ((ILocalizable)Control).Localize();
             }
         }
 
         public override void Dispose()
         {
             base.Dispose();
-            widget?.Dispose();
-            widget = null;
+            Control = null;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
@@ -114,7 +114,7 @@ namespace DataWF.Module.FlowGui
                 {
                     Name = "Table",
                     Visible = false,
-                    Invoker = new PropertyInvoker<TableItemNode, string>("TableName")
+                    Invoker = new PropertyActionInvoker<TableItemNode, string>("TableName")
                 })
             {
                 Tree = true,
@@ -140,13 +140,13 @@ namespace DataWF.Module.FlowGui
                 new GroupBoxItem
                 {
                     Text = "Params",
-                    Widget = list,
+                    Control = list,
                     FillWidth = true
                 },
                 new GroupBoxItem
                 {
                     Text = "Permissions",
-                    Widget = tree,
+                    Control = tree,
                     FillWidth = true,
                     FillHeight = true,
                     Row = 1
@@ -154,10 +154,10 @@ namespace DataWF.Module.FlowGui
 
             Name = "PermissionEditor";
             Text = "Permissions";
-            PackStart(bar, false, false);
-            PackStart(map, true, true);
+            Children.Add(bar, false, false);
+            Children.Add(map, true, true);
 
-            UserReg.RowLoged += FlowEnvirRowLoged;
+            FlowExplorer.Schema.UserReg.RowLoged += FlowEnvirRowLoged;
 
             Localize();
         }
@@ -242,7 +242,7 @@ namespace DataWF.Module.FlowGui
                 if (userGroup != null)
                     userGroup.PropertyChanged -= GroupPropertyChanged;
 
-                if (value.Id == null)
+                if (value.Id == 0)
                     value.GenerateId();
                 userGroup = value;
 
@@ -339,7 +339,7 @@ namespace DataWF.Module.FlowGui
 
         protected override void Dispose(bool disposing)
         {
-            UserReg.RowLoged -= FlowEnvirRowLoged;
+            FlowExplorer.Schema.UserReg.RowLoged -= FlowEnvirRowLoged;
             userGroup.PropertyChanged -= GroupPropertyChanged;
             base.Dispose(disposing);
         }

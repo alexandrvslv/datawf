@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <OutputType>Library</OutputType>
+    <RootNamespace>DataWF</RootNamespace>
+    <AssemblyName>DataWF.Core</AssemblyName>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <!--<PackageId>DataWF.Core</PackageId>
+    <PackageOutputPath>$(ProjectDir)Package\</PackageOutputPath>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/alexandrvslv/datawf</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/alexandrvslv/datawf.git</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>-->
+    <Platforms>AnyCPU</Platforms>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>  
+  <ItemGroup>
+    <Compile Remove="Collections\Query.cs" />
+    <Compile Remove="Collections\QueryOrdersList.cs" />
+    <Compile Remove="Collections\QueryParameter.cs" />
+    <Compile Remove="Collections\QueryParameterList.cs" />
+    <Compile Remove="Collections\Query\QCompareOperator.cs" />
+    <Compile Remove="Net\PipeWriterStream.cs" />
+    <Compile Remove="Serialization\DictionaryItem.cs" />
+    <Compile Remove="Serialization\ObjectPropertySerializeInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.23.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Portable.Xaml" Version="0.26.0" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DataWF.Serialization\DataWF.Serialization.csproj" />
+  </ItemGroup>
+</Project>

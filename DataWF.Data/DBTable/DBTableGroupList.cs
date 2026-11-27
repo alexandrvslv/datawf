@@ -18,7 +18,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using System.Collections.Generic;
-using DataWF.Common;
+using DataWF;
 
 namespace DataWF.Data
 {
@@ -36,7 +36,7 @@ namespace DataWF.Data
 
         public IEnumerable<DBTableGroup> GetByGroup(string name)
         {
-            return Select(nameof(DBTableGroup.GroupName), CompareType.Equal, name);
+            return Select(nameof(DBTableGroup.GroupName), CompareOperator.Equal, name);
         }
     }
 }

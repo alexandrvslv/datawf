@@ -1,6 +1,7 @@
 ﻿using System;
-using DataWF.Common;
-using Xwt;
+using DataWF;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
@@ -17,7 +18,7 @@ namespace DataWF.Gui
             get { return DropDown?.Target as ListEditor; }
         }
 
-        public override Widget InitDropDownContent()
+        public override IControl InitDropDownContent()
         {
             return Editor.GetCached<ListEditor>();
         }
@@ -29,7 +30,7 @@ namespace DataWF.Gui
 
         public override object Value
         {
-            get { return base.Value; }
+            get => base.Value;
             set
             {
                 base.Value = value;

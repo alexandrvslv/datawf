@@ -1,4 +1,5 @@
-﻿using Xwt;
+﻿using Avalonia;
+using Avalonia.Controls;
 
 namespace DataWF.Gui
 {
@@ -8,7 +9,7 @@ namespace DataWF.Gui
         {
             Visible = false;
             DisplayStyle = ToolItemDisplayStyle.Content;
-            ProgressBar.Indeterminate = true;
+            ProgressBar.IsIndeterminate = true;
         }
 
         public ProgressBar ProgressBar
@@ -18,8 +19,8 @@ namespace DataWF.Gui
 
         public int Value
         {
-            get { return (int)ProgressBar.Fraction * 100; }
-            set { ProgressBar.Fraction = (double)value / 100D; }
+            get => (int)ProgressBar.Value * 100;
+            set => ProgressBar.Value = value / 100D;
         }
 
         public override void Localize()

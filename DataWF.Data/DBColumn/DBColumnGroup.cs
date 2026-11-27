@@ -17,19 +17,19 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
-[assembly: Invoker(typeof(DBColumnGroup), nameof(DBColumnGroup.Order), typeof(DBColumnGroup.OrderInvoker<>))]
 namespace DataWF.Data
 {
-    public class DBColumnGroup : DBTableItem, IComparable, IComparable<DBColumnGroup>
+    [Invoker(Instance = true)]
+    public sealed partial class DBColumnGroup : DBTableItem, IComparable, IComparable<DBColumnGroup>
     {
-        protected int order = -1;
+        private int order = -1;
 
         public DBColumnGroup() : base()
         { }
@@ -84,21 +84,9 @@ namespace DataWF.Data
             };
         }
 
-        public override string FormatSql(DDLType ddlType)
+        public override string FormatSql(DDLType ddlType, bool dependency = false)
         {
             return null;
-        }
-
-        public class OrderInvoker<T> : Invoker<T, int> where T : DBColumnGroup
-        {
-            public static readonly OrderInvoker<T> Instance = new OrderInvoker<T>();
-            public override string Name => nameof(DBColumnGroup.Order);
-
-            public override bool CanWrite => true;
-
-            public override int GetValue(T target) => target.Order;
-
-            public override void SetValue(T target, int value) => target.Order = value;
         }
     }
 }

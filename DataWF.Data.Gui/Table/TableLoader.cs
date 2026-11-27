@@ -1,10 +1,11 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Xwt;
+using Avalonia;
+using Avalonia.Threading;
 
 namespace DataWF.Data.Gui
 {
@@ -12,7 +13,7 @@ namespace DataWF.Data.Gui
     {
         private ManualResetEvent cancelEvent = new ManualResetEvent(true);
         private ManualResetEvent delayEvent = new ManualResetEvent(false);
-        private ConcurrentStack<QQuery> queries = new ConcurrentStack<QQuery>();
+        private ConcurrentStack<IQQuery> queries = new ConcurrentStack<IQQuery>();
         private DateTime changeProgressSpeed = DateTime.UtcNow;
         private IDBTableView view;
         private DBTransaction transaction = null;
@@ -85,7 +86,7 @@ namespace DataWF.Data.Gui
                 if (ts.TotalMilliseconds > 300)
                 {
                     changeProgressSpeed = DateTime.UtcNow;
-                    Application.Invoke(() => OnLoadProgress(arg));
+                    _ = Dispatcher.UIThread.InvokeAsync(() => OnLoadProgress(arg));
                 }
             }
         }
@@ -97,7 +98,7 @@ namespace DataWF.Data.Gui
 
         private void DBTableLoadComplete(object sender, EventArgs arg)
         {
-            Application.Invoke(() => OnLoadComplete(arg));
+            _ = Dispatcher.UIThread.InvokeAsync(() => OnLoadComplete(arg));
         }
 
         private void OnLoadColumns(object val)
@@ -108,10 +109,10 @@ namespace DataWF.Data.Gui
         private void DBTableLoadColumns(object sender, DBLoadColumnsEventArgs arg)
         {
             if (arg.Target == view)
-                Application.Invoke(() => OnLoadColumns(arg));
+                _ = Dispatcher.UIThread.InvokeAsync(() => OnLoadColumns(arg));
         }
 
-        public async void LoadAsync(QQuery query)
+        public async void LoadAsync(IQQuery query)
         {
             Cancel();
             if (query != null && query.Table == view.Table)
@@ -131,16 +132,17 @@ namespace DataWF.Data.Gui
         private void Loader()
         {
             delayEvent.WaitOne(400);
-            if (queries.TryPop(out QQuery query))
+            if (queries.TryPop(out IQQuery query))
             {
                 cancelEvent.WaitOne();
                 try
                 {
                     DBTableLoadProgress(view.Table, new DBLoadProgressEventArgs(view, 0, 0, null));
-                    using (var temp = new DBTransaction(view.Table.Schema.Connection) { View = view })//DBLoadParam.GetCount | DBLoadParam.ReferenceRow
+                    using (var temp = new DBTransaction(view.Table) { View = view })//DBLoadParam.GetCount | DBLoadParam.ReferenceRow
                     {
                         transaction = temp;
-                        View.Table.LoadItems(query, LoadParam).LastOrDefault();
+                        query.LoadParam = LoadParam;
+                        View.Table.Load<DBItem>(query).LastOrDefault();
                     }
                 }
                 catch (Exception e)

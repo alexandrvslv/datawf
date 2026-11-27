@@ -17,22 +17,26 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
+using DataWF.Access;
+using DataWF.Collections;
+using DataWF.ModelProviders;
+using System.Collections.Generic;
 
 namespace DataWF.Data
 {
-    public interface IDBSchemaItem
+    public interface IDBSchemaItem : IModelItem
     {
+        IEnumerable<INotifyListPropertyChanged> Containers { get; }
         AccessValue Access { get; set; }
         string DisplayName { get; set; }
         string FullName { get; }
-        bool IsSynchronized { get; set; }
+        bool IsSynch { get; set; }
         LocaleItem LocaleInfo { get; }
-        string Name { get; set; }
         string OldName { get; set; }
-        DBSchema Schema { get; set; }
-
-        string FormatSql(DDLType ddlType);
+        new IDBSchema Schema { get; set; }
+        DBSchemaItemType Type { get; }
+        string FormatSql(DDLType ddlType, bool dependency = false);
         string GetLocalizeCategory();
     }
 }

@@ -18,10 +18,12 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace DataWF.Data
 {
+
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TableAttribute : Attribute
     {
@@ -43,11 +45,12 @@ namespace DataWF.Data
 
         public int BlockSize { get; set; } = 256;
 
-        public bool IsLoging { get; set; } = true;
+        public DBTableKeys Keys { get; set; }
 
         public bool ForceLoadReference { get; set; }
 
         public string SequenceName { get; set; }
 
+        public Type Type { get; set; }
     }
 }

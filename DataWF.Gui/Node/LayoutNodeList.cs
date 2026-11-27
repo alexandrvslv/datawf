@@ -1,4 +1,6 @@
-﻿using DataWF.Common;
+﻿using DataWF;
+using DataWF.Collections;
+using DataWF.Invokers;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -21,7 +23,7 @@ namespace DataWF.Gui
             Indexes.Add(NameInvoker);
             Indexes.Add(GroupInvoker);
             //this.Indexes.Add("Expand");
-            //this.Indexes.Add ("Visible");
+            //this.Indexes.Add ("IsVisible");
         }
 
         public LayoutNodeList(CategoryList categories) : this()
@@ -34,7 +36,7 @@ namespace DataWF.Gui
 
         public bool Sense
         {
-            get { return sense; }
+            get => sense;
             set
             {
                 if (sense == value)
@@ -62,7 +64,7 @@ namespace DataWF.Gui
         {
             //Node old = newIndex < Count ? _items[newIndex] : null;
             //node.order = old == null ? ++index : old.order;
-            var nodes = Select(nameof(Node.Group), CompareType.Equal, node.Group).ToList();
+            var nodes = Select(nameof(Node.Group), CompareOperator.Equal, node.Group).ToList();
             nodes.Sort();
             int nindex = 0;
             foreach (Node n in nodes)
@@ -129,7 +131,7 @@ namespace DataWF.Gui
 
         public T Find(string name)
         {
-            return SelectOne(nameof(Node.Name), CompareType.Equal, name);
+            return SelectOne(nameof(Node.Name), CompareOperator.Equal, name);
         }
 
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -164,7 +166,7 @@ namespace DataWF.Gui
 
         public IEnumerable<T> GetTopLevel()
         {
-            return Select(nameof(Node.Group), CompareType.Equal, null);
+            return Select(nameof(Node.Group), CompareOperator.Equal, null);
         }
 
         public void ExpandTop()
@@ -177,7 +179,7 @@ namespace DataWF.Gui
 
         public IEnumerable<T> GetChecked()
         {
-            return Select(nameof(Node.Check), CompareType.Equal, true);
+            return Select(nameof(Node.Check), CompareOperator.Equal, true);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using DataWF.Module.Common;
 using System;
@@ -11,150 +11,77 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.Flow
 {
-    public class DocumentDataList : DBTableView<DocumentData>
+
+    [Table("ddocument_data", "Document", BlockSize = 400), Invoker]
+    public partial class DocumentData : DocumentItem
     {
-        readonly Document document;
-
-        public DocumentDataList()
-            : this("", DBViewKeys.None)
-        {
-        }
-
-        public DocumentDataList(Document document)
-            : this(DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)).Name + "=" + document.PrimaryId, DBViewKeys.Static)
-        {
-            this.document = document;
-        }
-
-        public DocumentDataList(string filter, DBViewKeys mode)
-            : base(filter, mode)
-        {
-        }
-
-        public override int AddInternal(DocumentData item)
-        {
-            if (document != null && item.Document == null)
-                item.Document = document;
-            return base.AddInternal(item);
-        }
-
-        public void FilterByDocument(Document document)
-        {
-            DefaultParam = new QParam(LogicType.And, DocumentData.DocumentKey, CompareType.Equal, document.PrimaryId);
-        }
-    }
-
-    public class ListDocumentData : SelectableList<DocumentData>
-    {
-        readonly Document document;
-
-        public ListDocumentData(Document document)
-            : base(DocumentData.DBTable.Select(
-                DocumentData.DocumentKey, CompareType.Equal, document.PrimaryId))
-        {
-            this.document = document;
-        }
-
-        public override int AddInternal(DocumentData item)
-        {
-            if (Contains(item))
-                return -1;
-            if (item.Document == null)
-                item.Document = document;
-            int index = base.AddInternal(item);
-            item.Attach();
-            return index;
-        }
-    }
-
-    [Table("ddocument_data", "Document", BlockSize = 400)]
-    public class DocumentData : DBItem, IDocumentDetail
-    {
-        public static readonly DBTable<DocumentData> DBTable = GetTable<DocumentData>();
-        public static readonly DBColumn TemplateDataKey = DBTable.ParseProperty(nameof(TemplateDataId));
-        public static readonly DBColumn FileUrlKey = DBTable.ParseProperty(nameof(FileUrl));
-        public static readonly DBColumn FileLastWriteKey = DBTable.ParseProperty(nameof(FileLastWrite));
-        public static readonly DBColumn DocumentKey = DBTable.ParseProperty(nameof(DocumentId));
-
         private byte[] buf;
         private User currentUser;
         private TemplateData template;
-        private Document document;
 
-        public DocumentData()
-        { }
-
-        [Browsable(false)]
-        [Column("document_id"), Index("ddocument_data_document_id")]
-        public virtual long? DocumentId
+        [Column("unid", Keys = ColumnFlags.Primary)]
+        public long Id
         {
-            get => GetValue<long?>(DocumentKey);
-            set => SetValue(value, DocumentKey);
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
-        [Reference(nameof(DocumentId))]
-        public Document Document
-        {
-            get => GetReference(DocumentKey, ref document);
-            set => SetReference(document = value, DocumentKey);
-        }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public long? Id
-        {
-            get => GetValue<long?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
-        }
+        [Index("ddocument_data_document_id")]
+        public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
 
         [Index("ddocument_data_item_type", false)]
-        public override int? ItemType { get => base.ItemType; set => base.ItemType = value; }
+        public override int ItemType
+        {
+            get => base.ItemType;
+            set => base.ItemType = value;
+        }
 
         [Column("template_data_id")]
         public int? TemplateDataId
         {
-            get => GetValue<int?>(TemplateDataKey);
-            set => SetValue(value, TemplateDataKey);
+            get => GetValue(Table.TemplateDataIdKey);
+            set => SetValue(value, Table.TemplateDataIdKey);
         }
 
         [Reference(nameof(TemplateDataId))]
         public TemplateData TemplateData
         {
-            get => GetReference(TemplateDataKey, ref template);
-            set => SetReference(template = value, TemplateDataKey);
+            get => GetReference(Table.TemplateDataIdKey, ref template);
+            set => SetReference(template = value, Table.TemplateDataIdKey);
         }
 
-        [Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]
+        [Column("file_name", 1024, Keys = ColumnFlags.View | ColumnFlags.FileName)]
         public virtual string FileName
         {
-            get => GetValue<string>(Table.FileNameKey);
+            get => GetValue(Table.FileNameKey);
             set => SetValue(value, Table.FileNameKey);
         }
 
         [Column("file_url", 1024)]
         public string FileUrl
         {
-            get => GetValue<string>(FileUrlKey);
-            set => SetValue(value, FileUrlKey);
+            get => GetValue(Table.FileUrlKey);
+            set => SetValue(value, Table.FileUrlKey);
         }
 
-        [Column("file_last_write", Keys = DBColumnKeys.FileLastWrite)]
+        [Column("file_last_write", Keys = ColumnFlags.FileLastWrite)]
         public DateTime? FileLastWrite
         {
-            get => GetValue<DateTime?>(FileLastWriteKey) ?? Stamp;
-            set => SetValue(value, FileLastWriteKey);
+            get => GetValue(Table.FileLastWriteKey) ?? Stamp;
+            set => SetValue(value, Table.FileLastWriteKey);
         }
 
-        [Column("file_data", Keys = DBColumnKeys.File)]
+        [Column("file_data", Keys = ColumnFlags.File)]
         public virtual byte[] FileData
         {
-            get => buf ?? (buf = GetZip(Table.FileKey));
-            set => SetValue(value, Table.FileKey);
+            get => buf ?? (buf = GetValue(Table.FileDataKey));
+            set => SetValue(value, Table.FileDataKey);
         }
 
-        [Column("file_lob", DBDataType = DBDataType.LargeObject, Keys = DBColumnKeys.FileLOB)]
-        public virtual uint? FileLOB
+        [Column("file_lob", Keys = ColumnFlags.FileOID)]
+        public virtual long? FileLOB
         {
-            get => GetValue<uint?>(Table.FileLOBKey);
+            get => GetValue(Table.FileLOBKey);
             set => SetValue(value, Table.FileLOBKey);
         }
 
@@ -163,7 +90,7 @@ namespace DataWF.Module.Flow
         public int? CurrentUserId
         {
             get => currentUser?.Id;
-            set => CurrentUser = User.DBTable.LoadById(value);
+            set => CurrentUser = Schema.GetTable<User>().LoadById(value);
         }
 
         [Browsable(false)]
@@ -229,7 +156,7 @@ namespace DataWF.Module.Flow
         {
             if (FileLOB != null)
             {
-                var item = await GetLOBFileStream(Table.FileLOBKey, fileName, transaction);
+                var item = await GetBlob(Table.FileOIDKey, fileName, transaction);
                 if (item != null)
                 {
                     return item;
@@ -252,7 +179,7 @@ namespace DataWF.Module.Flow
             {
                 FileName = fileName;
             }
-            await SetLOB(stream, Table.FileLOBKey, transaction);
+            await SetBlob(stream, Table.FileOIDKey, transaction);
             //SetStream(stream, Table.FileKey, user);
         }
 
@@ -264,9 +191,8 @@ namespace DataWF.Module.Flow
 
         public Task<string> Parse(DBTransaction transaction, bool fromTemplate = false)
         {
-            return Parse(new DocumentExecuteArgs
+            return Parse(new DocumentExecuteArgs(document)
             {
-                Document = Document,
                 Transaction = transaction
             }, fromTemplate);
         }
@@ -293,16 +219,16 @@ namespace DataWF.Module.Flow
                 {
                     FileName = RefreshName();
                 }
-
-                filePath = Helper.GetDocumentsFullPath(FileName, "ParserNew" + (Id ?? TemplateData.Id));
-                using (var stream = TemplateData.File.GetZipFileStream(TemplateFile.DBTable.FileKey, filePath, param.Transaction))
+                var templateFileTable = (TemplateFileTable<TemplateFile>)Schema.GetTable<TemplateFile>();
+                filePath = Helper.GetDocumentsFullPath(FileName, "ParserNew" + (Id == 0 ? TemplateData.Id : Id));
+                using (var stream = TemplateData.File.GetZipFileStream(templateFileTable.FileKey, filePath, param.Transaction))
                 {
                     filePath = Execute(param, stream);
                 }
             }
             else
             {
-                filePath = Helper.GetDocumentsFullPath(FileName, "Parser" + (Id ?? TemplateData.Id));
+                filePath = Helper.GetDocumentsFullPath(FileName, "Parser" + (Id == 0 ? TemplateData.Id : Id));
                 using (var stream = await GetData(filePath, param.Transaction))
                 {
                     if (stream.Length == 0)

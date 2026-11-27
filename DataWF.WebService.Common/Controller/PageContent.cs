@@ -1,10 +1,11 @@
-﻿using DataWF.Data;
-using DataWF.WebClient.Common;
+﻿using DataWF;
+using DataWF.Data;
 using System.Collections.Generic;
 
 namespace DataWF.WebService.Common
 {
-    public class PageContent<T> where T : DBItem
+    [Invoker]
+    public partial class PageContent<T> where T : DBItem
     {
         public HttpPageSettings Info { get; set; }
 

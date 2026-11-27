@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Reflection;
 
@@ -39,7 +39,7 @@ namespace DataWF.Gui
 
             Bar.Items.Insert(group, true);
 
-            PackStart(Editor, true, true);
+            Children.Add(Editor, true, true);
             Name = "OptionEditor";
 
             Tree = ((CellEditorList)toolTree.Editor).DropDown.Target as LayoutList;
@@ -64,7 +64,7 @@ namespace DataWF.Gui
 
         public ListExplorerNode Current
         {
-            get { return Tree.SelectedNode as ListExplorerNode; }
+            get => Tree.SelectedNode as ListExplorerNode;
             set
             {
                 if (!Tree.Nodes.Contains(value))
@@ -83,19 +83,19 @@ namespace DataWF.Gui
 
         public bool ReadOnly
         {
-            get { return Editor.ReadOnly; }
-            set { Editor.ReadOnly = value; }
+            get => Editor.ReadOnly;
+            set => Editor.ReadOnly = value;
         }
 
         public bool ViewTree
         {
-            get { return toolTree.Visible; }
-            set { toolTree.Visible = value; }
+            get => toolTree.Visible;
+            set => toolTree.Visible = value;
         }
 
         public object Value
         {
-            get { return DataSource; }
+            get => DataSource;
             set
             {
                 if (DataSource == value)
@@ -115,7 +115,7 @@ namespace DataWF.Gui
 
         public object DataSource
         {
-            get { return dataSource; }
+            get => dataSource;
             set
             {
                 if (dataSource == value)
@@ -195,7 +195,7 @@ namespace DataWF.Gui
             {
                 if (TypeHelper.GetBrowsable(property) && TypeHelper.IsList(property.PropertyType) && !TypeHelper.IsIndex(property))
                 {
-                    Node propertyNode = InitNode(property, EmitInvoker.GetValue(property, node.DataSource));
+                    Node propertyNode = InitNode(property, InvokeProvider.GetValue(property, node.DataSource));
                     if (propertyNode != null)
                     {
                         propertyNode.Group = node;

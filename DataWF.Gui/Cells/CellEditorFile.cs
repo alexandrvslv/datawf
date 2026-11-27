@@ -1,15 +1,16 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.IO;
-using Xwt;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.VisualTree;
+using System.Linq;
 
 namespace DataWF.Gui
 {
     public class CellEditorFile : CellEditorText
     {
         private string propertyFileName;
-        private OpenFileDialog fdOpen;
-        private SaveFileDialog fdSave;
         private IInvoker invoker;
 
         public CellEditorFile()
@@ -19,15 +20,13 @@ namespace DataWF.Gui
             DropDownWindow = false;
             DropDownVisible = true;
             DropDownExVisible = true;
-            fdOpen = new OpenFileDialog();
-            fdSave = new SaveFileDialog();
             Format = "size";
         }
 
         public string PropertyFileName
         {
-            get { return propertyFileName; }
-            set { propertyFileName = value; }
+            get => propertyFileName;
+            set => propertyFileName = value;
         }
 
         public override void InitDropDown()
@@ -58,16 +57,18 @@ namespace DataWF.Gui
 
         protected virtual IInvoker GetFileNameInvoker(object dataSource)
         {
-            return EmitInvoker.Initialize(dataSource.GetType(), propertyFileName);
+            return InvokeProvider.Initialize(dataSource.GetType(), propertyFileName);
         }
 
-        private void OnDropDownClick(object sender, EventArgs e)
+        private async void OnDropDownClick(object sender, EventArgs e)
         {
-            if (fdOpen.Run(Editor.ParentWindow))
+            var file = await fdOpen.ShowAsync((Window)Editor.GetVisualRoot());
+            if (file?.Any() ?? false)
             {
-                if (File.Exists(fdOpen.FileName))
+                var fileName = file.First();
+                if (File.Exists(fileName))
                 {
-                    using (var stream = File.Open(fdOpen.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
                         var buf = new byte[stream.Length];
                         int count = buf.Length;
@@ -78,22 +79,26 @@ namespace DataWF.Gui
                         Value = buf;
                     }
                 }
-                string name = Path.GetFileName(fdOpen.FileName);
+                string name = Path.GetFileName(fileName);
                 if (invoker != null)
                     invoker.SetValue(EditItem, name);
                 EntryText = name;
             }
         }
 
-        private void OnDropDownExClick(object sender, EventArgs e)
+        private async void OnDropDownExClick(object sender, EventArgs e)
         {
             if (invoker != null)
             {
                 fdSave.InitialFileName = invoker.GetValue(base.EditItem) as string;
             }
-            if (Value != null && fdSave.Run(Editor.ParentWindow))
+            if (Value != null)
             {
-                File.WriteAllBytes(fdSave.FileName, (byte[])Value);
+                var file = await fdSave.ShowAsync((Window)Editor.GetVisualRoot());
+                if (file != null)
+                {
+                    File.WriteAllBytes(file, (byte[])Value);
+                }
             }
         }
 
@@ -110,8 +115,8 @@ namespace DataWF.Gui
         public override void Dispose()
         {
             base.Dispose();
-            fdOpen.Dispose();
-            fdSave.Dispose();
+            fdOpen = null;
+            fdSave = null;
         }
     }
 }

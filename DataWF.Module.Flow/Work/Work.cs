@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Data;
 using System;
 using System.Collections.Generic;
@@ -8,72 +8,57 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    public class WorkList : DBTableView<Work>
+    [Table("rwork", "Template", BlockSize = 20), Invoker]
+    public sealed partial class Work : DBItem, IDisposable
     {
-        public WorkList(string filter = "", DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(filter, mode, status)
+        [Column("unid", Keys = ColumnFlags.Primary)]
+        public int Id
         {
-            ApplySortInternal(new DBComparer<Work, string>(Work.DBTable.CodeKey, ListSortDirection.Ascending));
+            get => GetValue(Table.IdKey);
+            set => SetValue(value, Table.IdKey);
         }
 
-    }
-
-    [Table("rwork", "Template", BlockSize = 20)]
-    public class Work : DBItem, IDisposable
-    {
-        public static readonly DBTable<Work> DBTable = GetTable<Work>();
-
-        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
-        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
-
-        public Work()
-        {
-        }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
-        {
-            get => GetValue<int?>(Table.PrimaryKey);
-            set => SetValue(value, Table.PrimaryKey);
-        }
-
-        [Column("code", Keys = DBColumnKeys.Code)]
+        [Column("code", Keys = ColumnFlags.Code)]
         public string Code
         {
-            get => GetValue<string>(Table.CodeKey);
+            get => GetValue(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
-        [Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
+        [Column("name", Keys = ColumnFlags.Culture | ColumnFlags.View)]
         public string Name
         {
             get => GetName();
             set => SetName(value);
         }
 
+        [CultureKey(nameof(Name))]
         public string NameEN
         {
-            get => GetValue<string>(NameENKey);
-            set => SetValue(value, NameENKey);
+            get => GetValue(Table.NameENKey);
+            set => SetValue(value, Table.NameENKey);
         }
 
+        [CultureKey(nameof(Name))]
         public string NameRU
         {
-            get => GetValue<string>(NameRUKey);
-            set => SetValue(value, NameRUKey);
+            get => GetValue(Table.NameRUKey);
+            set => SetValue(value, Table.NameRUKey);
         }
 
         [ControllerMethod]
         public IEnumerable<Template> GetTemplates()
         {
-            return GetReferencing<Template>(Template.DBTable, Template.WorkKey, DBLoadParam.None)
+            return GetReferencing<Template>(Schema.Template.WorkIdKey, DBLoadParam.None)
                 .OrderBy(p => p.Code);
         }
 
         [ControllerMethod]
-        public IEnumerable<Stage> GetStages() =>
-            GetReferencing<Stage>(Stage.DBTable, Stage.WorkKey, DBLoadParam.None)
+        public IEnumerable<Stage> GetStages()
+        {
+            return GetReferencing<Stage>(Schema.Stage.WorkIdKey, DBLoadParam.None)
             .OrderBy(p => p.Code);
+        }
 
         [ControllerMethod]
         public Stage GetStartStage()

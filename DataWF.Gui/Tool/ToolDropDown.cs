@@ -28,7 +28,7 @@ namespace DataWF.Gui
 
         public Menubar DropDown
         {
-            get { return menu; }//?? (DropDown = new Menubar { Name = Name })
+            get => menu; //?? (DropDown = new Menubar { Name = Name })
             set
             {
                 if (menu != value)
@@ -81,13 +81,13 @@ namespace DataWF.Gui
         {
             if (menu != null)
             {
-                Bar.CurrentMenubar = menu.Visible ? null : menu;
+                Bar.CurrentMenubar = menu.IsVisible ? null : menu;
             }
         }
 
         public override void Dispose()
         {
-            menu?.Dispose();
+            //menu?.Dispose();
             base.Dispose();
         }
 
@@ -100,7 +100,7 @@ namespace DataWF.Gui
         {
             if (menu != null)
             {
-                if (!menu.Visible)
+                if (!menu.IsVisible)
                 {
                     var point = MenuAlign == LayoutAlignType.Left
                         ? Bound.TopLeft
@@ -117,7 +117,7 @@ namespace DataWF.Gui
         {
             if (menu != null)
             {
-                if (menu.Visible)
+                if (menu.IsVisible)
                 {
                     menu.Hide();
                 }

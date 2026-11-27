@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -41,14 +41,14 @@ namespace DataWF.Data
         public IEnumerable<DBProcedure> SelectByFile(string fileName)
         {
             var query = new Query<DBProcedure>();
-            query.Parameters.Add(new QueryParameter<DBProcedure>() { Invoker = DBProcedure.ProcedureTypeInvoker.Instance, Value = ProcedureTypes.Source });
-            query.Parameters.Add(new QueryParameter<DBProcedure>() { Invoker = DBProcedure.DataNameInvoker.Instance, Value = fileName });
+            query.Parameters.Add(new QueryParameter<DBProcedure, ProcedureTypes>() { Invoker = DBProcedure.ProcedureTypeInvoker.Instance, RightValue = ProcedureTypes.Source });
+            query.Parameters.Add(new QueryParameter<DBProcedure, string>() { Invoker = DBProcedure.DataNameInvoker.Instance, RightValue = fileName });
             return Select(query);
         }
 
         public IEnumerable<DBProcedure> SelectByParent(DBProcedure procedure)
         {
-            return Select(DBProcedure.GroupNameInvoker.Instance, CompareType.Equal, procedure?.Name);
+            return Select(DBProcedure.GroupNameInvoker.Instance, CompareOperator.Equal, procedure?.Name);
         }
 
         public IEnumerable<KeyValuePair<string, DBProcedure>> SelectByCategory(string category = "General")
@@ -79,7 +79,7 @@ namespace DataWF.Data
         {
             return item.ProcedureType == ProcedureTypes.StoredFunction || item.ProcedureType == ProcedureTypes.StoredProcedure
                 ? DDLType.Create
-                : DDLType.Default;
+                : DDLType.None;
         }
 
         public void AddCodes(DBProcedure item)
@@ -143,23 +143,35 @@ namespace DataWF.Data
             {
                 if (TypeHelper.IsInterface(type, typeof(IExecutable)))
                 {
-                    var name = type.FullName;
-                    var procedure = new DBProcedure
-                    {
-                        Group = gprocedure,
-                        Name = name,
-                        DataName = gprocedure.DataName,
-                        ProcedureType = ProcedureTypes.Assembly
-                    };
-                    procedure = AddOrUpdate(procedure);
-                    procedure.DisplayName = type.Name.ToSepInitcap();
-                    procedure.TempAssembly = assembly;
-                    procedure.Attributes.Clear();
-                    procedure.Attributes.AddRange(type.GetCustomAttributes<ParameterAttribute>());
-                    AddCodes(procedure);
+                    Generate(type, gprocedure);
                 }
             }
             return gprocedure;
+        }
+
+        public DBProcedure Generate(Type type)
+        {
+            return Generate(type, GenerateGroup(type.Assembly));
+        }
+
+        public DBProcedure Generate(Type type, DBProcedure group)
+        {
+            var name = type.FullName;
+            var procedure = new DBProcedure
+            {
+                Group = group,
+                Name = name,
+                DataName = group.DataName,
+                ProcedureType = ProcedureTypes.Assembly
+            };
+            procedure = AddOrUpdate(procedure);
+            procedure.DisplayName = type.Name.ToSepInitcap();
+            procedure.TempAssembly = type.Assembly;
+
+            procedure.Attributes.Clear();
+            procedure.Attributes.AddRange(type.GetCustomAttributes<ParameterAttribute>());
+            AddCodes(procedure);
+            return procedure;
         }
 
         public void CheckDeleted()

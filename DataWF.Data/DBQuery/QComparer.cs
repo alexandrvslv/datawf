@@ -17,21 +17,21 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System.Data;
 
 namespace DataWF.Data
 {
     public class QComparer : QItem
     {
-        private CompareTypes type = CompareTypes.Undefined;
+        private CompareOperatorType type = CompareOperatorType.Undefined;
 
-        public QComparer(CompareTypes comp)
+        public QComparer(CompareOperatorType comp)
         {
             Type = comp;
         }
 
-        public CompareTypes Type
+        public CompareOperatorType Type
         {
             get { return type; }
             set
@@ -39,14 +39,19 @@ namespace DataWF.Data
                 if (type != value)
                 {
                     type = value;
-                    text = CompareType.Format(value);
+                    //OnPropertyChanged();
                 }
             }
         }
 
         public override string Format(IDbCommand command = null)
         {
-            return " " + text + " ";
+            return $" {CompareOperator.Format(Type)} ";
+        }
+
+        public override object GetValue(DBItem row)
+        {
+            return CompareOperator.Format(Type);
         }
     }
 }

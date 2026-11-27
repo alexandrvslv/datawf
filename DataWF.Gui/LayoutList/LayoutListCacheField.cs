@@ -22,8 +22,8 @@ namespace DataWF.Gui
 
         public new LayoutFieldInfo this[string key]
         {
-            get { return TryGetValue(key, out var temp) ? temp : null; }
-            set { base[key] = value; }
+            get => TryGetValue(key, out var temp) ? temp : null;
+            set => base[key] = value;
         }
     }
 }

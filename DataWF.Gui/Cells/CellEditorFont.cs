@@ -1,54 +1,56 @@
 ﻿using System;
-using Xwt;
-using Xwt.Drawing;
-using DataWF.Common;
+using System.Linq;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using DataWF;
 
 namespace DataWF.Gui
 {
-    public class CellEditorFont : CellEditorText
+    public class CellEditorFont : CellEditorList
     {
-        private Font tempFont;
+        private FontFamily tempFont;
 
         public CellEditorFont() : base()
         {
         }
 
-        public FontSelector Selector
-        {
-            get { return DropDown?.Target as FontSelector; }
-        }
-
         public override object ParseValue(object value, object dataSource, Type valueType)
         {
             if (value is string)
-                value = Font.FromName((string)value);
+                value = FontFamily.Parse((string)value);
             return base.ParseValue(value, dataSource, valueType);
         }
 
         public override object Value
         {
-            get { return base.Value; }
+            get => base.Value;
             set
             {
-                var font = (Font)value;
+                var font = (FontFamily)value;
                 base.Value = value;
-                Selector.SelectedFont = font;
-                ((TextEntry)Editor.Widget).Font = font;
-                ((TextEntry)Editor.Widget).Text = FormatValue(font) as string;
+                ((TextBox)Editor.Control).FontFamily = font;
+                ((TextBox)Editor.Control).Text = FormatValue(font) as string;
             }
         }
 
-        public override Widget InitDropDownContent()
+        public override Type DataType
         {
-            var selector = Editor.GetCached<FontSelector>();
-            selector.FontChanged += OnFontSelect;
-            return selector;
+            get => base.DataType;
+            set
+            {
+                base.DataType = value;
+                if (value == typeof(FontFamily))
+                    listSource = new SelectableList<FontFamily>(FontManager.Current.GetInstalledFontFamilyNames().Select(x => new FontFamily(x)));
+                else
+                    listSource = new SelectableList<string>(FontManager.Current.GetInstalledFontFamilyNames());
+            }
         }
 
         public override void InitializeEditor(LayoutEditor editor, object value, object dataSource)
         {
             base.InitializeEditor(editor, value, dataSource);
-            tempFont = ((TextEntry)Editor.Widget).Font;
+            tempFont = ((TextBox)Editor.Control).FontFamily;
         }
 
         private void OnFontSelect(object sender, EventArgs e)
@@ -64,7 +66,7 @@ namespace DataWF.Gui
         public override void FreeEditor()
         {
             Selector.FontChanged -= OnFontSelect;
-            ((TextEntry)Editor.Widget).Font = tempFont;
+            ((TextBox)Editor.Control).FontFamily = tempFont;
             base.FreeEditor();
         }
     }

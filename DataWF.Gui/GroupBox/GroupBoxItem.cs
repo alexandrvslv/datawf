@@ -1,18 +1,18 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.ComponentModel;
-using Xwt.Drawing;
-using Xwt;
+using Avalonia.Controls;
+using Avalonia;
 
 namespace DataWF.Gui
 {
     public class GroupBoxItem : LayoutItem<GroupBoxItem>, IComparable, IDisposable, IText
     {
-        private Widget widget;
-        private Rectangle rectExpand = new Rectangle();
-        private Rectangle rectHeader = new Rectangle();
-        private Rectangle rectGlyph = new Rectangle();
-        private Rectangle rectText = new Rectangle();
+        private IControl control;
+        private Rect rectExpand = new Rect();
+        private Rect rectHeader = new Rect();
+        private Rect rectGlyph = new Rect();
+        private Rect rectText = new Rect();
         private bool autos = true;
         public int HeaderHeight = 23;
         private int dHeight = 100;
@@ -45,7 +45,7 @@ namespace DataWF.Gui
 
         public CellStyle StyleHeader
         {
-            get { return styleHeader ?? (styleHeader = GuiEnvironment.Theme[StyleHeaderName]); }
+            get => styleHeader ??= GuiEnvironment.Theme[StyleHeaderName];
             set
             {
                 styleHeader = value;
@@ -55,7 +55,7 @@ namespace DataWF.Gui
 
         public CellStyle Style
         {
-            get { return style ?? (style = GuiEnvironment.Theme[StyleName]); }
+            get => style ??= GuiEnvironment.Theme[StyleName];
             set
             {
                 style = value;
@@ -65,17 +65,17 @@ namespace DataWF.Gui
 
         public GroupBox GroupBox
         {
-            get { return groupBox ?? Map?.GroupBox; }
-            set { groupBox = value; }
+            get => groupBox ?? Map?.GroupBox;
+            set => groupBox = value;
         }
 
         protected override void OnPropertyChanged(string property)
         {
             base.OnPropertyChanged(property);
-            GroupBox?.QueueForReallocate();
+            GroupBox?.InvalidateArrange();
         }
 
-        public override void ApplyBound(Rectangle bound)
+        public override void ApplyBound(Rect bound)
         {
             var top = TopMap;
             if (top == null)
@@ -85,18 +85,18 @@ namespace DataWF.Gui
             //if (!expand)
             //    bound.Height = HeaderHeight + 5;
 
-            if (widget != null && Map != null)
+            if (Control != null && Map != null)
             {
-                if (widget.Visible)
+                if (Control.IsVisible)
                 {
-                    var rect = new Rectangle(bound.X + 5, bound.Y + HeaderHeight,
+                    var rect = new Rect(bound.X + 5, bound.Y + HeaderHeight,
                         bound.Width - 10, bound.Height - (HeaderHeight + 5));
                     if (rect.Width < 1)
-                        rect.Width = 1;
+                        rect = rect.WithWidth(1);
                     if (rect.Height < 1)
-                        rect.Height = 1;
+                        rect = rect.WithHeight(1);
 
-                    GroupBox.SetChildBounds(widget, rect);
+                    Control.Arrange(rect);
                 }
             }
         }
@@ -104,7 +104,7 @@ namespace DataWF.Gui
 
         public bool Autosize
         {
-            get { return autos; }
+            get => autos;
             set
             {
                 if (autos != value)
@@ -122,49 +122,49 @@ namespace DataWF.Gui
                 if (Visible != value)
                 {
                     base.Visible = value;
-                    if (widget != null)
-                        widget.Visible = Visible && Expand;
+                    if (Control != null)
+                        Control.IsVisible = Visible && Expand;
                 }
             }
         }
 
-        public Widget Widget
+        public IControl Control
         {
-            get { return widget; }
+            get => control;
             set
             {
-                if (widget == value)
+                if (control == value)
                     return;
-                if (widget != null && GroupBox != null)
+                if (control != null && GroupBox != null)
                 {
-                    GroupBox.RemoveChild(widget);
+                    GroupBox.Children.Remove(control);
                 }
-                widget = value;
-                if (widget != null)
+                control = value;
+                if (control != null)
                 {
-                    widget.Visible = Visible;
+                    control.IsVisible = Visible;
                     if (GroupBox != null)
-                        GroupBox.AddChild(widget);
+                        GroupBox.Children.Add(control);
                 }
             }
         }
 
         public int DefaultHeight
         {
-            get { return dHeight; }
-            set { dHeight = value; }
+            get => dHeight;
+            set => dHeight = value;
         }
 
         public override bool Expand
         {
-            get { return base.Expand; }
+            get => base.Expand;
             set
             {
                 if (Expand != value)
                 {
-                    if (widget != null)
+                    if (Control != null)
                     {
-                        widget.Visible = Visible && value;
+                        Control.IsVisible = Visible && value;
                     }
 
                     if (value && Map != null && value && RadioGroup > -1)
@@ -178,7 +178,7 @@ namespace DataWF.Gui
                         }
                     }
                     base.Expand = value;
-                    GroupBox?.QueueDraw();
+                    GroupBox?.InvalidateVisual();
                 }
             }
         }
@@ -189,18 +189,18 @@ namespace DataWF.Gui
 
             GetExpandBound(Bound);
 
-            rectHeader = new Rectangle(Bound.X + 3, Bound.Y, Bound.Width - 3, HeaderHeight);
-            rectGlyph = new Rectangle(Bound.X + 10, Bound.Y + 3, 15, 15);
-            rectText = new Rectangle(Bound.X + 30, Bound.Y + 3, Bound.Width - 40, rectHeader.Height - 5);
+            rectHeader = new Rect(Bound.X + 3, Bound.Y, Bound.Width - 3, HeaderHeight);
+            rectGlyph = new Rect(Bound.X + 10, Bound.Y + 3, 15, 15);
+            rectText = new Rect(Bound.X + 30, Bound.Y + 3, Bound.Width - 40, rectHeader.Height - 5);
 
             context.DrawCell(StyleHeader, Text, rectHeader, rectText, CellDisplayState.Default);
             context.DrawGlyph(Glyph, rectGlyph, StyleHeader);
             context.DrawGlyph(Expand ? GlyphType.ChevronDown : GlyphType.ChevronRight, rectExpand, StyleHeader);
         }
 
-        public Rectangle GetExpandBound(Rectangle bound)
+        public Rect GetExpandBound(Rect bound)
         {
-            rectExpand = new Rectangle(bound.Right - 30, bound.Y + 2, 16, 16);
+            rectExpand = new Rect(bound.Right - 30, bound.Y + 2, 16, 16);
             return rectExpand;
         }
 
@@ -208,7 +208,7 @@ namespace DataWF.Gui
         //{
         //    switch (property)
         //    {
-        //        case nameof(Visible):
+        //        case nameof(IsVisible):
 
         //            break;
         //        case nameof(Row):
@@ -223,8 +223,8 @@ namespace DataWF.Gui
 
         public override bool FillHeight
         {
-            get { return base.FillHeight && Expand; }
-            set { base.FillHeight = value; }
+            get => base.FillHeight && Expand;
+            set => base.FillHeight = value;
         }
 
         public string Text
@@ -239,13 +239,12 @@ namespace DataWF.Gui
 
         [DefaultValue(-1)]
         public int RadioGroup { get; set; } = -1;
-        public Rectangle Bound { get; private set; }
+        public Rect Bound { get; private set; }
 
         public override void Dispose()
         {
             TextChanged = null;
-            if (widget != null)
-                widget.Dispose();
+            Control = null;
             base.Dispose();
         }
 
@@ -253,8 +252,8 @@ namespace DataWF.Gui
         {
             if (GroupBox != null)
                 GuiService.Localize(this, GroupBox.Name, name);
-            if (widget is ILocalizable)
-                ((ILocalizable)widget).Localize();
+            if (Control is ILocalizable)
+                ((ILocalizable)Control).Localize();
         }
     }
 

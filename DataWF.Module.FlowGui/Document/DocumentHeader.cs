@@ -1,10 +1,10 @@
 ﻿using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
-using DataWF.Common;
+using DataWF;
 using System.Threading;
 using DataWF.Module.Flow;
-using Xwt;
+using Avalonia;
 using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
@@ -52,7 +52,7 @@ namespace DataWF.Module.FlowGui
             if (!synch)
             {
                 if (Document != null && Document.Id != null)
-                    Document.DBTable.ReloadItem(Document.Id);
+                    Document.Table.ReloadItem(Document.Id);
                 synch = true;
             }
         }

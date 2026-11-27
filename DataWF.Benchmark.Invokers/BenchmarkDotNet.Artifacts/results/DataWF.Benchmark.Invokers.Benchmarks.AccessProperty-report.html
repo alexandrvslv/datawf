@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>DataWF.Benchmark.Invokers.Benchmarks.AccessProperty-20261122-131553</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.8, Linux Ubuntu 26.04.1 LTS (Resolute Raccoon)
+AMD Ryzen 7 2700U with Radeon Vega Mobile Gfx, 1 CPU, 8 logical and 4 physical cores
+.NET SDK 10.0.115
+  [Host]     : .NET 10.0.15 (10.0.15, 10.0.1526.53008), X64 RyuJIT x86-64-v3
+  DefaultJob : .NET 10.0.15 (10.0.15, 10.0.1526.53008), X64 RyuJIT x86-64-v3
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method    </th><th>IterationCount</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Median</th><th>Gen0</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Exact</td><td>1000</td><td>2.268 &mu;s</td><td>0.0452 &mu;s</td><td>0.0538 &mu;s</td><td>2.260 &mu;s</td><td>-</td><td>-</td>
+</tr><tr><td>Generated</td><td>1000</td><td>2.362 &mu;s</td><td>0.0466 &mu;s</td><td>0.0555 &mu;s</td><td>2.347 &mu;s</td><td>-</td><td>-</td>
+</tr><tr><td>Delegate</td><td>1000</td><td>2.718 &mu;s</td><td>0.1046 &mu;s</td><td>0.3017 &mu;s</td><td>2.624 &mu;s</td><td>-</td><td>-</td>
+</tr><tr><td>Expression</td><td>1000</td><td>4.193 &mu;s</td><td>0.3536 &mu;s</td><td>1.0371 &mu;s</td><td>3.895 &mu;s</td><td>-</td><td>-</td>
+</tr><tr><td>DelegateNonRef</td><td>1000</td><td>12.041 &mu;s</td><td>1.1634 &mu;s</td><td>3.3194 &mu;s</td><td>10.722 &mu;s</td><td>-</td><td>-</td>
+</tr><tr><td>GeneratedNonRef</td><td>1000</td><td>12.885 &mu;s</td><td>0.8011 &mu;s</td><td>2.3367 &mu;s</td><td>12.487 &mu;s</td><td>-</td><td>-</td>
+</tr><tr><td>ExpressionNonRef</td><td>1000</td><td>14.241 &mu;s</td><td>0.8198 &mu;s</td><td>2.4043 &mu;s</td><td>13.513 &mu;s</td><td>-</td><td>-</td>
+</tr><tr><td>GeneratedBox</td><td>1000</td><td>29.668 &mu;s</td><td>1.8167 &mu;s</td><td>5.2417 &mu;s</td><td>28.419 &mu;s</td><td>22.9492</td><td>48000 B</td>
+</tr><tr><td>DelegateBox</td><td>1000</td><td>30.449 &mu;s</td><td>2.8125 &mu;s</td><td>8.0241 &mu;s</td><td>27.407 &mu;s</td><td>22.9492</td><td>48000 B</td>
+</tr><tr><td>ExpressionBox</td><td>1000</td><td>35.993 &mu;s</td><td>1.8475 &mu;s</td><td>5.4183 &mu;s</td><td>33.746 &mu;s</td><td>22.9492</td><td>48000 B</td>
+</tr><tr><td>Reflection</td><td>1000</td><td>53.153 &mu;s</td><td>4.1897 &mu;s</td><td>12.1552 &mu;s</td><td>48.178 &mu;s</td><td>22.9492</td><td>48000 B</td>
+</tr><tr><td>ReflectionBox</td><td>1000</td><td>54.935 &mu;s</td><td>4.7311 &mu;s</td><td>13.8008 &mu;s</td><td>53.961 &mu;s</td><td>22.9492</td><td>48000 B</td>
+</tr></tbody></table>
+</body>
+</html>

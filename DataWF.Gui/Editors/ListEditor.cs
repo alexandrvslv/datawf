@@ -1,10 +1,15 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.Threading;
+using System.Linq;
 
 namespace DataWF.Gui
 {
@@ -35,8 +40,8 @@ namespace DataWF.Gui
         protected ToolMenuItem toolStatusError;
         protected ToolItem toolRemove;
         protected ToolItem toolEdit;
-        private VPaned container;
-        private VBox box;
+        private SplitView container;
+        private StackPanel box;
         protected ToolWindow toolWindow;
         private EventHandler<ListEditorEventArgs> handleItemSelect;
         private ListEditorEventArgs cacheArg = new ListEditorEventArgs();
@@ -104,16 +109,16 @@ namespace DataWF.Gui
                 toolPosition)
             { Name = "ListEditor" };
 
-            box = new VBox() { Spacing = 1 };
-            box.PackStart(bar, false, false);
+            box = new StackPanel { Orientation = Orientation.Vertical, Spacing = 1 };
+            box.Children.Add(bar);
 
-            container = new VPaned() { Name = "container" };
-            container.Panel1.Content = box;
+            container = new SplitView() { Name = "container" };
+            container.Pane = box;
 
-            PackStart(container, true, true);
+            Children.Add(container);
             List = list;
 
-            fields = (LayoutList)EmitInvoker.CreateObject(list.GetType());
+            fields = (LayoutList)InvokeProvider.CreateObject(list.GetType());
             fields.EditMode = EditModes.ByClick;
             fields.RetriveCellEditor += handleGetEditor;
 
@@ -124,14 +129,13 @@ namespace DataWF.Gui
             Localize();
         }
 
-        protected override void Dispose(bool disposing)
+        protected void Dispose(bool disposing)
         {
             if (disposing)
             {
-                toolWindow?.Dispose();
-                fields?.Dispose();
+                toolWindow = null;
+                fields = null;
             }
-            base.Dispose(disposing);
         }
 
         private void CheckStatus()
@@ -178,7 +182,7 @@ namespace DataWF.Gui
 
         public object DataSource
         {
-            get { return dataSource; }
+            get => dataSource;
             set
             {
                 if (dataSource == value)
@@ -251,7 +255,7 @@ namespace DataWF.Gui
         {
             if (list.FieldSource is IEditable ediable)
             {
-                Application.Invoke(() =>
+                _ = Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     toolSave.Sensitive = ediable.IsChanged;
                     CheckStatus();
@@ -261,14 +265,14 @@ namespace DataWF.Gui
 
         public event EventHandler<ListEditorEventArgs> ItemSelect
         {
-            add { handleItemSelect += value; }
-            remove { handleItemSelect -= value; }
+            add => handleItemSelect += value;
+            remove => handleItemSelect -= value;
         }
 
         public event PListGetEditorHandler GetCellEditor
         {
-            add { handleGetCellEditor += value; }
-            remove { handleGetCellEditor -= value; }
+            add => handleGetCellEditor += value;
+            remove => handleGetCellEditor -= value;
         }
 
         private ILayoutCellEditor ListOnGetCellEditor(object listItem, object itemValue, ILayoutCell cell)
@@ -281,35 +285,35 @@ namespace DataWF.Gui
 
         public LayoutList List
         {
-            get { return list; }
+            get => list;
             set
             {
                 if (value == list)
                     return;
                 if (list != null)
                 {
-                    box.Remove(list);
+                    box.Children.Remove(list);
                     list.CellDoubleClick -= OnCellDoubleClick;
                     list.RetriveCellEditor -= handleGetEditor;
                     list.SelectionChanged -= OnListSelectionChanged;
                     list.PositionChanged -= OnListPositionChanged;
                     list.ColumnFilterChanged -= OnFilterChanged;
                     list.ColumnFilterChanging -= OnFilterChanging;
-                    list.KeyPressed -= OnListKeyDown;
+                    list.KeyDown -= OnListKeyDown;
                 }
 
                 list = value;
                 list.Name = "fields";
                 list.EditMode = EditModes.ByClick;
-                list.Visible = true;
+                list.IsVisible = true;
                 list.CellDoubleClick += OnCellDoubleClick;
                 list.RetriveCellEditor += handleGetEditor;
                 list.SelectionChanged += OnListSelectionChanged;
                 list.PositionChanged += OnListPositionChanged;
                 list.ColumnFilterChanged += OnFilterChanged;
                 list.ColumnFilterChanging += OnFilterChanging;
-                list.KeyPressed += OnListKeyDown;
-                box.PackStart(list, true, true);
+                list.KeyDown += OnListKeyDown;
+                box.Children.Add(list);
             }
         }
 
@@ -320,7 +324,7 @@ namespace DataWF.Gui
 
         public virtual bool ReadOnly
         {
-            get { return list.ReadOnly; }
+            get => list.ReadOnly;
             set
             {
                 if (value)
@@ -349,7 +353,7 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public virtual bool ListMode
         {
-            get { return list.Mode != LayoutListMode.Fields; }
+            get => list.Mode != LayoutListMode.Fields;
             set
             {
                 if (ListMode != value)
@@ -384,7 +388,7 @@ namespace DataWF.Gui
 
         public event EventHandler Saving;
 
-        protected virtual void OnToolSaveClick(object sender, EventArgs e)
+        protected virtual async void OnToolSaveClick(object sender, EventArgs e)
         {
             list.CurrentCell = null;
             Saving?.Invoke(this, new ListEditorEventArgs() { Item = DataSource });
@@ -392,29 +396,39 @@ namespace DataWF.Gui
             if (DataSource is IFileSerialize)
             {
                 var dialog = new SaveFileDialog();
-                dialog.Filters.Add(new FileDialogFilter("Config(xml)", "*.xml"));
-                dialog.InitialFileName = ((IFileSerialize)DataSource).FileName;
-                if (dialog.Run(ParentWindow))
+                dialog.Filters.Add(new FileDialogFilter
                 {
-                    ((IFileSerialize)DataSource).Save(dialog.FileName);
+                    Name = "Config(xml)",
+                    Extensions = new List<string> { "*.xml" }
+                });
+                dialog.InitialFileName = ((IFileSerialize)DataSource).FileName;
+                var fileName = await dialog.ShowAsync((Window)VisualRoot);
+                if (fileName != null)
+                {
+                    ((IFileSerialize)DataSource).Save(fileName);
                 }
 
             }
             else if (DataSource is IEditable)
             {
-                ((IEditable)DataSource).Save();
+                await ((IEditable)DataSource).Save();
             }
             else
             {
                 var dialog = new SaveFileDialog();
-                dialog.Filters.Add(new FileDialogFilter("Config(xml)", "*.xml"));
-                dialog.InitialFileName = DataSource.ToString();
-                if (dialog.Run(ParentWindow))
+                dialog.Filters.Add(new FileDialogFilter
                 {
-                    var filename = dialog.FileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
-                                         ? dialog.FileName
-                                         : dialog.FileName + ".xml";
-                    Serialization.Serialize(DataSource, filename);
+                    Name = "Config(xml)",
+                    Extensions = new List<string> { "*.xml" }
+                });
+                dialog.InitialFileName = DataSource.ToString();
+                var fileName = await dialog.ShowAsync((Window)VisualRoot);
+                if (fileName != null)
+                {
+                    var filename = fileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
+                                         ? fileName
+                                         : fileName + ".xml";
+                    SerializeProvider.Serialize(DataSource, filename);
                 }
             }
         }
@@ -442,32 +456,29 @@ namespace DataWF.Gui
 
         public bool AccessVisible
         {
-            get { return toolAccess.Checked; }
+            get => toolAccess.Checked;
             set
             {
                 toolAccess.Checked = value;
                 if (DataSource is IAccessable && value)
                 {
-                    if (access == null)
-                    {
-                        access = new AccessEditor() { Name = "access" };
-                    }
+                    access ??= new AccessEditor() { Name = "access" };
 
                     access.Accessable = (IAccessable)DataSource;
-                    container.Panel2.Content = access;
+                    container.Content = access;
                 }
                 else
                 {
-                    container.Panel2.Content = null;
+                    container.Content = null;
                 }
 
-                QueueForReallocate();
+                InvalidateArrange();
             }
         }
 
         protected virtual void OnListKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Modifiers == ModifierKeys.Control)
+            if (e.KeyModifiers == KeyModifiers.Control)
             {
                 if (e.Key == Key.L)
                     OnToolLoadClick(this, e);
@@ -521,22 +532,21 @@ namespace DataWF.Gui
             list.RefreshBounds(true);
         }
 
-        protected virtual void OnToolLoadClick(object sender, EventArgs e)
+        protected virtual async void OnToolLoadClick(object sender, EventArgs e)
         {
-            using (var dialog = new OpenFileDialog())
+            var dialog = new OpenFileDialog();
+            var files = await dialog.ShowAsync((Window)VisualRoot);
+            if (files?.Any() ?? false)
             {
-                if (dialog.Run(ParentWindow))
+                var item = SerializeProvider.Deserialize(files.First());
+                if (list.ListType == item.GetType())
                 {
-                    var item = Serialization.Deserialize(dialog.FileName);
-                    if (list.ListType == item.GetType())
-                    {
-                        list.ListSource.Add(item);
-                    }
-                    else if (item is IList)
-                    {
-                        foreach (var i in (IEnumerable)item)
-                            list.ListSource.Add(i);
-                    }
+                    list.ListSource.Add(item);
+                }
+                else if (item is IList)
+                {
+                    foreach (var i in (IEnumerable)item)
+                        list.ListSource.Add(i);
                 }
             }
         }

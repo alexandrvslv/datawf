@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using DataWF.Common;
+using DataWF;
 using System.Linq;
-using Xwt;
-using Xwt.Drawing;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Input;
 
 namespace DataWF.Gui
 {
@@ -16,7 +18,7 @@ namespace DataWF.Gui
         protected ToolItem cacheHitItem;
         protected ToolItem hitItem;
         protected Menubar currentMenu;
-        protected Orientation itemOrientation = Orientation.Horizontal;
+        protected BoxOrientation itemOrientation = BoxOrientation.Horizontal;
 
         public Toolsbar()
         {
@@ -38,7 +40,7 @@ namespace DataWF.Gui
 
         public ToolItem Items
         {
-            get { return items; }
+            get => items;
             set
             {
                 if (items != value)
@@ -54,7 +56,7 @@ namespace DataWF.Gui
 
         public Menubar CurrentMenubar
         {
-            get { return currentMenu; }
+            get => currentMenu;
             internal set
             {
 
@@ -78,9 +80,9 @@ namespace DataWF.Gui
             }
         }
 
-        public Orientation ItemOrientation
+        public BoxOrientation ItemOrientation
         {
-            get { return itemOrientation; }
+            get => itemOrientation;
             set
             {
                 if (itemOrientation == value)
@@ -101,15 +103,15 @@ namespace DataWF.Gui
             get { return (ToolItem)Items[name]; }
         }
 
-        protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
+        protected override Size MeasureOverride(Size availableSize)
         {
-            var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);
+            var size = base.MeasureOverride(availableSize);
             if (!items.Disposed)
             {
                 var bound = items.GetBound(0, 0);
                 foreach (var item in items.GetVisibleItems().OfType<ToolContentItem>())
                 {
-                    item.Content?.Surface.GetPreferredSize();
+                    item.Content?.Measure(item.Bound.Size);
                 }
                 return bound.Size;
             }
@@ -118,36 +120,39 @@ namespace DataWF.Gui
 
         public void Reallocate()
         {
-            OnReallocate();
-            QueueDraw();
+            InvalidateMeasure();
+            InvalidateVisual();
         }
 
-        protected override void OnReallocate()
+        protected override Size ArrangeOverride(Size finalSize)
         {
-            base.OnReallocate();
-            items.Width = Size.Width;
-            items.Height = Size.Height;
+            items.Width = Width;
+            items.Height = Height;
             var mapBound = items.GetBound();
             foreach (ToolItem item in items.GetVisibleItems())
             {
                 item.CheckSize();
                 items.GetBound(item, mapBound);
-                if (item is ToolContentItem && ((ToolContentItem)item).Content != null && ((ToolContentItem)item).Content.Parent == this)
-                    SetChildBounds(((ToolContentItem)item).Content, ((ToolContentItem)item).ContentBound);
+                if (item is ToolContentItem toolContentItem
+                    && toolContentItem.Content != null
+                    && toolContentItem.Content.Parent == this)
+                    toolContentItem.Content.Arrange(toolContentItem.ContentBound);
             }
-            QueueDraw();
+            InvalidateVisual();
+            return finalSize;
+
         }
 
-        protected override void OnDraw(Context ctx, Rectangle dirtyRect)
+        public override void Render(DrawingContext ctx)
         {
-            base.OnDraw(ctx, dirtyRect);
+            base.Render(ctx);
             using (var context = new GraphContext(ctx))
             {
-                OnDraw(context);
+                Render(context);
             }
         }
 
-        protected virtual void OnDraw(GraphContext context)
+        protected virtual void Render(GraphContext context)
         {
             if (items.Style != null)
             {
@@ -155,7 +160,7 @@ namespace DataWF.Gui
             }
             foreach (ToolItem item in items.GetVisibleItems())
             {
-                item.OnDraw(context);
+                item.Render(context);
             }
         }
 
@@ -176,83 +181,79 @@ namespace DataWF.Gui
             return null;
         }
 
-        protected override void OnMouseMoved(MouseMovedEventArgs args)
+        protected override void OnPointerMoved(PointerEventArgs e)
         {
-            base.OnMouseMoved(args);
-            var hitItem = HitTest(args.Position);
+            base.OnPointerMoved(e);
+            var hitItem = HitTest(e.GetPosition(this));
             if (cacheHitItem != hitItem)
             {
                 if (cacheHitItem != null)
                 {
-                    cacheHitItem.OnMouseExited(EventArgs.Empty);
+                    cacheHitItem.OnPointerExited(e);
                 }
                 if (hitItem != null)
                 {
                     hitItem.OnMouseEntered(EventArgs.Empty);
                     if (!hitItem.DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
                     {
-                        TooltipText = hitItem.Text;
+                        ToolTip.SetTip(this, hitItem.Text);
                         //Debug.WriteLine($"Tooltip Text {TooltipText}");
                     }
                     else
                     {
-                        TooltipText = null;
+                        ToolTip.SetTip(this, null);
                     }
                 }
                 cacheHitItem = hitItem;
             }
             else if (cacheHitItem != null)
             {
-                cacheHitItem.OnMouseMove(args);
+                cacheHitItem.OnMouseMove(e);
             }
         }
 
-        protected override void OnMouseExited(EventArgs args)
+        protected override void OnPointerExited(PointerEventArgs e)
         {
-            base.OnMouseExited(args);
+            base.OnPointerExited(e);
             if (cacheHitItem != null)
             {
-                cacheHitItem.OnMouseExited(args);
+                cacheHitItem.OnPointerExited(e);
                 cacheHitItem = null;
             }
         }
 
-        protected override void OnButtonPressed(ButtonEventArgs args)
+        protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
-            base.OnButtonPressed(args);
-            hitItem = HitTest(args.Position);
+            base.OnPointerPressed(e);
+            var position = e.GetPosition(this);
+            hitItem = HitTest(position);
             if (hitItem != null)
             {
-                hitItem.OnButtonPressed(args);
+                hitItem.OnPointerPressed(e);
             }
         }
 
-        protected override void OnButtonReleased(ButtonEventArgs args)
+        protected override void OnPointerReleased(PointerReleasedEventArgs e)
         {
-            base.OnButtonReleased(args);
-            hitItem = HitTest(args.Position);
-            if (hitItem != null && args.Button == PointerButton.Left)
+            base.OnPointerReleased(e);
+            var position = e.GetPosition(this);
+            var info = e.GetCurrentPoint(this).Properties;
+            hitItem = HitTest(position);
+            if (hitItem != null && info.IsLeftButtonPressed)
             {
-                hitItem.OnButtonReleased(args);
+                hitItem.OnPointerReleased(e);
             }
-            if (args.Button == PointerButton.Right)
+            if (info.IsRightButtonPressed)
             {
-                OnContextMenuShow(args);
+                OnContextMenuShow(e, position);
             }
         }
 
-        protected override void Dispose(bool disposing)
+        protected virtual void OnContextMenuShow(PointerEventArgs e, Point position)
         {
-            Items.Dispose();
-            base.Dispose(disposing);
-        }
-
-        protected virtual void OnContextMenuShow(ButtonEventArgs e)
-        {
-            if (DefaultMenu == null)
-                DefaultMenu = new ToolsbarMenu();
+            DefaultMenu ??= new ToolsbarMenu();
             DefaultMenu.ContextBar = this;
-            DefaultMenu.Show(this, e.Position);
+            DefaultMenu.Show(this, PixelPoint.FromPoint(position, 1));
         }
 
         public void Localize()
@@ -271,12 +272,12 @@ namespace DataWF.Gui
         public virtual void OnItemDoubleClick(ToolItem item)
         { }
 
-        public void Serialize(ISerializeWriter writer)
+        public void Serialize(XmlInvokerWriter writer)
         {
             writer.Write(items);
         }
 
-        public void Deserialize(ISerializeReader reader)
+        public void Deserialize(XmlInvokerReader reader)
         {
             reader.Read(items);
         }

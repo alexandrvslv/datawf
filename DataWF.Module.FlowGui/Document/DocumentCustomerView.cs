@@ -1,4 +1,4 @@
-﻿using DataWF.Common;
+﻿using DataWF;
 using DataWF.Gui;
 using DataWF.Module.Flow;
 using DataWF.Module.Messanger;
@@ -16,6 +16,11 @@ namespace DataWF.Module.FlowGui
         {
             base.Localize();
             GuiService.Localize(this, Name, "Clients", GlyphType.Users);
+        }
+
+        protected override DocumentCustomer GetNewItem()
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

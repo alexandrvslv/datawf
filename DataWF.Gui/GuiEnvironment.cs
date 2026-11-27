@@ -1,4 +1,10 @@
-﻿using DataWF.Common;
+﻿using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using DataWF;
+using DataWF.Access;
+using DataWF.Invokers;
+using DataWF.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -59,7 +65,7 @@ namespace DataWF.Gui
                     ValueTrue = true,
                     ValueFalse = false,
                     ValueNull = null,
-                    TreeState = false
+                    ThreeState = false
                 };
             };
             CellEditorFabric[typeof(DateTime)] = cell =>
@@ -70,14 +76,14 @@ namespace DataWF.Gui
             {
                 return new CellEditorDate() { Format = cell.Format, TwoDate = true };
             };
-            CellEditorFabric[typeof(Xwt.CheckBoxState)] = cell =>
+            CellEditorFabric[typeof(bool?)] = cell =>
             {
                 return new CellEditorCheck
                 {
-                    ValueTrue = Xwt.CheckBoxState.On,
-                    ValueFalse = Xwt.CheckBoxState.Off,
-                    ValueNull = Xwt.CheckBoxState.Mixed,
-                    TreeState = true
+                    ValueTrue = true,
+                    ValueFalse = false,
+                    ValueNull = null,
+                    ThreeState = true
                 };
             };
             CellEditorFabric[typeof(CheckedState)] = cell =>
@@ -87,7 +93,7 @@ namespace DataWF.Gui
                     ValueTrue = CheckedState.Checked,
                     ValueFalse = CheckedState.Unchecked,
                     ValueNull = CheckedState.Indeterminate,
-                    TreeState = true
+                    ThreeState = true
                 };
             };
             CellEditorFabric[typeof(System.Net.IPAddress)] = cell =>
@@ -102,15 +108,15 @@ namespace DataWF.Gui
             {
                 return new CellEditorList { DataSource = System.Text.Encoding.GetEncodings() };
             };
-            CellEditorFabric[typeof(Xwt.Drawing.Image)] = cell =>
+            CellEditorFabric[typeof(Bitmap)] = cell =>
             {
                 return new CellEditorImage();
             };
-            CellEditorFabric[typeof(Xwt.Drawing.Color)] = cell =>
+            CellEditorFabric[typeof(Color)] = cell =>
             {
                 return new CellEditorColor();
             };
-            CellEditorFabric[typeof(Xwt.Drawing.Font)] = cell =>
+            CellEditorFabric[typeof(FontFamily)] = cell =>
             {
                 return new CellEditorFont();
             };
@@ -126,7 +132,7 @@ namespace DataWF.Gui
             LocaleImage.ImageCache += (item) =>
             {
                 using (var stream = new MemoryStream(item.Data))
-                    return Xwt.Drawing.Image.FromStream(stream);
+                    return new Bitmap(stream);
             };
 
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
@@ -150,12 +156,12 @@ namespace DataWF.Gui
                 }
                 foreach (var item in types)
                 {
-                    if (TypeHelper.IsInterface(item, typeof(IModuleInitialize)))
+                    if (typeof(IModuleInitialize).IsAssignableFrom(item))
                     {
                         try
                         {
-                            var imodule = (IModuleInitialize)EmitInvoker.CreateObject(item);
-                            imodule.Initialize();
+                            var imodule = (IModuleInitialize)InvokeProvider.CreateObject(item);
+                            imodule.Initialize(new object[] { null });
                         }
                         catch (Exception ex)
                         {
@@ -252,7 +258,7 @@ namespace DataWF.Gui
 
         public string ThemeName
         {
-            get { return themeName; }
+            get => themeName;
             set
             {
                 if (value != themeName)
@@ -266,7 +272,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public GuiTheme CurrentTheme
         {
-            get { return theme ?? (theme = Themes[ThemeName]); }
+            get => theme ??= Themes[ThemeName];
             set
             {
                 if (CurrentTheme != value)
@@ -286,7 +292,7 @@ namespace DataWF.Gui
 
         public void SaveFile(string file)
         {
-            Serialization.Serialize(this, file);
+            XmlInvokerSerializer.Serialize(file, ref this);
         }
 
         public static void Load(string name = "gui.xml")
@@ -302,7 +308,7 @@ namespace DataWF.Gui
 
         public void LoadFile(string file)
         {
-            Serialization.Deserialize(file, this, false);
+            SerializeProvider.Deserialize(file, this, false);
         }
 
         public void Dispose()

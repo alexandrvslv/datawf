@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using MySqlConnector;
 using System;
 using System.Collections.Generic;
@@ -38,19 +38,18 @@ namespace DataWF.Data
             DataTypeMap = new Dictionary<DBDataType, string>(){
                     {DBDataType.String, "varchar{0}"},
                     {DBDataType.Clob, "text"},
-                    {DBDataType.DateTime, "datetime"},
+                    {DBDataType.DateTime, "datetime(6)"},
                     {DBDataType.ByteArray, "varbinary{0}"},
                     {DBDataType.ByteSerializable, "varbinary{0}"},
                     {DBDataType.Blob, "longblob"},
-                    {DBDataType.LargeObject, "integer"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
                     {DBDataType.ShortInt, "smallint"},
                     {DBDataType.TinyInt, "tinyint unsigned"},
-                    {DBDataType.Float, "float(22,11)"},
-                    {DBDataType.Double, "double"},
+                    {DBDataType.Float, "real"},
+                    {DBDataType.Double, "double precision"},
                     {DBDataType.Decimal, "numeric{0}"},
-                    {DBDataType.TimeSpan, "bigint"},
+                    {DBDataType.TimeSpan, "time"},
                     {DBDataType.Bool, "bool"},
                 };
         }
@@ -100,7 +99,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
             switch (ddlType)
             {
                 case DDLType.Create:
-                    ddl.AppendLine($"insert into db_sequence(name, seq) values('{sequence.Name}', {sequence.Current - 1});");
+                    ddl.AppendLine($"insert into db_sequence(name, seq) values('{sequence.Name}', {sequence.StartWith - 1});");
                     break;
                 case DDLType.Alter:
                     ddl.AppendLine($"update db_sequence set seq = {sequence.Current} where name = '{sequence.Name}';");
@@ -137,36 +136,30 @@ select seq from db_sequence where name = '{sequence.Name}';";
             {
                 ddl.AppendLine($"use {schema.DataBase};");
                 ddl.AppendLine($"create table db_sequence(name varchar(512) not null primary key, seq long);");
-                ddl.AppendLine($"create table db_lob(oid bigint not null primary key AUTO_INCREMENT, lob_data longblob);");
             }
         }
 
-        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
+        public override object FillParameter(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
-            var command = (MySqlCommand)transaction.AddCommand($"delete from db_lob where oid = @oid");
-            command.Parameters.AddWithValue($"@oid", (long)oid);
-            await transaction.ExecuteQueryAsync(command);
-        }
-
-        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
-        {
-            var command = (MySqlCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = @oid");
-            command.Parameters.AddWithValue($"@oid", (long)oid);
-            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
-            if (await transaction.ReadAsync())
+            if (column != null)
             {
-                return ((MySqlDataReader)transaction.Reader).GetStream(1);
+                switch (column.DBDataType)
+                {
+                    case DBDataType.Float:
+                        ((MySqlParameter)parameter).MySqlDbType = MySqlDbType.Float;
+                        break;
+                    case DBDataType.Double:
+                        ((MySqlParameter)parameter).MySqlDbType = MySqlDbType.Double;
+                        break;
+                }
             }
-            throw new Exception("No Data Found!");
+            return base.FillParameter(command, parameter, value, column);
         }
 
-        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
+        public override ValueTask<IDataParameter> CreateStreamParameter(IDbCommand command, DBColumn<byte[]> dataColumn, Stream stream)
         {
-            var command = (MySqlCommand)transaction.AddCommand(@"insert into db_lob (lob_data) values (@lob_data);");
-            command.Parameters.Add("@lob_data", MySqlDbType.LongBlob).Value = await Helper.GetBytesAsync(value);
-            await transaction.ExecuteQueryAsync(command);
-            return (uint)command.LastInsertedId;
-        }
+            return base.CreateStreamParameter(command, dataColumn, stream);
+        }        
 
         public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
         {
@@ -183,18 +176,12 @@ select seq from db_sequence where name = '{sequence.Name}';";
             return null;
         }
 
-        public override Task<bool> ReadAsync(IDataReader reader)
-        {
-            var sqlReader = (MySqlDataReader)reader;
-            return sqlReader.ReadAsync();
-        }
-
-        public override uint GetOID(IDataReader reader, int index)
+        public override uint GetUInt(DbDataReader reader, int index)
         {
             return ((MySqlDataReader)reader).GetUInt32(index);
         }
 
-        public override TimeSpan GetTimeSpan(IDataReader reader, int index)
+        public override TimeSpan GetTimeSpan(DbDataReader reader, int index)
         {
             return ((MySqlDataReader)reader).GetTimeSpan(index);
         }

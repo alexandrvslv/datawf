@@ -3,13 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
+using DataWF;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Input;
+using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace DataWF.Gui
 {
-    public class DockPanel : Toolsbar, IEnumerable, IEnumerable<DockPage>, IDockContainer, ILocalizable, ISerializableElement
+    public class DockPanel : Toolsbar, IEnumerable, IEnumerable<DockPage>, IDockContainer, ILocalizable, IXMLSerializable
     {
         private DockPage currentPage;
         //private Menubar context;
@@ -17,11 +21,11 @@ namespace DataWF.Gui
         private LayoutAlignType pagesAlign = LayoutAlignType.Top;
         private LinkedList<DockPage> pagesHistory = new LinkedList<DockPage>();
 
-        private Widget widget;
-        private Orientation orientation = Orientation.Horizontal;
+        private IControl control;
+        private BoxOrientation orientation = BoxOrientation.Horizontal;
         private bool viewClose = true;
-        private Rectangle widgetBounds;
-        private TextLayout selectText;
+        private Rect ControlBounds;
+        private FormattedText selectText;
 
         public DockPanel() : base()
         {
@@ -33,11 +37,11 @@ namespace DataWF.Gui
             Name = nameof(DockPanel);
         }
 
-        public DockPanel(params Widget[] widgets) : this()
+        public DockPanel(params Control[] Controls) : this()
         {
-            foreach (var widget in widgets)
+            foreach (var Control in Controls)
             {
-                Put(widget);
+                Put(Control);
             }
         }
 
@@ -45,32 +49,32 @@ namespace DataWF.Gui
 
         public DockBox DockBox { get { return DockItem?.DockBox; } }
 
-        public Widget CurrentWidget
+        public IControl CurrentControl
         {
-            get { return widget; }
+            get => control;
             internal set
             {
-                if (value == widget)
+                if (value == control)
                     return;
 
-                if (widget != null)
+                if (control != null)
                 {
-                    RemoveChild(widget);
+                    Children.Remove(control);
                 }
 
-                widget = value;
+                control = value;
 
-                if (widget != null)
+                if (control != null)
                 {
-                    AddChild(widget);
-                    SetChildBounds(widget, widgetBounds);
+                    Children.Add(control);
+                    control.Arrange(ControlBounds);
                 }
             }
         }
 
         public LayoutAlignType PagesAlign
         {
-            get { return pagesAlign; }
+            get => pagesAlign;
             set
             {
                 if (pagesAlign == value)
@@ -78,9 +82,9 @@ namespace DataWF.Gui
                 pagesAlign = value;
                 if (pagesAlign == LayoutAlignType.Left ||
                     pagesAlign == LayoutAlignType.Right)
-                    Orientation = Orientation.Vertical;
+                    Orientation = BoxOrientation.Vertical;
                 else
-                    Orientation = Orientation.Horizontal;
+                    Orientation = BoxOrientation.Horizontal;
                 //PerformLayout();
             }
         }
@@ -109,49 +113,49 @@ namespace DataWF.Gui
                 npage = CurrentPage;
             }
             CurrentPage = npage;
-            QueueDraw();
+            InvalidateVisual();
         }
 
-        protected override void OnReallocate()
+        protected override void OnMeasureInvalidated()
         {
-            base.OnReallocate();
+            base.OnMeasureInvalidated();
             double def = 30;
-            var pagesRect = Rectangle.Zero;
-            widgetBounds = Rectangle.Zero;
+            var pagesRect = Rect.Empty;
+            ControlBounds = Rect.Empty;
             if (pagesAlign == LayoutAlignType.Top)
             {
-                if (ItemOrientation == Orientation.Vertical)
+                if (ItemOrientation == BoxOrientation.Vertical)
                     def = 100D;
-                pagesRect = new Rectangle(0D, 0D, Size.Width, def);
-                widgetBounds = new Rectangle(0D, def, Size.Width, Size.Height - def);
+                pagesRect = new Rect(0D, 0D, Width, def);
+                ControlBounds = new Rect(0D, def, Width, Height - def);
             }
             else if (pagesAlign == LayoutAlignType.Bottom)
             {
-                if (ItemOrientation == Orientation.Vertical)
+                if (ItemOrientation == BoxOrientation.Vertical)
                     def = 100D;
 
-                pagesRect = new Rectangle(0D, Size.Height - def, Size.Width, def);
-                widgetBounds = new Rectangle(0D, 0D, Size.Width, Size.Height - def);
+                pagesRect = new Rect(0D, Height - def, Width, def);
+                ControlBounds = new Rect(0D, 0D, Width, Height - def);
             }
             else if (pagesAlign == LayoutAlignType.Left)
             {
-                if (ItemOrientation == Orientation.Horizontal)
+                if (ItemOrientation == BoxOrientation.Horizontal)
                     def = 100;
 
-                pagesRect = new Rectangle(0D, 0D, def, Size.Height);
-                widgetBounds = new Rectangle(def, 0D, Size.Width - def, Size.Height);
+                pagesRect = new Rect(0D, 0D, def, Height);
+                ControlBounds = new Rect(def, 0D, Width - def, Height);
             }
             else if (pagesAlign == LayoutAlignType.Right)
             {
-                if (ItemOrientation == Orientation.Horizontal)
+                if (ItemOrientation == BoxOrientation.Horizontal)
                     def = 100;
 
-                pagesRect = new Rectangle(Size.Width - def, 0D, def, Size.Height);
-                widgetBounds = new Rectangle(0D, 0D, Size.Width - def, Size.Height);
+                pagesRect = new Rect(Width - def, 0D, def, Height);
+                ControlBounds = new Rect(0D, 0D, Width - def, Height);
             }
-            if (CurrentWidget != null)
+            if (CurrentControl != null)
             {
-                SetChildBounds(CurrentWidget, widgetBounds);
+                CurrentControl.Arrange(ControlBounds);
             }
         }
 
@@ -161,7 +165,7 @@ namespace DataWF.Gui
             CurrentPage = null;
         }
 
-        public void SelectPageByControl(Widget control)
+        public void SelectPageByControl(Control control)
         {
             var page = GetPage(control);
             if (page != null)
@@ -172,7 +176,7 @@ namespace DataWF.Gui
 
         public DockPage CurrentPage
         {
-            get { return currentPage; }
+            get => currentPage;
             set
             {
                 if (currentPage == value)
@@ -187,19 +191,14 @@ namespace DataWF.Gui
                     }
                     pagesHistory.AddLast(currentPage);
                     currentPage.Checked = true;
-                    CurrentWidget = currentPage.Widget;
+                    CurrentControl = currentPage.Control;
                 }
                 else
                 {
-                    CurrentWidget = null;
+                    CurrentControl = null;
                 }
                 DockBox?.OnPageSelected(this, new DockPageEventArgs(value));
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -214,7 +213,7 @@ namespace DataWF.Gui
 
         public bool VisibleClose
         {
-            get { return viewClose; }
+            get => viewClose;
             set
             {
                 if (viewClose == value)
@@ -227,15 +226,15 @@ namespace DataWF.Gui
             }
         }
 
-        public Orientation Orientation
+        public BoxOrientation Orientation
         {
-            get { return orientation; }
+            get => orientation;
             set
             {
                 if (orientation == value)
                     return;
                 orientation = value;
-                QueueForReallocate();
+                InvalidateArrange();
             }
         }
 
@@ -257,9 +256,9 @@ namespace DataWF.Gui
 
         public void OnPageClose(DockPage page)
         {
-            if (page.Widget is IDockContent)
+            if (page.Control is IDockContent)
             {
-                if (!((IDockContent)page.Widget).Closing())
+                if (!((IDockContent)page.Control).Closing())
                     return;
             }
             PageClose?.Invoke(this, new DockPageEventArgs(page));
@@ -270,43 +269,43 @@ namespace DataWF.Gui
             else
             {
                 Items.Remove(page);
-                page.Widget.Dispose();
+                page.Control = null;
             }
         }
 
-        protected override void OnDraw(GraphContext context)
+        protected override void Render(GraphContext context)
         {
-            base.OnDraw(context);
-            Rectangle brect = orientation == Orientation.Horizontal
-                ? new Rectangle(0, 30 - 5, Bounds.Width, 5)
-                : new Rectangle(Bounds.Width - 5, 0, 5, 30);
+            base.Render(context);
+            Rect brect = orientation == BoxOrientation.Horizontal
+                ? new Rect(0, 30 - 5, Bounds.Width, 5)
+                : new Rect(Bounds.Width - 5, 0, 5, 30);
             if (PagesAlign == LayoutAlignType.Bottom)
-                brect.Y = 0;
+                brect = brect.WithY(0);
             context.FillRectangle(items.Style, brect, CellDisplayState.Selected);//st.BackBrush.GetBrush(rectb, 
 
-            if (CurrentWidget == null && widgetBounds.Width > 0 && widgetBounds.Height > 0)
+            if (CurrentControl == null && ControlBounds.Width > 0 && ControlBounds.Height > 0)
             {
-                if (selectText == null)
-                {
-                    selectText = new TextLayout
-                    {
-                        Font = Font.WithScaledSize(5D),
-                        TextAlignment = Alignment.Center,
-                        Text = "Select Document",
-                    };
-                }
-                var bound = new Rectangle(widgetBounds.X, widgetBounds.Height / 2D, widgetBounds.Width, 100);
-                context.DrawText(selectText, bound, items.Style.FontBrush.Color.WithAlpha(0.3));
+                selectText ??= new FormattedText
+                (
+                    textToFormat: "Select Document",
+                    culture: CultureInfo.InvariantCulture,
+                    flowDirection: FlowDirection.LeftToRight,
+                    typeface: Typeface.Default,
+                    emSize: 5D
+
+                );
+                var bound = new Rect(ControlBounds.X, ControlBounds.Height / 2D, ControlBounds.Width, 100);
+                context.DrawText(selectText, bound, items.Style.FontBrush.Color.WithAlpha(0.3), TextAlignment.Center);
             }
         }
 
-        protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
+        protected override Size ArrangeOverride(Size finalSize)
         {
-            var baseSize = base.OnGetPreferredSize(widthConstraint, heightConstraint);
-            if (CurrentWidget != null)
+            var baseSize = base.ArrangeOverride(finalSize);
+            if (CurrentControl != null)
             {
-                var size = CurrentWidget.Surface.GetPreferredSize();
-                size.Height += baseSize.Height;
+                var size = CurrentControl.PreviousMeasure.Value;
+                size = new Size(size.Width, size.Height + baseSize.Height);
                 return size;
             }
             return baseSize;
@@ -334,39 +333,39 @@ namespace DataWF.Gui
             get { return GuiService.GetDockParent(this); }
         }
 
-        public bool Contains(Widget control)
+        public bool Contains(IControl control)
         {
             foreach (DockPage t in Items)
-                if (t.Widget == control)
+                if (t.Control == control)
                     return true;
             return false;
         }
 
-        public IEnumerable<Widget> GetControls()
+        public IEnumerable<IControl> GetControls()
         {
             foreach (DockPage t in Items)
-                yield return t.Widget;
+                yield return t.Control;
         }
 
-        public Widget Find(string name)
+        public IControl Find(string name)
         {
             foreach (DockPage page in Items)
-                if (page.Widget.Name == name)
-                    return page.Widget;
+                if (page.Control.Name == name)
+                    return page.Control;
             return null;
         }
 
-        public DockPage Put(Widget widget)
+        public DockPage Put(IControl Control)
         {
-            return Put(widget, DockType.Content);
+            return Put(Control, DockType.Content);
         }
 
-        public DockPage Put(Widget widget, DockType type)
+        public DockPage Put(IControl Control, DockType type)
         {
             var page = new DockPage
             {
-                Name = widget.Name,
-                Widget = widget,
+                Name = Control.Name,
+                Control = Control,
             };
             Put(page);
             return page;
@@ -383,24 +382,24 @@ namespace DataWF.Gui
         public DockPage GetPage(string name)
         {
             foreach (DockPage page in Items)
-                if (page.Widget?.Name == name)
+                if (page.Control?.Name == name)
                 {
                     return page;
                 }
             return null;
         }
 
-        public DockPage GetPage(Widget control)
+        public DockPage GetPage(IControl control)
         {
             foreach (DockPage page in Items)
-                if (page.Widget == control)
+                if (page.Control == control)
                 {
                     return page;
                 }
             return null;
         }
 
-        public bool Delete(Widget control)
+        public bool Delete(IControl control)
         {
             var page = GetPage(control);
             if (page != null)
@@ -415,18 +414,18 @@ namespace DataWF.Gui
         {
             foreach (DockPage page in Items)
             {
-                if (page.Widget is IDockContainer)
-                    yield return (IDockContainer)page.Widget;
+                if (page.Control is IDockContainer)
+                    yield return (IDockContainer)page.Control;
             }
         }
 
         #endregion
 
-        protected override void OnContextMenuShow(ButtonEventArgs e)
+        protected override void OnContextMenuShow(PointerEventArgs e, Point position)
         {
-            if (widgetBounds.Contains(e.Position))
+            if (ControlBounds.Contains(position))
                 return;
-            base.OnContextMenuShow(e);
+            base.OnContextMenuShow(e, position);
         }
 
     }

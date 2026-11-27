@@ -17,7 +17,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 // DEALINGS IN THE SOFTWARE.
-using DataWF.Common;
+using DataWF;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -84,7 +84,7 @@ namespace DataWF.Data
             }
             else
             {
-                var procedure = DBService.Schems.ParseProcedure(procedureCode, args.Category);
+                var procedure = args.Schema.GetProcedure(procedureCode, args.Category);
                 if (procedure != null)
                     try { val = procedure.Execute(args); }
                     catch (Exception ex) { val = ex.Message; }

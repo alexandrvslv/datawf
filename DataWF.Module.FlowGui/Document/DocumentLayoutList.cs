@@ -8,10 +8,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using Xwt.Drawing;
+using Avalonia.Controls;
 using System.IO;
 using DataWF.Module.Counterpart;
-using DataWF.Common;
+using DataWF;
 
 namespace DataWF.Module.FlowGui
 {
@@ -96,7 +96,7 @@ namespace DataWF.Module.FlowGui
                 template = value;
                 if (Mode == LayoutListMode.List && Documents != null)
                 {
-                    var type = Document.DBTable.GetItemType(template?.DocumentType ?? 0).Type;
+                    var type = FlowExplorer.Schema.Document.GetItemType(template?.DocumentType ?? 0).Type;
                     if (ListType != type)
                     {
                         Documents.ItemType = type;
@@ -122,7 +122,7 @@ namespace DataWF.Module.FlowGui
                         {
                             styleBold = style.Clone();
                             styleBold.Name = "DocumentBold";
-                            styleBold.Font = style.Font.WithWeight(FontWeight.Bold);
+                            styleBold.FontFamily = style.FontFamily.WithWeight(FontWeight.Bold);
                             GuiEnvironment.Theme.Add(styleBold);
                         }
                     }
